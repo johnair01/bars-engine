@@ -1,0 +1,82 @@
+[
+    {
+        "id": "invitation",
+        "text": "You are not here by accident.\nSomething has already begun to move.",
+        "choices": [
+            {
+                "text": "Step forward",
+                "targetId": "crossing"
+            },
+            {
+                "text": "Wait and observe",
+                "targetId": "crossing"
+            }
+        ]
+    },
+    {
+        "id": "crossing",
+        "text": "There is a moment when motion commits itself.\nYou feel it now.",
+        "choices": [
+            {
+                "text": "Trust momentum",
+                "targetId": "orientation"
+            },
+            {
+                "text": "Test the ground",
+                "targetId": "orientation"
+            }
+        ]
+    },
+    {
+        "id": "orientation",
+        "text": "The world does not ask who you are.\nIt asks how you arrive.",
+        "choices": [
+            {
+                "text": "With intent",
+                "targetId": "first_reading"
+            },
+            {
+                "text": "With curiosity",
+                "targetId": "first_reading"
+            },
+            {
+                "text": "Unprepared",
+                "targetId": "first_reading"
+            }
+        ]
+    },
+    {
+        "id": "first_reading",
+        "text": "Patterns form whether you look for them or not.\nSomething takes shape.",
+        "choices": [
+            {
+                "text": "Continue",
+                "targetId": "the_call"
+            }
+        ],
+        "autoProceed": true,
+        "action": "ASSIGN_BAR"
+    },
+    {
+        "id": "the_call",
+        "text": "You are sent outward.\nNot to fetch — but to notice.",
+        "choices": [
+            {
+                "text": "Accept",
+                "targetId": "holding"
+            }
+        ],
+        "autoProceed": true,
+        "action": "ASSIGN_QUEST"
+    },
+    {
+        "id": "holding",
+        "text": "You are holding something now.\nBring it with you.",
+        "choices": [
+            {
+                "text": "Open Wallet",
+                "targetId": "WALLET_REDIRECT"
+            }
+        ]
+    }
+]

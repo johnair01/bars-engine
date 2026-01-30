@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------------------------------------------
+// ENUMS & TYPES
+// --------------------------------------------------------
+
+// Simple enums for status/types
+// (SQLite doesn't support native enums well, but Prisma handles them)
+
+// --------------------------------------------------------
+// CORE: PLAYERS & IDENTITY
+// --------------------------------------------------------
+
+model Invite {
+  id                String    @id @default(cuid())
+  token             String    @unique
+  status            String    @default("active") // active, used, revoked
+  preassignedRoleKey String?  // Optional role to auto-grant
+  
+  usedByPlayer      Player?   @relation("InviteUsed")
+  
+  createdAt         DateTime  @default(now())
+  usedAt            DateTime?
+  
+  @@map("invites")
+}
+
+model Player {
+  id              String    @id @default(cuid())
+  
+  // Auth / Contact
+  name            String
+  contactType     String    // email, phone
+  contactValue    String
+  
+  // Relations
+  inviteId        String    @unique
+  invite          Invite    @relation("InviteUsed", fields: [inviteId], references: [id])
+  
+  roles           PlayerRole[]
+  bars            PlayerBar[]
+  quests          PlayerQuest[]
+  vibulonEvents   VibulonEvent[]
+  
+  createdAt       DateTime  @default(now())
+
+  @@unique([contactType, contactValue]) // ensure unique email/phone
+  @@map("players")
+}
+
+// --------------------------------------------------------
+// ROLES & PROGRESSION
+// --------------------------------------------------------
+
+model Role {
+  id              String    @id @default(cuid())
+  key             String    @unique // ACE, VETERAN, ENGINEER, ROOKIE, LEADER
+  displayName     String
+  description     String
+  isForecasted    Boolean   @default(false)
+  
+  players         PlayerRole[]
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("roles")
+}
+
+model PlayerRole {
+  id              String    @id @default(cuid())
+  
+  playerId        String
+  player          Player    @relation(fields: [playerId], references: [id])
+  
+  roleId          String
+  role            Role      @relation(fields: [roleId], references: [id])
+  
+  grantedByAdminId String?  // For audit
+  
+  grantedAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  
+  @@map("player_roles")
+}
+
+// --------------------------------------------------------
+// STORY & STATE (BARS)
+// --------------------------------------------------------
+
+model Bar {
+  id              Int       @id // 1..64 (manual ID)
+  name            String    // "The Creative", "The Receptive", etc.
+  tone            String    // description or vibe
+  text            String    // poetic text
+  
+  assignedTo      PlayerBar[]
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("bars")
+}
+
+model PlayerBar {
+  id              String    @id @default(cuid())
+  
+  playerId        String
+  player          Player    @relation(fields: [playerId], references: [id])
+  
+  barId           Int
+  bar             Bar       @relation(fields: [barId], references: [id])
+  
+  source          String    // engine, admin, trade, ritual
+  notes           String?
+  
+  acquiredAt      DateTime  @default(now())
+  
+  @@map("player_bars")
+}
+
+// --------------------------------------------------------
+// QUESTS & TASKS
+// --------------------------------------------------------
+
+model Quest {
+  id              String    @id @default(cuid())
+  title           String
+  prompt          String
+  returnType      String    // "text", "image", "gps"
+  
+  assignments     PlayerQuest[]
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("quests")
+}
+
+model PlayerQuest {
+  id              String    @id @default(cuid())
+  
+  playerId        String
+  player          Player    @relation(fields: [playerId], references: [id])
+  
+  questId         String
+  quest           Quest     @relation(fields: [questId], references: [id])
+  
+  status          String    @default("assigned") // assigned, completed, failed
+  returnText      String?
+  
+  assignedAt      DateTime  @default(now())
+  completedAt     DateTime?
+  
+  @@map("player_quests")
+}
+
+// --------------------------------------------------------
+// ECONOMY (VIBULONS & EVENTS)
+// --------------------------------------------------------
+
+model VibulonEvent {
+  id              String    @id @default(cuid())
+  
+  playerId        String
+  player          Player    @relation(fields: [playerId], references: [id])
+  
+  source          String    // quest, role, admin, ritual
+  amount          Int       // usually +1
+  notes           String?
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("vibulon_events")
+}
+
+// --------------------------------------------------------
+// ADMIN & AUDIT
+// --------------------------------------------------------
+
+model AuditLog {
+  id              String    @id @default(cuid())
+  
+  actorAdminId    String
+  action          String    // "GRANT_ROLE", "RESET_BAR", etc.
+  targetType      String    // "player", "system"
+  targetId        String
+  payloadJson     String?   // Details
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("audit_logs")
+}

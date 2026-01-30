@@ -1,0 +1,1 @@
+import { db } from './src/lib/db'; async function reset() { await db.invite.update({ where: { token: 'ANTIGRAVITY' }, data: { status: 'active', usedAt: null } }); console.log('Reset complete'); } reset();

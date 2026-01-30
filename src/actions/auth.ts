@@ -1,0 +1,77 @@
+'use server'
+
+import { db } from '@/lib/db'
+import { PlayerSignupSchema } from '@/lib/schemas'
+import { redirect } from 'next/navigation'
+import { z } from 'zod'
+import { cookies } from 'next/headers'
+
+export async function joinWithInvite(prevState: any, formData: FormData) {
+    const rawData = {
+        inviteToken: formData.get('inviteToken'),
+        name: formData.get('name'),
+        contactType: formData.get('contactType'),
+        contactValue: formData.get('contactValue'),
+    }
+
+    // Validate
+    const result = PlayerSignupSchema.safeParse(rawData)
+    if (!result.success) {
+        return { error: 'Invalid input data.' }
+    }
+
+    const { inviteToken, name, contactType, contactValue } = result.data
+
+    // Transaction: Verify invite -> Create Player -> Mark invite used -> Assign pre-role
+    try {
+        const invite = await db.invite.findUnique({
+            where: { token: inviteToken },
+        })
+
+        if (!invite || invite.status !== 'active') {
+            return { error: 'Invalid or expired invite.' }
+        }
+
+        const player = await db.$transaction(async (tx) => {
+            // 1. Mark invite used
+            await tx.invite.update({
+                where: { id: invite.id },
+                data: { status: 'used', usedAt: new Date() },
+            })
+
+            // 2. Create Player
+            const newPlayer = await tx.player.create({
+                data: {
+                    name,
+                    contactType,
+                    contactValue,
+                    inviteId: invite.id,
+                },
+            })
+
+            // 3. Assign Role if preassigned
+            if (invite.preassignedRoleKey) {
+                const role = await tx.role.findUnique({ where: { key: invite.preassignedRoleKey } })
+                if (role) {
+                    await tx.playerRole.create({
+                        data: {
+                            playerId: newPlayer.id,
+                            roleId: role.id,
+                        },
+                    })
+                }
+            }
+
+            return newPlayer
+        })
+
+        const cookieStore = await cookies()
+        cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+
+    } catch (e) {
+        console.error(e)
+        return { error: 'Failed to join. Email/Phone might be taken.' }
+    }
+
+    redirect('/story')
+}

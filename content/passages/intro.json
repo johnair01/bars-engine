@@ -1,0 +1,25 @@
+{
+    "id": "invitation",
+    "text": "You stand before the threshold. The signal brought you here, but your intent must carry you forward. A hexagonal void awaits your input.",
+    "choices": [
+        {
+            "text": "I seek the pattern.",
+            "targetId": "pattern_response",
+            "effects": {
+                "tone": "structural"
+            }
+        },
+        {
+            "text": "I seek the vibration.",
+            "targetId": "vibe_response",
+            "effects": {
+                "tone": "chaotic"
+            }
+        },
+        {
+            "text": "[DEBUG] SKIP TO ASSIGNMENT",
+            "targetId": "BAR_ASSIGN",
+            "effects": {}
+        }
+    ]
+}

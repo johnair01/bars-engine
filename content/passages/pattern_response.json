@@ -1,0 +1,13 @@
+{
+    "id": "pattern_response",
+    "text": "The pattern is infinite, recursive, and stabilizing. You seek the architecture of things.",
+    "choices": [
+        {
+            "text": "Correct. I am ready to be assigned.",
+            "targetId": "BAR_ASSIGN",
+            "effects": {
+                "tone": "structural"
+            }
+        }
+    ]
+}

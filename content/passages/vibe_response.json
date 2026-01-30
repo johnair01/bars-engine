@@ -1,0 +1,13 @@
+{
+    "id": "vibe_response",
+    "text": "The vibration is constant, chaotic, and energized. You seek the pulse of things.",
+    "choices": [
+        {
+            "text": "Correct. I am ready to be assigned.",
+            "targetId": "BAR_ASSIGN",
+            "effects": {
+                "tone": "chaotic"
+            }
+        }
+    ]
+}
