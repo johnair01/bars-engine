@@ -73,5 +73,5 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
         return { error: 'Failed to join. Email/Phone might be taken.' }
     }
 
-    redirect('/story')
+    redirect('/')
 }

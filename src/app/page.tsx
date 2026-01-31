@@ -1,65 +1,92 @@
-import Image from "next/image";
+import { db } from '@/lib/db'
+import { cookies } from 'next/headers'
 
-export default function Home() {
+export default async function Home() {
+  const cookieStore = await cookies()
+  const playerId = cookieStore.get('bars_player_id')?.value
+
+  if (!playerId) {
+    // Not logged in -> Show Gatekeeper
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-4">
+        <h1 className="text-4xl tracking-tighter">BARS ENGINE</h1>
+        <p className="text-zinc-500">Access Restricted.</p>
+        <div className="text-xs text-zinc-700 mt-8">
+          To join, you must receive a specific invitation frequency.
+        </div>
+      </div>
+    )
+  }
+
+  const player = await db.player.findUnique({
+    where: { id: playerId },
+    include: {
+      roles: { include: { role: true } },
+      quests: { include: { quest: true } },
+      vibulonEvents: true
+    }
+  })
+
+  if (!player) {
+    return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
+  }
+
+  const vibulons = player.vibulonEvents.reduce((acc, e) => acc + e.amount, 0)
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 space-y-8">
+      {/* Header */}
+      <header className="flex justify-between items-end border-b border-zinc-800 pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">{player.name}</h1>
+          <div className="flex gap-2 items-center text-sm text-zinc-500">
+            {player.roles.map(r => (
+              <span key={r.id} className="text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded text-xs uppercase tracking-widest">
+                {r.role.key}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="text-right">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">Vibulons</div>
+          <div className="text-3xl font-mono text-green-400">{vibulons} ✺</div>
         </div>
-      </main>
+      </header>
+
+      {/* Quests */}
+      <section>
+        <h2 className="text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span>Active Directives</span>
+          <span className="text-xs bg-zinc-800 px-1.5 rounded-full">{player.quests.length}</span>
+        </h2>
+
+        {player.quests.length === 0 ? (
+          <div className="p-8 border border-dashed border-zinc-800 rounded-lg text-center text-zinc-600">
+            No active directives. Await transmission.
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {player.quests.map(pq => (
+              <div key={pq.id} className="p-4 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-zinc-700 transition">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-white">{pq.quest.title}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded capitalize ${pq.status === 'completed' ? 'bg-green-900/20 text-green-400' : 'bg-yellow-900/20 text-yellow-500'
+                    }`}>
+                    {pq.status}
+                  </span>
+                </div>
+                <p className="text-zinc-400 text-sm mb-4">{pq.quest.prompt}</p>
+
+                {pq.status !== 'completed' && (
+                  <div className="text-xs text-zinc-600 italic">
+                    Completion pending Admin verification.
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
-  );
+  )
 }
