@@ -1,0 +1,14 @@
+{
+    "id": "start",
+    "text": "## What is a Cursed Item?\n\nA **cursed item** is something that holds negative energy for you. It could be:\n\n- A gift from someone who hurt you\n- A reminder of a bad memory\n- Something you keep but wish you didn't\n\nBringing it to the party allows the collective energy to help cleanse or release it.",
+    "choices": [
+        {
+            "text": "What happens to it at the party?",
+            "targetId": "ritual"
+        },
+        {
+            "text": "I know what to bring",
+            "targetId": "final"
+        }
+    ]
+}

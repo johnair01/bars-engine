@@ -1,0 +1,10 @@
+{
+    "id": "choosing",
+    "text": "## Choosing Your Blessed Object\n\nGood blessed objects often have these qualities:\n\n- **Memory**: Connected to someone or something meaningful\n- **Comfort**: Brings you peace when you hold it\n- **Portable**: Small enough to carry in your pocket\n- **Resilient**: Won't be damaged by a party environment\n\nExamples: A ring, a coin, a small stone, a keychain, a button from a loved one's coat.",
+    "choices": [
+        {
+            "text": "I'm ready to choose",
+            "targetId": "final"
+        }
+    ]
+}

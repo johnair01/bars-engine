@@ -63,6 +63,7 @@ model Player {
   bars            PlayerBar[]
   quests          PlayerQuest[]
   vibulonEvents   VibulonEvent[]
+  vibulons        Vibulon[]
   
   createdAt       DateTime  @default(now())
 
@@ -120,6 +121,31 @@ model Bar {
   createdAt       DateTime  @default(now())
   
   @@map("bars")
+}
+
+// User-created Bars (quests/tasks anyone can create)
+model CustomBar {
+  id              String    @id @default(cuid())
+  
+  creatorId       String
+  
+  title           String
+  description     String
+  type            String    @default("vibe") // vibe, story
+  reward          Int       @default(1)
+  
+  // For story bars
+  storyPath       String? // "collective", "personal"
+  allowedTrigrams String? // JSON array of allowed Playbooks ["Heaven", "Earth"]
+  
+  // Input definition (JSON array of BarInput)
+  inputs          String    @default("[]")
+  
+  status          String    @default("active") // active, archived
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("custom_bars")
 }
 
 model PlayerBar {
@@ -193,6 +219,25 @@ model VibulonEvent {
   @@map("vibulon_events")
 }
 
+model Vibulon {
+  id          String   @id @default(cuid())
+  
+  ownerId     String?
+  owner       Player?   @relation(fields: [ownerId], references: [id])
+  
+  // Provenance (The "Story" carried by the coin)
+  originSource String   // "starter", "custom", "iching", "system"
+  originId     String   // ID of the bar/quest
+  originTitle  String   // Snapshot of title
+
+  // Staking/Escrow (When attached to a Bar)
+  stakedOnBarId String? // ID of the PlayerBar or CustomBar instance
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("vibulons")
+}
+
 // --------------------------------------------------------
 // CHARACTER CREATION 2.0 (STORY ENGINE)
 // --------------------------------------------------------
@@ -249,4 +294,35 @@ model AuditLog {
   createdAt       DateTime  @default(now())
   
   @@map("audit_logs")
+}
+
+model GlobalState {
+  id              String    @id // Singleton: "singleton"
+  
+  storyClock      Int       @default(0)
+  currentAct      Int       @default(1)
+  
+  // JSON array of unlocked tier IDs or flags
+  unlockedTiers   String    @default("[]") 
+  
+  // Shuffled sequence of 1-64
+  hexagramSequence String   @default("[]") 
+  
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("global_state")
+}
+
+model StoryTick {
+  id              String    @id @default(cuid())
+  
+  tickNumber      Int       // The clock value at this tick
+  actNumber       Int       // The act value at this tick
+  
+  trigger         String    // "manual", "auto_threshold", "event_trigger"
+  description     String
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("story_ticks")
 }

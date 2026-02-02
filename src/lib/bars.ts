@@ -8,47 +8,38 @@ export type BarInput = {
     options?: string[]
 }
 
+export type BarType = 'vibe' | 'story'
+export type BarStatus = 'available' | 'active' | 'completed'
+
 export type BarDef = {
     id: string
+    type: BarType
     title: string
     description: string
-    inputs: BarInput[]
+    inputs: BarInput[]  // For vibe bars: shown inline. For story bars: shown at end
     reward: number
-    unique: boolean // If true, can only be done once
-    mandatory?: boolean // If true, required to enter game
+    unique: boolean
+    mandatory?: boolean
+    // Story Bar specific
+    storyPath?: string  // Path to story content JSON (e.g., 'blessed_object/start')
 }
 
 // --- CONTENT DEFINITIONS ---
 
 export const STARTER_BARS: BarDef[] = [
     {
-        id: 'bar_nation',
-        title: 'Declare Your Nation',
-        description: 'Where do you hail from? This defines your burden.',
-        reward: 0,
-        unique: true,
-        mandatory: true,
-        inputs: [{ key: 'nationId', label: 'Nation', type: 'nation-select' }]
-    },
-    {
-        id: 'bar_playbook',
-        title: 'Choose Your Playbook',
-        description: 'How do you move through the world?',
-        reward: 0,
-        unique: true,
-        mandatory: true,
-        inputs: [{ key: 'playbookId', label: 'Playbook', type: 'playbook-select' }]
-    },
-    {
         id: 'bar_blessed_object',
+        type: 'story',  // Will have multi-page flow
         title: 'Bring a Blessed Object',
-        description: 'Name a small object you will physically bring to the party.',
-        reward: 1,
+        description: 'Learn what makes an object blessed, then choose yours.',
+        reward: 2,
         unique: true,
+        storyPath: 'blessed_object/start',
         inputs: [{ key: 'objectName', label: 'Object Name', type: 'text', placeholder: "e.g. My Grandmother's Ring" }]
     },
     {
         id: 'bar_attunement',
+        type: 'vibe',
         title: 'Attune Your Object',
         description: 'What emotional energy does your object hold?',
         reward: 1,
@@ -62,6 +53,7 @@ export const STARTER_BARS: BarDef[] = [
     },
     {
         id: 'bar_intention',
+        type: 'vibe',
         title: 'Personal Intention',
         description: 'One sentence describing the experience you desire.',
         reward: 1,
@@ -70,6 +62,7 @@ export const STARTER_BARS: BarDef[] = [
     },
     {
         id: 'bar_commission',
+        type: 'vibe',
         title: 'Commission a Quest',
         description: 'Request a public quest from the engine.',
         reward: 1,
@@ -81,17 +74,20 @@ export const STARTER_BARS: BarDef[] = [
     },
     {
         id: 'bar_cursed_item',
+        type: 'story',  // Will have multi-page flow
         title: 'Bring a Cursed Item',
-        description: 'An object you wish to be cleansed or destroyed.',
-        reward: 1,
+        description: 'Learn about curses and choose an object to cleanse.',
+        reward: 2,
         unique: true,
+        storyPath: 'cursed_item/start',
         inputs: [{ key: 'itemName', label: 'Item Name', type: 'text', placeholder: "The Doll" }]
     },
     {
         id: 'bar_signups',
+        type: 'vibe',
         title: 'Preproduction Signups',
         description: 'Volunteer for party roles. (+1 Vibulon per role)',
-        reward: 1, // Logic handled specially for multiselect count
+        reward: 1,
         unique: true,
         inputs: [{
             key: 'roles',

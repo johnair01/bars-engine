@@ -1,0 +1,10 @@
+{
+    "id": "ritual",
+    "text": "## The Cleansing Ritual\n\nDuring the party, there will be a **Curse Break Ceremony**.\n\nYou may choose to:\n- **Release**: Burn, bury, or ceremonially discard the item\n- **Transform**: Alter it to change its meaning\n- **Witness**: Simply have others acknowledge its weight\n\nThe choice is yours. The item won't be taken from you.",
+    "choices": [
+        {
+            "text": "I understand. Let me choose my item.",
+            "targetId": "final"
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "id": "start",
+    "text": "## What is a Blessed Object?\n\nA **blessed object** is something that carries personal meaning and positive energy. It's not about religious blessing—it's about *your* relationship with the object.\n\nThink of something small enough to carry, but significant enough to matter.",
+    "choices": [
+        {
+            "text": "Tell me more about choosing one",
+            "targetId": "choosing"
+        },
+        {
+            "text": "I already know what mine is",
+            "targetId": "final"
+        }
+    ]
+}

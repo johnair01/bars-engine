@@ -1,173 +1,85 @@
 import { db } from '@/lib/db'
+import { getGlobalState, advanceClock } from '@/actions/world'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export default async function AdminPage() {
-    // Fetch data
-    const players = await db.player.findMany({
-        include: {
-            roles: { include: { role: true } },
-            quests: { include: { quest: true } },
-            vibulonEvents: true,
-            nation: true,
-            playbook: true,
-        },
-        orderBy: { createdAt: 'desc' }
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) redirect('/')
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { roles: { include: { role: true } } }
     })
 
-    // Calculate Vibulons
-    const playersWithBalance = players.map(p => ({
-        ...p,
-        balance: p.vibulonEvents.reduce((acc, e) => acc + e.amount, 0)
-    }))
-
-    const quests = await db.quest.findMany()
-
-    // --- ACTIONS ---
-    async function grantVibulon(formData: FormData) {
-        'use server'
-        const playerId = formData.get('playerId') as string
-        const amount = Number(formData.get('amount'))
-        await db.vibulonEvent.create({
-            data: {
-                playerId,
-                amount,
-                source: 'admin',
-                notes: 'Manual Grant'
-            }
-        })
-        revalidatePath('/admin')
+    // Check for 'admin' role
+    const isAdmin = player?.roles.some(r => r.role.key === 'admin')
+    if (!isAdmin) {
+        redirect('/') // Or show 403
     }
 
-    async function assignQuest(formData: FormData) {
-        'use server'
-        const playerId = formData.get('playerId') as string
-        const questId = formData.get('questId') as string
-        await db.playerQuest.create({
-            data: { playerId, questId }
-        })
-        revalidatePath('/admin')
-    }
-
-    async function createInvite(formData: FormData) {
-        'use server'
-        const token = formData.get('token') as string
-        const roleKey = formData.get('roleKey') as string || undefined
-
-        if (!token) return
-
-        try {
-            await db.invite.create({
-                data: {
-                    token,
-                    preassignedRoleKey: roleKey === 'NONE' ? undefined : roleKey,
-                }
-            })
-            revalidatePath('/admin')
-        } catch (e) {
-            console.error('Failed to create invite', e)
-        }
-    }
-
-    const roles = await db.role.findMany()
-    const activeInvites = await db.invite.findMany({
-        where: { status: 'active' },
-        orderBy: { createdAt: 'desc' }
+    const globalState = await getGlobalState()
+    const history = await db.storyTick.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10
     })
+
+    // Simple action to call advance
+    async function handleAdvance() {
+        'use server'
+        await advanceClock(1)
+        revalidatePath('/admin')
+    }
 
     return (
-        <div className="min-h-screen bg-black text-xs text-zinc-400 font-mono p-8">
-            <h1 className="text-xl text-white mb-8 border-b border-zinc-800 pb-2">BARS ENGINE // ADMIN CONSOLE</h1>
+        <div className="min-h-screen bg-black text-zinc-200 font-sans p-8 max-w-4xl mx-auto space-y-12">
+            <header>
+                <h1 className="text-3xl font-bold text-white mb-2">Conclave Admin</h1>
+                <div className="text-zinc-500">Story Clock Control</div>
+            </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* PLAYERS LIST */}
-                <div className="space-y-4">
-                    <h2 className="text-zinc-500 uppercase tracking-widest">Active Players ({players.length})</h2>
-                    <div className="divide-y divide-zinc-900 border border-zinc-900 rounded">
-                        {playersWithBalance.map(player => (
-                            <div key={player.id} className="p-4 hover:bg-zinc-900/50 transition">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <div className="text-white font-bold text-sm">{player.name}</div>
-                                        <div>{player.contactValue} ({player.contactType})</div>
-                                        <div className="mt-1 text-purple-400">ROLE: {player.roles.map(r => r.role.displayName).join(', ') || 'N/A'}</div>
-                                        <div className="text-zinc-600 text-[10px] mt-1">
-                                            NATION: {player.nation?.name || 'Unknown'} | BOOK: {player.playbook?.name || 'Unknown'}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-green-400 text-lg">{player.balance} ✺</div>
-                                        <div className="text-zinc-600 truncate w-24" title={player.id}>{player.id}</div>
-                                    </div>
-                                </div>
-
-                                {/* CONTROLS */}
-                                <div className="flex gap-2 mt-4 bg-zinc-950 p-2 rounded">
-                                    <form action={grantVibulon} className="flex gap-1">
-                                        <input type="hidden" name="playerId" value={player.id} />
-                                        <input name="amount" type="number" defaultValue={1} className="w-12 bg-zinc-800 border-none rounded px-1" />
-                                        <button className="bg-zinc-800 hover:bg-zinc-700 px-2 rounded text-white">+V</button>
-                                    </form>
-
-                                    <form action={assignQuest} className="flex gap-1">
-                                        <input type="hidden" name="playerId" value={player.id} />
-                                        <select name="questId" className="w-24 bg-zinc-800 border-none rounded px-1">
-                                            {quests.map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
-                                        </select>
-                                        <button className="bg-zinc-800 hover:bg-zinc-700 px-2 rounded text-white">+Q</button>
-                                    </form>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* SYSTEM STATS / QUESTS */}
-                <div className="space-y-8">
-                    {/* INVITE GENERATOR */}
-                    <div>
-                        <h2 className="text-zinc-500 uppercase tracking-widest mb-4">Invite Generator</h2>
-                        <div className="bg-zinc-900/30 p-4 rounded border border-zinc-900">
-                            <form action={createInvite} className="flex gap-2 items-end">
-                                <div className="flex-1 space-y-1">
-                                    <label className="text-[10px] uppercase">Token String</label>
-                                    <input name="token" type="text" placeholder="e.g. PLAYER_TWO" className="w-full bg-black border border-zinc-800 rounded px-2 py-1 text-white" required />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] uppercase">Role (Optional)</label>
-                                    <select name="roleKey" className="bg-black border border-zinc-800 rounded px-2 py-1 text-white">
-                                        <option value="NONE">None</option>
-                                        {roles.map(r => <option key={r.id} value={r.key}>{r.displayName}</option>)}
-                                    </select>
-                                </div>
-                                <button className="bg-white text-black font-bold px-4 py-1 rounded hover:bg-zinc-200 h-[26px]">
-                                    GENERATE
-                                </button>
-                            </form>
-
-                            {/* ACTIVE INVITES LIST */}
-                            <div className="mt-4 space-y-1">
-                                {activeInvites.map(inv => (
-                                    <div key={inv.id} className="flex justify-between text-[10px] font-mono border-b border-zinc-800/50 pb-1">
-                                        <span className="text-white">{inv.token}</span>
-                                        <span className="text-zinc-500">{inv.preassignedRoleKey || '-'}</span>
-                                    </div>
-                                ))}
-                            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+                {/* CLOCK CONTROL */}
+                <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Story Clock</div>
+                            <div className="text-6xl font-mono text-white">{globalState.storyClock} <span className="text-lg text-zinc-600">/ 64</span></div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Current Act</div>
+                            <div className="text-6xl font-mono text-purple-400">{globalState.currentAct} <span className="text-lg text-zinc-600">/ 8</span></div>
                         </div>
                     </div>
 
-                    <div>
-                        <h2 className="text-zinc-500 uppercase tracking-widest mb-4">Quest Library</h2>
-                        <ul className="space-y-2">
-                            {quests.map(q => (
-                                <li key={q.id} className="p-2 border border-zinc-900 rounded">
-                                    <div className="text-white font-bold">{q.title}</div>
-                                    <div className="italic opacity-50">{q.prompt}</div>
-                                </li>
-                            ))}
-                        </ul>
+                    <form action={handleAdvance}>
+                        <button className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest rounded hover:bg-zinc-200 transition">
+                            Advance Clock (+1)
+                        </button>
+                        <p className="text-xs text-center text-zinc-500 mt-2">
+                            This will trigger Hexagram #{Math.min(64, globalState.storyClock + 1)} Global Quest
+                        </p>
+                    </form>
+                </section>
+
+                {/* LOGS */}
+                <section className="space-y-4">
+                    <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Recent Ticks</h3>
+                    <div className="space-y-2">
+                        {history.map(tick => (
+                            <div key={tick.id} className="bg-zinc-900/50 p-3 rounded border border-zinc-800 text-sm">
+                                <div className="flex justify-between text-zinc-400 text-xs mb-1">
+                                    <span>Tick {tick.tickNumber}</span>
+                                    <span>{tick.createdAt.toLocaleTimeString()}</span>
+                                </div>
+                                <div className="text-zinc-200">{tick.description}</div>
+                            </div>
+                        ))}
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     )

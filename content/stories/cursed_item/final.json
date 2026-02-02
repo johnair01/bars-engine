@@ -1,0 +1,6 @@
+{
+    "id": "final",
+    "text": "## Name Your Cursed Item\n\nChoose something you're willing to bring and potentially release.\n\nRemember: This is for you. The party will offer the container, but you choose what happens.",
+    "isFinal": true,
+    "showInputs": true
+}

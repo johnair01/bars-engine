@@ -11,24 +11,19 @@ const IdentitySchema = z.object({
     contact: z.string().min(3),
 })
 
-const CompletedBarSchema = z.object({
-    id: z.string(),
-    inputs: z.record(z.any()),
-})
-
 const CreateCharacterSchema = z.object({
     token: z.string(),
     identity: z.string(), // JSON
-    completedBars: z.string(), // JSON
-    vibeulons: z.coerce.number(),
+    nationId: z.string().min(1),
+    playbookId: z.string().min(1),
 })
 
 export async function createCharacter(prevState: any, formData: FormData) {
     const rawData = {
         token: formData.get('token'),
         identity: formData.get('identity'),
-        completedBars: formData.get('completedBars'),
-        vibeulons: formData.get('vibeulons'),
+        nationId: formData.get('nationId'),
+        playbookId: formData.get('playbookId'),
     }
 
     const result = CreateCharacterSchema.safeParse(rawData)
@@ -37,34 +32,19 @@ export async function createCharacter(prevState: any, formData: FormData) {
         return { error: 'Invalid Data' }
     }
 
-    const { token, vibeulons } = result.data
+    const { token, nationId, playbookId } = result.data
 
     // Parse Identity
     let identity
     try {
-        identity = IdentitySchema.parse(JSON.parse(result.data.identity))
-    } catch (e) {
-        return { error: 'Invalid Identity Data' }
+        console.log("Raw identity string:", result.data.identity)
+        const parsed = JSON.parse(result.data.identity)
+        console.log("Parsed identity:", parsed)
+        identity = IdentitySchema.parse(parsed)
+    } catch (e: any) {
+        console.error("Identity parsing error:", e?.message)
+        return { error: `Invalid Identity Data: ${e?.message}` }
     }
-
-    // Parse Completed Bars
-    let completedBars: z.infer<typeof CompletedBarSchema>[]
-    try {
-        completedBars = z.array(CompletedBarSchema).parse(JSON.parse(result.data.completedBars))
-    } catch (e) {
-        return { error: 'Invalid Bar Data' }
-    }
-
-    // Extract Nation & Playbook from Bars
-    const nationBar = completedBars.find(b => b.id === 'bar_nation')
-    const playbookBar = completedBars.find(b => b.id === 'bar_playbook')
-
-    if (!nationBar || !playbookBar) {
-        return { error: 'Nation and Playbook are required.' }
-    }
-
-    const nationId = nationBar.inputs.nationId
-    const playbookId = playbookBar.inputs.playbookId
 
     try {
         const invite = await db.invite.findUnique({ where: { token } })
@@ -92,28 +72,16 @@ export async function createCharacter(prevState: any, formData: FormData) {
                 },
             })
 
-            // 3. Create Starter Pack (generic JSON)
+            // 3. Initialize empty Starter Pack
             await tx.starterPack.create({
                 data: {
                     playerId: newPlayer.id,
-                    data: JSON.stringify({ completedBars }),
-                    initialVibeulons: vibeulons,
+                    data: JSON.stringify({ completedBars: [] }),
+                    initialVibeulons: 0,
                 }
             })
 
-            // 4. Grant Vibulons
-            if (vibeulons > 0) {
-                await tx.vibulonEvent.create({
-                    data: {
-                        playerId: newPlayer.id,
-                        source: 'starter_pack',
-                        amount: vibeulons,
-                        notes: 'Conclave Creation Bonus'
-                    }
-                })
-            }
-
-            // 5. Assign Role if preassigned
+            // 4. Assign Role if preassigned
             if (invite.preassignedRoleKey) {
                 const role = await tx.role.findUnique({ where: { key: invite.preassignedRoleKey } })
                 if (role) {
@@ -132,9 +100,10 @@ export async function createCharacter(prevState: any, formData: FormData) {
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 
-    } catch (e) {
-        console.error(e)
-        return { error: 'Failed to create character.' }
+    } catch (e: any) {
+        console.error("Character creation failed:", e?.message || e)
+        console.error("Stack:", e?.stack)
+        return { error: `Failed to create character: ${e?.message || 'Unknown error'}` }
     }
 
     redirect('/')

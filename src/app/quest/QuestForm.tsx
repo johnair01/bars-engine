@@ -4,7 +4,7 @@ import { submitQuestReturn } from '@/actions/quest'
 import { useActionState } from 'react'
 
 export function QuestForm({ questId }: { questId: string }) {
-    const [state, action, isPending] = useActionState(submitQuestReturn, null)
+    const [state, action, isPending] = useActionState<{ success?: boolean; error?: string } | null, FormData>(submitQuestReturn, null)
 
     return (
         <form action={action} className="space-y-8 w-full">
