@@ -48,6 +48,18 @@ model Player {
   invite          Invite    @relation("InviteUsed", fields: [inviteId], references: [id])
   
   roles           PlayerRole[]
+  
+  // Character Creation 2.0
+  nationId        String?
+  nation          Nation?   @relation(fields: [nationId], references: [id])
+  
+  playbookId      String?
+  playbook        Playbook? @relation(fields: [playbookId], references: [id])
+  
+  pronouns        String?
+  attendance      String?   // "in_person", "online"
+  starterPack     StarterPack?
+
   bars            PlayerBar[]
   quests          PlayerQuest[]
   vibulonEvents   VibulonEvent[]
@@ -182,8 +194,48 @@ model VibulonEvent {
 }
 
 // --------------------------------------------------------
-// ADMIN & AUDIT
+// CHARACTER CREATION 2.0 (STORY ENGINE)
 // --------------------------------------------------------
+
+model Nation {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  imgUrl      String?
+  
+  players     Player[]
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("nations")
+}
+
+model Playbook {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  moves       String   // JSON string of moves
+  
+  players     Player[]
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("playbooks")
+}
+
+model StarterPack {
+  id              String    @id @default(cuid())
+  
+  playerId        String    @unique
+  player          Player    @relation(fields: [playerId], references: [id])
+  
+  data            String    // JSON: { completedBars: [{ id, inputs }] }
+  initialVibeulons Int      @default(0)
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("starter_packs")
+}
 
 model AuditLog {
   id              String    @id @default(cuid())

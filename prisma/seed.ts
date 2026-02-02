@@ -23,8 +23,7 @@ async function main() {
         })
     }
 
-    // 2. Create 64 Bars
-    // For MVP, just creating placeholder names
+    // 2. Create 64 Bars (Placeholder)
     for (let i = 1; i <= 64; i++) {
         await prisma.bar.upsert({
             where: { id: i },
@@ -49,11 +48,47 @@ async function main() {
         },
     })
 
-    // 4. Create Demo Invite Tokens for Testing
+    // 4. Create Nations (Canonical Spec)
+    const nations = [
+        { name: 'Argyra', description: 'The Silver City. Logic, reflection, and mirrors.', imgUrl: '/nations/argyra.png' },
+        { name: 'Pyrakanth', description: 'The Burning Garden. Passion, consumption, and growth.', imgUrl: '/nations/pyrakanth.png' },
+        { name: 'Virelune', description: 'The Green Moon. Mystery, tides, and secrets.', imgUrl: '/nations/virelune.png' },
+        { name: 'Meridia', description: 'The Golden Noon. Clarity, trade, and exchange.', imgUrl: '/nations/meridia.png' },
+        { name: 'Lamenth', description: 'The Weeping Stone. Memory, history, and foundations.', imgUrl: '/nations/lamenth.png' },
+    ]
+
+    for (const n of nations) {
+        await prisma.nation.upsert({
+            where: { name: n.name },
+            update: {},
+            create: n,
+        })
+    }
+
+    // 5. Create Playbooks (Trigram Canonical)
+    const playbooks = [
+        { name: 'Heaven (Qian)', description: 'Initiating, strong, persistent.', moves: JSON.stringify(['Force Output', 'Overclock', 'Command']) },
+        { name: 'Earth (Kun)', description: 'Yielding, devoted, grounding.', moves: JSON.stringify(['Absorb Impact', 'Nurture', 'Stabilize']) },
+        { name: 'Thunder (Zhen)', description: 'Shocking, mobilizing, awakening.', moves: JSON.stringify(['Thunderclap', 'Disrupt', 'Awaken']) },
+        { name: 'Water (Kan)', description: 'Dangerous, profound, adaptable.', moves: JSON.stringify(['Flow State', 'Infiltrate', 'Deep Dive']) },
+        { name: 'Mountain (Gen)', description: 'Still, resting, stopping.', moves: JSON.stringify(['Blockade', 'Meditate', 'Immovable']) },
+        { name: 'Wind (Xun)', description: 'Penetrating, gentle, traveling.', moves: JSON.stringify(['Whisper', 'Spread', 'Permeate']) },
+        { name: 'Fire (Li)', description: 'Radiant, clinging, clarifying.', moves: JSON.stringify(['Spotlight', 'Analyze', 'Ignite']) },
+        { name: 'Lake (Dui)', description: 'Joyous, exchanging, open.', moves: JSON.stringify(['Charisma', 'Mirror', 'Celebrate']) },
+    ]
+
+    for (const p of playbooks) {
+        await prisma.playbook.upsert({
+            where: { name: p.name },
+            update: {},
+            create: p,
+        })
+    }
+
+    // 6. Create Demo Invite Tokens
     const demoTokens = [
-        { token: 'DEMO_TOKEN_1', preassignedRoleKey: null },
-        { token: 'DEMO_TOKEN_2', preassignedRoleKey: 'ROOKIE' },
-        { token: 'DEMO_TOKEN_3', preassignedRoleKey: 'ACE' },
+        { token: 'WENDELL', preassignedRoleKey: 'ACE' },
+        { token: 'PLAYER_TWO', preassignedRoleKey: 'ROOKIE' },
     ]
     for (const dt of demoTokens) {
         await prisma.invite.upsert({
@@ -66,18 +101,6 @@ async function main() {
             },
         })
     }
-
-    // 5. Create Initial Quest (using upsert for idempotency)
-    await prisma.quest.upsert({
-        where: { id: 'quest_arrival' },
-        update: {},
-        create: {
-            id: 'quest_arrival',
-            title: 'The Arrival',
-            prompt: 'Look around you. Find a small object that represents where you came from. What is it?',
-            returnType: 'text'
-        }
-    })
 
     console.log('Seeding complete.')
 }

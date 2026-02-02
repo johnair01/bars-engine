@@ -1,10 +1,13 @@
 import { db } from '@/lib/db'
 import { InviteForm } from './InviteForm'
+import { redirect } from 'next/navigation'
 
-export default async function InvitePage({ params }: { params: { token: string } }) {
+export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
     // 1. Verify Token
+    const { token } = await params
+
     const invite = await db.invite.findUnique({
-        where: { token: params.token },
+        where: { token },
     })
 
     if (!invite || invite.status !== 'active') {
@@ -18,28 +21,6 @@ export default async function InvitePage({ params }: { params: { token: string }
         )
     }
 
-    return (
-        <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-black text-zinc-100 font-sans selection:bg-purple-500/30">
-            <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {/* Header */}
-                <div className="text-center space-y-2">
-                    <div className="inline-block border rounded-full px-3 py-1 text-xs text-zinc-500 border-zinc-800 mb-4">
-                        SECURE CHANNEL: {invite.token}
-                    </div>
-                    <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
-                        Initialize Connection
-                    </h1>
-                    <p className="text-zinc-500">
-                        You have been invited to interface with the Bars Engine.
-                    </p>
-                </div>
-
-                <InviteForm token={invite.token} />
-
-                <p className="text-center text-xs text-zinc-700">
-                    By accepting, you agree to the chaotic neutrality of the system.
-                </p>
-            </div>
-        </div>
-    )
+    // Redirect to Conclave Wizard
+    redirect(`/conclave?token=${token}`)
 }
