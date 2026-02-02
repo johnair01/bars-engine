@@ -5,61 +5,66 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-const StarterPackSchema = z.object({
-    blessedObject: z.string().optional(),
-    attunement: z.string().optional(),
-    intention: z.string().optional(),
-    cursedItem: z.string().optional(),
-    commissionTitle: z.string().optional(),
-    commissionDesc: z.string().optional(),
-    signups: z.array(z.string()).default([]),
+const IdentitySchema = z.object({
+    name: z.string().min(2),
+    pronouns: z.string().optional(),
+    contact: z.string().min(3),
+})
+
+const CompletedBarSchema = z.object({
+    id: z.string(),
+    inputs: z.record(z.any()),
 })
 
 const CreateCharacterSchema = z.object({
     token: z.string(),
-    nationId: z.string(),
-    playbookId: z.string(),
-    name: z.string().min(2),
-    pronouns: z.string().optional(),
-    attendance: z.string().optional(),
-    starterPack: z.string(), // JSON string to parse
-    initialVibeulons: z.coerce.number(),
+    identity: z.string(), // JSON
+    completedBars: z.string(), // JSON
+    vibeulons: z.coerce.number(),
 })
 
 export async function createCharacter(prevState: any, formData: FormData) {
     const rawData = {
         token: formData.get('token'),
-        nationId: formData.get('nationId'),
-        playbookId: formData.get('playbookId'),
-        name: formData.get('name'),
-        pronouns: formData.get('pronouns'),
-        attendance: formData.get('attendance'),
-        starterPack: formData.get('starterPack'),
-        initialVibeulons: formData.get('initialVibeulons'),
+        identity: formData.get('identity'),
+        completedBars: formData.get('completedBars'),
+        vibeulons: formData.get('vibeulons'),
     }
 
     const result = CreateCharacterSchema.safeParse(rawData)
-
     if (!result.success) {
         console.error("Validation Error", result.error)
         return { error: 'Invalid Data' }
     }
 
-    const { token, nationId, playbookId, name, pronouns, attendance, starterPack, initialVibeulons } = result.data
+    const { token, vibeulons } = result.data
 
-    let parsedStarter = {}
+    // Parse Identity
+    let identity
     try {
-        parsedStarter = JSON.parse(starterPack)
+        identity = IdentitySchema.parse(JSON.parse(result.data.identity))
     } catch (e) {
-        console.error("JSON Parse Error", e)
-        return { error: 'Invalid Starter Pack Data' }
+        return { error: 'Invalid Identity Data' }
     }
 
-    const starterResult = StarterPackSchema.safeParse(parsedStarter)
-    if (!starterResult.success) {
-        return { error: 'Invalid Starter Pack content' }
+    // Parse Completed Bars
+    let completedBars: z.infer<typeof CompletedBarSchema>[]
+    try {
+        completedBars = z.array(CompletedBarSchema).parse(JSON.parse(result.data.completedBars))
+    } catch (e) {
+        return { error: 'Invalid Bar Data' }
     }
-    const starterData = starterResult.data
+
+    // Extract Nation & Playbook from Bars
+    const nationBar = completedBars.find(b => b.id === 'bar_nation')
+    const playbookBar = completedBars.find(b => b.id === 'bar_playbook')
+
+    if (!nationBar || !playbookBar) {
+        return { error: 'Nation and Playbook are required.' }
+    }
+
+    const nationId = nationBar.inputs.nationId
+    const playbookId = playbookBar.inputs.playbookId
 
     try {
         const invite = await db.invite.findUnique({ where: { token } })
@@ -77,39 +82,32 @@ export async function createCharacter(prevState: any, formData: FormData) {
             // 2. Create Player
             const newPlayer = await tx.player.create({
                 data: {
-                    name,
-                    pronouns,
-                    attendance,
-                    contactType: 'conclave',
-                    contactValue: token, // Using token as unique contact for now
+                    name: identity.name,
+                    pronouns: identity.pronouns,
+                    contactType: identity.contact.includes('@') ? 'email' : 'phone',
+                    contactValue: identity.contact,
                     inviteId: invite.id,
                     nationId,
                     playbookId,
                 },
             })
 
-            // 3. Create Starter Pack
+            // 3. Create Starter Pack (generic JSON)
             await tx.starterPack.create({
                 data: {
                     playerId: newPlayer.id,
-                    blessedObject: starterData.blessedObject || null,
-                    attunement: starterData.attunement || null,
-                    intention: starterData.intention || null,
-                    cursedItem: starterData.cursedItem || null,
-                    commissionTitle: starterData.commissionTitle || null,
-                    commissionDesc: starterData.commissionDesc || null,
-                    signups: JSON.stringify(starterData.signups),
-                    initialVibeulons: initialVibeulons,
+                    data: JSON.stringify({ completedBars }),
+                    initialVibeulons: vibeulons,
                 }
             })
 
             // 4. Grant Vibulons
-            if (initialVibeulons > 0) {
+            if (vibeulons > 0) {
                 await tx.vibulonEvent.create({
                     data: {
                         playerId: newPlayer.id,
                         source: 'starter_pack',
-                        amount: initialVibeulons,
+                        amount: vibeulons,
                         notes: 'Conclave Creation Bonus'
                     }
                 })
@@ -127,9 +125,6 @@ export async function createCharacter(prevState: any, formData: FormData) {
                     })
                 }
             }
-
-            // 6. If Commissioned Quest Exists -> Create Public Quest (Optional, skipping logic for now to keep MVP simple, 
-            // but we store the commission in StarterPack for Admin review)
 
             return newPlayer
         })
