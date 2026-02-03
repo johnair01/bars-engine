@@ -48,7 +48,10 @@ export default async function WalletPage() {
                     <span>💸 Transfer Vibulons</span>
                 </h2>
 
-                <form action={transferVibulons} className="space-y-4">
+                <form action={async (formData) => {
+                    'use server'
+                    await transferVibulons(formData)
+                }} className="space-y-4">
                     <input type="hidden" name="senderId" value={playerId} />
 
                     <div className="grid grid-cols-2 gap-4">

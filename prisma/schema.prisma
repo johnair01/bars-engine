@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -113,6 +113,7 @@ model PlayerRole {
   grantedAt       DateTime  @default(now())
   expiresAt       DateTime?
   
+  @@unique([playerId, roleId])
   @@map("player_roles")
 }
 

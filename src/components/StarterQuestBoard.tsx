@@ -329,7 +329,7 @@ export function StarterQuestBoard({
         setLocalActive(localActive.filter(id => id !== barId))
 
         const result = await delegateBar(formData)
-        if (result?.error) {
+        if (result && 'error' in result) {
             alert("Delegation failed: " + result.error)
             // Rollback (simple refresh)
             startTransition(() => { router.refresh() })

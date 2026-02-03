@@ -32,7 +32,7 @@ async function main() {
         adminRole = await db.role.create({
             data: {
                 key: 'admin',
-                name: 'Administrator',
+                displayName: 'Administrator',
                 description: 'Full access to admin panel'
             }
         })

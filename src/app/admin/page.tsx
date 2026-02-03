@@ -27,6 +27,25 @@ export default async function AdminPage() {
         take: 10
     })
 
+    // Fetch Stats
+    const [
+        playerCount,
+        activeQuestsCount,
+        completedQuestsCount,
+        vibulonCount,
+        recentPlayers
+    ] = await Promise.all([
+        db.player.count(),
+        db.playerQuest.count({ where: { status: 'assigned' } }),
+        db.playerQuest.count({ where: { status: 'completed' } }),
+        db.vibulon.count(),
+        db.player.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            include: { nation: true, playbook: true }
+        })
+    ])
+
     // Simple action to call advance
     async function handleAdvance() {
         'use server'
@@ -35,11 +54,31 @@ export default async function AdminPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-8 max-w-4xl mx-auto space-y-12">
+        <div className="min-h-screen bg-black text-zinc-200 font-sans p-8 max-w-5xl mx-auto space-y-12">
             <header>
                 <h1 className="text-3xl font-bold text-white mb-2">Conclave Admin</h1>
-                <div className="text-zinc-500">Story Clock Control</div>
+                <div className="text-zinc-500">System Overview</div>
             </header>
+
+            {/* KEY METRICS */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+                    <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Population</div>
+                    <div className="text-3xl font-mono text-white">{playerCount}</div>
+                </div>
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+                    <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Economy</div>
+                    <div className="text-3xl font-mono text-green-400">{vibulonCount} <span className="text-sm text-zinc-600">♦</span></div>
+                </div>
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+                    <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Active Quests</div>
+                    <div className="text-3xl font-mono text-yellow-500">{activeQuestsCount}</div>
+                </div>
+                <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+                    <div className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Completed</div>
+                    <div className="text-3xl font-mono text-zinc-400">{completedQuestsCount}</div>
+                </div>
+            </div>
 
             <div className="grid md:grid-cols-2 gap-8">
                 {/* CLOCK CONTROL */}
@@ -81,6 +120,26 @@ export default async function AdminPage() {
                     </div>
                 </section>
             </div>
+
+            {/* RECENT PLAYERS */}
+            <section className="space-y-4">
+                <h3 className="text-xs uppercase tracking-widest text-zinc-500 font-bold border-b border-zinc-800 pb-2">Recent Signups</h3>
+                <div className="grid gap-2">
+                    {recentPlayers.map(p => (
+                        <div key={p.id} className="flex items-center justify-between bg-zinc-900/30 p-3 rounded hover:bg-zinc-900 transition">
+                            <div>
+                                <div className="font-bold text-white">{p.name}</div>
+                                <div className="text-xs text-zinc-500 font-mono">{p.contactValue}</div>
+                            </div>
+                            <div className="text-right text-xs">
+                                <div className="text-zinc-400">{p.nation?.name || 'No Nation'} / {p.playbook?.name || 'No Playbook'}</div>
+                                <div className="text-zinc-600">{p.createdAt.toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                    ))}
+                    {recentPlayers.length === 0 && <div className="text-zinc-600 italic">No players yet.</div>}
+                </div>
+            </section>
         </div>
     )
 }

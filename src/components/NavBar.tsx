@@ -4,12 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/actions/logout'
 
-export function NavBar() {
+export function NavBar({ isAdmin }: { isAdmin: boolean }) {
     const pathname = usePathname()
-
-    // Don't show on invite pages to keep them focused? 
-    // Actually, "Disconnect" is useful even there if stuck.
-    // Let's keep it simple and pervasive.
 
     const isActive = (path: string) => pathname === path ? 'text-white bg-zinc-800' : 'text-zinc-500 hover:text-zinc-300'
 
@@ -19,9 +15,11 @@ export function NavBar() {
                 <Link href="/" className={`px-4 py-3 rounded transition-colors ${isActive('/')}`}>
                     TERMINAL
                 </Link>
-                <Link href="/admin" className={`px-4 py-3 rounded transition-colors ${isActive('/admin')}`}>
-                    CONTROL
-                </Link>
+                {isAdmin && (
+                    <Link href="/admin" className={`px-4 py-3 rounded transition-colors ${isActive('/admin')}`}>
+                        CONTROL
+                    </Link>
+                )}
             </div>
 
             <form action={logout}>

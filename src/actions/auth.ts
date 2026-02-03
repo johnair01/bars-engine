@@ -33,7 +33,7 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
         }
 
         // Check Max Uses
-        if (invite.status !== 'revoked' && invite.uses >= invite.maxUses) {
+        if (invite.uses >= invite.maxUses) {
             return { error: 'This invite has reached its maximum usage.' }
         }
 
