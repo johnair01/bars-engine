@@ -360,3 +360,37 @@ model StoryTick {
   
   @@map("story_ticks")
 }
+
+// --------------------------------------------------------
+// ADMIN: APP CONFIGURATION & AUDIT
+// --------------------------------------------------------
+
+model AppConfig {
+  id          String   @id @default("singleton")
+  
+  // Feature Flags (JSON object: { "iching": true, "wallet": true, ... })
+  features    Json     @default("{}")
+  
+  // UI Configuration
+  theme       Json     @default("{}")  // { "primaryColor": "#...", "mode": "dark" }
+  heroTitle   String?  // Landing page title override
+  heroSubtitle String? // Landing page subtitle override
+  
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?  // Admin ID who made last change
+  
+  @@map("app_config")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  
+  adminId     String   // Who performed the action
+  action      String   // "config_update", "feature_toggle", "data_edit"
+  target      String?  // What was affected (e.g., "features.wallet")
+  payload     Json     // The change payload
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("admin_audit_log")
+}

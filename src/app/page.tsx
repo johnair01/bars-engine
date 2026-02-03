@@ -5,20 +5,26 @@ import { CreateBarForm } from '@/components/CreateBarForm'
 import { DashboardCaster } from '@/components/DashboardCaster'
 import { ensureWallet } from '@/actions/economy'
 import { getGlobalState } from '@/actions/world'
+import { getAppConfig } from '@/actions/config'
 import Link from 'next/link'
 
 export default async function Home() {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
+  // Get app config for dynamic content
+  const appConfig = await getAppConfig()
+  const heroTitle = appConfig.heroTitle || 'BARS ENGINE'
+  const heroSubtitle = appConfig.heroSubtitle || 'A quest system for the vibrational convergence'
+
   if (!playerId) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
         <div className="text-center space-y-4">
           <h1 className="text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
-            BARS ENGINE
+            {heroTitle}
           </h1>
-          <p className="text-zinc-400 text-lg">A quest system for the vibrational convergence</p>
+          <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-xs">

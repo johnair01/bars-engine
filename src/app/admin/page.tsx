@@ -3,6 +3,7 @@ import { getGlobalState, advanceClock } from '@/actions/world'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 export default async function AdminPage() {
     const cookieStore = await cookies()
@@ -55,9 +56,14 @@ export default async function AdminPage() {
 
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-8 max-w-5xl mx-auto space-y-12">
-            <header>
-                <h1 className="text-3xl font-bold text-white mb-2">Conclave Admin</h1>
-                <div className="text-zinc-500">System Overview</div>
+            <header className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Conclave Admin</h1>
+                    <div className="text-zinc-500">System Overview</div>
+                </div>
+                <Link href="/admin/config" className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded text-white font-medium">
+                    ⚙️ App Config
+                </Link>
             </header>
 
             {/* KEY METRICS */}
