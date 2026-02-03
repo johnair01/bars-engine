@@ -23,6 +23,23 @@ export async function pickUpBar(formData: FormData) {
             where: { id: barId }
         })
         if (customBar && customBar.status === 'active') {
+            // Check if already claimed by someone else
+            if (customBar.claimedById && customBar.claimedById !== playerId) {
+                return { error: 'This quest has already been claimed by another player.' }
+            }
+            // Private bars can only be received via delegation, not picked up
+            if (customBar.visibility === 'private' && customBar.creatorId !== playerId && !customBar.claimedById) {
+                return { error: 'Private quests cannot be picked up directly.' }
+            }
+
+            // Claim the bar if not already claimed
+            if (!customBar.claimedById) {
+                await db.customBar.update({
+                    where: { id: barId },
+                    data: { claimedById: playerId }
+                })
+            }
+
             // Adapt to BarDef interface (partial)
             barDef = {
                 id: customBar.id,

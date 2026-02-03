@@ -32,11 +32,24 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
             return { error: 'Invalid or expired invite.' }
         }
 
+        // Check Max Uses
+        if (invite.status !== 'revoked' && invite.uses >= invite.maxUses) {
+            return { error: 'This invite has reached its maximum usage.' }
+        }
+
         const player = await db.$transaction(async (tx) => {
-            // 1. Mark invite used
+            // 1. Increment Uses
+            const newUses = invite.uses + 1
+            const shouldClose = newUses >= invite.maxUses
+
             await tx.invite.update({
                 where: { id: invite.id },
-                data: { status: 'used', usedAt: new Date() },
+                data: {
+                    uses: newUses,
+                    status: shouldClose ? 'used' : 'active',
+                    usedAt: shouldClose ? new Date() : null // Only set usedAt when fully used? Or track last usage? 
+                    // Let's keep usedAt for final closure, or just rely on 'uses'.
+                },
             })
 
             // 2. Create Player

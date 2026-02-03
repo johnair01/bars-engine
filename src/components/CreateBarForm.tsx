@@ -10,7 +10,8 @@ export function CreateBarForm() {
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [players, setPlayers] = useState<Player[]>([])
-    const [targetType, setTargetType] = useState<'collective' | 'player'>('collective')
+    const [visibility, setVisibility] = useState<'public' | 'private'>('public')
+    const [moveType, setMoveType] = useState<'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | null>(null)
     const [state, formAction, isPending] = useActionState(createCustomBar, null)
 
     useEffect(() => {
@@ -53,7 +54,7 @@ export function CreateBarForm() {
                         type="text"
                         placeholder="e.g. Share a Secret"
                         required
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
                 </div>
 
@@ -64,7 +65,7 @@ export function CreateBarForm() {
                         placeholder="What should the player do?"
                         required
                         rows={2}
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white"
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
                 </div>
 
@@ -73,7 +74,7 @@ export function CreateBarForm() {
                         <label className="text-xs uppercase text-zinc-500">Response Type</label>
                         <select
                             name="inputType"
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                         >
                             <option value="text">Short Text</option>
                             <option value="textarea">Long Text</option>
@@ -86,45 +87,76 @@ export function CreateBarForm() {
                             name="inputLabel"
                             type="text"
                             defaultValue="Response"
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                         />
                     </div>
                 </div>
 
-                {/* Target Selection */}
+                {/* Visibility Selection */}
                 <div className="space-y-3 pt-4 border-t border-zinc-800">
-                    <label className="text-xs uppercase text-zinc-500">Who receives this Bar?</label>
+                    <label className="text-xs uppercase text-zinc-500">Quest Visibility</label>
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={() => setTargetType('collective')}
-                            className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${targetType === 'collective'
-                                    ? 'bg-green-900/30 border-green-600 text-green-400'
-                                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                            onClick={() => setVisibility('public')}
+                            className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'public'
+                                ? 'bg-green-900/30 border-green-600 text-green-400'
+                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
                                 }`}
                         >
-                            🌍 Everyone (Collective)
+                            🌍 Public
                         </button>
                         <button
                             type="button"
-                            onClick={() => setTargetType('player')}
-                            className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition ${targetType === 'player'
-                                    ? 'bg-purple-900/30 border-purple-600 text-purple-400'
-                                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                            onClick={() => setVisibility('private')}
+                            className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'private'
+                                ? 'bg-purple-900/30 border-purple-600 text-purple-400'
+                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
                                 }`}
                         >
-                            👤 Specific Player
+                            🔒 Private
                         </button>
                     </div>
-                    <input type="hidden" name="targetType" value={targetType} />
+                    <p className="text-xs text-zinc-600">
+                        {visibility === 'public'
+                            ? 'Anyone can pick up and complete this quest.'
+                            : 'Only you can see this. Share it with a specific player.'}
+                    </p>
+                    <input type="hidden" name="visibility" value={visibility} />
+                </div>
 
-                    {targetType === 'player' && (
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase text-zinc-500">Select Player</label>
+                {/* Move Type Selection */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500">Quest Type (Optional)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { key: 'wakeUp', label: '👁 Wake Up', desc: 'Awareness' },
+                            { key: 'cleanUp', label: '🧹 Clean Up', desc: 'Shadow Work' },
+                            { key: 'growUp', label: '🌱 Grow Up', desc: 'Development' },
+                            { key: 'showUp', label: '🎯 Show Up', desc: 'Action' },
+                        ].map((mt) => (
+                            <button
+                                key={mt.key}
+                                type="button"
+                                onClick={() => setMoveType(moveType === mt.key ? null : mt.key as any)}
+                                className={`py-2 px-3 rounded-lg border text-sm transition ${moveType === mt.key
+                                    ? 'bg-amber-900/30 border-amber-600 text-amber-400'
+                                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                    }`}
+                            >
+                                <span className="font-medium">{mt.label}</span>
+                                <span className="block text-xs text-zinc-500">{mt.desc}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <input type="hidden" name="moveType" value={moveType || ''} />
+                    {visibility === 'private' && (
+                        <div className="space-y-2 mt-3">
+                            <label className="text-xs uppercase text-zinc-500">Send To Player</label>
                             <select
                                 name="targetPlayerId"
-                                required={targetType === 'player'}
-                                className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white"
+                                required={visibility === 'private'}
+                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                             >
                                 <option value="">Choose a player...</option>
                                 {players.map(p => (
@@ -146,14 +178,14 @@ export function CreateBarForm() {
                     <button
                         type="button"
                         onClick={() => setIsOpen(false)}
-                        className="px-4 py-2 text-zinc-400 hover:text-white"
+                        className="px-6 py-3 text-zinc-400 hover:text-white min-h-[44px]"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isPending}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold disabled:opacity-50"
+                        className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold disabled:opacity-50 min-h-[44px]"
                     >
                         {isPending ? 'Creating...' : 'Create Bar'}
                     </button>

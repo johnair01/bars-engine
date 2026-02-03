@@ -16,8 +16,9 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     const description = formData.get('description') as string
     const inputType = formData.get('inputType') as string || 'text'
     const inputLabel = formData.get('inputLabel') as string || 'Response'
-    const targetType = formData.get('targetType') as string || 'collective' // 'collective' or 'player'
+    const visibility = formData.get('visibility') as string || 'public' // 'public' or 'private'
     const targetPlayerId = formData.get('targetPlayerId') as string || null
+    const moveType = formData.get('moveType') as string || null // wakeUp, cleanUp, growUp, showUp
 
     if (!title || !description) {
         return { error: 'Title and description are required' }
@@ -29,6 +30,11 @@ export async function createCustomBar(prevState: any, formData: FormData) {
             { key: 'response', label: inputLabel, type: inputType, placeholder: '' }
         ])
 
+        // Private bars with a target go directly to recipient's claimed hand
+        const claimedById = visibility === 'private' && targetPlayerId
+            ? targetPlayerId
+            : null
+
         await db.customBar.create({
             data: {
                 creatorId: playerId,
@@ -37,10 +43,10 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                 type: 'vibe',
                 reward: 1,
                 inputs,
-                // Store target info in the model - we'll handle distribution logic later
-                storyPath: targetType === 'player' && targetPlayerId
-                    ? `player:${targetPlayerId}`
-                    : 'collective',
+                visibility,
+                claimedById,
+                moveType: moveType || null,
+                storyPath: 'collective', // Simplified; we now use visibility for access control
             }
         })
 

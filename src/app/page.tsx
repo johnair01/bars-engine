@@ -92,11 +92,21 @@ export default async function Home() {
     }
     : { completedBars: [], activeBars: [] }
 
-  // Fetch user-created bars (collective ones available to everyone)
+  // Fetch user-created bars:
+  // - Public bars that are unclaimed (available to everyone)
+  // - Bars claimed by current player (their active quests)
+  // - Private bars created by current player (their drafts)
   const customBars = await db.customBar.findMany({
     where: {
       status: 'active',
-      storyPath: 'collective'  // Only collective bars for now
+      OR: [
+        // Public + unclaimed = Available to all
+        { visibility: 'public', claimedById: null },
+        // Claimed by me = My active quests
+        { claimedById: playerId },
+        // My drafts (private, unclaimed)
+        { visibility: 'private', creatorId: playerId, claimedById: null },
+      ]
     },
     orderBy: { createdAt: 'desc' }
   })
@@ -225,29 +235,74 @@ export default async function Home() {
 
         <div className="space-y-10">
           {/* 4. CHARACTER MOVES */}
-          {player.playbook && (
+          {(player.playbook || player.nation) && (
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px bg-zinc-800 flex-1"></div>
-                <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-bold">Moves</h2>
+                <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-bold">Your Moves</h2>
                 <div className="h-px bg-zinc-800 flex-1"></div>
               </div>
-              <div className="space-y-3">
-                {JSON.parse(player.playbook.moves).map((move: { name: string; type: string; desc: string }, i: number) => (
-                  <div key={i} className="bg-zinc-900/30 border border-zinc-800 p-4 rounded-lg">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-zinc-200 text-sm">{move.name}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${move.type === 'at_will' ? 'bg-green-900/20 text-green-400' :
-                        move.type === 'per_hour' ? 'bg-yellow-900/20 text-yellow-400' :
-                          'bg-red-900/20 text-red-400'
-                        }`}>
-                        {move.type === 'at_will' ? '∞' : move.type === 'per_hour' ? '1/HR' : '1x'}
-                      </span>
-                    </div>
-                    <div className="text-xs text-zinc-500 leading-snug">{move.desc}</div>
+
+              {/* Basic Moves Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* Wake Up */}
+                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>👁</span>
+                    <span className="text-xs uppercase text-zinc-500 font-bold">Wake Up</span>
                   </div>
-                ))}
+                  <div className="text-xs text-zinc-400">
+                    {player.playbook?.wakeUp?.split(':')[0] || player.nation?.wakeUp?.split(':')[0] || 'Not set'}
+                  </div>
+                </div>
+
+                {/* Clean Up */}
+                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>🧹</span>
+                    <span className="text-xs uppercase text-zinc-500 font-bold">Clean Up</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">
+                    {player.playbook?.cleanUp?.split(':')[0] || player.nation?.cleanUp?.split(':')[0] || 'Not set'}
+                  </div>
+                </div>
+
+                {/* Grow Up */}
+                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>🌱</span>
+                    <span className="text-xs uppercase text-zinc-500 font-bold">Grow Up</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">
+                    {player.playbook?.growUp?.split(':')[0] || player.nation?.growUp?.split(':')[0] || 'Not set'}
+                  </div>
+                </div>
+
+                {/* Show Up */}
+                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>🎯</span>
+                    <span className="text-xs uppercase text-zinc-500 font-bold">Show Up</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">
+                    {player.playbook?.showUp?.split(':')[0] || player.nation?.showUp?.split(':')[0] || 'Not set'}
+                  </div>
+                </div>
               </div>
+
+              {/* Special Moves */}
+              {player.playbook && (
+                <div className="bg-zinc-900/20 border border-zinc-800 p-3 rounded-lg">
+                  <div className="text-xs uppercase text-zinc-500 font-bold mb-2">Special Moves ({player.playbook.name.split(' ')[0]})</div>
+                  <div className="flex flex-wrap gap-2">
+                    {JSON.parse(player.playbook.moves).map((move: string, i: number) => (
+                      <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-800 rounded text-xs text-blue-300">
+                        {move}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
