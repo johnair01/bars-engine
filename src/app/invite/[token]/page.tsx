@@ -21,6 +21,17 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         )
     }
 
-    // Redirect to Conclave Wizard
+    // If it has a theme, render the themed InviteForm
+    if (invite.theme && invite.theme !== 'standard') {
+        return (
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+                <main className="w-full max-w-lg">
+                    <InviteForm token={token} theme={invite.theme} />
+                </main>
+            </div>
+        )
+    }
+
+    // Default behavior: Redirect to Conclave Wizard
     redirect(`/conclave?token=${token}`)
 }

@@ -228,6 +228,22 @@ async function main() {
         },
     })
 
+    // 7b. Create SHOW_CAP Invite (Operation: Show Cap Alpha Seeding)
+    // Theme: 'oceans11' (Fiasco / Coen Brothers / Professional Heist)
+    await prisma.invite.upsert({
+        where: { token: 'SHOW_CAP' },
+        update: {
+            theme: 'oceans11', // Update theme if it exists
+        },
+        create: {
+            token: 'SHOW_CAP',
+            status: 'active',
+            maxUses: 100,
+            uses: 0,
+            theme: 'oceans11',
+        },
+    })
+
     // 8. Create Test Players with known IDs
     const testPlayers = [
         { id: 'test-alice', name: 'Alice (Test)', contactType: 'email', contactValue: 'alice@test.local' },

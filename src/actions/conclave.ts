@@ -106,5 +106,5 @@ export async function createCharacter(prevState: any, formData: FormData) {
         return { error: `Failed to create character: ${e?.message || 'Unknown error'}` }
     }
 
-    redirect('/')
+    return { success: true }
 }

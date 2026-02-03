@@ -32,6 +32,9 @@ model Invite {
   
   players           Player[]  @relation("InviteUsed")
   
+  // Theme for specific landing page experiences (e.g. 'standard', 'oceans11')
+  theme             String    @default("standard")
+  
   createdAt         DateTime  @default(now())
   usedAt            DateTime?
   

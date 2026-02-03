@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation'
 
 type Player = { id: string; name: string }
 
-export function CreateBarForm() {
+export function CreateBarForm({ setup }: { setup?: boolean }) {
     const router = useRouter()
-    const [isOpen, setIsOpen] = useState(false)
+    const [isOpen, setIsOpen] = useState(setup || false)
     const [players, setPlayers] = useState<Player[]>([])
     const [visibility, setVisibility] = useState<'public' | 'private'>('public')
     const [moveType, setMoveType] = useState<'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | null>(null)
@@ -41,9 +41,18 @@ export function CreateBarForm() {
 
     return (
         <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-5 space-y-4">
-            <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-white">Create a New Bar</h3>
-                <button onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white">✕</button>
+            <div className="flex justify-between items-start mb-4">
+                <div className="space-y-1">
+                    <h3 className="font-bold text-white text-lg">
+                        {setup ? 'The Setup' : 'Create a new Bar'}
+                    </h3>
+                    {setup && (
+                        <p className="text-amber-500 font-serif italic max-w-md">
+                            "The stakes are infinite. The cost to you is zero. What is your first high-stakes move?"
+                        </p>
+                    )}
+                </div>
+                {!setup && <button onClick={() => setIsOpen(false)} className="text-zinc-500 hover:text-white">✕</button>}
             </div>
 
             <form action={formAction} className="space-y-4">

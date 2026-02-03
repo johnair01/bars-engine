@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect } from 'react'
 import { createCharacter } from '@/actions/conclave'
+import { useRouter } from 'next/navigation'
 
 type Nation = {
     id: string
@@ -24,14 +25,16 @@ type Playbook = {
     showUp?: string | null
 }
 
-type Step = 'identity' | 'nation' | 'playbook'
+type Step = 'identity' | 'nation' | 'playbook' | 'setup'
 
 export function ConclaveWizard({
     token,
+    theme,
     nations,
     playbooks,
 }: {
     token: string
+    theme?: string
     nations: Nation[]
     playbooks: Playbook[]
 }) {
@@ -43,6 +46,19 @@ export function ConclaveWizard({
     const [expandedPlaybook, setExpandedPlaybook] = useState<string | null>(null)
 
     const [serverState, formAction, isPending] = useActionState(createCharacter, null)
+    const router = useRouter()
+
+    // Redirect or Success Handling
+    useEffect(() => {
+        if (serverState?.success) {
+            if (theme === 'oceans11') {
+                // "Ocean's 11" Theme: Direct to Quest Creation (Setup)
+                router.push('/create-bar?setup=true')
+            } else {
+                router.push('/')
+            }
+        }
+    }, [serverState, theme, router])
 
     const selectedNation = nations.find(n => n.id === nationId)
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
@@ -307,7 +323,7 @@ export function ConclaveWizard({
                         disabled={!playbookId || isPending}
                         className="w-full bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
                     >
-                        {isPending ? 'Creating...' : 'Create Character →'}
+                        {isPending ? 'Creating...' : (theme === 'oceans11' ? 'Start the Job →' : 'Create Character →')}
                     </button>
                 </form>
             </div>

@@ -7,6 +7,7 @@ export default async function ConclavePage({ searchParams }: { searchParams: { t
 
     let inviteToken = token
     let isOpenSignup = false
+    let inviteTheme = 'standard'
 
     // If no token provided, create an auto-invite for open signup
     if (!token) {
@@ -40,6 +41,8 @@ export default async function ConclavePage({ searchParams }: { searchParams: { t
                 </div>
             )
         }
+
+        inviteTheme = (invite as any).theme || 'standard'
     }
 
     // Fetch Data for Wizard
@@ -51,6 +54,7 @@ export default async function ConclavePage({ searchParams }: { searchParams: { t
             <main className="max-w-3xl mx-auto px-6 py-12 pt-24 pb-32">
                 <ConclaveWizard
                     token={inviteToken!}
+                    theme={inviteTheme}
                     nations={nations}
                     playbooks={playbooks}
                 />
