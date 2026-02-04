@@ -44,10 +44,15 @@ model Invite {
 model Player {
   id              String    @id @default(cuid())
   
-  // Auth / Contact
+  // Account Relation
+  accountId       String?
+  account         Account?  @relation(fields: [accountId], references: [id])
+
+  // Identity
   name            String
-  contactType     String    // email, phone
-  contactValue    String
+  contactType     String    // email, phone - TODO: Deprecate in favor of Account.email
+  contactValue    String    // TODO: Deprecate
+  passwordHash    String?   // TODO: Deprecate in favor of Account.passwordHash   // New P0 requirement for Auth Slice 1
   
   // Relations
   inviteId        String    // removed @unique to allow reusable invites
@@ -97,6 +102,19 @@ model Role {
   createdAt       DateTime  @default(now())
   
   @@map("roles")
+}
+
+model Account {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  
+  players         Player[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("accounts")
 }
 
 model PlayerRole {
@@ -167,6 +185,13 @@ model CustomBar {
   
   createdAt       DateTime  @default(now())
   
+  // Recursion for Quest Trees
+  parentId        String?
+  parent          CustomBar? @relation("CustomBarTree", fields: [parentId], references: [id])
+  children        CustomBar[] @relation("CustomBarTree")
+  
+  rootId          String?   // For fast lookups
+  
   @@map("custom_bars")
 }
 
@@ -198,6 +223,13 @@ model Quest {
   returnType      String    // "text", "image", "gps"
   
   assignments     PlayerQuest[]
+  
+  // Recursion
+  parentId        String?
+  parent          Quest?    @relation("QuestTree", fields: [parentId], references: [id])
+  children        Quest[]   @relation("QuestTree")
+  
+  rootId          String?   // For fast lookups of the whole tree
   
   createdAt       DateTime  @default(now())
   

@@ -35,7 +35,7 @@ export async function createCustomBar(prevState: any, formData: FormData) {
             ? targetPlayerId
             : null
 
-        await db.customBar.create({
+        const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title,
@@ -48,6 +48,12 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                 moveType: moveType || null,
                 storyPath: 'collective', // Simplified; we now use visibility for access control
             }
+        })
+
+        // Initialize rootId for new bars (recursion support)
+        await db.customBar.update({
+            where: { id: newBar.id },
+            data: { rootId: newBar.id }
         })
 
         revalidatePath('/')

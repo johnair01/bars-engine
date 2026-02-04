@@ -2,6 +2,7 @@
 
 import { useState, useActionState, useEffect } from 'react'
 import { createCharacter } from '@/actions/conclave'
+import { checkEmail, login } from '@/actions/conclave-auth'
 import { useRouter } from 'next/navigation'
 
 type Nation = {
@@ -25,7 +26,7 @@ type Playbook = {
     showUp?: string | null
 }
 
-type Step = 'identity' | 'nation' | 'playbook' | 'setup'
+type Step = 'email' | 'login' | 'identity' | 'nation' | 'playbook' | 'setup'
 
 export function ConclaveWizard({
     token,
@@ -38,8 +39,16 @@ export function ConclaveWizard({
     nations: Nation[]
     playbooks: Playbook[]
 }) {
-    const [step, setStep] = useState<Step>('identity')
-    const [identity, setIdentity] = useState({ name: '', pronouns: '', contact: '' })
+    const [step, setStep] = useState<Step>('email')
+
+    // Auth State
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+    const [loginError, setLoginError] = useState<string | null>(null)
+
+    // Character State
+    const [identity, setIdentity] = useState({ name: '', pronouns: '' }) // removed contact, using email
     const [nationId, setNationId] = useState<string | null>(null)
     const [playbookId, setPlaybookId] = useState<string | null>(null)
     const [expandedNation, setExpandedNation] = useState<string | null>(null)
@@ -48,35 +57,43 @@ export function ConclaveWizard({
     const [serverState, formAction, isPending] = useActionState(createCharacter, null)
     const router = useRouter()
 
-    // Redirect or Success Handling
+    // Redirect or Success Handling for Creation
     useEffect(() => {
         if (serverState?.success) {
-            if (theme === 'oceans11') {
-                // "Ocean's 11" Theme: Direct to Quest Creation (Setup)
-                router.push('/create-bar?setup=true')
-            } else {
-                router.push('/')
-            }
+            router.push('/')
         }
-    }, [serverState, theme, router])
+    }, [serverState, router])
+
+    const handleEmailCheck = async () => {
+        if (!email.includes('@')) return
+        setIsCheckingEmail(true)
+        const result = await checkEmail(email)
+        setIsCheckingEmail(false)
+
+        if (result.exists) {
+            setStep('login')
+        } else {
+            setStep('identity')
+        }
+    }
+
+    const handleLogin = async () => {
+        setLoginError(null)
+        const formData = new FormData()
+        formData.append('email', email)
+        formData.append('password', password)
+        const result = await login(formData)
+        if (result?.error) {
+            setLoginError(result.error)
+        } else {
+            router.push('/')
+        }
+    }
 
     const selectedNation = nations.find(n => n.id === nationId)
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
 
-    // Random selection helpers
-    const selectRandomNation = () => {
-        const random = nations[Math.floor(Math.random() * nations.length)]
-        setNationId(random.id)
-        setExpandedNation(random.id)
-    }
-
-    const selectRandomPlaybook = () => {
-        const random = playbooks[Math.floor(Math.random() * playbooks.length)]
-        setPlaybookId(random.id)
-        setExpandedPlaybook(random.id)
-    }
-
-    // Move display component
+    // Move display helper
     const MoveDisplay = ({ label, emoji, value }: { label: string; emoji: string; value?: string | null }) => {
         if (!value) return null
         const [moveName, ...descParts] = value.split(':')
@@ -94,13 +111,95 @@ export function ConclaveWizard({
         )
     }
 
-    // --- STEP 1: IDENTITY ---
+    // --- STEP 1: EMAIL ENTRY ---
+    if (step === 'email') {
+        return (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold text-white">Enter The Conclave</h1>
+                    <p className="text-zinc-400">Identify yourself to begin.</p>
+                </div>
+
+                <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800 space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-300">Email Address</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleEmailCheck()}
+                            placeholder="you@example.com"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none"
+                            autoFocus
+                        />
+                    </div>
+                </div>
+
+                <button
+                    disabled={!email || isCheckingEmail}
+                    onClick={handleEmailCheck}
+                    className="w-full bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
+                >
+                    {isCheckingEmail ? 'Checking...' : 'Continue →'}
+                </button>
+            </div>
+        )
+    }
+
+    // --- STEP 1.5: LOGIN (Existing User) ---
+    if (step === 'login') {
+        return (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="text-center space-y-2">
+                    <h1 className="text-xl font-bold text-white">Welcome Back</h1>
+                    <p className="text-zinc-400">{email}</p>
+                </div>
+
+                <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800 space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-300">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                            placeholder="••••••••"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none"
+                            autoFocus
+                        />
+                    </div>
+                    {loginError && (
+                        <div className="text-red-500 text-sm text-center bg-red-900/20 p-2 rounded">
+                            {loginError}
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-3">
+                    <button
+                        onClick={handleLogin}
+                        className="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-full font-bold"
+                    >
+                        Log In
+                    </button>
+                    <button
+                        onClick={() => setStep('email')}
+                        className="w-full text-zinc-500 text-sm hover:text-zinc-300"
+                    >
+                        ← Use different email
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // --- STEP 2: IDENTITY (New User) ---
     if (step === 'identity') {
         return (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold text-white">Welcome to The Conclave</h1>
-                    <p className="text-zinc-400">Before we begin, tell us who you are.</p>
+                    <h1 className="text-3xl font-bold text-white">New Arrival</h1>
+                    <p className="text-zinc-400">Create your identity.</p>
                 </div>
 
                 <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800 space-y-4">
@@ -114,53 +213,45 @@ export function ConclaveWizard({
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">Pronouns</label>
+                        <label className="text-sm font-medium text-zinc-300">Password</label>
                         <input
-                            value={identity.pronouns}
-                            onChange={e => setIdentity({ ...identity, pronouns: e.target.value })}
-                            placeholder="they/them, she/her, etc."
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="Create a password..."
                             className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white"
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-300">Email or Phone</label>
-                        <input
-                            value={identity.contact}
-                            onChange={e => setIdentity({ ...identity, contact: e.target.value })}
-                            placeholder="you@example.com"
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white"
-                        />
-                    </div>
+                    {/* Pronouns removed from P0 requirement, but can check if needed. Keeping simple. */}
                 </div>
 
-                <button
-                    disabled={!identity.name || !identity.contact}
-                    onClick={() => setStep('nation')}
-                    className="w-full bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
-                >
-                    Next: Choose Nation →
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setStep('email')}
+                        className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold"
+                    >
+                        ← Back
+                    </button>
+                    <button
+                        disabled={!identity.name || !password}
+                        onClick={() => setStep('nation')}
+                        className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
+                    >
+                        Next: Choose Nation →
+                    </button>
+                </div>
             </div>
         )
     }
 
-    // --- STEP 2: NATION ---
+    // --- STEP 3: NATION ---
     if (step === 'nation') {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="text-center space-y-2">
                     <h1 className="text-2xl font-bold text-white">Choose Your Nation</h1>
-                    <p className="text-zinc-400">Where do you hail from? This defines your approach to the four paths.</p>
+                    <p className="text-zinc-400">Where do you hail from?</p>
                 </div>
-
-                {/* Random Button */}
-                <button
-                    type="button"
-                    onClick={selectRandomNation}
-                    className="w-full py-3 rounded-xl border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-purple-500 hover:text-purple-400 transition-all flex items-center justify-center gap-2"
-                >
-                    🎲 Let Fate Decide
-                </button>
 
                 <div className="space-y-3">
                     {nations.map(nation => (
@@ -188,11 +279,8 @@ export function ConclaveWizard({
                                     </span>
                                 </div>
                             </button>
-
-                            {/* Expanded Move Details */}
                             {expandedNation === nation.id && (
                                 <div className="px-4 pb-4 pt-2 border-t border-zinc-800 bg-zinc-900/50">
-                                    <div className="text-xs uppercase text-zinc-500 mb-2">Your Paths in {nation.name}</div>
                                     <MoveDisplay label="Wake Up" emoji="👁" value={nation.wakeUp} />
                                     <MoveDisplay label="Clean Up" emoji="🧹" value={nation.cleanUp} />
                                     <MoveDisplay label="Grow Up" emoji="🌱" value={nation.growUp} />
@@ -204,40 +292,20 @@ export function ConclaveWizard({
                 </div>
 
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setStep('identity')}
-                        className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold"
-                    >
-                        ← Back
-                    </button>
-                    <button
-                        disabled={!nationId}
-                        onClick={() => setStep('playbook')}
-                        className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
-                    >
-                        Next: Choose Playbook →
-                    </button>
+                    <button onClick={() => setStep('identity')} className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold">← Back</button>
+                    <button disabled={!nationId} onClick={() => setStep('playbook')} className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50">Next: Choose Playbook →</button>
                 </div>
             </div>
         )
     }
 
-    // --- STEP 3: PLAYBOOK ---
+    // --- STEP 4: PLAYBOOK ---
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-white">Choose Your Playbook</h1>
                 <p className="text-zinc-400">How do you move through the world?</p>
             </div>
-
-            {/* Random Button */}
-            <button
-                type="button"
-                onClick={selectRandomPlaybook}
-                className="w-full py-3 rounded-xl border-2 border-dashed border-zinc-600 text-zinc-400 hover:border-blue-500 hover:text-blue-400 transition-all flex items-center justify-center gap-2"
-            >
-                🎲 Let Fate Decide
-            </button>
 
             <div className="space-y-3">
                 {playbooks.map(playbook => (
@@ -265,56 +333,24 @@ export function ConclaveWizard({
                                 </span>
                             </div>
                         </button>
-
-                        {/* Expanded Move Details */}
                         {expandedPlaybook === playbook.id && (
                             <div className="px-4 pb-4 pt-2 border-t border-zinc-800 bg-zinc-900/50">
-                                <div className="text-xs uppercase text-zinc-500 mb-2">Your Moves as {playbook.name.split(' ')[0]}</div>
                                 <MoveDisplay label="Wake Up" emoji="👁" value={playbook.wakeUp} />
                                 <MoveDisplay label="Clean Up" emoji="🧹" value={playbook.cleanUp} />
                                 <MoveDisplay label="Grow Up" emoji="🌱" value={playbook.growUp} />
                                 <MoveDisplay label="Show Up" emoji="🎯" value={playbook.showUp} />
-
-                                {/* Special Moves */}
-                                <div className="mt-3 pt-3 border-t border-zinc-700">
-                                    <div className="text-xs uppercase text-zinc-500 mb-2">Special Moves</div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {JSON.parse(playbook.moves).map((move: string, i: number) => (
-                                            <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-800 rounded text-xs text-blue-300">
-                                                {move}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
                             </div>
                         )}
                     </div>
                 ))}
             </div>
 
-            {/* Summary */}
-            {selectedNation && selectedPlaybook && (
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-2">
-                    <h3 className="text-sm font-medium text-zinc-400">Your Character</h3>
-                    <div className="text-white">
-                        <span className="font-bold">{identity.name}</span>
-                        <span className="text-zinc-500"> ({identity.pronouns})</span>
-                    </div>
-                    <div className="text-sm text-zinc-400">
-                        {selectedNation.name} • {selectedPlaybook.name}
-                    </div>
-                </div>
-            )}
-
             <div className="flex gap-3">
-                <button
-                    onClick={() => setStep('nation')}
-                    className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold"
-                >
-                    ← Back
-                </button>
+                <button onClick={() => setStep('nation')} className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold">← Back</button>
                 <form action={formAction} className="flex-1">
                     <input type="hidden" name="token" value={token} />
+                    <input type="hidden" name="email" value={email} />
+                    <input type="hidden" name="password" value={password} />
                     <input type="hidden" name="identity" value={JSON.stringify(identity)} />
                     <input type="hidden" name="nationId" value={nationId || ''} />
                     <input type="hidden" name="playbookId" value={playbookId || ''} />
@@ -323,14 +359,11 @@ export function ConclaveWizard({
                         disabled={!playbookId || isPending}
                         className="w-full bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
                     >
-                        {isPending ? 'Creating...' : (theme === 'oceans11' ? 'Start the Job →' : 'Create Character →')}
+                        {isPending ? 'Creating...' : 'Create Character →'}
                     </button>
                 </form>
             </div>
-
-            {serverState?.error && (
-                <div className="text-red-500 text-center text-sm">{serverState.error}</div>
-            )}
+            {serverState?.error && <div className="text-red-500 text-center text-sm">{serverState.error}</div>}
         </div>
     )
 }

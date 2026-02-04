@@ -68,7 +68,7 @@ export async function generateQuestFromReading(hexagramId: number) {
         })
 
         // 5. Create CustomBar (Collective)
-        await db.customBar.create({
+        const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title: object.title,
@@ -81,6 +81,12 @@ export async function generateQuestFromReading(hexagramId: number) {
                     { key: 'reflection', label: 'Response', type: 'textarea', placeholder: `Use the move: ${object.selectedMove}` }
                 ])
             }
+        })
+
+        // Initialize rootId to self for new root quests
+        await db.customBar.update({
+            where: { id: newBar.id },
+            data: { rootId: newBar.id }
         })
 
         revalidatePath('/')

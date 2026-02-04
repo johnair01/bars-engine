@@ -19,6 +19,7 @@
     "@ai-sdk/openai": "^3.0.25",
     "@prisma/client": "^5.22.0",
     "ai": "^6.0.67",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "next": "16.1.5",
     "prisma": "^5.22.0",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

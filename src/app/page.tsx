@@ -213,21 +213,25 @@ export default async function Home() {
             />
           </section>
 
-          {/* 3. AVAILABLE BARS (Starter) */}
+          {/* 3. AVAILABLE BARS LINK */}
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-green-600/70 uppercase tracking-widest text-sm font-bold">Available Bars</h2>
+              <h2 className="text-green-600/70 uppercase tracking-widest text-sm font-bold">Commissions</h2>
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
-            <StarterQuestBoard
-              completedBars={starterPackData.completedBars}
-              activeBars={starterPackData.activeBars || []}
-              customBars={visibleCustomBars}
-              ichingBars={ichingReadings}
-              potentialDelegates={potentialDelegates}
-              view="available"
-            />
+
+            <Link href="/bars/available" className="block group">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex justify-between items-center group-hover:border-green-500/50 transition-all">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">Available Commissions</h3>
+                  <p className="text-zinc-500"> Browse and accept new quests from other players.</p>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
+                  →
+                </div>
+              </div>
+            </Link>
 
             {/* CREATE BAR */}
             <div className="mt-6">

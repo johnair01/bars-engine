@@ -23,7 +23,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     useEffect(() => {
         if (state?.success) {
             setIsOpen(false)
-            router.refresh()
+            router.push('/bars/available') // Redirect to available bars
         }
     }, [state, router])
 
@@ -161,10 +161,10 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     <input type="hidden" name="moveType" value={moveType || ''} />
                     {visibility === 'private' && (
                         <div className="space-y-2 mt-3">
-                            <label className="text-xs uppercase text-zinc-500">Send To Player</label>
+                            <label className="text-xs uppercase text-zinc-500">Send To Player (Optional)</label>
                             <select
                                 name="targetPlayerId"
-                                required={visibility === 'private'}
+                                // required={visibility === 'private'} // Removed required
                                 className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                             >
                                 <option value="">Choose a player...</option>
