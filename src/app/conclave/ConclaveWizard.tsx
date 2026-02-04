@@ -48,7 +48,7 @@ export function ConclaveWizard({
     const [loginError, setLoginError] = useState<string | null>(null)
 
     // Character State
-    const [identity, setIdentity] = useState({ name: '', pronouns: '' }) // removed contact, using email
+    const [identity, setIdentity] = useState({ name: '' }) // simplified
     const [nationId, setNationId] = useState<string | null>(null)
     const [playbookId, setPlaybookId] = useState<string | null>(null)
     const [expandedNation, setExpandedNation] = useState<string | null>(null)
@@ -351,7 +351,7 @@ export function ConclaveWizard({
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="email" value={email} />
                     <input type="hidden" name="password" value={password} />
-                    <input type="hidden" name="identity" value={JSON.stringify(identity)} />
+                    <input type="hidden" name="identity" value={JSON.stringify({ ...identity, contact: email, password: password })} />
                     <input type="hidden" name="nationId" value={nationId || ''} />
                     <input type="hidden" name="playbookId" value={playbookId || ''} />
                     <button
