@@ -1,0 +1,70 @@
+{
+    "id": "new_arrival",
+    "name": "The New Arrival",
+    "hero": "wanderer",
+    "goal": "Join the Conclave and receive first quest",
+    "steps": [
+        {
+            "action": "navigate",
+            "target": "/conclave",
+            "description": "Enter the Conclave gate"
+        },
+        {
+            "action": "input",
+            "field": "email",
+            "value": "${hero.email}",
+            "description": "Speak your name"
+        },
+        {
+            "action": "click",
+            "target": "continue",
+            "description": "Announce yourself"
+        },
+        {
+            "action": "input",
+            "field": "name",
+            "value": "New Wanderer",
+            "description": "State your identity"
+        },
+        {
+            "action": "input",
+            "field": "password",
+            "value": "${hero.password}",
+            "description": "Whisper the secret word"
+        },
+        {
+            "action": "click",
+            "target": "next",
+            "description": "Step forward"
+        },
+        {
+            "action": "select",
+            "field": "nation",
+            "index": 0,
+            "description": "Choose your nation"
+        },
+        {
+            "action": "click",
+            "target": "next",
+            "description": "Accept your heritage"
+        },
+        {
+            "action": "select",
+            "field": "playbook",
+            "index": 0,
+            "description": "Choose your playbook"
+        },
+        {
+            "action": "click",
+            "target": "submit",
+            "description": "Complete the ritual"
+        }
+    ],
+    "victory": {
+        "url": "/",
+        "check": "Dashboard loads with player name"
+    },
+    "defeat": {
+        "check": "Error message or redirect failure"
+    }
+}

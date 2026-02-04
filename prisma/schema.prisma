@@ -183,6 +183,9 @@ model CustomBar {
   
   status          String    @default("active") // active, archived
   
+  // Kotter Stage: 1-8 (position in change cycle)
+  kotterStage     Int       @default(1)
+  
   createdAt       DateTime  @default(now())
   
   // Recursion for Quest Trees
@@ -267,6 +270,12 @@ model VibulonEvent {
   source          String    // quest, role, admin, ritual
   amount          Int       // usually +1
   notes           String?
+  
+  // Archetype move that generated this event
+  archetypeMove   String?   // THUNDERCLAP, NURTURE, COMMAND, EXPRESS, INFILTRATE, IGNITE, PERMEATE, IMMOVABLE
+  
+  // Link to quest (for provenance)
+  questId         String?
   
   createdAt       DateTime  @default(now())
   

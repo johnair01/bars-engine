@@ -38,12 +38,15 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
     })
 
     // GRANT VIBULON (+1) - Only grants because we confirmed status was 'active'
+    // IGNITE = completing a quest (Achiever move, Stage 6: Short-Term Wins)
     await db.vibulonEvent.create({
         data: {
             playerId: player.id,
             source: 'quest',
             amount: 1,
             notes: `Quest Returned: ${questId}`,
+            archetypeMove: 'IGNITE',
+            questId: questId,
         }
     })
 

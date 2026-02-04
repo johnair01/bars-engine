@@ -1,0 +1,32 @@
+{
+    "characters": [
+        {
+            "id": "wanderer",
+            "name": "The Wanderer",
+            "description": "New user, no account",
+            "email": "wanderer@test.local",
+            "password": "wanderer123"
+        },
+        {
+            "id": "veteran",
+            "name": "The Veteran",
+            "description": "Returning player, existing account",
+            "email": "veteran@test.local",
+            "password": "veteran123"
+        },
+        {
+            "id": "creator",
+            "name": "The Creator",
+            "description": "User who makes quests/bars",
+            "email": "creator@test.local",
+            "password": "creator123"
+        },
+        {
+            "id": "keeper",
+            "name": "The Keeper",
+            "description": "Admin user",
+            "email": "keeper@test.local",
+            "password": "keeper123"
+        }
+    ]
+}
