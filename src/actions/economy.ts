@@ -92,19 +92,27 @@ export async function transferVibulons(formData: FormData) {
 
         const tokenIds = wallet.map(t => t.id)
 
-        // 2. Transfer Tokens
-        await tx.vibulon.updateMany({
-            where: { id: { in: tokenIds } },
-            data: { ownerId: targetId }
-        })
+        // 2. Transfer Tokens + Increment Generation
+        // Each transfer increments generation (tracks hops from origin)
+        for (const token of wallet) {
+            await tx.vibulon.update({
+                where: { id: token.id },
+                data: {
+                    ownerId: targetId,
+                    generation: token.generation + 1
+                }
+            })
+        }
 
-        // 3. Log Event
+        // 3. Log Events with archetype move
+        // PERMEATE = spreading/transfer (Peacemaker move, Stage 7)
         await tx.vibulonEvent.create({
             data: {
                 playerId: senderId,
                 source: 'p2p_transfer',
                 amount: -amount,
-                notes: `Sent to ${targetId}`
+                notes: `Sent to ${targetId}`,
+                archetypeMove: 'PERMEATE'
             }
         })
         await tx.vibulonEvent.create({
@@ -112,7 +120,8 @@ export async function transferVibulons(formData: FormData) {
                 playerId: targetId,
                 source: 'p2p_transfer',
                 amount: amount,
-                notes: `Received from ${senderId}`
+                notes: `Received from ${senderId}`,
+                archetypeMove: 'PERMEATE'
             }
         })
 

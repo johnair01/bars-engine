@@ -292,6 +292,9 @@ model Vibulon {
   originSource String   // "starter", "custom", "iching", "system"
   originId     String   // ID of the bar/quest
   originTitle  String   // Snapshot of title
+  
+  // Generation: How many hops from origin (starts at 1)
+  generation   Int      @default(1)
 
   // Staking/Escrow (When attached to a Bar)
   stakedOnBarId String? // ID of the PlayerBar or CustomBar instance
