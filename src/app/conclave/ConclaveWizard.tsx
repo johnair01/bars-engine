@@ -93,6 +93,19 @@ export function ConclaveWizard({
     const selectedNation = nations.find(n => n.id === nationId)
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
 
+    // Random selection handlers
+    const selectRandomNation = () => {
+        const randomIndex = Math.floor(Math.random() * nations.length)
+        setNationId(nations[randomIndex].id)
+        setExpandedNation(nations[randomIndex].id)
+    }
+
+    const selectRandomPlaybook = () => {
+        const randomIndex = Math.floor(Math.random() * playbooks.length)
+        setPlaybookId(playbooks[randomIndex].id)
+        setExpandedPlaybook(playbooks[randomIndex].id)
+    }
+
     // Move display helper
     const MoveDisplay = ({ label, emoji, value }: { label: string; emoji: string; value?: string | null }) => {
         if (!value) return null
@@ -221,6 +234,7 @@ export function ConclaveWizard({
                             placeholder="Create a password..."
                             className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white"
                         />
+                        <p className="text-xs text-zinc-500">Must be at least 6 characters</p>
                     </div>
                     {/* Pronouns removed from P0 requirement, but can check if needed. Keeping simple. */}
                 </div>
@@ -251,6 +265,13 @@ export function ConclaveWizard({
                 <div className="text-center space-y-2">
                     <h1 className="text-2xl font-bold text-white">Choose Your Nation</h1>
                     <p className="text-zinc-400">Where do you hail from?</p>
+                    <button
+                        type="button"
+                        onClick={selectRandomNation}
+                        className="text-sm text-purple-400 hover:text-purple-300 underline"
+                    >
+                        🎲 Choose for me
+                    </button>
                 </div>
 
                 <div className="space-y-3">
@@ -305,6 +326,13 @@ export function ConclaveWizard({
             <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-white">Choose Your Playbook</h1>
                 <p className="text-zinc-400">How do you move through the world?</p>
+                <button
+                    type="button"
+                    onClick={selectRandomPlaybook}
+                    className="text-sm text-blue-400 hover:text-blue-300 underline"
+                >
+                    🎲 Choose for me
+                </button>
             </div>
 
             <div className="space-y-3">

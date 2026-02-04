@@ -3,9 +3,13 @@ import { cookies } from 'next/headers'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { CreateBarForm } from '@/components/CreateBarForm'
 import { DashboardCaster } from '@/components/DashboardCaster'
+import { QuestThread } from '@/components/QuestThread'
+import { QuestPack } from '@/components/QuestPack'
 import { ensureWallet } from '@/actions/economy'
 import { getGlobalState } from '@/actions/world'
 import { getAppConfig } from '@/actions/config'
+import { getPlayerThreads } from '@/actions/quest-thread'
+import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
 
 export default async function Home() {
@@ -142,6 +146,10 @@ export default async function Home() {
     }
   })
 
+  // Fetch Quest Threads and Packs
+  const threads = await getPlayerThreads()
+  const packs = await getPlayerPacks()
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 space-y-12 max-w-4xl mx-auto">
 
@@ -192,6 +200,26 @@ export default async function Home() {
           )}
         </div>
       </header >
+
+      {/* QUEST JOURNEYS (Threads & Packs) */}
+      {(threads.length > 0 || packs.length > 0) && (
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-px bg-zinc-800 flex-1"></div>
+            <h2 className="text-purple-500/70 uppercase tracking-widest text-sm font-bold">Journeys</h2>
+            <div className="h-px bg-zinc-800 flex-1"></div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {threads.map(thread => (
+              <QuestThread key={thread.id} thread={thread} />
+            ))}
+            {packs.map(pack => (
+              <QuestPack key={pack.id} pack={pack} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid md:grid-cols-2 gap-12">
         <div className="space-y-10">

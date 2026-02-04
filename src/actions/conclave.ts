@@ -2,10 +2,10 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import { hashPassword } from '@/lib/auth-utils'
+import { assignOrientationThreads } from './quest-thread'
 
 const IdentitySchema = z.object({
     name: z.string().min(2),
@@ -119,6 +119,9 @@ export async function createCharacter(prevState: any, formData: FormData) {
 
             return newPlayer
         })
+
+        // 6. Assign orientation threads (outside transaction for simplicity)
+        await assignOrientationThreads(player.id)
 
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })

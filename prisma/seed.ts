@@ -334,6 +334,95 @@ async function main() {
         console.log('  Created sample CustomBars (public + private)')
     }
 
+    // 11. Create Orientation Thread with Starter Quests
+    console.log('Creating orientation thread...')
+
+    // Get a creator for the quests (use test-admin or alice)
+    const threadCreator = await prisma.player.findFirst({
+        where: { id: { in: ['test-admin', 'test-alice'] } }
+    })
+
+    if (threadCreator) {
+        // Create orientation quests (CustomBars)
+        const orientationQuests = [
+            {
+                id: 'orientation-quest-1',
+                title: 'Set Your Intention',
+                description: 'What brings you to this journey? Take a moment to reflect on what you hope to discover or accomplish here.',
+                inputs: JSON.stringify([{ key: 'intention', label: 'My intention is...', type: 'textarea' }]),
+            },
+            {
+                id: 'orientation-quest-2',
+                title: 'Meet Your Playbook',
+                description: 'Explore your playbook\'s moves. Which one resonates most with how you naturally operate?',
+                inputs: JSON.stringify([{ key: 'favorite_move', label: 'The move that resonates most is...', type: 'text' }]),
+            },
+            {
+                id: 'orientation-quest-3',
+                title: 'Cast Your First Reading',
+                description: 'Visit the I Ching caster and receive your first hexagram. What message does it hold for you?',
+                inputs: JSON.stringify([{ key: 'reflection', label: 'The reading spoke to me because...', type: 'textarea' }]),
+            },
+            {
+                id: 'orientation-quest-4',
+                title: 'Send a Vibeulon',
+                description: 'Vibeulons carry energy between players. Find someone and send them a token of connection.',
+                inputs: JSON.stringify([{ key: 'recipient', label: 'I sent my first Vibeulon to...', type: 'text' }]),
+            },
+        ]
+
+        for (const quest of orientationQuests) {
+            await prisma.customBar.upsert({
+                where: { id: quest.id },
+                update: {},
+                create: {
+                    id: quest.id,
+                    creatorId: threadCreator.id,
+                    title: quest.title,
+                    description: quest.description,
+                    type: 'vibe',
+                    visibility: 'public',
+                    reward: 1,
+                    inputs: quest.inputs,
+                },
+            })
+        }
+
+        // Create the Orientation Thread
+        const orientationThread = await prisma.questThread.upsert({
+            where: { id: 'orientation-thread' },
+            update: {},
+            create: {
+                id: 'orientation-thread',
+                title: 'Welcome Journey',
+                description: 'Your first steps into the Conclave. Complete these quests to find your footing.',
+                threadType: 'orientation',
+                creatorType: 'system',
+                completionReward: 5, // Bonus vibeulons for completing the journey
+            },
+        })
+
+        // Link quests to thread in order
+        for (let i = 0; i < orientationQuests.length; i++) {
+            await prisma.threadQuest.upsert({
+                where: {
+                    threadId_questId: {
+                        threadId: orientationThread.id,
+                        questId: orientationQuests[i].id
+                    }
+                },
+                update: { position: i + 1 },
+                create: {
+                    threadId: orientationThread.id,
+                    questId: orientationQuests[i].id,
+                    position: i + 1,
+                },
+            })
+        }
+
+        console.log('  Created orientation thread with 4 starter quests')
+    }
+
     console.log('Seeding complete.')
 }
 

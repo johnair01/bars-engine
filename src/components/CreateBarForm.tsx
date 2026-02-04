@@ -12,6 +12,8 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [players, setPlayers] = useState<Player[]>([])
     const [visibility, setVisibility] = useState<'public' | 'private'>('public')
     const [moveType, setMoveType] = useState<'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | null>(null)
+    const [showStory, setShowStory] = useState(false)
+    const [storyMood, setStoryMood] = useState<string | null>(null)
     const [state, formAction, isPending] = useActionState(createCustomBar, null)
 
     useEffect(() => {
@@ -76,6 +78,50 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         rows={2}
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
+                </div>
+
+                {/* Story Section */}
+                <div className="space-y-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowStory(!showStory)}
+                        className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-2"
+                    >
+                        <span>{showStory ? '▼' : '▶'}</span>
+                        <span>🎭 Add Story (Optional)</span>
+                    </button>
+
+                    {showStory && (
+                        <div className="space-y-3 pl-4 border-l-2 border-purple-800">
+                            <textarea
+                                name="storyContent"
+                                placeholder="Write the narrative for this quest... (Markdown supported)"
+                                rows={4}
+                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base font-mono text-sm"
+                            />
+                            <div className="flex gap-2 flex-wrap">
+                                {[
+                                    { key: 'dramatic', emoji: '🎭', label: 'Dramatic' },
+                                    { key: 'playful', emoji: '✨', label: 'Playful' },
+                                    { key: 'serious', emoji: '⚔️', label: 'Serious' },
+                                    { key: 'mysterious', emoji: '🌙', label: 'Mysterious' },
+                                ].map((mood) => (
+                                    <button
+                                        key={mood.key}
+                                        type="button"
+                                        onClick={() => setStoryMood(storyMood === mood.key ? null : mood.key)}
+                                        className={`px-3 py-1 rounded-full text-xs transition ${storyMood === mood.key
+                                                ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
+                                                : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            }`}
+                                    >
+                                        {mood.emoji} {mood.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="hidden" name="storyMood" value={storyMood || ''} />
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -159,23 +205,29 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         ))}
                     </div>
                     <input type="hidden" name="moveType" value={moveType || ''} />
-                    {visibility === 'private' && (
-                        <div className="space-y-2 mt-3">
-                            <label className="text-xs uppercase text-zinc-500">Send To Player (Optional)</label>
-                            <select
-                                name="targetPlayerId"
-                                // required={visibility === 'private'} // Removed required
-                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
-                            >
-                                <option value="">Choose a player...</option>
-                                {players.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                            {players.length === 0 && (
-                                <p className="text-xs text-zinc-600 italic">Loading players...</p>
-                            )}
-                        </div>
+                </div>
+
+                {/* Assign To Player */}
+                <div className="space-y-2 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500">
+                        🎯 Assign To Player (Optional)
+                    </label>
+                    <select
+                        name="targetPlayerId"
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                    >
+                        <option value="">Anyone can claim (unassigned)</option>
+                        {players.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-zinc-600">
+                        {visibility === 'public'
+                            ? 'Assigned quests still appear in Available for the specific player.'
+                            : 'Private quests with an assignee are only visible to that player.'}
+                    </p>
+                    {players.length === 0 && (
+                        <p className="text-xs text-zinc-600 italic">Loading players...</p>
                     )}
                 </div>
 

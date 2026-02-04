@@ -19,6 +19,8 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     const visibility = formData.get('visibility') as string || 'public' // 'public' or 'private'
     const targetPlayerId = formData.get('targetPlayerId') as string || null
     const moveType = formData.get('moveType') as string || null // wakeUp, cleanUp, growUp, showUp
+    const storyContent = formData.get('storyContent') as string || null
+    const storyMood = formData.get('storyMood') as string || null
 
     if (!title || !description) {
         return { error: 'Title and description are required' }
@@ -30,10 +32,12 @@ export async function createCustomBar(prevState: any, formData: FormData) {
             { key: 'response', label: inputLabel, type: inputType, placeholder: '' }
         ])
 
-        // Private bars with a target go directly to recipient's claimed hand
-        const claimedById = visibility === 'private' && targetPlayerId
-            ? targetPlayerId
-            : null
+        // If a specific player is assigned:
+        // - For private quests: goes directly to their claimed hand
+        // - For public quests: quest is claimable but "for" that player
+        const claimedById = targetPlayerId && visibility === 'private'
+            ? targetPlayerId  // Private assigned quests go to claimed
+            : null            // Public assigned quests stay available but show as "for you"
 
         const newBar = await db.customBar.create({
             data: {
@@ -46,7 +50,9 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                 visibility,
                 claimedById,
                 moveType: moveType || null,
-                storyPath: 'collective', // Simplified; we now use visibility for access control
+                storyPath: 'collective',
+                storyContent: storyContent || null,
+                storyMood: storyMood || null,
             }
         })
 

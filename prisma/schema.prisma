@@ -186,6 +186,10 @@ model CustomBar {
   // Kotter Stage: 1-8 (position in change cycle)
   kotterStage     Int       @default(1)
   
+  // Rich story/narrative content (markdown supported)
+  storyContent    String?   // Markdown content for the quest narrative
+  storyMood       String?   // Emotional tone: "dramatic", "playful", "serious", "mysterious"
+  
   createdAt       DateTime  @default(now())
   
   // Recursion for Quest Trees
@@ -255,6 +259,135 @@ model PlayerQuest {
   completedAt     DateTime?
   
   @@map("player_quests")
+}
+
+// --------------------------------------------------------
+// QUEST THREADS (Sequential Quest Journeys)
+// --------------------------------------------------------
+
+model QuestThread {
+  id          String   @id @default(cuid())
+  
+  title       String
+  description String?
+  
+  // Thread type: orientation threads auto-assign to new players
+  threadType  String   @default("standard") // "orientation", "standard"
+  
+  // System or player-created (currently only system/admin can create)
+  creatorType String   @default("system") // "system", "admin"
+  creatorId   String?  // Admin player ID if applicable
+  
+  // Cost to create (in Vibeulons) - 0 for system threads
+  creationCost Int     @default(0)
+  
+  // Reward for completing entire thread
+  completionReward Int @default(0)
+  
+  // Thread quests (ordered by position)
+  quests      ThreadQuest[]
+  
+  // Player progress
+  progress    ThreadProgress[]
+  
+  status      String   @default("active") // active, archived
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("quest_threads")
+}
+
+model ThreadQuest {
+  id          String   @id @default(cuid())
+  
+  threadId    String
+  thread      QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  
+  // Links to CustomBar (quest)
+  questId     String
+  
+  // Order in thread (1, 2, 3...)
+  position    Int
+  
+  @@unique([threadId, position])
+  @@unique([threadId, questId])
+  @@map("thread_quests")
+}
+
+model ThreadProgress {
+  id          String   @id @default(cuid())
+  
+  threadId    String
+  thread      QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  
+  playerId    String
+  
+  // Current position: 0 = not started, 1 = on first quest, etc.
+  currentPosition Int @default(0)
+  
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([threadId, playerId])
+  @@map("thread_progress")
+}
+
+// --------------------------------------------------------
+// QUEST PACKS (Unordered Quest Collections)
+// --------------------------------------------------------
+
+model QuestPack {
+  id          String   @id @default(cuid())
+  
+  title       String
+  description String?
+  
+  // System or player-created
+  creatorType String   @default("system") // "system", "player"
+  creatorId   String?  // Player ID if player-created
+  
+  // Pack quests (unordered)
+  quests      PackQuest[]
+  
+  // Player progress
+  progress    PackProgress[]
+  
+  status      String   @default("active") // active, archived
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("quest_packs")
+}
+
+model PackQuest {
+  id          String   @id @default(cuid())
+  
+  packId      String
+  pack        QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  
+  // Links to CustomBar (quest)
+  questId     String
+  
+  @@unique([packId, questId])
+  @@map("pack_quests")
+}
+
+model PackProgress {
+  id          String   @id @default(cuid())
+  
+  packId      String
+  pack        QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  
+  playerId    String
+  
+  // Completed quest IDs within this pack (JSON array)
+  completed   String   @default("[]")
+  
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([packId, playerId])
+  @@map("pack_progress")
 }
 
 // --------------------------------------------------------
