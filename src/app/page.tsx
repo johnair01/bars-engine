@@ -158,36 +158,36 @@ export default async function Home() {
   const packs = await getPlayerPacks()
 
   return (
-    <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 space-y-12 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold text-white tracking-tight">{player.name}</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">{player.name}</h1>
             <div className="text-zinc-400 text-sm font-mono">{player.contactValue}</div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
             {/* CLOCK WIDGET */}
-            <div className="flex flex-col gap-2">
-              <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 text-center min-w-[100px]">
+            <div className="flex flex-col gap-2 flex-1 sm:flex-initial">
+              <div className="bg-zinc-900/50 p-3 sm:p-4 rounded-xl border border-zinc-800 text-center min-w-[80px] sm:min-w-[100px]">
                 <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-                <div className="text-4xl font-mono text-purple-400">{globalState.currentAct}</div>
+                <div className="text-3xl sm:text-4xl font-mono text-purple-400">{globalState.currentAct}</div>
               </div>
 
               {/* KOTTER GAUGE (Small) */}
               <KotterGauge currentStage={Math.ceil(globalState.storyClock / 8)} label="Global Phase" />
             </div>
 
-            <Link href="/wallet" className="text-right bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition">
+            <Link href="/wallet" className="text-right bg-zinc-900/50 p-3 sm:p-4 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition flex-1 sm:flex-initial">
               <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
-              <div className="text-4xl font-mono text-green-400">{vibulons} ♦</div>
+              <div className="text-3xl sm:text-4xl font-mono text-green-400">{vibulons} ♦</div>
             </Link>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           {player.nation && (
             <div className="px-4 py-2 bg-purple-900/20 border border-purple-900/50 rounded-lg">
               <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-1">Nation</div>
@@ -222,7 +222,7 @@ export default async function Home() {
             <div className="h-px bg-zinc-800 flex-1"></div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {threads.map(thread => (
               <QuestThread key={thread.id} thread={thread} />
             ))}
@@ -233,7 +233,7 @@ export default async function Home() {
         </section>
       )}
 
-      <div className="grid md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         <div className="space-y-10">
           {/* 2. ACTIVE BARS (Current) */}
           <section>

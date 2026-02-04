@@ -50,10 +50,10 @@ export default function TownSquarePage() {
     return (
         <div className="min-h-screen bg-black text-zinc-200 p-4 md:p-8 space-y-8">
             <header className="space-y-2">
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">
+                <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-600">
                     Town Square
                 </h1>
-                <p className="text-zinc-400 max-w-2xl">
+                <p className="text-zinc-400 max-w-2xl text-sm sm:text-base">
                     The bustling market of ideas. Pick up commissioned quests from the Salad Bowl
                     or discover community-curated packs recycled by fellow travelers.
                 </p>

@@ -149,8 +149,8 @@ export function ConclaveWizard({
         return (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold text-white">Enter The Conclave</h1>
-                    <p className="text-zinc-400">Identify yourself to begin.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white">Enter The Conclave</h1>
+                    <p className="text-zinc-400 text-sm sm:text-base">Identify yourself to begin.</p>
                 </div>
 
                 <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800 space-y-4">
