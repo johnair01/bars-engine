@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { STARTER_BARS, BarDef, BarInput } from '@/lib/bars'
+import { BarDef, BarInput } from '@/lib/bars'
 import { completeStarterQuest } from '@/actions/starter-quests'
 import { pickUpBar } from '@/actions/pick-up-bar'
 import { delegateBar } from '@/actions/delegate-bar'
+import { releaseBarToSaladBowl } from '@/actions/release-bar'
 import Link from 'next/link'
 
 type CompletedBar = { id: string; inputs: Record<string, any> }
@@ -17,12 +18,14 @@ function VibeBarCard({
     onPickUp,
     onComplete,
     onDelegate, // Added onDelegate prop
+    onRelease, // Added onRelease prop
 }: {
     bar: BarDef
     isActive: boolean
     onPickUp: () => void
     onComplete: (inputs: Record<string, any>) => void
-    onDelegate?: (targetId: string) => void // Added onDelegate prop type
+    onDelegate?: (targetId: string) => void
+    onRelease?: () => void
 }) {
     const [open, setOpen] = useState(isActive)  // Auto-open if active
     const [inputs, setInputs] = useState<Record<string, any>>({})
@@ -139,6 +142,23 @@ function VibeBarCard({
             {/* EXPANDED CONTENT */}
             {open && isActive && (
                 <div className="p-4 pt-0 space-y-4 border-t border-yellow-800/50 mt-2">
+                    {/* RELEASE UI (For Assigned/Custom Quests) */}
+                    {onRelease && (
+                        <div className="flex justify-end mb-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (confirm('Release this quest to the Salad Bowl? (Costs 5 Vibeulons)')) {
+                                        onRelease()
+                                    }
+                                }}
+                                className="text-[10px] uppercase text-zinc-500 hover:text-red-400 font-mono flex items-center gap-1 transition-colors"
+                            >
+                                <span>♻ Release to Bowl</span>
+                            </button>
+                        </div>
+                    )}
+
                     {/* DELEGATION UI */}
                     {onDelegate && (
                         <div className="bg-black/40 p-2 rounded flex gap-2 items-center mb-2">
@@ -339,6 +359,20 @@ export function StarterQuestBoard({
         startTransition(() => { router.refresh() })
     }
 
+    const handleRelease = async (barId: string) => {
+        // Optimistic: remove from active (it goes to available, but we might not see it immediately if not refreshing available list, or it goes to salad bowl)
+        setLocalActive(localActive.filter(id => id !== barId))
+
+        const result = await releaseBarToSaladBowl(barId)
+        if (result && 'error' in result) {
+            alert("Release failed: " + result.error)
+            startTransition(() => { router.refresh() }) // rollback
+            return
+        }
+
+        startTransition(() => { router.refresh() })
+    }
+
     // Convert custom bars to BarDef format
     const customAsBarDef: BarDef[] = customBars.map(cb => ({
         id: cb.id,
@@ -348,6 +382,7 @@ export function StarterQuestBoard({
         reward: cb.reward,
         inputs: JSON.parse(cb.inputs || '[]'),
         unique: false,  // Custom bars are repeatable
+        isCustom: true, // Mark as custom
     }))
 
     // Convert I Ching readings to BarDef format
@@ -369,7 +404,7 @@ export function StarterQuestBoard({
     // Merge starter bars with custom bars and I Ching bars
     // Note: I Ching bars are only ever "active" or "completed", they don't appear in "available" usually (unless we wanted to show past ones)
     // But since localActive contains 'iching_X', we need them in allBars to be found by the filter.
-    const allBars = [...STARTER_BARS, ...customAsBarDef, ...ichingAsBarDef]
+    const allBars = [...customAsBarDef, ...ichingAsBarDef]
 
     const availableBars = allBars.filter(b => !localCompleted.includes(b.id) && !localActive.includes(b.id))
     // const activeBarsFiltered = allBars.filter(b => localActive.includes(b.id)) // Original line
@@ -391,25 +426,14 @@ export function StarterQuestBoard({
                     bar.type === 'story' ? (
                         <StoryBarCard key={bar.id} bar={bar} isActive={true} onPickUp={() => { }} />
                     ) : (
-                        // Add helper to fetch players? Or pass as prop? 
-                        // For now, simpler to assume a small app and maybe fetch players in the component or passing them down.
-                        // Since this is a client component, I can use a server action to get players or pass them.
-                        // I'll add a 'activeBars' logic update update:
-                        // Actually, I need to fetch players. I'll add a simple props for 'potentialDelegates' or just fetch them.
-                        // Let's modify the VibeBarCard first to support delegation.
-
-                        // WAIT. I don't have the player list in the component.
-                        // I should first update `page.tsx` to fetch players and pass to `StarterQuestBoard`.
-
-                        // In the meantime, I will add the UI scaffold.
-
                         <VibeBarCard
                             key={bar.id}
                             bar={bar}
                             isActive={true}
                             onPickUp={() => { }}
                             onComplete={(inputs) => handleComplete(bar.id, inputs)}
-                            onDelegate={(targetId) => handleDelegate(bar.id, targetId)} // NEW
+                            onDelegate={(targetId) => handleDelegate(bar.id, targetId)}
+                            onRelease={bar.isCustom ? () => handleRelease(bar.id) : undefined}
                         />
                     )
                 ))}

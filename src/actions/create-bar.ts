@@ -39,27 +39,65 @@ export async function createCustomBar(prevState: any, formData: FormData) {
             ? targetPlayerId  // Private assigned quests go to claimed
             : null            // Public assigned quests stay available but show as "for you"
 
-        const newBar = await db.customBar.create({
-            data: {
-                creatorId: playerId,
-                title,
-                description,
-                type: 'vibe',
-                reward: 1,
-                inputs,
-                visibility,
-                claimedById,
-                moveType: moveType || null,
-                storyPath: 'collective',
-                storyContent: storyContent || null,
-                storyMood: storyMood || null,
-            }
-        })
+        // TRANSACTION: If public, burn token. Then create bar.
+        const result = await db.$transaction(async (tx) => {
+            if (visibility === 'public') {
+                // Check balance defined by available vibeulons
+                const wallet = await tx.vibulon.findMany({
+                    where: { ownerId: playerId },
+                    orderBy: { createdAt: 'asc' },
+                    take: 1
+                })
 
-        // Initialize rootId for new bars (recursion support)
-        await db.customBar.update({
-            where: { id: newBar.id },
-            data: { rootId: newBar.id }
+                if (wallet.length < 1) {
+                    throw new Error('Need 1 Vibeulon to stake a Public Quest')
+                }
+
+                const tokenToBurn = wallet[0]
+
+                // Burn the token
+                await tx.vibulon.delete({
+                    where: { id: tokenToBurn.id }
+                })
+
+                // Log the burn
+                await tx.vibulonEvent.create({
+                    data: {
+                        playerId,
+                        source: 'quest_creation_stake',
+                        amount: -1,
+                        notes: `Staked on public quest: ${title}`,
+                        archetypeMove: 'INITIATE' // General move for starting something
+                    }
+                })
+            }
+
+            // Create the Bar
+            const newBar = await tx.customBar.create({
+                data: {
+                    creatorId: playerId,
+                    title,
+                    description,
+                    type: 'vibe',
+                    reward: 1, // Pay it forward
+                    inputs,
+                    visibility,
+                    claimedById,
+                    moveType: moveType || null,
+                    storyPath: 'collective',
+                    storyContent: storyContent || null,
+                    storyMood: storyMood || null,
+                    rootId: 'temp' // Placeholder, updated below
+                }
+            })
+
+            // Update rootId
+            await tx.customBar.update({
+                where: { id: newBar.id },
+                data: { rootId: newBar.id }
+            })
+
+            return newBar
         })
 
         revalidatePath('/')
@@ -67,6 +105,10 @@ export async function createCustomBar(prevState: any, formData: FormData) {
 
     } catch (e: any) {
         console.error("Create bar failed:", e?.message)
+        // Return explicit error message if it was our balance check
+        if (e.message.includes('Need 1 Vibeulon')) {
+            return { error: e.message }
+        }
         return { error: 'Failed to create bar' }
     }
 }

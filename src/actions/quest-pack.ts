@@ -25,7 +25,9 @@ export async function getPlayerPacks() {
             ]
         },
         include: {
-            quests: true,
+            quests: {
+                include: { quest: true }
+            },
             progress: {
                 where: { playerId: player.id }
             }
@@ -42,7 +44,8 @@ export async function getPlayerPacks() {
             playerProgress: pack.progress[0] || null,
             totalQuests: pack.quests.length,
             completedCount: completed.length,
-            completedQuestIds: completed
+            completedQuestIds: completed,
+            isCreator: pack.creatorId === player.id
         }
     })
 }
@@ -57,7 +60,9 @@ export async function getPack(packId: string) {
     const pack = await db.questPack.findUnique({
         where: { id: packId },
         include: {
-            quests: true,
+            quests: {
+                include: { quest: true }
+            },
             progress: {
                 where: { playerId: player.id }
             }

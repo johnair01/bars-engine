@@ -15,6 +15,16 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { error: 'Not logged in' }
     }
 
+    const result = await generateQuestCore(playerId, hexagramId)
+
+    if (result.success) {
+        revalidatePath('/')
+    }
+
+    return result
+}
+
+export async function generateQuestCore(playerId: string, hexagramId: number) {
     try {
         // 1. Fetch Player and Playbook
         const player = await db.player.findUnique({
@@ -89,12 +99,15 @@ export async function generateQuestFromReading(hexagramId: number) {
             data: { rootId: newBar.id }
         })
 
-        revalidatePath('/')
+        // revalidatePath('/') // Moved to wrapper
 
         return { success: true, quest: object }
 
     } catch (e: any) {
         console.error("Generate quest failed:", e?.message)
+        // Log stack for deep debugging
+        if (e.stack) console.error(e.stack)
+
         return { error: e?.message || 'Failed to generate quest' }
     }
 }

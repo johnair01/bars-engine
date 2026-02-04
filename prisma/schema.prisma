@@ -190,12 +190,22 @@ model CustomBar {
   storyContent    String?   // Markdown content for the quest narrative
   storyMood       String?   // Emotional tone: "dramatic", "playful", "serious", "mysterious"
   
+  // System Quests (e.g. Starters) - Reusable, not unique to one claimer
+  isSystem        Boolean   @default(false)
+  
   createdAt       DateTime  @default(now())
   
   // Recursion for Quest Trees
   parentId        String?
   parent          CustomBar? @relation("CustomBarTree", fields: [parentId], references: [id])
   children        CustomBar[] @relation("CustomBarTree")
+  
+  // Relationships for Threads and Packs
+  threadQuests    ThreadQuest[]
+  packQuests      PackQuest[]
+
+  // Active assignments (Multi-player progress)
+  assignments     PlayerQuest[]
   
   rootId          String?   // For fast lookups
   
@@ -229,7 +239,8 @@ model Quest {
   prompt          String
   returnType      String    // "text", "image", "gps"
   
-  assignments     PlayerQuest[]
+  // DEPRECATED: assignments linked to CustomBar now
+  // assignments     PlayerQuest[]
   
   // Recursion
   parentId        String?
@@ -249,15 +260,19 @@ model PlayerQuest {
   playerId        String
   player          Player    @relation(fields: [playerId], references: [id])
   
+  // Link to CustomBar (The Quest Definition)
   questId         String
-  quest           Quest     @relation(fields: [questId], references: [id])
+  quest           CustomBar @relation(fields: [questId], references: [id])
   
   status          String    @default("assigned") // assigned, completed, failed
-  returnText      String?
+  
+  // Submission Data (JSON)
+  inputs          String?   // JSON string of submitted values
   
   assignedAt      DateTime  @default(now())
   completedAt     DateTime?
   
+  @@unique([playerId, questId]) // Ensure unique assignment per quest
   @@map("player_quests")
 }
 
@@ -283,6 +298,9 @@ model QuestThread {
   
   // Reward for completing entire thread
   completionReward Int @default(0)
+
+  // Target Audience (JSON array of playbook names/IDs)
+  allowedPlaybooks String? 
   
   // Thread quests (ordered by position)
   quests      ThreadQuest[]
@@ -305,6 +323,7 @@ model ThreadQuest {
   
   // Links to CustomBar (quest)
   questId     String
+  quest       CustomBar @relation(fields: [questId], references: [id])
   
   // Order in thread (1, 2, 3...)
   position    Int
@@ -346,6 +365,9 @@ model QuestPack {
   creatorType String   @default("system") // "system", "player"
   creatorId   String?  // Player ID if player-created
   
+  // Target Audience (JSON array of playbook names/IDs)
+  allowedPlaybooks String?
+
   // Pack quests (unordered)
   quests      PackQuest[]
   
@@ -353,6 +375,7 @@ model QuestPack {
   progress    PackProgress[]
   
   status      String   @default("active") // active, archived
+  visibility  String   @default("private") // private, public
   
   createdAt   DateTime @default(now())
   
@@ -367,6 +390,7 @@ model PackQuest {
   
   // Links to CustomBar (quest)
   questId     String
+  quest       CustomBar @relation(fields: [questId], references: [id])
   
   @@unique([packId, questId])
   @@map("pack_quests")

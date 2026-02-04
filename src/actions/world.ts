@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
@@ -76,6 +77,53 @@ export async function advanceClock(amount: number = 1) {
 
     revalidatePath('/')
     return { success: true, clock: newClock, act: newAct }
+}
+
+/**
+ * TRIGGER THE TILT (Fiasco)
+ * Transitions the world from Act 1 to Act 2.
+ * This is a one-way door.
+ */
+export async function triggerTilt() {
+    // 0. Verify Admin
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+    if (!playerId) return { error: 'Unauthorized' }
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { roles: { include: { role: true } } }
+    })
+
+    const isAdmin = player?.roles.some(r => r.role.key === 'admin' || r.role.key === 'ENGINEER')
+    if (!isAdmin) return { error: 'Forbidden: Only Admins can tilt the world.' }
+
+    const state = await getGlobalState()
+
+    if (state.currentAct >= 2) {
+        return { error: 'The Tilt has already occurred.' }
+    }
+
+    // 1. Update Global State
+    await db.globalState.update({
+        where: { id: 'singleton' },
+        data: { currentAct: 2 }
+    })
+
+    // 2. Log the Meaningful Event
+    await db.storyTick.create({
+        data: {
+            tickNumber: state.storyClock,
+            actNumber: 2,
+            trigger: 'THE_TILT',
+            description: 'The Tilt has occurred. The world has shifted. Equilibrium is broken.'
+        }
+    })
+
+    // 3. (Optional) In the future, this would inject "Tilt" elements into the custom_bars table
+
+    revalidatePath('/')
+    return { success: true, message: 'The Tilt has been triggered.' }
 }
 
 /**

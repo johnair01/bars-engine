@@ -11,6 +11,103 @@ const CompleteBarSchema = z.object({
     inputs: z.record(z.string(), z.any()),
 })
 
+
+// Core logic function (Testable)
+export async function completeQuestLogic(playerId: string, barId: string, inputs: Record<string, any>) {
+    // 1. Resolve Bar Definition from DB
+    const barDef = await db.customBar.findUnique({
+        where: { id: barId }
+    })
+
+    if (!barDef) {
+        return { error: 'Unknown bar' }
+    }
+
+    // 2. Check PlayerQuest Status
+    const existingQuest = await db.playerQuest.findUnique({
+        where: {
+            playerId_questId: {
+                playerId,
+                questId: barId
+            }
+        }
+    })
+
+    if (existingQuest?.status === 'completed') {
+        return { error: 'Already completed' }
+    }
+
+    // 3. Calculate Reward
+    let reward = barDef.reward
+    if (barId === 'bar_signups' && inputs.roles) {
+        reward = inputs.roles.length // Specific logic for signups quest
+    }
+
+    // Prepare Vibulon creation data
+    const vibulonsToCreate: { ownerId: string, originSource: string, originId: string, originTitle: string }[] = []
+    for (let i = 0; i < reward; i++) {
+        vibulonsToCreate.push({
+            ownerId: playerId,
+            originSource: 'quest_reward',
+            originId: barDef.id,
+            originTitle: barDef.title
+        })
+    }
+
+    // 4. Execute Transaction
+    await db.$transaction(async (tx) => {
+        // Upsert PlayerQuest as completed
+        await tx.playerQuest.upsert({
+            where: {
+                playerId_questId: {
+                    playerId,
+                    questId: barId
+                }
+            },
+            update: {
+                status: 'completed',
+                inputs: JSON.stringify(inputs),
+                completedAt: new Date()
+            },
+            create: {
+                playerId,
+                questId: barId,
+                status: 'completed',
+                inputs: JSON.stringify(inputs),
+                completedAt: new Date(),
+                assignedAt: new Date()
+            }
+        })
+
+        // Mint Reward Vibulons
+        if (vibulonsToCreate.length > 0) {
+            await tx.vibulon.createMany({ data: vibulonsToCreate })
+        }
+
+        // Claim Staked Vibulons (if any attached to this bar)
+        // This allows delegated quests to release their attached "bribe" when completed
+        const stakedCount = await tx.vibulon.count({ where: { stakedOnBarId: barId } })
+        if (stakedCount > 0) {
+            await tx.vibulon.updateMany({
+                where: { stakedOnBarId: barId },
+                data: { ownerId: playerId, stakedOnBarId: null }
+            })
+        }
+
+        // Log Event
+        await tx.vibulonEvent.create({
+            data: {
+                playerId,
+                source: 'starter_quest',
+                amount: reward + stakedCount,
+                notes: `Completed: ${barDef.title} (Reward: ${reward}, Staked: ${stakedCount})`
+            }
+        })
+    })
+
+    return { success: true, reward }
+}
+
 export async function completeStarterQuest(formData: FormData) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -29,104 +126,14 @@ export async function completeStarterQuest(formData: FormData) {
         return { error: 'Invalid input data' }
     }
 
-    let barDef = STARTER_BARS.find(b => b.id === barId)
-
-    // Look up in CustomBar if not found
-    if (!barDef) {
-        const customBar = await db.customBar.findUnique({
-            where: { id: barId }
-        })
-        if (customBar && customBar.status === 'active') {
-            barDef = {
-                id: customBar.id,
-                title: customBar.title,
-                description: customBar.description,
-                type: customBar.type as 'vibe' | 'story',
-                reward: customBar.reward,
-                inputs: JSON.parse(customBar.inputs || '[]'),
-                unique: false
-            }
-        }
-    }
-
-    if (!barDef) {
-        return { error: 'Unknown bar' }
-    }
-
     try {
-        const starterPack = await db.starterPack.findUnique({
-            where: { playerId }
-        })
+        const result = await completeQuestLogic(playerId, barId, inputs)
 
-        if (!starterPack) {
-            return { error: 'Starter pack not found' }
+        if (result.success) {
+            revalidatePath('/')
         }
 
-        const data = JSON.parse(starterPack.data) as { completedBars: { id: string; inputs: Record<string, any> }[] }
-
-        // Check if already completed
-        if (data.completedBars.some(cb => cb.id === barId)) {
-            return { error: 'Already completed' }
-        }
-
-        // Add to completed
-        data.completedBars.push({ id: barId, inputs })
-
-        // Calculate reward
-        let reward = barDef.reward
-        if (barId === 'bar_signups' && inputs.roles) {
-            reward = inputs.roles.length // +1 per signup
-        }
-
-        // Prepare Vibulon creation data
-        const vibulonsToCreate: { ownerId: string, originSource: string, originId: string, originTitle: string }[] = []
-        for (let i = 0; i < reward; i++) {
-            vibulonsToCreate.push({
-                ownerId: playerId,
-                originSource: 'quest_reward',
-                originId: barDef.id,
-                originTitle: barDef.title
-            })
-        }
-
-        await db.$transaction(async (tx) => {
-            // 1. Update Player's StarterPack (Data only)
-            await tx.starterPack.update({
-                where: { playerId },
-                data: {
-                    data: JSON.stringify(data),
-                    // initialVibeulons: { increment: reward } // DEPRECATED: No longer using integer balance
-                }
-            })
-
-            // 2. Mint Reward Vibulons
-            if (vibulonsToCreate.length > 0) {
-                await tx.vibulon.createMany({ data: vibulonsToCreate })
-            }
-
-            // 3. Claim Staked Vibulons (if any attached to this bar)
-            // This allows delegated quests to release their attached "bribe"
-            const stakedCount = await tx.vibulon.count({ where: { stakedOnBarId: barId } })
-            if (stakedCount > 0) {
-                await tx.vibulon.updateMany({
-                    where: { stakedOnBarId: barId },
-                    data: { ownerId: playerId, stakedOnBarId: null }
-                })
-            }
-
-            // 4. Log Event
-            await tx.vibulonEvent.create({
-                data: {
-                    playerId,
-                    source: 'starter_quest',
-                    amount: reward + stakedCount,
-                    notes: `Completed: ${barDef.title} (Reward: ${reward}, Staked: ${stakedCount})`
-                }
-            })
-        })
-
-        revalidatePath('/')
-        return { success: true, reward }
+        return result
 
     } catch (e) {
         console.error(e)

@@ -11,6 +11,8 @@ import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
+import { AlchemyCaster } from '@/components/AlchemyCaster'
+import { KotterGauge } from '@/components/KotterGauge'
 
 export default async function Home() {
   const cookieStore = await cookies()
@@ -95,12 +97,17 @@ export default async function Home() {
     select: { id: true, name: true },
     orderBy: { name: 'asc' }
   })
-  const starterPackData = player.starterPack
-    ? JSON.parse(player.starterPack.data) as {
-      completedBars: { id: string; inputs: Record<string, any> }[],
-      activeBars?: string[]
-    }
-    : { completedBars: [], activeBars: [] }
+  // Derive quest state from PlayerQuest table
+  const completedBars = player.quests
+    .filter(q => q.status === 'completed')
+    .map(q => ({
+      id: q.questId,
+      inputs: q.inputs ? JSON.parse(q.inputs) : {}
+    }))
+
+  const activeBars = player.quests
+    .filter(q => q.status === 'assigned')
+    .map(q => q.questId)
 
   // Fetch user-created bars:
   // - Public bars that are unclaimed (available to everyone)
@@ -163,9 +170,14 @@ export default async function Home() {
 
           <div className="flex gap-4">
             {/* CLOCK WIDGET */}
-            <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 text-center min-w-[100px]">
-              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-              <div className="text-4xl font-mono text-purple-400">{globalState.currentAct}</div>
+            <div className="flex flex-col gap-2">
+              <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 text-center min-w-[100px]">
+                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Act</div>
+                <div className="text-4xl font-mono text-purple-400">{globalState.currentAct}</div>
+              </div>
+
+              {/* KOTTER GAUGE (Small) */}
+              <KotterGauge currentStage={Math.ceil(globalState.storyClock / 8)} label="Global Phase" />
             </div>
 
             <Link href="/wallet" className="text-right bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition">
@@ -232,8 +244,8 @@ export default async function Home() {
             </div>
 
             <StarterQuestBoard
-              completedBars={starterPackData.completedBars}
-              activeBars={starterPackData.activeBars || []}
+              completedBars={completedBars}
+              activeBars={activeBars}
               customBars={visibleCustomBars}
               ichingBars={ichingReadings}
               potentialDelegates={potentialDelegates}
@@ -283,49 +295,26 @@ export default async function Home() {
 
               {/* Basic Moves Grid */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                {/* Wake Up */}
-                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>👁</span>
-                    <span className="text-xs uppercase text-zinc-500 font-bold">Wake Up</span>
-                  </div>
-                  <div className="text-xs text-zinc-400">
-                    {player.playbook?.wakeUp?.split(':')[0] || player.nation?.wakeUp?.split(':')[0] || 'Not set'}
-                  </div>
-                </div>
-
-                {/* Clean Up */}
-                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>🧹</span>
-                    <span className="text-xs uppercase text-zinc-500 font-bold">Clean Up</span>
-                  </div>
-                  <div className="text-xs text-zinc-400">
-                    {player.playbook?.cleanUp?.split(':')[0] || player.nation?.cleanUp?.split(':')[0] || 'Not set'}
-                  </div>
-                </div>
-
-                {/* Grow Up */}
-                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>🌱</span>
-                    <span className="text-xs uppercase text-zinc-500 font-bold">Grow Up</span>
-                  </div>
-                  <div className="text-xs text-zinc-400">
-                    {player.playbook?.growUp?.split(':')[0] || player.nation?.growUp?.split(':')[0] || 'Not set'}
-                  </div>
-                </div>
-
-                {/* Show Up */}
-                <div className="bg-zinc-900/30 border border-zinc-800 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span>🎯</span>
-                    <span className="text-xs uppercase text-zinc-500 font-bold">Show Up</span>
-                  </div>
-                  <div className="text-xs text-zinc-400">
-                    {player.playbook?.showUp?.split(':')[0] || player.nation?.showUp?.split(':')[0] || 'Not set'}
-                  </div>
-                </div>
+                <AlchemyCaster
+                  moveName="Wake Up"
+                  icon="👁"
+                  description={player.playbook?.wakeUp?.split(':')[0] || player.nation?.wakeUp?.split(':')[0]}
+                />
+                <AlchemyCaster
+                  moveName="Clean Up"
+                  icon="🧹"
+                  description={player.playbook?.cleanUp?.split(':')[0] || player.nation?.cleanUp?.split(':')[0]}
+                />
+                <AlchemyCaster
+                  moveName="Grow Up"
+                  icon="🌱"
+                  description={player.playbook?.growUp?.split(':')[0] || player.nation?.growUp?.split(':')[0]}
+                />
+                <AlchemyCaster
+                  moveName="Show Up"
+                  icon="🎯"
+                  description={player.playbook?.showUp?.split(':')[0] || player.nation?.showUp?.split(':')[0]}
+                />
               </div>
 
               {/* Special Moves */}
@@ -334,9 +323,7 @@ export default async function Home() {
                   <div className="text-xs uppercase text-zinc-500 font-bold mb-2">Special Moves ({player.playbook.name.split(' ')[0]})</div>
                   <div className="flex flex-wrap gap-2">
                     {JSON.parse(player.playbook.moves).map((move: string, i: number) => (
-                      <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-800 rounded text-xs text-blue-300">
-                        {move}
-                      </span>
+                      <AlchemyCaster key={i} moveName={move} isSpecial={true} />
                     ))}
                   </div>
                 </div>
@@ -351,7 +338,7 @@ export default async function Home() {
               <h2 className="text-zinc-700 uppercase tracking-widest text-sm font-bold">💀 Graveyard</h2>
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
-            <StarterQuestBoard completedBars={starterPackData.completedBars} activeBars={starterPackData.activeBars || []} view="completed" />
+            <StarterQuestBoard completedBars={completedBars} activeBars={activeBars} view="completed" />
           </section>
         </div>
       </div>

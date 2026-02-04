@@ -25,9 +25,13 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     useEffect(() => {
         if (state?.success) {
             setIsOpen(false)
-            router.push('/bars/available') // Redirect to available bars
+            if (visibility === 'private') {
+                router.push('/hand')
+            } else {
+                router.push('/bars/available')
+            }
         }
-    }, [state, router])
+    }, [state, router, visibility])
 
     if (!isOpen) {
         return (
@@ -111,8 +115,8 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                                         type="button"
                                         onClick={() => setStoryMood(storyMood === mood.key ? null : mood.key)}
                                         className={`px-3 py-1 rounded-full text-xs transition ${storyMood === mood.key
-                                                ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
-                                                : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
+                                            : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
                                             }`}
                                     >
                                         {mood.emoji} {mood.label}
@@ -153,13 +157,20 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={() => setVisibility('public')}
+                            onClick={() => {
+                                setVisibility('public')
+                                const select = document.querySelector('select[name="targetPlayerId"]') as HTMLSelectElement
+                                if (select) select.value = ""
+                            }}
                             className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'public'
                                 ? 'bg-green-900/30 border-green-600 text-green-400'
                                 : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
                                 }`}
                         >
-                            🌍 Public
+                            <div className="flex flex-col items-center">
+                                <span>🌍 Public</span>
+                                <span className="text-[10px] text-green-500/80 font-mono">Cost: 1v Stake</span>
+                            </div>
                         </button>
                         <button
                             type="button"
@@ -215,6 +226,11 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     <select
                         name="targetPlayerId"
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                setVisibility('private')
+                            }
+                        }}
                     >
                         <option value="">Anyone can claim (unassigned)</option>
                         {players.map(p => (
@@ -223,8 +239,8 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     </select>
                     <p className="text-xs text-zinc-600">
                         {visibility === 'public'
-                            ? 'Assigned quests still appear in Available for the specific player.'
-                            : 'Private quests with an assignee are only visible to that player.'}
+                            ? 'Public quests go to the "Salad Bowl" for anyone to claim.'
+                            : 'Private assigned quests go directly to the player. They can release it later.'}
                     </p>
                     {players.length === 0 && (
                         <p className="text-xs text-zinc-600 italic">Loading players...</p>

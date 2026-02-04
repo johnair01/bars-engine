@@ -15,81 +15,66 @@ export async function pickUpBar(formData: FormData) {
 
     const barId = formData.get('barId') as string
 
-    let barDef = STARTER_BARS.find(b => b.id === barId)
+    // 1. Look up CustomBar in DB
+    const customBar = await db.customBar.findUnique({
+        where: { id: barId }
+    })
 
-    // Look up in CustomBar if not found
-    if (!barDef) {
-        const customBar = await db.customBar.findUnique({
-            where: { id: barId }
-        })
-        if (customBar && customBar.status === 'active') {
-            // Check if already claimed by someone else
-            if (customBar.claimedById && customBar.claimedById !== playerId) {
-                return { error: 'This quest has already been claimed by another player.' }
-            }
-            // Private bars can only be received via delegation, not picked up
-            if (customBar.visibility === 'private' && customBar.creatorId !== playerId && !customBar.claimedById) {
-                return { error: 'Private quests cannot be picked up directly.' }
-            }
-
-            // Claim the bar if not already claimed
-            if (!customBar.claimedById) {
-                await db.customBar.update({
-                    where: { id: barId },
-                    data: { claimedById: playerId }
-                })
-            }
-
-            // Adapt to BarDef interface (partial)
-            barDef = {
-                id: customBar.id,
-                title: customBar.title,
-                description: customBar.description,
-                type: customBar.type as 'vibe' | 'story',
-                reward: customBar.reward,
-                inputs: JSON.parse(customBar.inputs || '[]'),
-                unique: false
-            }
-        }
-    }
-
-    if (!barDef) {
+    if (!customBar) {
         return { error: 'Unknown bar' }
     }
 
+    if (customBar.status !== 'active') {
+        return { error: 'Quest is not active.' }
+    }
+
+    // 2. Validate Access / Claiming
+    // Check if already claimed by another player (for unique quests)
+    if (customBar.claimedById && customBar.claimedById !== playerId) {
+        return { error: 'This quest has already been claimed by another player.' }
+    }
+
+    // Private bars logic
+    if (customBar.visibility === 'private' && customBar.creatorId !== playerId && !customBar.claimedById) {
+        return { error: 'Private quests cannot be picked up directly.' }
+    }
+
+    // Claim the bar if not already claimed AND not a system quest
+    if (!customBar.claimedById && !customBar.isSystem) {
+        await db.customBar.update({
+            where: { id: barId },
+            data: { claimedById: playerId }
+        })
+    }
+
+    // 3. Create PlayerQuest (Assignment)
     try {
-        const starterPack = await db.starterPack.findUnique({
-            where: { playerId }
+        const existingQuest = await db.playerQuest.findUnique({
+            where: {
+                playerId_questId: {
+                    playerId,
+                    questId: barId
+                }
+            }
         })
 
-        if (!starterPack) {
-            return { error: 'Starter pack not found' }
+        if (existingQuest) {
+            if (existingQuest.status === 'completed') {
+                return { error: 'Bar already completed' }
+            }
+            if (existingQuest.status === 'assigned') {
+                return { error: 'Bar already active' }
+            }
+            // If failed, we might allow retry? assuming assigned for now if extracting logic implies retry
         }
 
-        const data = JSON.parse(starterPack.data) as {
-            completedBars: { id: string; inputs: Record<string, any> }[],
-            activeBars: string[]
-        }
-
-        // Initialize activeBars if not present
-        if (!data.activeBars) {
-            data.activeBars = []
-        }
-
-        // Check if already active or completed
-        if (data.activeBars.includes(barId)) {
-            return { error: 'Bar already active' }
-        }
-        if (data.completedBars.some(cb => cb.id === barId)) {
-            return { error: 'Bar already completed' }
-        }
-
-        // Add to active
-        data.activeBars.push(barId)
-
-        await db.starterPack.update({
-            where: { playerId },
-            data: { data: JSON.stringify(data) }
+        // Create assignment
+        await db.playerQuest.create({
+            data: {
+                playerId,
+                questId: barId,
+                status: 'assigned'
+            }
         })
 
         revalidatePath('/')

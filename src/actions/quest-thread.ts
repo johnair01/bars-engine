@@ -28,7 +28,8 @@ export async function getPlayerThreads() {
         },
         include: {
             quests: {
-                orderBy: { position: 'asc' }
+                orderBy: { position: 'asc' },
+                include: { quest: true }
             },
             progress: {
                 where: { playerId: player.id }
@@ -57,7 +58,8 @@ export async function getThread(threadId: string) {
         where: { id: threadId },
         include: {
             quests: {
-                orderBy: { position: 'asc' }
+                orderBy: { position: 'asc' },
+                include: { quest: true }
             },
             progress: {
                 where: { playerId: player.id }
@@ -112,7 +114,7 @@ export async function advanceThread(threadId: string, questId: string) {
     const thread = await db.questThread.findUnique({
         where: { id: threadId },
         include: {
-            quests: { orderBy: { position: 'asc' } },
+            quests: { orderBy: { position: 'asc' }, include: { quest: true } },
             progress: { where: { playerId: player.id } }
         }
     })

@@ -17,7 +17,7 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
         where: {
             playerId: player.id,
             questId,
-            status: 'active' // Only complete if still active
+            status: 'assigned' // Only complete if still assigned
         }
     })
 
@@ -32,7 +32,7 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
         where: { id: activeQuest.id },
         data: {
             status: 'completed',
-            returnText: returnText || null, // Store if provided
+            inputs: JSON.stringify({ returnText }), // Store as JSON
             completedAt: new Date(),
         }
     })

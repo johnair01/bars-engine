@@ -15,6 +15,9 @@ export function NavBar({ isAdmin }: { isAdmin: boolean }) {
                 <Link href="/" className={`px-4 py-3 rounded transition-colors ${isActive('/')}`}>
                     TERMINAL
                 </Link>
+                <Link href="/town-square" className={`px-4 py-3 rounded transition-colors ${isActive('/town-square')}`}>
+                    MARKET
+                </Link>
                 {isAdmin && (
                     <Link href="/admin" className={`px-4 py-3 rounded transition-colors ${isActive('/admin')}`}>
                         CONTROL

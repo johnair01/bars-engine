@@ -10,7 +10,7 @@ export default async function QuestPage() {
 
     // Find active quest
     const activeQuest = await db.playerQuest.findFirst({
-        where: { playerId: player.id, status: 'active' },
+        where: { playerId: player.id, status: 'assigned' },
         include: { quest: true }
     })
 
@@ -36,7 +36,7 @@ export default async function QuestPage() {
                         {activeQuest.quest.title}
                     </h1>
                     <p className="text-zinc-400 text-lg leading-relaxed font-light">
-                        {activeQuest.quest.prompt}
+                        {activeQuest.quest.description}
                     </p>
                 </div>
 
