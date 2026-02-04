@@ -331,13 +331,34 @@ export default async function Home() {
             </section>
           )}
 
-          {/* 5. GRAVEYARD (Completed Bars) */}
+          {/* 5. GRAVEYARD (Completed Bars & Journeys) */}
           <section className="opacity-60 hover:opacity-100 transition duration-500">
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px bg-zinc-800 flex-1"></div>
               <h2 className="text-zinc-700 uppercase tracking-widest text-sm font-bold">💀 Graveyard</h2>
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
+
+            {/* Completed Journeys (Threads & Packs) */}
+            {(threads.some(t => t.playerProgress?.completedAt) || packs.some(p => p.status === 'completed')) && (
+              <div className="mb-6">
+                <h3 className="text-xs text-zinc-600 uppercase tracking-widest mb-3">Completed Journeys</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {threads
+                    .filter(t => t.playerProgress?.completedAt)
+                    .map(thread => (
+                      <QuestThread key={thread.id} thread={thread} />
+                    ))}
+                  {packs
+                    .filter(p => p.status === 'completed')
+                    .map(pack => (
+                      <QuestPack key={pack.id} pack={pack} />
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Completed Individual Quests */}
             <StarterQuestBoard completedBars={completedBars} activeBars={activeBars} view="completed" />
           </section>
         </div>
