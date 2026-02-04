@@ -1,21 +1,20 @@
 import { db } from '@/lib/db'
-import { cookies } from 'next/headers'
+import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
 import { pickUpBar } from '@/actions/pick-up-bar'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 
 export default async function AvailableBarsPage() {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
+    const currentPlayer = await getCurrentPlayer()
 
-    if (!playerId) {
+    if (!currentPlayer) {
         return <div className="p-8 text-center text-zinc-500">Access Denied</div>
     }
 
-    // Get player with playbook
+    // Get player with playbook (already have from getCurrentPlayer, but need playbook)
     const player = await db.player.findUnique({
-        where: { id: playerId },
+        where: { id: currentPlayer.id },
         include: { playbook: true }
     })
 

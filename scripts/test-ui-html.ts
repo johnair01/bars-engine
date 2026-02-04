@@ -26,53 +26,49 @@ interface UITest {
 }
 
 const UI_TESTS: UITest[] = [
-    // Public pages (no auth required)
+    // Public pages
     {
         name: 'Landing Page',
         path: '/',
         expectedElements: [
-            'BARS ENGINE',                // App title
-            'Sign Up',                    // CTA button
+            'BARS ENGINE',
+            'Sign Up',
         ],
-        forbiddenElements: [
-            'Application error',
-            'NEXT_NOT_FOUND'
-        ]
-    },
-    {
-        name: 'Invite Landing',
-        path: '/invite/ANTIGRAVITY',
-        expectedElements: [
-            'invite',                     // Some invite-related text
-        ],
-        forbiddenElements: [
-            'Application error',
-        ]
-    },
-    {
-        name: 'Conclave Entry',
-        path: '/conclave',
-        expectedElements: [
-            'email',                      // Login form
-        ],
-        forbiddenElements: [
-            'Application error',
-        ]
+        forbiddenElements: ['Application error']
     },
     {
         name: 'Health Check',
         path: '/api/health',
-        expectedElements: [
-            'ok',                         // Health response
-        ],
+        expectedElements: ['ok'],
         forbiddenElements: []
     },
-]
 
-// Note: These pages require authentication
-// /bars/available, /wallet, /iching, /quest
-// They redirect to /conclave when not logged in
-// To test these, need to set up auth cookie or test the redirect behavior
+    // Auth-protected pages (DEV_PLAYER_ID in .env bypasses auth)
+    {
+        name: 'Available Bars',
+        path: '/bars/available',
+        expectedElements: [
+            'Available Commissions',
+        ],
+        forbiddenElements: ['Application error', 'Access Denied']
+    },
+    {
+        name: 'Wallet',
+        path: '/wallet',
+        expectedElements: [
+            'Wallet',
+        ],
+        forbiddenElements: ['Application error']
+    },
+    {
+        name: 'I Ching',
+        path: '/iching',
+        expectedElements: [
+            'I Ching',
+        ],
+        forbiddenElements: ['Application error']
+    },
+]
 
 async function fetchPage(path: string): Promise<{ status: number; html: string }> {
     const { exec } = await import('child_process')

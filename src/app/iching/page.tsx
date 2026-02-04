@@ -1,13 +1,12 @@
-import { cookies } from 'next/headers'
+import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { CastingRitual } from '@/components/CastingRitual'
 import Link from 'next/link'
 
 export default async function IChingPage() {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
+    const player = await getCurrentPlayer()
 
-    if (!playerId) {
+    if (!player) {
         redirect('/')
     }
 
