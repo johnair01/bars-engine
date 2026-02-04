@@ -2,7 +2,7 @@
 
 import { useState, useActionState, useEffect } from 'react'
 import { createCharacter } from '@/actions/conclave'
-import { checkEmail, login } from '@/actions/conclave-auth'
+import { checkEmail, checkContactAvailability, login } from '@/actions/conclave-auth'
 import { useRouter } from 'next/navigation'
 
 type Nation = {
@@ -53,6 +53,8 @@ export function ConclaveWizard({
     const [playbookId, setPlaybookId] = useState<string | null>(null)
     const [expandedNation, setExpandedNation] = useState<string | null>(null)
     const [expandedPlaybook, setExpandedPlaybook] = useState<string | null>(null)
+    const [contactError, setContactError] = useState<string | null>(null)
+    const [isValidatingContact, setIsValidatingContact] = useState(false)
 
     const [serverState, formAction, isPending] = useActionState(createCharacter, null)
     const router = useRouter()
@@ -90,7 +92,25 @@ export function ConclaveWizard({
         }
     }
 
-    const selectedNation = nations.find(n => n.id === nationId)
+    const handleIdentityNext = async () => {
+        setContactError(null)
+        setIsValidatingContact(true)
+
+        const result = await checkContactAvailability(email)
+        setIsValidatingContact(false)
+
+        if (!result.available) {
+            if (result.reason === 'account_exists') {
+                setContactError('This email already has an account. Please go back and log in.')
+            } else {
+                setContactError('A character already exists with this email. Please use a different email.')
+            }
+            return
+        }
+
+        setStep('nation')
+    }
+
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
 
     // Random selection handlers
@@ -236,6 +256,11 @@ export function ConclaveWizard({
                         />
                         <p className="text-xs text-zinc-500">Must be at least 6 characters</p>
                     </div>
+                    {contactError && (
+                        <div className="text-red-500 text-sm text-center bg-red-900/20 p-3 rounded">
+                            {contactError}
+                        </div>
+                    )}
                     {/* Pronouns removed from P0 requirement, but can check if needed. Keeping simple. */}
                 </div>
 
@@ -247,11 +272,11 @@ export function ConclaveWizard({
                         ← Back
                     </button>
                     <button
-                        disabled={!identity.name || !password}
-                        onClick={() => setStep('nation')}
+                        disabled={!identity.name || !password || isValidatingContact}
+                        onClick={handleIdentityNext}
                         className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
                     >
-                        Next: Choose Nation →
+                        {isValidatingContact ? 'Checking...' : 'Next: Choose Nation →'}
                     </button>
                 </div>
             </div>

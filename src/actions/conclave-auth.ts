@@ -11,6 +11,27 @@ export async function checkEmail(email: string) {
     return { exists: !!account }
 }
 
+export async function checkContactAvailability(contact: string) {
+    // Check both Account and Player to ensure no conflicts
+    const [existingAccount, existingPlayer] = await Promise.all([
+        db.account.findUnique({ where: { email: contact } }),
+        db.player.findUnique({
+            where: {
+                contactType_contactValue: {
+                    contactType: 'email',
+                    contactValue: contact
+                }
+            }
+        })
+    ])
+
+    if (existingAccount || existingPlayer) {
+        return { available: false, reason: existingAccount ? 'account_exists' : 'player_exists' }
+    }
+
+    return { available: true }
+}
+
 export async function login(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string

@@ -63,6 +63,20 @@ export async function createCharacter(prevState: any, formData: FormData) {
             return { error: 'Account already exists. Please log in.' }
         }
 
+        // Check if a player already exists with this contact (legacy data protection)
+        const existingPlayer = await db.player.findUnique({
+            where: {
+                contactType_contactValue: {
+                    contactType: 'email',
+                    contactValue: identity.contact
+                }
+            }
+        })
+
+        if (existingPlayer) {
+            return { error: 'A character already exists with this contact information. Please use a different email or contact support.' }
+        }
+
         const passwordHash = await hashPassword(identity.password)
 
         const player = await db.$transaction(async (tx) => {
