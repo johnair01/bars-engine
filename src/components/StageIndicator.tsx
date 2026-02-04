@@ -1,6 +1,6 @@
 'use client'
 
-import { KOTTER_STAGES, KotterStage } from '@/actions/stage'
+import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 
 interface StageIndicatorProps {
     stage: number
