@@ -1,34 +1,53 @@
-# Fire (Li): The Clarifier
+# Fire (Li): The Truth Seer
 
 **Trigram**: ☲ (Broken line between two solid - radiance through attachment)  
-**Themes**: Radiant clarity, clinging awareness, illumination  
-**Energy**: Clear sight, attachment that clarifies
+**Archetype**: The one who sees and speaks what's real  
+**Central Conflict**: Your attachment to truth versus compassion and tact
 
 ---
 
 ## The Playbook's Story
 
-Fire doesn't just burn—Fire *illuminates*. This is the playbook of those who bring clarity through radiant awareness, who cling to what matters and make it visible to everyone.
+You're the person who sees through illusions and makes the real visible. Not cruelly, but because clarity matters more to you than comfort. You're drawn to truth the way flames are drawn to fuel—you cling to what's real and make it radiant.
 
-When you embody Fire, you're the one who sees clearly and helps others see too. You attach yourself to what's important and make it radiant. Where you focus, things become clear. You're the light that reveals truth.
+Fire energy is about illuminating clarity. Where you focus, things become CLEAR. Not just to you, but to everyone. Your attention is a light that reveals what was hiding in shadows.
+
+**Example Archetypes**:
+- The Truth-Teller
+- The Clarity-Bringer
+- The Illusion-Burner
 
 ### In the Robot Oscars Heist
 
-You're the one who sees the real situation beneath appearances. Who illuminates the path forward when others are lost. Your clarity is contagious—people near you see better too.
+You're the one who sees what's really happening beneath the surface. Who cuts through pretense to the actual situation. Your construct doesn't hide—it illuminates, scans, reveals the truth of every scenario.
 
-**Your construct affinity**: Scanning systems, illumination tech, clarity enhancement.
+**Your construct affinity**: Scanning systems, truth detection, clarity enhancement
 
-**Your strength**: You SEE clearly. You make truth radiant.
+**Your strength**: You SEE clearly. You make truth visible.
 
-**Your challenge**: Attachment to clarity can become rigidity. Sometimes mystery matters.
+**Your challenge**: Sometimes truth hurts. Sometimes compassion matters more than clarity.
 
-**Your triumph**: When your radiant clarity reveals the solution everyone missed.
+**Your triumph**: When your radiant clarity reveals the solution everyone was avoiding.
 
 ---
 
 ## Why Choose Fire?
 
-**Choose Fire if you:** Want to be the clarifying force that illuminates truth for everyone.
+**Choose Fire if you:** Want to play someone obsessed with seeing and showing what's real.
 
-**Heist role**: The Visionary  
-**Energy**: "I see it. Let me show you what's really happening."
+**Your vibe**: The spotlight, the revealing flame  
+**Your energy**: "I see it. No, really SEE it. Let me show you."
+
+**This is NOT about**:
+- Being cruel with truth
+- Ignoring feelings
+- Making people uncomfortable for fun
+
+**This IS about**:
+- The tension between truth and tact
+- Being the character who can't unsee reality
+- The power and burden of clear sight
+
+---
+
+*Fire: When you're so attached to truth that your clarity illuminates everything.*

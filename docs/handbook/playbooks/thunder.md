@@ -1,34 +1,53 @@
-# Thunder (Zhen): The Awakener
+# Thunder (Zhen): The Decisive Storm
 
 **Trigram**: ☳ (Solid line below two broken - movement emerging)  
-**Themes**: Shocking action, mobilization, bold awakening  
-**Energy**: Sudden movement, decisive breaks
+**Archetype**: The one who acts in the crucial moment  
+**Central Conflict**: Your need for decisive action versus patience and timing
 
 ---
 
 ## The Playbook's Story
 
-Thunder doesn't ease in—Thunder STRIKES. This is the playbook of those who understand that sometimes the only way forward is a sudden, shocking break from how things have been.
+You're the person who breaks stalemates. Not through planning or subtlety, but through bold, shocking action at exactly the right moment. You feel the charge building, the tension mounting—and then you STRIKE.
 
-When you embody Thunder, you're the catalyst. The one who breaks stalemates with bold action. Who wakes people up from complacency. Who moves decisively when decisiveness matters most.
+Thunder energy is about perfect timing meeting total commitment. You're not reckless—you're decisive. You know when the moment has arrived and you don't hesitate. Your action shocks systems awake.
+
+**Example Archetypes**:
+- The Storm That Breaks The Silence
+- The Moment Seizer
+- The Bold Interrupter
 
 ### In the Robot Oscars Heist
 
-You're the one who acts when everyone else is planning. Your timing is everything—strike at the perfect moment and everything changes. Too early or too late, and thunder is just noise.
+You're the energy that breaks through when everyone's overthinking. Not the planner, but the one who acts when action matters more than perfection. Your construct strikes fast, hits hard, changes everything in an instant.
 
-**Your construct affinity**: Burst systems, shock tactics, rapid mobilization.
+**Your construct affinity**: Burst systems, shock tactics, rapid mobilization
 
-**Your strength**: You MOVE NOW. You shock systems awake.
+**Your strength**: You ACT NOW. You break paralysis through bold moves.
 
-**Your challenge**: Not every moment needs thunderous action. Sometimes quiet matters.
+**Your challenge**: Not every moment needs thunder. Sometimes quiet brewing creates more power.
 
-**Your triumph**: When your perfectly-timed strike shatters the impossible.
+**Your triumph**: When your perfectly-timed strike turns "impossible stalemate" into "we're through!"
 
 ---
 
 ## Why Choose Thunder?
 
-**Choose Thunder if you:** Want to be the bold force that acts decisively in crucial moments.
+**Choose Thunder if you:** Want to play someone who thrives in decisive moments.
 
-**Heist role**: The Shock Trooper  
-**Energy**: "NOW. We act NOW."
+**Your vibe**: The storm, the disruptor, the one who acts boldly NOW  
+**Your energy**: "Stop planning. We go. NOW."
+
+**This is NOT about**:
+- Making decisions for the group
+- Being impulsive or reckless
+- Taking charge of the party
+
+**This IS about**:
+- Being the character who seizes crucial moments
+- The tension between acting and waiting
+- The thrill of perfect timing
+
+---
+
+*Thunder: When you're so attuned to the moment that your boldness becomes precision.*

@@ -1,34 +1,53 @@
-# Lake (Dui): The Connector
+# Lake (Dui): The Joyful Connector
 
 **Trigram**: ☱ (Broken line above two solid - joyous openness)  
-**Themes**: Joyous exchange, openness, connection  
-**Energy**: Playful communication, mutual delight
+**Archetype**: The one who brings people together through delight  
+**Central Conflict**: Your openness and generosity versus healthy boundaries
 
 ---
 
 ## The Playbook's Story
 
-Lake doesn't hoard—Lake *exchanges*. This is the playbook of those who understand that joy comes from open connection, that the best experiences are shared ones, that delight multiplies when it's passed around.
+You're the person who lights up when connecting with others. Not from neediness, but because genuine exchange DELIGHTS you. You're open, generous, playful—and people are drawn to your joy like moths to flame.
 
-When you embody Lake, you're the connector. The one who creates joy through bringing people together. You're open, playful, generous with energy and attention. You delight in exchange—of ideas, energy, laughter, connection.
+Lake energy is about joyous exchange. You don't hoard experiences or energy—you SHARE. Every interaction is an opportunity for mutual delight. You make people feel seen, valued, excited to be part of something together.
+
+**Example Archetypes**:
+- The Natural Connector
+- The Joy-Spreader
+- The Open Heart
 
 ### In the Robot Oscars Heist
 
-You're the social engineer. The one who makes contacts, builds bridges, turns strangers into allies through genuine joyful connection. Your openness is disarming—people want to help you because being around you is delightful.
+You're the one who makes friends out of strangers, who turns tense situations playful, who reminds everyone this is supposed to be FUN. Your construct doesn't fight—it connects, communicates, creates networks of cooperation.
 
-**Your construct affinity**: Communication systems, networked protocols, collaborative tech.
+**Your construct affinity**: Communication systems, networked protocols, collaborative tech
 
-**Your strength**: You CONNECT. You bring joy. You facilitate exchange.
+**Your strength**: You CONNECT. You bring delight. You make everything more joyful.
 
-**Your challenge**: Openness can become vulnerability. Sometimes boundaries matter.
+**Your challenge**: Your openness can become vulnerability. Sometimes boundaries protect joy.
 
-**Your triumph**: When your joyous connections turn isolated individuals into a unified crew.
+**Your triumph**: When your joyful connections turn isolated individuals into a crew that loves each other.
 
 ---
 
 ## Why Choose Lake?
 
-**Choose Lake if you:** Want to be the joyous connector who brings people together through delight.
+**Choose Lake if you:** Want to play someone who creates joy through authentic connection.
 
-**Heist role**: The Face  
-**Energy**: "Let's do this together! It'll be amazing!"
+**Your vibe**: The party spark, the genuine friend, the delight-bringer  
+**Your energy**: "This is going to be AMAZING and we're doing it TOGETHER!"
+
+**This is NOT about**:
+- Being fake-cheerful
+- Ignoring real problems
+- Making everything superficial
+
+**This IS about**:
+- The tension between openness and boundaries
+- Being the character who creates genuine joy
+- The power of authentic delight
+
+---
+
+*Lake: When you're so genuinely joyful that connection becomes contagious.*

@@ -1,34 +1,53 @@
-# Wind (Xun): The Penetrator
+# Wind (Xun): The Subtle Influence
 
 **Trigram**: ☴ (Broken line below two solid - gentle but persistent)  
-**Themes**: Gentle persistence, penetration, traveling  
-**Energy**: Subtle influence, gradual change
+**Archetype**: The one who changes everything gradually  
+**Central Conflict**: Your subtle persistence versus the desire to be seen and direct
 
 ---
 
 ## The Playbook's Story
 
-Wind doesn't force—Wind *penetrates*. This is the playbook of those who understand that the most powerful changes happen gradually, subtly, persistently until they've transformed everything.
+You're the person who shifts things without anyone noticing until it's done. Not through force, but through gentle, persistent influence. You're the conversation that changes a mind, the small action repeated until it's transformed everything.
 
-When you embody Wind, you're the gentle but unstoppable force. You travel through spaces others don't notice. You persist without aggression until you've penetrated to the very center of things. Soft, but over time, impossibly powerful.
+Wind energy is about patient penetration. You don't break doors—you find the cracks and widen them so gently that eventually they're open. Soft, subtle, but utterly unstoppable over time.
+
+**Example Archetypes**:
+- The Gentle Influencer
+- The Patient Transformer
+- The Unseen Changer
 
 ### In the Robot Oscars Heist
 
-You're the one who moves through security unnoticed. Who gradually shifts perspectives until allies appear where enemies stood. You don't break doors—you find the cracks and widen them gently until they open.
+You're the one who shifts perspectives, who gradually moves pieces into place, who creates opportunities through persistent subtle action. Your construct doesn't announce itself—it just somehow ends up exactly where it needs to be.
 
-**Your construct affinity**: Infiltration systems, gradual influence, persistent pressure.
+**Your construct affinity**: Infiltration systems, gradual influence, persistent pressure
 
-**Your strength**: You PENETRATE barriers. You travel everywhere.
+**Your strength**: You PENETRATE everywhere. You change things subtly but totally.
 
-**Your challenge**: Subtlety can become invisibility. Sometimes you need to be seen.
+**Your challenge**: Subtlety can feel invisible. Sometimes you want to be SEEN, not just effective.
 
-**Your triumph**: When your gentle persistence creates total transformation.
+**Your triumph**: When you realize your gentle persistence has transformed the entire situation.
 
 ---
 
 ## Why Choose Wind?
 
-**Choose Wind if you:** Want to be the subtle force that penetrates everywhere through gentle persistence.
+**Choose Wind if you:** Want to play someone whose power is in gentle, persistent influence.
 
-**Heist role**: The Infiltrator  
-**Energy**: "Gently, gently... and now we're through."
+**Your vibe**: The breeze that becomes the wind, the subtle force  
+**Your energy**: "I'll just... keep... gently... pushing..."
+
+**This is NOT about**:
+- Manipulating people
+- Being passive-aggressive
+- Avoiding direct action forever
+
+**This IS about**:
+- The tension between subtlety and visibility
+- Being the character who changes things gradually
+- The satisfaction of gentle persistence winning
+
+---
+
+*Wind: When you're so persistent in your gentleness that walls become doors.*
