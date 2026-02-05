@@ -162,27 +162,27 @@ export default async function Home() {
 
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">{player.name}</h1>
             <div className="text-zinc-400 text-sm font-mono">{player.contactValue}</div>
           </div>
 
-          <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
             {/* CLOCK WIDGET */}
-            <div className="flex flex-col gap-2 flex-1 sm:flex-initial">
-              <div className="bg-zinc-900/50 p-3 sm:p-4 rounded-xl border border-zinc-800 text-center min-w-[80px] sm:min-w-[100px]">
-                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-                <div className="text-3xl sm:text-4xl font-mono text-purple-400">{globalState.currentAct}</div>
+            <div className="flex flex-col gap-2">
+              <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 text-center min-w-[70px]">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Act</div>
+                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/8</div>
               </div>
 
               {/* KOTTER GAUGE (Small) */}
               <KotterGauge currentStage={Math.ceil(globalState.storyClock / 8)} label="Global Phase" />
             </div>
 
-            <Link href="/wallet" className="text-right bg-zinc-900/50 p-3 sm:p-4 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition flex-1 sm:flex-initial">
-              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
-              <div className="text-3xl sm:text-4xl font-mono text-green-400">{vibulons} ♦</div>
+            <Link href="/wallet" className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
+              <div className="text-xl sm:text-2xl font-mono text-green-400 truncate">{vibulons} ♦</div>
             </Link>
           </div>
         </div>
