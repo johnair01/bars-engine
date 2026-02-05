@@ -28,9 +28,9 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 pl-64">
+        <div className="min-h-screen bg-black text-zinc-200">
             <AdminNav />
-            <main className="p-8 max-w-6xl mx-auto">
+            <main className="p-4 sm:p-8 max-w-7xl mx-auto transition-all duration-300">
                 {children}
             </main>
         </div>
