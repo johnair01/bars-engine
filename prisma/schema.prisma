@@ -54,6 +54,11 @@ model Player {
   contactValue    String    // TODO: Deprecate
   passwordHash    String?   // TODO: Deprecate in favor of Account.passwordHash   // New P0 requirement for Auth Slice 1
   
+  // Onboarding
+  onboardingMode     String?  @default("expert") // "expert" | "guided"
+  onboardingComplete Boolean  @default(false)
+  storyProgress      Json?    // Track guided mode progress
+  
   // Relations
   inviteId        String    // removed @unique to allow reusable invites
   invite          Invite    @relation("InviteUsed", fields: [inviteId], references: [id])
