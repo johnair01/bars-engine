@@ -57,7 +57,7 @@ model Player {
   // Onboarding
   onboardingMode     String?  @default("expert") // "expert" | "guided"
   onboardingComplete Boolean  @default(false)
-  storyProgress      Json?    // Track guided mode progress
+  storyProgress      String?    // Track guided mode progress (JSON string)
   
   // Relations
   inviteId        String    // removed @unique to allow reusable invites

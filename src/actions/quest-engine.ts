@@ -53,57 +53,91 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
 
-    try {
-        // CASE A: Quest inside a Pack
-        if (context?.packId) {
-            const result = await completePackQuest(context.packId, questId)
-            if (result.error) throw new Error(result.error)
+    if (!player) throw new Error('No active player')
 
-            // Optionally logs specific event if needed, but completePackQuest handles basic progress
-            return { success: true, ...result }
+    // Fetch the quest to check for Story Clock bonuses
+    const quest = await db.customBar.findUnique({
+        where: { id: questId }
+    })
+
+    if (!quest) throw new Error('Quest not found')
+
+    // CHECK FOR STORY CLOCK BONUS
+    let bonusMultiplier = 1
+    let isFirstCompleter = false
+
+    if (quest.hexagramId && quest.periodGenerated) {
+        const globalState = await db.globalState.findUnique({ where: { id: 'singleton' } })
+
+        // Old period bonus
+        if (globalState && quest.periodGenerated < globalState.currentPeriod) {
+            bonusMultiplier = 1.5 // +50% bonus
         }
 
-        // CASE B: Standard / Standalone Quest
-        const activeQuest = await db.playerQuest.findFirst({
-            where: {
-                playerId: player.id,
-                questId,
-                status: 'assigned'
-            }
-        })
-
-        if (!activeQuest) {
-            // Check if it's a public quest we can claim-and-complete instantly? 
-            // For now, let's assume you must have it assigned.
-            return { error: 'Quest not assigned or already completed' }
+        // Check if this is the first completer
+        if (!quest.firstCompleterId) {
+            isFirstCompleter = true
+            // Update quest with first completer
+            await db.customBar.update({
+                where: { id: questId },
+                data: { firstCompleterId: player.id }
+            })
         }
+    }
 
-        // Complete it
+    // MARK QUEST AS COMPLETE
+    const existingAssignment = await db.playerQuest.findFirst({
+        where: { playerId: player.id, questId, status: 'assigned' }
+    })
+
+    if (existingAssignment) {
         await db.playerQuest.update({
-            where: { id: activeQuest.id },
+            where: { id: existingAssignment.id },
             data: {
                 status: 'completed',
                 inputs: JSON.stringify(inputs),
                 completedAt: new Date(),
             }
         })
-
-        // Log completion reward
-        await db.vibulonEvent.create({
+    } else {
+        // Create new completed assignment
+        await db.playerQuest.create({
             data: {
                 playerId: player.id,
-                source: 'quest_complete',
-                amount: 1, // Standard reward
-                notes: `Completed quest: ${questId}`,
-                archetypeMove: 'Arete' // Virtue/Excellence
+                questId,
+                status: 'completed',
+                inputs: JSON.stringify(inputs),
+                completedAt: new Date(),
             }
         })
-
-        revalidatePath('/')
-        return { success: true }
-
-    } catch (e: any) {
-        console.error("Complete quest failed:", e)
-        return { error: e.message || 'Failed to complete quest' }
     }
+
+    // GRANT VIBEULONS with bonus
+    const baseReward = quest.reward || 1
+    const finalReward = Math.floor(baseReward * bonusMultiplier)
+
+    await db.vibulonEvent.create({
+        data: {
+            playerId: player.id,
+            source: 'quest',
+            amount: finalReward,
+            notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
+            archetypeMove: 'IGNITE',
+            questId: questId,
+        }
+    })
+
+    // Handle Pack/Thread progression
+    if (context?.packId) {
+        await completePackQuest(context.packId, questId) // Assuming completePackQuest handles progression
+    }
+
+    // if (context?.threadId) {
+    //     await handleThreadProgression(player.id, context.threadId) // Placeholder for future thread progression
+    // }
+
+    revalidatePath('/')
+    revalidatePath('/story-clock')
+    revalidatePath('/wallet')
+    return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
 }
