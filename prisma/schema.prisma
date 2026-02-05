@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // --------------------------------------------------------
@@ -197,6 +197,11 @@ model CustomBar {
   
   // System Quests (e.g. Starters) - Reusable, not unique to one claimer
   isSystem        Boolean   @default(false)
+  
+  // Story Clock Integration
+  hexagramId      Int?      // Which hexagram generated this quest (1-64)
+  periodGenerated Int?      // Which period this quest was created in (1-8)
+  firstCompleterId String?  // Player who first completed this quest
   
   createdAt       DateTime  @default(now())
   
@@ -541,6 +546,8 @@ model GlobalState {
   
   storyClock      Int       @default(0)
   currentAct      Int       @default(1)
+  currentPeriod   Int       @default(1)  // Current period (1-8)
+  isPaused        Boolean   @default(false) // Pause state
   
   // JSON array of unlocked tier IDs or flags
   unlockedTiers   String    @default("[]") 
