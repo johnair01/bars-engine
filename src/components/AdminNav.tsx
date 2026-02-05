@@ -6,7 +6,7 @@ import { useState } from 'react'
 
 export function AdminNav() {
     const pathname = usePathname()
-    const [isCollapsed, setIsCollapsed] = useState(false)
+    const [isCollapsed, setIsCollapsed] = useState(true) // Default to hidden
 
     const navItems = [
         { name: 'Dashboard', href: '/admin', icon: '🏠' },
@@ -15,6 +15,11 @@ export function AdminNav() {
         { name: 'Players', href: '/admin/players', icon: '👥' },
         { name: 'World Data', href: '/admin/world', icon: '🌍' },
     ]
+
+    const handleNavClick = () => {
+        // Auto-collapse when clicking any nav item
+        setIsCollapsed(true)
+    }
 
     return (
         <>
@@ -31,7 +36,7 @@ export function AdminNav() {
             <nav className={`bg-zinc-900/95 backdrop-blur border-r border-zinc-800 flex flex-col h-screen fixed left-0 top-0 overflow-y-auto transition-all duration-300 z-40 ${isCollapsed ? 'w-0 -translate-x-full' : 'w-64 translate-x-0'
                 }`}>
                 <div className="p-6 border-b border-zinc-800">
-                    <Link href="/admin" className="block">
+                    <Link href="/admin" className="block" onClick={handleNavClick}>
                         <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                             GM Suite
                         </h1>
@@ -46,6 +51,7 @@ export function AdminNav() {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={handleNavClick}
                                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${isActive
                                         ? 'bg-purple-900/20 text-purple-300 border border-purple-900/50'
                                         : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent'
@@ -61,6 +67,7 @@ export function AdminNav() {
                 <div className="p-4 border-t border-zinc-800">
                     <Link
                         href="/"
+                        onClick={handleNavClick}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors"
                     >
                         <span>←</span> Return to Game
