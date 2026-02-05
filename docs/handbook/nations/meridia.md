@@ -1,73 +1,78 @@
 # Meridia: The Golden Noon
 
 **Element**: Earth 🏔️  
-**Themes**: Clarity, balance, mutual benefit  
-**Emotional Channel**: Calm, centeredness, fairness
+**Pitch**: The nation where everything is visible, nothing hides, and balance is sacred. Fair exchange shapes reality.  
+**Hook**: Will your clarity and fairness turn enemies into allies—or will perfect balance trap you when you need to choose a side?
 
 ---
 
-## The Nation's Story
+## The Nation's Setting
 
-Meridia stands at high noon, where everything is illuminated and nothing hides. This is the nation of clear sight, fair exchange, and the understanding that true power comes from balance.
+Meridia stands at high noon, where light eliminates all shadows. This is the nation of clear sight, fair exchange, and the understanding that true power comes not from domination but from win-win thinking.
 
-Citizens of Meridia are traders in the deepest sense—not just of goods, but of value itself. They understand that every interaction is an exchange, and the most successful deals are the ones where everyone walks away richer. They see through pretense not with cynicism but with the kind clarity of midday sun.
+Walk through Meridia's markets and you'll see exchanges happening at every level—not just goods, but ideas, energy, value itself. Their constructs are fortress-like yet graceful. Their citizens see through pretense not with cynicism but with the kind clarity of midday sun.
 
-In Meridia, shadows are short because there's nothing to hide. Attachments are released through the simple practice of fair exchange: old for new, what no longer serves for what does. Everything in balance, everything in its proper place under the golden light.
+**The Culture**:
+- **Values**: Clarity, balance, fairness, mutual benefit
+- **Aesthetic**: Golden light, balanced constructs, open markets
+- **Philosophy**: "Stand in full light. See clearly. Deal fairly. Everyone wins."
 
-### In the Robot Oscars Heist
-
-Meridia's role is **the negotiation**. Getting past guards? That's a deal to be made. Need equipment? That's value to be exchanged. Every obstacle is an opportunity for mutual benefit—if you're clear-sighted enough to see it.
-
-Their constructs are fortress-like yet graceful—defensive systems that protect while enabling movement, enduring foundations that support rather than dominate. They stand like mountains at noon: solid, clear, unmistakable.
-
-### What Playing Meridia Feels Like
-
-You're the crew's center of gravity. The one who sees situations clearly and finds win-win solutions. You create stability that empowers others to take risks.
-
-**Your construct style**: Defensive matrices, support systems, enduring presence.
-
-**Your challenge**: Sometimes perfect balance means not choosing sides when you should.
-
-**Your triumph**: When your clarity and fairness turn enemies into allies.
+**What Makes Meridia Distinct**:
+- They're masters of negotiation—every conflict is an opportunity for mutual benefit
+- Their constructs balance offense and defense, individual and collective
+- Shadow work is transactional: release old patterns by trading them for new ones
+- Attachments are released through conscious, fair exchange
 
 ---
 
-## The Four Moves of Meridia
+## Playing from Meridia
 
-### 👁 Wake Up: Noon Clarity
-*Stand in the full light and see all things as they are.*
+**What it means to be Meridian in the heist**:
 
-Awareness in Meridia is radical honesty. No shadows, no illusions, no comforting lies. See things exactly as they are—that's where wisdom begins.
+You see clearly—the guards are just doing their jobs. The corrupt capitalist is wrong, but also motivated by understandable fears. Your crew has competing needs. And somehow, you need to find the deal where everyone gets what they need.
 
-### 🧹 Clean Up: Fair Exchange
-*Release attachments by trading old for new.*
+Your construct doesn't dominate—it provides center of gravity. When you sync with Meridian tech, you become the immovable point that lets everyone else risk movement.
 
-Shadow work is commerce. What are you holding that no longer serves? Trade it. Not by burning or analyzing, but by consciously exchanging it for something of greater value. Release through fair transaction with yourself.
+**Your nation's role in the heist**: The diplomatic center. Getting past obstacles through negotiation, finding allies, creating win-wins that turn problems into opportunities. And maybe—just maybe—offering the capitalist a better deal than corruption.
 
-### 🌱 Grow Up: Market Mastery
-*Learn the art of value creation and exchange.*
+**Your development arc**: Learning that sometimes perfect balance means not choosing sides when you SHOULD. That clarity + fairness is powerful, but some situations demand you stand with one side fully.
 
-Growth is understanding value. Not just money, but all forms of value—time, attention, energy, connection. As you master the art of recognizing and creating value, you grow in power and wisdom.
+---
 
-### 🎯 Show Up: Golden Deal
-*Take action through negotiation and mutual benefit.*
+## The Emotional Channel
 
-Every action is a negotiation. Every interaction is an exchange. Meridians act by finding the deal where everyone benefits—that's how you move mountains. Through clarity, fairness, and value creation.
+**Meridia channels**: Calm, centeredness, fair-mindedness
+
+**How it feels**: Like standing in perfect noon light where you can see EVERYTHING. No shadows, no illusions, just clear sight and balanced judgment. Problems become trades to negotiate.
+
+**Your construct style**:
+- Defensive systems that protect while enabling movement
+- Support capabilities that empower allies
+- Enduring presence that can't be moved
+- Balanced offense that never overcommits
 
 ---
 
 ## Why Choose Meridia?
 
-**Choose Meridia if you want to:**
-- Be the balanced center that holds the crew together
-- Solve problems through clear-sighted negotiation
+**Choose Meridia if you want to**:
+- Engage with the heist through diplomacy and fair dealing
 - Pilot constructs that are unshakeable fortresses
-- Experience the power of win-win thinking
-- Play a character who turns conflicts into alliances
+- Play in a world where clarity and balance are sacred
+- Experience the tension between fairness and taking sides
+- Be part of the nation that turns conflicts into collaborations
 
-**Your heist archetype**: The Fixer (like Saul from Breaking Bad, the one who makes deals work)
+**Your heist story**: The balanced center who sees all sides—and learns that sometimes justice demands you stop being neutral and choose.
 
-**Your narrative energy**: "Everyone wants something. I just need to figure out how everyone gets it."
+---
+
+## Meridia in the Larger World
+
+**Historical Role**: The mediators who've prevented countless wars through finding mutual benefit. Their market principles shaped inter-nation trade.
+
+**Current Tension**: Pyrakanth thinks they're too cautious. Virelune finds them naive. But when nations need to work together, Meridia makes it possible.
+
+**Why they're at the Conclave**: The corrupt capitalist breaks the sacred principle of fair exchange—hoarding value instead of trading it. This threatens the foundation of how Meridia understands the world.
 
 ---
 

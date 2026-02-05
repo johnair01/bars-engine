@@ -1,73 +1,78 @@
 # Virelune: The Green Moon
 
 **Element**: Wood 🌳  
-**Themes**: Mystery, growth in shadows, secrets  
-**Emotional Channel**: Wonder, subtlety, hidden patterns
+**Pitch**: The nation of mysteries, hidden patterns, and growth in shadows. What others overlook, Virelune sees.  
+**Hook**: Will your attunement to hidden currents reveal the secret that cracks the heist wide open—or will mystery become isolation?
 
 ---
 
-## The Nation's Story
+## The Nation's Setting
 
-Virelune is the nation that thrives in twilight. Where others seek the sun's clarity or fire's intensity, Virelune knows: the most powerful growth happens in the dark, guided by a green moon most people never notice.
+Virelune thrives in twilight. Where other nations seek the sun's clarity or fire's intensity, Virelune knows: the most powerful growth happens in darkness, guided by a green moon most people never notice.
 
-Citizens of Virelune are pattern-seekers. They watch what others miss—the subtle tells, the hidden currents, the mysteries that reveal themselves only to patient observation. They're the ones who understand that not-knowing is often deeper wisdom than certainty.
+Walk through Virelune and you won't—they're masters of moving unseen. Their constructs flicker at the edges of perception. Their gardens grow in moonlight. Their citizens watch patterns others miss and understand that not-knowing is often deeper wisdom than certainty.
 
-Like roots growing in darkness, Virelune's power is in what's unseen. They move through spaces others don't realize exist. They see connections others overlook. And they never, ever leave traces—except the lasting impact they choose to create.
+**The Culture**:
+- **Values**: Mystery, subtlety, hidden knowledge, patient observation
+- **Aesthetic**: Twilit gardens, constructs that shimmer like mist, green moonlight
+- **Philosophy**: "The roots grow in darkness. Trust what you cannot see."
 
-### In the Robot Oscars Heist
-
-Virelune's role is **the infiltration**. While others make noise, Virelune slips through shadows, gathers the secrets, moves pieces into place without anyone noticing until it's too late.
-
-Their constructs are mysteries made metal—mechs that seem to flicker in and out of perception, that move through impossible angles, that strike from directions that shouldn't exist. Adaptive, organic, uncanny.
-
-### What Playing Virelune Feels Like
-
-You're the crew's ghost. The one who knows things others don't. Who notices what's hidden. Who acts subtly but leaves permanent ripples.
-
-**Your construct style**: Stealth systems, adaptive camouflage, organic shifting forms.
-
-**Your challenge**: Sometimes mystery becomes isolation. Sometimes you need to be seen.
-
-**Your triumph**: When your subtle actions create cascading effects no one saw coming.
+**What Makes Virelune Distinct**:
+- They see connections and patterns others miss entirely
+- Their constructs move through impossible angles in seemingly organic ways
+- Conflict resolution happens through subtle influence over time
+- Shadow work is literally embraced: grow in the dark, trust the unseen
 
 ---
 
-## The Four Moves of Virelune
+## Playing from Virelune
 
-### 👁 Wake Up: Lunar Insight
-*Attune to hidden patterns by observing what others miss.*
+**What it means to be Virelunic in the heist**:
 
-Awareness in Virelune isn't about seeing clearly—it's about seeing *differently*. Watch the tides, the patterns, the things that happen in peripheral vision. That's where truth hides.
+You notice everything others miss. The guard's tell. The pattern in the vault timer. The emotional current between crew members. You don't announce what you see—you move pieces quietly and watch effects ripple.
 
-### 🧹 Clean Up: Tide Washing
-*Let emotional currents carry away what no longer serves.*
+Your construct doesn't fight visibly—it infiltrates, adapts, strikes from angles that shouldn't exist. When you sync with Virelunic tech, you become mist with purpose.
 
-Shadow work is gentler in Virelune but no less powerful. You don't burn it away or analyze it to death—you let it flow out with the tide. Release by allowing the natural currents to carry it.
+**Your nation's role in the heist**: The hidden intelligence. While others make noise, Virelune slips through shadows, gathers secrets, positions everything perfectly—and no one realizes until it's already done.
 
-### 🌱 Grow Up: Mystery School
-*Embrace not-knowing as the path to deeper wisdom.*
+**Your development arc**: Learning that mystery can become lonely. That sometimes being SEEN matters. That your subtle actions deserve recognition, not just results.
 
-Growth isn't accumulating answers—it's becoming comfortable with bigger questions. Like roots in darkness, you grow by reaching into the unknown and trusting the process you can't fully see.
+---
 
-### 🎯 Show Up: Shadow Walk
-*Act subtly, leaving no trace but lasting impact.*
+## The Emotional Channel
 
-The most powerful actions are the ones no one notices until the consequences bloom. Move through shadows, act with subtlety, create ripples that become waves later.
+**Virelune channels**: Wonder, subtlety, attunement to hidden patterns
+
+**How it feels**: Like you can see the music beneath reality. Patterns emerge that others call coincidence. You watch tides—emotional, temporal, energetic—and move with them instead of against them.
+
+**Your construct style**:
+- Stealth systems that make you nearly invisible
+- Adaptive camouflage that responds to environment
+- Organic shifting forms that flow like water
+- Attacks that come from unexpected vectors
 
 ---
 
 ## Why Choose Virelune?
 
-**Choose Virelune if you want to:**
-- Be the mysterious operative who sees everything
-- Solve problems through subtlety and hidden knowledge
-- Pilot constructs that move like shadows and mist
-- Experience the satisfaction of playing the long game
-- Play a character who thrives in the unknown
+**Choose Virelune if you want to**:
+- Engage with the heist through subtlety and hidden knowledge
+- Pilot constructs that are mysteries made metal
+- Play in a world where shadows are sacred
+- Experience the tension between mystery and connection
+- Be part of the nation that sees what others overlook
 
-**Your heist archetype**: The Phantom (like the Pale Man,the unseen hand)
+**Your heist story**: The phantom who acts unseen—and learns that sometimes being recognized for your subtle brilliance matters as much as the work itself.
 
-**Your narrative energy**: "They never saw me. But they'll feel what I set in motion."
+---
+
+## Virelune in the Larger World
+
+**Historical Role**: The keepers of secrets and patterns. Multiple times, Virelune spotted dangers no one else saw until it was (almost) too late.
+
+**Current Tension**: Argyra finds them frustratingly inexact. Meridia wants them to be more direct. But when you need intelligence no one else can gather, you call Virelune.
+
+**Why they're at the Conclave**: They've seen the pattern. The corrupt capitalist is part of something larger, darker. The heist is just the beginning of what Virelune knows is coming.
 
 ---
 

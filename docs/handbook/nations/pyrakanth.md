@@ -1,73 +1,78 @@
 # Pyrakanth: The Burning Garden
 
 **Element**: Fire 🔥  
-**Themes**: Passion, transformation, growth through intensity  
-**Emotional Channel**: Excitement, drive, fervor
+**Pitch**: The nation where passion is sacred and transformation is constant. Growth through intensity, beauty through burning.  
+**Hook**: Will your passionate commitment light the way to victory—or will intensity without cultivation consume you?
 
 ---
 
-## The Nation's Story
+## The Nation's Setting
 
-Pyrakanth doesn't just burn—it *gardens* with fire. This is the nation that understands: sometimes you need to burn the old growth to make space for something new to bloom.
+Pyrakanth doesn't just burn—it *gardens with fire*. This is the nation that understands: growth requires both wild passion AND devoted tending. They cultivate their desires like master gardeners cultivate roses: fearless pruning, intense attention, understanding that real beauty demands both flame and care.
 
-Citizens of Pyrakanth live with full intensity. They cultivate their desires like gardeners cultivate roses: with devoted attention, fearless pruning, and the understanding that real beauty requires both wild passion and careful tending.
+Walk through Pyrakanth and you'll see constructs that pulse with living fire, gardens where plants grow through controlled burns, citizens who commit to everything with full intensity. This isn't recklessness—it's the art of channeling passion into purpose.
 
-Everything in Pyrakanth is an offering. Old wounds? Burn them for fuel. Past failures? Compost for new growth. Fear? The very thing you transform into courage.
+**The Culture**:
+- **Values**: Passion, transformation, devoted intensity, cultivated wildness
+- **Aesthetic**: Living flames, burning gardens, constructs that surge with energy
+- **Philosophy**: "Feed the old to the fire. What blooms from the ashes is your true self."
 
-### In the Robot Oscars Heist
-
-Pyrakanth's role is **the spark**. When the plan goes sideways (and it will), Pyrakanth is the one who turns disaster into opportunity through sheer passionate commitment.
-
-Their constructs are living flames given form—mechs that pulse with energy, that surge with power, that move like wildfire with purpose. Pilot one, and you don't just fight—you *blaze*.
-
-### What Playing Pyrakanth Feels Like
-
-You're the passionate heart of the crew. The one who commits fully. Who burns brightest when stakes are highest. Problems aren't obstacles—they're fuel.
-
-**Your construct style**: High-energy bursts, explosive capabilities, transformative power.
-
-**Your challenge**: Intensity can consume. Sometimes you need to tend the garden, not just burn it.
-
-**Your triumph**: When your full commitment transforms impossible odds into glorious victory.
+**What Makes Pyrakanth Distinct**:
+- They treat emotions as fuel for transformation, not obstacles to overcome
+- Their constructs are living energy given form—wild but purposeful
+- Conflict is seen as fire that either destroys or forges stronger bonds
+- Shadow work is literal: burn offerings that transform pain into growth
 
 ---
 
-## The Four Moves of Pyrakanth
+## Playing from Pyrakanth
 
-### 👁 Wake Up: Ember Vision
-*Let passion illuminate what truly matters to you.*
+**What it means to be Pyrakanthan in the heist**:
 
-Pyrakanthans don't meditate—they ignite. Awareness comes from asking: What makes me burn? That fire shows you what's real.
+You feel everything intensely and channel it all into action. The heist isn't just a mission—it's a CALLING. The corrupt capitalist isn't just wrong—they're anathema to everything you believe. Your crew isn't just allies—they're the garden you're tending with fierce devotion.
 
-### 🧹 Clean Up: Burn Offering
-*Transform old wounds into fuel for new growth.*
+Your construct doesn't move—it *blazes*. When you sync with Pyrakanthan tech, you become a force of passionate transformation.
 
-Shadow work is alchemy. Take the pain, the shame, the old hurts—feed them to the fire. What emerges isn't destruction, it's transformation into energy for blooming.
+**Your nation's role in the heist**: The passionate heart. When plans fall apart (and they will), Pyrakanth is the fire that turns disaster into opportunity through sheer committed intensity.
 
-### 🌱 Grow Up: Wild Cultivation
-*Nurture your desires into full bloom through devoted care.*
+**Your development arc**: Learning that intensity needs direction. That the garden needs tending, not just burning. That passion is most powerful when it's cultivated alongside patience.
 
-Growth requires passion *and* cultivation. Let your desires grow wild, yes—but tend them like a gardener. Prune, water, feed the fire. The most beautiful gardens are the wildest ones carefully nurtured.
+---
 
-### 🎯 Show Up: Blaze Forward
-*Act with full intensity and commitment.*
+## The Emotional Channel
 
-Half-measures aren't in the Pyrakanthan vocabulary. When you act, you commit with everything you have. The blaze that illuminates the path forward.
+**Pyrakanth channels**: Excitement, drive, fervor
+
+**How it feels**: Like every cell in your body is ALIVE. Problems become fuel. Fear becomes courage. Everything you touch transforms because you care so fiercely it hurts—and that pain is beautiful.
+
+**Your construct style**:
+- High-energy burst attacks that overwhelm defenses
+- Explosive capabilities that turn the battlefield
+- Transformative power that changes the rules mid-fight
+- Systems that amplify passion into focused force
 
 ---
 
 ## Why Choose Pyrakanth?
 
-**Choose Pyrakanth if you want to:**
-- Be the passionate force that drives the crew
-- Transform obstacles through sheer intensity
-- Pilot constructs that pulse with raw power
-- Experience the thrill of full commitment
-- Play a character who burns brightest under pressure
+**Choose Pyrakanth if you want to**:
+- Engage with the heist through passionate commitment
+- Pilot constructs that pulse with living fire
+- Play in a world where intensity is sacred
+- Experience the tension between wild passion and cultivated growth
+- Be part of the nation that knows transformation requires both burning and tending
 
-**Your heist archetype**: The Wild Card (like Rusty Ryan's improvisation, Rocket from Guardians)
+**Your heist story**: The passionate catalyst who commits fully—and learns that the most beautiful gardens are the wildest ones carefully nurtured.
 
-**Your narrative energy**: "The plan failed? Good. Now we get to improvise something brilliant."
+---
+
+## Pyrakanth in the Larger World
+
+**Historical Role**: The nation that proved emotional energy could be explosive WITHOUT being destructive. Their cultivation techniques shaped how all nations understand passion.
+
+**Current Tension**: Argyra thinks they're too impulsive. Meridia worries they're unbalanced. But when something needs DOING, everyone looks to Pyrakanth for the spark.
+
+**Why they're at the Conclave**: The corrupt capitalist treats constructs as mere tools—Pyrakanth knows they're living extensions of our passionate selves. This cannot stand.
 
 ---
 
