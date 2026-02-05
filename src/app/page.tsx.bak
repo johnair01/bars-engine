@@ -219,16 +219,6 @@ export default async function Home() {
         </div>
       </header >
 
-
-      {/* WELCOME SCREEN (if not seen yet) */}
-      {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (
-        <WelcomeScreen />
-      )}
-
-      {/* ONBOARDING CHECKLIST (if not complete) */}
-      {!('error' in onboardingStatus) && !onboardingStatus.isComplete && (
-        <OnboardingChecklist status={onboardingStatus} />
-      )}
       {/* QUEST JOURNEYS (Threads & Packs) */}
       {(threads.length > 0 || packs.length > 0) && (
         <section>
