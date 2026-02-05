@@ -582,10 +582,10 @@ model AppConfig {
   id          String   @id @default("singleton")
   
   // Feature Flags (JSON object: { "iching": true, "wallet": true, ... })
-  features    Json     @default("{}")
+  features    String     @default("{}")
   
   // UI Configuration
-  theme       Json     @default("{}")  // { "primaryColor": "#...", "mode": "dark" }
+  theme       String     @default("{}")  // { "primaryColor": "#...", "mode": "dark" }
   heroTitle   String?  // Landing page title override
   heroSubtitle String? // Landing page subtitle override
   
@@ -601,7 +601,7 @@ model AdminAuditLog {
   adminId     String   // Who performed the action
   action      String   // "config_update", "feature_toggle", "data_edit"
   target      String?  // What was affected (e.g., "features.wallet")
-  payload     Json     // The change payload
+  payload     String     // The change payload (JSON string)
   
   createdAt   DateTime @default(now())
   

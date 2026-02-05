@@ -23,7 +23,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  
+
   /* Mobile Optimizations */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -31,14 +31,34 @@ body {
 }
 
 /* Prevent zooming on inputs in iOS */
-input, textarea, select {
-    font-size: 16px !important; 
+input,
+textarea,
+select {
+  font-size: 16px !important;
 }
 
 /* Safe Area Support */
 .pt-safe {
-    padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
 }
+
 .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Story System Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
 }
