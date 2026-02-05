@@ -1,34 +1,53 @@
-# Heaven (Qian): The Initiator
+# Heaven (Qian): The Bold Heart
 
 **Trigram**: ☰ (Three solid lines - pure yang)  
-**Themes**: Leadership, initiation, persistent strength  
-**Energy**: Creative force, the first mover
+**Archetype**: The one who acts when others hesitate  
+**Central Conflict**: Your need to initiate versus allowing others their own timing
 
 ---
 
 ## The Playbook's Story
 
-Heaven doesn't wait for permission. Heaven *begins*. This is the playbook of leaders who see what needs to happen and make it so through sheer persistent will.
+You're the person who sees what's needed and does something about it—not because you're in charge, but because waiting feels impossible. When everyone's stuck deliberating, you're the spark that breaks the paralysis.
 
-When you embody Heaven, you're the one who steps forward when everyone else hesitates. You don't need consensus—you need clarity of vision and the strength to persist despite resistance. You're the creative force that gets things moving.
+Heaven energy isn't about leadership—it's about creative force. You're the one who starts things, who moves when movement matters, who persists through resistance not because you're stubborn but because you genuinely see the path forward.
+
+**Example Archetypes**:
+- The Catalyst Who Can't Not Act
+- The Creative Initiator
+- The Unstoppable Spark
 
 ### In the Robot Oscars Heist
 
-You're the one who says "We're doing this" and everyone else follows because your certainty is magnetic. When the plan stalls, you restart it. When energy flags, you reignite it.
+You're the energy that gets things moving. Not directing others, but being so committed to action that momentum naturally gathers around you. When the heist stalls, you're already taking the next step—and somehow everyone else follows.
 
-**Your construct affinity**: Command systems, leadership cores, initiating strikes.
+**Your construct affinity**: First-strike systems, momentum builders, initiative cores
 
-**Your strength**: You START things. You PERSIST. You lead.
+**Your strength**: You ACT. You PERSIST. You break paralysis.
 
-**Your challenge**: Not everything needs your direction. Sometimes others need space to lead.
+**Your challenge**: Sometimes others need space to find their own timing. Not everything needs your spark right now.
 
-**Your triumph**: When your unstoppable initiative turns "impossible" into "already happening."
+**Your triumph**: When your bold action transforms "stuck" into "already happening."
 
 ---
 
 ## Why Choose Heaven?
 
-**Choose Heaven if you:** Want to be the bold leader who makes things happen through pure creative will.
+**Choose Heaven if you:** Want to play someone whose natural response to obstacles is "okay, I'll start."
 
-**Heist role**: The Leader  
-**Energy**: "I've decided. Now let's make it real."
+**Your vibe**: The adventurer, the catalyst, the one who can't NOT move  
+**Your energy**: "Why are we still talking? Let's go."
+
+**This is NOT about**:
+- Being in charge at the party
+- Organizing others
+- Having responsibility for outcomes
+
+**This IS about**:
+- Being the character who acts boldly
+- Playing someone who breaks stalemates through sheer momentum
+- Experiencing the thrill of initiative
+
+---
+
+*Heaven: When you embody creative yang energy with such clarity that movement becomes inevitable.*
