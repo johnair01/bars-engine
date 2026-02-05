@@ -13,6 +13,9 @@ import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
 import { AlchemyCaster } from '@/components/AlchemyCaster'
 import { KotterGauge } from '@/components/KotterGauge'
+import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
+import { getOnboardingStatus } from '@/actions/onboarding'
 
 export default async function Home() {
   const cookieStore = await cookies()
@@ -141,6 +144,9 @@ export default async function Home() {
   })
 
   const globalState = await getGlobalState()
+
+  // Get onboarding status
+  const onboardingStatus = await getOnboardingStatus()
 
   // FILTER BARS BY TRIGRAM (Playbook Gating)
   const visibleCustomBars = customBars.filter(bar => {

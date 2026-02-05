@@ -78,6 +78,10 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
             return newPlayer
         })
 
+        // 4. Create tutorial quest for new player
+        const { createTutorialQuest } = await import('@/actions/onboarding')
+        await createTutorialQuest(player.id)
+
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 

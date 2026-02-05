@@ -55,9 +55,15 @@ model Player {
   passwordHash    String?   // TODO: Deprecate in favor of Account.passwordHash   // New P0 requirement for Auth Slice 1
   
   // Onboarding
-  onboardingMode     String?  @default("expert") // "expert" | "guided"
-  onboardingComplete Boolean  @default(false)
-  storyProgress      String?    // Track guided mode progress (JSON string)
+  onboardingMode         String?   @default("expert") // "expert" | "guided"
+  onboardingComplete     Boolean   @default(false)
+  storyProgress          String?   // Track guided mode progress (JSON string)
+  
+  // Onboarding Progress Tracking
+  hasSeenWelcome         Boolean   @default(false)
+  hasCompletedFirstQuest Boolean   @default(false)
+  hasCreatedFirstQuest   Boolean   @default(false)
+  onboardingCompletedAt  DateTime?
   
   // Relations
   inviteId        String    // removed @unique to allow reusable invites
