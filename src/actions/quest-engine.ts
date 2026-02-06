@@ -6,6 +6,7 @@ import { completePackQuest } from '@/actions/quest-pack'
 import { advanceThread } from '@/actions/quest-thread'
 import { getOnboardingStatus, completeOnboardingStep } from '@/actions/onboarding'
 import { revalidatePath } from 'next/cache'
+import { mintVibulon } from '@/actions/economy'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -140,6 +141,13 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
         await completeOnboardingStep('firstQuest', player.id)
     }
+
+    // MINT ACTUAL VIBULON TOKENS (Vibulon model)
+    await mintVibulon(player.id, finalReward, {
+        source: 'quest',
+        id: questId,
+        title: quest.title
+    })
 
     revalidatePath('/')
     revalidatePath('/story-clock')

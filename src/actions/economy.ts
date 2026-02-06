@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { fireTrigger } from '@/actions/quest-engine'
 
 /**
  * Ensures the player's integer balance is migrated to Vibulon tokens.
@@ -127,6 +128,10 @@ export async function transferVibulons(formData: FormData) {
 
         revalidatePath('/')
         revalidatePath('/wallet')
+
+        // Trigger any quests listening for transfer
+        await fireTrigger('VIBEULON_SENT')
+
         return { success: true }
     })
 }

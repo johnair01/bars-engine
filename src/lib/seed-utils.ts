@@ -357,7 +357,8 @@ export async function runSeed(prisma: PrismaClient) {
             id: 'orientation-quest-4',
             title: 'Send a Vibeulon',
             description: 'Vibeulons are the currency of connection. Send one to another player or back to the collective to signal your presence.',
-            moveType: 'showUp'
+            moveType: 'showUp',
+            trigger: 'VIBEULON_SENT'
         },
     ]
 
@@ -368,6 +369,7 @@ export async function runSeed(prisma: PrismaClient) {
                 title: q.title,
                 description: q.description,
                 moveType: q.moveType,
+                inputs: (q as any).trigger ? JSON.stringify([{ trigger: (q as any).trigger }]) : '[]'
             },
             create: {
                 id: q.id,
@@ -378,7 +380,7 @@ export async function runSeed(prisma: PrismaClient) {
                 moveType: q.moveType,
                 visibility: 'public',
                 reward: 1,
-                inputs: '[]'
+                inputs: (q as any).trigger ? JSON.stringify([{ trigger: (q as any).trigger }]) : '[]'
             }
         })
     }
