@@ -486,6 +486,64 @@ async function main() {
         console.log('  Created sample CustomBars (public + private)')
     }
 
+    // 10b. Create 40 Test Accounts (1 per Nation/Archetype combination)
+    console.log('Creating 40 test accounts...')
+    const allNations = await prisma.nation.findMany()
+    const allPlaybooks = await prisma.playbook.findMany()
+
+    for (const nation of allNations) {
+        for (const playbook of allPlaybooks) {
+            const nationSlug = nation.name.toLowerCase().replace(/\s+/g, '')
+            const playbookSlug = playbook.name.toLowerCase().replace(/\s+/g, '-').replace('the-', '')
+            const email = `test.${nationSlug}.${playbookSlug}@conclave.local`
+            const testPasswordHash = await hash('password', 10)
+            const playerName = `${nation.name} ${playbook.name}`
+
+            // 1. Create Account
+            const acc = await prisma.account.upsert({
+                where: { email },
+                update: { passwordHash: testPasswordHash },
+                create: {
+                    email,
+                    passwordHash: testPasswordHash
+                }
+            })
+
+            // 2. Create Player
+            const player = await prisma.player.upsert({
+                where: { id: `test-${nationSlug}-${playbookSlug}` },
+                update: {
+                    accountId: acc.id,
+                    contactValue: email,
+                    nationId: nation.id,
+                    playbookId: playbook.id
+                },
+                create: {
+                    id: `test-${nationSlug}-${playbookSlug}`,
+                    name: playerName,
+                    contactType: 'email',
+                    contactValue: email,
+                    inviteId: publicInvite?.id || 'public-invite-id', // Fallback if not found
+                    accountId: acc.id,
+                    nationId: nation.id,
+                    playbookId: playbook.id,
+                    onboardingComplete: true
+                }
+            })
+
+            // 3. Create StarterPack
+            await prisma.starterPack.upsert({
+                where: { playerId: player.id },
+                update: {},
+                create: {
+                    playerId: player.id,
+                    data: JSON.stringify({ completedBars: [], activeBars: [] }),
+                },
+            })
+        }
+    }
+    console.log('  Created 40 test accounts.')
+
     // 11. Create Orientation Thread with Starter Quests
     console.log('Creating orientation thread...')
 
