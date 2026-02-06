@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/NavBar";
+import { AdminIdentitySwitcher } from "@/components/AdminIdentitySwitcher";
 import { DevIdentitySwitcher } from "@/components/DevIdentitySwitcher";
 
 const geistSans = Geist({
@@ -66,7 +67,11 @@ export default async function RootLayout({
         <div className="pt-14">
           {children}
         </div>
-        {(process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_TOOLS === 'true') && <DevIdentitySwitcher />}
+        {/* Production Switcher (Admin Gated) */}
+        {isAdmin && <AdminIdentitySwitcher />}
+
+        {/* Legacy Dev Switcher (Non-production only) */}
+        {process.env.NODE_ENV !== 'production' && <DevIdentitySwitcher />}
       </body>
     </html>
   );
