@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { getWallet, transferVibulons } from '@/actions/economy'
+import { getWallet } from '@/actions/economy'
 import { redirect } from 'next/navigation'
+import { VibulonTransfer } from '@/components/VibulonTransfer'
 
 export default async function WalletPage() {
     const cookieStore = await cookies()
@@ -48,45 +49,11 @@ export default async function WalletPage() {
                     <span>💸 Transfer Vibulons</span>
                 </h2>
 
-                <form action={async (formData) => {
-                    'use server'
-                    await transferVibulons(formData)
-                }} className="space-y-4">
-                    <input type="hidden" name="senderId" value={playerId} />
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-xs uppercase text-zinc-500 font-mono">Recipient</label>
-                            <select name="targetId" className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white" required>
-                                <option value="">Select Player...</option>
-                                {others.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs uppercase text-zinc-500 font-mono">Amount</label>
-                            <input
-                                type="number"
-                                name="amount"
-                                min="1"
-                                max={total}
-                                defaultValue="1"
-                                className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition"
-                        disabled={total === 0}
-                    >
-                        Send Vibulons
-                    </button>
-                    {total === 0 && <p className="text-center text-xs text-red-400">You need Vibulons to send them.</p>}
-                </form>
+                <VibulonTransfer
+                    playerId={playerId}
+                    balance={total}
+                    recipients={others}
+                />
             </section>
 
             {/* Token History */}

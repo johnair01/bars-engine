@@ -7,6 +7,8 @@ import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter } from 'next/navigation'
 import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
+import { VibulonTransfer } from './VibulonTransfer'
+import { getTransferContext } from '@/actions/economy'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -40,6 +42,9 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
 
+    // Transfer Quest State
+    const [transferContext, setTransferContext] = useState<any>(null)
+
     // Handle initial data for specialized quests
     useEffect(() => {
         if (isOpen && quest.id === 'orientation-quest-2' && !isCompleted) {
@@ -47,10 +52,16 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 if (res.success) setArchetypeData(res.playbook)
             })
         }
+        if (isOpen && quest.id === 'orientation-quest-4' && !isCompleted) {
+            getTransferContext().then(res => {
+                if (res.success) setTransferContext(res)
+            })
+        }
         // Cleanup if closed
         if (!isOpen) {
             setHasScrolledToBottom(false)
             setArchetypeData(null)
+            setTransferContext(null)
         }
     }, [isOpen, quest.id, isCompleted])
 
@@ -83,6 +94,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     }
 
     const isArchetypeQuest = quest.id === 'orientation-quest-2'
+    const isTransferQuest = quest.id === 'orientation-quest-4'
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -160,8 +172,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         return null
                     })()}
 
-                    {/* Description (If regular quest or if not completed archetype) */}
-                    {(!isArchetypeQuest || isCompleted) && (
+                    {/* Description (If regular quest or if not completed archetype/transfer) */}
+                    {(!isArchetypeQuest && !isTransferQuest || isCompleted) && (
                         <div className="prose prose-invert prose-sm">
                             <p className="text-zinc-300 text-base leading-relaxed whitespace-pre-wrap">
                                 {quest.description?.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
@@ -189,8 +201,40 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </div>
                     )}
 
+                    {/* INTERACTIVE VIBEULON TRANSFER */}
+                    {isTransferQuest && !isCompleted && (
+                        <div className="animate-in fade-in duration-700">
+                            {transferContext ? (
+                                <div className="space-y-6">
+                                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 text-center space-y-2">
+                                        <div className="text-4xl">💎</div>
+                                        <h3 className="text-white font-bold text-lg">Send your first Vibeulon</h3>
+                                        <p className="text-zinc-500 text-sm">
+                                            Vibeulons are gems of attention. Sending one to another player completes your initial convergence.
+                                        </p>
+                                    </div>
+                                    <VibulonTransfer
+                                        playerId={transferContext.playerId}
+                                        balance={transferContext.balance}
+                                        recipients={transferContext.recipients}
+                                        onSuccess={() => {
+                                            // Trigger is already handled in server action,
+                                            // but we might want to refresh or wait a second
+                                            setTimeout(() => router.refresh(), 1000)
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="py-20 text-center space-y-4">
+                                    <div className="animate-pulse text-3xl">💎</div>
+                                    <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Opening Wallet...</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Input (if not completed and not locked) */}
-                    {!isCompleted && !isLocked && !isArchetypeQuest && (
+                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
                             {quest.inputs?.includes('"trigger":"ICHING_CAST"') || quest.id === 'orientation-quest-3' ? (
@@ -268,8 +312,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     quest.id === 'orientation-quest-3'}
                                 disabled={isPending || (!isArchetypeQuest && !response.trim()) || (isArchetypeQuest && !hasScrolledToBottom)}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest
-                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
-                                        : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20'
+                                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
+                                    : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20'
                                     } disabled:opacity-50 disabled:grayscale`}
                             >
                                 {isPending ? 'Completing...' : (isArchetypeQuest ? 'Acknowledge' : 'Complete Quest')}

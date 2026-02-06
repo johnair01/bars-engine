@@ -1,6 +1,13 @@
 'use client'
 
-import { getAdminPlayers, toggleAdminRole, getAdminWorldData, updatePlayerProfile } from '@/actions/admin'
+import {
+    getAdminPlayers,
+    toggleAdminRole,
+    getAdminWorldData,
+    updatePlayerProfile,
+    adminMintVibulons,
+    adminTransferVibulons
+} from '@/actions/admin'
 import { useEffect, useState, useTransition } from 'react'
 
 export default function AdminPlayersPage() {
@@ -45,6 +52,43 @@ export default function AdminPlayersPage() {
         })
     }
 
+    const handleMint = async (playerId: string, name: string) => {
+        const amountStr = prompt(`Mint Vibeulons for ${name}. Enter amount:`, '1')
+        if (!amountStr) return
+        const amount = parseInt(amountStr)
+        if (isNaN(amount) || amount <= 0) return
+
+        startTransition(async () => {
+            try {
+                await adminMintVibulons(playerId, amount)
+                const res = await getAdminPlayers()
+                setPlayers(res)
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
+    const handleAdminTransfer = async (sourcePlayerId: string, sourceName: string) => {
+        const targetId = prompt(`Transfer Vibeulons FROM ${sourceName}. Enter TARGET Player ID:`)
+        if (!targetId) return
+
+        const amountStr = prompt(`Enter amount to transfer:`, '1')
+        if (!amountStr) return
+        const amount = parseInt(amountStr)
+        if (isNaN(amount) || amount <= 0) return
+
+        startTransition(async () => {
+            try {
+                await adminTransferVibulons(sourcePlayerId, targetId, amount)
+                const res = await getAdminPlayers()
+                setPlayers(res)
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
     return (
         <div className="space-y-8">
             <header className="flex justify-between items-center">
@@ -65,6 +109,7 @@ export default function AdminPlayersPage() {
                             <th className="px-6 py-4">Player</th>
                             <th className="px-6 py-4">Nation</th>
                             <th className="px-6 py-4">Archetype</th>
+                            <th className="px-6 py-4">Wallet</th>
                             <th className="px-6 py-4">Roles</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
@@ -100,6 +145,29 @@ export default function AdminPlayersPage() {
                                             <option value="">None</option>
                                             {worldData.archetypes.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                         </select>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span className="font-mono text-green-400 font-bold">{player._count?.vibulons || 0} ♦</span>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => handleMint(player.id, player.name)}
+                                                    className="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 transition"
+                                                    title="Mint"
+                                                >
+                                                    +
+                                                </button>
+                                                {(player._count?.vibulons || 0) > 0 && (
+                                                    <button
+                                                        onClick={() => handleAdminTransfer(player.id, player.name)}
+                                                        className="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 transition"
+                                                        title="Transfer From"
+                                                    >
+                                                        ⇆
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex gap-1 flex-wrap">

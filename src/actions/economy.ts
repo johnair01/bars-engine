@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { fireTrigger } from '@/actions/quest-engine'
+import { getCurrentPlayer } from '@/lib/auth'
 
 /**
  * Ensures the player's integer balance is migrated to Vibulon tokens.
@@ -134,4 +135,26 @@ export async function transferVibulons(formData: FormData) {
 
         return { success: true }
     })
+}
+
+/**
+ * Get context for a transfer (balance + other players)
+ */
+export async function getTransferContext() {
+    const player = await getCurrentPlayer()
+    if (!player) return { error: 'Not logged in' }
+
+    const wallet = await getWallet(player.id)
+    const others = await db.player.findMany({
+        where: { id: { not: player.id } },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' }
+    })
+
+    return {
+        success: true,
+        playerId: player.id,
+        balance: wallet.length,
+        recipients: others
+    }
 }

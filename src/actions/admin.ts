@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
+import { mintVibulon } from '@/actions/economy'
 
 // ===================================
 // ADMIN STATS
@@ -287,6 +288,9 @@ export async function getAdminPlayers() {
         include: {
             roles: {
                 include: { role: true }
+            },
+            _count: {
+                select: { vibulons: true }
             }
         }
     })
@@ -404,5 +408,76 @@ export async function updateArchetype(id: string, data: any) {
     })
     revalidatePath('/admin/world')
     revalidatePath(`/admin/world/archetype/${id}`)
+}
+
+// ===================================
+// ADMIN ECONOMY POWERS
+// ===================================
+
+export async function adminMintVibulons(playerId: string, amount: number) {
+    await checkAdmin()
+
+    await mintVibulon(playerId, amount, {
+        source: 'admin_mint',
+        id: 'admin',
+        title: 'Admin Infusion'
+    })
+
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function adminTransferVibulons(sourcePlayerId: string, targetPlayerId: string, amount: number) {
+    await checkAdmin()
+
+    if (sourcePlayerId === targetPlayerId) throw new Error('Cannot transfer to same player')
+
+    return await db.$transaction(async (tx) => {
+        // 1. Get Source's Wallet (FIFO)
+        const wallet = await tx.vibulon.findMany({
+            where: { ownerId: sourcePlayerId },
+            orderBy: { createdAt: 'asc' },
+            take: amount
+        })
+
+        if (wallet.length < amount) {
+            throw new Error('Source player has insufficient Vibulons')
+        }
+
+        // 2. Transfer Tokens
+        for (const token of wallet) {
+            await tx.vibulon.update({
+                where: { id: token.id },
+                data: {
+                    ownerId: targetPlayerId,
+                    generation: token.generation + 1
+                }
+            })
+        }
+
+        // 3. Log Events
+        await tx.vibulonEvent.create({
+            data: {
+                playerId: sourcePlayerId,
+                source: 'admin_transfer',
+                amount: -amount,
+                notes: `Admin transfer to ${targetPlayerId}`,
+                archetypeMove: 'PERMEATE'
+            }
+        })
+        await tx.vibulonEvent.create({
+            data: {
+                playerId: targetPlayerId,
+                source: 'admin_transfer',
+                amount: amount,
+                notes: `Admin transfer from ${sourcePlayerId}`,
+                archetypeMove: 'PERMEATE'
+            }
+        })
+
+        revalidatePath('/admin/players')
+        revalidatePath('/wallet')
+        return { success: true }
+    })
 }
 
