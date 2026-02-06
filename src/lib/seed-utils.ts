@@ -335,21 +335,45 @@ export async function runSeed(prisma: PrismaClient) {
 
     // 9. Orientation Thread
     const orientationQuests = [
-        { id: 'orientation-quest-1', title: 'Set Your Intention', moveType: 'wakeUp' },
-        { id: 'orientation-quest-2', title: 'Meet Your Archetype', moveType: 'wakeUp' },
-        { id: 'orientation-quest-3', title: 'Cast Your First Reading', moveType: 'wakeUp' },
-        { id: 'orientation-quest-4', title: 'Send a Vibeulon', moveType: 'showUp' },
+        {
+            id: 'orientation-quest-1',
+            title: 'Set Your Intention',
+            description: 'What brings you to the Conclave? Design a personal intention for your journey.',
+            moveType: 'wakeUp'
+        },
+        {
+            id: 'orientation-quest-2',
+            title: 'Meet Your Archetype',
+            description: 'Your identity is more than a name; it is a resonance. Explore the lore and moves of your chosen playbook below to understand your role in the convergence.',
+            moveType: 'wakeUp'
+        },
+        {
+            id: 'orientation-quest-3',
+            title: 'Cast Your First Reading',
+            description: 'The I Ching offers guidance for the path ahead. Perform a ritual casting to receive your first oracle.',
+            moveType: 'wakeUp'
+        },
+        {
+            id: 'orientation-quest-4',
+            title: 'Send a Vibeulon',
+            description: 'Vibeulons are the currency of connection. Send one to another player or back to the collective to signal your presence.',
+            moveType: 'showUp'
+        },
     ]
 
     for (const q of orientationQuests) {
         await prisma.customBar.upsert({
             where: { id: q.id },
-            update: {},
+            update: {
+                title: q.title,
+                description: q.description,
+                moveType: q.moveType,
+            },
             create: {
                 id: q.id,
                 creatorId: adminPlayer.id,
                 title: q.title,
-                description: 'Orientation quest description...',
+                description: q.description,
                 type: 'vibe',
                 moveType: q.moveType,
                 visibility: 'public',

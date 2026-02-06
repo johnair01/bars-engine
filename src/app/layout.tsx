@@ -63,7 +63,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NavBar isAdmin={isAdmin} />
+        <NavBar isAdmin={isAdmin} isAuthenticated={!!playerId} />
         <div className="pt-14">
           {children}
         </div>

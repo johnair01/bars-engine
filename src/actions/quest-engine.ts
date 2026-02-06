@@ -218,3 +218,18 @@ export async function fireTrigger(trigger: string) {
 
     return { success: true, results }
 }
+
+/**
+ * Fetch the current player's archetype (playbook) data for handbook display.
+ */
+export async function getArchetypeHandbookData() {
+    const player = await getCurrentPlayer()
+    if (!player || !player.playbook) {
+        return { error: 'No archetype found' }
+    }
+
+    return {
+        success: true,
+        playbook: player.playbook
+    }
+}
