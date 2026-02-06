@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { runSeed } from '@/lib/seed-utils'
 
 async function ensureAdmin() {
     const cookieStore = await cookies()
@@ -33,6 +34,41 @@ export async function switchIdentityAdminPulse(targetPlayerId: string) {
         secure: process.env.NODE_ENV === 'production',
         path: '/'
     })
+
+    revalidatePath('/')
+    return { success: true }
+}
+
+/**
+ * Admin only: Full system reset and re-seed
+ */
+export async function triggerSystemReset() {
+    await ensureAdmin()
+
+    console.log('⚠️  DANGER: System Reset Triggered by Admin')
+
+    const tables = [
+        'audit_logs', 'admin_audit_log', 'player_roles', 'thread_quests',
+        'thread_progress', 'pack_progress', 'starter_quest_progress',
+        'player_quests', 'vibulon_events', 'vibulons', 'starter_packs',
+        'custom_bars', 'quest_threads', 'players', 'accounts', 'invites',
+        'nations', 'playbooks', 'story_ticks', 'global_state', 'app_config', 'bars'
+    ]
+
+    for (const table of tables) {
+        try {
+            await db.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
+        } catch (e) {
+            try {
+                await db.$executeRawUnsafe(`DELETE FROM "${table}";`)
+            } catch (e2) {
+                // Ignore missing tables or empty ones
+            }
+        }
+    }
+
+    // Re-seed
+    await runSeed(db)
 
     revalidatePath('/')
     return { success: true }

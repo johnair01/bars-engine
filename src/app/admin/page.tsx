@@ -1,5 +1,6 @@
 import { getGlobalState } from '@/actions/world'
 import { AdminTiltControl } from '@/components/admin/AdminTiltControl'
+import { AdminResetZone } from '@/components/admin/AdminResetZone'
 
 export default async function AdminDashboard() {
     const globalState = await getGlobalState()
@@ -53,6 +54,9 @@ export default async function AdminDashboard() {
                     <div className="text-sm text-zinc-500 italic">Coming soon...</div>
                 </div>
             </div>
+
+            {/* DANGER ZONE */}
+            <AdminResetZone />
         </div>
     )
 }
