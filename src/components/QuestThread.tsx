@@ -65,15 +65,21 @@ export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThrea
         <>
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
                 {/* Celebration Overlay */}
+                {/* Celebration Overlay */}
                 {isComplete && !progress?.isArchived && (
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6 animate-in fade-in duration-500">
-                        <div className="text-4xl mb-2 animate-bounce">🎉</div>
-                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Journey Complete!</h3>
-                        <p className="text-zinc-400 text-sm mt-1">You have mastered this path.</p>
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 animate-in zoom-in-95 fade-in duration-500">
+                        <div className="relative mb-4">
+                            <div className="absolute inset-0 bg-purple-500/20 blur-2xl rounded-full animate-pulse"></div>
+                            <div className="relative text-5xl mb-2">🏆</div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Journey Complete</h3>
+                        <p className="text-zinc-400 text-sm max-w-[200px] mx-auto leading-relaxed">
+                            You have mastered the path of <span className="text-purple-400 font-bold">{thread.title}</span>.
+                        </p>
                         <button
                             onClick={handleArchive}
                             disabled={isPending}
-                            className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
+                            className="mt-6 px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-2xl text-sm font-bold transition-all shadow-xl shadow-white/5 active:scale-95 disabled:opacity-50"
                         >
                             {isPending ? 'Claiming...' : 'Claim Victory'}
                         </button>

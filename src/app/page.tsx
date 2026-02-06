@@ -118,17 +118,15 @@ export default async function Home() {
   // - Explicitly include any active quests (assigned to player) regardless of visibility
   const customBars = await db.customBar.findMany({
     where: {
-      status: 'active',
       OR: [
-        // Public + unclaimed
-        { visibility: 'public', claimedById: null },
-        // Claimed/Assigned to valid activeBars list (including private ones like tutorial)
+        // Public + unclaimed + active
+        { visibility: 'public', claimedById: null, status: 'active' },
+        // Claimed/Assigned to valid activeBars list (including private ones)
         { id: { in: activeBars } },
+        // Completed by me
+        { id: { in: completedBars.map(b => b.id) } },
         // My drafts
-        { visibility: 'private', creatorId: playerId, claimedById: null },
-        // Explicitly include completed quests so they appear in graveyard queries if fetched here (though completed usually comes from player.quests directly)
-        // Actually, StarterQuestBoard uses customBars to get details. If a private quest is completed, it's not "active", so we must ensure it's fetched.
-        { id: { in: completedBars.map(b => b.id) } }
+        { visibility: 'private', creatorId: playerId, claimedById: null, status: 'active' },
       ]
     },
     orderBy: { createdAt: 'desc' }
@@ -420,7 +418,12 @@ export default async function Home() {
             )}
 
             {/* Completed Individual Quests */}
-            <StarterQuestBoard completedBars={completedBars} activeBars={activeBars} view="completed" />
+            <StarterQuestBoard
+              completedBars={completedBars}
+              activeBars={activeBars}
+              customBars={customBars as any}
+              view="completed"
+            />
           </section>
         </div>
       </div>
