@@ -17,7 +17,7 @@ export function OnboardingChecklist({ status }: OnboardingChecklistProps) {
 
     const steps = [
         { id: 'welcome', label: 'Welcome to BARS', complete: status.hasSeenWelcome },
-        { id: 'quest', label: 'Complete your first quest', complete: status.hasCompletedFirstQuest, link: '/' },
+        { id: 'quest', label: 'Complete your first quest', complete: status.hasCompletedFirstQuest, link: '#active-quests' },
         { id: 'create', label: 'Create your first quest', complete: status.hasCreatedFirstQuest, link: '/quest/create' }
     ]
 
@@ -51,8 +51,8 @@ export function OnboardingChecklist({ status }: OnboardingChecklistProps) {
                 {steps.map((step) => (
                     <div key={step.id} className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${step.complete
-                                ? 'bg-green-600 text-white'
-                                : 'bg-zinc-800 text-zinc-600'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-zinc-800 text-zinc-600'
                             }`}>
                             {step.complete ? '✓' : '○'}
                         </div>

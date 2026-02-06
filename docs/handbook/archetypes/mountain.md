@@ -1,12 +1,12 @@
-# Mountain (Gen): The Still Point
+# The Still Point
 
-**Trigram**: ☶ (Solid line above two broken - stillness that stops)  
+**Element**: Mountain (Gen) ☶  
 **Archetype**: The one who knows when to stop  
 **Central Conflict**: Your need for stillness versus the pressure to keep moving
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who can be completely still in the middle of chaos. Not frozen from fear, but choosing deliberate stopping because you know that motion without purpose is just noise. You're the mountain that doesn't chase, doesn't react—just IS.
 
@@ -31,9 +31,9 @@ You're the one who says "Wait." Who stops the crew before they make a fatal mist
 
 ---
 
-## Why Choose Mountain?
+## Why Choose The Still Point?
 
-**Choose Mountain if you:** Want to play someone whose power is in deliberate stillness.
+**Choose The Still Point if you:** Want to play someone whose power is in deliberate stillness.
 
 **Your vibe**: The anchor, the resting place, the immovable  
 **Your energy**: "Not yet. We stop. Right... NOW."
@@ -50,4 +50,4 @@ You're the one who says "Wait." Who stops the crew before they make a fatal mist
 
 ---
 
-*Mountain: When you're so still that your stopping becomes the most powerful move.*
+*The Still Point: When you're so still that your stopping becomes the most powerful move.*

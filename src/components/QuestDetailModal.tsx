@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { completeQuest } from '@/actions/quest-engine'
+import { CastingRitual } from './CastingRitual'
+import { generateQuestFromReading } from '@/actions/generate-quest'
+import { useRouter } from 'next/navigation'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -12,6 +15,7 @@ interface QuestDetailModalProps {
         description: string | null
         reward: number
         inputs?: string // JSON definition of inputs
+        moveType?: string | null
     }
     context?: {
         packId?: string
@@ -23,6 +27,7 @@ interface QuestDetailModalProps {
 }
 
 export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked }: QuestDetailModalProps) {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [response, setResponse] = useState('')
@@ -71,6 +76,16 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         🔒 Locked
                                     </span>
                                 )}
+                                {quest.moveType && (
+                                    <span className={`font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${quest.moveType === 'wakeUp' ? 'bg-yellow-900/30 text-yellow-400' :
+                                        quest.moveType === 'cleanUp' ? 'bg-orange-900/30 text-orange-400' :
+                                            quest.moveType === 'growUp' ? 'bg-green-900/30 text-green-400' :
+                                                quest.moveType === 'showUp' ? 'bg-purple-900/30 text-purple-400' :
+                                                    'bg-zinc-800 text-zinc-400'
+                                        }`}>
+                                        {quest.moveType.replace(/([A-Z])/g, ' $1').trim()}
+                                    </span>
+                                )}
                                 <span className="text-yellow-500 font-mono px-2 py-0.5 bg-yellow-900/20 rounded-full">
                                     +{quest.reward} ⓥ
                                 </span>
@@ -89,24 +104,75 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 <div className="p-6 space-y-6">
                     {/* Description */}
                     <div className="prose prose-invert prose-sm">
-                        <p className="text-zinc-300 text-base leading-relaxed">
-                            {quest.description}
+                        <p className="text-zinc-300 text-base leading-relaxed whitespace-pre-wrap">
+                            {quest.description?.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                const match = part.match(/\[(.*?)\]\((.*?)\)/)
+                                if (match) {
+                                    return <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">{match[1]}</a>
+                                }
+                                return part
+                            })}
                         </p>
                     </div>
+
+                    {/* Special Handling for Meet Your Archetype */}
+                    {quest.id === 'orientation-quest-2' && !isCompleted && (
+                        <div className="bg-blue-900/20 border border-blue-900/50 rounded-xl p-4 text-center">
+                            <p className="text-blue-300 text-sm mb-3">
+                                This quest will complete automatically once you've explored your Archetype's handbook page.
+                            </p>
+                            <a
+                                href="/archetype"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-transform hover:scale-105"
+                            >
+                                📖 Open Handbook Page ↗
+                            </a>
+                        </div>
+                    )}
 
                     {/* Input (if not completed and not locked) */}
                     {!isCompleted && !isLocked && (
                         <div className="space-y-3">
-                            <label className="text-xs uppercase text-zinc-500 font-bold tracking-wider">
-                                Your Response
-                            </label>
-                            <textarea
-                                value={response}
-                                onChange={(e) => setResponse(e.target.value)}
-                                placeholder="Reflect on your experience..."
-                                rows={3}
-                                className="w-full bg-black border border-zinc-800 rounded-lg p-3 text-white placeholder:text-zinc-600 focus:border-purple-500 outline-none transition-colors"
-                            />
+                            {/* Check for Trigger in inputs */}
+                            {quest.inputs?.includes('"trigger":"ICHING_CAST"') || quest.id === 'orientation-quest-3' ? (
+                                <div className="bg-black/50 rounded-xl border border-zinc-800 p-4">
+                                    <h4 className="text-center text-yellow-500 font-bold mb-4">Consult the Oracle</h4>
+                                    <CastingRitual
+                                        mode="modal"
+                                        onComplete={async (hexagramId) => {
+                                            const result = await generateQuestFromReading(hexagramId)
+                                            if (result.success) {
+                                                setFeedback('✨ Wisdom Received & Quest Completed!')
+                                                setTimeout(() => {
+                                                    onClose()
+                                                    router.refresh()
+                                                }, 2000)
+                                            } else {
+                                                setFeedback(`❌ ${result.error}`)
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            ) : quest.inputs?.includes('"trigger":"ARCHETYPE_VIEWED"') ? (
+                                <div className="bg-zinc-800/50 rounded-xl p-4 text-center text-zinc-400 italic text-sm">
+                                    Awaiting archetype synchronization...
+                                </div>
+                            ) : (
+                                <>
+                                    <label className="text-xs uppercase text-zinc-500 font-bold tracking-wider">
+                                        Your Response
+                                    </label>
+                                    <textarea
+                                        value={response}
+                                        onChange={(e) => setResponse(e.target.value)}
+                                        placeholder="Reflect on your experience..."
+                                        rows={3}
+                                        className="w-full bg-black border border-zinc-800 rounded-lg p-3 text-white placeholder:text-zinc-600 focus:border-purple-500 outline-none transition-colors"
+                                    />
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -130,6 +196,10 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     {!isCompleted && !isLocked && (
                         <button
                             onClick={handleComplete}
+                            // Disable for triggered quests
+                            hidden={quest.inputs?.includes('"trigger":"ICHING_CAST"') ||
+                                quest.inputs?.includes('"trigger":"ARCHETYPE_VIEWED"') ||
+                                quest.id === 'orientation-quest-3'}
                             disabled={isPending || !response.trim()}
                             className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:grayscale shadow-lg shadow-purple-900/20"
                         >

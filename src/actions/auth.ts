@@ -59,6 +59,15 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
                     contactType,
                     contactValue,
                     inviteId: invite.id,
+                    onboardingMode: 'guided',
+                    storyProgress: JSON.stringify({
+                        currentNodeId: 'intro_001',
+                        completedNodes: [],
+                        decisions: [],
+                        vibeulonsEarned: 0,
+                        startedAt: new Date(),
+                        lastActiveAt: new Date()
+                    })
                 },
             })
 
@@ -78,9 +87,9 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
             return newPlayer
         })
 
-        // 4. Create tutorial quest for new player
-        const { createTutorialQuest } = await import('@/actions/onboarding')
-        await createTutorialQuest(player.id)
+        // 4. Create tutorial quest for new player (optional, maybe specific to guided later)
+        // const { createTutorialQuest } = await import('@/actions/onboarding')
+        // await createTutorialQuest(player.id)
 
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
@@ -90,5 +99,5 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
         return { error: 'Failed to join. Email/Phone might be taken.' }
     }
 
-    redirect('/')
+    redirect('/conclave/guided')
 }

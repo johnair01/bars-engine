@@ -1,9 +1,9 @@
 import { db } from '@/lib/db'
-import { ConclaveWizard } from './ConclaveWizard'
+import { ConclaveWizard } from '../ConclaveWizard'
 import { redirect } from 'next/navigation'
 
-export default async function ConclavePage({ searchParams }: { searchParams: { token?: string } }) {
-    const { token } = await searchParams
+export default async function ConclavePage({ searchParams }: { searchParams: { token?: string; mode?: string } }) {
+    const { token, mode } = await searchParams
 
     let inviteToken = token
     let isOpenSignup = false
@@ -49,6 +49,9 @@ export default async function ConclavePage({ searchParams }: { searchParams: { t
     const nations = await db.nation.findMany()
     const playbooks = await db.playbook.findMany()
 
+
+
+
     return (
         <div className="min-h-screen bg-black font-sans selection:bg-purple-900/50">
             <main className="max-w-3xl mx-auto px-6 py-12 pt-24 pb-32">
@@ -57,6 +60,7 @@ export default async function ConclavePage({ searchParams }: { searchParams: { t
                     theme={inviteTheme}
                     nations={nations}
                     playbooks={playbooks}
+                    mode={mode as 'expert' | 'guided'}
                 />
             </main>
         </div>

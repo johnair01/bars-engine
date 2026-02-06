@@ -1,12 +1,12 @@
-# Earth (Kun): The Devoted Guardian
+# The Devoted Guardian
 
-**Trigram**: ☷ (Three broken lines - pure yin)  
+**Element**: Earth (Kun) ☷  
 **Archetype**: Selfless protector who holds space for others  
 **Central Conflict**: Your devotion to others versus caring for yourself
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the one people come to when they need grounding. Not because you're weak or passive, but because your strength is in receiving, supporting, and holding space. You know that the most powerful thing you can do is be the foundation others build on.
 
@@ -31,9 +31,9 @@ You're the one who makes sure everyone's okay. Who notices when someone needs su
 
 ---
 
-## Why Choose Earth?
+## Why Choose The Devoted Guardian?
 
-**Choose Earth if you:** Want to play the character who empowers others through devoted care.
+**Choose The Devoted Guardian if you:** Want to play the character who empowers others through devoted care.
 
 **Your vibe**: The nurturer, the guardian, the safe harbor  
 **Your energy**: "I've got you. Do what you need to do."
@@ -50,4 +50,4 @@ You're the one who makes sure everyone's okay. Who notices when someone needs su
 
 ---
 
-*Earth: When you love others so fiercely that your softness becomes unbreakable strength.*
+*The Devoted Guardian: When you love others so fiercely that your softness becomes unbreakable strength.*

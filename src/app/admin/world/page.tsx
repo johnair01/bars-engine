@@ -19,7 +19,7 @@ export default function AdminWorldPage() {
         <div className="space-y-12">
             <header>
                 <h1 className="text-3xl font-bold text-white mb-2">World Data</h1>
-                <p className="text-zinc-400">Manage the core setting data (Nations and Playbooks).</p>
+                <p className="text-zinc-400">Manage the core setting data (Nations and Archetypes).</p>
             </header>
 
             {/* NATIONS */}
@@ -29,7 +29,7 @@ export default function AdminWorldPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {data.nations.map((nation: any) => (
-                        <Link key={nation.id} href={`/admin/world/nation/${nation.name}`} className="block group h-full">
+                        <Link key={nation.id} href={`/admin/world/nation/${nation.id}`} className="block group h-full">
                             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 h-full flex flex-col hover:border-orange-500/50 transition-all">
                                 <div className="flex justify-between items-start mb-4">
                                     <h3 className="font-bold text-xl text-white group-hover:text-orange-300 transition-colors">
@@ -47,14 +47,14 @@ export default function AdminWorldPage() {
                 </div>
             </section>
 
-            {/* PLAYBOOKS */}
+            {/* ARCHETYPES */}
             <section>
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <span className="text-cyan-400">📖</span> Playbooks
+                    <span className="text-cyan-400">📖</span> Archetypes
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {data.playbooks.map((pb: any) => (
-                        <Link key={pb.id} href={`/admin/world/playbook/${pb.name}`} className="block group h-full">
+                        <Link key={pb.id} href={`/admin/world/archetype/${pb.id}`} className="block group h-full">
                             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 h-full flex flex-col hover:border-cyan-500/50 transition-all">
                                 <div className="flex justify-between items-start mb-4">
                                     <h3 className="font-bold text-lg text-white group-hover:text-cyan-300 transition-colors">

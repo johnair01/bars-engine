@@ -1,12 +1,12 @@
-# Water (Kan): The Danger Walker
+# The Danger Walker
 
-**Trigram**: ☵ (Solid line between two broken - danger embraced)  
+**Element**: Water (Kan) ☵  
 **Archetype**: The one who thrives in chaos and danger  
 **Central Conflict**: Your comfort with danger versus the need for safety and stability
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who doesn't avoid the dangerous path—you're drawn to it. Not from recklessness, but because you understand that the deepest wisdom lives in places others fear. You flow through danger the way rivers carve canyons.
 
@@ -31,9 +31,9 @@ You're the one who thrives when plans fall apart. When everything goes sideways,
 
 ---
 
-## Why Choose Water?
+## Why Choose The Danger Walker?
 
-**Choose Water if you:** Want to play someone who thrives in dangerous, uncertain situations.
+**Choose The Danger Walker if you:** Want to play someone who thrives in dangerous, uncertain situations.
 
 **Your vibe**: The river through rapids, the storm dancer  
 **Your energy**: "Dangerous? Perfect. That's where the real paths are."
@@ -50,4 +50,4 @@ You're the one who thrives when plans fall apart. When everything goes sideways,
 
 ---
 
-*Water: When you're so fluid that danger becomes just another current to ride.*
+*The Danger Walker: When you're so fluid that danger becomes just another current to ride.*

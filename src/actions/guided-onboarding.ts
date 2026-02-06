@@ -15,14 +15,14 @@ export async function startGuidedOnboarding(email: string, password: string, inv
                 inviteId: inviteToken,
                 onboardingMode: 'guided',
                 onboardingComplete: false,
-                storyProgress: {
+                storyProgress: JSON.stringify({
                     currentNodeId: 'intro_001',
                     completedNodes: [],
                     decisions: [],
                     vibeulonsEarned: 0,
                     startedAt: new Date(),
                     lastActiveAt: new Date()
-                }
+                })
             }
         })
 
@@ -40,16 +40,17 @@ export async function startGuidedOnboarding(email: string, password: string, inv
     }
 }
 
+import { getStaticStoryNode } from '@/lib/story-content'
+
 export async function getStoryNode(nodeId: string): Promise<StoryNode | null> {
-    // TODO: Fetch from database or story-content.ts
-    // For now, returning null as placeholder
-    return null
+    return getStaticStoryNode(nodeId)
 }
 
 export async function recordStoryChoice(
     playerId: string,
     nodeId: string,
     choiceId: string,
+    input?: string, // Added optional input
     rewards?: {
         vibeulons?: number
         unlocks?: string[]
@@ -64,11 +65,55 @@ export async function recordStoryChoice(
             return { success: false, error: 'Player not found' }
         }
 
-        const currentProgress = player.storyProgress as StoryProgress
+        // Handle Identity Name Input
+        if (nodeId === 'identity_001' && input) {
+            await db.player.update({
+                where: { id: playerId },
+                data: { name: input } // Removed nameSetAt as it's not in schema
+            })
+        }
+
+        // Handle Unlocks (Nations/Playbooks)
+        if (rewards?.unlocks) {
+            // Check for nation unlocks 
+            const nationUnlock = rewards.unlocks.find(u => u.startsWith('nation:'))
+            if (nationUnlock) {
+                const nationId = nationUnlock.split(':')[1]
+                await db.player.update({
+                    where: { id: playerId },
+                    data: { nationId } // Set their nation selection
+                })
+            }
+
+            // Check for playbook unlocks
+            const playbookUnlock = rewards.unlocks.find(u => u.startsWith('playbook:'))
+            if (playbookUnlock) {
+                const playbookId = playbookUnlock.split(':')[1]
+                await db.player.update({
+                    where: { id: playerId },
+                    data: { playbookId } // Set their playbook selection
+                })
+            }
+        }
+
+        // Parse existing progress
+        const currentProgress = player.storyProgress
+            ? JSON.parse(player.storyProgress as string) as StoryProgress
+            : {
+                currentNodeId: 'intro_001',
+                completedNodes: [],
+                decisions: [],
+                vibeulonsEarned: 0,
+                startedAt: new Date(),
+                lastActiveAt: new Date()
+            } as StoryProgress
+
+        const nextNodeId = await getNextNodeId(nodeId, choiceId)
 
         // Update progress
         const updatedProgress: StoryProgress = {
             ...currentProgress,
+            currentNodeId: nextNodeId,
             completedNodes: [...currentProgress.completedNodes, nodeId],
             decisions: [
                 ...currentProgress.decisions,
@@ -85,7 +130,7 @@ export async function recordStoryChoice(
         await db.player.update({
             where: { id: playerId },
             data: {
-                storyProgress: updatedProgress
+                storyProgress: JSON.stringify(updatedProgress)
             }
         })
 
@@ -94,6 +139,14 @@ export async function recordStoryChoice(
         console.error('Failed to record choice:', error)
         return { success: false, error: 'Failed to save progress' }
     }
+}
+
+// Helper to find next node from choice
+async function getNextNodeId(currentNodeId: string, choiceId: string): Promise<string> {
+    const node = await getStaticStoryNode(currentNodeId)
+    if (!node) return currentNodeId; // Fallback
+    const choice = node.choices.find(c => c.id === choiceId)
+    return choice ? choice.nextNodeId : currentNodeId
 }
 
 export async function finalizeOnboarding(
@@ -110,7 +163,9 @@ export async function finalizeOnboarding(
             return { success: false, error: 'Player not found' }
         }
 
-        const progress = player.storyProgress as StoryProgress
+        const progress = player.storyProgress
+            ? JSON.parse(player.storyProgress as string) as StoryProgress
+            : { vibeulonsEarned: 0 }
 
         // Update player with character data
         await db.player.update({
@@ -122,14 +177,20 @@ export async function finalizeOnboarding(
             }
         })
 
-        // Create vibeulons in wallet
-        await db.vibulon.createMany({
-            data: Array.from({ length: progress.vibeulonsEarned }).map(() => ({
-                playerId,
-                sourceType: 'onboarding',
-                sourceId: 'guided_completion'
-            }))
-        })
+        // Create vibeulons in wallet - ensure type safety
+        const vibeulonCount = progress.vibeulonsEarned || 0
+        if (vibeulonCount > 0) {
+            await db.vibulon.createMany({
+                data: Array.from({ length: vibeulonCount }).map(() => ({
+                    ownerId: playerId,
+                    sourceType: 'onboarding',
+                    sourceId: 'guided_completion',
+                    originSource: 'onboarding', // Added required fields
+                    originId: 'guided_completion',
+                    originTitle: 'Guided Onboarding'
+                }))
+            })
+        }
 
         // TODO: Assign orientation quest thread
 

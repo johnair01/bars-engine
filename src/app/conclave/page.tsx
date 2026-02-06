@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function ConclaveModePage() {
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-black text-white font-sans">
+        <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-sans py-12">
             <div className="max-w-4xl w-full p-4 sm:p-8 space-y-8 sm:space-y-12">
                 {/* Header */}
                 <header className="text-center space-y-4">
@@ -17,7 +17,7 @@ export default function ConclaveModePage() {
                 {/* Mode Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Guided Mode */}
-                    <Link href="/conclave/guided">
+                    <Link href="/conclave/wizard?mode=guided">
                         <div className="group cursor-pointer bg-zinc-900/40 border-2 border-purple-900/50 hover:border-purple-500 rounded-2xl p-6 sm:p-8 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-900/20">
                             <div className="space-y-4">
                                 <div className="text-4xl sm:text-5xl">📖</div>

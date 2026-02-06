@@ -26,14 +26,19 @@ type Playbook = {
     showUp?: string | null
 }
 
-type Step = 'email' | 'login' | 'identity' | 'nation' | 'playbook' | 'setup'
+import { WorldOverview } from '@/components/conclave/WorldOverview'
+import { ArchetypeOverview } from '@/components/conclave/ArchetypeOverview'
+
+type Step = 'email' | 'login' | 'identity' | 'world-overview' | 'nation' | 'archetype-overview' | 'playbook' | 'setup'
 
 export function ConclaveWizard({
     token,
     theme,
     nations,
     playbooks,
+    mode,
 }: {
+    mode?: 'expert' | 'guided'
     token: string
     theme?: string
     nations: Nation[]
@@ -108,7 +113,12 @@ export function ConclaveWizard({
             return
         }
 
-        setStep('nation')
+        // MODE CHECK: Expert skips World Overview
+        if (mode === 'expert') {
+            setStep('nation')
+        } else {
+            setStep('world-overview')
+        }
     }
 
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
@@ -261,7 +271,6 @@ export function ConclaveWizard({
                             {contactError}
                         </div>
                     )}
-                    {/* Pronouns removed from P0 requirement, but can check if needed. Keeping simple. */}
                 </div>
 
                 <div className="flex gap-3">
@@ -276,11 +285,16 @@ export function ConclaveWizard({
                         onClick={handleIdentityNext}
                         className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
                     >
-                        {isValidatingContact ? 'Checking...' : 'Next: Choose Nation →'}
+                        {isValidatingContact ? 'Checking...' : 'Next: Introduction →'}
                     </button>
                 </div>
             </div>
         )
+    }
+
+    // --- STEP 2.5: WORLD OVERVIEW ---
+    if (step === 'world-overview') {
+        return <WorldOverview onNext={() => setStep('nation')} />
     }
 
     // --- STEP 3: NATION ---
@@ -330,7 +344,16 @@ export function ConclaveWizard({
                                     <MoveDisplay label="Wake Up" emoji="👁" value={nation.wakeUp} />
                                     <MoveDisplay label="Clean Up" emoji="🧹" value={nation.cleanUp} />
                                     <MoveDisplay label="Grow Up" emoji="🌱" value={nation.growUp} />
-                                    <MoveDisplay label="Show Up" emoji="🎯" value={nation.showUp} />
+                                    <div className="mt-4 pt-4 border-t border-zinc-800">
+                                        <a
+                                            href={`/nation/${nation.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full text-center py-2 rounded bg-purple-900/30 text-purple-300 text-sm font-bold border border-purple-500/30 hover:bg-purple-900/50 hover:border-purple-500 transition-all"
+                                        >
+                                            📜 Read Full Origin Story ↗
+                                        </a>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -339,10 +362,22 @@ export function ConclaveWizard({
 
                 <div className="flex gap-3">
                     <button onClick={() => setStep('identity')} className="flex-1 bg-zinc-800 text-white py-3 rounded-full font-bold">← Back</button>
-                    <button disabled={!nationId} onClick={() => setStep('playbook')} className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50">Next: Choose Playbook →</button>
+                    {/* MODE CHECK: Expert skips Archetype Overview */}
+                    <button
+                        disabled={!nationId}
+                        onClick={() => mode === 'expert' ? setStep('playbook') : setStep('archetype-overview')}
+                        className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
+                    >
+                        Next: Choose Playbook →
+                    </button>
                 </div>
             </div>
         )
+    }
+
+    // --- STEP 3.5: ARCHETYPE OVERVIEW ---
+    if (step === 'archetype-overview') {
+        return <ArchetypeOverview onNext={() => setStep('playbook')} />
     }
 
     // --- STEP 4: PLAYBOOK ---

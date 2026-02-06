@@ -1,6 +1,6 @@
 'use client'
 
-import { startThread, advanceThread } from '@/actions/quest-thread'
+import { startThread, advanceThread, archiveThread } from '@/actions/quest-thread'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
@@ -16,6 +16,7 @@ type ThreadProgress = {
     id: string
     currentPosition: number
     completedAt: Date | null
+    isArchived: boolean
 }
 
 type QuestThreadData = {
@@ -27,7 +28,7 @@ type QuestThreadData = {
     quests: ThreadQuest[]
     playerProgress: ThreadProgress | null
     totalQuests: number
-    currentQuest?: ThreadQuest | null  // Allow undefined
+    currentQuest?: ThreadQuest | null
 }
 
 export function QuestThread({ thread }: { thread: QuestThreadData }) {
@@ -47,6 +48,13 @@ export function QuestThread({ thread }: { thread: QuestThreadData }) {
         })
     }
 
+    const handleArchive = () => {
+        startTransition(async () => {
+            await archiveThread(thread.id)
+            router.refresh()
+        })
+    }
+
     const progressPercent = isComplete
         ? 100
         : thread.totalQuests > 0
@@ -55,7 +63,23 @@ export function QuestThread({ thread }: { thread: QuestThreadData }) {
 
     return (
         <>
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
+                {/* Celebration Overlay */}
+                {isComplete && !progress?.isArchived && (
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6 animate-in fade-in duration-500">
+                        <div className="text-4xl mb-2 animate-bounce">🎉</div>
+                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Journey Complete!</h3>
+                        <p className="text-zinc-400 text-sm mt-1">You have mastered this path.</p>
+                        <button
+                            onClick={handleArchive}
+                            disabled={isPending}
+                            className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
+                        >
+                            {isPending ? 'Claiming...' : 'Claim Victory'}
+                        </button>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div>
@@ -96,12 +120,12 @@ export function QuestThread({ thread }: { thread: QuestThreadData }) {
                         return (
                             <div
                                 key={tq.id}
-                                onClick={() => setSelectedQuest(tq)}
+                                onClick={() => !isLocked && setSelectedQuest(tq)}
                                 className={`flex items-center gap-3 text-sm p-3 rounded-lg border transition-all cursor-pointer ${isCurrent
                                     ? 'bg-purple-900/30 border-purple-500/50 text-purple-100 hover:bg-purple-900/40'
                                     : isDone
                                         ? 'bg-zinc-900/30 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                        : 'bg-zinc-900/30 border-zinc-800 text-zinc-400 opacity-70 hover:opacity-100'
+                                        : 'bg-zinc-900/30 border-zinc-800 text-zinc-400 opacity-70 cursor-not-allowed'
                                     }`}
                             >
                                 {/* Status Icon */}
@@ -158,7 +182,7 @@ export function QuestThread({ thread }: { thread: QuestThreadData }) {
 
                 {isComplete && (
                     <div className="text-center text-green-400 text-sm font-medium py-2">
-                        ✓ Journey Complete
+                        ✓ Journey Archivied
                     </div>
                 )}
             </div>

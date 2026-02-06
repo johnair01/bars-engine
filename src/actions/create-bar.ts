@@ -129,3 +129,84 @@ export async function getActivePlayers() {
         orderBy: { name: 'asc' }
     })
 }
+
+export async function createQuestFromWizard(data: any) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { error: 'Not logged in' }
+    }
+
+    try {
+        const {
+            title, description, category, visibility,
+            reward, inputs, lifecycleFraming, approach
+        } = data
+
+        // Validation
+        if (!title || !description) return { error: 'Missing title or description' }
+
+        // Logic for Public Quests (Cost to Create)
+        if (visibility === 'public') {
+            await db.$transaction(async (tx) => {
+                const wallet = await tx.vibulon.findMany({
+                    where: { ownerId: playerId },
+                    take: 1
+                })
+
+                if (wallet.length < 1) {
+                    throw new Error('Need 1 Vibeulon to stake a Public Quest')
+                }
+
+                await tx.vibulon.delete({ where: { id: wallet[0].id } })
+                await tx.vibulonEvent.create({
+                    data: {
+                        playerId,
+                        source: 'quest_creation_stake',
+                        amount: -1,
+                        notes: `Staked on public quest: ${title}`,
+                        archetypeMove: 'INITIATE'
+                    }
+                })
+            })
+        }
+
+        // Create the Bar
+        const newBar = await db.customBar.create({
+            data: {
+                creatorId: playerId,
+                title,
+                description,
+                type: category || 'custom',
+                reward: Number(reward) || 1,
+                inputs: JSON.stringify(inputs || []),
+                visibility: visibility || 'public',
+                status: 'active',
+                moveType: lifecycleFraming || null,
+                storyPath: 'collective',
+                rootId: 'temp',
+                storyContent: approach ? `Approach: ${approach}` : null
+            }
+        })
+
+        await db.customBar.update({
+            where: { id: newBar.id },
+            data: { rootId: newBar.id }
+        })
+
+        // Track "First Quest Created" for onboarding
+        const player = await db.player.findUnique({ where: { id: playerId } })
+        if (player && !player.hasCreatedFirstQuest) {
+            const { completeOnboardingStep } = await import('@/actions/onboarding')
+            await completeOnboardingStep('firstCreate')
+        }
+
+        revalidatePath('/')
+        return { success: true, questId: newBar.id }
+
+    } catch (e: any) {
+        console.error("Wizard create failed:", e)
+        return { error: e.message || 'Failed to create quest' }
+    }
+}

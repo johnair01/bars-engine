@@ -266,6 +266,20 @@ type CustomBarDef = {
     inputs: string
     creatorId: string
     storyPath: string | null
+    moveType: string | null
+}
+
+// Update BarDef too
+export type BarDef = {
+    id: string
+    title: string
+    description: string
+    type: 'vibe' | 'story'
+    reward: number
+    inputs: BarInput[]
+    unique?: boolean
+    isCustom?: boolean
+    moveType?: string | null
 }
 
 // Type for I Ching bars from DB (via PlayerBar)
@@ -383,6 +397,7 @@ export function StarterQuestBoard({
         inputs: JSON.parse(cb.inputs || '[]'),
         unique: false,  // Custom bars are repeatable
         isCustom: true, // Mark as custom
+        moveType: cb.moveType,
     }))
 
     // Convert I Ching readings to BarDef format

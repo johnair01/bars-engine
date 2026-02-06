@@ -147,3 +147,100 @@ export async function createCharacter(prevState: any, formData: FormData) {
 
     return { success: true }
 }
+
+const GuidedIdentitySchema = z.object({
+    name: z.string().min(2),
+    contact: z.string().email(),
+    password: z.string().min(6),
+})
+
+export async function createGuidedPlayer(prevState: any, formData: FormData) {
+    const rawData = {
+        identity: formData.get('identity'),
+    }
+
+    let identity
+    try {
+        const parsed = JSON.parse(rawData.identity as string)
+        identity = GuidedIdentitySchema.parse(parsed)
+    } catch (e: any) {
+        return { error: `Invalid Identity: ${e?.message}` }
+    }
+
+    try {
+        const existingAccount = await db.account.findUnique({ where: { email: identity.contact } })
+        if (existingAccount) return { error: 'Account already exists. Please log in.' }
+
+        // Use a system open invite or generate one?
+        // Guided mode typically implies open access or specific flow.
+        // For now, we'll create a single-use invite on the fly if none provided, 
+        // OR we just create the account directly if we allow open signup.
+        // Let's assume open signup for Guided for now or reuse the token logic if passed.
+
+        // Assuming pure open signup for Guided MVP:
+        const passwordHash = await hashPassword(identity.password)
+
+        const player = await db.$transaction(async (tx) => {
+            const account = await tx.account.create({
+                data: {
+                    email: identity.contact,
+                    passwordHash,
+                }
+            })
+
+            // Create a dummy invite for record keeping or use a system code
+            const autoInvite = await tx.invite.create({
+                data: {
+                    token: `guided_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    status: 'used',
+                    usedAt: new Date(),
+                    players: {
+                        create: {
+                            accountId: account.id,
+                            name: identity.name,
+                            contactType: 'email',
+                            contactValue: identity.contact,
+                            onboardingMode: 'guided',
+                            // No nation or playbook yet
+                        }
+                    }
+                },
+                include: {
+                    players: true
+                }
+            })
+
+            const newPlayer = autoInvite.players[0]
+
+            // Init Starter Pack
+            await tx.starterPack.create({
+                data: {
+                    playerId: newPlayer.id,
+                    data: JSON.stringify({ completedBars: [] }),
+                    initialVibeulons: 0,
+                }
+            })
+
+            return newPlayer
+        })
+
+        // Assign orientation threads
+        const { assignOrientationThreads } = await import('./quest-thread')
+        await assignOrientationThreads(player.id)
+
+        const cookieStore = await cookies()
+        // Use strict rules for production, lax for dev to ensure it setting
+        cookieStore.set('bars_player_id', player.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30 // 30 days
+        })
+
+    } catch (e: any) {
+        console.error("Guided creation failed:", e)
+        return { error: e.message }
+    }
+
+    return { success: true }
+}

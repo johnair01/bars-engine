@@ -1,12 +1,12 @@
-# Wind (Xun): The Subtle Influence
+# The Subtle Influence
 
-**Trigram**: ☴ (Broken line below two solid - gentle but persistent)  
+**Element**: Wind (Xun) ☴  
 **Archetype**: The one who changes everything gradually  
 **Central Conflict**: Your subtle persistence versus the desire to be seen and direct
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who shifts things without anyone noticing until it's done. Not through force, but through gentle, persistent influence. You're the conversation that changes a mind, the small action repeated until it's transformed everything.
 
@@ -31,9 +31,9 @@ You're the one who shifts perspectives, who gradually moves pieces into place, w
 
 ---
 
-## Why Choose Wind?
+## Why Choose The Subtle Influence?
 
-**Choose Wind if you:** Want to play someone whose power is in gentle, persistent influence.
+**Choose The Subtle Influence if you:** Want to play someone whose power is in gentle, persistent influence.
 
 **Your vibe**: The breeze that becomes the wind, the subtle force  
 **Your energy**: "I'll just... keep... gently... pushing..."
@@ -50,4 +50,4 @@ You're the one who shifts perspectives, who gradually moves pieces into place, w
 
 ---
 
-*Wind: When you're so persistent in your gentleness that walls become doors.*
+*The Subtle Influence: When you're so persistent in your gentleness that walls become doors.*

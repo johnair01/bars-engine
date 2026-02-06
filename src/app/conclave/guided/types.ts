@@ -12,6 +12,7 @@ export interface StoryNode {
         teachesAbout?: string   // "nations", "playbooks", "vibeulons"
         emotionalTone?: string  // "exciting", "mysterious", "informative"
     }
+    inputType?: 'text' | 'none'
 }
 
 export interface StoryChoice {

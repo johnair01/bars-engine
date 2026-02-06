@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
-import { CreateBarForm } from '@/components/CreateBarForm'
 import { DashboardCaster } from '@/components/DashboardCaster'
 import { QuestThread } from '@/components/QuestThread'
 import { QuestPack } from '@/components/QuestPack'
@@ -113,19 +112,23 @@ export default async function Home() {
     .map(q => q.questId)
 
   // Fetch user-created bars:
-  // - Public bars that are unclaimed (available to everyone)
-  // - Bars claimed by current player (their active quests)
-  // - Private bars created by current player (their drafts)
+  // - Public bars that are unclaimed
+  // - Bars claimed by current player (these are in activeBars)
+  // - Private bars created by current player (drafts)
+  // - Explicitly include any active quests (assigned to player) regardless of visibility
   const customBars = await db.customBar.findMany({
     where: {
       status: 'active',
       OR: [
-        // Public + unclaimed = Available to all
+        // Public + unclaimed
         { visibility: 'public', claimedById: null },
-        // Claimed by me = My active quests
-        { claimedById: playerId },
-        // My drafts (private, unclaimed)
+        // Claimed/Assigned to valid activeBars list (including private ones like tutorial)
+        { id: { in: activeBars } },
+        // My drafts
         { visibility: 'private', creatorId: playerId, claimedById: null },
+        // Explicitly include completed quests so they appear in graveyard queries if fetched here (though completed usually comes from player.quests directly)
+        // Actually, StarterQuestBoard uses customBars to get details. If a private quest is completed, it's not "active", so we must ensure it's fetched.
+        { id: { in: completedBars.map(b => b.id) } }
       ]
     },
     orderBy: { createdAt: 'desc' }
@@ -195,16 +198,20 @@ export default async function Home() {
 
         <div className="flex flex-wrap gap-2 sm:gap-4">
           {player.nation && (
-            <div className="px-4 py-2 bg-purple-900/20 border border-purple-900/50 rounded-lg">
-              <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-1">Nation</div>
-              <div className="text-purple-100 font-bold">{player.nation.name}</div>
-            </div>
+            <Link href="/nation" className="block cursor-pointer hover:opacity-80 transition">
+              <div className="px-4 py-2 bg-purple-900/20 border border-purple-900/50 rounded-lg">
+                <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-1">Nation</div>
+                <div className="text-purple-100 font-bold">{player.nation.name}</div>
+              </div>
+            </Link>
           )}
           {player.playbook && (
-            <div className="px-4 py-2 bg-blue-900/20 border border-blue-900/50 rounded-lg">
-              <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">Playbook</div>
-              <div className="text-blue-100 font-bold">{player.playbook.name}</div>
-            </div>
+            <Link href="/archetype" className="block cursor-pointer hover:opacity-80 transition">
+              <div className="px-4 py-2 bg-blue-900/20 border border-blue-900/50 rounded-lg">
+                <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">Archetype</div>
+                <div className="text-blue-100 font-bold">{player.playbook.name}</div>
+              </div>
+            </Link>
           )}
           {player.roles.length > 0 && (
             <div className="px-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
@@ -239,11 +246,11 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {threads.map(thread => (
-              <QuestThread key={thread.id} thread={thread} />
+            {threads.filter(t => !(t.playerProgress as any)?.isArchived).map(thread => (
+              <QuestThread key={thread.id} thread={thread as any} />
             ))}
             {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack} />
+              <QuestPack key={pack.id} pack={pack as any} />
             ))}
           </div>
         </section>
@@ -253,34 +260,58 @@ export default async function Home() {
         <div className="space-y-10">
           {/* 2. ACTIVE BARS (Current) */}
           <section>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-6" id="active-quests">
               <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-yellow-500/70 uppercase tracking-widest text-sm font-bold">Active Bars</h2>
+              <h2 className="text-yellow-500/70 uppercase tracking-widest text-sm font-bold">Active Quests</h2>
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
 
             <StarterQuestBoard
               completedBars={completedBars}
               activeBars={activeBars}
-              customBars={visibleCustomBars}
+              // Filter out 'inspiration' type for the main list
+              customBars={visibleCustomBars.filter(b => b.type !== 'inspiration')}
               ichingBars={ichingReadings}
               potentialDelegates={potentialDelegates}
               view="active"
             />
           </section>
 
+          {/* 3. BARS WALLET (Inspiration) */}
+          {visibleCustomBars.some(b => b.type === 'inspiration') && (
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-px bg-zinc-800 flex-1"></div>
+                <h2 className="text-pink-500/70 uppercase tracking-widest text-sm font-bold">Bars Wallet</h2>
+                <div className="h-px bg-zinc-800 flex-1"></div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-zinc-500 text-sm italic text-center">Inspirations collected. Forge them into quests for the collective.</p>
+                <StarterQuestBoard
+                  completedBars={completedBars}
+                  activeBars={activeBars}
+                  customBars={visibleCustomBars.filter(b => b.type === 'inspiration')}
+                  ichingBars={ichingReadings}
+                  potentialDelegates={potentialDelegates}
+                  view="active"
+                />
+              </div>
+            </section>
+          )}
+
           {/* 3. AVAILABLE BARS LINK */}
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-green-600/70 uppercase tracking-widest text-sm font-bold">Commissions</h2>
+              <h2 className="text-green-600/70 uppercase tracking-widest text-sm font-bold">Available Quests</h2>
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
 
             <Link href="/bars/available" className="block group">
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex justify-between items-center group-hover:border-green-500/50 transition-all">
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-2">Available Commissions</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">Available Quests</h3>
                   <p className="text-zinc-500"> Browse and accept new quests from other players.</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
@@ -290,8 +321,15 @@ export default async function Home() {
             </Link>
 
             {/* CREATE BAR */}
-            <div className="mt-6">
-              <CreateBarForm />
+            <div className="mt-8">
+              <Link
+                href="/quest/create"
+                className="w-full group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">✨</div>
+                <div className="font-bold text-white mb-1">Create a New Quest</div>
+                <div className="text-sm text-zinc-500">Design a dream, scheme, or invitation</div>
+              </Link>
             </div>
 
             {/* I CHING */}
@@ -356,19 +394,19 @@ export default async function Home() {
             </div>
 
             {/* Completed Journeys (Threads & Packs) */}
-            {(threads.some(t => t.playerProgress?.completedAt) || packs.some(p => p.status === 'completed')) && (
+            {(threads.some(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived) || packs.some(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)) && (
               <div className="mb-6">
                 <h3 className="text-xs text-zinc-600 uppercase tracking-widest mb-3">Completed Journeys</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {threads
-                    .filter(t => t.playerProgress?.completedAt)
+                    .filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
                     .map(thread => (
-                      <QuestThread key={thread.id} thread={thread} />
+                      <QuestThread key={thread.id} thread={thread as any} />
                     ))}
                   {packs
-                    .filter(p => p.status === 'completed')
+                    .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
                     .map(pack => (
-                      <QuestPack key={pack.id} pack={pack} />
+                      <QuestPack key={pack.id} pack={pack as any} />
                     ))}
                 </div>
               </div>

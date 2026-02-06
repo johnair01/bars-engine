@@ -6,6 +6,7 @@ import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { completeQuest } from '@/actions/quest-engine'
 
 export async function generateQuestFromReading(hexagramId: number) {
     const cookieStore = await cookies()
@@ -18,6 +19,30 @@ export async function generateQuestFromReading(hexagramId: number) {
     const result = await generateQuestCore(playerId, hexagramId)
 
     if (result.success) {
+        // CHECK FOR QUEST COMPLETION (orientation-quest-3)
+        // Check for thread participation instead of assignment
+        const threadQuest = await db.threadQuest.findFirst({
+            where: { questId: 'orientation-quest-3' }
+        })
+
+        if (threadQuest) {
+            const progress = await db.threadProgress.findUnique({
+                where: {
+                    threadId_playerId: {
+                        threadId: threadQuest.threadId,
+                        playerId
+                    }
+                }
+            })
+
+            if (progress) {
+                await completeQuest(threadQuest.questId, {
+                    hexagramId,
+                    generatedQuestId: result.quest?.title
+                }, { threadId: threadQuest.threadId })
+            }
+        }
+
         revalidatePath('/')
     }
 
@@ -77,19 +102,30 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
             prompt: "Generate a Collective Quest."
         })
 
-        // 5. Create CustomBar (Collective)
+        // 5. Create CustomBar (Inspiration)
         const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title: object.title,
                 description: object.description,
-                type: 'vibe',
-                reward: 2, // Slightly higher reward for oracle quests
+                type: 'inspiration', // MARK AS INSPIRATION (Raw Bar)
+                reward: 2,
                 status: 'active',
-                storyPath: 'collective', // Available to everyone
+                storyPath: 'personal',
+                visibility: 'private',
                 inputs: JSON.stringify([
                     { key: 'reflection', label: 'Response', type: 'textarea', placeholder: `Use the move: ${object.selectedMove}` }
                 ])
+            }
+        })
+
+        // Auto-assign to creator so it shows in "Active Quests"
+        await db.playerQuest.create({
+            data: {
+                playerId,
+                questId: newBar.id,
+                status: 'assigned',
+                assignedAt: new Date()
             }
         })
 

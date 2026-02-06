@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { fireTrigger } from '@/actions/quest-engine'
 
 export async function castIChing() {
     const cookieStore = await cookies()
@@ -91,6 +92,9 @@ export async function acceptReading(hexagramId: number) {
                 where: { playerId },
                 data: { data: JSON.stringify(data) }
             })
+
+            // Fire orientation quest trigger
+            await fireTrigger('ICHING_CAST')
         }
 
         revalidatePath('/')

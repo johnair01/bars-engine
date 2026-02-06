@@ -1,12 +1,12 @@
-# Heaven (Qian): The Bold Heart
+# The Bold Heart
 
-**Trigram**: ☰ (Three solid lines - pure yang)  
+**Element**: Heaven (Qian) ☰  
 **Archetype**: The one who acts when others hesitate  
 **Central Conflict**: Your need to initiate versus allowing others their own timing
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who sees what's needed and does something about it—not because you're in charge, but because waiting feels impossible. When everyone's stuck deliberating, you're the spark that breaks the paralysis.
 
@@ -31,9 +31,9 @@ You're the energy that gets things moving. Not directing others, but being so co
 
 ---
 
-## Why Choose Heaven?
+## Why Choose The Bold Heart?
 
-**Choose Heaven if you:** Want to play someone whose natural response to obstacles is "okay, I'll start."
+**Choose The Bold Heart if you:** Want to play someone whose natural response to obstacles is "okay, I'll start."
 
 **Your vibe**: The adventurer, the catalyst, the one who can't NOT move  
 **Your energy**: "Why are we still talking? Let's go."
@@ -50,4 +50,4 @@ You're the energy that gets things moving. Not directing others, but being so co
 
 ---
 
-*Heaven: When you embody creative yang energy with such clarity that movement becomes inevitable.*
+*The Bold Heart: When you embody creative yang energy with such clarity that movement becomes inevitable.*

@@ -1,6 +1,6 @@
 'use client'
 
-import { startPack } from '@/actions/quest-pack'
+import { startPack, archivePack } from '@/actions/quest-pack'
 import { useRouter } from 'next/navigation'
 import { useTransition, useState } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
@@ -15,6 +15,7 @@ type PackProgress = {
     id: string
     completed: string // JSON array
     completedAt: Date | null
+    isArchived: boolean
 }
 
 type QuestPackData = {
@@ -47,8 +48,31 @@ export function QuestPack({ pack }: { pack: QuestPackData }) {
         })
     }
 
+    const handleArchive = () => {
+        startTransition(async () => {
+            await archivePack(pack.id)
+            router.refresh()
+        })
+    }
+
     return (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
+            {/* Celebration Overlay */}
+            {isComplete && !pack.playerProgress?.isArchived && (
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6 animate-in fade-in duration-500">
+                    <div className="text-4xl mb-2 animate-bounce">📦</div>
+                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-600">Pack Complete!</h3>
+                    <p className="text-zinc-400 text-sm mt-1">Collection acquired.</p>
+                    <button
+                        onClick={handleArchive}
+                        disabled={isPending}
+                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
+                    >
+                        {isPending ? 'Archiving...' : 'Archive Pack'}
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
@@ -128,9 +152,6 @@ export function QuestPack({ pack }: { pack: QuestPackData }) {
             )}
 
             <div className="space-y-2">
-                <div className="text-center text-green-400 text-sm font-medium py-2">
-                    ✓ Pack Complete
-                </div>
                 {/* @ts-ignore */}
                 {pack.isCreator && (
                     <button

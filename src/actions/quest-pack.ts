@@ -242,3 +242,21 @@ export async function createSystemPack(data: {
     revalidatePath('/')
     return { success: true, packId: pack.id }
 }
+
+/**
+ * Archive a completed pack (remove from dashboard)
+ */
+export async function archivePack(packId: string) {
+    const player = await getCurrentPlayer()
+    if (!player) return { error: 'Not logged in' }
+
+    await db.packProgress.update({
+        where: {
+            packId_playerId: { packId, playerId: player.id }
+        },
+        data: { isArchived: true } as any
+    })
+
+    revalidatePath('/')
+    return { success: true }
+}

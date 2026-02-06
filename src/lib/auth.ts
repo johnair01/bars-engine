@@ -20,6 +20,8 @@ export const getCurrentPlayer = cache(async () => {
             include: {
                 roles: { include: { role: true } },
                 bars: { include: { bar: true } },
+                nation: true,
+                playbook: true,
                 _count: { select: { vibulonEvents: true } }
             }
         })

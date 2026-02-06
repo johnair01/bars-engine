@@ -1,12 +1,12 @@
-# Lake (Dui): The Joyful Connector
+# The Joyful Connector
 
-**Trigram**: ☱ (Broken line above two solid - joyous openness)  
-**Archetype**: The one who brings people together through delight  
+**Element**: Lake (Dui) ☱
+**Archetype**: The one who brings people together through delight
 **Central Conflict**: Your openness and generosity versus healthy boundaries
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who lights up when connecting with others. Not from neediness, but because genuine exchange DELIGHTS you. You're open, generous, playful—and people are drawn to your joy like moths to flame.
 
@@ -31,9 +31,9 @@ You're the one who makes friends out of strangers, who turns tense situations pl
 
 ---
 
-## Why Choose Lake?
+## Why Choose The Joyful Connector?
 
-**Choose Lake if you:** Want to play someone who creates joy through authentic connection.
+**Choose The Joyful Connector if you:** Want to play someone who creates joy through authentic connection.
 
 **Your vibe**: The party spark, the genuine friend, the delight-bringer  
 **Your energy**: "This is going to be AMAZING and we're doing it TOGETHER!"
@@ -50,4 +50,4 @@ You're the one who makes friends out of strangers, who turns tense situations pl
 
 ---
 
-*Lake: When you're so genuinely joyful that connection becomes contagious.*
+*The Joyful Connector: When you're so genuinely joyful that connection becomes contagious.*

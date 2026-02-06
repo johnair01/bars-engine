@@ -153,6 +153,26 @@ export async function advanceThread(threadId: string, questId: string) {
                 notes: `Completed thread: ${thread.title}`
             }
         })
+    } else if (!isComplete) {
+        // RECURSIVE CHECK: Is the *next* quest already done?
+        // (This handles out-of-order completions where user did a future step early)
+        const nextQuest = thread.quests.find(q => q.position === nextPosition)
+        if (nextQuest) {
+            const assignment = await db.playerQuest.findFirst({
+                where: {
+                    playerId: player.id,
+                    questId: nextQuest.questId,
+                    status: 'completed'
+                }
+            })
+
+            if (assignment) {
+                // Recursively advance (with loose check since we know it's the right next step)
+                // We construct a "force" call or just recurse normally
+                console.log(`Auto-advancing thread ${threadId} past already-completed quest ${nextQuest.questId}`)
+                await advanceThread(threadId, nextQuest.questId)
+            }
+        }
     }
 
     revalidatePath('/')
@@ -221,4 +241,22 @@ export async function createThread(data: {
 
     revalidatePath('/')
     return { success: true, threadId: thread.id }
+}
+
+/**
+ * Archive a completed thread (remove from main dashboard)
+ */
+export async function archiveThread(threadId: string) {
+    const player = await getCurrentPlayer()
+    if (!player) return { error: 'Not logged in' }
+
+    await db.threadProgress.update({
+        where: {
+            threadId_playerId: { threadId, playerId: player.id }
+        },
+        data: { isArchived: true } as any
+    })
+
+    revalidatePath('/')
+    return { success: true }
 }

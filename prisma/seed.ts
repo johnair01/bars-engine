@@ -1,5 +1,8 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
+import { hash } from 'bcryptjs'
+import fs from 'fs'
+import path from 'path'
 
 const prisma = new PrismaClient()
 
@@ -111,74 +114,86 @@ async function main() {
     }
 
     // 5. Create Playbooks (Trigram Canonical) with Basic Moves
+    // Map of Descriptive Name -> Filename for content loading
+    const fileMap: Record<string, string> = {
+        'The Bold Heart': 'heaven.md',
+        'The Devoted Guardian': 'earth.md',
+        'The Decisive Storm': 'thunder.md',
+        'The Danger Walker': 'water.md',
+        'The Still Point': 'mountain.md',
+        'The Subtle Influence': 'wind.md',
+        'The Truth Seer': 'fire.md',
+        'The Joyful Connector': 'lake.md',
+    }
+
     const playbooks = [
         {
-            name: 'Heaven (Qian)',
-            description: 'Initiating, strong, persistent.',
-            moves: JSON.stringify(['Force Output', 'Overclock', 'Command']),
+            name: 'The Bold Heart',
+            description: 'Element: Heaven (Qian). The one who acts when others hesitate.',
+            moves: JSON.stringify(['The Catalyst', 'The Initiator', 'The Unstoppable Spark']),
             wakeUp: 'Cosmic Vision: See the grand pattern that connects all things.',
             cleanUp: 'Dragon\'s Breath: Burn away doubt and hesitation.',
             growUp: 'Sovereign Path: Develop leadership through taking responsibility.',
             showUp: 'Initiative: Be the first to act, setting the direction for others.',
         },
         {
-            name: 'Earth (Kun)',
-            description: 'Yielding, devoted, grounding.',
-            moves: JSON.stringify(['Absorb Impact', 'Nurture', 'Stabilize']),
+            name: 'The Devoted Guardian',
+            description: 'Element: Earth (Kun). Selfless protector who holds space for others.',
+            moves: JSON.stringify(['The Protective Friend', 'The Grounding Force', 'The Space-Holder']),
             wakeUp: 'Ground Sense: Feel the truth of a situation through your body.',
             cleanUp: 'Composting: Transform decay into fertile ground.',
             growUp: 'Steady Cultivation: Grow through patient, consistent practice.',
-            showUp: 'Hold Space: Act by receiving and supporting others.\'s efforts.',
+            showUp: 'Hold Space: Act by receiving and supporting others.',
         },
         {
-            name: 'Thunder (Zhen)',
-            description: 'Shocking, mobilizing, awakening.',
-            moves: JSON.stringify(['Thunderclap', 'Disrupt', 'Awaken']),
+            name: 'The Decisive Storm',
+            description: 'Element: Thunder (Zhen). The one who acts in the crucial moment.',
+            moves: JSON.stringify(['The Storm', 'The Moment Seizer', 'The Bold Interrupter']),
             wakeUp: 'Shock Awareness: Let sudden insight shake you out of complacency.',
             cleanUp: 'Storm Release: Express stuck energy through dramatic catharsis.',
             growUp: 'Rapid Activation: Grow through bold experiments and quick pivots.',
             showUp: 'First Strike: Act decisively before conditions change.',
         },
         {
-            name: 'Water (Kan)',
-            description: 'Dangerous, profound, adaptable.',
-            moves: JSON.stringify(['Flow State', 'Infiltrate', 'Deep Dive']),
+            name: 'The Danger Walker',
+            description: 'Element: Water (Kan). The one who thrives in chaos and danger.',
+            moves: JSON.stringify(['The Chaos Surfer', 'The Deep Diver', 'The Storm Sailor']),
             wakeUp: 'Depth Perception: See beneath the surface to hidden currents.',
             cleanUp: 'Dissolution: Let go by allowing things to dissolve naturally.',
             growUp: 'Adaptive Learning: Grow by flowing around obstacles.',
             showUp: 'Persistence: Act like water—find every crack, never stop.',
         },
         {
-            name: 'Mountain (Gen)',
-            description: 'Still, resting, stopping.',
-            moves: JSON.stringify(['Blockade', 'Meditate', 'Immovable']),
+            name: 'The Still Point',
+            description: 'Element: Mountain (Gen). The one who knows when to stop.',
+            moves: JSON.stringify(['The Immovable Presence', 'The Deliberate Stopper', 'The Resting Power']),
             wakeUp: 'Still Point: Find clarity in absolute stillness.',
             cleanUp: 'Stone Silence: Release through stopping completely.',
             growUp: 'Inner Heights: Grow by going inward and upward.',
             showUp: 'Immovable Stand: Act by refusing to move.',
         },
         {
-            name: 'Wind (Xun)',
-            description: 'Penetrating, gentle, traveling.',
-            moves: JSON.stringify(['Whisper', 'Spread', 'Permeate']),
+            name: 'The Subtle Influence',
+            description: 'Element: Wind (Xun). The one who changes everything gradually.',
+            moves: JSON.stringify(['The Gentle Influencer', 'The Patient Transformer', 'The Unseen Changer']),
             wakeUp: 'Subtle Perception: Notice the small signs that reveal big truths.',
             cleanUp: 'Gentle Dispersal: Let old patterns scatter like leaves in wind.',
             growUp: 'Gradual Influence: Grow by slowly permeating new territories.',
             showUp: 'Indirect Action: Act through suggestion and gentle pressure.',
         },
         {
-            name: 'Fire (Li)',
-            description: 'Radiant, clinging, clarifying.',
-            moves: JSON.stringify(['Spotlight', 'Analyze', 'Ignite']),
+            name: 'The Truth Seer',
+            description: 'Element: Fire (Li). The one who sees and speaks what\'s real.',
+            moves: JSON.stringify(['The Truth-Teller', 'The Clarity-Bringer', 'The Illusion-Burner']),
             wakeUp: 'Illumination: See clearly by bringing light to dark corners.',
             cleanUp: 'Purifying Flame: Burn away impurities to reveal the essential.',
             growUp: 'Radiant Development: Grow by sharing your light with others.',
             showUp: 'Declare: Act by making your position brilliantly clear.',
         },
         {
-            name: 'Lake (Dui)',
-            description: 'Joyous, exchanging, open.',
-            moves: JSON.stringify(['Charisma', 'Mirror', 'Celebrate']),
+            name: 'The Joyful Connector',
+            description: 'Element: Lake (Dui). The one who brings people together through delight.',
+            moves: JSON.stringify(['The Natural Connector', 'The Joy-Spreader', 'The Open Heart']),
             wakeUp: 'Joyful Recognition: See truth through delight and pleasure.',
             cleanUp: 'Laughter\'s Release: Let joy dissolve what heaviness remains.',
             growUp: 'Generous Exchange: Grow through giving and receiving freely.',
@@ -186,7 +201,54 @@ async function main() {
         },
     ]
 
+    // Helper to extract list items
+    const extractList = (text: string, header: string, endMarker: string = '\n\n'): string[] => {
+        const regex = new RegExp(`\\*\\*${header}\\*\\*:[\\s\\n]+([\\s\\S]*?)(?=${endMarker}|$)`, 'i')
+        const match = text.match(regex)
+        if (!match) return []
+        return match[1].split('\n')
+            .map(line => line.trim())
+            .filter(line => line.startsWith('-'))
+            .map(line => line.replace(/^-\s*/, ''))
+    }
+
+    const extractLine = (text: string, header: string): string | null => {
+        const regex = new RegExp(`\\*\\*${header}\\*\\*:\\s*(.*)`, 'i')
+        const match = text.match(regex)
+        return match ? match[1].trim() : null
+    }
+
     for (const p of playbooks) {
+        // Read Markdown Content
+        const filename = fileMap[p.name]
+        let content = ''
+        let richData: any = {}
+
+        if (filename) {
+            try {
+                const filePath = path.join(process.cwd(), 'docs/handbook/archetypes', filename)
+                content = fs.readFileSync(filePath, 'utf-8')
+
+                // Parse Rich Data
+                richData = {
+                    centralConflict: extractLine(content, 'Central Conflict'),
+                    vibe: extractLine(content, 'Your vibe'),
+                    energy: extractLine(content, 'Your energy'),
+                    primaryQuestion: (() => {
+                        // "Choose [Archetype] if you:"
+                        const match = content.match(/\*\*Choose.*?if you:\*\*\s*(.*)/i)
+                        return match ? match[1].trim() : null
+                    })(),
+                    examples: JSON.stringify(extractList(content, 'Example Archetypes', '\\n###')),
+                    shadowSignposts: JSON.stringify(extractList(content, 'This is NOT about', '\\n\\*\\*This IS')),
+                    lightSignposts: JSON.stringify(extractList(content, 'This IS about', '\\n---')),
+                }
+
+            } catch (err) {
+                console.warn(`Warning: Could not read/parse content for ${p.name} (${filename})`, err)
+            }
+        }
+
         await prisma.playbook.upsert({
             where: { name: p.name },
             update: {
@@ -194,9 +256,53 @@ async function main() {
                 cleanUp: p.cleanUp,
                 growUp: p.growUp,
                 showUp: p.showUp,
+                description: p.description,
+                content: content,
+                ...richData
             },
-            create: p,
+            create: {
+                ...p,
+                content: content,
+                ...richData
+            },
         })
+    }
+
+    // 5b. MIGRATION: Cleanup old Trigram Playbooks and migrate players
+    const migrationMap: Record<string, string> = {
+        // Original short names
+        'Heaven': 'The Bold Heart',
+        'Earth': 'The Devoted Guardian',
+        'Thunder': 'The Decisive Storm',
+        'Water': 'The Danger Walker',
+        'Mountain': 'The Still Point',
+        'Wind': 'The Subtle Influence',
+        'Fire': 'The Truth Seer',
+        'Lake': 'The Joyful Connector',
+        // Legacy "Trigram" names (found in DB)
+        'Heaven (Qian)': 'The Bold Heart',
+        'Earth (Kun)': 'The Devoted Guardian',
+        'Thunder (Zhen)': 'The Decisive Storm',
+        'Water (Kan)': 'The Danger Walker',
+        'Mountain (Gen)': 'The Still Point',
+        'Wind (Xun)': 'The Subtle Influence',
+        'Fire (Li)': 'The Truth Seer',
+        'Lake (Dui)': 'The Joyful Connector'
+    }
+
+    for (const [oldName, newName] of Object.entries(migrationMap)) {
+        const oldP = await prisma.playbook.findUnique({ where: { name: oldName } })
+        const newP = await prisma.playbook.findUnique({ where: { name: newName } })
+
+        if (oldP && newP) {
+            console.log(`Migrating players from ${oldName} to ${newName}...`)
+            await prisma.player.updateMany({
+                where: { playbookId: oldP.id },
+                data: { playbookId: newP.id }
+            })
+            console.log(`Deleting legacy playbook: ${oldName}`)
+            await prisma.playbook.delete({ where: { id: oldP.id } })
+        }
     }
 
     // 6. Create Demo Invite Tokens
@@ -248,7 +354,6 @@ async function main() {
     const testPlayers = [
         { id: 'test-alice', name: 'Alice (Test)', contactType: 'email', contactValue: 'alice@test.local' },
         { id: 'test-bob', name: 'Bob (Test)', contactType: 'email', contactValue: 'bob@test.local' },
-        { id: 'test-admin', name: 'Admin (Test)', contactType: 'email', contactValue: 'admin@test.local' },
     ]
 
     // Get PUBLIC invite ID for linking
@@ -279,6 +384,53 @@ async function main() {
 
             console.log(`  Created test player: ${tp.name}`)
         }
+    }
+
+    // 8b. Create/Update Admin Account (test-admin) with Password
+    if (publicInvite) {
+        const adminEmail = 'admin@admin.local'
+        const adminPasswordHash = await hash('password', 10)
+
+        // 1. Create Account
+        const adminAccount = await prisma.account.upsert({
+            where: { email: adminEmail },
+            update: { passwordHash: adminPasswordHash },
+            create: {
+                email: adminEmail,
+                passwordHash: adminPasswordHash
+            }
+        })
+
+        // 2. Create/Update Player linked to Account
+        // We use upsert to ensure test-admin exists and has the correct accountId
+        const adminPlayer = await prisma.player.upsert({
+            where: { id: 'test-admin' },
+            update: {
+                accountId: adminAccount.id,
+                contactValue: adminEmail
+            },
+            create: {
+                id: 'test-admin',
+                name: 'Admin (God Mode)',
+                contactType: 'email',
+                contactValue: adminEmail,
+                inviteId: publicInvite.id,
+                accountId: adminAccount.id,
+                onboardingComplete: true
+            }
+        })
+
+        // Create StarterPack for Admin
+        await prisma.starterPack.upsert({
+            where: { playerId: adminPlayer.id },
+            update: {},
+            create: {
+                playerId: adminPlayer.id,
+                data: JSON.stringify({ completedBars: [], activeBars: [] }),
+            },
+        })
+
+        console.log(`  Created ADMIN account: ${adminEmail} / password`)
     }
 
     // 9. Create Admin Role for test-admin
@@ -348,25 +500,34 @@ async function main() {
             {
                 id: 'orientation-quest-1',
                 title: 'Set Your Intention',
-                description: 'What brings you to this journey? Take a moment to reflect on what you hope to discover or accomplish here.',
+                description: 'What brings you to this journey? This "Wake Up" quest is about setting your orientation as we prepare for the party.',
+                moveType: 'wakeUp',
                 inputs: JSON.stringify([{ key: 'intention', label: 'My intention is...', type: 'textarea' }]),
             },
             {
                 id: 'orientation-quest-2',
-                title: 'Meet Your Playbook',
-                description: 'Explore your playbook\'s moves. Which one resonates most with how you naturally operate?',
-                inputs: JSON.stringify([{ key: 'favorite_move', label: 'The move that resonates most is...', type: 'text' }]),
+                title: 'Meet Your Archetype',
+                description: 'Explore your archetype\'s story and handbook. This "Wake Up" quest raises your awareness of your natural patterns.',
+                moveType: 'wakeUp',
+                inputs: JSON.stringify([{
+                    key: 'reflection',
+                    label: 'The move that resonates most is...',
+                    type: 'text',
+                    trigger: 'ARCHETYPE_VIEWED' // To be used by fireTrigger
+                }]),
             },
             {
                 id: 'orientation-quest-3',
                 title: 'Cast Your First Reading',
-                description: 'Visit the I Ching caster and receive your first hexagram. What message does it hold for you?',
-                inputs: JSON.stringify([{ key: 'reflection', label: 'The reading spoke to me because...', type: 'textarea' }]),
+                description: 'Visit the I Ching caster. This "Wake Up" quest connects you with the signal of the moment.',
+                moveType: 'wakeUp',
+                inputs: JSON.stringify([{ key: 'reflection', label: 'The reading spoke to me because...', type: 'textarea', trigger: 'ICHING_CAST' }]),
             },
             {
                 id: 'orientation-quest-4',
                 title: 'Send a Vibeulon',
-                description: 'Vibeulons carry energy between players. Find someone and send them a token of connection.',
+                description: 'Find someone and send a token of connection. This "Show Up" quest is your first internal impact.',
+                moveType: 'showUp',
                 inputs: JSON.stringify([{ key: 'recipient', label: 'I sent my first Vibeulon to...', type: 'text' }]),
             },
         ]
@@ -374,13 +535,19 @@ async function main() {
         for (const quest of orientationQuests) {
             await prisma.customBar.upsert({
                 where: { id: quest.id },
-                update: {},
+                update: {
+                    title: quest.title,
+                    description: quest.description,
+                    moveType: quest.moveType,
+                    inputs: quest.inputs,
+                },
                 create: {
                     id: quest.id,
                     creatorId: threadCreator.id,
                     title: quest.title,
                     description: quest.description,
                     type: 'vibe',
+                    moveType: quest.moveType,
                     visibility: 'public',
                     reward: 1,
                     inputs: quest.inputs,

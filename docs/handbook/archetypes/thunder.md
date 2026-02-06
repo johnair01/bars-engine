@@ -1,12 +1,12 @@
-# Thunder (Zhen): The Decisive Storm
+# The Decisive Storm
 
-**Trigram**: ☳ (Solid line below two broken - movement emerging)  
+**Element**: Thunder (Zhen) ☳  
 **Archetype**: The one who acts in the crucial moment  
 **Central Conflict**: Your need for decisive action versus patience and timing
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who breaks stalemates. Not through planning or subtlety, but through bold, shocking action at exactly the right moment. You feel the charge building, the tension mounting—and then you STRIKE.
 
@@ -31,9 +31,9 @@ You're the energy that breaks through when everyone's overthinking. Not the plan
 
 ---
 
-## Why Choose Thunder?
+## Why Choose The Decisive Storm?
 
-**Choose Thunder if you:** Want to play someone who thrives in decisive moments.
+**Choose The Decisive Storm if you:** Want to play someone who thrives in decisive moments.
 
 **Your vibe**: The storm, the disruptor, the one who acts boldly NOW  
 **Your energy**: "Stop planning. We go. NOW."
@@ -50,4 +50,4 @@ You're the energy that breaks through when everyone's overthinking. Not the plan
 
 ---
 
-*Thunder: When you're so attuned to the moment that your boldness becomes precision.*
+*The Decisive Storm: When you're so attuned to the moment that your boldness becomes precision.*

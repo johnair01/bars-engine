@@ -1,12 +1,12 @@
-# Fire (Li): The Truth Seer
+# The Truth Seer
 
-**Trigram**: ☲ (Broken line between two solid - radiance through attachment)  
+**Element**: Fire (Li) ☲  
 **Archetype**: The one who sees and speaks what's real  
 **Central Conflict**: Your attachment to truth versus compassion and tact
 
 ---
 
-## The Playbook's Story
+## The Archetype's Story
 
 You're the person who sees through illusions and makes the real visible. Not cruelly, but because clarity matters more to you than comfort. You're drawn to truth the way flames are drawn to fuel—you cling to what's real and make it radiant.
 
@@ -31,9 +31,9 @@ You're the one who sees what's really happening beneath the surface. Who cuts th
 
 ---
 
-## Why Choose Fire?
+## Why Choose The Truth Seer?
 
-**Choose Fire if you:** Want to play someone obsessed with seeing and showing what's real.
+**Choose The Truth Seer if you:** Want to play someone obsessed with seeing and showing what's real.
 
 **Your vibe**: The spotlight, the revealing flame  
 **Your energy**: "I see it. No, really SEE it. Let me show you."
@@ -50,4 +50,4 @@ You're the one who sees what's really happening beneath the surface. Who cuts th
 
 ---
 
-*Fire: When you're so attached to truth that your clarity illuminates everything.*
+*The Truth Seer: When you're so attached to truth that your clarity illuminates everything.*

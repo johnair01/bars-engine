@@ -335,15 +335,15 @@ export async function getAdminWorldData() {
     ])
 }
 
-export async function getAdminNation(name: string) {
+export async function getAdminNation(id: string) {
     await checkAdmin()
-    return db.nation.findUnique({ where: { name } })
+    return db.nation.findUnique({ where: { id } })
 }
 
-export async function updateNation(name: string, data: any) {
+export async function updateNation(id: string, data: any) {
     await checkAdmin()
     await db.nation.update({
-        where: { name },
+        where: { id },
         data: {
             description: data.description,
             imgUrl: data.imgUrl,
@@ -354,27 +354,40 @@ export async function updateNation(name: string, data: any) {
         }
     })
     revalidatePath('/admin/world')
+    revalidatePath(`/admin/world/nation/${id}`)
 }
 
-export async function getAdminPlaybook(name: string) {
+export async function getAdminArchetype(id: string) {
     await checkAdmin()
-    return db.playbook.findUnique({ where: { name } })
+    return db.playbook.findUnique({ where: { id } })
 }
 
-export async function updatePlaybook(name: string, data: any) {
+export async function updateArchetype(id: string, data: any) {
     await checkAdmin()
     await db.playbook.update({
-        where: { name },
+        where: { id },
         data: {
             description: data.description,
+            // Narrative Content (Markdown)
+            content: data.content,
+            // Rich Data
+            centralConflict: data.centralConflict,
+            vibe: data.vibe,
+            energy: data.energy,
+            primaryQuestion: data.primaryQuestion,
+            examples: data.examples, // JSON string
+            shadowSignposts: data.shadowSignposts, // JSON string
+            lightSignposts: data.lightSignposts, // JSON string
+
+            // Flavor Text
             wakeUp: data.wakeUp,
             cleanUp: data.cleanUp,
             growUp: data.growUp,
             showUp: data.showUp,
-            // Parsing moves JSON if user edits raw JSON or formatted
-            moves: data.moves
+            // Note: 'name' and 'moves' are intentionally excluded to preserve game mechanics integrity
         }
     })
     revalidatePath('/admin/world')
+    revalidatePath(`/admin/world/archetype/${id}`)
 }
 

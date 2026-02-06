@@ -362,6 +362,7 @@ model ThreadProgress {
   
   startedAt   DateTime @default(now())
   completedAt DateTime?
+  isArchived  Boolean  @default(false)
   
   @@unique([threadId, playerId])
   @@map("thread_progress")
@@ -425,6 +426,7 @@ model PackProgress {
   
   startedAt   DateTime @default(now())
   completedAt DateTime?
+  isArchived  Boolean  @default(false)
   
   @@unique([packId, playerId])
   @@map("pack_progress")
@@ -505,6 +507,16 @@ model Playbook {
   name        String   @unique
   description String
   moves       String   // JSON string of special moves
+  content     String?  // Rich markdown content (Full Handbook Story)
+
+  // Rich Data (Extracted from Handbook)
+  centralConflict String? // "Your comfort with danger versus..."
+  primaryQuestion String? // "Why choose this archetype?"
+  vibe            String? // "The river through rapids..."
+  energy          String? // Quote: "Dangerous? Perfect..."
+  shadowSignposts String? // JSON: What this is NOT about
+  lightSignposts  String? // JSON: What this IS about
+  examples        String? // JSON: Example Archetypes
   
   // Basic Moves (Playbook's interpretation)
   wakeUp      String?  // Awareness move

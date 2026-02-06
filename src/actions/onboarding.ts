@@ -7,8 +7,14 @@ import { revalidatePath } from 'next/cache'
 /**
  * Get onboarding status for current player
  */
-export async function getOnboardingStatus() {
-    const player = await getCurrentPlayer()
+export async function getOnboardingStatus(playerId?: string) {
+    let player
+    if (playerId) {
+        player = await db.player.findUnique({ where: { id: playerId } })
+    } else {
+        player = await getCurrentPlayer()
+    }
+
     if (!player) return { error: 'Not logged in' }
 
     const onboarding = await db.player.findUnique({
@@ -49,8 +55,14 @@ export async function getOnboardingStatus() {
 /**
  * Mark an onboarding step as complete
  */
-export async function completeOnboardingStep(step: 'welcome' | 'firstQuest' | 'firstCreate') {
-    const player = await getCurrentPlayer()
+export async function completeOnboardingStep(step: 'welcome' | 'firstQuest' | 'firstCreate', playerId?: string) {
+    let player
+    if (playerId) {
+        player = await db.player.findUnique({ where: { id: playerId } })
+    } else {
+        player = await getCurrentPlayer()
+    }
+
     if (!player) return { error: 'Not logged in' }
 
     const updates: any = {}
@@ -74,7 +86,7 @@ export async function completeOnboardingStep(step: 'welcome' | 'firstQuest' | 'f
     })
 
     // Check if onboarding is now complete
-    const status = await getOnboardingStatus()
+    const status = await getOnboardingStatus(player.id)
     if ('isComplete' in status && status.isComplete && !status.onboardingCompletedAt) {
         await db.player.update({
             where: { id: player.id },
