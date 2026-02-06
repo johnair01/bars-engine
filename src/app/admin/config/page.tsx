@@ -22,7 +22,12 @@ export default async function AdminConfigPage() {
     const auditLogs = await getRecentAuditLogs(5)
 
     // Parse features safely
-    const features = (config.features as Record<string, boolean>) || {}
+    let features: Record<string, boolean> = {}
+    try {
+        features = JSON.parse(config.features || '{}')
+    } catch {
+        features = {}
+    }
 
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-8 max-w-4xl mx-auto space-y-12">

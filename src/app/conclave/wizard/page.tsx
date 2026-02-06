@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { ConclaveWizard } from '../ConclaveWizard'
+import { ConclaveWizard } from '@/app/conclave/ConclaveWizard'
 import { redirect } from 'next/navigation'
 
 export default async function ConclavePage({ searchParams }: { searchParams: { token?: string; mode?: string } }) {

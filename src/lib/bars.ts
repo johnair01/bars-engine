@@ -23,6 +23,7 @@ export type BarDef = {
     // Story Bar specific
     storyPath?: string  // Path to story content JSON (e.g., 'blessed_object/start')
     isCustom?: boolean // Whether this implies a custom bar from DB
+    moveType?: string | null
 }
 
 // --- CONTENT DEFINITIONS ---

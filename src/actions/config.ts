@@ -40,7 +40,7 @@ export async function updateFeatures(formData: FormData) {
     await db.appConfig.update({
         where: { id: 'singleton' },
         data: {
-            features,
+            features: JSON.stringify(features),
             updatedBy: adminId
         }
     })
@@ -51,7 +51,7 @@ export async function updateFeatures(formData: FormData) {
             adminId,
             action: 'feature_toggle',
             target: 'features',
-            payload: { old: oldConfig.features, new: features }
+            payload: JSON.stringify({ old: oldConfig.features, new: features })
         }
     })
 
@@ -85,7 +85,7 @@ export async function updateHeroText(formData: FormData) {
             adminId,
             action: 'config_update',
             target: 'hero_text',
-            payload: { heroTitle, heroSubtitle }
+            payload: JSON.stringify({ heroTitle, heroSubtitle })
         }
     })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { GuideEmotion } from './types'
+import { GuideEmotion } from '../types'
 import { useState, useEffect } from 'react'
 
 interface GuideCharacterProps {

@@ -269,18 +269,6 @@ type CustomBarDef = {
     moveType: string | null
 }
 
-// Update BarDef too
-export type BarDef = {
-    id: string
-    title: string
-    description: string
-    type: 'vibe' | 'story'
-    reward: number
-    inputs: BarInput[]
-    unique?: boolean
-    isCustom?: boolean
-    moveType?: string | null
-}
 
 // Type for I Ching bars from DB (via PlayerBar)
 type IChingBarDef = {
