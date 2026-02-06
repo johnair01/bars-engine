@@ -36,7 +36,6 @@ export function QuestWizard() {
     const handleNext = async () => {
         if (step === 2) {
             // Validate basic details
-            // For now just basic check
             if (!formData.title && !selectedTemplate?.id) return
             setStep(3)
         } else if (step === 3) {
@@ -158,11 +157,11 @@ export function QuestWizard() {
                     </div>
 
                     <div>
-                        <label className="block text-sm text-zinc-400 mb-1">Description / Instructions</label>
+                        <label className="block text-sm text-zinc-400 mb-1">Description / Instructions (Optional)</label>
                         <textarea
                             rows={4}
                             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
-                            placeholder={selectedTemplate?.description}
+                            placeholder={selectedTemplate?.description || "Give players some guidance, or leave blank if self-explanatory."}
                             value={formData.description || ''}
                             onChange={(e) => handleInputChange('description', e.target.value)}
                         />

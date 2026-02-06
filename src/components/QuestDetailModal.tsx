@@ -5,6 +5,7 @@ import { completeQuest } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter } from 'next/navigation'
+import { JOURNEY_SEQUENCE } from '@/lib/bars'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -24,9 +25,10 @@ interface QuestDetailModalProps {
     // Pre-calculated state from parent
     isCompleted?: boolean
     isLocked?: boolean
+    completedMoveTypes?: string[] // Optional: types already achieved by player
 }
 
-export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked }: QuestDetailModalProps) {
+export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes }: QuestDetailModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
@@ -99,6 +101,26 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </button>
                     </div>
                 </div>
+
+                {/* Flow Violation Check */}
+                {quest.moveType && completedMoveTypes && !isCompleted && (() => {
+                    const currentIdx = JOURNEY_SEQUENCE.indexOf(quest.moveType)
+                    if (currentIdx > 0) {
+                        const previousMove = JOURNEY_SEQUENCE[currentIdx - 1]
+                        if (!completedMoveTypes.includes(previousMove)) {
+                            return (
+                                <div className="mx-6 mt-4 p-3 bg-red-900/20 border border-red-900/50 rounded-lg flex items-center gap-3">
+                                    <span className="text-xl">⚠️</span>
+                                    <div className="text-xs text-red-200">
+                                        <p className="font-bold uppercase tracking-tight">Sequence Warning</p>
+                                        <p className="opacity-80">This is a <span className="text-red-400 font-bold">{quest.moveType.replace(/([A-Z])/g, ' $1').trim()}</span> move. It is recommended to complete a <span className="text-white font-bold">{previousMove.replace(/([A-Z])/g, ' $1').trim()}</span> quest first.</p>
+                                    </div>
+                                </div>
+                            )
+                        }
+                    }
+                    return null
+                })()}
 
                 {/* Body */}
                 <div className="p-6 space-y-6">

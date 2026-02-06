@@ -323,6 +323,21 @@ export async function toggleAdminRole(playerId: string, makeAdmin: boolean) {
     revalidatePath('/admin/players')
 }
 
+export async function updatePlayerProfile(playerId: string, data: { nationId?: string, playbookId?: string }) {
+    await checkAdmin()
+
+    await db.player.update({
+        where: { id: playerId },
+        data: {
+            nationId: data.nationId || undefined,
+            playbookId: data.playbookId || undefined
+        }
+    })
+
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
 // ===================================
 // WORLD DATA MANAGEMENT
 // ===================================

@@ -10,18 +10,24 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
     if (!player) return redirect('/invite/ANTIGRAVITY')
 
     const questId = formData.get('questId') as string
-    const returnText = (formData.get('returnText') as string) || '' // Optional
 
-    // Find the active quest (idempotency check: only complete if still active)
+    // Collect all inputs from the quest's schema
+    const responses: Record<string, string> = {}
+    formData.forEach((value, key) => {
+        if (key !== 'questId' && key !== 'prev_action_state') {
+            responses[key] = value as string
+        }
+    })
+
+    // Find the active quest
     const activeQuest = await db.playerQuest.findFirst({
         where: {
             playerId: player.id,
             questId,
-            status: 'assigned' // Only complete if still assigned
+            status: 'assigned'
         }
     })
 
-    // If quest is not found or already completed, just redirect (idempotent)
     if (!activeQuest) {
         revalidatePath('/wallet')
         return redirect('/wallet')
@@ -32,13 +38,12 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
         where: { id: activeQuest.id },
         data: {
             status: 'completed',
-            inputs: JSON.stringify({ returnText }), // Store as JSON
+            inputs: JSON.stringify(responses), // Store dynamic responses
             completedAt: new Date(),
         }
     })
 
-    // GRANT VIBULON (+1) - Only grants because we confirmed status was 'active'
-    // IGNITE = completing a quest (Achiever move, Stage 6: Short-Term Wins)
+    // GRANT VIBULON (+1)
     await db.vibulonEvent.create({
         data: {
             playerId: player.id,

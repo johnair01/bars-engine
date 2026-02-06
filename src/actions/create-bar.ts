@@ -22,8 +22,8 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     const storyContent = formData.get('storyContent') as string || null
     const storyMood = formData.get('storyMood') as string || null
 
-    if (!title || !description) {
-        return { error: 'Title and description are required' }
+    if (!title) {
+        return { error: 'Title is required' }
     }
 
     try {
@@ -145,7 +145,7 @@ export async function createQuestFromWizard(data: any) {
         } = data
 
         // Validation
-        if (!title || !description) return { error: 'Missing title or description' }
+        if (!title) return { error: 'Missing title' }
 
         // Logic for Public Quests (Cost to Create)
         if (visibility === 'public') {

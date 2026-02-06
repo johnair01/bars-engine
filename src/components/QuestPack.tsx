@@ -30,7 +30,7 @@ type QuestPackData = {
     completedQuestIds: string[]
 }
 
-export function QuestPack({ pack }: { pack: QuestPackData }) {
+export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, completedMoveTypes?: string[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<PackQuest | null>(null)
@@ -192,6 +192,7 @@ export function QuestPack({ pack }: { pack: QuestPackData }) {
                     }}
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}
+                    completedMoveTypes={completedMoveTypes}
                 />
             )}
         </div>

@@ -166,6 +166,13 @@ export default async function Home() {
   const threads = await getPlayerThreads()
   const packs = await getPlayerPacks()
 
+  // Derive completed move types for flow checking
+  const completedMoveTypes = Array.from(new Set(
+    player.quests
+      .filter(q => q.status === 'completed' && q.quest.moveType)
+      .map(q => q.quest.moveType as string)
+  ))
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
@@ -247,10 +254,10 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {threads.filter(t => !(t.playerProgress as any)?.isArchived).map(thread => (
-              <QuestThread key={thread.id} thread={thread as any} />
+              <QuestThread key={thread.id} thread={thread as any} completedMoveTypes={completedMoveTypes} />
             ))}
             {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack as any} />
+              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} />
             ))}
           </div>
         </section>

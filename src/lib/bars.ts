@@ -26,6 +26,8 @@ export type BarDef = {
     moveType?: string | null
 }
 
+export const JOURNEY_SEQUENCE = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
+
 // --- CONTENT DEFINITIONS ---
 
 export const STARTER_BARS: BarDef[] = [

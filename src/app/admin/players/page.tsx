@@ -1,16 +1,21 @@
 'use client'
 
-import { getAdminPlayers, toggleAdminRole } from '@/actions/admin'
+import { getAdminPlayers, toggleAdminRole, getAdminWorldData, updatePlayerProfile } from '@/actions/admin'
 import { useEffect, useState, useTransition } from 'react'
 
 export default function AdminPlayersPage() {
     const [players, setPlayers] = useState<any[]>([])
+    const [worldData, setWorldData] = useState<{ nations: any[], archetypes: any[] }>({ nations: [], archetypes: [] })
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => {
         startTransition(async () => {
-            const res = await getAdminPlayers()
-            setPlayers(res)
+            const [p, [n, a]] = await Promise.all([
+                getAdminPlayers(),
+                getAdminWorldData()
+            ])
+            setPlayers(p)
+            setWorldData({ nations: n, archetypes: a })
         })
     }, [])
 
@@ -20,7 +25,18 @@ export default function AdminPlayersPage() {
         startTransition(async () => {
             try {
                 await toggleAdminRole(id, !currentStatus)
-                // Refresh list
+                const res = await getAdminPlayers()
+                setPlayers(res)
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
+    const handleUpdateProfile = async (playerId: string, field: 'nationId' | 'playbookId', value: string) => {
+        startTransition(async () => {
+            try {
+                await updatePlayerProfile(playerId, { [field]: value })
                 const res = await getAdminPlayers()
                 setPlayers(res)
             } catch (e: any) {
@@ -34,7 +50,7 @@ export default function AdminPlayersPage() {
             <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Players</h1>
-                    <p className="text-zinc-400">Manage registered players and their roles.</p>
+                    <p className="text-zinc-400">Manage registered players, roles, and character attributes.</p>
                 </div>
                 <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-sm">
                     <span className="text-zinc-400">Total Players: </span>
@@ -47,7 +63,8 @@ export default function AdminPlayersPage() {
                     <thead className="bg-zinc-950/50 text-zinc-500 text-xs uppercase font-bold tracking-wider">
                         <tr>
                             <th className="px-6 py-4">Player</th>
-                            <th className="px-6 py-4">Contact</th>
+                            <th className="px-6 py-4">Nation</th>
+                            <th className="px-6 py-4">Archetype</th>
                             <th className="px-6 py-4">Roles</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
@@ -60,15 +77,29 @@ export default function AdminPlayersPage() {
                                 <tr key={player.id} className="group hover:bg-zinc-800/30 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="font-bold text-white">{player.name}</div>
-                                        <div className="text-xs text-zinc-500 font-mono mt-0.5">{player.id}</div>
+                                        <div className="text-xs text-zinc-500 font-mono mt-0.5">{player.contactValue}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm text-zinc-400">
-                                            {player.contactValue}
-                                        </div>
-                                        <div className="text-xs text-zinc-600 capitalize">
-                                            {player.contactType}
-                                        </div>
+                                        <select
+                                            value={player.nationId || ''}
+                                            onChange={(e) => handleUpdateProfile(player.id, 'nationId', e.target.value)}
+                                            disabled={isPending}
+                                            className="bg-zinc-800 border border-zinc-700 text-xs text-white rounded px-2 py-1 outline-none focus:border-purple-500 w-32"
+                                        >
+                                            <option value="">None</option>
+                                            {worldData.nations.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                                        </select>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <select
+                                            value={player.playbookId || ''}
+                                            onChange={(e) => handleUpdateProfile(player.id, 'playbookId', e.target.value)}
+                                            disabled={isPending}
+                                            className="bg-zinc-800 border border-zinc-700 text-xs text-white rounded px-2 py-1 outline-none focus:border-purple-500 w-40"
+                                        >
+                                            <option value="">None</option>
+                                            {worldData.archetypes.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                        </select>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex gap-1 flex-wrap">
@@ -76,8 +107,8 @@ export default function AdminPlayersPage() {
                                                 <span
                                                     key={pr.id}
                                                     className={`text-xs px-2 py-0.5 rounded-full ${pr.role.key === 'admin'
-                                                            ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
-                                                            : 'bg-zinc-800 text-zinc-400'
+                                                        ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
+                                                        : 'bg-zinc-800 text-zinc-400'
                                                         }`}
                                                 >
                                                     {pr.role.displayName}
@@ -93,8 +124,8 @@ export default function AdminPlayersPage() {
                                             onClick={() => handleToggleAdmin(player.id, isAdmin, player.name)}
                                             disabled={isPending}
                                             className={`text-xs font-bold px-3 py-1.5 rounded transition-colors ${isAdmin
-                                                    ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40'
-                                                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                                ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40'
+                                                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                                                 }`}
                                         >
                                             {isAdmin ? 'Revoke Admin' : 'Make Admin'}
@@ -105,7 +136,7 @@ export default function AdminPlayersPage() {
                         })}
                     </tbody>
                 </table>
-                {players.length === 0 && (
+                {players.length === 0 && !isPending && (
                     <div className="p-8 text-center text-zinc-500 italic">No players found.</div>
                 )}
             </div>

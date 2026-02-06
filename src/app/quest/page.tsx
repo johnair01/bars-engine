@@ -40,7 +40,10 @@ export default async function QuestPage() {
                     </p>
                 </div>
 
-                <QuestForm questId={activeQuest.questId} />
+                <QuestForm
+                    questId={activeQuest.questId}
+                    inputs={JSON.parse(activeQuest.quest.inputs || '[]')}
+                />
 
             </div>
         </div>
