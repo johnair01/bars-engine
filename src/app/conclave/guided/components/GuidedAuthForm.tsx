@@ -5,7 +5,6 @@ import { createGuidedPlayer } from '@/actions/conclave'
 import { useRouter } from 'next/navigation'
 
 export function GuidedAuthForm() {
-    const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -27,22 +26,10 @@ export function GuidedAuthForm() {
             <div className="text-center mb-8">
                 <div className="text-5xl mb-4">📖</div>
                 <h1 className="text-2xl font-bold text-white mb-2">Begin Your Story</h1>
-                <p className="text-zinc-400 text-sm">Create a temporary identity to start your guided journey.</p>
+                <p className="text-zinc-400 text-sm">Create your account to start your guided journey. You can set your character name during character creation.</p>
             </div>
 
             <form action={formAction} className="space-y-4">
-                <div>
-                    <label className="block text-xs uppercase text-zinc-500 mb-1">Name</label>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white focus:border-purple-500 outline-none transition"
-                        placeholder="Traveler Name"
-                        required
-                    />
-                </div>
-
                 <div>
                     <label className="block text-xs uppercase text-zinc-500 mb-1">Email (for saving progress)</label>
                     <input
@@ -71,7 +58,7 @@ export function GuidedAuthForm() {
                 <input
                     type="hidden"
                     name="identity"
-                    value={JSON.stringify({ name, contact: email, password })}
+                    value={JSON.stringify({ contact: email, password })}
                 />
 
                 {error && (

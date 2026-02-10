@@ -149,10 +149,15 @@ export async function createCharacter(prevState: any, formData: FormData) {
 }
 
 const GuidedIdentitySchema = z.object({
-    name: z.string().min(2),
     contact: z.string().email(),
     password: z.string().min(6),
 })
+
+function deriveTemporaryNameFromEmail(email: string): string {
+    const localPart = email.split('@')[0]?.trim() || ''
+    if (localPart.length >= 2) return localPart.slice(0, 50)
+    return 'Traveler'
+}
 
 export async function createGuidedPlayer(prevState: any, formData: FormData) {
     const rawData = {
@@ -170,6 +175,7 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
     try {
         const existingAccount = await db.account.findUnique({ where: { email: identity.contact } })
         if (existingAccount) return { error: 'Account already exists. Please log in.' }
+        const temporaryName = deriveTemporaryNameFromEmail(identity.contact)
 
         // Use a system open invite or generate one?
         // Guided mode typically implies open access or specific flow.
@@ -197,7 +203,7 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
                     players: {
                         create: {
                             accountId: account.id,
-                            name: identity.name,
+                            name: temporaryName,
                             contactType: 'email',
                             contactValue: identity.contact,
                             onboardingMode: 'guided',
