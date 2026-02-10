@@ -117,6 +117,7 @@ export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { 
             <div className="grid grid-cols-1 gap-2">
                 {pack.quests.map((pq) => {
                     const isDone = pack.completedQuestIds.includes(pq.questId)
+                    const questReward = pq.quest?.reward ?? 0
                     return (
                         <div
                             key={pq.id}
@@ -138,9 +139,9 @@ export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { 
                                     <span className={`font-medium truncate text-zinc-300 ${isDone && 'line-through text-zinc-500'}`}>
                                         {pq.quest?.title || 'Unknown Quest'}
                                     </span>
-                                    {!isDone && pq.quest?.reward > 0 && (
+                                    {!isDone && questReward > 0 && (
                                         <span className="text-xs text-yellow-500 font-mono">
-                                            +{pq.quest.reward}ⓥ
+                                            +{questReward}ⓥ
                                         </span>
                                     )}
                                 </div>

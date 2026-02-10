@@ -129,6 +129,7 @@ export function QuestThread({ thread, completedMoveTypes, ichingEnabled = true }
                         const isDone = pos < currentPos
                         const isCurrent = pos === currentPos
                         const isLocked = pos > currentPos
+                        const questReward = tq.quest?.reward ?? 0
 
                         return (
                             <div
@@ -155,9 +156,9 @@ export function QuestThread({ thread, completedMoveTypes, ichingEnabled = true }
                                         <span className={`font-medium truncate ${isDone && 'line-through'}`}>
                                             {tq.quest?.title || `Quest ${pos}`}
                                         </span>
-                                        {tq.quest?.reward > 0 && !isDone && (
+                                        {questReward > 0 && !isDone && (
                                             <span className="text-xs text-yellow-500 ml-2">
-                                                +{tq.quest.reward}ⓥ
+                                                +{questReward}ⓥ
                                             </span>
                                         )}
                                     </div>
