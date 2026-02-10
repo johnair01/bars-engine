@@ -114,7 +114,22 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
 
     // GRANT VIBEULONS with bonus
     const baseReward = quest.reward || 1
-    const finalReward = Math.floor(baseReward * bonusMultiplier)
+    let finalReward = Math.floor(baseReward * bonusMultiplier)
+
+    // REPEATABLE FEEDBACK QUEST LOGIC
+    if (questId === 'system-feedback') {
+        const feedbackCount = await db.vibulonEvent.count({
+            where: {
+                playerId: player.id,
+                questId: 'system-feedback',
+                source: 'quest'
+            }
+        })
+        if (feedbackCount >= 5) {
+            finalReward = 0
+            console.log(`[QuestEngine] Feedback cap reached for ${player.id}. Reward set to 0.`)
+        }
+    }
 
     await db.vibulonEvent.create({
         data: {
@@ -148,6 +163,18 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
         id: questId,
         title: quest.title
     })
+
+    // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
+    if (questId === 'system-feedback') {
+        await db.playerQuest.delete({
+            where: {
+                playerId_questId: {
+                    playerId: player.id,
+                    questId: 'system-feedback'
+                }
+            }
+        })
+    }
 
     revalidatePath('/')
     revalidatePath('/story-clock')

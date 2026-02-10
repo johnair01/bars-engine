@@ -385,6 +385,39 @@ export async function runSeed(prisma: PrismaClient) {
         })
     }
 
+    // 10. Global Feedback Quest
+    await prisma.customBar.upsert({
+        where: { id: 'system-feedback' },
+        update: {
+            title: 'Share Your Signal',
+            description: 'How does the convergence feel today? Your feedback helps clear the collective frequency.',
+            moveType: 'cleanUp',
+            inputs: JSON.stringify([
+                { key: 'sentiment', label: 'Sentiment', type: 'select', options: ['Emerald (Clear)', 'Amber (Tuning)', 'Obsidian (Opaque)'] },
+                { key: 'clarity', label: 'Clarity', type: 'select', options: ['High', 'Moderate', 'Low'] },
+                { key: 'feedback', label: 'Feedback', type: 'textarea', placeholder: 'Tell us more...' }
+            ]),
+            isSystem: true,
+            reward: 1
+        },
+        create: {
+            id: 'system-feedback',
+            creatorId: adminPlayer.id,
+            title: 'Share Your Signal',
+            description: 'How does the convergence feel today? Your feedback helps clear the collective frequency.',
+            type: 'vibe',
+            moveType: 'cleanUp',
+            visibility: 'public',
+            reward: 1,
+            isSystem: true,
+            inputs: JSON.stringify([
+                { key: 'sentiment', label: 'Sentiment', type: 'select', options: ['Emerald (Clear)', 'Amber (Tuning)', 'Obsidian (Opaque)'] },
+                { key: 'clarity', label: 'Clarity', type: 'select', options: ['High', 'Moderate', 'Low'] },
+                { key: 'feedback', label: 'Feedback', type: 'textarea', placeholder: 'Tell us more...' }
+            ])
+        }
+    })
+
     const orientationThread = await prisma.questThread.upsert({
         where: { id: 'orientation-thread' },
         update: {},

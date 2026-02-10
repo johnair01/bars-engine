@@ -111,6 +111,11 @@ export default async function Home() {
     .filter(q => q.status === 'assigned')
     .map(q => q.questId)
 
+  // Ensure system feedback is always "active" for the player
+  if (!activeBars.includes('system-feedback')) {
+    activeBars.push('system-feedback')
+  }
+
   // Fetch user-created bars:
   // - Public bars that are unclaimed
   // - Bars claimed by current player (these are in activeBars)
@@ -123,6 +128,8 @@ export default async function Home() {
         { visibility: 'public', claimedById: null, status: 'active' },
         // Claimed/Assigned to valid activeBars list (including private ones)
         { id: { in: activeBars } },
+        // System quests (always visible)
+        { isSystem: true, status: 'active' },
         // Completed by me
         { id: { in: completedBars.map(b => b.id) } },
         // My drafts
