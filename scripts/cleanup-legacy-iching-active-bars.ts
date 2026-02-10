@@ -1,57 +1,11 @@
 import { db } from '../src/lib/db'
-
-type StarterPackData = {
-    completedBars?: Array<{ id: string; inputs?: Record<string, unknown> }>
-    activeBars?: string[]
-    [key: string]: unknown
-}
-
-function stripLegacyIChingActiveBars(data: StarterPackData): { next: StarterPackData; removed: number } {
-    const activeBars = Array.isArray(data.activeBars) ? data.activeBars : []
-    const filtered = activeBars.filter((id) => !/^iching_\d+$/.test(id))
-    const removed = activeBars.length - filtered.length
-
-    if (removed === 0) {
-        return { next: data, removed: 0 }
-    }
-
-    return {
-        next: { ...data, activeBars: filtered },
-        removed
-    }
-}
+import { cleanupLegacyIChingStarterPackState } from '../src/lib/iching-hardening'
 
 async function main() {
-    const packs = await db.starterPack.findMany({
-        select: { id: true, playerId: true, data: true }
-    })
-
-    let updatedPacks = 0
-    let removedEntries = 0
-
-    for (const pack of packs) {
-        let parsed: StarterPackData
-        try {
-            parsed = JSON.parse(pack.data || '{}')
-        } catch {
-            console.warn(`Skipping pack ${pack.id} (invalid JSON)`)
-            continue
-        }
-
-        const { next, removed } = stripLegacyIChingActiveBars(parsed)
-        if (removed === 0) continue
-
-        await db.starterPack.update({
-            where: { id: pack.id },
-            data: { data: JSON.stringify(next) }
-        })
-
-        updatedPacks += 1
-        removedEntries += removed
-        console.log(`Updated ${pack.id} (player ${pack.playerId}) - removed ${removed} legacy entries`)
-    }
-
-    console.log(`Done. Updated ${updatedPacks} starter packs, removed ${removedEntries} legacy iching activeBars entries.`)
+    const result = await cleanupLegacyIChingStarterPackState(db)
+    console.log(
+        `Done. Scanned ${result.packsScanned} packs, updated ${result.packsUpdated}, removed ${result.entriesRemoved} legacy iching activeBars entries, invalid JSON packs: ${result.invalidJsonPacks}.`
+    )
 }
 
 main()

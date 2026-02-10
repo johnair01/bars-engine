@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { runSeed } from '@/lib/seed-utils'
+import { runIChingHardening } from '@/lib/iching-hardening'
 
 async function ensureAdmin() {
     const cookieStore = await cookies()
@@ -88,4 +89,32 @@ export async function getAllPlayersAdminPulse() {
         select: { id: true, name: true, contactValue: true },
         orderBy: { createdAt: 'desc' }
     })
+}
+
+/**
+ * Admin only: apply idempotent I Ching data hardening.
+ */
+export async function runIChingDataHardening() {
+    try {
+        const admin = await ensureAdmin()
+        const report = await runIChingHardening(db)
+
+        await db.adminAuditLog.create({
+            data: {
+                adminId: admin.id,
+                action: 'iching_hardening',
+                target: 'iching_data',
+                payload: JSON.stringify(report)
+            }
+        })
+
+        revalidatePath('/')
+        revalidatePath('/iching')
+        revalidatePath('/admin')
+
+        return { success: true, report }
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        return { success: false, error: message }
+    }
 }

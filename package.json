@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "db:prod-reset": "tsx scripts/prod-reset.ts",
+    "hardening:iching": "tsx scripts/harden-iching-data.ts",
     "test:actions": "tsx scripts/test-actions.ts",
     "postinstall": "prisma generate"
   },
