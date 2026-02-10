@@ -193,8 +193,15 @@ export async function assignOrientationThreads(playerId: string) {
     })
 
     for (const thread of orientationThreads) {
-        await db.threadProgress.create({
-            data: {
+        await db.threadProgress.upsert({
+            where: {
+                threadId_playerId: {
+                    threadId: thread.id,
+                    playerId
+                }
+            },
+            update: {},
+            create: {
                 threadId: thread.id,
                 playerId,
                 currentPosition: 1

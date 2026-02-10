@@ -92,7 +92,12 @@ export async function joinWithInvite(prevState: any, formData: FormData) {
         // await createTutorialQuest(player.id)
 
         const cookieStore = await cookies()
-        cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+        cookieStore.set('bars_player_id', player.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30
+        })
 
     } catch (e) {
         console.error(e)

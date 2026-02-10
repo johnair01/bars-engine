@@ -13,9 +13,9 @@ export function ArchetypeOverview({ onNext }: { onNext: () => void }) {
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6">
                 <div>
-                    <h3 className="text-xl font-bold text-white mb-2">What is a Playbook?</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">What is an Archetype?</h3>
                     <p className="text-zinc-300">
-                        Your Playbook is your guide to action. It defines your <strong>Archetype</strong>—the specific energy you bring to the collective.
+                        Your Archetype is your guide to action. It defines the specific energy you bring to the collective.
                     </p>
                 </div>
 

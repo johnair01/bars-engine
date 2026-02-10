@@ -2,11 +2,36 @@ import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function NationByIdPage({ params }: { params: { id: string } }) {
+function resolveReturnPath(rawFrom?: string): string {
+    if (!rawFrom) return '/'
+    try {
+        const decoded = decodeURIComponent(rawFrom)
+        if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+            return decoded
+        }
+    } catch {
+        // Fall through to safe default.
+    }
+    return '/'
+}
+
+export default async function NationByIdPage({
+    params,
+    searchParams
+}: {
+    params: { id: string },
+    searchParams: { from?: string }
+}) {
     // Await params as required in Next.js 15+ (or recent 14 changes)? Assuming yes or standard access
     // Next 15 might require awaiting params if they are promises? Stick to standard for now.
     // If build fails, I'll fix key access.
     const { id } = await params // Await just in case
+
+    const { from } = await searchParams
+    const returnPath = resolveReturnPath(from)
+    const returnLabel = returnPath.startsWith('/conclave')
+        ? 'Return to Conclave Setup'
+        : 'Return to Dashboard'
 
     // Check if ID is a name (e.g. "Argyra") or ID.
     // Try finding by ID first, then Name.
@@ -28,8 +53,8 @@ export default async function NationByIdPage({ params }: { params: { id: string 
         <div className="min-h-screen bg-black text-zinc-100 font-sans p-6 md:p-12 selection:bg-purple-900/50">
             <div className="max-w-4xl mx-auto space-y-12">
                 <header>
-                    <Link href="/" className="text-zinc-500 hover:text-white transition text-sm flex items-center gap-2 mb-8 group">
-                        <span className="group-hover:-translate-x-1 transition-transform">←</span> Return to Dashboard
+                    <Link href={returnPath} className="text-zinc-500 hover:text-white transition text-sm flex items-center gap-2 mb-8 group">
+                        <span className="group-hover:-translate-x-1 transition-transform">←</span> {returnLabel}
                     </Link>
 
                     {/* Epiphany Bridge Header */}
@@ -87,10 +112,12 @@ export default async function NationByIdPage({ params }: { params: { id: string 
                     <p className="text-zinc-500 italic mb-8">
                         "The story of {nation.name} is now your story."
                     </p>
-                    {/* Close / Back button (if opened in new tab, simple message) */}
-                    <div className="text-sm text-zinc-600">
-                        (Return to the Conclave Wizard to complete your selection)
-                    </div>
+                    <Link
+                        href={returnPath}
+                        className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-white transition"
+                    >
+                        ← {returnLabel}
+                    </Link>
                 </footer>
             </div>
         </div>

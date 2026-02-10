@@ -51,6 +51,9 @@ export async function createCharacter(prevState: any, formData: FormData) {
         if (!invite || invite.status !== 'active') {
             return { error: 'Invalid Invite' }
         }
+        if (invite.uses >= invite.maxUses) {
+            return { error: 'Invite has reached its maximum usage.' }
+        }
 
         // Check if account taken
         const existingAccount = await db.account.findUnique({
@@ -80,10 +83,28 @@ export async function createCharacter(prevState: any, formData: FormData) {
         const passwordHash = await hashPassword(identity.password)
 
         const player = await db.$transaction(async (tx) => {
-            // 1. Mark invite used
+            // 1. Increment invite usage and close only at maxUses
+            const latestInvite = await tx.invite.findUnique({
+                where: { id: invite.id }
+            })
+
+            if (!latestInvite || latestInvite.status !== 'active') {
+                throw new Error('Invite is no longer active.')
+            }
+            if (latestInvite.uses >= latestInvite.maxUses) {
+                throw new Error('Invite has reached its maximum usage.')
+            }
+
+            const newUses = latestInvite.uses + 1
+            const shouldClose = newUses >= latestInvite.maxUses
+
             await tx.invite.update({
-                where: { id: invite.id },
-                data: { status: 'used', usedAt: new Date() },
+                where: { id: latestInvite.id },
+                data: {
+                    uses: newUses,
+                    status: shouldClose ? 'used' : 'active',
+                    usedAt: new Date(),
+                },
             })
 
             // 2. Create Account
@@ -134,11 +155,20 @@ export async function createCharacter(prevState: any, formData: FormData) {
             return newPlayer
         })
 
-        // 6. Assign orientation threads (outside transaction for simplicity)
-        await assignOrientationThreads(player.id)
+        // 6. Assign orientation threads (non-fatal if already assigned)
+        try {
+            await assignOrientationThreads(player.id)
+        } catch (threadError) {
+            console.warn('[createCharacter] orientation thread assignment skipped:', threadError)
+        }
 
         const cookieStore = await cookies()
-        cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+        cookieStore.set('bars_player_id', player.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30
+        })
 
     } catch (e: any) {
         console.error("Character creation failed:", e?.message || e)
@@ -168,8 +198,18 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
     }
 
     try {
-        const existingAccount = await db.account.findUnique({ where: { email: identity.contact } })
-        if (existingAccount) return { error: 'Account already exists. Please log in.' }
+        const [existingAccount, existingPlayer] = await Promise.all([
+            db.account.findUnique({ where: { email: identity.contact } }),
+            db.player.findUnique({
+                where: {
+                    contactType_contactValue: {
+                        contactType: 'email',
+                        contactValue: identity.contact
+                    }
+                }
+            })
+        ])
+        if (existingAccount || existingPlayer) return { error: 'Account already exists. Please log in.' }
 
         // Use a system open invite or generate one?
         // Guided mode typically implies open access or specific flow.
@@ -224,9 +264,13 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
             return newPlayer
         })
 
-        // Assign orientation threads
+        // Assign orientation threads (non-fatal if already assigned)
         const { assignOrientationThreads } = await import('./quest-thread')
-        await assignOrientationThreads(player.id)
+        try {
+            await assignOrientationThreads(player.id)
+        } catch (threadError) {
+            console.warn('[createGuidedPlayer] orientation thread assignment skipped:', threadError)
+        }
 
         const cookieStore = await cookies()
         // Use strict rules for production, lax for dev to ensure it setting

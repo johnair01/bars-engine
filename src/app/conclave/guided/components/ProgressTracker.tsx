@@ -12,7 +12,7 @@ export function ProgressTracker({ currentStep, vibeulonsEarned }: ProgressTracke
         { key: 'intro', label: 'Welcome' },
         { key: 'identity', label: 'Identity' },
         { key: 'nation_discovery', label: 'Nation' },
-        { key: 'playbook_discovery', label: 'Playbook' },
+        { key: 'playbook_discovery', label: 'Archetype' },
         { key: 'finalization', label: 'Ready' },
     ]
 

@@ -63,7 +63,12 @@ export async function login(formData: FormData) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+    cookieStore.set('bars_player_id', player.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30
+    })
 
     return { success: true }
 }

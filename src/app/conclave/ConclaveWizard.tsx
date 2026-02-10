@@ -128,6 +128,7 @@ export function ConclaveWizard({
     }
 
     const selectedPlaybook = playbooks.find(p => p.id === playbookId)
+    const returnToWizard = `/conclave?token=${encodeURIComponent(token)}`
 
     // Random selection handlers
     const selectRandomNation = () => {
@@ -402,12 +403,12 @@ export function ConclaveWizard({
                                     <MoveDisplay label="Grow Up" emoji="🌱" value={nation.growUp} />
                                     <div className="mt-4 pt-4 border-t border-zinc-800">
                                         <a
-                                            href={`/nation/${nation.id}`}
+                                            href={`/nation/${nation.id}?from=${encodeURIComponent(returnToWizard)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block w-full text-center py-2 rounded bg-purple-900/30 text-purple-300 text-sm font-bold border border-purple-500/30 hover:bg-purple-900/50 hover:border-purple-500 transition-all"
                                         >
-                                            📜 Read Full Origin Story ↗
+                                            📜 Read Full Nation Guidebook ↗
                                         </a>
                                     </div>
                                 </div>
@@ -424,7 +425,7 @@ export function ConclaveWizard({
                         onClick={() => mode === 'expert' ? setStep('playbook') : setStep('archetype-overview')}
                         className="flex-1 bg-white text-black py-3 rounded-full font-bold disabled:opacity-50"
                     >
-                        Next: Choose Playbook →
+                        Next: Choose Archetype →
                     </button>
                 </div>
             </div>
@@ -440,7 +441,7 @@ export function ConclaveWizard({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="text-center space-y-2">
-                <h1 className="text-2xl font-bold text-white">Choose Your Playbook</h1>
+                <h1 className="text-2xl font-bold text-white">Choose Your Archetype</h1>
                 <p className="text-zinc-400">How do you move through the world?</p>
                 <button
                     type="button"
@@ -483,6 +484,16 @@ export function ConclaveWizard({
                                 <MoveDisplay label="Clean Up" emoji="🧹" value={playbook.cleanUp} />
                                 <MoveDisplay label="Grow Up" emoji="🌱" value={playbook.growUp} />
                                 <MoveDisplay label="Show Up" emoji="🎯" value={playbook.showUp} />
+                                <div className="mt-4 pt-4 border-t border-zinc-800">
+                                    <a
+                                        href={`/archetype/${playbook.id}?from=${encodeURIComponent(returnToWizard)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block w-full text-center py-2 rounded bg-blue-900/30 text-blue-300 text-sm font-bold border border-blue-500/30 hover:bg-blue-900/50 hover:border-blue-500 transition-all"
+                                    >
+                                        📘 Tell me more about this archetype ↗
+                                    </a>
+                                </div>
                             </div>
                         )}
                     </div>

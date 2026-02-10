@@ -9,7 +9,7 @@ export interface StoryNode {
     category: 'intro' | 'nation' | 'playbook' | 'transition' | 'quest' | 'identity'
     choices: StoryChoice[]
     metadata?: {
-        teachesAbout?: string   // "nations", "playbooks", "vibeulons"
+        teachesAbout?: string   // "nations", "archetypes", "vibeulons"
         emotionalTone?: string  // "exciting", "mysterious", "informative"
     }
     inputType?: 'text' | 'none'
@@ -35,7 +35,7 @@ export interface StoryProgress {
         timestamp: Date
     }[]
     unlockedNations?: string[]
-    unlockedPlaybooks?: string[]
+    unlockedPlaybooks?: string[] // legacy key; stores selected archetypes
     vibeulonsEarned: number
     playerName?: string
     characterName?: string
@@ -61,7 +61,7 @@ export interface MiniQuest {
 export interface QuestOption {
     id: string
     text: string
-    alignsWith: string[] // nation/playbook IDs
+    alignsWith: string[] // nation/archetype IDs
 }
 
 export type GuideEmotion = 'neutral' | 'welcoming' | 'encouraging' | 'mysterious' | 'thoughtful'

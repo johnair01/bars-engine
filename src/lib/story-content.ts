@@ -8,10 +8,10 @@ const getNationChoice = (nation: any): StoryChoice => ({
     nextNodeId: `nation_info_${nation.id}`,
 })
 
-// Helper to format playbook choice
+// Helper to format archetype choice (legacy node IDs use "playbook")
 const getPlaybookChoice = (playbook: any): StoryChoice => ({
     id: `view_playbook_${playbook.id}`,
-    text: `View ${playbook.name}`,
+    text: `View ${playbook.name} Archetype`,
     nextNodeId: `playbook_info_${playbook.id}`,
 })
 
@@ -154,7 +154,7 @@ There are five nations in the alliance. Each has a different philosophy on how t
         }
     }
 
-    // 4. PLAYBOOK SELECTION
+    // 4. ARCHETYPE SELECTION (legacy node id: playbook_select)
     if (nodeId === 'playbook_select') {
         // We might want to group these, but for now flat list is fine or we can do a simple categorization in dialogue
         const playbooks = await db.playbook.findMany({ orderBy: { name: 'asc' } })
@@ -167,14 +167,14 @@ There are five nations in the alliance. Each has a different philosophy on how t
             content: `
 We know where you're from. Now... who are you? In the heat of the moment, how do you solve problems?
 
-The Conclave recognizes 8 archetypes based on the I Ching trigrams. This defines your role in the crew.
+The Conclave recognizes 8 archetypes based on the I Ching trigrams. Your archetype defines your role in the crew.
             `,
             guideDialogue: "Who are you when the alarm goes off?",
             choices: playbooks.map(getPlaybookChoice)
         }
     }
 
-    // PLAYBOOK INFO NODES
+    // ARCHETYPE INFO NODES (legacy node id prefix: playbook_info_)
     if (nodeId.startsWith('playbook_info_')) {
         const playbookId = nodeId.replace('playbook_info_', '')
         const playbook = await db.playbook.findUnique({ where: { id: playbookId } })
@@ -198,7 +198,7 @@ The Conclave recognizes 8 archetypes based on the I Ching trigrams. This defines
             choices: [
                 {
                     id: `confirm_playbook_${playbook.id}`,
-                    text: `Confirm ${playbook.name}`,
+                    text: `Confirm Archetype: ${playbook.name}`,
                     nextNodeId: 'conclusion',
                     rewards: {
                         unlocks: [`playbook:${playbook.id}`]
@@ -206,7 +206,7 @@ The Conclave recognizes 8 archetypes based on the I Ching trigrams. This defines
                 },
                 {
                     id: 'back_to_playbooks',
-                    text: "Let me reconsider",
+                    text: "Let me review other archetypes",
                     nextNodeId: 'playbook_select'
                 }
             ]
