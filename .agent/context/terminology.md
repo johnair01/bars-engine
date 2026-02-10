@@ -17,8 +17,8 @@ description: Canonical spelling and terminology for the project
 | **Archetype** | - | Enneagram type (1-9, excluding 5) |
 | **Trigram** | - | I Ching base element (☰☷☳☵☶☴☲☱) |
 | **Hexagram** | - | Pair of trigrams = quest reading |
-| **Quest** | `CustomBar` | User-created mission |
-| **Bar** | `Bar` | System/I Ching hexagram (1-64) |
+| **BAR** | `Bar` / `CustomBar` | Primary game object: signal unit (I Ching reading, inspiration, prompt) |
+| **Quest** | `CustomBar` + assignment/progression | Actionable BAR state (a BAR transformed into a mission loop) |
 | **Move** | - | Archetype action (⚡🤝👁🎭💧🔥🌬⛰) |
 
 ---
@@ -43,3 +43,5 @@ description: Canonical spelling and terminology for the project
 - **Prose/docs**: Use "Vibeulon" (capitalized)
 - **Code/schema**: Use `vibulon` (lowercase, as per Prisma convention)
 - **Relation names**: Use `Vibeulon` prefix (e.g., `VibulonEvent`)
+- **Mechanics**: Treat BAR as the primary object; Quest is a promoted BAR state.
+- **I Ching**: A cast hexagram is a BAR first, then may be transformed into a private story quest.

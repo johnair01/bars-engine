@@ -22,6 +22,9 @@ Horizontal emergence: all archetypes get value at each stage.
 
 ## Feature Pillars
 
+> **Mechanics note:** BAR is the primary object. Quest is BAR-in-action.
+> I Ching hexagrams are BARs first; they can be transformed into private story quests using archetype + story context.
+
 ### 1. Quest Creation
 *How players birth new quests into the world*
 

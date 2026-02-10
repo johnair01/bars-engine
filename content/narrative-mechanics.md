@@ -2,6 +2,38 @@
 
 This document outlines the collaborative storytelling inspirations behind the Integral Emergences Story Engine and maps them to the system's data schema.
 
+## BAR-First Mechanics (Canonical Loop)
+
+The game loop is BAR-first. Quests are transformed BARs, not a separate conceptual object.
+
+- **BAR** = a unit of meaningful signal gathered from play/life (I Ching draw, personal inspiration, event input).
+- **Quest** = a BAR promoted into actionable structure, with explicit completion inputs and optional reward behavior.
+- **Not all BARs must become Quests**. Players can keep BARs as references or prompts.
+
+### I Ching-specific rule
+
+An I Ching cast first creates/records a **BAR** (the hexagram reading), then transforms that BAR into a quest using:
+
+1. the player's archetype/playbook
+2. the current story context (act/period/clock state)
+
+The transformed output is a **private story quest**.
+
+### Reward rule
+
+- **Private quests behave as BARs** and do **not** mint Vibeulons on completion.
+- **Exception:** hexagram-generated story quests can mint Vibeulons even when private.
+
+### Future extension
+
+Players will be able to:
+
+1. log their own BARs from party/life inspiration
+2. upgrade selected BARs into quests later
+3. use BARs to modify quests currently in play
+
+This keeps narrative sensing (BAR collection) and narrative execution (Quest completion) in one coherent mechanic.
+
 ## Core Inspirations
 
 ### 1. Hearts Blazing

@@ -265,6 +265,9 @@ export function QuestWizard() {
 
     // Step 4: Preview
     if (step === 4) {
+        const previewVisibility = formData.visibility || 'public'
+        const previewReward = previewVisibility === 'private' ? 0 : Number(formData.reward || 5)
+
         return (
             <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-right-8">
                 <button onClick={() => setStep(3)} className="text-sm text-zinc-500 hover:text-white">
@@ -298,11 +301,11 @@ export function QuestWizard() {
                         <div className="flex gap-4 pt-4 border-t border-zinc-800 text-sm">
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Reward</span>
-                                <span className="text-green-400 font-mono">5 ♦</span>
+                                <span className="text-green-400 font-mono">{previewReward} ♦</span>
                             </div>
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Visibility</span>
-                                <span className="text-white capitalize">{formData.visibility || 'Public'}</span>
+                                <span className="text-white capitalize">{previewVisibility}</span>
                             </div>
                             {formData.lifecycleFraming && (
                                 <div className="text-zinc-500">
@@ -322,7 +325,9 @@ export function QuestWizard() {
 
                 <div className="flex justify-between items-center pt-4">
                     <div className="text-sm text-zinc-500">
-                        {formData.visibility === 'public' && 'Creation Cost: 1 Vibeulon'}
+                        {previewVisibility === 'public'
+                            ? 'Creation Cost: 1 Vibeulon'
+                            : 'Private quests are BAR-style and do not mint Vibeulons by default'}
                     </div>
                     <button
                         onClick={handlePublish}

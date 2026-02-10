@@ -112,8 +112,14 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
         }
     })
 
-    // GRANT VIBEULONS with bonus
-    const baseReward = quest.reward || 1
+    // BAR-first reward rule:
+    // - Private quests behave like BARs and do not mint by default.
+    // - Exception: hexagram-generated story quests can mint even when private.
+    const isPrivateQuest = quest.visibility === 'private'
+    const isHexagramGeneratedStoryQuest = quest.type === 'story' && quest.hexagramId !== null
+    const canMintReward = !isPrivateQuest || isHexagramGeneratedStoryQuest
+
+    const baseReward = canMintReward ? (quest.reward || 1) : 0
     let finalReward = Math.floor(baseReward * bonusMultiplier)
 
     // REPEATABLE FEEDBACK QUEST LOGIC
@@ -131,16 +137,18 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
         }
     }
 
-    await db.vibulonEvent.create({
-        data: {
-            playerId: player.id,
-            source: 'quest',
-            amount: finalReward,
-            notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
-            archetypeMove: 'IGNITE',
-            questId: questId,
-        }
-    })
+    if (finalReward > 0) {
+        await db.vibulonEvent.create({
+            data: {
+                playerId: player.id,
+                source: 'quest',
+                amount: finalReward,
+                notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
+                archetypeMove: 'IGNITE',
+                questId: questId,
+            }
+        })
+    }
 
     // Handle Pack/Thread progression
     if (context?.packId) {
@@ -158,11 +166,13 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     }
 
     // MINT ACTUAL VIBULON TOKENS (Vibulon model)
-    await mintVibulon(player.id, finalReward, {
-        source: 'quest',
-        id: questId,
-        title: quest.title
-    })
+    if (finalReward > 0) {
+        await mintVibulon(player.id, finalReward, {
+            source: 'quest',
+            id: questId,
+            title: quest.title
+        })
+    }
 
     // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
     if (questId === 'system-feedback') {

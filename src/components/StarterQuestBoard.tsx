@@ -29,6 +29,8 @@ function VibeBarCard({
 }) {
     const [open, setOpen] = useState(isActive)  // Auto-open if active
     const [inputs, setInputs] = useState<Record<string, any>>({})
+    const availableLabel = bar.type === 'story' ? 'Story' : 'Vibe'
+    const rewardColor = bar.type === 'story' ? 'text-purple-400' : 'text-green-400'
 
     const handleSubmit = () => {
         onComplete(inputs)
@@ -115,7 +117,7 @@ function VibeBarCard({
                     <div>
                         <div className="flex items-center gap-2">
                             <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-mono ${isActive ? 'bg-yellow-900/50 text-yellow-400' : 'bg-green-900/30 text-green-400'}`}>
-                                {isActive ? 'Active' : 'Vibe'}
+                                {isActive ? 'Active' : availableLabel}
                             </span>
                             <h3 className="font-bold text-white">{bar.title}</h3>
                         </div>
@@ -124,7 +126,7 @@ function VibeBarCard({
                 </button>
 
                 <div className="flex items-center gap-2">
-                    <span className="text-green-400 font-mono text-sm">+{bar.reward} ♦</span>
+                    <span className={`${rewardColor} font-mono text-sm`}>+{bar.reward} ♦</span>
 
                     {!isActive && <span className="text-zinc-500 text-xs ml-2 cursor-pointer" onClick={onPickUp}>Pick Up →</span>}
 
@@ -265,6 +267,8 @@ type CustomBarDef = {
     reward: number
     inputs: string
     creatorId: string
+    visibility: string
+    hexagramId?: number | null
     storyPath: string | null
     moveType: string | null
 }
@@ -361,17 +365,23 @@ export function StarterQuestBoard({
     }
 
     // Convert custom bars to BarDef format
-    const customAsBarDef: BarDef[] = customBars.map(cb => ({
-        id: cb.id,
-        title: cb.title,
-        description: cb.description,
-        type: cb.type as 'vibe' | 'story',
-        reward: cb.reward,
-        inputs: JSON.parse(cb.inputs || '[]'),
-        unique: false,  // Custom bars are repeatable
-        isCustom: true, // Mark as custom
-        moveType: cb.moveType,
-    }))
+    const customAsBarDef: BarDef[] = customBars.map(cb => {
+        const isPrivate = cb.visibility === 'private'
+        const isHexagramStoryQuest = cb.type === 'story' && !!cb.hexagramId
+        const displayReward = isPrivate && !isHexagramStoryQuest ? 0 : cb.reward
+
+        return {
+            id: cb.id,
+            title: cb.title,
+            description: cb.description,
+            type: cb.type as 'vibe' | 'story',
+            reward: displayReward,
+            inputs: JSON.parse(cb.inputs || '[]'),
+            unique: false,  // Custom bars are repeatable
+            isCustom: true, // Mark as custom
+            moveType: cb.moveType,
+        }
+    })
 
     // Canonical quest state comes from CustomBar + PlayerQuest.
     const allBars = [...customAsBarDef]
@@ -393,7 +403,7 @@ export function StarterQuestBoard({
         return (
             <div className="space-y-3">
                 {activeBarsWithDelegates.map(bar => ( // Changed to activeBarsWithDelegates
-                    bar.type === 'story' ? (
+                    bar.type === 'story' && !bar.isCustom && !!bar.storyPath ? (
                         <StoryBarCard key={bar.id} bar={bar} isActive={true} onPickUp={() => { }} />
                     ) : (
                         <VibeBarCard
@@ -416,7 +426,7 @@ export function StarterQuestBoard({
         return (
             <div className="space-y-3">
                 {availableBars.map(bar => (
-                    bar.type === 'story' ? (
+                    bar.type === 'story' && !bar.isCustom && !!bar.storyPath ? (
                         <StoryBarCard key={bar.id} bar={bar} isActive={false} onPickUp={() => handlePickUp(bar.id)} />
                     ) : (
                         <VibeBarCard

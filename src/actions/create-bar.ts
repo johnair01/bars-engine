@@ -79,7 +79,7 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                     title,
                     description,
                     type: 'vibe',
-                    reward: 1, // Pay it forward
+                    reward: visibility === 'private' ? 0 : 1, // Private quests are BAR-like (no mint)
                     inputs,
                     visibility,
                     claimedById,
@@ -179,7 +179,7 @@ export async function createQuestFromWizard(data: any) {
                 title,
                 description,
                 type: category || 'custom',
-                reward: Number(reward) || 1,
+                reward: visibility === 'private' ? 0 : (Number(reward) || 1),
                 inputs: JSON.stringify(inputs || []),
                 visibility: visibility || 'public',
                 status: 'active',

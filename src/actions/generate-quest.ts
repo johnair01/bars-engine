@@ -200,15 +200,29 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
             return { success: false, error: 'Hexagram not found' } satisfies ActionError
         }
 
-        // 3. Prepare AI Prompt
+        // 3. Gather current story context (world state)
+        const globalState = await db.globalState.findUnique({
+            where: { id: 'singleton' },
+            select: {
+                currentAct: true,
+                currentPeriod: true,
+                storyClock: true,
+            }
+        })
+
+        // 4. Prepare AI Prompt
         const moves = JSON.parse(player.playbook.moves || '[]')
+        const storyContext = globalState
+            ? `Current Story Context: Act ${globalState.currentAct}, Period ${globalState.currentPeriod}, Clock ${globalState.storyClock}/64.`
+            : 'Current Story Context: Unknown (treat as early emergence).'
 
         const systemPrompt = `You are the Oracle of the Conclave. 
         You interpret the I Ching Hexagrams to guide the Collective.
-        Your goal is to create a "Bar" (a quest/task) for the community based on the hexagram and the player's playbook moves.
+        Your goal is to create a private story quest based on the hexagram and the player's playbook moves.
         
         The Hexagram is: #${hexagram.id} ${hexagram.name} - ${hexagram.tone}
         Meaning: ${hexagram.text}
+        ${storyContext}
         
         The Player's Playbook is: ${player.playbook.name}
         Available Moves: ${JSON.stringify(moves)}
@@ -216,11 +230,11 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
         Task:
         Select ONE relevant move from the playbook that aligns with the Hexagram's meaning.
         Create a quest title and description.
-        The description should feel like a call to action for the collective, incorporating the vibe of the hexagram and the mechanics of the chosen move.
+        The description should feel like a call to action that reflects both the hexagram and current story context.
         The Tone should be: ${hexagram.tone}.
         `
 
-        // 4. Call AI
+        // 5. Call AI
         const { object } = await generateObject({
             model: openai('gpt-4o'),
             schema: z.object({
@@ -232,24 +246,24 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
             prompt: "Generate a Collective Quest."
         })
 
-        // 5. Create CustomBar (Inspiration)
+        // 6. Create hexagram-transformed private story quest
         const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title: object.title,
                 description: object.description,
-                type: 'inspiration', // MARK AS INSPIRATION (Raw Bar)
+                type: 'story',
                 reward: 2,
                 status: 'active',
-                storyPath: 'personal',
                 visibility: 'private',
+                hexagramId: hexagramId,
                 inputs: JSON.stringify([
                     { key: 'reflection', label: 'Response', type: 'textarea', placeholder: `Use the move: ${object.selectedMove}` }
                 ])
             }
         })
 
-        // Auto-assign to creator so it shows in "Active Quests"
+        // 7. Auto-assign to creator so it appears in active quests
         await db.playerQuest.create({
             data: {
                 playerId,
@@ -259,7 +273,7 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
             }
         })
 
-        // Initialize rootId to self for new root quests
+        // 8. Initialize rootId to self for new root quests
         await db.customBar.update({
             where: { id: newBar.id },
             data: { rootId: newBar.id }
