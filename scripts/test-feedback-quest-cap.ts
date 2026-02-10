@@ -3,8 +3,31 @@ import { completeQuestForPlayer } from '../src/actions/quest-engine'
 
 const db = new PrismaClient()
 
+async function logFeedbackCapTest(action: string, payload: Record<string, unknown>) {
+    try {
+        await db.auditLog.create({
+            data: {
+                actorAdminId: 'system',
+                action,
+                targetType: 'system',
+                targetId: String(payload.testRunId || 'unknown'),
+                payloadJson: JSON.stringify(payload)
+            }
+        })
+    } catch (error) {
+        console.log(`  - Audit log skipped for ${action}: ${(error as Error).message}`)
+    }
+}
+
 async function main() {
     console.log('🧪 Testing feedback quest cap (max 5 vibeulons)...')
+    const testRunId = `feedback_cap_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const startedAt = new Date()
+    await logFeedbackCapTest('FEEDBACK_CAP_TEST_STARTED', {
+        testRunId,
+        source: 'script:test-feedback-quest-cap',
+        startedAt: startedAt.toISOString()
+    })
 
     const questId = 'system-feedback'
     const quest = await db.customBar.findUnique({ where: { id: questId } })
@@ -13,7 +36,7 @@ async function main() {
     }
 
     const timestamp = Date.now()
-    const invite = await db.invite.create({
+    let invite = await db.invite.create({
         data: {
             token: `TEST-FEEDBACK-${timestamp}`,
             status: 'active',
@@ -22,7 +45,7 @@ async function main() {
         }
     })
 
-    const player = await db.player.create({
+    let player = await db.player.create({
         data: {
             name: 'Feedback Cap Tester',
             contactType: 'email',
@@ -41,6 +64,7 @@ async function main() {
     })
 
     const rewards: number[] = []
+    let walletCount = 0
     try {
         for (let i = 1; i <= 6; i++) {
             const result = await completeQuestForPlayer(
@@ -75,7 +99,7 @@ async function main() {
             }
         }
 
-        const walletCount = await db.vibulon.count({ where: { ownerId: player.id } })
+        walletCount = await db.vibulon.count({ where: { ownerId: player.id } })
         const feedbackEvents = await db.vibulonEvent.findMany({
             where: {
                 playerId: player.id,
@@ -105,13 +129,39 @@ async function main() {
         console.log(`   Rewards by run: ${JSON.stringify(rewards)}`)
         console.log(`   Vibulons minted: ${walletCount}`)
         console.log('   Cap enforced after 5 rewarded completions.')
+        await logFeedbackCapTest('FEEDBACK_CAP_TEST_COMPLETED', {
+            testRunId,
+            source: 'script:test-feedback-quest-cap',
+            startedAt: startedAt.toISOString(),
+            completedAt: new Date().toISOString(),
+            rewards,
+            walletCount,
+            positiveRewardRuns,
+            questId
+        })
+    } catch (error) {
+        await logFeedbackCapTest('FEEDBACK_CAP_TEST_FAILED', {
+            testRunId,
+            source: 'script:test-feedback-quest-cap',
+            startedAt: startedAt.toISOString(),
+            failedAt: new Date().toISOString(),
+            rewards,
+            walletCount,
+            questId,
+            error: error instanceof Error ? error.message : String(error)
+        })
+        throw error
     } finally {
-        await db.playerQuest.deleteMany({ where: { playerId: player.id } })
-        await db.vibulonEvent.deleteMany({ where: { playerId: player.id } })
-        await db.vibulon.deleteMany({ where: { ownerId: player.id } })
-        await db.starterPack.deleteMany({ where: { playerId: player.id } })
-        await db.player.deleteMany({ where: { id: player.id } })
-        await db.invite.deleteMany({ where: { id: invite.id } })
+        if (player?.id) {
+            await db.playerQuest.deleteMany({ where: { playerId: player.id } })
+            await db.vibulonEvent.deleteMany({ where: { playerId: player.id } })
+            await db.vibulon.deleteMany({ where: { ownerId: player.id } })
+            await db.starterPack.deleteMany({ where: { playerId: player.id } })
+            await db.player.deleteMany({ where: { id: player.id } })
+        }
+        if (invite?.id) {
+            await db.invite.deleteMany({ where: { id: invite.id } })
+        }
     }
 }
 
