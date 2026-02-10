@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { hashPassword, verifyPassword } from '@/lib/auth-utils'
+import { verifyPassword } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
 
 export type LoginState = {
