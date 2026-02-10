@@ -3,12 +3,35 @@ import { execSync } from 'child_process'
 
 const prisma = new PrismaClient()
 
+async function safeAudit(action: string, payload: Record<string, unknown>) {
+    try {
+        await prisma.auditLog.create({
+            data: {
+                actorAdminId: 'system',
+                action,
+                targetType: 'system',
+                targetId: String(payload.resetRunId || 'unknown'),
+                payloadJson: JSON.stringify(payload)
+            }
+        })
+    } catch (error) {
+        console.log(`  - Audit log skipped for ${action}: ${(error as Error).message}`)
+    }
+}
+
 async function reset() {
     console.log('⚠️  WARNING: Starting Full Production Reset...')
+    const resetRunId = `prod_reset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const startedAt = new Date()
+    await safeAudit('PROD_RESET_STARTED', {
+        resetRunId,
+        source: 'script:prod-reset',
+        startedAt: startedAt.toISOString()
+    })
 
     // Ordered deletions to handle foreign keys
     const tables = [
-        'audit_logs',
+        // Keep audit_logs so reset history survives resets.
         'admin_audit_log',
         'player_roles',
         'thread_quests',
@@ -33,27 +56,56 @@ async function reset() {
         'bars' // Legacy bars table
     ]
 
-    for (const table of tables) {
-        try {
-            await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
-            console.log(`  ✓ Truncated ${table}`)
-        } catch (e: any) {
-            // Fallback for tables that might not exist or if CASCADE isn't supported exactly this way
-            try {
-                await prisma.$executeRawUnsafe(`DELETE FROM "${table}";`)
-                console.log(`  ✓ Deleted from ${table}`)
-            } catch (e2) {
-                console.log(`  - Skip ${table} (likely doesn't exist or already empty)`)
-            }
-        }
+    const resetSummary = {
+        truncated: [] as string[],
+        deleted: [] as string[],
+        skipped: [] as string[]
     }
 
-    console.log('✅ Reset complete. Now seeding...')
+    try {
+        for (const table of tables) {
+            try {
+                await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
+                console.log(`  ✓ Truncated ${table}`)
+                resetSummary.truncated.push(table)
+            } catch {
+                // Fallback for tables that might not exist or if CASCADE isn't supported exactly this way
+                try {
+                    await prisma.$executeRawUnsafe(`DELETE FROM "${table}";`)
+                    console.log(`  ✓ Deleted from ${table}`)
+                    resetSummary.deleted.push(table)
+                } catch {
+                    console.log(`  - Skip ${table} (likely doesn't exist or already empty)`)
+                    resetSummary.skipped.push(table)
+                }
+            }
+        }
 
-    // Run the actual seed script
-    execSync('npx tsx prisma/seed.ts', { stdio: 'inherit' })
+        console.log('✅ Reset complete. Now seeding...')
 
-    console.log('🚀 Production reset and seed finished.')
+        // Run the actual seed script
+        execSync('npx tsx prisma/seed.ts', { stdio: 'inherit' })
+
+        await safeAudit('PROD_RESET_COMPLETED', {
+            resetRunId,
+            source: 'script:prod-reset',
+            startedAt: startedAt.toISOString(),
+            completedAt: new Date().toISOString(),
+            summary: resetSummary
+        })
+
+        console.log('🚀 Production reset and seed finished.')
+    } catch (error) {
+        await safeAudit('PROD_RESET_FAILED', {
+            resetRunId,
+            source: 'script:prod-reset',
+            startedAt: startedAt.toISOString(),
+            failedAt: new Date().toISOString(),
+            error: error instanceof Error ? error.message : String(error),
+            summary: resetSummary
+        })
+        throw error
+    }
 }
 
 reset()

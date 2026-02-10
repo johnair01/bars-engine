@@ -43,35 +43,101 @@ export async function switchIdentityAdminPulse(targetPlayerId: string) {
  * Admin only: Full system reset and re-seed
  */
 export async function triggerSystemReset() {
-    await ensureAdmin()
+    const admin = await ensureAdmin()
+    const resetRunId = `admin_reset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const startedAt = new Date()
 
     console.log('⚠️  DANGER: System Reset Triggered by Admin')
+    await db.auditLog.create({
+        data: {
+            actorAdminId: admin.id,
+            action: 'SYSTEM_RESET_STARTED',
+            targetType: 'system',
+            targetId: resetRunId,
+            payloadJson: JSON.stringify({
+                resetRunId,
+                source: 'admin_panel',
+                startedAt: startedAt.toISOString(),
+                actor: {
+                    id: admin.id,
+                    name: admin.name,
+                    contactValue: admin.contactValue
+                }
+            })
+        }
+    })
 
     const tables = [
-        'audit_logs', 'admin_audit_log', 'player_roles', 'thread_quests',
+        // Keep audit_logs so reset history survives resets.
+        'admin_audit_log', 'player_roles', 'thread_quests',
         'thread_progress', 'pack_progress', 'starter_quest_progress',
         'player_quests', 'vibulon_events', 'vibulons', 'starter_packs',
         'custom_bars', 'quest_threads', 'players', 'accounts', 'invites',
         'nations', 'playbooks', 'story_ticks', 'global_state', 'app_config', 'bars'
     ]
 
-    for (const table of tables) {
-        try {
-            await db.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
-        } catch (e) {
-            try {
-                await db.$executeRawUnsafe(`DELETE FROM "${table}";`)
-            } catch (e2) {
-                // Ignore missing tables or empty ones
-            }
-        }
+    const resetSummary = {
+        truncated: [] as string[],
+        deleted: [] as string[],
+        skipped: [] as string[]
     }
 
-    // Re-seed
-    await runSeed(db)
+    try {
+        for (const table of tables) {
+            try {
+                await db.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`)
+                resetSummary.truncated.push(table)
+            } catch {
+                try {
+                    await db.$executeRawUnsafe(`DELETE FROM "${table}";`)
+                    resetSummary.deleted.push(table)
+                } catch {
+                    // Ignore missing tables or empty ones
+                    resetSummary.skipped.push(table)
+                }
+            }
+        }
+
+        // Re-seed
+        await runSeed(db)
+
+        await db.auditLog.create({
+            data: {
+                actorAdminId: admin.id,
+                action: 'SYSTEM_RESET_COMPLETED',
+                targetType: 'system',
+                targetId: resetRunId,
+                payloadJson: JSON.stringify({
+                    resetRunId,
+                    source: 'admin_panel',
+                    startedAt: startedAt.toISOString(),
+                    completedAt: new Date().toISOString(),
+                    summary: resetSummary
+                })
+            }
+        })
+    } catch (error) {
+        await db.auditLog.create({
+            data: {
+                actorAdminId: admin.id,
+                action: 'SYSTEM_RESET_FAILED',
+                targetType: 'system',
+                targetId: resetRunId,
+                payloadJson: JSON.stringify({
+                    resetRunId,
+                    source: 'admin_panel',
+                    startedAt: startedAt.toISOString(),
+                    failedAt: new Date().toISOString(),
+                    error: error instanceof Error ? error.message : String(error),
+                    summary: resetSummary
+                })
+            }
+        })
+        throw error
+    }
 
     revalidatePath('/')
-    return { success: true }
+    return { success: true, resetRunId }
 }
 
 /**
