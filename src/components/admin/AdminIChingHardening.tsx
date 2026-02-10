@@ -35,6 +35,10 @@ export function AdminIChingHardening() {
                 setError(result.error || 'Hardening failed')
                 return
             }
+            if (!result.report) {
+                setError('Hardening completed without report payload.')
+                return
+            }
             setReport(result.report)
         })
     }

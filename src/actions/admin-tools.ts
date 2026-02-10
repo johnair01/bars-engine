@@ -17,7 +17,9 @@ async function ensureAdmin() {
         include: { roles: { include: { role: true } } }
     })
 
-    const isAdmin = player?.roles.some(r => r.role.key === 'admin')
+    if (!player) throw new Error('Not authenticated')
+
+    const isAdmin = player.roles.some(r => r.role.key === 'admin')
     if (!isAdmin) throw new Error('Not authorized: Admin role required')
 
     return player
