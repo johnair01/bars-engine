@@ -205,6 +205,18 @@ export default function ArchetypeEditorPage() {
                             />
                         </div>
 
+                        <div className="pt-2">
+                            <FlavorInput
+                                label="🩺 Emotional First Aid (Clean-Up Lens)"
+                                value={data.emotionalFirstAid}
+                                onChange={(val: string) => setData({ ...data, emotionalFirstAid: val })}
+                                color="border-cyan-900/50 text-cyan-400"
+                            />
+                            <p className="text-xs text-zinc-600 mt-2">
+                                This archetype-specific protocol is used by the Emotional First Aid Kit and can influence quest generation when players opt in.
+                            </p>
+                        </div>
+
                         {/* Full Content (Markdown) */}
                         <div className="pt-6 border-t border-zinc-800">
                             <label className="block text-white text-sm font-bold mb-2 flex justify-between">

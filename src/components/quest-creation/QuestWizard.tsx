@@ -81,7 +81,8 @@ export function QuestWizard() {
             const result = await createQuestFromWizard({
                 ...formData,
                 category: selectedTemplate?.category || 'custom',
-                inputs
+                inputs,
+                applyFirstAidLens: !!formData.applyFirstAidLens,
             })
 
             if (result?.error) {
@@ -251,6 +252,18 @@ export function QuestWizard() {
                     </div>
                 )}
 
+                <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+                    <input
+                        type="checkbox"
+                        checked={!!formData.applyFirstAidLens}
+                        onChange={(e) => handleInputChange('applyFirstAidLens', e.target.checked)}
+                        className="mt-1 h-4 w-4"
+                    />
+                    <span className="text-xs text-zinc-300">
+                        Apply latest Emotional First Aid lens to this quest.
+                    </span>
+                </label>
+
                 <div className="flex justify-end pt-4">
                     <button
                         onClick={handleNext}
@@ -308,6 +321,12 @@ export function QuestWizard() {
                                 <div className="text-zinc-500">
                                     <span className="block text-xs uppercase tracking-widest mb-1">Framing</span>
                                     <span className="text-amber-400 capitalize">{formData.lifecycleFraming}</span>
+                                </div>
+                            )}
+                            {formData.applyFirstAidLens && (
+                                <div className="text-zinc-500">
+                                    <span className="block text-xs uppercase tracking-widest mb-1">Lens</span>
+                                    <span className="text-cyan-400">Emotional First Aid</span>
                                 </div>
                             )}
                         </div>

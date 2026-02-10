@@ -9,10 +9,11 @@ export function DashboardCaster() {
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [generatedQuest, setGeneratedQuest] = useState<{ title: string, description: string } | null>(null)
+    const [useFirstAidLens, setUseFirstAidLens] = useState(false)
 
     const handleComplete = async (hexagramId: number) => {
         // Trigger AI Quest Generation
-        const result = await generateQuestFromReading(hexagramId)
+        const result = await generateQuestFromReading(hexagramId, useFirstAidLens)
 
         if (result.error) {
             throw new Error(result.error) // Bubble up to CastingRitual's error handler
@@ -53,11 +54,24 @@ export function DashboardCaster() {
                 </button>
 
                 {!generatedQuest ? (
-                    <CastingRitual
-                        mode="modal"
-                        onComplete={handleComplete}
-                        onCancel={() => setIsOpen(false)}
-                    />
+                    <div className="space-y-4">
+                        <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+                            <input
+                                type="checkbox"
+                                checked={useFirstAidLens}
+                                onChange={(e) => setUseFirstAidLens(e.target.checked)}
+                                className="mt-1 h-4 w-4"
+                            />
+                            <span className="text-xs text-zinc-300">
+                                Use latest Emotional First Aid lens for this generated quest.
+                            </span>
+                        </label>
+                        <CastingRitual
+                            mode="modal"
+                            onComplete={handleComplete}
+                            onCancel={() => setIsOpen(false)}
+                        />
+                    </div>
                 ) : (
                     <div className="text-center py-12 space-y-6 animate-in fade-in duration-500">
                         <div className="text-6xl">🔮</div>

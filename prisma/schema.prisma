@@ -86,6 +86,7 @@ model Player {
   quests          PlayerQuest[]
   vibulonEvents   VibulonEvent[]
   vibulons        Vibulon[]
+  emotionalAidSessions EmotionalFirstAidSession[]
   
   // CustomBar relations
   createdBars     CustomBar[]   @relation("CreatedBars")
@@ -527,12 +528,65 @@ model Playbook {
   cleanUp     String?  // Shadow work move
   growUp      String?  // Development move
   showUp      String?  // Action move
+  emotionalFirstAid String? // Archetype-specific first-aid protocol / clean-up lens
   
   players     Player[]
   
   createdAt   DateTime @default(now())
   
   @@map("playbooks")
+}
+
+model EmotionalFirstAidTool {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  icon        String?
+  moveType    String   @default("cleanUp") // usually cleanUp
+  tags        String   @default("[]")      // JSON array of emergency tags
+  twineLogic  String                    // JSON Twine logic
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  sessions    EmotionalFirstAidSession[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("emotional_first_aid_tools")
+}
+
+model EmotionalFirstAidSession {
+  id          String   @id @default(cuid())
+
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id])
+
+  toolId      String?
+  tool        EmotionalFirstAidTool? @relation(fields: [toolId], references: [id], onDelete: SetNull)
+
+  contextQuestId String?
+  issueTag    String?
+  issueText   String?
+
+  stuckBefore Int
+  stuckAfter  Int?
+  delta       Int?
+
+  recommendedToolKey String?
+  mintedAmount Int    @default(0)
+  applyToQuesting Boolean @default(false)
+
+  // Optional serialized variables from the completed Twine run
+  twineSnapshot String?
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([playerId, createdAt])
+  @@map("emotional_first_aid_sessions")
 }
 
 model StarterPack {

@@ -403,6 +403,7 @@ export async function updateArchetype(id: string, data: any) {
             cleanUp: data.cleanUp,
             growUp: data.growUp,
             showUp: data.showUp,
+            emotionalFirstAid: data.emotionalFirstAid,
             // Note: 'name' and 'moves' are intentionally excluded to preserve game mechanics integrity
         }
     })

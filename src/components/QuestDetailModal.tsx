@@ -13,6 +13,7 @@ import { QuestInputs, BarInput } from './QuestInputs'
 import { QuestTwinePlayer } from './QuestTwinePlayer'
 import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
+import Link from 'next/link'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -223,6 +224,21 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         }
                         return null
                     })()}
+
+                    {!isCompleted && !isLocked && (
+                        <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Vibes Emergency</p>
+                                <p className="text-xs text-cyan-100/80">Blocked emotionally? Run a first-aid protocol and come back.</p>
+                            </div>
+                            <Link
+                                href={`/emotional-first-aid?questId=${encodeURIComponent(quest.id)}&returnTo=%2F`}
+                                className="shrink-0 rounded-lg border border-cyan-700/60 bg-cyan-900/30 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-800/40 transition-colors"
+                            >
+                                Open Kit →
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Intention Quest: Direct vs Guided Path */}
                     {isIntentionQuest && !isCompleted && !isLocked && (

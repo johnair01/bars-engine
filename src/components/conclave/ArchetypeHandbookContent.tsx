@@ -15,6 +15,7 @@ interface Playbook {
     primaryQuestion?: string | null
     vibe?: string | null
     energy?: string | null
+    emotionalFirstAid?: string | null
 }
 
 export function ArchetypeHandbookContent({ playbook }: { playbook: Playbook }) {
@@ -79,6 +80,17 @@ export function ArchetypeHandbookContent({ playbook }: { playbook: Playbook }) {
                         <MoveCard title="Show Up" desc={playbook.showUp} icon="🎯" color="text-purple-400" border="border-purple-900/30" bg="bg-purple-900/10" />
                     </div>
                 </section>
+
+                {playbook.emotionalFirstAid && (
+                    <section className="space-y-3">
+                        <h2 className="text-zinc-500 uppercase tracking-widest text-[10px] font-bold flex items-center gap-2">
+                            <span className="text-lg">🩺</span> Emotional First Aid
+                        </h2>
+                        <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-5">
+                            <p className="text-sm text-cyan-100 leading-relaxed">{playbook.emotionalFirstAid}</p>
+                        </div>
+                    </section>
+                )}
 
                 {/* HANDBOOK CONTENT */}
                 {playbook.content && (
