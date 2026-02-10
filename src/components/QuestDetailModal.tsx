@@ -10,6 +10,21 @@ import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
 
+function getQuestTriggers(inputsJson?: string): string[] {
+    if (!inputsJson) return []
+    try {
+        const parsed = JSON.parse(inputsJson)
+        if (!Array.isArray(parsed)) return []
+        return parsed.flatMap((input: unknown) => {
+            if (!input || typeof input !== 'object') return []
+            const trigger = (input as { trigger?: unknown }).trigger
+            return typeof trigger === 'string' ? [trigger] : []
+        })
+    } catch {
+        return []
+    }
+}
+
 interface QuestDetailModalProps {
     isOpen: boolean
     onClose: () => void
@@ -29,9 +44,10 @@ interface QuestDetailModalProps {
     isCompleted?: boolean
     isLocked?: boolean
     completedMoveTypes?: string[] // Optional: types already achieved by player
+    ichingEnabled?: boolean
 }
 
-export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes }: QuestDetailModalProps) {
+export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, ichingEnabled = true }: QuestDetailModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
@@ -95,6 +111,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
     const isArchetypeQuest = quest.id === 'orientation-quest-2'
     const isTransferQuest = quest.id === 'orientation-quest-4'
+    const questTriggers = getQuestTriggers(quest.inputs)
+    const requiresIChingCast = questTriggers.includes('ICHING_CAST')
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -237,24 +255,30 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
-                            {quest.inputs?.includes('"trigger":"ICHING_CAST"') || quest.id === 'orientation-quest-3' ? (
+                            {requiresIChingCast ? (
                                 <div className="bg-black/50 rounded-xl border border-zinc-800 p-4">
                                     <h4 className="text-center text-yellow-500 font-bold mb-4 uppercase tracking-[0.2em] text-xs">Consult the Oracle</h4>
-                                    <CastingRitual
-                                        mode="modal"
-                                        onComplete={async (hexagramId) => {
-                                            const result = await generateQuestFromReading(hexagramId)
-                                            if (result.success) {
-                                                setFeedback('✨ Wisdom Received & Quest Completed!')
-                                                setTimeout(() => {
-                                                    onClose()
-                                                    router.refresh()
-                                                }, 2000)
-                                            } else {
-                                                setFeedback(`❌ ${result.error}`)
-                                            }
-                                        }}
-                                    />
+                                    {ichingEnabled ? (
+                                        <CastingRitual
+                                            mode="modal"
+                                            onComplete={async (hexagramId) => {
+                                                const result = await generateQuestFromReading(hexagramId)
+                                                if (result.success) {
+                                                    setFeedback('✨ Wisdom Received & Quest Completed!')
+                                                    setTimeout(() => {
+                                                        onClose()
+                                                        router.refresh()
+                                                    }, 2000)
+                                                } else {
+                                                    setFeedback(`❌ ${result.error}`)
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        <p className="text-center text-zinc-500 text-sm">
+                                            Oracle casting is currently disabled by admin configuration.
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -308,8 +332,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             <button
                                 onClick={handleComplete}
                                 // Disable for triggered quests (except archetype reader)
-                                hidden={quest.inputs?.includes('"trigger":"ICHING_CAST"') ||
-                                    quest.id === 'orientation-quest-3'}
+                                hidden={requiresIChingCast}
                                 disabled={isPending || (!isArchetypeQuest && !response.trim()) || (isArchetypeQuest && !hasScrolledToBottom)}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest
                                     ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'

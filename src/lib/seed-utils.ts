@@ -351,7 +351,8 @@ export async function runSeed(prisma: PrismaClient) {
             id: 'orientation-quest-3',
             title: 'Cast Your First Reading',
             description: 'The I Ching offers guidance for the path ahead. Perform a ritual casting to receive your first oracle.',
-            moveType: 'wakeUp'
+            moveType: 'wakeUp',
+            trigger: 'ICHING_CAST'
         },
         {
             id: 'orientation-quest-4',

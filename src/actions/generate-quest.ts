@@ -6,7 +6,8 @@ import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { completeQuest, fireTrigger } from '@/actions/quest-engine'
+import { fireTrigger } from '@/actions/quest-engine'
+import { isFeatureEnabled } from '@/lib/features'
 
 type QuestDraft = {
     title: string
@@ -41,6 +42,12 @@ function toErrorMessage(e: unknown): string {
     return String(e)
 }
 
+async function ensureIChingEnabled(): Promise<ActionError | null> {
+    const enabled = await isFeatureEnabled('iching', true)
+    if (enabled) return null
+    return { success: false, error: 'I Ching is currently disabled.' }
+}
+
 function normalizeHexagram(hexagram: { id: number, name: string, tone: string, text: string }): HexagramSummary {
     return {
         id: hexagram.id,
@@ -65,35 +72,6 @@ async function recordIChingReadingHistory(playerId: string, hexagramId: number) 
             notes: `Cast on ${new Date().toLocaleDateString()}`
         }
     })
-}
-
-async function tryCompleteOrientationQuestFromCast(playerId: string, hexagramId: number, generatedQuestId?: string) {
-    try {
-        const threadQuest = await db.threadQuest.findFirst({
-            where: { questId: 'orientation-quest-3' }
-        })
-
-        if (!threadQuest) return
-
-        const progress = await db.threadProgress.findUnique({
-            where: {
-                threadId_playerId: {
-                    threadId: threadQuest.threadId,
-                    playerId
-                }
-            }
-        })
-
-        if (!progress) return
-
-        await completeQuest(threadQuest.questId, {
-            hexagramId,
-            generatedQuestId: generatedQuestId || null
-        }, { threadId: threadQuest.threadId })
-    } catch (e: unknown) {
-        // Keep quest generation successful even if orientation post-processing fails.
-        console.warn('[IChing] Orientation completion check failed:', toErrorMessage(e))
-    }
 }
 
 type GenerationOptions = {
@@ -133,6 +111,9 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
+    const featureError = await ensureIChingEnabled()
+    if (featureError) return featureError
+
     const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
     if (!result.success) {
@@ -141,9 +122,6 @@ export async function generateQuestFromReading(hexagramId: number) {
 
     // Trigger listeners (legacy + future trigger-based flows)
     await fireTrigger('ICHING_CAST')
-
-    // Hard guard for current orientation flow until trigger metadata is fully migrated.
-    await tryCompleteOrientationQuestFromCast(playerId, hexagramId, result.questId)
 
     revalidatePath('/')
     revalidatePath('/iching')
@@ -166,6 +144,9 @@ export async function castAndGenerateQuest() {
         return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
+    const featureError = await ensureIChingEnabled()
+    if (featureError) return featureError
+
     const hexagramId = Math.floor(Math.random() * 64) + 1
     const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
@@ -174,8 +155,6 @@ export async function castAndGenerateQuest() {
     }
 
     await fireTrigger('ICHING_CAST')
-    await tryCompleteOrientationQuestFromCast(playerId, hexagramId, result.questId)
-
     revalidatePath('/')
     revalidatePath('/iching')
 

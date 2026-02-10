@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { fireTrigger } from '@/actions/quest-engine'
+import { isFeatureEnabled } from '@/lib/features'
 
 export async function castIChing() {
     const cookieStore = await cookies()
@@ -11,6 +12,11 @@ export async function castIChing() {
 
     if (!playerId) {
         return { error: 'Not logged in' }
+    }
+
+    const ichingEnabled = await isFeatureEnabled('iching', true)
+    if (!ichingEnabled) {
+        return { error: 'I Ching is currently disabled.' }
     }
 
     try {
@@ -48,6 +54,11 @@ export async function acceptReading(hexagramId: number) {
 
     if (!playerId) {
         return { error: 'Not logged in' }
+    }
+
+    const ichingEnabled = await isFeatureEnabled('iching', true)
+    if (!ichingEnabled) {
+        return { error: 'I Ching is currently disabled.' }
     }
 
     try {

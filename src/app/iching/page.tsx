@@ -1,12 +1,14 @@
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { CastingRitual } from '@/components/CastingRitual'
+import { IChingQuestCaster } from '@/components/IChingQuestCaster'
 import Link from 'next/link'
+import { isFeatureEnabled } from '@/lib/features'
 
 export default async function IChingPage() {
     const player = await getCurrentPlayer()
+    const ichingEnabled = await isFeatureEnabled('iching', true)
 
-    if (!player) {
+    if (!player || !ichingEnabled) {
         redirect('/')
     }
 
@@ -25,7 +27,7 @@ export default async function IChingPage() {
                 </header>
 
                 {/* Casting Ritual */}
-                <CastingRitual />
+                <IChingQuestCaster />
 
                 {/* Info Footer */}
                 <footer className="mt-16 text-center text-xs text-zinc-700 space-y-2">

@@ -31,7 +31,7 @@ type QuestThreadData = {
     currentQuest?: ThreadQuest | null
 }
 
-export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThreadData, completedMoveTypes?: string[] }) {
+export function QuestThread({ thread, completedMoveTypes, ichingEnabled = true }: { thread: QuestThreadData, completedMoveTypes?: string[], ichingEnabled?: boolean }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<ThreadQuest | null>(null)
@@ -212,6 +212,7 @@ export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThrea
                     isCompleted={selectedQuest.position < currentPos}
                     isLocked={selectedQuest.position > currentPos}
                     completedMoveTypes={completedMoveTypes}
+                    ichingEnabled={ichingEnabled}
                 />
             )}
         </>

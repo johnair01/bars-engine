@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { castIChing } from '@/actions/cast-iching'
-import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter } from 'next/navigation'
 
 type Hexagram = {
@@ -14,7 +13,7 @@ type Hexagram = {
 
 interface CastingRitualProps {
     mode?: 'page' | 'modal'
-    onComplete?: (hexagramId: number) => Promise<void>
+    onComplete: (hexagramId: number) => Promise<void>
     onCancel?: () => void
 }
 
@@ -84,15 +83,8 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
         setIsSubmitting(true)
 
         try {
-            if (onComplete) {
-                // If external handler provided (e.g., for AI generation), use it
-                await onComplete(hexagram.id)
-            } else {
-                // Default behavior: Generate and assign a quest from this reading
-                const result = await generateQuestFromReading(hexagram.id)
-                if (!result.success) throw new Error(result.error)
-                setMessage(result.message || 'The Oracle has spoken.')
-            }
+            await onComplete(hexagram.id)
+            setMessage('The Oracle has spoken.')
 
             setPhase('accepted')
 

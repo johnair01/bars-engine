@@ -30,7 +30,7 @@ type QuestPackData = {
     completedQuestIds: string[]
 }
 
-export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, completedMoveTypes?: string[] }) {
+export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { pack: QuestPackData, completedMoveTypes?: string[], ichingEnabled?: boolean }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<PackQuest | null>(null)
@@ -198,6 +198,7 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}
                     completedMoveTypes={completedMoveTypes}
+                    ichingEnabled={ichingEnabled}
                 />
             )}
         </div>

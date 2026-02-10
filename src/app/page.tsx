@@ -15,6 +15,7 @@ import { KotterGauge } from '@/components/KotterGauge'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
+import { parseFeatureFlags } from '@/lib/features'
 
 export default async function Home() {
   const cookieStore = await cookies()
@@ -22,6 +23,8 @@ export default async function Home() {
 
   // Get app config for dynamic content
   const appConfig = await getAppConfig()
+  const featureFlags = parseFeatureFlags(appConfig.features)
+  const ichingEnabled = featureFlags.iching !== false
   const heroTitle = appConfig.heroTitle || 'BARS ENGINE'
   const heroSubtitle = appConfig.heroSubtitle || 'A quest system for the vibrational convergence'
 
@@ -259,10 +262,10 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {threads.filter(t => !(t.playerProgress as any)?.isArchived).map(thread => (
-              <QuestThread key={thread.id} thread={thread as any} completedMoveTypes={completedMoveTypes} />
+              <QuestThread key={thread.id} thread={thread as any} completedMoveTypes={completedMoveTypes} ichingEnabled={ichingEnabled} />
             ))}
             {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} />
+              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} ichingEnabled={ichingEnabled} />
             ))}
           </div>
         </section>
@@ -345,7 +348,7 @@ export default async function Home() {
             </div>
 
             {/* I CHING */}
-            <DashboardCaster />
+            {ichingEnabled && <DashboardCaster />}
           </section>
         </div>
 
@@ -413,12 +416,12 @@ export default async function Home() {
                   {threads
                     .filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
                     .map(thread => (
-                      <QuestThread key={thread.id} thread={thread as any} />
+                      <QuestThread key={thread.id} thread={thread as any} ichingEnabled={ichingEnabled} />
                     ))}
                   {packs
                     .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
                     .map(pack => (
-                      <QuestPack key={pack.id} pack={pack as any} />
+                      <QuestPack key={pack.id} pack={pack as any} ichingEnabled={ichingEnabled} />
                     ))}
                 </div>
               </div>
