@@ -374,6 +374,10 @@ export async function updateNation(id: string, data: any) {
     })
     revalidatePath('/admin/world')
     revalidatePath(`/admin/world/nation/${id}`)
+    revalidatePath('/conclave')
+    revalidatePath('/conclave/guided')
+    revalidatePath(`/nation/${id}`)
+    revalidatePath('/')
 }
 
 export async function getAdminArchetype(id: string) {
@@ -408,6 +412,11 @@ export async function updateArchetype(id: string, data: any) {
     })
     revalidatePath('/admin/world')
     revalidatePath(`/admin/world/archetype/${id}`)
+    revalidatePath('/conclave')
+    revalidatePath('/conclave/guided')
+    revalidatePath(`/archetype/${id}`)
+    revalidatePath('/archetype')
+    revalidatePath('/')
 }
 
 // ===================================
