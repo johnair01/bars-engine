@@ -19,7 +19,7 @@ async function main() {
     console.log(`👤 Using player: ${player.name} (${player.id})`)
 
     const result = await castAndGenerateQuestForPlayer(player.id)
-    if ('error' in result) {
+    if (!result.success) {
         throw new Error(`I Ching quest generation failed: ${result.error}`)
     }
 

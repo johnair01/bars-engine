@@ -90,7 +90,7 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
             } else {
                 // Default behavior: Generate and assign a quest from this reading
                 const result = await generateQuestFromReading(hexagram.id)
-                if (result.error) throw new Error(result.error)
+                if (!result.success) throw new Error(result.error)
                 setMessage(result.message || 'The Oracle has spoken.')
             }
 

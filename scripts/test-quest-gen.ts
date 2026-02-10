@@ -24,7 +24,7 @@ async function main() {
 
     const result = await generateQuestCore(player.id, hexagramId)
 
-    if (result.error) {
+    if (!result.success) {
         console.error('❌ Generation Failed:', result.error)
     } else {
         console.log('✅ Generation Success!')

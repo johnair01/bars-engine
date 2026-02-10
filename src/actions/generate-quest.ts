@@ -8,11 +8,37 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { completeQuest, fireTrigger } from '@/actions/quest-engine'
 
+type QuestDraft = {
+    title: string
+    description: string
+    selectedMove: string
+}
+
+type ActionError = {
+    success: false
+    error: string
+}
+
+type QuestCoreSuccess = {
+    success: true
+    quest: QuestDraft
+    questId: string
+}
+
 type HexagramSummary = {
     id: number
     name: string
     tone: string
     text: string
+}
+
+type IChingQuestSuccess = QuestCoreSuccess & {
+    hexagram: HexagramSummary
+}
+
+function toErrorMessage(e: unknown): string {
+    if (e instanceof Error) return e.message
+    return String(e)
 }
 
 function normalizeHexagram(hexagram: { id: number, name: string, tone: string, text: string }): HexagramSummary {
@@ -64,9 +90,9 @@ async function tryCompleteOrientationQuestFromCast(playerId: string, hexagramId:
             hexagramId,
             generatedQuestId: generatedQuestId || null
         }, { threadId: threadQuest.threadId })
-    } catch (e: any) {
+    } catch (e: unknown) {
         // Keep quest generation successful even if orientation post-processing fails.
-        console.warn('[IChing] Orientation completion check failed:', e?.message)
+        console.warn('[IChing] Orientation completion check failed:', toErrorMessage(e))
     }
 }
 
@@ -79,11 +105,11 @@ async function runIChingQuestGeneration(playerId: string, hexagramId: number, op
 
     const hexagram = await getHexagramById(hexagramId)
     if (!hexagram) {
-        return { error: 'Hexagram not found' }
+        return { success: false, error: 'Hexagram not found' } satisfies ActionError
     }
 
     const result = await generateQuestCore(playerId, hexagramId)
-    if ('error' in result) {
+    if (!result.success) {
         return result
     }
 
@@ -96,7 +122,7 @@ async function runIChingQuestGeneration(playerId: string, hexagramId: number, op
         quest: result.quest,
         questId: result.questId,
         hexagram: normalizeHexagram(hexagram)
-    }
+    } satisfies IChingQuestSuccess
 }
 
 export async function generateQuestFromReading(hexagramId: number) {
@@ -104,12 +130,12 @@ export async function generateQuestFromReading(hexagramId: number) {
     const playerId = cookieStore.get('bars_player_id')?.value
 
     if (!playerId) {
-        return { error: 'Not logged in' }
+        return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
     const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
-    if ('error' in result) {
+    if (!result.success) {
         return result
     }
 
@@ -137,13 +163,13 @@ export async function castAndGenerateQuest() {
     const playerId = cookieStore.get('bars_player_id')?.value
 
     if (!playerId) {
-        return { error: 'Not logged in' }
+        return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
     const hexagramId = Math.floor(Math.random() * 64) + 1
     const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
-    if ('error' in result) {
+    if (!result.success) {
         return result
     }
 
@@ -183,7 +209,7 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
         })
 
         if (!player || !player.playbook) {
-            return { error: 'Player or playbook not found' }
+            return { success: false, error: 'Player or playbook not found' } satisfies ActionError
         }
 
         // 2. Fetch Hexagram
@@ -192,7 +218,7 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
         })
 
         if (!hexagram) {
-            return { error: 'Hexagram not found' }
+            return { success: false, error: 'Hexagram not found' } satisfies ActionError
         }
 
         // 3. Prepare AI Prompt
@@ -262,13 +288,13 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
 
         // revalidatePath('/') // Moved to wrapper
 
-        return { success: true, quest: object, questId: newBar.id }
+        return { success: true, quest: object, questId: newBar.id } satisfies QuestCoreSuccess
 
-    } catch (e: any) {
-        console.error("Generate quest failed:", e?.message)
+    } catch (e: unknown) {
+        console.error("Generate quest failed:", toErrorMessage(e))
         // Log stack for deep debugging
-        if (e.stack) console.error(e.stack)
+        if (e instanceof Error && e.stack) console.error(e.stack)
 
-        return { error: e?.message || 'Failed to generate quest' }
+        return { success: false, error: toErrorMessage(e) || 'Failed to generate quest' } satisfies ActionError
     }
 }

@@ -14,7 +14,7 @@ export function DashboardCaster() {
         // Trigger AI Quest Generation
         const result = await generateQuestFromReading(hexagramId)
 
-        if (result.error) {
+        if (!result.success) {
             throw new Error(result.error) // Bubble up to CastingRitual's error handler
         }
 
