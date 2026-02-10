@@ -179,6 +179,37 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     revalidatePath('/')
     revalidatePath('/story-clock')
     revalidatePath('/wallet')
+
+    // PROCESS COMPLETION EFFECTS
+    if (quest.completionEffects) {
+        try {
+            const effects = JSON.parse(quest.completionEffects) as any
+
+            // Example Effect: Update Player Profile
+            if (effects.updatePlayer) {
+                await db.player.update({
+                    where: { id: player.id },
+                    data: effects.updatePlayer
+                })
+            }
+
+            // Example Effect: Log specialized event
+            if (effects.logEvent) {
+                await db.auditLog.create({
+                    data: {
+                        actorAdminId: 'system',
+                        action: effects.logEvent.action || 'QUEST_EFFECT',
+                        targetType: 'player',
+                        targetId: player.id,
+                        payloadJson: JSON.stringify(effects.logEvent.payload || {})
+                    }
+                })
+            }
+        } catch (e) {
+            console.error("Failed to process quest completion effects", e)
+        }
+    }
+
     return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
 }
 /**

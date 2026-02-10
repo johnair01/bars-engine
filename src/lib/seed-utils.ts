@@ -472,5 +472,66 @@ export async function runSeed(prisma: PrismaClient) {
         })
     }
 
+    // 11. Twine Adventure Quest
+    const twineLogic = {
+        startPassageId: 'start',
+        passages: [
+            {
+                id: 'start',
+                text: 'You stand at the edge of the Whispering Woods. Two paths lie before you.',
+                choices: [
+                    { text: 'Take the shadowed path', targetId: 'shadow' },
+                    { text: 'Follow the sunlit trail', targetId: 'sunlit' }
+                ]
+            },
+            {
+                id: 'shadow',
+                text: 'The trees huddle close, their leaves muttering secrets. You find a glinting stone.',
+                choices: [
+                    { text: 'Pick up the stone', targetId: 'end', effects: { foundStone: true } },
+                    { text: 'Leave it alone', targetId: 'end' }
+                ]
+            },
+            {
+                id: 'sunlit',
+                text: 'The air is warm and smells of wild jasmine. A traveler hails you.',
+                choices: [
+                    { text: 'Speak with them', targetId: 'end', effects: { travelerBond: true } },
+                    { text: 'Wave and pass by', targetId: 'end' }
+                ]
+            },
+            {
+                id: 'end',
+                text: 'Your journey through the woods comes to an end. You feel changed by the experience.',
+                choices: [],
+                isFinal: true
+            }
+        ]
+    }
+
+    const completionEffects = {
+        updatePlayer: { pronouns: 'They/Them' }, // Just a test update
+        logEvent: { action: 'TWINE_COMPLETED', payload: { version: '0.1' } }
+    }
+
+    await prisma.customBar.upsert({
+        where: { id: 'twine-adventure-1' },
+        update: {
+            twineLogic: JSON.stringify(twineLogic),
+            completionEffects: JSON.stringify(completionEffects),
+        },
+        create: {
+            id: 'twine-adventure-1',
+            creatorId: adminPlayer.id,
+            title: 'The Whispering Woods',
+            description: 'A narrative journey into the unknown.',
+            type: 'story',
+            visibility: 'public',
+            reward: 2,
+            twineLogic: JSON.stringify(twineLogic),
+            completionEffects: JSON.stringify(completionEffects),
+        }
+    })
+
     console.log('Seeding complete.')
 }

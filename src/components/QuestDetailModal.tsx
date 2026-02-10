@@ -10,6 +10,8 @@ import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
 import { QuestInputs, BarInput } from './QuestInputs'
+import { QuestTwinePlayer } from './QuestTwinePlayer'
+import { TwineLogic } from '@/lib/twine-engine'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -21,6 +23,7 @@ interface QuestDetailModalProps {
         reward: number
         inputs?: string // JSON definition of inputs
         moveType?: string | null
+        twineLogic?: string | null // JSON string of TwineLogic
     }
     context?: {
         packId?: string
@@ -188,6 +191,30 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </div>
                     )}
 
+                    {/* TWINE NARRATIVE ENGINE */}
+                    {quest.twineLogic && !isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && (
+                        <QuestTwinePlayer
+                            logic={JSON.parse(quest.twineLogic) as TwineLogic}
+                            onComplete={(vars) => {
+                                setResponses(prev => ({ ...prev, ...vars }))
+                                // We can either auto-complete here or just enable the button
+                                // Let's trigger a transition for a smooth feel
+                                startTransition(async () => {
+                                    const result = await completeQuest(quest.id, { ...responses, ...vars }, context)
+                                    if (result.success) {
+                                        setFeedback('✨ Quest Complete!')
+                                        setTimeout(() => {
+                                            setFeedback(null)
+                                            onClose()
+                                        }, 1500)
+                                    } else {
+                                        setFeedback(`❌ ${result.error}`)
+                                    }
+                                })
+                            }}
+                        />
+                    )}
+
                     {/* INTERACTIVE ARCHETYPE READER */}
                     {isArchetypeQuest && !isCompleted && (
                         <div className="animate-in fade-in duration-700">
@@ -235,7 +262,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Input (if not completed and not locked) */}
-                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && (
+                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !quest.twineLogic && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
                             {quest.inputs?.includes('"trigger":"ICHING_CAST"') || quest.id === 'orientation-quest-3' ? (
@@ -298,7 +325,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             {isCompleted ? 'Done' : 'Cancel'}
                         </button>
 
-                        {!isCompleted && !isLocked && (
+                        {!isCompleted && !isLocked && !quest.twineLogic && (
                             <button
                                 onClick={handleComplete}
                                 // Disable for triggered quests (except archetype reader)
