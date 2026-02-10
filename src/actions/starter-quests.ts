@@ -31,7 +31,7 @@ export async function completeStarterQuest(formData: FormData) {
         // 4. Onboarding checks
         const result = await completeQuest(barId, inputs)
 
-        if (result.success) {
+        if ('success' in result && result.success) {
             revalidatePath('/')
         }
 
