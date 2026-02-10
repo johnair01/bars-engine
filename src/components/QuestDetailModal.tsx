@@ -12,6 +12,7 @@ import { getTransferContext } from '@/actions/economy'
 import { QuestInputs, BarInput } from './QuestInputs'
 import { QuestTwinePlayer } from './QuestTwinePlayer'
 import { TwineLogic } from '@/lib/twine-engine'
+import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -35,11 +36,31 @@ interface QuestDetailModalProps {
     completedMoveTypes?: string[] // Optional: types already achieved by player
 }
 
+function parseQuestInputs(inputs?: string): BarInput[] {
+    if (!inputs) return []
+    try {
+        const parsed = JSON.parse(inputs)
+        return Array.isArray(parsed) ? parsed : []
+    } catch {
+        return []
+    }
+}
+
+function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
+    if (!twineLogic) return null
+    try {
+        return JSON.parse(twineLogic) as TwineLogic
+    } catch {
+        return null
+    }
+}
+
 export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes }: QuestDetailModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [responses, setResponses] = useState<Record<string, any>>({})
+    const [intentionMode, setIntentionMode] = useState<'direct' | 'guided'>('direct')
 
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
@@ -68,6 +89,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
             setTransferContext(null)
         }
     }, [isOpen, quest.id, isCompleted])
+
+    useEffect(() => {
+        if (!isOpen) {
+            setResponses({})
+            setFeedback(null)
+            setIntentionMode('direct')
+        }
+    }, [isOpen, quest.id])
 
     // Detect Scroll for specialized quests
     const handleScroll = () => {
@@ -99,6 +128,25 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
     const isArchetypeQuest = quest.id === 'orientation-quest-2'
     const isTransferQuest = quest.id === 'orientation-quest-4'
+    const isIntentionQuest = quest.id === 'orientation-quest-1'
+
+    const parsedInputs = parseQuestInputs(quest.inputs)
+    const effectiveInputs: BarInput[] = isIntentionQuest && parsedInputs.length === 0
+        ? [...DEFAULT_INTENTION_INPUTS] as unknown as BarInput[]
+        : parsedInputs
+
+    const parsedTwineLogic = parseTwineLogic(quest.twineLogic)
+    const effectiveTwineLogic: TwineLogic | null = isIntentionQuest
+        ? parsedTwineLogic || INTENTION_GUIDED_TWINE_LOGIC
+        : parsedTwineLogic
+
+    const showingGuidedIntention = isIntentionQuest && intentionMode === 'guided'
+    const shouldRenderTwine = !!effectiveTwineLogic
+        && !isCompleted
+        && !isLocked
+        && !isArchetypeQuest
+        && !isTransferQuest
+        && (!isIntentionQuest || showingGuidedIntention)
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -176,6 +224,37 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         return null
                     })()}
 
+                    {/* Intention Quest: Direct vs Guided Path */}
+                    {isIntentionQuest && !isCompleted && !isLocked && (
+                        <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+                            <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Choose your path</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIntentionMode('direct')}
+                                    className={`rounded-lg border px-3 py-2 text-left text-sm transition ${intentionMode === 'direct'
+                                        ? 'border-purple-500 bg-purple-900/30 text-purple-100'
+                                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    <div className="font-semibold">Write intention directly</div>
+                                    <div className="text-xs text-zinc-500 mt-1">I already know what I want to commit to.</div>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIntentionMode('guided')}
+                                    className={`rounded-lg border px-3 py-2 text-left text-sm transition ${intentionMode === 'guided'
+                                        ? 'border-emerald-500 bg-emerald-900/20 text-emerald-100'
+                                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    <div className="font-semibold">Need help figuring it out?</div>
+                                    <div className="text-xs text-zinc-500 mt-1">Use a guided journey to discover an intention.</div>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Description (If regular quest or if not completed archetype/transfer) */}
                     {(!isArchetypeQuest && !isTransferQuest || isCompleted) && (
                         <div className="prose prose-invert prose-sm">
@@ -192,15 +271,20 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* TWINE NARRATIVE ENGINE */}
-                    {quest.twineLogic && !isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && (
+                    {shouldRenderTwine && effectiveTwineLogic && (
                         <QuestTwinePlayer
-                            logic={JSON.parse(quest.twineLogic) as TwineLogic}
+                            logic={effectiveTwineLogic}
                             onComplete={(vars) => {
-                                setResponses(prev => ({ ...prev, ...vars }))
-                                // We can either auto-complete here or just enable the button
-                                // Let's trigger a transition for a smooth feel
+                                const mergedResponses = { ...responses, ...vars }
+
+                                if (isIntentionQuest && !mergedResponses.intention) {
+                                    setFeedback('❌ Guided journey completed but intention was not captured. Please try again.')
+                                    return
+                                }
+
+                                setResponses(mergedResponses)
                                 startTransition(async () => {
-                                    const result = await completeQuest(quest.id, { ...responses, ...vars }, context)
+                                    const result = await completeQuest(quest.id, mergedResponses, context)
                                     if (result.success) {
                                         setFeedback('✨ Quest Complete!')
                                         setTimeout(() => {
@@ -262,10 +346,10 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Input (if not completed and not locked) */}
-                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !quest.twineLogic && (
+                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !shouldRenderTwine && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
-                            {quest.inputs?.includes('"trigger":"ICHING_CAST"') || quest.id === 'orientation-quest-3' ? (
+                            {effectiveInputs.some(input => input.trigger === 'ICHING_CAST') || quest.id === 'orientation-quest-3' ? (
                                 <div className="bg-black/50 rounded-xl border border-zinc-800 p-4">
                                     <h4 className="text-center text-yellow-500 font-bold mb-4 uppercase tracking-[0.2em] text-xs">Consult the Oracle</h4>
                                     <CastingRitual
@@ -286,7 +370,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 </div>
                             ) : (
                                 <QuestInputs
-                                    inputs={quest.inputs || '[]'}
+                                    inputs={effectiveInputs}
                                     values={responses}
                                     onChange={(key, value) => setResponses(prev => ({ ...prev, [key]: value }))}
                                 />
@@ -325,17 +409,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             {isCompleted ? 'Done' : 'Cancel'}
                         </button>
 
-                        {!isCompleted && !isLocked && !quest.twineLogic && (
+                        {!isCompleted && !isLocked && !shouldRenderTwine && (
                             <button
                                 onClick={handleComplete}
                                 // Disable for triggered quests (except archetype reader)
-                                hidden={quest.inputs?.includes('"trigger":"ICHING_CAST"') ||
+                                hidden={effectiveInputs.some(input => input.trigger === 'ICHING_CAST') ||
                                     quest.id === 'orientation-quest-3'}
                                 disabled={isPending || (isArchetypeQuest && !hasScrolledToBottom) || (!isArchetypeQuest && (() => {
-                                    const inputList: BarInput[] = typeof quest.inputs === 'string' ? JSON.parse(quest.inputs || '[]') : (quest.inputs || [])
-                                    const requiredMissing = inputList.some(input => input.required && !responses[input.key])
-                                    // If no inputs are defined and it's not archetype, we need at least some response normally? 
-                                    // But user asked for everything to be optional.
+                                    const requiredMissing = effectiveInputs.some(input => input.required && !responses[input.key])
                                     return requiredMissing
                                 })())}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest
