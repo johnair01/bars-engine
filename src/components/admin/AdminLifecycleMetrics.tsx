@@ -16,6 +16,11 @@ export function AdminLifecycleMetrics() {
                 return
             }
 
+            if (!result.metrics) {
+                setError('Metrics payload missing from response')
+                return
+            }
+
             setError(null)
             setMetrics(result.metrics)
         })
