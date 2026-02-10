@@ -142,18 +142,6 @@ export default async function Home() {
     orderBy: { createdAt: 'desc' }
   })
 
-  // Fetch active I Ching readings for this player
-  const ichingReadings = await db.playerBar.findMany({
-    where: {
-      playerId,
-      source: 'iching',
-    },
-    include: {
-      bar: true
-    },
-    orderBy: { acquiredAt: 'desc' }
-  })
-
   const globalState = await getGlobalState()
 
   // Get onboarding status
@@ -286,7 +274,6 @@ export default async function Home() {
               activeBars={activeBars}
               // Filter out 'inspiration' type for the main list
               customBars={visibleCustomBars.filter(b => b.type !== 'inspiration')}
-              ichingBars={ichingReadings}
               potentialDelegates={potentialDelegates}
               view="active"
             />
@@ -307,7 +294,6 @@ export default async function Home() {
                   completedBars={completedBars}
                   activeBars={activeBars}
                   customBars={visibleCustomBars.filter(b => b.type === 'inspiration')}
-                  ichingBars={ichingReadings}
                   potentialDelegates={potentialDelegates}
                   view="active"
                 />

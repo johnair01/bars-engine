@@ -269,31 +269,16 @@ type CustomBarDef = {
     moveType: string | null
 }
 
-
-// Type for I Ching bars from DB (via PlayerBar)
-type IChingBarDef = {
-    id: string // PlayerBar id (CUID)
-    barId: number // Hexagram id
-    bar: {
-        id: number
-        name: string
-        tone: string
-        text: string
-    }
-}
-
 export function StarterQuestBoard({
     completedBars,
     activeBars = [],
     customBars = [],
-    ichingBars = [],
     potentialDelegates = [], // New prop
     view
 }: {
     completedBars: CompletedBar[],
     activeBars?: string[],
     customBars?: CustomBarDef[],
-    ichingBars?: IChingBarDef[],
     potentialDelegates?: { id: string, name: string }[], // New prop type
     view: 'available' | 'active' | 'completed'
 }) {
@@ -388,26 +373,8 @@ export function StarterQuestBoard({
         moveType: cb.moveType,
     }))
 
-    // Convert I Ching readings to BarDef format
-    const ichingAsBarDef: BarDef[] = ichingBars.map(ib => ({
-        id: `iching_${ib.bar.id}`,
-        title: `Hexagram ${ib.bar.id}: ${ib.bar.name}`,
-        description: ib.bar.tone, // Use tone as description
-        type: 'vibe', // Treat as vibe bar
-        reward: 1,
-        inputs: [{
-            key: 'reflection',
-            label: 'Reflection',
-            type: 'textarea',
-            placeholder: 'How does this hexagram resonate with your current situation?'
-        }],
-        unique: false,
-    }))
-
-    // Merge starter bars with custom bars and I Ching bars
-    // Note: I Ching bars are only ever "active" or "completed", they don't appear in "available" usually (unless we wanted to show past ones)
-    // But since localActive contains 'iching_X', we need them in allBars to be found by the filter.
-    const allBars = [...customAsBarDef, ...ichingAsBarDef]
+    // Canonical quest state comes from CustomBar + PlayerQuest.
+    const allBars = [...customAsBarDef]
 
     const availableBars = allBars.filter(b => !localCompleted.includes(b.id) && !localActive.includes(b.id))
     // const activeBarsFiltered = allBars.filter(b => localActive.includes(b.id)) // Original line

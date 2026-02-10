@@ -1,15 +1,22 @@
 'use client'
 
-import { startThread, advanceThread, archiveThread } from '@/actions/quest-thread'
+import { startThread, archiveThread } from '@/actions/quest-thread'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
 
 type ThreadQuest = {
     id: string
     questId: string
     position: number
-    quest?: { title: string, description: string | null, reward: number }
+    quest?: {
+        id: string
+        title: string
+        description: string | null
+        reward: number
+        inputs: string
+        moveType: string | null
+    }
 }
 
 type ThreadProgress = {
@@ -146,21 +153,16 @@ export function QuestThread({ thread, completedMoveTypes, ichingEnabled = true }
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between">
                                         <span className={`font-medium truncate ${isDone && 'line-through'}`}>
-                                            {/* @ts-ignore - quest is joined */}
                                             {tq.quest?.title || `Quest ${pos}`}
                                         </span>
-                                        {/* @ts-ignore */}
                                         {tq.quest?.reward > 0 && !isDone && (
                                             <span className="text-xs text-yellow-500 ml-2">
-                                                {/* @ts-ignore */}
                                                 +{tq.quest.reward}ⓥ
                                             </span>
                                         )}
                                     </div>
-                                    {/* @ts-ignore */}
                                     {isCurrent && tq.quest?.description && (
                                         <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
-                                            {/* @ts-ignore */}
                                             {tq.quest.description}
                                         </p>
                                     )}
@@ -199,14 +201,12 @@ export function QuestThread({ thread, completedMoveTypes, ichingEnabled = true }
                     isOpen={!!selectedQuest}
                     onClose={() => setSelectedQuest(null)}
                     quest={{
-                        // @ts-ignore
-                        id: selectedQuest.quest!.id,
-                        // @ts-ignore
-                        title: selectedQuest.quest!.title,
-                        // @ts-ignore
-                        description: selectedQuest.quest!.description,
-                        // @ts-ignore
-                        reward: selectedQuest.quest!.reward || 1,
+                        id: selectedQuest.quest.id,
+                        title: selectedQuest.quest.title,
+                        description: selectedQuest.quest.description,
+                        reward: selectedQuest.quest.reward || 1,
+                        inputs: selectedQuest.quest.inputs,
+                        moveType: selectedQuest.quest.moveType,
                     }}
                     context={{ threadId: thread.id }}
                     isCompleted={selectedQuest.position < currentPos}

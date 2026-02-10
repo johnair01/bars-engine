@@ -77,7 +77,6 @@ export default async function HandPage() {
                         completedBars={[]}
                         activeBars={[]}
                         customBars={privateDrafts}
-                        ichingBars={[]}
                         view="available" // Render as cards we can interact with (edit/assign?)
                     />
                 )}

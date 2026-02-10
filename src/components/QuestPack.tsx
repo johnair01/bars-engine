@@ -8,7 +8,14 @@ import { QuestDetailModal } from './QuestDetailModal'
 type PackQuest = {
     id: string
     questId: string
-    quest?: { title: string, reward: number }
+    quest?: {
+        id: string
+        title: string
+        description: string | null
+        reward: number
+        inputs: string
+        moveType: string | null
+    }
 }
 
 type PackProgress = {
@@ -28,6 +35,7 @@ type QuestPackData = {
     totalQuests: number
     completedCount: number
     completedQuestIds: string[]
+    isCreator?: boolean
 }
 
 export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { pack: QuestPackData, completedMoveTypes?: string[], ichingEnabled?: boolean }) {
@@ -128,13 +136,10 @@ export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { 
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-center text-sm">
                                     <span className={`font-medium truncate text-zinc-300 ${isDone && 'line-through text-zinc-500'}`}>
-                                        {/* @ts-ignore */}
                                         {pq.quest?.title || 'Unknown Quest'}
                                     </span>
-                                    {/* @ts-ignore */}
                                     {!isDone && pq.quest?.reward > 0 && (
                                         <span className="text-xs text-yellow-500 font-mono">
-                                            {/* @ts-ignore */}
                                             +{pq.quest.reward}ⓥ
                                         </span>
                                     )}
@@ -157,7 +162,6 @@ export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { 
             )}
 
             <div className="space-y-2">
-                {/* @ts-ignore */}
                 {pack.isCreator && (
                     <button
                         onClick={() => {
@@ -186,14 +190,12 @@ export function QuestPack({ pack, completedMoveTypes, ichingEnabled = true }: { 
                     isOpen={!!selectedQuest}
                     onClose={() => setSelectedQuest(null)}
                     quest={{
-                        // @ts-ignore
-                        id: selectedQuest.quest!.id,
-                        // @ts-ignore
-                        title: selectedQuest.quest!.title,
-                        // @ts-ignore
-                        description: selectedQuest.quest!.description,
-                        // @ts-ignore
-                        reward: selectedQuest.quest!.reward || 1,
+                        id: selectedQuest.quest.id,
+                        title: selectedQuest.quest.title,
+                        description: selectedQuest.quest.description,
+                        reward: selectedQuest.quest.reward || 1,
+                        inputs: selectedQuest.quest.inputs,
+                        moveType: selectedQuest.quest.moveType,
                     }}
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}
