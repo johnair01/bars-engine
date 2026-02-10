@@ -6,7 +6,98 @@ import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { completeQuest } from '@/actions/quest-engine'
+import { completeQuest, fireTrigger } from '@/actions/quest-engine'
+
+type HexagramSummary = {
+    id: number
+    name: string
+    tone: string
+    text: string
+}
+
+function normalizeHexagram(hexagram: { id: number, name: string, tone: string, text: string }): HexagramSummary {
+    return {
+        id: hexagram.id,
+        name: hexagram.name,
+        tone: hexagram.tone,
+        text: hexagram.text,
+    }
+}
+
+async function getHexagramById(hexagramId: number) {
+    return db.bar.findUnique({
+        where: { id: hexagramId }
+    })
+}
+
+async function recordIChingReadingHistory(playerId: string, hexagramId: number) {
+    await db.playerBar.create({
+        data: {
+            playerId,
+            barId: hexagramId,
+            source: 'iching',
+            notes: `Cast on ${new Date().toLocaleDateString()}`
+        }
+    })
+}
+
+async function tryCompleteOrientationQuestFromCast(playerId: string, hexagramId: number, generatedQuestId?: string) {
+    try {
+        const threadQuest = await db.threadQuest.findFirst({
+            where: { questId: 'orientation-quest-3' }
+        })
+
+        if (!threadQuest) return
+
+        const progress = await db.threadProgress.findUnique({
+            where: {
+                threadId_playerId: {
+                    threadId: threadQuest.threadId,
+                    playerId
+                }
+            }
+        })
+
+        if (!progress) return
+
+        await completeQuest(threadQuest.questId, {
+            hexagramId,
+            generatedQuestId: generatedQuestId || null
+        }, { threadId: threadQuest.threadId })
+    } catch (e: any) {
+        // Keep quest generation successful even if orientation post-processing fails.
+        console.warn('[IChing] Orientation completion check failed:', e?.message)
+    }
+}
+
+type GenerationOptions = {
+    recordReading?: boolean
+}
+
+async function runIChingQuestGeneration(playerId: string, hexagramId: number, options: GenerationOptions = {}) {
+    const recordReading = options.recordReading !== false
+
+    const hexagram = await getHexagramById(hexagramId)
+    if (!hexagram) {
+        return { error: 'Hexagram not found' }
+    }
+
+    const result = await generateQuestCore(playerId, hexagramId)
+    if ('error' in result) {
+        return result
+    }
+
+    if (recordReading) {
+        await recordIChingReadingHistory(playerId, hexagramId)
+    }
+
+    return {
+        success: true as const,
+        quest: result.quest,
+        questId: result.questId,
+        hexagram: normalizeHexagram(hexagram)
+    }
+}
 
 export async function generateQuestFromReading(hexagramId: number) {
     const cookieStore = await cookies()
@@ -16,37 +107,71 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { error: 'Not logged in' }
     }
 
-    const result = await generateQuestCore(playerId, hexagramId)
+    const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
-    if (result.success) {
-        // CHECK FOR QUEST COMPLETION (orientation-quest-3)
-        // Check for thread participation instead of assignment
-        const threadQuest = await db.threadQuest.findFirst({
-            where: { questId: 'orientation-quest-3' }
-        })
-
-        if (threadQuest) {
-            const progress = await db.threadProgress.findUnique({
-                where: {
-                    threadId_playerId: {
-                        threadId: threadQuest.threadId,
-                        playerId
-                    }
-                }
-            })
-
-            if (progress) {
-                await completeQuest(threadQuest.questId, {
-                    hexagramId,
-                    generatedQuestId: result.quest?.title
-                }, { threadId: threadQuest.threadId })
-            }
-        }
-
-        revalidatePath('/')
+    if ('error' in result) {
+        return result
     }
 
-    return result
+    // Trigger listeners (legacy + future trigger-based flows)
+    await fireTrigger('ICHING_CAST')
+
+    // Hard guard for current orientation flow until trigger metadata is fully migrated.
+    await tryCompleteOrientationQuestFromCast(playerId, hexagramId, result.questId)
+
+    revalidatePath('/')
+    revalidatePath('/iching')
+
+    return {
+        ...result,
+        message: 'The Oracle has spoken. A quest has been added to your board.'
+    }
+}
+
+/**
+ * Unified one-call path for Phase 1:
+ * cast -> generate quest -> assign -> record reading -> fire trigger.
+ */
+export async function castAndGenerateQuest() {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { error: 'Not logged in' }
+    }
+
+    const hexagramId = Math.floor(Math.random() * 64) + 1
+    const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
+
+    if ('error' in result) {
+        return result
+    }
+
+    await fireTrigger('ICHING_CAST')
+    await tryCompleteOrientationQuestFromCast(playerId, hexagramId, result.questId)
+
+    revalidatePath('/')
+    revalidatePath('/iching')
+
+    return {
+        ...result,
+        message: 'The Oracle has spoken. A quest has been added to your board.'
+    }
+}
+
+/**
+ * Script-friendly helper (no cookies/context required).
+ */
+export async function castAndGenerateQuestForPlayer(playerId: string) {
+    const hexagramId = Math.floor(Math.random() * 64) + 1
+    return runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
+}
+
+/**
+ * Script-friendly helper (no cookies/context required).
+ */
+export async function generateQuestFromReadingForPlayer(playerId: string, hexagramId: number) {
+    return runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 }
 
 export async function generateQuestCore(playerId: string, hexagramId: number) {
@@ -137,7 +262,7 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
 
         // revalidatePath('/') // Moved to wrapper
 
-        return { success: true, quest: object }
+        return { success: true, quest: object, questId: newBar.id }
 
     } catch (e: any) {
         console.error("Generate quest failed:", e?.message)

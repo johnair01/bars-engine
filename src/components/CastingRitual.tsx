@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { castIChing, acceptReading } from '@/actions/cast-iching'
+import { castIChing } from '@/actions/cast-iching'
+import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter } from 'next/navigation'
 
 type Hexagram = {
@@ -87,10 +88,10 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
                 // If external handler provided (e.g., for AI generation), use it
                 await onComplete(hexagram.id)
             } else {
-                // Default behavior: Add to active bars
-                const result = await acceptReading(hexagram.id)
+                // Default behavior: Generate and assign a quest from this reading
+                const result = await generateQuestFromReading(hexagram.id)
                 if (result.error) throw new Error(result.error)
-                setMessage(result.message || 'Reading accepted!')
+                setMessage(result.message || 'The Oracle has spoken.')
             }
 
             setPhase('accepted')

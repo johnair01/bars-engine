@@ -59,7 +59,8 @@ export async function acceptReading(hexagramId: number) {
             return { error: 'Hexagram not found' }
         }
 
-        // Record this reading as a PlayerBar
+        // Legacy path: keep as history-only recording.
+        // Canonical quest lifecycle now lives in generateQuestFromReading / castAndGenerateQuest.
         await db.playerBar.create({
             data: {
                 playerId,
@@ -69,40 +70,15 @@ export async function acceptReading(hexagramId: number) {
             }
         })
 
-        // Also add to starterPack activeBars for dashboard display
-        const starterPack = await db.starterPack.findUnique({
-            where: { playerId }
-        })
-
-        if (starterPack) {
-            const data = JSON.parse(starterPack.data) as {
-                completedBars: any[],
-                activeBars: string[]
-            }
-
-            if (!data.activeBars) data.activeBars = []
-
-            // Add with iching_ prefix to distinguish
-            const ichingBarId = `iching_${hexagramId}`
-            if (!data.activeBars.includes(ichingBarId)) {
-                data.activeBars.push(ichingBarId)
-            }
-
-            await db.starterPack.update({
-                where: { playerId },
-                data: { data: JSON.stringify(data) }
-            })
-
-            // Fire orientation quest trigger
-            await fireTrigger('ICHING_CAST')
-        }
+        // Fire orientation trigger listeners for backward compatibility.
+        await fireTrigger('ICHING_CAST')
 
         revalidatePath('/')
         revalidatePath('/iching')
 
         return {
             success: true,
-            message: `${hexagram.name} has been added to your active quests.`
+            message: `${hexagram.name} has been added to your reading history.`
         }
 
     } catch (e: any) {
