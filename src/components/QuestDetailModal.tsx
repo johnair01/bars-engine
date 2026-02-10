@@ -9,6 +9,7 @@ import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
+import { QuestInputs, BarInput } from './QuestInputs'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -35,7 +36,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
-    const [response, setResponse] = useState('')
+    const [responses, setResponses] = useState<Record<string, any>>({})
 
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
@@ -80,7 +81,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const handleComplete = () => {
         if (isPending) return
         startTransition(async () => {
-            const result = await completeQuest(quest.id, { response, autoTriggered: archetypeData ? true : false }, context)
+            const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, context)
             if (result.success) {
                 setFeedback('✨ Quest Complete!')
                 setTimeout(() => {
@@ -257,18 +258,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     />
                                 </div>
                             ) : (
-                                <>
-                                    <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">
-                                        Your Response
-                                    </label>
-                                    <textarea
-                                        value={response}
-                                        onChange={(e) => setResponse(e.target.value)}
-                                        placeholder="Reflect on your experience..."
-                                        rows={3}
-                                        className="w-full bg-black border border-zinc-800 rounded-lg p-3 text-white placeholder:text-zinc-700 focus:border-purple-500/50 outline-none transition-all"
-                                    />
-                                </>
+                                <QuestInputs
+                                    inputs={quest.inputs || '[]'}
+                                    values={responses}
+                                    onChange={(key, value) => setResponses(prev => ({ ...prev, [key]: value }))}
+                                />
                             )}
                         </div>
                     )}
@@ -310,7 +304,13 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 // Disable for triggered quests (except archetype reader)
                                 hidden={quest.inputs?.includes('"trigger":"ICHING_CAST"') ||
                                     quest.id === 'orientation-quest-3'}
-                                disabled={isPending || (!isArchetypeQuest && !response.trim()) || (isArchetypeQuest && !hasScrolledToBottom)}
+                                disabled={isPending || (isArchetypeQuest && !hasScrolledToBottom) || (!isArchetypeQuest && (() => {
+                                    const inputList: BarInput[] = typeof quest.inputs === 'string' ? JSON.parse(quest.inputs || '[]') : (quest.inputs || [])
+                                    const requiredMissing = inputList.some(input => input.required && !responses[input.key])
+                                    // If no inputs are defined and it's not archetype, we need at least some response normally? 
+                                    // But user asked for everything to be optional.
+                                    return requiredMissing
+                                })())}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest
                                     ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
                                     : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20'

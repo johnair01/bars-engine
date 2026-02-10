@@ -397,6 +397,7 @@ export async function runSeed(prisma: PrismaClient) {
                     key: 'sentiment',
                     label: 'Resonance (Overall Vibe)',
                     type: 'select',
+                    required: false,
                     options: [
                         'Emerald (High resonance, I am finding my flow)',
                         'Amber (Static present, curious but occasionally stuck)',
@@ -407,13 +408,14 @@ export async function runSeed(prisma: PrismaClient) {
                     key: 'clarity',
                     label: 'Game Grammar (Clarity of Action)',
                     type: 'select',
+                    required: false,
                     options: [
                         'Clear Path (I know exactly what my next move is)',
                         'Foggy (I understand the vibe, but the grammar is fuzzy)',
                         'Blind (The system feels like a black box)'
                     ]
                 },
-                { key: 'feedback', label: 'Transmission', type: 'textarea', placeholder: 'What specific friction or magic did you encounter?' }
+                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' }
             ]),
             isSystem: true,
             reward: 1
@@ -433,6 +435,7 @@ export async function runSeed(prisma: PrismaClient) {
                     key: 'sentiment',
                     label: 'Resonance (Overall Vibe)',
                     type: 'select',
+                    required: false,
                     options: [
                         'Emerald (High resonance, I am finding my flow)',
                         'Amber (Static present, curious but occasionally stuck)',
@@ -443,13 +446,14 @@ export async function runSeed(prisma: PrismaClient) {
                     key: 'clarity',
                     label: 'Game Grammar (Clarity of Action)',
                     type: 'select',
+                    required: false,
                     options: [
                         'Clear Path (I know exactly what my next move is)',
                         'Foggy (I understand the vibe, but the grammar is fuzzy)',
                         'Blind (The system feels like a black box)'
                     ]
                 },
-                { key: 'feedback', label: 'Transmission', type: 'textarea', placeholder: 'What specific friction or magic did you encounter?' }
+                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' }
             ])
         }
     })
