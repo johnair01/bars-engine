@@ -59,17 +59,53 @@ export default async function Home() {
     )
   }
 
-  const player = await db.player.findUnique({
-    where: { id: playerId },
-    include: {
-      nation: true,
-      playbook: true,
-      roles: { include: { role: true } },
-      quests: { include: { quest: true } },
-      vibulonEvents: true,
-      starterPack: true,
-    }
-  })
+  const commonPlayerInclude = {
+    nation: true,
+    roles: { include: { role: true } },
+    quests: { include: { quest: true } },
+    vibulonEvents: true,
+    starterPack: true,
+  } as const
+
+  let player = null
+  try {
+    player = await db.player.findUnique({
+      where: { id: playerId },
+      include: {
+        ...commonPlayerInclude,
+        playbook: true,
+      }
+    })
+  } catch {
+    // Fallback for temporary schema drift during deployment rollout.
+    player = await db.player.findUnique({
+      where: { id: playerId },
+      include: {
+        ...commonPlayerInclude,
+        playbook: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            moves: true,
+            content: true,
+            centralConflict: true,
+            primaryQuestion: true,
+            vibe: true,
+            energy: true,
+            shadowSignposts: true,
+            lightSignposts: true,
+            examples: true,
+            wakeUp: true,
+            cleanUp: true,
+            growUp: true,
+            showUp: true,
+            createdAt: true,
+          }
+        },
+      }
+    })
+  }
 
   if (!player) {
     return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
@@ -146,7 +182,7 @@ export default async function Home() {
     try {
       const allowed = JSON.parse(bar.allowedTrigrams)
       return player.playbook && allowed.includes(player.playbook.name)
-    } catch (e) {
+    } catch {
       return true // Fallback to visible if error
     }
   })

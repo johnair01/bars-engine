@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && ( [ -n \"$DATABASE_URL\" ] && prisma db push || echo \"Skipping prisma db push (DATABASE_URL not set)\" ) && next build",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
