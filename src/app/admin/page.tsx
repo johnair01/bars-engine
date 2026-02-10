@@ -2,6 +2,7 @@ import { getGlobalState } from '@/actions/world'
 import { AdminTiltControl } from '@/components/admin/AdminTiltControl'
 import { AdminResetZone } from '@/components/admin/AdminResetZone'
 import { AdminIChingHardening } from '@/components/admin/AdminIChingHardening'
+import { AdminLifecycleMetrics } from '@/components/admin/AdminLifecycleMetrics'
 
 export default async function AdminDashboard() {
     const globalState = await getGlobalState()
@@ -57,6 +58,7 @@ export default async function AdminDashboard() {
             </div>
 
             <AdminIChingHardening />
+            <AdminLifecycleMetrics />
 
             {/* DANGER ZONE */}
             <AdminResetZone />

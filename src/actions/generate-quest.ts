@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { fireTrigger } from '@/actions/quest-engine'
 import { isFeatureEnabled } from '@/lib/features'
+import { getIChingCooldownBlock } from '@/lib/iching-cooldown'
+import { logLifecycleEvent } from '@/lib/lifecycle-events'
 
 type QuestDraft = {
     title: string
@@ -46,6 +48,16 @@ async function ensureIChingEnabled(): Promise<ActionError | null> {
     const enabled = await isFeatureEnabled('iching', true)
     if (enabled) return null
     return { success: false, error: 'I Ching is currently disabled.' }
+}
+
+async function ensureIChingCooldown(playerId: string): Promise<ActionError | null> {
+    const cooldown = await getIChingCooldownBlock(playerId)
+    if (!cooldown) return null
+
+    return {
+        success: false,
+        error: `The oracle is still settling. Please wait ${cooldown.remainingSeconds}s before casting again.`,
+    }
 }
 
 function normalizeHexagram(hexagram: { id: number, name: string, tone: string, text: string }): HexagramSummary {
@@ -111,24 +123,61 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
+    await logLifecycleEvent(playerId, 'ICHING_CAST_ATTEMPT', {
+        metadata: { path: 'generateQuestFromReading', hexagramId }
+    })
+
     const featureError = await ensureIChingEnabled()
-    if (featureError) return featureError
-
-    const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
-
-    if (!result.success) {
-        return result
+    if (featureError) {
+        await logLifecycleEvent(playerId, 'ICHING_CAST_FAILED', {
+            metadata: { reason: featureError.error, path: 'generateQuestFromReading' }
+        })
+        return featureError
     }
 
-    // Trigger listeners (legacy + future trigger-based flows)
-    await fireTrigger('ICHING_CAST')
+    const cooldownError = await ensureIChingCooldown(playerId)
+    if (cooldownError) {
+        await logLifecycleEvent(playerId, 'ICHING_CAST_COOLDOWN_BLOCKED', {
+            metadata: { path: 'generateQuestFromReading', hexagramId }
+        })
+        return cooldownError
+    }
 
-    revalidatePath('/')
-    revalidatePath('/iching')
+    try {
+        const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
 
-    return {
-        ...result,
-        message: 'The Oracle has spoken. A quest has been added to your board.'
+        if (!result.success) {
+            await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATION_FAILED', {
+                metadata: { reason: result.error, hexagramId, path: 'generateQuestFromReading' }
+            })
+            return result
+        }
+
+        // Trigger listeners (legacy + future trigger-based flows)
+        await fireTrigger('ICHING_CAST')
+
+        revalidatePath('/')
+        revalidatePath('/iching')
+
+        await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATED', {
+            questId: result.questId,
+            metadata: {
+                hexagramId: result.hexagram.id,
+                hexagramName: result.hexagram.name,
+                path: 'generateQuestFromReading'
+            }
+        })
+
+        return {
+            ...result,
+            message: 'The Oracle has spoken. A quest has been added to your board.'
+        }
+    } catch (error: unknown) {
+        const message = toErrorMessage(error)
+        await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATION_FAILED', {
+            metadata: { reason: message, hexagramId, path: 'generateQuestFromReading' }
+        })
+        return { success: false, error: message } satisfies ActionError
     }
 }
 
@@ -144,23 +193,60 @@ export async function castAndGenerateQuest() {
         return { success: false, error: 'Not logged in' } satisfies ActionError
     }
 
+    await logLifecycleEvent(playerId, 'ICHING_CAST_ATTEMPT', {
+        metadata: { path: 'castAndGenerateQuest' }
+    })
+
     const featureError = await ensureIChingEnabled()
-    if (featureError) return featureError
-
-    const hexagramId = Math.floor(Math.random() * 64) + 1
-    const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
-
-    if (!result.success) {
-        return result
+    if (featureError) {
+        await logLifecycleEvent(playerId, 'ICHING_CAST_FAILED', {
+            metadata: { reason: featureError.error, path: 'castAndGenerateQuest' }
+        })
+        return featureError
     }
 
-    await fireTrigger('ICHING_CAST')
-    revalidatePath('/')
-    revalidatePath('/iching')
+    const cooldownError = await ensureIChingCooldown(playerId)
+    if (cooldownError) {
+        await logLifecycleEvent(playerId, 'ICHING_CAST_COOLDOWN_BLOCKED', {
+            metadata: { path: 'castAndGenerateQuest' }
+        })
+        return cooldownError
+    }
 
-    return {
-        ...result,
-        message: 'The Oracle has spoken. A quest has been added to your board.'
+    try {
+        const hexagramId = Math.floor(Math.random() * 64) + 1
+        const result = await runIChingQuestGeneration(playerId, hexagramId, { recordReading: true })
+
+        if (!result.success) {
+            await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATION_FAILED', {
+                metadata: { reason: result.error, hexagramId, path: 'castAndGenerateQuest' }
+            })
+            return result
+        }
+
+        await fireTrigger('ICHING_CAST')
+        revalidatePath('/')
+        revalidatePath('/iching')
+
+        await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATED', {
+            questId: result.questId,
+            metadata: {
+                hexagramId: result.hexagram.id,
+                hexagramName: result.hexagram.name,
+                path: 'castAndGenerateQuest'
+            }
+        })
+
+        return {
+            ...result,
+            message: 'The Oracle has spoken. A quest has been added to your board.'
+        }
+    } catch (error: unknown) {
+        const message = toErrorMessage(error)
+        await logLifecycleEvent(playerId, 'ICHING_QUEST_GENERATION_FAILED', {
+            metadata: { reason: message, path: 'castAndGenerateQuest' }
+        })
+        return { success: false, error: message } satisfies ActionError
     }
 }
 

@@ -21,7 +21,7 @@ You need to add the `OPENAI_API_KEY` environment variable to your Vercel project
 
 3. **Add the OpenAI API Key**
    - **Key**: `OPENAI_API_KEY`
-   - **Value**: `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`
+   - **Value**: `YOUR_OPENAI_API_KEY` (never commit real keys)
    - **Environments**: Select all environments (Production, Preview, Development)
    - Click "Save"
 
@@ -37,3 +37,7 @@ After redeployment, the I Ching hexagram generation should work without errors.
 - Environment variables in `.env` files are only available locally
 - Vercel runs in a different environment and needs variables configured in the dashboard
 - The OpenAI SDK automatically looks for `OPENAI_API_KEY` environment variable
+
+## Security Note
+- If a real key was ever committed to git history, rotate it immediately in the provider dashboard.
+- Run `npm run secrets:scan` before pushing changes.

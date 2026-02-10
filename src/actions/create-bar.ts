@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { logLifecycleEvent } from '@/lib/lifecycle-events'
 
 export async function createCustomBar(prevState: any, formData: FormData) {
     const cookieStore = await cookies()
@@ -128,6 +129,165 @@ export async function getActivePlayers() {
         },
         orderBy: { name: 'asc' }
     })
+}
+
+export async function logPersonalBar(formData: FormData) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { success: false, error: 'Not logged in' }
+    }
+
+    const title = String(formData.get('title') || '').trim()
+    const description = String(formData.get('description') || '').trim()
+    const source = String(formData.get('source') || 'life').trim()
+
+    if (!title) {
+        return { success: false, error: 'Title is required' }
+    }
+
+    try {
+        const newBar = await db.customBar.create({
+            data: {
+                creatorId: playerId,
+                title,
+                description: description || 'A personal BAR signal waiting for the right moment.',
+                type: 'inspiration',
+                reward: 0,
+                visibility: 'private',
+                status: 'active',
+                storyPath: 'personal',
+                inputs: '[]',
+                rootId: 'temp',
+                storyContent: `Logged from: ${source}`
+            }
+        })
+
+        await db.customBar.update({
+            where: { id: newBar.id },
+            data: { rootId: newBar.id }
+        })
+
+        await logLifecycleEvent(playerId, 'BAR_LOGGED', {
+            questId: newBar.id,
+            metadata: { source }
+        })
+
+        revalidatePath('/')
+        revalidatePath('/hand')
+        return { success: true, barId: newBar.id }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        return { success: false, error: message || 'Failed to log BAR' }
+    }
+}
+
+export async function promoteBarToQuest(formData: FormData) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { success: false, error: 'Not logged in' }
+    }
+
+    const barId = String(formData.get('barId') || '').trim()
+    if (!barId) {
+        return { success: false, error: 'BAR ID is required' }
+    }
+
+    try {
+        const [bar, player, globalState] = await Promise.all([
+            db.customBar.findUnique({ where: { id: barId } }),
+            db.player.findUnique({
+                where: { id: playerId },
+                include: { playbook: true }
+            }),
+            db.globalState.findUnique({
+                where: { id: 'singleton' },
+                select: { currentAct: true, currentPeriod: true, storyClock: true }
+            })
+        ])
+
+        if (!bar) {
+            return { success: false, error: 'BAR not found' }
+        }
+
+        if (bar.creatorId !== playerId) {
+            return { success: false, error: 'You can only promote your own BARs' }
+        }
+
+        if (bar.type !== 'inspiration') {
+            return { success: false, error: 'This BAR is already a quest' }
+        }
+
+        if (!player) {
+            return { success: false, error: 'Player not found' }
+        }
+
+        const storyContext = globalState
+            ? `Act ${globalState.currentAct}, Period ${globalState.currentPeriod}, Clock ${globalState.storyClock}/64`
+            : 'Story context unavailable'
+        const archetype = player.playbook?.name || 'Unbound'
+
+        const storyLines = [
+            bar.storyContent || '',
+            '',
+            'Promoted from personal BAR.',
+            `Story Context: ${storyContext}`,
+            `Archetype Lens: ${archetype}`,
+        ].filter(Boolean)
+
+        await db.$transaction(async (tx) => {
+            await tx.customBar.update({
+                where: { id: barId },
+                data: {
+                    type: 'story',
+                    visibility: 'private',
+                    reward: 0,
+                    status: 'active',
+                    storyPath: 'personal',
+                    claimedById: playerId,
+                    storyContent: storyLines.join('\n')
+                }
+            })
+
+            await tx.playerQuest.upsert({
+                where: {
+                    playerId_questId: {
+                        playerId,
+                        questId: barId
+                    }
+                },
+                update: {
+                    status: 'assigned',
+                    assignedAt: new Date(),
+                    completedAt: null
+                },
+                create: {
+                    playerId,
+                    questId: barId,
+                    status: 'assigned',
+                    assignedAt: new Date()
+                }
+            })
+        })
+
+        await logLifecycleEvent(playerId, 'BAR_PROMOTED_TO_QUEST', {
+            questId: barId,
+            metadata: { storyContext, archetype }
+        })
+
+        revalidatePath('/')
+        revalidatePath('/hand')
+        return { success: true, questId: barId }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        await logLifecycleEvent(playerId, 'BAR_PROMOTION_FAILED', {
+            metadata: { barId, reason: message }
+        })
+        return { success: false, error: message || 'Failed to promote BAR' }
+    }
 }
 
 export async function createQuestFromWizard(data: any) {

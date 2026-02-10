@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { runSeed } from '@/lib/seed-utils'
 import { runIChingHardening } from '@/lib/iching-hardening'
+import { lifecycleEventMarker } from '@/lib/lifecycle-events'
 
 async function ensureAdmin() {
     const cookieStore = await cookies()
@@ -115,6 +116,176 @@ export async function runIChingDataHardening() {
         revalidatePath('/admin')
 
         return { success: true, report }
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e)
+        return { success: false, error: message }
+    }
+}
+
+export type LifecycleMetrics = {
+    windowHours: number
+    generatedAt: string
+    castAttempts: number
+    castsRevealed: number
+    cooldownBlocks: number
+    castFailures: number
+    generationFailures: number
+    questsGenerated: number
+    barsLogged: number
+    barsPromoted: number
+    hexQuestsCreated: number
+    hexAssignments: number
+    hexCompletions: number
+    privateNonHexCompletions: number
+    privateHexCompletions: number
+    castToQuestRate: number
+    hexQuestCompletionRate: number
+}
+
+function asPercent(numerator: number, denominator: number): number {
+    if (denominator <= 0) return 0
+    return Number(((numerator / denominator) * 100).toFixed(1))
+}
+
+/**
+ * Admin only: lifecycle snapshot for BAR/Quest loop observability.
+ */
+export async function getLifecycleMetrics() {
+    try {
+        await ensureAdmin()
+        const windowHours = 24
+        const since = new Date(Date.now() - windowHours * 60 * 60 * 1000)
+
+        const [
+            castAttempts,
+            castsRevealed,
+            cooldownBlocks,
+            castFailures,
+            generationFailures,
+            questsGenerated,
+            barsLogged,
+            barsPromoted,
+            hexQuestsCreated,
+            hexAssignments,
+            hexCompletions,
+            privateNonHexCompletions,
+            privateHexCompletions,
+        ] = await Promise.all([
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_CAST_ATTEMPT') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_CAST_REVEALED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_CAST_COOLDOWN_BLOCKED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_CAST_FAILED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_QUEST_GENERATION_FAILED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('ICHING_QUEST_GENERATED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('BAR_LOGGED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('BAR_PROMOTED_TO_QUEST') }
+                }
+            }),
+            db.customBar.count({
+                where: {
+                    createdAt: { gte: since },
+                    hexagramId: { not: null },
+                }
+            }),
+            db.playerQuest.count({
+                where: {
+                    assignedAt: { gte: since },
+                    quest: { hexagramId: { not: null } }
+                }
+            }),
+            db.playerQuest.count({
+                where: {
+                    completedAt: { gte: since },
+                    quest: { hexagramId: { not: null } }
+                }
+            }),
+            db.playerQuest.count({
+                where: {
+                    completedAt: { gte: since },
+                    quest: {
+                        visibility: 'private',
+                        hexagramId: null
+                    }
+                }
+            }),
+            db.playerQuest.count({
+                where: {
+                    completedAt: { gte: since },
+                    quest: {
+                        visibility: 'private',
+                        hexagramId: { not: null }
+                    }
+                }
+            }),
+        ])
+
+        const metrics: LifecycleMetrics = {
+            windowHours,
+            generatedAt: new Date().toISOString(),
+            castAttempts,
+            castsRevealed,
+            cooldownBlocks,
+            castFailures,
+            generationFailures,
+            questsGenerated,
+            barsLogged,
+            barsPromoted,
+            hexQuestsCreated,
+            hexAssignments,
+            hexCompletions,
+            privateNonHexCompletions,
+            privateHexCompletions,
+            castToQuestRate: asPercent(questsGenerated, castsRevealed),
+            hexQuestCompletionRate: asPercent(hexCompletions, hexAssignments),
+        }
+
+        return { success: true, metrics }
     } catch (e: unknown) {
         const message = e instanceof Error ? e.message : String(e)
         return { success: false, error: message }

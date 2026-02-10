@@ -157,6 +157,9 @@ export default async function Home() {
       return true // Fallback to visible if error
     }
   })
+  const barWalletCount = visibleCustomBars.filter(
+    bar => bar.type === 'inspiration' && bar.creatorId === playerId
+  ).length
 
   // Fetch Quest Threads and Packs
   const threads = await getPlayerThreads()
@@ -280,7 +283,7 @@ export default async function Home() {
           </section>
 
           {/* 3. BARS WALLET (Inspiration) */}
-          {visibleCustomBars.some(b => b.type === 'inspiration') && (
+          {barWalletCount > 0 && (
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px bg-zinc-800 flex-1"></div>
@@ -288,16 +291,17 @@ export default async function Home() {
                 <div className="h-px bg-zinc-800 flex-1"></div>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-zinc-500 text-sm italic text-center">Inspirations collected. Forge them into quests for the collective.</p>
-                <StarterQuestBoard
-                  completedBars={completedBars}
-                  activeBars={activeBars}
-                  customBars={visibleCustomBars.filter(b => b.type === 'inspiration')}
-                  potentialDelegates={potentialDelegates}
-                  view="active"
-                />
-              </div>
+              <Link href="/hand" className="block group">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-pink-500/50 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Personal BAR Wallet</h3>
+                    <p className="text-zinc-500 text-sm">You have {barWalletCount} logged BAR{barWalletCount === 1 ? '' : 's'} ready for promotion.</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-pink-900/50 group-hover:text-pink-300 transition-colors">
+                    →
+                  </div>
+                </div>
+              </Link>
             </section>
           )}
 
