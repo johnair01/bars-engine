@@ -40,17 +40,15 @@ export default async function Home() {
             href="/conclave/guided"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
-            Sign Up / Sign In
+            Sign Up
           </a>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800"></div>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-black px-4 text-zinc-600">or</span>
-            </div>
-          </div>
+          <a
+            href="/login"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
+          >
+            Log In
+          </a>
 
         </div>
 
