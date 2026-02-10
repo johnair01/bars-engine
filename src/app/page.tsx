@@ -158,7 +158,7 @@ export default async function Home() {
     }
   })
   const barWalletCount = visibleCustomBars.filter(
-    bar => bar.type === 'inspiration' && bar.creatorId === playerId
+    bar => (bar.barState === 'logged' || bar.type === 'inspiration') && bar.creatorId === playerId
   ).length
 
   // Fetch Quest Threads and Packs

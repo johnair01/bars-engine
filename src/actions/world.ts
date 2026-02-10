@@ -303,6 +303,7 @@ async function generateGlobalQuest(hexagramId: number, period: number) {
                 title: object.title,
                 description: object.description,
                 type: 'story',
+                barState: 'promoted',
                 reward: 5,
                 status: 'active',
                 storyPath: 'collective',

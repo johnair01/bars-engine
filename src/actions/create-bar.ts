@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { logLifecycleEvent } from '@/lib/lifecycle-events'
+import { buildReflectionModifierPayload } from '@/lib/quest-modifiers'
 
 export async function createCustomBar(prevState: any, formData: FormData) {
     const cookieStore = await cookies()
@@ -80,6 +81,7 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                     title,
                     description,
                     type: 'vibe',
+                    barState: 'quest',
                     reward: visibility === 'private' ? 0 : 1, // Private quests are BAR-like (no mint)
                     inputs,
                     visibility,
@@ -154,6 +156,7 @@ export async function logPersonalBar(formData: FormData) {
                 title,
                 description: description || 'A personal BAR signal waiting for the right moment.',
                 type: 'inspiration',
+                barState: 'logged',
                 reward: 0,
                 visibility: 'private',
                 status: 'active',
@@ -243,6 +246,7 @@ export async function promoteBarToQuest(formData: FormData) {
                 where: { id: barId },
                 data: {
                     type: 'story',
+                    barState: 'promoted',
                     visibility: 'private',
                     reward: 0,
                     status: 'active',
@@ -290,34 +294,6 @@ export async function promoteBarToQuest(formData: FormData) {
     }
 }
 
-type QuestInputType = 'text' | 'textarea' | 'select' | 'multiselect'
-type QuestInputDef = {
-    key: string
-    label: string
-    type: QuestInputType
-    placeholder?: string
-    options?: string[]
-    trigger?: string
-}
-
-function parseQuestInputs(inputsJson: string): QuestInputDef[] {
-    try {
-        const parsed = JSON.parse(inputsJson)
-        if (!Array.isArray(parsed)) return []
-        return parsed.filter((input: unknown): input is QuestInputDef => {
-            if (!input || typeof input !== 'object') return false
-            const candidate = input as { key?: unknown, label?: unknown, type?: unknown }
-            return (
-                typeof candidate.key === 'string' &&
-                typeof candidate.label === 'string' &&
-                typeof candidate.type === 'string'
-            )
-        })
-    } catch {
-        return []
-    }
-}
-
 export async function applyBarModifier(formData: FormData) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -358,7 +334,8 @@ export async function applyBarModifier(formData: FormData) {
         if (modifierBar.creatorId !== playerId) {
             return { success: false, error: 'You can only use your own BAR as a modifier' }
         }
-        if (modifierBar.type !== 'inspiration' || modifierBar.visibility !== 'private' || modifierBar.status !== 'active') {
+        const isLoggedBar = modifierBar.barState === 'logged' || modifierBar.type === 'inspiration'
+        if (!isLoggedBar || modifierBar.visibility !== 'private' || modifierBar.status !== 'active') {
             return { success: false, error: 'Only active private inspiration BARs can modify quests' }
         }
 
@@ -370,56 +347,75 @@ export async function applyBarModifier(formData: FormData) {
         if (targetQuest.visibility !== 'private') {
             return { success: false, error: 'BAR modifiers currently support private active quests only' }
         }
-
-        const existingInputs = parseQuestInputs(targetQuest.inputs || '[]')
-        const modifierKey = `modifier_echo_${barId.slice(-8)}`
-        if (existingInputs.some(input => input.key === modifierKey)) {
-            return { success: false, error: 'This BAR modifier has already been applied' }
+        if (targetQuest.type === 'inspiration') {
+            return { success: false, error: 'BAR modifiers can only target promoted quest bars' }
         }
 
-        const echoPrompt = modifierBar.description?.trim() || `Let "${modifierBar.title}" shift how you complete this quest.`
-        const modifierInput: QuestInputDef = {
-            key: modifierKey,
-            label: `Modifier Echo — ${modifierBar.title}`,
+        const existingInputs = parseQuestInputDefs(targetQuest.inputs || '[]')
+
+        const existingModifier = await db.questModifier.findUnique({
+            where: {
+                sourceBarId_targetQuestId: {
+                    sourceBarId: barId,
+                    targetQuestId
+                }
+            }
+        })
+        if (existingModifier) {
+            return { success: false, error: 'This BAR modifier has already been applied to this quest' }
+        }
+
+        const modifierPayload = buildReflectionModifierPayload({
+            sourceBarId: barId,
+            sourceBarTitle: modifierBar.title,
+            sourceBarDescription: modifierBar.description
+        })
+        if (existingInputs.some(input => input.key === modifierPayload.key)) {
+            return { success: false, error: 'This BAR modifier input already exists on the target quest' }
+        }
+
+        const modifierInput = {
+            key: modifierPayload.key,
+            label: modifierPayload.label,
             type: 'textarea',
-            placeholder: echoPrompt
+            placeholder: modifierPayload.placeholder
         }
-
         const updatedInputs = [...existingInputs, modifierInput]
-        const existingStory = targetQuest.storyContent?.trim() || ''
-        const modifierStamp = [
-            `[BAR-MOD:${barId}]`,
-            `BAR Modifier Applied: ${modifierBar.title}`,
-            `Effect: Added a required "Modifier Echo" reflection input.`,
-            `Prompt: ${echoPrompt}`
-        ].join('\n')
-        const updatedStoryContent = existingStory
-            ? `${existingStory}\n\n${modifierStamp}`
-            : modifierStamp
 
         await db.$transaction(async (tx) => {
+            await tx.questModifier.create({
+                data: {
+                    sourceBarId: barId,
+                    targetQuestId,
+                    appliedById: playerId,
+                    effectType: 'ADD_REFLECTION_INPUT',
+                    payload: JSON.stringify(modifierPayload),
+                    status: 'active',
+                }
+            })
+
+            // Transitional compatibility:
+            // reflect modifier input directly on quest schema so board-based UIs can render it.
             await tx.customBar.update({
                 where: { id: targetQuestId },
-                data: {
-                    inputs: JSON.stringify(updatedInputs),
-                    storyContent: updatedStoryContent
-                }
+                data: { inputs: JSON.stringify(updatedInputs) }
             })
 
             await tx.customBar.update({
                 where: { id: barId },
                 data: {
                     status: 'archived',
+                    barState: 'consumed',
                     parentId: targetQuestId,
                     storyPath: 'modifier',
-                    storyContent: `Consumed as modifier for quest ${targetQuestId} at ${new Date().toISOString()}`
+                    storyContent: `Consumed as structured modifier for quest ${targetQuestId} at ${new Date().toISOString()}`
                 }
             })
         })
 
         await logLifecycleEvent(playerId, 'BAR_MODIFIER_APPLIED', {
             questId: targetQuestId,
-            metadata: { barId, modifierKey }
+            metadata: { barId, effectType: 'ADD_REFLECTION_INPUT', inputKey: modifierPayload.key }
         })
 
         revalidatePath('/')
@@ -431,6 +427,31 @@ export async function applyBarModifier(formData: FormData) {
             metadata: { barId, targetQuestId, reason: message }
         })
         return { success: false, error: message || 'Failed to apply BAR modifier' }
+    }
+}
+
+type QuestInputDef = {
+    key: string
+    label: string
+    type: string
+    placeholder?: string
+}
+
+function parseQuestInputDefs(inputsJson: string): QuestInputDef[] {
+    try {
+        const parsed = JSON.parse(inputsJson)
+        if (!Array.isArray(parsed)) return []
+        return parsed.filter((input: unknown): input is QuestInputDef => {
+            if (!input || typeof input !== 'object') return false
+            const candidate = input as { key?: unknown, label?: unknown, type?: unknown }
+            return (
+                typeof candidate.key === 'string' &&
+                typeof candidate.label === 'string' &&
+                typeof candidate.type === 'string'
+            )
+        })
+    } catch {
+        return []
     }
 }
 
@@ -483,6 +504,7 @@ export async function createQuestFromWizard(data: any) {
                 title,
                 description,
                 type: category || 'custom',
+                barState: 'quest',
                 reward: visibility === 'private' ? 0 : (Number(reward) || 1),
                 inputs: JSON.stringify(inputs || []),
                 visibility: visibility || 'public',

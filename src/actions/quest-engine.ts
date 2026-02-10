@@ -7,6 +7,11 @@ import { advanceThread } from '@/actions/quest-thread'
 import { getOnboardingStatus, completeOnboardingStep } from '@/actions/onboarding'
 import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
+import {
+    consumeActiveModifiersForQuest,
+    getActiveRuntimeModifierInputsForQuest,
+    getMissingModifierResponseLabels
+} from '@/lib/quest-modifiers'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -65,6 +70,17 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
 
     if (!quest) throw new Error('Quest not found')
 
+    const normalizedInputs: Record<string, unknown> =
+        inputs && typeof inputs === 'object' && !Array.isArray(inputs)
+            ? inputs as Record<string, unknown>
+            : { response: typeof inputs === 'string' ? inputs : JSON.stringify(inputs) }
+
+    const activeModifierInputs = await getActiveRuntimeModifierInputsForQuest(questId)
+    const missingModifierLabels = getMissingModifierResponseLabels(activeModifierInputs, normalizedInputs)
+    if (missingModifierLabels.length > 0) {
+        return { error: `Missing required modifier response: ${missingModifierLabels.join(', ')}` }
+    }
+
     // CHECK FOR STORY CLOCK BONUS
     let bonusMultiplier = 1
     let isFirstCompleter = false
@@ -99,14 +115,14 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
         },
         update: {
             status: 'completed',
-            inputs: JSON.stringify(inputs),
+            inputs: JSON.stringify(normalizedInputs),
             completedAt: new Date(),
         },
         create: {
             playerId: player.id,
             questId,
             status: 'completed',
-            inputs: JSON.stringify(inputs),
+            inputs: JSON.stringify(normalizedInputs),
             completedAt: new Date(),
             assignedAt: new Date()
         }
@@ -184,6 +200,10 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
                 }
             }
         })
+    }
+
+    if (activeModifierInputs.length > 0) {
+        await consumeActiveModifiersForQuest(questId)
     }
 
     revalidatePath('/')

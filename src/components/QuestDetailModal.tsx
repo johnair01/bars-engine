@@ -9,6 +9,17 @@ import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
+import { getRuntimeQuestModifiers } from '@/actions/quest-modifiers'
+
+type RuntimeModifierInput = {
+    modifierId: string
+    effectType: 'ADD_REFLECTION_INPUT'
+    key: string
+    label: string
+    placeholder: string
+    sourceBarId: string
+    sourceBarTitle: string
+}
 
 function getQuestTriggers(inputsJson?: string): string[] {
     if (!inputsJson) return []
@@ -52,6 +63,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [response, setResponse] = useState('')
+    const [modifierInputs, setModifierInputs] = useState<RuntimeModifierInput[]>([])
+    const [modifierResponses, setModifierResponses] = useState<Record<string, string>>({})
 
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
@@ -73,13 +86,24 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 if (res.success) setTransferContext(res)
             })
         }
+        if (isOpen && !isCompleted && !isLocked) {
+            getRuntimeQuestModifiers(quest.id).then((res) => {
+                if (res.success && res.inputs) {
+                    setModifierInputs(res.inputs as RuntimeModifierInput[])
+                } else {
+                    setModifierInputs([])
+                }
+            })
+        }
         // Cleanup if closed
         if (!isOpen) {
             setHasScrolledToBottom(false)
             setArchetypeData(null)
             setTransferContext(null)
+            setModifierInputs([])
+            setModifierResponses({})
         }
-    }, [isOpen, quest.id, isCompleted])
+    }, [isOpen, quest.id, isCompleted, isLocked])
 
     // Detect Scroll for specialized quests
     const handleScroll = () => {
@@ -96,7 +120,13 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const handleComplete = () => {
         if (isPending) return
         startTransition(async () => {
-            const result = await completeQuest(quest.id, { response, autoTriggered: archetypeData ? true : false }, context)
+            const completionPayload: Record<string, unknown> = {
+                response,
+                ...modifierResponses
+            }
+            if (archetypeData) completionPayload.autoTriggered = true
+
+            const result = await completeQuest(quest.id, completionPayload, context)
             if (result.success) {
                 setFeedback('✨ Quest Complete!')
                 setTimeout(() => {
@@ -113,6 +143,10 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const isTransferQuest = quest.id === 'orientation-quest-4'
     const questTriggers = getQuestTriggers(quest.inputs)
     const requiresIChingCast = questTriggers.includes('ICHING_CAST')
+    const modifierResponsesComplete = modifierInputs.every(input => {
+        const value = modifierResponses[input.key]
+        return typeof value === 'string' && value.trim().length > 0
+    })
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -153,6 +187,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 <span className="text-yellow-500 font-mono px-2 py-0.5 bg-yellow-900/20 rounded-full">
                                     +{quest.reward} ⓥ
                                 </span>
+                                {modifierInputs.length > 0 && (
+                                    <span className="text-cyan-300 font-mono px-2 py-0.5 bg-cyan-900/20 rounded-full">
+                                        Mods: {modifierInputs.length}
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <button
@@ -282,6 +321,35 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 </div>
                             ) : (
                                 <>
+                                    {modifierInputs.length > 0 && (
+                                        <div className="space-y-3 rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-3 mb-3">
+                                            <p className="text-[10px] uppercase tracking-widest text-cyan-300 font-bold">
+                                                BAR Modifiers in Play
+                                            </p>
+                                            {modifierInputs.map((modifierInput) => (
+                                                <div key={modifierInput.modifierId} className="space-y-2">
+                                                    <label className="text-xs text-cyan-200 font-semibold">
+                                                        {modifierInput.label}
+                                                    </label>
+                                                    <textarea
+                                                        value={modifierResponses[modifierInput.key] || ''}
+                                                        onChange={(e) =>
+                                                            setModifierResponses((prev) => ({
+                                                                ...prev,
+                                                                [modifierInput.key]: e.target.value
+                                                            }))
+                                                        }
+                                                        placeholder={modifierInput.placeholder}
+                                                        rows={2}
+                                                        className="w-full bg-black border border-cyan-900/40 rounded-lg p-2 text-white placeholder:text-zinc-700 focus:border-cyan-500/50 outline-none transition-all text-sm"
+                                                    />
+                                                    <p className="text-[10px] text-cyan-500/80">
+                                                        Source BAR: {modifierInput.sourceBarTitle}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                     <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">
                                         Your Response
                                     </label>
@@ -333,7 +401,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 onClick={handleComplete}
                                 // Disable for triggered quests (except archetype reader)
                                 hidden={requiresIChingCast}
-                                disabled={isPending || (!isArchetypeQuest && !response.trim()) || (isArchetypeQuest && !hasScrolledToBottom)}
+                                disabled={isPending || (!isArchetypeQuest && !response.trim()) || !modifierResponsesComplete || (isArchetypeQuest && !hasScrolledToBottom)}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest
                                     ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'
                                     : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20'

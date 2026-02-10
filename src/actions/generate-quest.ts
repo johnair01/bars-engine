@@ -339,6 +339,7 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
                 title: object.title,
                 description: object.description,
                 type: 'story',
+                barState: 'promoted',
                 reward: 2,
                 status: 'active',
                 visibility: 'private',

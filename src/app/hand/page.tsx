@@ -19,7 +19,10 @@ export default async function HandPage() {
             creatorId: playerId,
             visibility: 'private',
             status: 'active',
-            type: 'inspiration'
+            OR: [
+                { barState: 'logged' },
+                { type: 'inspiration' } // legacy fallback before barState was introduced
+            ]
         },
         select: {
             id: true,
@@ -66,6 +69,23 @@ export default async function HandPage() {
             type: { not: 'inspiration' }
         },
         orderBy: { createdAt: 'desc' }
+    })
+
+    const consumedModifierBars = await db.customBar.findMany({
+        where: {
+            creatorId: playerId,
+            barState: 'consumed',
+            storyPath: 'modifier',
+        },
+        select: {
+            id: true,
+            title: true,
+            parentId: true,
+            storyContent: true,
+            createdAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 12
     })
 
     return (
@@ -116,6 +136,28 @@ export default async function HandPage() {
                     <div className="h-px bg-zinc-800 flex-1"></div>
                 </div>
                 <CreateBarForm />
+            </section>
+
+            <section className="space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="h-px bg-zinc-800 flex-1"></div>
+                    <h2 className="text-cyan-500 uppercase tracking-widest text-sm font-bold">Modifier Lineage</h2>
+                    <div className="h-px bg-zinc-800 flex-1"></div>
+                </div>
+                {consumedModifierBars.length === 0 ? (
+                    <div className="text-zinc-600 text-sm italic">No consumed modifier BARs yet.</div>
+                ) : (
+                    <div className="space-y-2">
+                        {consumedModifierBars.map((bar) => (
+                            <div key={bar.id} className="rounded-lg border border-zinc-800 bg-zinc-900/20 p-3">
+                                <div className="text-sm text-cyan-200 font-semibold">{bar.title}</div>
+                                <div className="text-xs text-zinc-500 mt-1">
+                                    Applied to quest: <span className="font-mono text-zinc-400">{bar.parentId || 'unknown'}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     )

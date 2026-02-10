@@ -90,6 +90,7 @@ model Player {
   // CustomBar relations
   createdBars     CustomBar[]   @relation("CreatedBars")
   claimedBars     CustomBar[]   @relation("ClaimedBars")
+  appliedQuestModifiers QuestModifier[] @relation("QuestModifierAppliedBy")
   
   createdAt       DateTime  @default(now())
 
@@ -193,6 +194,7 @@ model CustomBar {
   moveType        String?   // wakeUp, cleanUp, growUp, showUp
   
   status          String    @default("active") // active, archived
+  barState        String    @default("quest")  // logged, promoted, consumed, quest
   
   // Kotter Stage: 1-8 (position in change cycle)
   kotterStage     Int       @default(1)
@@ -222,10 +224,36 @@ model CustomBar {
 
   // Active assignments (Multi-player progress)
   assignments     PlayerQuest[]
+  sourceModifiers QuestModifier[] @relation("QuestModifierSource")
+  targetModifiers QuestModifier[] @relation("QuestModifierTarget")
   
   rootId          String?   // For fast lookups
   
   @@map("custom_bars")
+}
+
+model QuestModifier {
+  id            String    @id @default(cuid())
+
+  sourceBarId   String
+  sourceBar     CustomBar @relation("QuestModifierSource", fields: [sourceBarId], references: [id], onDelete: Cascade)
+
+  targetQuestId String
+  targetQuest   CustomBar @relation("QuestModifierTarget", fields: [targetQuestId], references: [id], onDelete: Cascade)
+
+  appliedById   String
+  appliedBy     Player    @relation("QuestModifierAppliedBy", fields: [appliedById], references: [id], onDelete: Cascade)
+
+  effectType    String
+  payload       String    @default("{}")
+  status        String    @default("active") // active, consumed, revoked
+
+  appliedAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  @@unique([sourceBarId, targetQuestId])
+  @@index([targetQuestId, status])
+  @@map("quest_modifiers")
 }
 
 model PlayerBar {

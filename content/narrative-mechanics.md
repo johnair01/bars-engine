@@ -40,6 +40,8 @@ This keeps narrative sensing (BAR collection) and narrative execution (Quest com
 - A logged BAR can be promoted into a private quest.
 - A logged BAR can also be applied as a **modifier** to an active private quest.
   - Modifier v1 effect: adds a required "Modifier Echo" reflection input to the target quest.
+- Modifiers are now persisted as structured `QuestModifier` records (effect type + payload + status).
+- BAR lifecycle is explicitly tracked via `barState` (`logged`, `promoted`, `consumed`, `quest`).
 
 ## Core Inspirations
 
