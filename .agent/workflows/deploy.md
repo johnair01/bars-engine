@@ -48,4 +48,5 @@ Use this flow for feature QA and mobile testing.
 ## Notes
 - Vercel automatically deploys previews for pushed branches.
 - For QA handoff, always send full preview links, not localhost links.
+- If preview protection is enabled, testers need Vercel auth before links load.
 - Check Vercel dashboard/build logs if deployment fails.

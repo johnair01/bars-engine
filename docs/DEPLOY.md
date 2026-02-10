@@ -59,6 +59,7 @@ To reduce local memory usage and support mobile/iPhone testing, use Vercel Previ
   - Base preview URL
   - Direct route links for the feature
   - If needed, admin route links
+- If preview access is protected, testers must authenticate with Vercel first (or disable protection for the preview environment).
 
 ### Retrieve the current branch preview URL
 1. Push your branch.
