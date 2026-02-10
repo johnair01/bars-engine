@@ -15,6 +15,29 @@ const getPlaybookChoice = (playbook: any): StoryChoice => ({
     nextNodeId: `playbook_info_${playbook.id}`,
 })
 
+function parseStringArray(raw?: string | null): string[] {
+    if (!raw) return []
+    try {
+        const parsed = JSON.parse(raw)
+        if (!Array.isArray(parsed)) return []
+        return parsed.filter((item): item is string => typeof item === 'string')
+    } catch {
+        return []
+    }
+}
+
+function handbookExcerpt(markdown?: string | null, maxLength = 280): string | null {
+    if (!markdown) return null
+    const plain = markdown
+        .replace(/[#>*_`]/g, '')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+        .replace(/\s+/g, ' ')
+        .trim()
+    if (!plain) return null
+    if (plain.length <= maxLength) return plain
+    return `${plain.slice(0, maxLength).trim()}...`
+}
+
 export async function getStaticStoryNode(nodeId: string): Promise<StoryNode | null> {
     // 1. INTRO
     if (nodeId === 'intro_001') {
@@ -181,6 +204,22 @@ The Conclave recognizes 8 archetypes based on the I Ching trigrams. Your archety
 
         if (!playbook) return null
 
+        const examples = parseStringArray(playbook.examples).slice(0, 4)
+        const shadowSignposts = parseStringArray(playbook.shadowSignposts).slice(0, 3)
+        const lightSignposts = parseStringArray(playbook.lightSignposts).slice(0, 3)
+        const excerpt = handbookExcerpt(playbook.content)
+
+        const details = [
+            playbook.centralConflict ? `**Central Conflict:** ${playbook.centralConflict}` : null,
+            playbook.primaryQuestion ? `**Primary Question:** ${playbook.primaryQuestion}` : null,
+            playbook.vibe ? `**Vibe:** ${playbook.vibe}` : null,
+            playbook.energy ? `**Energy:** ${playbook.energy}` : null,
+            examples.length > 0 ? `**Examples:** ${examples.join(', ')}` : null,
+            shadowSignposts.length > 0 ? `**Shadow Signposts:** ${shadowSignposts.join(' • ')}` : null,
+            lightSignposts.length > 0 ? `**Light Signposts:** ${lightSignposts.join(' • ')}` : null,
+            excerpt ? `**Worldbook Excerpt:** ${excerpt}` : null
+        ].filter(Boolean)
+
         return {
             id: nodeId,
             nodeId: nodeId,
@@ -193,6 +232,8 @@ The Conclave recognizes 8 archetypes based on the I Ching trigrams. Your archety
 *Clean Up*: ${playbook.cleanUp}
 *Grow Up*: ${playbook.growUp}
 *Show Up*: ${playbook.showUp}
+
+${details.join('\n\n')}
             `,
             guideDialogue: "A powerful archetype. Is this you?",
             choices: [

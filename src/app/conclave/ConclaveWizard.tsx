@@ -9,6 +9,7 @@ type Nation = {
     id: string
     name: string
     description: string
+    imgUrl?: string | null
     wakeUp?: string | null
     cleanUp?: string | null
     growUp?: string | null
@@ -20,6 +21,14 @@ type Playbook = {
     name: string
     description: string
     moves: string
+    content?: string | null
+    centralConflict?: string | null
+    primaryQuestion?: string | null
+    vibe?: string | null
+    energy?: string | null
+    examples?: string | null
+    shadowSignposts?: string | null
+    lightSignposts?: string | null
     wakeUp?: string | null
     cleanUp?: string | null
     growUp?: string | null
@@ -28,6 +37,29 @@ type Playbook = {
 
 import { WorldOverview } from '@/components/conclave/WorldOverview'
 import { ArchetypeOverview } from '@/components/conclave/ArchetypeOverview'
+
+function parseStringList(raw?: string | null): string[] {
+    if (!raw) return []
+    try {
+        const parsed = JSON.parse(raw)
+        if (!Array.isArray(parsed)) return []
+        return parsed.filter((item): item is string => typeof item === 'string')
+    } catch {
+        return []
+    }
+}
+
+function getHandbookPreview(markdown?: string | null, maxLength = 260): string | null {
+    if (!markdown) return null
+    const plain = markdown
+        .replace(/[#>*_`]/g, '')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+        .replace(/\s+/g, ' ')
+        .trim()
+    if (!plain) return null
+    if (plain.length <= maxLength) return plain
+    return `${plain.slice(0, maxLength).trim()}...`
+}
 
 type Step = 'email' | 'login' | 'identity' | 'mode-selection' | 'world-overview' | 'nation' | 'archetype-overview' | 'playbook' | 'setup'
 
@@ -398,9 +430,15 @@ export function ConclaveWizard({
                             </button>
                             {expandedNation === nation.id && (
                                 <div className="px-4 pb-4 pt-2 border-t border-zinc-800 bg-zinc-900/50">
+                                    {nation.imgUrl && (
+                                        <div className="mb-3 rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                                            <img src={nation.imgUrl} alt={nation.name} className="w-full h-36 object-cover" />
+                                        </div>
+                                    )}
                                     <MoveDisplay label="Wake Up" emoji="👁" value={nation.wakeUp} />
                                     <MoveDisplay label="Clean Up" emoji="🧹" value={nation.cleanUp} />
                                     <MoveDisplay label="Grow Up" emoji="🌱" value={nation.growUp} />
+                                    <MoveDisplay label="Show Up" emoji="🎯" value={nation.showUp} />
                                     <div className="mt-4 pt-4 border-t border-zinc-800">
                                         <a
                                             href={`/nation/${nation.id}?from=${encodeURIComponent(returnToWizard)}`}
@@ -480,10 +518,85 @@ export function ConclaveWizard({
                         </button>
                         {expandedPlaybook === playbook.id && (
                             <div className="px-4 pb-4 pt-2 border-t border-zinc-800 bg-zinc-900/50">
+                                {playbook.vibe && (
+                                    <div className="mb-3 p-3 rounded-lg border border-blue-900/40 bg-blue-950/20">
+                                        <div className="text-[10px] uppercase tracking-widest text-blue-300 font-bold mb-1">Vibe</div>
+                                        <p className="text-sm text-blue-100/90 italic">"{playbook.vibe}"</p>
+                                    </div>
+                                )}
+                                {playbook.energy && (
+                                    <div className="mb-3 p-3 rounded-lg border border-indigo-900/40 bg-indigo-950/20">
+                                        <div className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold mb-1">Energy</div>
+                                        <p className="text-sm text-indigo-100/90 italic">"{playbook.energy}"</p>
+                                    </div>
+                                )}
+                                {playbook.centralConflict && (
+                                    <div className="mb-3 p-3 rounded-lg border border-zinc-800 bg-black/40">
+                                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Central Conflict</div>
+                                        <p className="text-sm text-zinc-300">{playbook.centralConflict}</p>
+                                    </div>
+                                )}
+                                {playbook.primaryQuestion && (
+                                    <div className="mb-3 p-3 rounded-lg border border-zinc-800 bg-black/40">
+                                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Primary Question</div>
+                                        <p className="text-sm text-zinc-300">{playbook.primaryQuestion}</p>
+                                    </div>
+                                )}
                                 <MoveDisplay label="Wake Up" emoji="👁" value={playbook.wakeUp} />
                                 <MoveDisplay label="Clean Up" emoji="🧹" value={playbook.cleanUp} />
                                 <MoveDisplay label="Grow Up" emoji="🌱" value={playbook.growUp} />
                                 <MoveDisplay label="Show Up" emoji="🎯" value={playbook.showUp} />
+                                {(() => {
+                                    const preview = getHandbookPreview(playbook.content)
+                                    if (!preview) return null
+                                    return (
+                                        <div className="mt-3 p-3 rounded-lg border border-cyan-900/40 bg-cyan-950/20">
+                                            <div className="text-[10px] uppercase tracking-widest text-cyan-300 font-bold mb-1">Worldbook Excerpt</div>
+                                            <p className="text-xs text-cyan-100/90 leading-relaxed">{preview}</p>
+                                        </div>
+                                    )
+                                })()}
+                                {(() => {
+                                    const examples = parseStringList(playbook.examples)
+                                    if (examples.length === 0) return null
+                                    return (
+                                        <div className="mt-3">
+                                            <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-2">Examples</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {examples.slice(0, 4).map((example, idx) => (
+                                                    <span key={`${playbook.id}-ex-${idx}`} className="px-2 py-1 text-[10px] rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                                        {example}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                })()}
+                                {(() => {
+                                    const shadow = parseStringList(playbook.shadowSignposts)
+                                    const light = parseStringList(playbook.lightSignposts)
+                                    if (shadow.length === 0 && light.length === 0) return null
+                                    return (
+                                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            {shadow.length > 0 && (
+                                                <div className="p-2 rounded border border-orange-900/40 bg-orange-950/20">
+                                                    <div className="text-[10px] uppercase tracking-widest text-orange-300 font-bold mb-1">Shadow Signs</div>
+                                                    <ul className="text-[11px] text-orange-100/90 list-disc pl-4 space-y-1">
+                                                        {shadow.slice(0, 3).map((item, idx) => <li key={`${playbook.id}-sh-${idx}`}>{item}</li>)}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {light.length > 0 && (
+                                                <div className="p-2 rounded border border-green-900/40 bg-green-950/20">
+                                                    <div className="text-[10px] uppercase tracking-widest text-green-300 font-bold mb-1">Light Signs</div>
+                                                    <ul className="text-[11px] text-green-100/90 list-disc pl-4 space-y-1">
+                                                        {light.slice(0, 3).map((item, idx) => <li key={`${playbook.id}-li-${idx}`}>{item}</li>)}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
                                 <div className="mt-4 pt-4 border-t border-zinc-800">
                                     <a
                                         href={`/archetype/${playbook.id}?from=${encodeURIComponent(returnToWizard)}`}

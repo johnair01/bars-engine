@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { StoryNode, StoryChoice } from '../types'
 import { GuideCharacter } from './GuideCharacter'
 import { ChoiceButton } from './ChoiceButton'
+import ReactMarkdown from 'react-markdown'
 
 interface StoryNodeProps {
     node: StoryNode
@@ -33,7 +34,18 @@ export function StoryNodeComponent({ node, onChoiceSelect, isLoading = false }: 
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">{node.title}</h2>
                 <div className="prose prose-invert prose-sm sm:prose-base max-w-none">
-                    <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">{node.content}</p>
+                    <ReactMarkdown
+                        components={{
+                            a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline" />,
+                            p: (props) => <p {...props} className="text-zinc-300 leading-relaxed whitespace-pre-wrap mb-3" />,
+                            ul: (props) => <ul {...props} className="list-disc pl-5 text-zinc-300 space-y-1" />,
+                            li: (props) => <li {...props} className="marker:text-zinc-500" />,
+                            strong: (props) => <strong {...props} className="text-white font-semibold" />,
+                            h3: (props) => <h3 {...props} className="text-sm uppercase tracking-widest text-zinc-500 font-bold mt-4 mb-2" />,
+                        }}
+                    >
+                        {node.content}
+                    </ReactMarkdown>
                 </div>
 
                 {/* Text Input */}
