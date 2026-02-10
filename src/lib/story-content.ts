@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { StoryNode, StoryChoice } from '@/app/conclave/guided/types'
+import { StoryNode, StoryChoice, StoryProgress } from '@/app/conclave/guided/types'
 
 // Helper to format nation choice
 const getNationChoice = (nation: any): StoryChoice => ({
@@ -15,7 +15,10 @@ const getPlaybookChoice = (playbook: any): StoryChoice => ({
     nextNodeId: `playbook_info_${playbook.id}`,
 })
 
-export async function getStaticStoryNode(nodeId: string): Promise<StoryNode | null> {
+export async function getStaticStoryNode(nodeId: string, playerId?: string): Promise<StoryNode | null> {
+    const player = playerId ? await db.player.findUnique({ where: { id: playerId } }) : null
+    const progress = player?.storyProgress ? JSON.parse(player.storyProgress as string) as StoryProgress : null
+    const decisions = progress?.decisions || []
     // 1. INTRO
     if (nodeId === 'intro_001') {
         return {
@@ -93,22 +96,133 @@ What name should I put on your dossier? This is how the other heist members will
         }
     }
 
-    // 3. NATION SELECTION
+    // 3. NATION DISCOVERY (The Mini-Quest)
     if (nodeId === 'nation_select') {
-        const nations = await db.nation.findMany({ orderBy: { name: 'asc' } })
-
         return {
             id: 'nation_select',
             nodeId: 'nation_select',
-            title: 'The Five Nations',
+            title: 'Entry Point',
             category: 'nation',
             content: `
-The Conclave is a joint effort, but we all come from somewhere. Which flag feels like home?
+You've reached the perimeter of the Robot Oscars. A high-resolution security drone floats toward you, sensors glowing a skeptical crimson.
 
-There are five nations in the alliance. Each has a different philosophy on how to approach the world—and this heist.
+It emits a series of chirps—the standard challenge protocol. How do you respond?
             `,
-            guideDialogue: "Take a look. Which story calls to you?",
-            choices: nations.map(getNationChoice)
+            guideDialogue: "Classic security. They value order here. Let's see how you handle it.",
+            choices: [
+                {
+                    id: 'nation_argyra',
+                    text: "[Logic] Present a perfectly forged permit.",
+                    nextNodeId: 'nation_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:argyra'] }
+                },
+                {
+                    id: 'nation_pyrakanth',
+                    text: "[Passion] Overload its sensors with a burst of static.",
+                    nextNodeId: 'nation_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:pyrakanth'] }
+                },
+                {
+                    id: 'nation_virelune',
+                    text: "[Joy] Distract it with a playful hologram.",
+                    nextNodeId: 'nation_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:virelune'] }
+                },
+                {
+                    id: 'nation_meridia',
+                    text: "[Balance] Negotiate a trade for its silence.",
+                    nextNodeId: 'nation_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:meridia'] }
+                },
+                {
+                    id: 'nation_lamenth',
+                    text: "[Memory] Share a record of its creator.",
+                    nextNodeId: 'nation_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:lamenth'] }
+                }
+            ]
+        }
+    }
+
+    if (nodeId === 'nation_scenario_2') {
+        return {
+            id: 'nation_scenario_2',
+            nodeId: 'nation_scenario_2',
+            title: 'The Inner Loop',
+            category: 'nation',
+            content: `
+You're inside the maintenance tunnels, but the layout is a shifting kaleidoscope of steel. The blueprint you have is outdated—reconstruction is ongoing for the gala.
+
+A crossroads lies ahead. One path smells of ozone, another echoes with distant laughter, and a third is eerily silent.
+            `,
+            guideDialogue: "The structural patterns have shifted. Trust your instincts here.",
+            choices: [
+                {
+                    id: 'nation_argyra_2',
+                    text: "[Logic] Map the likely layout from acoustics.",
+                    nextNodeId: 'nation_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:argyra'] }
+                },
+                {
+                    id: 'nation_pyrakanth_2',
+                    text: "[Passion] Force a new path through that vent.",
+                    nextNodeId: 'nation_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:pyrakanth'] }
+                },
+                {
+                    id: 'nation_virelune_2',
+                    text: "[Joy] Follow the laughter; it leads to the party.",
+                    nextNodeId: 'nation_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:virelune'] }
+                },
+                {
+                    id: 'nation_meridia_2',
+                    text: "[Balance] Watch the staff; flow with their rhythm.",
+                    nextNodeId: 'nation_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:meridia'] }
+                },
+                {
+                    id: 'nation_lamenth_2',
+                    text: "[Memory] Recall the architect's signature style.",
+                    nextNodeId: 'nation_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:lamenth'] }
+                }
+            ]
+        }
+    }
+
+    if (nodeId === 'nation_reveal') {
+        const nations = await db.nation.findMany({ orderBy: { name: 'asc' } })
+
+        // Suggestion Logic
+        const counts: Record<string, number> = {}
+        decisions.forEach(d => {
+            if (d.choiceId.startsWith('nation_')) {
+                const align = d.choiceId.split('_')[1] // argyra, pyrakanth, etc.
+                counts[align] = (counts[align] || 0) + 1
+            }
+        })
+
+        const topAlign = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0]
+        const suggestedNation = nations.find(n => n.name.toLowerCase().includes(topAlign))
+
+        return {
+            id: 'nation_reveal',
+            nodeId: 'nation_reveal',
+            title: 'Your Orientation',
+            category: 'nation',
+            content: `
+Based on how you navigated the approach, your resonance is becoming clear. We are all shaped by where we come from.
+
+${suggestedNation ? `Your choices align most closely with **${suggestedNation.name}**. Their philosophy appears to match your instincts.` : ''}
+
+Choose your nation. This determines your initial toolkit and social status within the Conclave.
+            `,
+            guideDialogue: suggestedNation ? `Indeed, your approach to that drone was very ${suggestedNation.name}. Does it feel right?` : "You have a distinct rhythm. Which of these feels like where you belong?",
+            choices: [
+                ...(suggestedNation ? [getNationChoice(suggestedNation)] : []),
+                ...nations.filter(n => n.id !== suggestedNation?.id).map(getNationChoice)
+            ]
         }
     }
 
@@ -154,23 +268,131 @@ There are five nations in the alliance. Each has a different philosophy on how t
         }
     }
 
-    // 4. PLAYBOOK SELECTION
+    // 4. PLAYBOOK DISCOVERY (The Mini-Quest)
     if (nodeId === 'playbook_select') {
-        // We might want to group these, but for now flat list is fine or we can do a simple categorization in dialogue
-        const playbooks = await db.playbook.findMany({ orderBy: { name: 'asc' } })
-
         return {
             id: 'playbook_select',
             nodeId: 'playbook_select',
-            title: 'Your Archetype',
+            title: 'The Tension',
             category: 'playbook',
             content: `
-We know where you're from. Now... who are you? In the heat of the moment, how do you solve problems?
+A conflict breaks out between two of the heist members during the final briefing. Tensions are high; tools are being gripped a bit too tightly, and voices are rising.
 
-The Conclave recognizes 8 archetypes based on the I Ching trigrams. This defines your role in the crew.
+The mission is at risk before it even begins. How do you intercede?
             `,
-            guideDialogue: "Who are you when the alarm goes off?",
-            choices: playbooks.map(getPlaybookChoice)
+            guideDialogue: "Dynamics are always... delicate in teams like this. What's your move?",
+            choices: [
+                {
+                    id: 'pb_movers',
+                    text: "[The Movers] Take control of the room immediately.",
+                    nextNodeId: 'playbook_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:movers'] }
+                },
+                {
+                    id: 'pb_connectors',
+                    text: "[The Connectors] Find common ground and de-escalate.",
+                    nextNodeId: 'playbook_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:connectors'] }
+                },
+                {
+                    id: 'pb_shifters',
+                    text: "[The Shifters] Redirect the energy and move past it.",
+                    nextNodeId: 'playbook_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:shifters'] }
+                },
+                {
+                    id: 'pb_anchors',
+                    text: "[The Anchors] Be the calm center; expose the truth.",
+                    nextNodeId: 'playbook_scenario_2',
+                    rewards: { vibeulons: 1, unlocks: ['align:anchors'] }
+                }
+            ]
+        }
+    }
+
+    if (nodeId === 'playbook_scenario_2') {
+        return {
+            id: 'playbook_scenario_2',
+            nodeId: 'playbook_scenario_2',
+            title: 'The Breakthrough',
+            category: 'playbook',
+            content: `
+You've reached the target: a heavy vault door protected by a vibrational lock that responds to emotional frequency. Standard tech won't touch it.
+
+You must project a specific intent to resonate with the tumblers. What do you channel?
+            `,
+            guideDialogue: "The safe reads intention, not code. Focus yourself.",
+            choices: [
+                {
+                    id: 'pb_movers_2',
+                    text: "[The Movers] Pure, driving will and command.",
+                    nextNodeId: 'playbook_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:movers'] }
+                },
+                {
+                    id: 'pb_connectors_2',
+                    text: "[The Connectors] Resonance and harmony with the field.",
+                    nextNodeId: 'playbook_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:connectors'] }
+                },
+                {
+                    id: 'pb_shifters_2',
+                    text: "[The Shifters] A fluid, adaptive rhythm that shifts.",
+                    nextNodeId: 'playbook_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:shifters'] }
+                },
+                {
+                    id: 'pb_anchors_2',
+                    text: "[The Anchors] Unwavering clarity and stillness.",
+                    nextNodeId: 'playbook_reveal',
+                    rewards: { vibeulons: 1, unlocks: ['align:anchors'] }
+                }
+            ]
+        }
+    }
+
+    if (nodeId === 'playbook_reveal') {
+        const playbooks = await db.playbook.findMany({ orderBy: { name: 'asc' } })
+
+        // Mapping alignment to playbooks (Simplified matching)
+        const groups: Record<string, string[]> = {
+            movers: ['Heaven', 'Thunder'],
+            connectors: ['Earth', 'Lake'],
+            shifters: ['Wind', 'Water'],
+            anchors: ['Mountain', 'Fire']
+        }
+
+        const counts: Record<string, number> = {}
+        decisions.forEach(d => {
+            if (d.choiceId.startsWith('pb_')) {
+                const align = d.choiceId.split('_')[1] // movers, connectors, etc.
+                counts[align] = (counts[align] || 0) + 1
+            }
+        })
+
+        const topAlign = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0]
+        const suggestedGroup = topAlign ? groups[topAlign] : []
+
+        // Pick one suggested playbook to feature or just show the group
+        const featuredPlaybook = playbooks.find(p => suggestedGroup.includes(p.name))
+
+        return {
+            id: 'playbook_reveal',
+            nodeId: 'playbook_reveal',
+            title: 'Choose Your Way',
+            category: 'playbook',
+            content: `
+Your way of moving through the world is clear. The I Ching archetypes are more than just roles—they are the way you express your power.
+
+${featuredPlaybook ? `Your instincts align with **${topAlign.charAt(0).toUpperCase() + topAlign.slice(1)}**. Archetypes like **${featuredPlaybook.name}** might suit your style.` : ''}
+
+Select your playbook. This defines your unique moves and your contribution to the heist.
+            `,
+            guideDialogue: featuredPlaybook ? `The way you handled that conflict... it speaks of the ${featuredPlaybook.name}. Use that spark.` : "The Eight Ways are before you. Which path do you walk?",
+            choices: [
+                ...(featuredPlaybook ? [getPlaybookChoice(featuredPlaybook)] : []),
+                ...playbooks.filter(p => p.id !== featuredPlaybook?.id).map(getPlaybookChoice)
+            ]
         }
     }
 

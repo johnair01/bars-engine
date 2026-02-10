@@ -9,7 +9,7 @@ export async function assignBarToPlayer(existingPlayerId?: string) {
         ? await db.player.findUnique({ where: { id: existingPlayerId }, include: { bars: true } })
         : await getCurrentPlayer()
 
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave')
 
     if (player.bars.length > 0) return redirect('/wallet')
 

@@ -220,6 +220,10 @@ model CustomBar {
   threadQuests    ThreadQuest[]
   packQuests      PackQuest[]
 
+  // Twine Logic (Optional)
+  twineLogic      String?   // JSON representation of passages and choices
+  completionEffects String? // JSON representation of effects upon completion
+
   // Active assignments (Multi-player progress)
   assignments     PlayerQuest[]
   

@@ -6,7 +6,7 @@ import { StoryChoices } from '../StoryChoices'
 export default async function DynamicStoryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const player = await getCurrentPlayer()
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave')
 
     const passage = await getPassage(id)
     if (!passage) return <div>End of Line.</div>

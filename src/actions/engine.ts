@@ -12,7 +12,7 @@ export async function submitChoice(formData: FormData) {
 
     // 1. Validate Session
     const player = await getCurrentPlayer()
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave')
 
     // 2. Load Passage
     const passage = await getPassage(passageId)

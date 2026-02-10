@@ -5,7 +5,7 @@ import { StoryChoices } from './StoryChoices'
 
 export default async function StoryPage() {
     const player = await getCurrentPlayer()
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave')
 
     // MVP: Check if player has wallet items to determine state?
     // Actually, we just start at 'invitation' if no state.

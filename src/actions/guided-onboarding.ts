@@ -42,8 +42,8 @@ export async function startGuidedOnboarding(email: string, password: string, inv
 
 import { getStaticStoryNode } from '@/lib/story-content'
 
-export async function getStoryNode(nodeId: string): Promise<StoryNode | null> {
-    return getStaticStoryNode(nodeId)
+export async function getStoryNode(nodeId: string, playerId?: string): Promise<StoryNode | null> {
+    return getStaticStoryNode(nodeId, playerId)
 }
 
 export async function recordStoryChoice(
@@ -192,7 +192,9 @@ export async function finalizeOnboarding(
             })
         }
 
-        // TODO: Assign orientation quest thread
+        // Assign orientation quest thread
+        const { assignOrientationThreads } = await import('./quest-thread')
+        await assignOrientationThreads(playerId)
 
         return { success: true }
     } catch (error) {

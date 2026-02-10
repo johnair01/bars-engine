@@ -79,7 +79,7 @@ async function GuidedStoryLoader() {
         }
     }
 
-    const node = await getStoryNode(progress.currentNodeId)
+    const node = await getStoryNode(progress.currentNodeId, playerId)
 
     // Handle end state or missing node (dashboard redirect)
     if (!node) {

@@ -37,7 +37,7 @@ export default async function Home() {
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <a
-            href="/conclave"
+            href="/conclave/guided"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
             Sign Up / Sign In
@@ -52,24 +52,10 @@ export default async function Home() {
             </div>
           </div>
 
-          <form action="/invite" method="get" className="flex gap-2">
-            <input
-              type="text"
-              name="token"
-              placeholder="Enter invite code..."
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 text-sm focus:border-zinc-600 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium text-sm transition"
-            >
-              Redeem
-            </button>
-          </form>
         </div>
 
         <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          New players can sign up directly. Existing players can sign in or use an invite code for special access.
+          New players can sign up directly. Existing players can sign in to continue their journey.
         </div>
       </div>
     )

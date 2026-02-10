@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 
 export async function submitQuestReturn(prevState: any, formData: FormData) {
     const player = await getCurrentPlayer()
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave')
 
     const questId = formData.get('questId') as string
 

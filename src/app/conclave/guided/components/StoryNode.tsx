@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { StoryNode, StoryChoice } from '../types'
 import { GuideCharacter } from './GuideCharacter'
 import { ChoiceButton } from './ChoiceButton'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface StoryNodeProps {
     node: StoryNode
@@ -20,59 +21,88 @@ export function StoryNodeComponent({ node, onChoiceSelect, isLoading = false }: 
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
-            {/* Guide Dialogue */}
-            {node.guideDialogue && (
-                <GuideCharacter
-                    dialogue={node.guideDialogue}
-                    emotion={node.metadata?.emotionalTone as any || 'neutral'}
-                />
-            )}
-
-            {/* Story Content */}
-            <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">{node.title}</h2>
-                <div className="prose prose-invert prose-sm sm:prose-base max-w-none">
-                    <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">{node.content}</p>
-                </div>
-
-                {/* Text Input */}
-                {node.inputType === 'text' && (
-                    <div className="mt-6">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Enter your response..."
-                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium"
-                            disabled={isLoading}
-                            autoFocus
-                        />
-                    </div>
-                )}
-            </div>
-
-            {/* Choices */}
-            <div className="space-y-3">
-                {node.choices.map((choice, index) => (
-                    <ChoiceButton
-                        key={choice.id}
-                        text={choice.text}
-                        onClick={() => handleChoiceClick(choice)}
-                        disabled={isLoading || (node.inputType === 'text' && !inputValue.trim())}
-                        variant={index === 0 ? 'primary' : 'secondary'}
+        <AnimatePresence mode="wait">
+            <motion.div
+                key={node.nodeId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="max-w-3xl mx-auto space-y-6"
+            >
+                {/* Guide Dialogue */}
+                {node.guideDialogue && (
+                    <GuideCharacter
+                        dialogue={node.guideDialogue}
+                        emotion={node.metadata?.emotionalTone as any || 'neutral'}
                     />
-                ))}
-            </div>
+                )}
 
-            {/* Reward Preview */}
-            {node.choices.some(c => c.rewards?.vibeulons) && (
-                <div className="text-center">
-                    <p className="text-xs text-zinc-600">
-                        💎 Earn vibeulons by making your choice
-                    </p>
-                </div>
-            )}
-        </div>
+                {/* Story Content */}
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-zinc-900/40 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 sm:p-8 shadow-2xl"
+                >
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 tracking-tight">{node.title}</h2>
+                    <div className="prose prose-invert prose-sm sm:prose-base max-w-none">
+                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">{node.content}</p>
+                    </div>
+
+                    {/* Text Input */}
+                    {node.inputType === 'text' && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="mt-6"
+                        >
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                placeholder="Enter your response..."
+                                className="w-full bg-zinc-900/60 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium"
+                                disabled={isLoading}
+                                autoFocus
+                            />
+                        </motion.div>
+                    )}
+                </motion.div>
+
+                {/* Choices */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="space-y-3"
+                >
+                    {node.choices.map((choice, index) => (
+                        <ChoiceButton
+                            key={choice.id}
+                            text={choice.text}
+                            onClick={() => handleChoiceClick(choice)}
+                            disabled={isLoading || (node.inputType === 'text' && !inputValue.trim())}
+                            variant={index === 0 ? 'primary' : 'secondary'}
+                        />
+                    ))}
+                </motion.div>
+
+                {/* Reward Preview */}
+                {node.choices.some(c => c.rewards?.vibeulons) && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        className="text-center"
+                    >
+                        <p className="text-xs text-zinc-600">
+                            💎 Earn vibeulons by making your choice
+                        </p>
+                    </motion.div>
+                )}
+            </motion.div>
+        </AnimatePresence>
     )
 }
