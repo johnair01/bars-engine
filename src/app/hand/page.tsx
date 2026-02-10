@@ -41,6 +41,12 @@ export default async function HandPage() {
 
     // Convert to IDs for the board component
     const activeQuestIds = activeQuests.map(pq => pq.questId)
+    const activePrivateQuestOptions = activeQuests
+        .filter(pq => pq.quest.visibility === 'private' && pq.quest.type !== 'inspiration')
+        .map(pq => ({
+            id: pq.questId,
+            title: pq.quest.title
+        }))
 
     // Completed for reference
     const completedQuests = await db.playerQuest.findMany({
@@ -80,7 +86,7 @@ export default async function HandPage() {
                 <p className="text-sm text-zinc-500">
                     Log inspiration BARs from life or party moments. Promote a BAR into a private quest when you are ready.
                 </p>
-                <BarWalletManager bars={loggedBars} />
+                <BarWalletManager bars={loggedBars} activeQuestOptions={activePrivateQuestOptions} />
             </section>
 
             <section className="space-y-6">

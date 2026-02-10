@@ -34,6 +34,13 @@ Players will be able to:
 
 This keeps narrative sensing (BAR collection) and narrative execution (Quest completion) in one coherent mechanic.
 
+### Current implementation (v1)
+
+- Players can log private inspiration BARs in the BAR Wallet.
+- A logged BAR can be promoted into a private quest.
+- A logged BAR can also be applied as a **modifier** to an active private quest.
+  - Modifier v1 effect: adds a required "Modifier Echo" reflection input to the target quest.
+
 ## Core Inspirations
 
 ### 1. Hearts Blazing

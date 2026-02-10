@@ -290,6 +290,150 @@ export async function promoteBarToQuest(formData: FormData) {
     }
 }
 
+type QuestInputType = 'text' | 'textarea' | 'select' | 'multiselect'
+type QuestInputDef = {
+    key: string
+    label: string
+    type: QuestInputType
+    placeholder?: string
+    options?: string[]
+    trigger?: string
+}
+
+function parseQuestInputs(inputsJson: string): QuestInputDef[] {
+    try {
+        const parsed = JSON.parse(inputsJson)
+        if (!Array.isArray(parsed)) return []
+        return parsed.filter((input: unknown): input is QuestInputDef => {
+            if (!input || typeof input !== 'object') return false
+            const candidate = input as { key?: unknown, label?: unknown, type?: unknown }
+            return (
+                typeof candidate.key === 'string' &&
+                typeof candidate.label === 'string' &&
+                typeof candidate.type === 'string'
+            )
+        })
+    } catch {
+        return []
+    }
+}
+
+export async function applyBarModifier(formData: FormData) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { success: false, error: 'Not logged in' }
+    }
+
+    const barId = String(formData.get('barId') || '').trim()
+    const targetQuestId = String(formData.get('targetQuestId') || '').trim()
+
+    if (!barId || !targetQuestId) {
+        return { success: false, error: 'BAR and target quest are required' }
+    }
+
+    if (barId === targetQuestId) {
+        return { success: false, error: 'A BAR cannot modify itself' }
+    }
+
+    try {
+        const [modifierBar, assignment] = await Promise.all([
+            db.customBar.findUnique({
+                where: { id: barId }
+            }),
+            db.playerQuest.findFirst({
+                where: {
+                    playerId,
+                    questId: targetQuestId,
+                    status: 'assigned'
+                },
+                include: { quest: true }
+            })
+        ])
+
+        if (!modifierBar) {
+            return { success: false, error: 'BAR not found' }
+        }
+        if (modifierBar.creatorId !== playerId) {
+            return { success: false, error: 'You can only use your own BAR as a modifier' }
+        }
+        if (modifierBar.type !== 'inspiration' || modifierBar.visibility !== 'private' || modifierBar.status !== 'active') {
+            return { success: false, error: 'Only active private inspiration BARs can modify quests' }
+        }
+
+        if (!assignment?.quest) {
+            return { success: false, error: 'Target quest is not active for you' }
+        }
+
+        const targetQuest = assignment.quest
+        if (targetQuest.visibility !== 'private') {
+            return { success: false, error: 'BAR modifiers currently support private active quests only' }
+        }
+
+        const existingInputs = parseQuestInputs(targetQuest.inputs || '[]')
+        const modifierKey = `modifier_echo_${barId.slice(-8)}`
+        if (existingInputs.some(input => input.key === modifierKey)) {
+            return { success: false, error: 'This BAR modifier has already been applied' }
+        }
+
+        const echoPrompt = modifierBar.description?.trim() || `Let "${modifierBar.title}" shift how you complete this quest.`
+        const modifierInput: QuestInputDef = {
+            key: modifierKey,
+            label: `Modifier Echo — ${modifierBar.title}`,
+            type: 'textarea',
+            placeholder: echoPrompt
+        }
+
+        const updatedInputs = [...existingInputs, modifierInput]
+        const existingStory = targetQuest.storyContent?.trim() || ''
+        const modifierStamp = [
+            `[BAR-MOD:${barId}]`,
+            `BAR Modifier Applied: ${modifierBar.title}`,
+            `Effect: Added a required "Modifier Echo" reflection input.`,
+            `Prompt: ${echoPrompt}`
+        ].join('\n')
+        const updatedStoryContent = existingStory
+            ? `${existingStory}\n\n${modifierStamp}`
+            : modifierStamp
+
+        await db.$transaction(async (tx) => {
+            await tx.customBar.update({
+                where: { id: targetQuestId },
+                data: {
+                    inputs: JSON.stringify(updatedInputs),
+                    storyContent: updatedStoryContent
+                }
+            })
+
+            await tx.customBar.update({
+                where: { id: barId },
+                data: {
+                    status: 'archived',
+                    parentId: targetQuestId,
+                    storyPath: 'modifier',
+                    storyContent: `Consumed as modifier for quest ${targetQuestId} at ${new Date().toISOString()}`
+                }
+            })
+        })
+
+        await logLifecycleEvent(playerId, 'BAR_MODIFIER_APPLIED', {
+            questId: targetQuestId,
+            metadata: { barId, modifierKey }
+        })
+
+        revalidatePath('/')
+        revalidatePath('/hand')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        await logLifecycleEvent(playerId, 'BAR_MODIFIER_FAILED', {
+            metadata: { barId, targetQuestId, reason: message }
+        })
+        return { success: false, error: message || 'Failed to apply BAR modifier' }
+    }
+}
+
 export async function createQuestFromWizard(data: any) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value

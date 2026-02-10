@@ -64,6 +64,8 @@ export function AdminLifecycleMetrics() {
                     <Metric label="Quest generated" value={metrics.questsGenerated} />
                     <Metric label="BARs logged" value={metrics.barsLogged} />
                     <Metric label="BARs promoted" value={metrics.barsPromoted} />
+                    <Metric label="BAR modifiers applied" value={metrics.barsModified} />
+                    <Metric label="BAR modifier failures" value={metrics.modifierFailures} />
                     <Metric label="Hex quests created" value={metrics.hexQuestsCreated} />
                     <Metric label="Hex assignments" value={metrics.hexAssignments} />
                     <Metric label="Hex completions" value={metrics.hexCompletions} />

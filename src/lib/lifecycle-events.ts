@@ -10,6 +10,8 @@ export type LifecycleEventName =
     | 'BAR_LOGGED'
     | 'BAR_PROMOTED_TO_QUEST'
     | 'BAR_PROMOTION_FAILED'
+    | 'BAR_MODIFIER_APPLIED'
+    | 'BAR_MODIFIER_FAILED'
 
 type LifecyclePayload = {
     event: LifecycleEventName

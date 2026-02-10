@@ -133,6 +133,8 @@ export type LifecycleMetrics = {
     questsGenerated: number
     barsLogged: number
     barsPromoted: number
+    barsModified: number
+    modifierFailures: number
     hexQuestsCreated: number
     hexAssignments: number
     hexCompletions: number
@@ -165,6 +167,8 @@ export async function getLifecycleMetrics() {
             questsGenerated,
             barsLogged,
             barsPromoted,
+            barsModified,
+            modifierFailures,
             hexQuestsCreated,
             hexAssignments,
             hexCompletions,
@@ -227,6 +231,20 @@ export async function getLifecycleMetrics() {
                     notes: { contains: lifecycleEventMarker('BAR_PROMOTED_TO_QUEST') }
                 }
             }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('BAR_MODIFIER_APPLIED') }
+                }
+            }),
+            db.vibulonEvent.count({
+                where: {
+                    source: 'lifecycle',
+                    createdAt: { gte: since },
+                    notes: { contains: lifecycleEventMarker('BAR_MODIFIER_FAILED') }
+                }
+            }),
             db.customBar.count({
                 where: {
                     createdAt: { gte: since },
@@ -276,6 +294,8 @@ export async function getLifecycleMetrics() {
             questsGenerated,
             barsLogged,
             barsPromoted,
+            barsModified,
+            modifierFailures,
             hexQuestsCreated,
             hexAssignments,
             hexCompletions,

@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { logPersonalBar, promoteBarToQuest } from '@/actions/create-bar'
+import { applyBarModifier, logPersonalBar, promoteBarToQuest } from '@/actions/create-bar'
 
 type LoggedBar = {
     id: string
@@ -11,12 +11,24 @@ type LoggedBar = {
     createdAt: Date
 }
 
-export function BarWalletManager({ bars }: { bars: LoggedBar[] }) {
+type ActiveQuestOption = {
+    id: string
+    title: string
+}
+
+export function BarWalletManager({
+    bars,
+    activeQuestOptions,
+}: {
+    bars: LoggedBar[]
+    activeQuestOptions: ActiveQuestOption[]
+}) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [source, setSource] = useState<'party' | 'life' | 'story'>('life')
+    const [modifierTargets, setModifierTargets] = useState<Record<string, string>>({})
     const [message, setMessage] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
@@ -65,6 +77,41 @@ export function BarWalletManager({ bars }: { bars: LoggedBar[] }) {
             }
 
             setMessage('BAR promoted to quest and assigned to your board.')
+            router.refresh()
+        })
+    }
+
+    const handleApplyModifier = (barId: string) => {
+        const targetQuestId = modifierTargets[barId]
+        if (!targetQuestId) {
+            setError('Select a target quest first.')
+            return
+        }
+
+        if (!confirm('Apply this BAR as a modifier to the selected active quest?')) {
+            return
+        }
+
+        startTransition(async () => {
+            setError(null)
+            setMessage(null)
+
+            const payload = new FormData()
+            payload.set('barId', barId)
+            payload.set('targetQuestId', targetQuestId)
+
+            const result = await applyBarModifier(payload)
+            if (!result.success) {
+                setError(result.error || 'Failed to apply modifier')
+                return
+            }
+
+            setMessage('BAR modifier applied to active quest.')
+            setModifierTargets((prev) => {
+                const next = { ...prev }
+                delete next[barId]
+                return next
+            })
             router.refresh()
         })
     }
@@ -132,14 +179,45 @@ export function BarWalletManager({ bars }: { bars: LoggedBar[] }) {
                                     Logged {new Date(bar.createdAt).toLocaleString()}
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                disabled={isPending}
-                                onClick={() => handlePromote(bar.id)}
-                                className="px-3 py-2 rounded border border-yellow-700 text-yellow-300 hover:bg-yellow-900/20 text-xs font-bold disabled:opacity-50"
-                            >
-                                Promote to Quest
-                            </button>
+                            <div className="w-full sm:w-auto flex flex-col gap-2">
+                                {activeQuestOptions.length > 0 ? (
+                                    <>
+                                        <select
+                                            value={modifierTargets[bar.id] || ''}
+                                            disabled={isPending}
+                                            onChange={(e) =>
+                                                setModifierTargets((prev) => ({ ...prev, [bar.id]: e.target.value }))
+                                            }
+                                            className="bg-black border border-zinc-700 rounded px-2 py-1.5 text-xs text-white min-w-[220px]"
+                                        >
+                                            <option value="">Modify active quest…</option>
+                                            {activeQuestOptions.map((quest) => (
+                                                <option key={quest.id} value={quest.id}>
+                                                    {quest.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            disabled={isPending || !modifierTargets[bar.id]}
+                                            onClick={() => handleApplyModifier(bar.id)}
+                                            className="px-3 py-2 rounded border border-cyan-700 text-cyan-300 hover:bg-cyan-900/20 text-xs font-bold disabled:opacity-50"
+                                        >
+                                            Apply Modifier
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="text-[11px] text-zinc-500 italic">No active private quests to modify yet.</div>
+                                )}
+                                <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={() => handlePromote(bar.id)}
+                                    className="px-3 py-2 rounded border border-yellow-700 text-yellow-300 hover:bg-yellow-900/20 text-xs font-bold disabled:opacity-50"
+                                >
+                                    Promote to Quest
+                                </button>
+                            </div>
                         </div>
                     ))
                 )}
