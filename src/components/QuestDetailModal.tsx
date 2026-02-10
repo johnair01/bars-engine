@@ -114,14 +114,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         if (isPending) return
         startTransition(async () => {
             const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, context)
-            if (result.success) {
+            if ('success' in result && result.success) {
                 setFeedback('✨ Quest Complete!')
                 setTimeout(() => {
                     setFeedback(null)
                     onClose()
                 }, 1500)
             } else {
-                setFeedback(`❌ ${result.error}`)
+                setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
             }
         })
     }
@@ -285,14 +285,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 setResponses(mergedResponses)
                                 startTransition(async () => {
                                     const result = await completeQuest(quest.id, mergedResponses, context)
-                                    if (result.success) {
+                                    if ('success' in result && result.success) {
                                         setFeedback('✨ Quest Complete!')
                                         setTimeout(() => {
                                             setFeedback(null)
                                             onClose()
                                         }, 1500)
                                     } else {
-                                        setFeedback(`❌ ${result.error}`)
+                                        setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
                                     }
                                 })
                             }}
