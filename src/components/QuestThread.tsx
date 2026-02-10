@@ -9,7 +9,15 @@ type ThreadQuest = {
     id: string
     questId: string
     position: number
-    quest?: { title: string, description: string | null, reward: number }
+    quest?: {
+        id: string
+        title: string
+        description: string | null
+        reward: number
+        inputs?: string | null
+        moveType?: string | null
+        twineLogic?: string | null
+    }
 }
 
 type ThreadProgress = {
@@ -199,14 +207,13 @@ export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThrea
                     isOpen={!!selectedQuest}
                     onClose={() => setSelectedQuest(null)}
                     quest={{
-                        // @ts-ignore
-                        id: selectedQuest.quest!.id,
-                        // @ts-ignore
-                        title: selectedQuest.quest!.title,
-                        // @ts-ignore
-                        description: selectedQuest.quest!.description,
-                        // @ts-ignore
-                        reward: selectedQuest.quest!.reward || 1,
+                        id: selectedQuest.quest.id,
+                        title: selectedQuest.quest.title,
+                        description: selectedQuest.quest.description,
+                        reward: selectedQuest.quest.reward || 1,
+                        inputs: selectedQuest.quest.inputs || '[]',
+                        moveType: selectedQuest.quest.moveType || null,
+                        twineLogic: selectedQuest.quest.twineLogic || null,
                     }}
                     context={{ threadId: thread.id }}
                     isCompleted={selectedQuest.position < currentPos}

@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
+import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from './intention-guided-journey'
 
 export async function runSeed(prisma: PrismaClient) {
     console.log('Seeding database...')
@@ -339,7 +340,9 @@ export async function runSeed(prisma: PrismaClient) {
             id: 'orientation-quest-1',
             title: 'Set Your Intention',
             description: 'What brings you to the Conclave? Design a personal intention for your journey.',
-            moveType: 'wakeUp'
+            moveType: 'wakeUp',
+            inputs: JSON.stringify(DEFAULT_INTENTION_INPUTS),
+            twineLogic: JSON.stringify(INTENTION_GUIDED_TWINE_LOGIC)
         },
         {
             id: 'orientation-quest-2',
@@ -363,13 +366,20 @@ export async function runSeed(prisma: PrismaClient) {
     ]
 
     for (const q of orientationQuests) {
+        const questInputs = (q as any).inputs
+            ? (q as any).inputs
+            : (q as any).trigger
+                ? JSON.stringify([{ trigger: (q as any).trigger }])
+                : '[]'
+
         await prisma.customBar.upsert({
             where: { id: q.id },
             update: {
                 title: q.title,
                 description: q.description,
                 moveType: q.moveType,
-                inputs: (q as any).trigger ? JSON.stringify([{ trigger: (q as any).trigger }]) : '[]'
+                inputs: questInputs,
+                twineLogic: (q as any).twineLogic || null
             },
             create: {
                 id: q.id,
@@ -380,7 +390,8 @@ export async function runSeed(prisma: PrismaClient) {
                 moveType: q.moveType,
                 visibility: 'public',
                 reward: 1,
-                inputs: (q as any).trigger ? JSON.stringify([{ trigger: (q as any).trigger }]) : '[]'
+                inputs: questInputs,
+                twineLogic: (q as any).twineLogic || null
             }
         })
     }
