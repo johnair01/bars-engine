@@ -52,11 +52,28 @@ export async function checkQuestStatus(questId: string, context?: { packId?: str
  * Complete a quest.
  * Handles both Pack context and Standalone context.
  */
-export async function completeQuest(questId: string, inputs: any, context?: { packId?: string, threadId?: string }) {
+type QuestCompletionContext = { packId?: string, threadId?: string }
+type QuestCompletionOptions = { skipRevalidate?: boolean }
+
+export async function completeQuest(questId: string, inputs: any, context?: QuestCompletionContext) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
 
-    if (!player) throw new Error('No active player')
+    return completeQuestForPlayer(player.id, questId, inputs, context)
+}
+
+/**
+ * Test-friendly completion path that bypasses auth context.
+ * Use from scripts only (never from client code).
+ */
+export async function completeQuestForPlayer(
+    playerId: string,
+    questId: string,
+    inputs: any,
+    context?: QuestCompletionContext,
+    options?: QuestCompletionOptions
+) {
+    if (!playerId) throw new Error('No active player')
 
     // Fetch the quest to check for Story Clock bonuses
     const quest = await db.customBar.findUnique({
@@ -83,7 +100,7 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
             // Update quest with first completer
             await db.customBar.update({
                 where: { id: questId },
-                data: { firstCompleterId: player.id }
+                data: { firstCompleterId: playerId }
             })
         }
     }
@@ -93,7 +110,7 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     await db.playerQuest.upsert({
         where: {
             playerId_questId: {
-                playerId: player.id,
+                playerId,
                 questId
             }
         },
@@ -103,7 +120,7 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
             completedAt: new Date(),
         },
         create: {
-            playerId: player.id,
+            playerId,
             questId,
             status: 'completed',
             inputs: JSON.stringify(inputs),
@@ -120,20 +137,20 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     if (questId === 'system-feedback') {
         const feedbackCount = await db.vibulonEvent.count({
             where: {
-                playerId: player.id,
+                playerId,
                 questId: 'system-feedback',
                 source: 'quest'
             }
         })
         if (feedbackCount >= 5) {
             finalReward = 0
-            console.log(`[QuestEngine] Feedback cap reached for ${player.id}. Reward set to 0.`)
+            console.log(`[QuestEngine] Feedback cap reached for ${playerId}. Reward set to 0.`)
         }
     }
 
     await db.vibulonEvent.create({
         data: {
-            playerId: player.id,
+            playerId,
             source: 'quest',
             amount: finalReward,
             notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
@@ -152,33 +169,35 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
     }
 
     // CHECK ONBOARDING STATUS
-    const obStatus = await getOnboardingStatus(player.id)
+    const obStatus = await getOnboardingStatus(playerId)
     if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
-        await completeOnboardingStep('firstQuest', player.id)
+        await completeOnboardingStep('firstQuest', playerId)
     }
 
     // MINT ACTUAL VIBULON TOKENS (Vibulon model)
-    await mintVibulon(player.id, finalReward, {
+    await mintVibulon(playerId, finalReward, {
         source: 'quest',
         id: questId,
         title: quest.title
-    })
+    }, { skipRevalidate: options?.skipRevalidate })
 
     // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
     if (questId === 'system-feedback') {
         await db.playerQuest.delete({
             where: {
                 playerId_questId: {
-                    playerId: player.id,
+                    playerId,
                     questId: 'system-feedback'
                 }
             }
         })
     }
 
-    revalidatePath('/')
-    revalidatePath('/story-clock')
-    revalidatePath('/wallet')
+    if (!options?.skipRevalidate) {
+        revalidatePath('/')
+        revalidatePath('/story-clock')
+        revalidatePath('/wallet')
+    }
 
     // PROCESS COMPLETION EFFECTS
     if (quest.completionEffects) {
@@ -188,7 +207,7 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
             // Example Effect: Update Player Profile
             if (effects.updatePlayer) {
                 await db.player.update({
-                    where: { id: player.id },
+                    where: { id: playerId },
                     data: effects.updatePlayer
                 })
             }
@@ -200,7 +219,7 @@ export async function completeQuest(questId: string, inputs: any, context?: { pa
                         actorAdminId: 'system',
                         action: effects.logEvent.action || 'QUEST_EFFECT',
                         targetType: 'player',
-                        targetId: player.id,
+                        targetId: playerId,
                         payloadJson: JSON.stringify(effects.logEvent.payload || {})
                     }
                 })
