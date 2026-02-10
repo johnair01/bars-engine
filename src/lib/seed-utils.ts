@@ -3,6 +3,7 @@ import { hash } from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from './intention-guided-journey'
+import { DEFAULT_FIRST_AID_TOOLS } from './emotional-first-aid'
 
 export async function runSeed(prisma: PrismaClient) {
     console.log('Seeding database...')
@@ -128,6 +129,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Dragon\'s Breath: Burn away doubt and hesitation.',
             growUp: 'Sovereign Path: Develop leadership through taking responsibility.',
             showUp: 'Initiative: Be the first to act, setting the direction for others.',
+            emotionalFirstAid: 'When blocked, compress the mission into one courageous action under ten minutes. Courage first, perfection later.',
         },
         {
             name: 'The Devoted Guardian',
@@ -137,6 +139,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Composting: Transform decay into fertile ground.',
             growUp: 'Steady Cultivation: Grow through patient, consistent practice.',
             showUp: 'Hold Space: Act by receiving and supporting others.',
+            emotionalFirstAid: 'When blocked, return to body contact and one caring boundary sentence. Support does not require self-erasure.',
         },
         {
             name: 'The Decisive Storm',
@@ -146,6 +149,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Storm Release: Express stuck energy through dramatic catharsis.',
             growUp: 'Rapid Activation: Grow through bold experiments and quick pivots.',
             showUp: 'First Strike: Act decisively before conditions change.',
+            emotionalFirstAid: 'When blocked, safely discharge energy first (breath, movement, sound), then choose one decisive move and execute.',
         },
         {
             name: 'The Danger Walker',
@@ -155,6 +159,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Dissolution: Let go by allowing things to dissolve naturally.',
             growUp: 'Adaptive Learning: Grow by flowing around obstacles.',
             showUp: 'Persistence: Act like water—find every crack, never stop.',
+            emotionalFirstAid: 'When blocked, slow down and map the current: what is true, what is threat story, what is next navigable channel.',
         },
         {
             name: 'The Still Point',
@@ -164,6 +169,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Stone Silence: Release through stopping completely.',
             growUp: 'Inner Heights: Grow by going inward and upward.',
             showUp: 'Immovable Stand: Act by refusing to move.',
+            emotionalFirstAid: 'When blocked, pause all nonessential action for two minutes, then restart with a single intentional commitment.',
         },
         {
             name: 'The Subtle Influence',
@@ -173,6 +179,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Gentle Dispersal: Let old patterns scatter like leaves in wind.',
             growUp: 'Gradual Influence: Grow by slowly permeating new territories.',
             showUp: 'Indirect Action: Act through suggestion and gentle pressure.',
+            emotionalFirstAid: 'When blocked, reduce force. Choose one tiny adjustment that shifts conditions without overwhelm.',
         },
         {
             name: 'The Truth Seer',
@@ -182,6 +189,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Purifying Flame: Burn away impurities to reveal the essential.',
             growUp: 'Radiant Development: Grow by sharing your light with others.',
             showUp: 'Declare: Act by making your position brilliantly clear.',
+            emotionalFirstAid: 'When blocked, write one honest sentence about what is true right now. Use that truth as your next-action anchor.',
         },
         {
             name: 'The Joyful Connector',
@@ -191,6 +199,7 @@ export async function runSeed(prisma: PrismaClient) {
             cleanUp: 'Laughter\'s Release: Let joy dissolve what heaviness remains.',
             growUp: 'Generous Exchange: Grow through giving and receiving freely.',
             showUp: 'Invitation: Act by creating openings for others to join.',
+            emotionalFirstAid: 'When blocked, restore connection first: micro-delight, gratitude, or one authentic outreach before pushing productivity.',
         },
     ]
 
@@ -243,6 +252,34 @@ export async function runSeed(prisma: PrismaClient) {
             where: { name: p.name },
             update: { ...p, content, ...richData },
             create: { ...p, content, ...richData },
+        })
+    }
+
+    // 5b. Seed Emotional First Aid Tools
+    for (const tool of DEFAULT_FIRST_AID_TOOLS) {
+        await prisma.emotionalFirstAidTool.upsert({
+            where: { key: tool.key },
+            update: {
+                name: tool.name,
+                description: tool.description,
+                icon: tool.icon,
+                moveType: tool.moveType,
+                tags: JSON.stringify(tool.tags),
+                twineLogic: JSON.stringify(tool.twineLogic),
+                sortOrder: tool.sortOrder,
+                isActive: true,
+            },
+            create: {
+                key: tool.key,
+                name: tool.name,
+                description: tool.description,
+                icon: tool.icon,
+                moveType: tool.moveType,
+                tags: JSON.stringify(tool.tags),
+                twineLogic: JSON.stringify(tool.twineLogic),
+                sortOrder: tool.sortOrder,
+                isActive: true,
+            }
         })
     }
 

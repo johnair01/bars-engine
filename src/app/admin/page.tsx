@@ -20,7 +20,7 @@ export default async function AdminDashboard() {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <DashboardCard
                     title="Active Players"
                     value="--"
@@ -44,6 +44,13 @@ export default async function AdminDashboard() {
                     value="Online"
                     color="text-green-400"
                     icon="🟢"
+                />
+                <DashboardCard
+                    title="First Aid Tools"
+                    value="Edit"
+                    href="/admin/first-aid"
+                    color="text-cyan-400"
+                    icon="🩺"
                 />
             </div>
 

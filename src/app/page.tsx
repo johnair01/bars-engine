@@ -59,17 +59,53 @@ export default async function Home() {
     )
   }
 
-  const player = await db.player.findUnique({
-    where: { id: playerId },
-    include: {
-      nation: true,
-      playbook: true,
-      roles: { include: { role: true } },
-      quests: { include: { quest: true } },
-      vibulonEvents: true,
-      starterPack: true,
-    }
-  })
+  const commonPlayerInclude = {
+    nation: true,
+    roles: { include: { role: true } },
+    quests: { include: { quest: true } },
+    vibulonEvents: true,
+    starterPack: true,
+  } as const
+
+  let player = null
+  try {
+    player = await db.player.findUnique({
+      where: { id: playerId },
+      include: {
+        ...commonPlayerInclude,
+        playbook: true,
+      }
+    })
+  } catch {
+    // Fallback for temporary schema drift during deployment rollout.
+    player = await db.player.findUnique({
+      where: { id: playerId },
+      include: {
+        ...commonPlayerInclude,
+        playbook: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            moves: true,
+            content: true,
+            centralConflict: true,
+            primaryQuestion: true,
+            vibe: true,
+            energy: true,
+            shadowSignposts: true,
+            lightSignposts: true,
+            examples: true,
+            wakeUp: true,
+            cleanUp: true,
+            growUp: true,
+            showUp: true,
+            createdAt: true,
+          }
+        },
+      }
+    })
+  }
 
   if (!player) {
     return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
@@ -146,7 +182,7 @@ export default async function Home() {
     try {
       const allowed = JSON.parse(bar.allowedTrigrams)
       return player.playbook && allowed.includes(player.playbook.name)
-    } catch (e) {
+    } catch {
       return true // Fallback to visible if error
     }
   })
@@ -342,6 +378,17 @@ export default async function Home() {
                 <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-bold">Your Moves</h2>
                 <div className="h-px bg-zinc-800 flex-1"></div>
               </div>
+
+              <Link
+                href="/emotional-first-aid"
+                className="mb-4 block rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 hover:border-cyan-500/60 hover:bg-cyan-900/20 transition-colors"
+              >
+                <div className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Medbay Access</div>
+                <div className="text-white font-semibold">Emotional First Aid Kit</div>
+                <div className="text-xs text-cyan-100/70 mt-1">
+                  Feeling stuck? Run a quick vibes emergency protocol.
+                </div>
+              </Link>
 
               {/* Basic Moves Grid */}
               <div className="grid grid-cols-2 gap-3 mb-4">

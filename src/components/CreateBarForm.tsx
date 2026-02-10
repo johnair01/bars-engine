@@ -14,6 +14,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [moveType, setMoveType] = useState<'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | null>(null)
     const [showStory, setShowStory] = useState(false)
     const [storyMood, setStoryMood] = useState<string | null>(null)
+    const [applyFirstAidLens, setApplyFirstAidLens] = useState(false)
     const [state, formAction, isPending] = useActionState(createCustomBar, null)
 
     useEffect(() => {
@@ -217,6 +218,19 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     </div>
                     <input type="hidden" name="moveType" value={moveType || ''} />
                 </div>
+
+                <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+                    <input
+                        type="checkbox"
+                        checked={applyFirstAidLens}
+                        onChange={(e) => setApplyFirstAidLens(e.target.checked)}
+                        className="mt-1 h-4 w-4"
+                    />
+                    <span className="text-xs text-zinc-300">
+                        Apply latest Emotional First Aid lens to this quest.
+                    </span>
+                </label>
+                <input type="hidden" name="applyFirstAidLens" value={applyFirstAidLens ? 'true' : 'false'} />
 
                 {/* Assign To Player */}
                 <div className="space-y-2 pt-4 border-t border-zinc-800">

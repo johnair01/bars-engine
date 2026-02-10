@@ -14,6 +14,7 @@ export function AdminNav() {
         { name: 'Quests', href: '/admin/quests', icon: '⚔️' },
         { name: 'Players', href: '/admin/players', icon: '👥' },
         { name: 'World Data', href: '/admin/world', icon: '🌍' },
+        { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
     ]
 
     const handleNavClick = () => {

@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-aid'
 
 export async function createCustomBar(prevState: any, formData: FormData) {
     const cookieStore = await cookies()
@@ -13,20 +14,32 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     }
 
     const title = formData.get('title') as string
-    const description = formData.get('description') as string
+    let description = formData.get('description') as string
     const inputType = formData.get('inputType') as string || 'text'
     const inputLabel = formData.get('inputLabel') as string || 'Response'
     const visibility = formData.get('visibility') as string || 'public' // 'public' or 'private'
     const targetPlayerId = formData.get('targetPlayerId') as string || null
-    const moveType = formData.get('moveType') as string || null // wakeUp, cleanUp, growUp, showUp
-    const storyContent = formData.get('storyContent') as string || null
+    let moveType = formData.get('moveType') as string || null // wakeUp, cleanUp, growUp, showUp
+    let storyContent = formData.get('storyContent') as string || null
     const storyMood = formData.get('storyMood') as string || null
+    const applyFirstAidLens = (formData.get('applyFirstAidLens') as string) === 'true'
 
     if (!title) {
         return { error: 'Title is required' }
     }
 
     try {
+        if (applyFirstAidLens) {
+            const lens = await getLatestFirstAidQuestLensForPlayer(playerId)
+            if (lens) {
+                description = `${description}\n\nFirst Aid Lens: ${lens.publicHint}`
+                storyContent = storyContent
+                    ? `${storyContent}\n\n${lens.prompt}`
+                    : lens.prompt
+                if (!moveType) moveType = lens.preferredMoveType
+            }
+        }
+
         // Create simple vibe bar with one input
         const inputs = JSON.stringify([
             { key: 'response', label: inputLabel, type: inputType, placeholder: '' }
@@ -141,7 +154,7 @@ export async function createQuestFromWizard(data: any) {
     try {
         const {
             title, description, category, visibility,
-            reward, inputs, lifecycleFraming, approach
+            reward, inputs, lifecycleFraming, approach, applyFirstAidLens
         } = data
 
         // Validation
@@ -172,21 +185,36 @@ export async function createQuestFromWizard(data: any) {
             })
         }
 
+        let finalDescription = description || ''
+        let finalMoveType = lifecycleFraming || null
+        let finalStoryContent = approach ? `Approach: ${approach}` : null
+
+        if (applyFirstAidLens) {
+            const lens = await getLatestFirstAidQuestLensForPlayer(playerId)
+            if (lens) {
+                finalDescription = `${finalDescription}\n\nFirst Aid Lens: ${lens.publicHint}`
+                finalStoryContent = finalStoryContent
+                    ? `${finalStoryContent}\n\n${lens.prompt}`
+                    : lens.prompt
+                if (!finalMoveType) finalMoveType = lens.preferredMoveType
+            }
+        }
+
         // Create the Bar
         const newBar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title,
-                description,
+                description: finalDescription,
                 type: category || 'custom',
                 reward: Number(reward) || 1,
                 inputs: JSON.stringify(inputs || []),
                 visibility: visibility || 'public',
                 status: 'active',
-                moveType: lifecycleFraming || null,
+                moveType: finalMoveType,
                 storyPath: 'collective',
                 rootId: 'temp',
-                storyContent: approach ? `Approach: ${approach}` : null
+                storyContent: finalStoryContent
             }
         })
 

@@ -7,8 +7,9 @@ import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { completeQuest } from '@/actions/quest-engine'
+import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-aid'
 
-export async function generateQuestFromReading(hexagramId: number) {
+export async function generateQuestFromReading(hexagramId: number, useFirstAidLens: boolean = false) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -16,7 +17,7 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { error: 'Not logged in' }
     }
 
-    const result = await generateQuestCore(playerId, hexagramId)
+    const result = await generateQuestCore(playerId, hexagramId, useFirstAidLens)
 
     if (result.success) {
         // CHECK FOR QUEST COMPLETION (orientation-quest-3)
@@ -49,7 +50,7 @@ export async function generateQuestFromReading(hexagramId: number) {
     return result
 }
 
-export async function generateQuestCore(playerId: string, hexagramId: number) {
+export async function generateQuestCore(playerId: string, hexagramId: number, useFirstAidLens: boolean = false) {
     try {
         // 1. Fetch Player and Playbook
         const player = await db.player.findUnique({
@@ -72,6 +73,9 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
 
         // 3. Prepare AI Prompt
         const moves = JSON.parse(player.playbook.moves || '[]')
+        const firstAidLens = useFirstAidLens
+            ? await getLatestFirstAidQuestLensForPlayer(playerId)
+            : null
 
         const systemPrompt = `You are the Oracle of the Conclave. 
         You interpret the I Ching Hexagrams to guide the Collective.
@@ -88,6 +92,11 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
         Create a quest title and description.
         The description should feel like a call to action for the collective, incorporating the vibe of the hexagram and the mechanics of the chosen move.
         The Tone should be: ${hexagram.tone}.
+        ${firstAidLens ? `
+        Additional emotional first-aid context (player opted in):
+        ${firstAidLens.prompt}
+        Prefer clean-up style framing when it remains aligned to the hexagram.
+        ` : ''}
         `
 
         // 4. Call AI
@@ -107,14 +116,24 @@ export async function generateQuestCore(playerId: string, hexagramId: number) {
             data: {
                 creatorId: playerId,
                 title: object.title,
-                description: object.description,
+                description: firstAidLens
+                    ? `${object.description}\n\nFirst Aid Lens: ${firstAidLens.publicHint}`
+                    : object.description,
                 type: 'inspiration', // MARK AS INSPIRATION (Raw Bar)
                 reward: 2,
                 status: 'active',
                 storyPath: 'personal',
                 visibility: 'private',
+                moveType: firstAidLens?.preferredMoveType || null,
                 inputs: JSON.stringify([
-                    { key: 'reflection', label: 'Response', type: 'textarea', placeholder: `Use the move: ${object.selectedMove}` }
+                    {
+                        key: 'reflection',
+                        label: 'Response',
+                        type: 'textarea',
+                        placeholder: firstAidLens
+                            ? `Use the move: ${object.selectedMove}. Lens: ${firstAidLens.publicHint}`
+                            : `Use the move: ${object.selectedMove}`
+                    }
                 ])
             }
         })

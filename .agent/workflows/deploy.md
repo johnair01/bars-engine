@@ -1,39 +1,52 @@
 ---
-description: Deploy changes to Vercel production
+description: Push branch and verify Vercel preview links
 ---
 
-# Deploy to Vercel
+# Vercel Preview Deployment Workflow
 
-This workflow pushes code changes to GitHub, which triggers an automatic Vercel deployment.
+This workflow pushes branch changes to GitHub, which triggers an automatic Vercel preview deployment.
+Use this flow for feature QA and mobile testing.
 
 ## Steps
 
-// turbo-all
-
 1. Check git status:
    ```bash
-   cd /Users/test/.gemini/antigravity/bars-engine/web && git status
+   git status
    ```
 
 2. Stage all changes:
    ```bash
-   cd /Users/test/.gemini/antigravity/bars-engine/web && git add -A
+   git add -A
    ```
 
 3. Commit with a descriptive message:
    ```bash
-   cd /Users/test/.gemini/antigravity/bars-engine/web && git commit -m "fix: <describe changes>"
+   git commit -m "feat: <describe changes>"
    ```
    Note: Replace `<describe changes>` with actual commit message.
 
-4. Push to main branch (triggers Vercel auto-deploy):
+4. Push to current feature branch (triggers Vercel preview):
    ```bash
-   cd /Users/test/.gemini/antigravity/bars-engine/web && git push origin main
+   git push -u origin "$(git branch --show-current)"
    ```
 
-5. Verify deployment at: https://bars-engine.vercel.app/
+5. Locate preview URL from PR comment:
+   ```bash
+   BRANCH="$(git branch --show-current)"
+   PR_NUMBER="$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')"
+   OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+   gh api "repos/$OWNER_REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login=="vercel[bot]") | .body' \
+     | rg -o "https://[A-Za-z0-9.-]+\\.vercel\\.app" \
+     | head -n 1
+   ```
+
+6. Share QA links using preview URL (no localhost):
+   - `<preview>/emotional-first-aid`
+   - `<preview>/admin/first-aid` (admin-only)
+   - Any route under test for the feature
 
 ## Notes
-- Vercel automatically deploys when code is pushed to `main`
-- Check Vercel Dashboard for build logs if deployment fails
-- DATABASE_URL is already set in Vercel environment
+- Vercel automatically deploys previews for pushed branches.
+- For QA handoff, always send full preview links, not localhost links.
+- If preview protection is enabled, testers need Vercel auth before links load.
+- Check Vercel dashboard/build logs if deployment fails.

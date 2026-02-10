@@ -7,7 +7,12 @@ import { logout } from '@/actions/logout'
 export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthenticated: boolean }) {
     const pathname = usePathname()
 
-    const isActive = (path: string) => pathname === path ? 'text-white bg-zinc-800' : 'text-zinc-500 hover:text-zinc-300'
+    const isActive = (path: string) => {
+        const active = path === '/'
+            ? pathname === '/'
+            : pathname === path || pathname.startsWith(`${path}/`)
+        return active ? 'text-white bg-zinc-800' : 'text-zinc-500 hover:text-zinc-300'
+    }
 
     return (
         <nav className="fixed top-0 left-0 right-0 h-14 border-b border-zinc-900 bg-black/80 backdrop-blur z-50 flex items-center justify-between px-3 sm:px-8 font-mono text-xs">
@@ -19,6 +24,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         </Link>
                         <Link href="/town-square" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/town-square')}`}>
                             MARKET
+                        </Link>
+                        <Link href="/emotional-first-aid" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/emotional-first-aid')}`}>
+                            VIBES SOS
                         </Link>
                     </>
                 )}
