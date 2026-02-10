@@ -171,7 +171,7 @@ export async function completeQuestForPlayer(
     // CHECK ONBOARDING STATUS
     const obStatus = await getOnboardingStatus(playerId)
     if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
-        await completeOnboardingStep('firstQuest', playerId)
+        await completeOnboardingStep('firstQuest', playerId, { skipRevalidate: options?.skipRevalidate })
     }
 
     // MINT ACTUAL VIBULON TOKENS (Vibulon model)
