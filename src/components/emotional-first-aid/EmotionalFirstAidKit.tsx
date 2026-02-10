@@ -93,7 +93,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
             })
 
             if ('error' in response) {
-                setError(response.error)
+                setError(response.error || 'Unable to start first-aid session')
                 return
             }
 
@@ -119,7 +119,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
             })
 
             if ('error' in response) {
-                setError(response.error)
+                setError(response.error || 'Unable to complete first-aid session')
                 return
             }
 

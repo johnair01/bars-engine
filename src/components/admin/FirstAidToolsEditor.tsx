@@ -80,7 +80,7 @@ export function FirstAidToolsEditor() {
             })
 
             if ('error' in result) {
-                setError(result.error)
+                setError(result.error || 'Failed to save tool')
                 return
             }
 
@@ -105,7 +105,7 @@ export function FirstAidToolsEditor() {
             setError(null)
             const result = await deleteFirstAidTool(tool.id!)
             if ('error' in result) {
-                setError(result.error)
+                setError(result.error || 'Failed to delete tool')
                 return
             }
             setFeedback(`Deleted ${tool.name}`)

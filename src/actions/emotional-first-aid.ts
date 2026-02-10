@@ -407,8 +407,9 @@ export async function upsertFirstAidTool(input: AdminToolInput) {
     let twineLogic: string
     try {
         twineLogic = JSON.stringify(parseTwineLogic(input.twineLogic))
-    } catch (e: any) {
-        return { error: e?.message || 'Invalid Twine logic JSON' }
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Invalid Twine logic JSON'
+        return { error: message }
     }
 
     const tags = parseTagsInput(input.tags)
