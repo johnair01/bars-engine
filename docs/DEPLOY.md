@@ -48,3 +48,38 @@ The user asked: *"It also needs to be able to be updated even while the game is 
     - **Zero Downtime**: The game continues running smoothly.
 
 **⚠️ Caution**: Avoid destructive database schema changes (deleting columns) during the live event. Adding columns (like we just did) is safe.
+
+## 5. Standard QA Flow: Vercel Preview First (No localhost)
+
+To reduce local memory usage and support mobile/iPhone testing, use Vercel Preview URLs as the default QA flow.
+
+### Team Standard
+- Do **not** send `localhost` links for QA handoff.
+- Every feature handoff should include:
+  - Base preview URL
+  - Direct route links for the feature
+  - If needed, admin route links
+
+### Retrieve the current branch preview URL
+1. Push your branch.
+2. Open/update the PR.
+3. Copy the latest Vercel Preview URL from the `vercel[bot]` PR comment.
+
+Optional CLI helper:
+
+```bash
+BRANCH="$(git branch --show-current)"
+PR_NUMBER="$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')"
+OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+gh api "repos/$OWNER_REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login=="vercel[bot]") | .body' \
+  | rg -o "https://[A-Za-z0-9.-]+\\.vercel\\.app" \
+  | head -n 1
+```
+
+### Example handoff format
+
+```text
+Preview Base: https://<preview>.vercel.app
+Feature: https://<preview>.vercel.app/emotional-first-aid
+Admin: https://<preview>.vercel.app/admin/first-aid
+```
