@@ -393,9 +393,27 @@ export async function runSeed(prisma: PrismaClient) {
             description: 'How does the convergence feel today? Your feedback helps clear the collective frequency.',
             moveType: 'cleanUp',
             inputs: JSON.stringify([
-                { key: 'sentiment', label: 'Sentiment', type: 'select', options: ['Emerald (Clear)', 'Amber (Tuning)', 'Obsidian (Opaque)'] },
-                { key: 'clarity', label: 'Clarity', type: 'select', options: ['High', 'Moderate', 'Low'] },
-                { key: 'feedback', label: 'Feedback', type: 'textarea', placeholder: 'Tell us more...' }
+                {
+                    key: 'sentiment',
+                    label: 'Resonance (Overall Vibe)',
+                    type: 'select',
+                    options: [
+                        'Emerald (High resonance, I am finding my flow)',
+                        'Amber (Static present, curious but occasionally stuck)',
+                        'Obsidian (Heavy interference, I feel blocked or frustrated)'
+                    ]
+                },
+                {
+                    key: 'clarity',
+                    label: 'Game Grammar (Clarity of Action)',
+                    type: 'select',
+                    options: [
+                        'Clear Path (I know exactly what my next move is)',
+                        'Foggy (I understand the vibe, but the grammar is fuzzy)',
+                        'Blind (The system feels like a black box)'
+                    ]
+                },
+                { key: 'feedback', label: 'Transmission', type: 'textarea', placeholder: 'What specific friction or magic did you encounter?' }
             ]),
             isSystem: true,
             reward: 1
@@ -411,9 +429,27 @@ export async function runSeed(prisma: PrismaClient) {
             reward: 1,
             isSystem: true,
             inputs: JSON.stringify([
-                { key: 'sentiment', label: 'Sentiment', type: 'select', options: ['Emerald (Clear)', 'Amber (Tuning)', 'Obsidian (Opaque)'] },
-                { key: 'clarity', label: 'Clarity', type: 'select', options: ['High', 'Moderate', 'Low'] },
-                { key: 'feedback', label: 'Feedback', type: 'textarea', placeholder: 'Tell us more...' }
+                {
+                    key: 'sentiment',
+                    label: 'Resonance (Overall Vibe)',
+                    type: 'select',
+                    options: [
+                        'Emerald (High resonance, I am finding my flow)',
+                        'Amber (Static present, curious but occasionally stuck)',
+                        'Obsidian (Heavy interference, I feel blocked or frustrated)'
+                    ]
+                },
+                {
+                    key: 'clarity',
+                    label: 'Game Grammar (Clarity of Action)',
+                    type: 'select',
+                    options: [
+                        'Clear Path (I know exactly what my next move is)',
+                        'Foggy (I understand the vibe, but the grammar is fuzzy)',
+                        'Blind (The system feels like a black box)'
+                    ]
+                },
+                { key: 'feedback', label: 'Transmission', type: 'textarea', placeholder: 'What specific friction or magic did you encounter?' }
             ])
         }
     })
