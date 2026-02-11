@@ -38,7 +38,12 @@ export async function ensureWallet(playerId: string) {
 /**
  * Mint new Vibulons for a player
  */
-export async function mintVibulon(playerId: string, amount: number, origin: { source: string, id: string, title: string }) {
+export async function mintVibulon(
+    playerId: string,
+    amount: number,
+    origin: { source: string, id: string, title: string },
+    options?: { skipRevalidate?: boolean }
+) {
     if (amount <= 0) return
 
     const data = []
@@ -52,7 +57,9 @@ export async function mintVibulon(playerId: string, amount: number, origin: { so
     }
 
     await db.vibulon.createMany({ data })
-    revalidatePath('/')
+    if (!options?.skipRevalidate) {
+        revalidatePath('/')
+    }
 }
 
 /**

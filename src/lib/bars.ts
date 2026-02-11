@@ -4,6 +4,7 @@ export type BarInput = {
     key: string
     label: string
     type: BarInputType
+    required?: boolean
     placeholder?: string
     options?: string[]
 }

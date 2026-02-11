@@ -2,6 +2,9 @@
 
 How to deploy the Conclave Engine for a live event.
 
+For release quality checks focused on the playable loop, use:
+- `docs/LOOP_READINESS_CHECKLIST.md`
+
 ## 1. Hosting (Vercel)
 The easiest way to deploy is via **Vercel**.
 

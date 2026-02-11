@@ -55,7 +55,11 @@ export async function getOnboardingStatus(playerId?: string) {
 /**
  * Mark an onboarding step as complete
  */
-export async function completeOnboardingStep(step: 'welcome' | 'firstQuest' | 'firstCreate', playerId?: string) {
+export async function completeOnboardingStep(
+    step: 'welcome' | 'firstQuest' | 'firstCreate',
+    playerId?: string,
+    options?: { skipRevalidate?: boolean }
+) {
     let player
     if (playerId) {
         player = await db.player.findUnique({ where: { id: playerId } })
@@ -105,7 +109,9 @@ export async function completeOnboardingStep(step: 'welcome' | 'firstQuest' | 'f
         })
     }
 
-    revalidatePath('/')
+    if (!options?.skipRevalidate) {
+        revalidatePath('/')
+    }
     return { success: true, status }
 }
 

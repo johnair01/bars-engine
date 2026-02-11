@@ -36,61 +36,76 @@ function VibeBarCard({
     }
 
     const renderInput = (input: BarInput) => {
+        const label = (
+            <label className="block text-[10px] uppercase text-zinc-500 font-bold tracking-widest mb-1">
+                {input.label}
+            </label>
+        )
+
         if (input.type === 'text') {
             return (
-                <input
-                    key={input.key}
-                    value={inputs[input.key] || ''}
-                    onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
-                    placeholder={input.placeholder}
-                    className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white"
-                />
+                <div key={input.key}>
+                    {label}
+                    <input
+                        value={inputs[input.key] || ''}
+                        onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
+                        placeholder={input.placeholder}
+                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white"
+                    />
+                </div>
             )
         }
         if (input.type === 'textarea') {
             return (
-                <textarea
-                    key={input.key}
-                    value={inputs[input.key] || ''}
-                    onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
-                    placeholder={input.placeholder}
-                    className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white h-20"
-                />
+                <div key={input.key}>
+                    {label}
+                    <textarea
+                        value={inputs[input.key] || ''}
+                        onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
+                        placeholder={input.placeholder}
+                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white h-20"
+                    />
+                </div>
             )
         }
         if (input.type === 'select') {
             return (
-                <select
-                    key={input.key}
-                    value={inputs[input.key] || ''}
-                    onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
-                    className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white"
-                >
-                    <option value="">Select...</option>
-                    {input.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
+                <div key={input.key}>
+                    {label}
+                    <select
+                        value={inputs[input.key] || ''}
+                        onChange={e => setInputs({ ...inputs, [input.key]: e.target.value })}
+                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-sm text-white"
+                    >
+                        <option value="">Select...</option>
+                        {input.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                </div>
             )
         }
         if (input.type === 'multiselect') {
             const selected = inputs[input.key] || []
             return (
-                <div key={input.key} className="grid grid-cols-2 gap-2">
-                    {input.options?.map(opt => (
-                        <button
-                            key={opt}
-                            type="button"
-                            onClick={() => {
-                                if (selected.includes(opt)) {
-                                    setInputs({ ...inputs, [input.key]: selected.filter((s: string) => s !== opt) })
-                                } else {
-                                    setInputs({ ...inputs, [input.key]: [...selected, opt] })
-                                }
-                            }}
-                            className={`text-xs py-2 px-3 rounded border text-left ${selected.includes(opt) ? 'bg-green-900/20 border-green-500 text-green-400' : 'bg-black border-zinc-800 text-zinc-400'}`}
-                        >
-                            {opt}
-                        </button>
-                    ))}
+                <div key={input.key}>
+                    {label}
+                    <div className="grid grid-cols-2 gap-2">
+                        {input.options?.map(opt => (
+                            <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                    if (selected.includes(opt)) {
+                                        setInputs({ ...inputs, [input.key]: selected.filter((s: string) => s !== opt) })
+                                    } else {
+                                        setInputs({ ...inputs, [input.key]: [...selected, opt] })
+                                    }
+                                }}
+                                className={`text-xs py-2 px-3 rounded border text-left ${selected.includes(opt) ? 'bg-green-900/20 border-green-500 text-green-400' : 'bg-black border-zinc-800 text-zinc-400'}`}
+                            >
+                                {opt}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )
         }
@@ -98,8 +113,12 @@ function VibeBarCard({
     }
 
     const isValid = bar.inputs.every(inp => {
-        if (inp.type === 'multiselect') return true
-        return inputs[inp.key]
+        if (!inp.required) return true
+        if (inp.type === 'multiselect') {
+            return Array.isArray(inputs[inp.key]) && inputs[inp.key].length > 0
+        }
+        const value = inputs[inp.key]
+        return typeof value === 'string' ? value.trim().length > 0 : !!value
     })
 
     return (
