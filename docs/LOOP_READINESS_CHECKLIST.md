@@ -29,6 +29,20 @@ git status --short
 npm run build
 ```
 
+### One-command runner (recommended)
+
+Run full readiness:
+
+```bash
+DATABASE_URL="postgres://..." npm run loop:ready
+```
+
+Run quick mode (skip build):
+
+```bash
+DATABASE_URL="postgres://..." npm run loop:ready:quick
+```
+
 ---
 
 ## 1) Data Safety & Audit Visibility (2 min)
