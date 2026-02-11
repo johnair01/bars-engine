@@ -16,6 +16,8 @@
     "db:reset-history": "tsx scripts/check-reset-history.ts",
     "db:feedback-cap-history": "tsx scripts/check-feedback-cap-history.ts",
     "test:feedback-cap": "tsx scripts/test-feedback-quest-cap.ts",
+    "loop:ready": "tsx scripts/loop-readiness.ts",
+    "loop:ready:quick": "tsx scripts/loop-readiness.ts --quick",
     "test:actions": "tsx scripts/test-actions.ts",
     "feedback:sync": "tsx scripts/sync_feedback.ts",
     "postinstall": "prisma generate"
