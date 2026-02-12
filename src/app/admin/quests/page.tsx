@@ -19,6 +19,9 @@ export default function AdminQuestsPage() {
         <div className="space-y-8">
             <header className="flex justify-between items-center">
                 <div>
+                    <Link href="/admin" className="text-xs text-zinc-500 hover:text-white transition-colors">
+                        ← Back to Admin Control
+                    </Link>
                     <h1 className="text-3xl font-bold text-white mb-2">Quests (Custom Bars)</h1>
                     <p className="text-zinc-400">Library of all quests available to be used in Threads or Packs.</p>
                 </div>

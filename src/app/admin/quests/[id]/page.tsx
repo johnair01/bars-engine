@@ -1,10 +1,11 @@
 'use client'
 
 import { getAdminQuest, upsertQuest, deleteQuest } from '@/actions/admin'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
-export default function EditQuestPage({ params }: { params: { id: string } }) {
+export default function EditQuestPage() {
+    const params = useParams<{ id: string }>()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -18,16 +19,21 @@ export default function EditQuestPage({ params }: { params: { id: string } }) {
     const [reward, setReward] = useState(0)
     const [inputs, setInputs] = useState('[]')
 
-    const isNew = params.id === 'new-quest'
+    const id = params.id
+    const isNew = id === 'new-quest'
 
     useEffect(() => {
+        if (!id) {
+            setLoading(false)
+            return
+        }
         if (isNew) {
             setLoading(false)
             return
         }
 
         startTransition(async () => {
-            const data = await getAdminQuest(params.id)
+            const data = await getAdminQuest(id)
             if (data) {
                 setTitle(data.title)
                 setDescription(data.description || '')
@@ -37,7 +43,7 @@ export default function EditQuestPage({ params }: { params: { id: string } }) {
             }
             setLoading(false)
         })
-    }, [params.id, isNew])
+    }, [id, isNew])
 
     // Handlers
     const handleSave = async () => {
@@ -50,7 +56,7 @@ export default function EditQuestPage({ params }: { params: { id: string } }) {
 
         startTransition(async () => {
             await upsertQuest({
-                id: isNew ? undefined : params.id,
+                id: isNew ? undefined : id,
                 title,
                 description,
                 type,
@@ -65,7 +71,7 @@ export default function EditQuestPage({ params }: { params: { id: string } }) {
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this quest?')) return
         startTransition(async () => {
-            await deleteQuest(params.id)
+            await deleteQuest(id)
             router.push('/admin/quests')
             router.refresh()
         })

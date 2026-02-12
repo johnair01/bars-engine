@@ -1,7 +1,7 @@
 'use client'
 
 import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, updateThreadQuests } from '@/actions/admin'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
 const PLAYBOOKS = [
@@ -9,7 +9,8 @@ const PLAYBOOKS = [
     'Mountain (Gen)', 'Wind (Xun)', 'Fire (Li)', 'Lake (Dui)'
 ]
 
-export default function EditThreadPage({ params }: { params: { id: string } }) {
+export default function EditThreadPage() {
+    const params = useParams<{ id: string }>()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -28,16 +29,21 @@ export default function EditThreadPage({ params }: { params: { id: string } }) {
     const [availableQuests, setAvailableQuests] = useState<any[]>([])
     const [selectedQuestId, setSelectedQuestId] = useState('')
 
-    const isNew = params.id === 'new-thread'
+    const id = params.id
+    const isNew = id === 'new-thread'
 
     useEffect(() => {
+        if (!id) {
+            setLoading(false)
+            return
+        }
         startTransition(async () => {
             // Load available quests for dropdown
             const quests = await getAdminQuests()
             setAvailableQuests(quests)
 
             if (!isNew) {
-                const data = await getAdminThread(params.id)
+                const data = await getAdminThread(id)
                 if (data) {
                     setTitle(data.title)
                     setDescription(data.description || '')
@@ -79,14 +85,14 @@ export default function EditThreadPage({ params }: { params: { id: string } }) {
             }
             setLoading(false)
         })
-    }, [params.id, isNew])
+    }, [id, isNew])
 
     // Handlers
     const handleSave = async () => {
         startTransition(async () => {
             // 1. Save Metadata
             await upsertQuestThread({
-                id: isNew ? undefined : params.id,
+                id: isNew ? undefined : id,
                 title,
                 description,
                 threadType,
@@ -102,7 +108,7 @@ export default function EditThreadPage({ params }: { params: { id: string } }) {
             // OR we fix upsert to return ID.
 
             if (!isNew) {
-                await updateThreadQuests(params.id, threadQuests.map(q => q.questId))
+                await updateThreadQuests(id, threadQuests.map(q => q.questId))
             }
 
             router.push('/admin/journeys')
@@ -113,7 +119,7 @@ export default function EditThreadPage({ params }: { params: { id: string } }) {
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this thread?')) return
         startTransition(async () => {
-            await deleteThread(params.id)
+            await deleteThread(id)
             router.push('/admin/journeys')
             router.refresh()
         })

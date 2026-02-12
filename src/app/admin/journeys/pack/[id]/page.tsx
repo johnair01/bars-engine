@@ -1,7 +1,7 @@
 'use client'
 
 import { getAdminPack, upsertQuestPack, deletePack, getAdminQuests, updatePackQuests } from '@/actions/admin'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
 const PLAYBOOKS = [
@@ -9,7 +9,8 @@ const PLAYBOOKS = [
     'Mountain (Gen)', 'Wind (Xun)', 'Fire (Li)', 'Lake (Dui)'
 ]
 
-export default function EditPackPage({ params }: { params: { id: string } }) {
+export default function EditPackPage() {
+    const params = useParams<{ id: string }>()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -26,16 +27,21 @@ export default function EditPackPage({ params }: { params: { id: string } }) {
     const [availableQuests, setAvailableQuests] = useState<any[]>([])
     const [selectedQuestId, setSelectedQuestId] = useState('')
 
-    const isNew = params.id === 'new-pack'
+    const id = params.id
+    const isNew = id === 'new-pack'
 
     useEffect(() => {
+        if (!id) {
+            setLoading(false)
+            return
+        }
         startTransition(async () => {
             // Load available quests
             const quests = await getAdminQuests()
             setAvailableQuests(quests)
 
             if (!isNew) {
-                const data = await getAdminPack(params.id)
+                const data = await getAdminPack(id)
                 if (data) {
                     setTitle(data.title)
                     setDescription(data.description || '')
@@ -56,20 +62,20 @@ export default function EditPackPage({ params }: { params: { id: string } }) {
             }
             setLoading(false)
         })
-    }, [params.id, isNew])
+    }, [id, isNew])
 
     // Handlers
     const handleSave = async () => {
         startTransition(async () => {
             await upsertQuestPack({
-                id: isNew ? undefined : params.id,
+                id: isNew ? undefined : id,
                 title,
                 description,
                 allowedPlaybooks: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
             })
 
             if (!isNew) {
-                await updatePackQuests(params.id, packQuests.map(q => q.questId))
+                await updatePackQuests(id, packQuests.map(q => q.questId))
             }
 
             router.push('/admin/journeys')
@@ -80,7 +86,7 @@ export default function EditPackPage({ params }: { params: { id: string } }) {
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this pack?')) return
         startTransition(async () => {
-            await deletePack(params.id)
+            await deletePack(id)
             router.push('/admin/journeys')
             router.refresh()
         })
