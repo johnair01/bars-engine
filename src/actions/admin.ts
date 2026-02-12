@@ -385,25 +385,30 @@ export async function assignPackToPlayer(playerId: string, packId: string) {
 }
 
 export async function deleteAdminPlayer(playerId: string) {
-    const admin = await checkAdmin()
-    if (admin.id === playerId) throw new Error('Cannot delete your own account')
+    try {
+        const admin = await checkAdmin()
+        if (admin.id === playerId) return { error: 'Cannot delete your own account' }
 
-    await db.$transaction(async (tx) => {
-        await tx.customBar.updateMany({ where: { creatorId: playerId }, data: { creatorId: admin.id } })
-        await tx.customBar.updateMany({ where: { claimedById: playerId }, data: { claimedById: null } })
-        await tx.playerRole.deleteMany({ where: { playerId } })
-        await tx.playerBar.deleteMany({ where: { playerId } })
-        await tx.playerQuest.deleteMany({ where: { playerId } })
-        await tx.threadProgress.deleteMany({ where: { playerId } })
-        await tx.packProgress.deleteMany({ where: { playerId } })
-        await tx.vibulonEvent.deleteMany({ where: { playerId } })
-        await tx.vibulon.deleteMany({ where: { ownerId: playerId } })
-        await tx.starterPack.deleteMany({ where: { playerId } })
-        await tx.player.delete({ where: { id: playerId } })
-    })
+        await db.$transaction(async (tx) => {
+            await tx.customBar.updateMany({ where: { creatorId: playerId }, data: { creatorId: admin.id } })
+            await tx.customBar.updateMany({ where: { claimedById: playerId }, data: { claimedById: null } })
+            await tx.playerRole.deleteMany({ where: { playerId } })
+            await tx.playerBar.deleteMany({ where: { playerId } })
+            await tx.playerQuest.deleteMany({ where: { playerId } })
+            await tx.threadProgress.deleteMany({ where: { playerId } })
+            await tx.packProgress.deleteMany({ where: { playerId } })
+            await tx.vibulonEvent.deleteMany({ where: { playerId } })
+            await tx.vibulon.deleteMany({ where: { ownerId: playerId } })
+            await tx.starterPack.deleteMany({ where: { playerId } })
+            await tx.player.delete({ where: { id: playerId } })
+        })
 
-    revalidatePath('/admin/players')
-    return { success: true }
+        revalidatePath('/admin/players')
+        return { success: true }
+    } catch (error) {
+        console.error(`[AdminDeletePlayer] failed for ${playerId}:`, error instanceof Error ? error.message : String(error))
+        return { error: 'Failed to delete player. Please refresh and try again.' }
+    }
 }
 
 // ===================================
