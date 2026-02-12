@@ -132,20 +132,23 @@ export async function upsertQuestPack(data: {
         allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
     }
 
+    let packId = data.id
     if (data.id) {
         await db.questPack.update({
             where: { id: data.id },
             data: payload
         })
     } else {
-        await db.questPack.create({
+        const created = await db.questPack.create({
             data: {
                 ...payload,
                 creatorType: 'system',
             }
         })
+        packId = created.id
     }
     revalidatePath('/admin/journeys')
+    return { id: packId as string }
 }
 // ===================================
 // THREAD QUEST MANAGEMENT
