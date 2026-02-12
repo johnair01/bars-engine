@@ -1,13 +1,8 @@
 'use client'
 
-import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, updateThreadQuests } from '@/actions/admin'
+import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, updateThreadQuests, getAdminWorldData } from '@/actions/admin'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
-
-const PLAYBOOKS = [
-    'Heaven (Qian)', 'Earth (Kun)', 'Thunder (Zhen)', 'Water (Kan)',
-    'Mountain (Gen)', 'Wind (Xun)', 'Fire (Li)', 'Lake (Dui)'
-]
 
 export default function EditThreadPage() {
     const params = useParams<{ id: string }>()
@@ -27,6 +22,7 @@ export default function EditThreadPage() {
     // Quest Management
     const [threadQuests, setThreadQuests] = useState<any[]>([]) // { questId, quest: { title } }
     const [availableQuests, setAvailableQuests] = useState<any[]>([])
+    const [availableArchetypes, setAvailableArchetypes] = useState<any[]>([])
     const [selectedQuestId, setSelectedQuestId] = useState('')
 
     const id = params.id
@@ -40,7 +36,9 @@ export default function EditThreadPage() {
         startTransition(async () => {
             // Load available quests for dropdown
             const quests = await getAdminQuests()
+            const [, archetypes] = await getAdminWorldData()
             setAvailableQuests(quests)
+            setAvailableArchetypes(archetypes)
 
             if (!isNew) {
                 const data = await getAdminThread(id)
@@ -125,11 +123,11 @@ export default function EditThreadPage() {
         })
     }
 
-    const togglePlaybook = (pb: string) => {
-        if (allowedPlaybooks.includes(pb)) {
-            setAllowedPlaybooks(allowedPlaybooks.filter(p => p !== pb))
+    const togglePlaybook = (archetypeName: string) => {
+        if (allowedPlaybooks.includes(archetypeName)) {
+            setAllowedPlaybooks(allowedPlaybooks.filter(p => p !== archetypeName))
         } else {
-            setAllowedPlaybooks([...allowedPlaybooks, pb])
+            setAllowedPlaybooks([...allowedPlaybooks, archetypeName])
         }
     }
 
@@ -231,20 +229,20 @@ export default function EditThreadPage() {
 
                         <div className="space-y-3">
                             <label className="text-sm font-bold text-zinc-400">
-                                Restrict to Playbooks
+                                Restrict to Archetypes
                             </label>
                             <div className="grid grid-cols-2 gap-2">
-                                {PLAYBOOKS.map(pb => (
+                                {availableArchetypes.map((archetype: any) => (
                                     <button
-                                        key={pb}
-                                        onClick={() => togglePlaybook(pb)}
-                                        className={`text-left px-3 py-2 rounded-lg text-xs transition-colors border ${allowedPlaybooks.includes(pb)
+                                        key={archetype.id}
+                                        onClick={() => togglePlaybook(archetype.name)}
+                                        className={`text-left px-3 py-2 rounded-lg text-xs transition-colors border ${allowedPlaybooks.includes(archetype.name)
                                                 ? 'bg-purple-900/30 border-purple-500 text-purple-200'
                                                 : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
                                             }`}
                                     >
-                                        {allowedPlaybooks.includes(pb) ? '✓ ' : '○ '}
-                                        {pb.split(' ')[0]}
+                                        {allowedPlaybooks.includes(archetype.name) ? '✓ ' : '○ '}
+                                        {archetype.name}
                                     </button>
                                 ))}
                             </div>
