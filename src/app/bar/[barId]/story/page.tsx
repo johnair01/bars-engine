@@ -3,8 +3,10 @@ import { cookies } from 'next/headers'
 import { redirect, notFound } from 'next/navigation'
 import { STARTER_BARS } from '@/lib/bars'
 import StoryReader from './StoryReader'
+import TwineStoryReader from './TwineStoryReader'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { TwineLogic } from '@/lib/twine-engine'
 
 type Passage = {
     id: string
@@ -42,7 +44,29 @@ export default async function StoryBarPage({
     // Find the bar definition
     const barDef = STARTER_BARS.find(b => b.id === barId)
     if (!barDef || barDef.type !== 'story' || !barDef.storyPath) {
-        notFound()
+        const twineQuest = await db.customBar.findUnique({
+            where: { id: barId },
+            select: { id: true, title: true, description: true, twineLogic: true }
+        })
+
+        if (!twineQuest?.twineLogic) notFound()
+
+        let logic: TwineLogic | null = null
+        try {
+            logic = JSON.parse(twineQuest.twineLogic) as TwineLogic
+        } catch {
+            notFound()
+        }
+
+        if (!logic) notFound()
+
+        return (
+            <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 flex items-center justify-center">
+                <div className="max-w-2xl w-full">
+                    <TwineStoryReader questId={twineQuest.id} title={twineQuest.title} description={twineQuest.description} logic={logic} />
+                </div>
+            </div>
+        )
     }
 
     // Load the current passage
