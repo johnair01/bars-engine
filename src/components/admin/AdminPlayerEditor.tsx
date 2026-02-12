@@ -1,11 +1,17 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import {
     toggleAdminRole,
     updatePlayerProfile,
     adminMintVibulons,
-    adminTransferVibulons
+    adminTransferVibulons,
+    getAdminQuests,
+    getAdminJourneys,
+    assignQuestToPlayer,
+    assignThreadToPlayer,
+    assignPackToPlayer,
+    deleteAdminPlayer
 } from '@/actions/admin'
 
 interface AdminPlayerEditorProps {
@@ -18,6 +24,21 @@ interface AdminPlayerEditorProps {
 export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: AdminPlayerEditorProps) {
     const [isPending, startTransition] = useTransition()
     const isAdmin = player.roles.some((r: any) => r.role.key === 'admin')
+    const [quests, setQuests] = useState<any[]>([])
+    const [threads, setThreads] = useState<any[]>([])
+    const [packs, setPacks] = useState<any[]>([])
+    const [selectedQuestId, setSelectedQuestId] = useState('')
+    const [selectedThreadId, setSelectedThreadId] = useState('')
+    const [selectedPackId, setSelectedPackId] = useState('')
+
+    useEffect(() => {
+        startTransition(async () => {
+            const [allQuests, journeys] = await Promise.all([getAdminQuests(), getAdminJourneys()])
+            setQuests(allQuests)
+            setThreads(journeys.threads)
+            setPacks(journeys.packs)
+        })
+    }, [])
 
     const handleToggleAdmin = async () => {
         if (!confirm(`${isAdmin ? 'Revoke' : 'Grant'} Admin role for ${player.name}?`)) return
@@ -71,6 +92,32 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
             try {
                 await adminTransferVibulons(player.id, targetId, amount)
                 onUpdate()
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
+    const handleAssign = async (type: 'quest' | 'thread' | 'pack') => {
+        startTransition(async () => {
+            try {
+                if (type === 'quest' && selectedQuestId) await assignQuestToPlayer(player.id, selectedQuestId)
+                if (type === 'thread' && selectedThreadId) await assignThreadToPlayer(player.id, selectedThreadId)
+                if (type === 'pack' && selectedPackId) await assignPackToPlayer(player.id, selectedPackId)
+                onUpdate()
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
+    const handleDeletePlayer = async () => {
+        if (!confirm(`Delete player ${player.name}? This cannot be undone.`)) return
+        startTransition(async () => {
+            try {
+                await deleteAdminPlayer(player.id)
+                onUpdate()
+                onClose()
             } catch (e: any) {
                 alert(e.message)
             }
@@ -175,10 +222,44 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
                             </button>
                         </div>
                     </section>
+
+                    <section className="space-y-4">
+                        <h3 className="text-[10px] uppercase text-zinc-500 font-bold tracking-[0.2em]">Assignments</h3>
+                        <div className="space-y-2">
+                            <div className="flex gap-2">
+                                <select value={selectedQuestId} onChange={(e) => setSelectedQuestId(e.target.value)} className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white">
+                                    <option value="">Assign quest...</option>
+                                    {quests.map((q) => <option key={q.id} value={q.id}>{q.title}</option>)}
+                                </select>
+                                <button onClick={() => handleAssign('quest')} disabled={isPending || !selectedQuestId} className="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-200 text-sm disabled:opacity-50">Assign</button>
+                            </div>
+                            <div className="flex gap-2">
+                                <select value={selectedThreadId} onChange={(e) => setSelectedThreadId(e.target.value)} className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white">
+                                    <option value="">Assign journey...</option>
+                                    {threads.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                                </select>
+                                <button onClick={() => handleAssign('thread')} disabled={isPending || !selectedThreadId} className="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-200 text-sm disabled:opacity-50">Assign</button>
+                            </div>
+                            <div className="flex gap-2">
+                                <select value={selectedPackId} onChange={(e) => setSelectedPackId(e.target.value)} className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white">
+                                    <option value="">Assign pack...</option>
+                                    {packs.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                </select>
+                                <button onClick={() => handleAssign('pack')} disabled={isPending || !selectedPackId} className="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-200 text-sm disabled:opacity-50">Assign</button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
                 {/* Footer */}
                 <footer className="px-6 py-6 border-t border-zinc-800 bg-zinc-900/20">
+                    <button
+                        onClick={handleDeletePlayer}
+                        disabled={isPending}
+                        className="w-full mb-3 bg-red-900/30 text-red-300 font-bold py-3.5 rounded-2xl hover:bg-red-900/50 transition-all disabled:opacity-50"
+                    >
+                        Delete Player
+                    </button>
                     <button
                         onClick={onClose}
                         className="w-full bg-white text-black font-bold py-3.5 rounded-2xl hover:bg-zinc-200 transition-all shadow-xl shadow-white/5"

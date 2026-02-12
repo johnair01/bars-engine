@@ -89,20 +89,23 @@ export async function upsertQuestThread(data: {
         allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
     }
 
+    let threadId = data.id
     if (data.id) {
         await db.questThread.update({
             where: { id: data.id },
             data: payload
         })
     } else {
-        await db.questThread.create({
+        const created = await db.questThread.create({
             data: {
                 ...payload,
                 creatorType: 'admin',
             }
         })
+        threadId = created.id
     }
     revalidatePath('/admin/journeys')
+    return { id: threadId as string }
 }
 
 export async function deleteThread(id: string) {
@@ -129,20 +132,23 @@ export async function upsertQuestPack(data: {
         allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
     }
 
+    let packId = data.id
     if (data.id) {
         await db.questPack.update({
             where: { id: data.id },
             data: payload
         })
     } else {
-        await db.questPack.create({
+        const created = await db.questPack.create({
             data: {
                 ...payload,
                 creatorType: 'system',
             }
         })
+        packId = created.id
     }
     revalidatePath('/admin/journeys')
+    return { id: packId as string }
 }
 // ===================================
 // THREAD QUEST MANAGEMENT
@@ -249,6 +255,7 @@ export async function upsertQuest(data: {
         visibility: 'public', // Default to public for system quests
     }
 
+    let questId = data.id
     if (data.id) {
         await db.customBar.update({
             where: { id: data.id },
@@ -258,7 +265,7 @@ export async function upsertQuest(data: {
         const admin = await getCurrentPlayer()
         if (!admin) throw new Error('No user')
 
-        await db.customBar.create({
+        const created = await db.customBar.create({
             data: {
                 ...payload,
                 creatorId: admin.id,
@@ -267,8 +274,10 @@ export async function upsertQuest(data: {
                 ...(data.id ? { id: data.id } : {})
             }
         })
+        questId = created.id
     }
     revalidatePath('/admin/quests')
+    return { id: questId as string }
 }
 
 export async function deleteQuest(id: string) {
@@ -336,6 +345,61 @@ export async function updatePlayerProfile(playerId: string, data: { nationId?: s
             nationId: data.nationId || undefined,
             playbookId: data.playbookId || undefined
         }
+    })
+
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function assignQuestToPlayer(playerId: string, questId: string) {
+    await checkAdmin()
+    await db.playerQuest.upsert({
+        where: { playerId_questId: { playerId, questId } },
+        update: { status: 'assigned', completedAt: null, inputs: null },
+        create: { playerId, questId, status: 'assigned' }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function assignThreadToPlayer(playerId: string, threadId: string) {
+    await checkAdmin()
+    await db.threadProgress.upsert({
+        where: { threadId_playerId: { threadId, playerId } },
+        update: { currentPosition: 1, completedAt: null, isArchived: false },
+        create: { threadId, playerId, currentPosition: 1 }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function assignPackToPlayer(playerId: string, packId: string) {
+    await checkAdmin()
+    await db.packProgress.upsert({
+        where: { packId_playerId: { packId, playerId } },
+        update: { completed: '[]', completedAt: null, isArchived: false },
+        create: { packId, playerId, completed: '[]' }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function deleteAdminPlayer(playerId: string) {
+    const admin = await checkAdmin()
+    if (admin.id === playerId) throw new Error('Cannot delete your own account')
+
+    await db.$transaction(async (tx) => {
+        await tx.customBar.updateMany({ where: { creatorId: playerId }, data: { creatorId: admin.id } })
+        await tx.customBar.updateMany({ where: { claimedById: playerId }, data: { claimedById: null } })
+        await tx.playerRole.deleteMany({ where: { playerId } })
+        await tx.playerBar.deleteMany({ where: { playerId } })
+        await tx.playerQuest.deleteMany({ where: { playerId } })
+        await tx.threadProgress.deleteMany({ where: { playerId } })
+        await tx.packProgress.deleteMany({ where: { playerId } })
+        await tx.vibulonEvent.deleteMany({ where: { playerId } })
+        await tx.vibulon.deleteMany({ where: { ownerId: playerId } })
+        await tx.starterPack.deleteMany({ where: { playerId } })
+        await tx.player.delete({ where: { id: playerId } })
     })
 
     revalidatePath('/admin/players')
