@@ -351,6 +351,61 @@ export async function updatePlayerProfile(playerId: string, data: { nationId?: s
     return { success: true }
 }
 
+export async function assignQuestToPlayer(playerId: string, questId: string) {
+    await checkAdmin()
+    await db.playerQuest.upsert({
+        where: { playerId_questId: { playerId, questId } },
+        update: { status: 'assigned', completedAt: null, inputs: null },
+        create: { playerId, questId, status: 'assigned' }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function assignThreadToPlayer(playerId: string, threadId: string) {
+    await checkAdmin()
+    await db.threadProgress.upsert({
+        where: { threadId_playerId: { threadId, playerId } },
+        update: { currentPosition: 1, completedAt: null, isArchived: false },
+        create: { threadId, playerId, currentPosition: 1 }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function assignPackToPlayer(playerId: string, packId: string) {
+    await checkAdmin()
+    await db.packProgress.upsert({
+        where: { packId_playerId: { packId, playerId } },
+        update: { completed: '[]', completedAt: null, isArchived: false },
+        create: { packId, playerId, completed: '[]' }
+    })
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+export async function deleteAdminPlayer(playerId: string) {
+    const admin = await checkAdmin()
+    if (admin.id === playerId) throw new Error('Cannot delete your own account')
+
+    await db.$transaction(async (tx) => {
+        await tx.customBar.updateMany({ where: { creatorId: playerId }, data: { creatorId: admin.id } })
+        await tx.customBar.updateMany({ where: { claimedById: playerId }, data: { claimedById: null } })
+        await tx.playerRole.deleteMany({ where: { playerId } })
+        await tx.playerBar.deleteMany({ where: { playerId } })
+        await tx.playerQuest.deleteMany({ where: { playerId } })
+        await tx.threadProgress.deleteMany({ where: { playerId } })
+        await tx.packProgress.deleteMany({ where: { playerId } })
+        await tx.vibulonEvent.deleteMany({ where: { playerId } })
+        await tx.vibulon.deleteMany({ where: { ownerId: playerId } })
+        await tx.starterPack.deleteMany({ where: { playerId } })
+        await tx.player.delete({ where: { id: playerId } })
+    })
+
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
 // ===================================
 // WORLD DATA MANAGEMENT
 // ===================================
