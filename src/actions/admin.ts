@@ -89,20 +89,23 @@ export async function upsertQuestThread(data: {
         allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
     }
 
+    let threadId = data.id
     if (data.id) {
         await db.questThread.update({
             where: { id: data.id },
             data: payload
         })
     } else {
-        await db.questThread.create({
+        const created = await db.questThread.create({
             data: {
                 ...payload,
                 creatorType: 'admin',
             }
         })
+        threadId = created.id
     }
     revalidatePath('/admin/journeys')
+    return { id: threadId as string }
 }
 
 export async function deleteThread(id: string) {
@@ -249,6 +252,7 @@ export async function upsertQuest(data: {
         visibility: 'public', // Default to public for system quests
     }
 
+    let questId = data.id
     if (data.id) {
         await db.customBar.update({
             where: { id: data.id },
@@ -258,7 +262,7 @@ export async function upsertQuest(data: {
         const admin = await getCurrentPlayer()
         if (!admin) throw new Error('No user')
 
-        await db.customBar.create({
+        const created = await db.customBar.create({
             data: {
                 ...payload,
                 creatorId: admin.id,
@@ -267,8 +271,10 @@ export async function upsertQuest(data: {
                 ...(data.id ? { id: data.id } : {})
             }
         })
+        questId = created.id
     }
     revalidatePath('/admin/quests')
+    return { id: questId as string }
 }
 
 export async function deleteQuest(id: string) {

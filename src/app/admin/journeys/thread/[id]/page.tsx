@@ -1,6 +1,6 @@
 'use client'
 
-import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, updateThreadQuests, getAdminWorldData } from '@/actions/admin'
+import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, updateThreadQuests, getAdminWorldData, upsertQuest } from '@/actions/admin'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
@@ -24,6 +24,8 @@ export default function EditThreadPage() {
     const [availableQuests, setAvailableQuests] = useState<any[]>([])
     const [availableArchetypes, setAvailableArchetypes] = useState<any[]>([])
     const [selectedQuestId, setSelectedQuestId] = useState('')
+    const [newQuestTitle, setNewQuestTitle] = useState('')
+    const [newQuestReward, setNewQuestReward] = useState(1)
 
     const id = params.id
     const isNew = id === 'new-thread'
@@ -88,8 +90,7 @@ export default function EditThreadPage() {
     // Handlers
     const handleSave = async () => {
         startTransition(async () => {
-            // 1. Save Metadata
-            await upsertQuestThread({
+            const savedThread = await upsertQuestThread({
                 id: isNew ? undefined : id,
                 title,
                 description,
@@ -97,20 +98,30 @@ export default function EditThreadPage() {
                 completionReward,
                 allowedPlaybooks: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
             })
-
-            // 2. Save Quests (only if not new, or need to handle new ID return)
-            // Current upsertQuestThread doesn't return ID.
-            // Limitation: Creating new thread and adding quests in one go is tricky without ID.
-            // Workaround: If new, we save metadata first, get redirected. 
-            // User has to edit adding quests after creation.
-            // OR we fix upsert to return ID.
-
-            if (!isNew) {
-                await updateThreadQuests(id, threadQuests.map(q => q.questId))
-            }
+            await updateThreadQuests(savedThread.id, threadQuests.map(q => q.questId))
 
             router.push('/admin/journeys')
             router.refresh()
+        })
+    }
+
+    const createAndAddQuest = () => {
+        startTransition(async () => {
+            const title = newQuestTitle.trim()
+            if (!title) return
+            const { id: newQuestId } = await upsertQuest({
+                title,
+                description: '',
+                type: 'standard',
+                reward: newQuestReward || 0,
+                inputs: '[]'
+            })
+            const quests = await getAdminQuests()
+            setAvailableQuests(quests)
+            const quest = quests.find(q => q.id === newQuestId)
+            if (quest) setThreadQuests(prev => [...prev, { questId: quest.id, title: quest.title }])
+            setNewQuestTitle('')
+            setNewQuestReward(1)
         })
     }
 
@@ -255,7 +266,7 @@ export default function EditThreadPage() {
                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-6 h-full flex flex-col">
                         <h2 className="font-bold text-zinc-400 uppercase text-xs tracking-wider">Quest Steps</h2>
 
-                        {!isNew ? (
+                        {(
                             <>
                                 <div className="flex-1 space-y-2 overflow-y-auto max-h-[500px]">
                                     {threadQuests.map((q, idx) => (
@@ -299,11 +310,28 @@ export default function EditThreadPage() {
                                         Add
                                     </button>
                                 </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        value={newQuestTitle}
+                                        onChange={e => setNewQuestTitle(e.target.value)}
+                                        placeholder="Create new quest title..."
+                                        className="flex-1 bg-black border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    />
+                                    <input
+                                        type="number"
+                                        value={newQuestReward}
+                                        onChange={e => setNewQuestReward(parseInt(e.target.value || '0'))}
+                                        className="w-24 bg-black border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
+                                    />
+                                    <button
+                                        onClick={createAndAddQuest}
+                                        disabled={!newQuestTitle.trim()}
+                                        className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold disabled:opacity-50"
+                                    >
+                                        Create + Add
+                                    </button>
+                                </div>
                             </>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm text-center px-8">
-                                Save the thread first to start adding quests.
-                            </div>
                         )}
                     </div>
                 </div>
