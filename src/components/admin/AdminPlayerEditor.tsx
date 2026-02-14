@@ -115,9 +115,13 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
         if (!confirm(`Delete player ${player.name}? This cannot be undone.`)) return
         startTransition(async () => {
             try {
-                await deleteAdminPlayer(player.id)
-                onUpdate()
+                const result = await deleteAdminPlayer(player.id)
+                if ('error' in result) {
+                    alert(result.error)
+                    return
+                }
                 onClose()
+                onUpdate()
             } catch (e: any) {
                 alert(e.message)
             }
