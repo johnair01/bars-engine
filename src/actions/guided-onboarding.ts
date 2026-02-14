@@ -43,6 +43,25 @@ export async function startGuidedOnboarding(email: string, password: string, inv
 import { getStaticStoryNode } from '@/lib/story-content'
 
 export async function getStoryNode(nodeId: string, playerId?: string): Promise<StoryNode | null> {
+    if (playerId && nodeId === 'intro_001') {
+        const player = await db.player.findUnique({ where: { id: playerId }, select: { storyProgress: true } })
+        const progress = player?.storyProgress ? JSON.parse(player.storyProgress as string) as StoryProgress : null
+        const pickedMode = progress?.decisions?.some(d => d.nodeId === 'mode_select')
+        if (!pickedMode) {
+            return {
+                id: 'mode_select',
+                nodeId: 'mode_select',
+                title: 'Choose Your Onboarding Mode',
+                category: 'intro',
+                content: `Pick how guided you want this orientation to be. You can continue in full guided mode or jump into a faster expert flow.`,
+                guideDialogue: 'How would you like to proceed?',
+                choices: [
+                    { id: 'mode_guided', text: 'Guided mode (full orientation)', nextNodeId: 'intro_001' },
+                    { id: 'mode_expert', text: 'Expert mode (condensed)', nextNodeId: 'identity_001' }
+                ]
+            }
+        }
+    }
     return getStaticStoryNode(nodeId, playerId)
 }
 
@@ -73,12 +92,23 @@ export async function recordStoryChoice(
             })
         }
 
+        // Persist mode selection immediately after email entry.
+        if (nodeId === 'mode_select') {
+            await db.player.update({
+                where: { id: playerId },
+                data: { onboardingMode: choiceId === 'mode_expert' ? 'expert' : 'guided' }
+            })
+        }
+
         // Handle Unlocks (Nations/Playbooks)
+        let selectedNationId: string | null = null
+        let selectedPlaybookId: string | null = null
         if (rewards?.unlocks) {
             // Check for nation unlocks 
             const nationUnlock = rewards.unlocks.find(u => u.startsWith('nation:'))
             if (nationUnlock) {
                 const nationId = nationUnlock.split(':')[1]
+                selectedNationId = nationId
                 await db.player.update({
                     where: { id: playerId },
                     data: { nationId } // Set their nation selection
@@ -89,6 +119,7 @@ export async function recordStoryChoice(
             const playbookUnlock = rewards.unlocks.find(u => u.startsWith('playbook:'))
             if (playbookUnlock) {
                 const playbookId = playbookUnlock.split(':')[1]
+                selectedPlaybookId = playbookId
                 await db.player.update({
                     where: { id: playerId },
                     data: { playbookId } // Set their playbook selection
@@ -109,6 +140,18 @@ export async function recordStoryChoice(
             } as StoryProgress
 
         const nextNodeId = await getNextNodeId(nodeId, choiceId)
+        const resolvedNationId = selectedNationId || player.nationId
+        const resolvedPlaybookId = selectedPlaybookId || player.playbookId
+
+        if (nextNodeId === 'playbook_select' && !resolvedNationId) {
+            return { success: false, error: 'Please select a nation before continuing.' }
+        }
+        if ((nextNodeId === 'conclusion' || nextNodeId === 'dashboard') && !resolvedPlaybookId) {
+            return { success: false, error: 'Please select an archetype before continuing.' }
+        }
+        if (nextNodeId === 'dashboard' && (!resolvedNationId || !resolvedPlaybookId)) {
+            return { success: false, error: 'Nation and archetype are required to finish onboarding.' }
+        }
 
         // Update progress
         const updatedProgress: StoryProgress = {
@@ -130,7 +173,8 @@ export async function recordStoryChoice(
         await db.player.update({
             where: { id: playerId },
             data: {
-                storyProgress: JSON.stringify(updatedProgress)
+                storyProgress: JSON.stringify(updatedProgress),
+                onboardingComplete: nextNodeId === 'dashboard' ? true : undefined
             }
         })
 
@@ -143,6 +187,9 @@ export async function recordStoryChoice(
 
 // Helper to find next node from choice
 async function getNextNodeId(currentNodeId: string, choiceId: string): Promise<string> {
+    if (currentNodeId === 'mode_select') {
+        return choiceId === 'mode_expert' ? 'identity_001' : 'intro_001'
+    }
     const node = await getStaticStoryNode(currentNodeId)
     if (!node) return currentNodeId; // Fallback
     const choice = node.choices.find(c => c.id === choiceId)

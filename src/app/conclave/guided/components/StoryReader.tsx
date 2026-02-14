@@ -16,6 +16,7 @@ interface StoryReaderProps {
 export function StoryReader({ initialNode, playerId, progress: initialProgress }: StoryReaderProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    const [validationError, setValidationError] = useState<string | null>(null)
 
     // Use prop directly since we rely on router.refresh() to update content
     const currentNode = initialNode
@@ -38,6 +39,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
         if (!currentNode) return
 
         startTransition(async () => {
+            setValidationError(null)
             // 1. Record the choice via Server Action
             const result = await recordStoryChoice(
                 playerId,
@@ -48,7 +50,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
             )
 
             if (!result.success) {
-                console.error('Failed to record choice:', result.error)
+                setValidationError(result.error || 'Unable to continue. Please review your selections.')
                 return
             }
 
@@ -84,6 +86,11 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                 onChoiceSelect={handleChoice}
                 isLoading={isPending}
             />
+            {validationError && (
+                <div className="max-w-3xl mx-auto rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-300">
+                    {validationError}
+                </div>
+            )}
         </div>
     )
 }
