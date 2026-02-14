@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { StoryNode, StoryChoice, StoryProgress } from '../types'
 import { StoryNodeComponent } from './StoryNode'
-import { getStoryNode, recordStoryChoice } from '@/actions/guided-onboarding'
+import { getStoryNode, recordStoryChoice, getOrientationHandbookEntry } from '@/actions/guided-onboarding'
 import { ProgressTracker } from './ProgressTracker'
 
 interface StoryReaderProps {
@@ -18,6 +18,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
     const [isPending, startTransition] = useTransition()
     const [validationError, setValidationError] = useState<string | null>(null)
     const [infoNode, setInfoNode] = useState<StoryNode | null>(null)
+    const [infoHandbook, setInfoHandbook] = useState<any | null>(null)
     const [infoLoading, setInfoLoading] = useState(false)
 
     // Use prop directly since we rely on router.refresh() to update content
@@ -41,8 +42,14 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
         if (!currentNode) return
         if (choice.id.startsWith('view_nation_') || choice.id.startsWith('view_playbook_')) {
             setInfoLoading(true)
-            const node = await getStoryNode(choice.nextNodeId, playerId)
+            const isNation = choice.id.startsWith('view_nation_')
+            const entityId = choice.id.replace(isNation ? 'view_nation_' : 'view_playbook_', '')
+            const [node, handbook] = await Promise.all([
+                getStoryNode(choice.nextNodeId, playerId),
+                getOrientationHandbookEntry(isNation ? 'nation' : 'playbook', entityId)
+            ])
             setInfoNode(node)
+            setInfoHandbook('success' in handbook && handbook.success ? handbook.entry : null)
             setInfoLoading(false)
             return
         }
@@ -104,7 +111,9 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                 <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="max-w-2xl w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
                         <h3 className="text-xl font-bold text-white">{infoNode.title}</h3>
-                        <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoNode.content}</p>
+                        <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoHandbook
+                            ? [infoHandbook.description, `Wake Up: ${infoHandbook.wakeUp}`, `Clean Up: ${infoHandbook.cleanUp}`, `Grow Up: ${infoHandbook.growUp}`, `Show Up: ${infoHandbook.showUp}`].filter(Boolean).join('\n\n')
+                            : infoNode.content}</p>
                         <div className="flex gap-2 justify-end">
                             {infoNode.nodeId.startsWith('nation_info_') && (
                                 <button onClick={() => handleChoice({ id: `confirm_nation_${infoNode.nodeId.replace('nation_info_', '')}`, text: '', nextNodeId: 'playbook_select', rewards: { unlocks: [`nation:${infoNode.nodeId.replace('nation_info_', '')}`] } })} disabled={isPending} className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-sm">
@@ -116,7 +125,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                                     Choose this archetype
                                 </button>
                             )}
-                            <button onClick={() => setInfoNode(null)} disabled={isPending || infoLoading} className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 text-sm">
+                            <button onClick={() => { setInfoNode(null); setInfoHandbook(null) }} disabled={isPending || infoLoading} className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 text-sm">
                                 Close
                             </button>
                         </div>

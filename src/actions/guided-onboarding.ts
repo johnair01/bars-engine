@@ -65,6 +65,28 @@ export async function getStoryNode(nodeId: string, playerId?: string): Promise<S
     return getStaticStoryNode(nodeId, playerId)
 }
 
+export async function getOrientationHandbookEntry(kind: 'nation' | 'playbook', id: string) {
+    try {
+        if (kind === 'nation') {
+            const entry = await db.nation.findUnique({
+                where: { id },
+                select: { id: true, name: true, description: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true }
+            })
+            if (!entry) return { error: 'Nation not found' }
+            return { success: true, entry }
+        }
+
+        const entry = await db.playbook.findUnique({
+            where: { id },
+            select: { id: true, name: true, description: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true, content: true }
+        })
+        if (!entry) return { error: 'Archetype not found' }
+        return { success: true, entry }
+    } catch {
+        return { error: 'Failed to load handbook entry' }
+    }
+}
+
 export async function recordStoryChoice(
     playerId: string,
     nodeId: string,
