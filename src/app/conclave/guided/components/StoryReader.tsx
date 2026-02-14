@@ -38,6 +38,32 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
 
     const currentStep = currentNode ? getOnboardingStep(currentNode.category || 'intro') : 'intro'
 
+    const submitChoice = (nodeId: string, choice: StoryChoice, input?: string) => {
+        startTransition(async () => {
+            setValidationError(null)
+            const result = await recordStoryChoice(
+                playerId,
+                nodeId,
+                choice.id,
+                input,
+                choice.rewards
+            )
+
+            if (!result.success) {
+                setValidationError(result.error || 'Unable to continue. Please review your selections.')
+                return
+            }
+
+            setInfoNode(null)
+            setInfoHandbook(null)
+            if (choice.nextNodeId === 'dashboard') {
+                router.push('/dashboard')
+            } else {
+                router.push(`/conclave/guided?step=${encodeURIComponent(choice.nextNodeId)}`)
+            }
+        })
+    }
+
     const handleChoice = async (choice: StoryChoice, input?: string) => {
         if (!currentNode) return
         if (choice.id.startsWith('view_nation_') || choice.id.startsWith('view_playbook_')) {
@@ -53,33 +79,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
             setInfoLoading(false)
             return
         }
-
-        startTransition(async () => {
-            setValidationError(null)
-            // 1. Record the choice via Server Action
-            const result = await recordStoryChoice(
-                playerId,
-                currentNode.nodeId,
-                choice.id,
-                input,
-                choice.rewards
-            )
-
-            if (!result.success) {
-                setValidationError(result.error || 'Unable to continue. Please review your selections.')
-                return
-            }
-
-            // 2. Handle Navigation
-            if (choice.nextNodeId === 'dashboard') {
-                // Special case for ending
-                router.push('/dashboard')
-            } else {
-                // Refresh the route to fetch the next node from the server
-                // Alternatively, we could fetch just the next node here, but refreshing keeps server as source of truth
-                router.refresh()
-            }
-        })
+        submitChoice(currentNode.nodeId, choice, input)
     }
 
     if (!currentNode && !isPending) {
@@ -111,17 +111,40 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                 <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="max-w-2xl w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
                         <h3 className="text-xl font-bold text-white">{infoNode.title}</h3>
-                        <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoHandbook
-                            ? [infoHandbook.description, `Wake Up: ${infoHandbook.wakeUp}`, `Clean Up: ${infoHandbook.cleanUp}`, `Grow Up: ${infoHandbook.growUp}`, `Show Up: ${infoHandbook.showUp}`].filter(Boolean).join('\n\n')
-                            : infoNode.content}</p>
+                        {infoHandbook ? (
+                            <div className="space-y-4">
+                                {infoNode.nodeId.startsWith('nation_info_') && infoHandbook.imgUrl && (
+                                    <div className="w-full h-44 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+                                        <img src={infoHandbook.imgUrl} alt={infoHandbook.name} className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                                {infoHandbook.description && (
+                                    <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoHandbook.description}</p>
+                                )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {infoHandbook.wakeUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Wake Up:</span> {infoHandbook.wakeUp}</div>}
+                                    {infoHandbook.cleanUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Clean Up:</span> {infoHandbook.cleanUp}</div>}
+                                    {infoHandbook.growUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Grow Up:</span> {infoHandbook.growUp}</div>}
+                                    {infoHandbook.showUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Show Up:</span> {infoHandbook.showUp}</div>}
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoNode.content}</p>
+                        )}
                         <div className="flex gap-2 justify-end">
                             {infoNode.nodeId.startsWith('nation_info_') && (
-                                <button onClick={() => handleChoice({ id: `confirm_nation_${infoNode.nodeId.replace('nation_info_', '')}`, text: '', nextNodeId: 'playbook_select', rewards: { unlocks: [`nation:${infoNode.nodeId.replace('nation_info_', '')}`] } })} disabled={isPending} className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-sm">
+                                <button onClick={() => {
+                                    const choice = infoNode.choices.find(c => c.id.startsWith('confirm_nation_'))
+                                    if (choice) submitChoice(infoNode.nodeId, choice)
+                                }} disabled={isPending} className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-sm">
                                     Choose this nation
                                 </button>
                             )}
                             {infoNode.nodeId.startsWith('playbook_info_') && (
-                                <button onClick={() => handleChoice({ id: `confirm_playbook_${infoNode.nodeId.replace('playbook_info_', '')}`, text: '', nextNodeId: 'conclusion', rewards: { unlocks: [`playbook:${infoNode.nodeId.replace('playbook_info_', '')}`] } })} disabled={isPending} className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm">
+                                <button onClick={() => {
+                                    const choice = infoNode.choices.find(c => c.id.startsWith('confirm_playbook_'))
+                                    if (choice) submitChoice(infoNode.nodeId, choice)
+                                }} disabled={isPending} className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm">
                                     Choose this archetype
                                 </button>
                             )}
