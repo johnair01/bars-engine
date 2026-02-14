@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 import { StoryNode, StoryChoice, StoryProgress } from '../types'
 import { StoryNodeComponent } from './StoryNode'
 import { getStoryNode, recordStoryChoice, getOrientationHandbookEntry } from '@/actions/guided-onboarding'
@@ -113,15 +114,20 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                         <h3 className="text-xl font-bold text-white">{infoNode.title}</h3>
                         {infoHandbook ? (
                             <div className="space-y-4">
+                                {infoNode.nodeId.startsWith('playbook_info_') && infoHandbook.content && (
+                                    <article className="prose prose-invert prose-sm max-w-none rounded-xl border border-zinc-800 bg-black/30 p-4">
+                                        <ReactMarkdown>{infoHandbook.content}</ReactMarkdown>
+                                    </article>
+                                )}
                                 {infoNode.nodeId.startsWith('nation_info_') && infoHandbook.imgUrl && (
                                     <div className="w-full h-44 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
                                         <img src={infoHandbook.imgUrl} alt={infoHandbook.name} className="w-full h-full object-cover" />
                                     </div>
                                 )}
-                                {infoHandbook.description && (
+                                {infoHandbook.description && !(infoNode.nodeId.startsWith('playbook_info_') && infoHandbook.content) && (
                                     <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoHandbook.description}</p>
                                 )}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className={`grid grid-cols-1 sm:grid-cols-2 gap-2 ${(infoNode.nodeId.startsWith('playbook_info_') && infoHandbook.content) ? 'hidden' : ''}`}>
                                     {infoHandbook.wakeUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Wake Up:</span> {infoHandbook.wakeUp}</div>}
                                     {infoHandbook.cleanUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Clean Up:</span> {infoHandbook.cleanUp}</div>}
                                     {infoHandbook.growUp && <div className="rounded-lg border border-zinc-800 bg-black/40 p-2 text-xs text-zinc-300"><span className="text-zinc-500 uppercase tracking-wider">Grow Up:</span> {infoHandbook.growUp}</div>}
