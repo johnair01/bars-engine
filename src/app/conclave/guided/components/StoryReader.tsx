@@ -38,6 +38,32 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
 
     const currentStep = currentNode ? getOnboardingStep(currentNode.category || 'intro') : 'intro'
 
+    const submitChoice = (nodeId: string, choice: StoryChoice, input?: string) => {
+        startTransition(async () => {
+            setValidationError(null)
+            const result = await recordStoryChoice(
+                playerId,
+                nodeId,
+                choice.id,
+                input,
+                choice.rewards
+            )
+
+            if (!result.success) {
+                setValidationError(result.error || 'Unable to continue. Please review your selections.')
+                return
+            }
+
+            setInfoNode(null)
+            setInfoHandbook(null)
+            if (choice.nextNodeId === 'dashboard') {
+                router.push('/dashboard')
+            } else {
+                router.push(`/conclave/guided?step=${encodeURIComponent(choice.nextNodeId)}`)
+            }
+        })
+    }
+
     const handleChoice = async (choice: StoryChoice, input?: string) => {
         if (!currentNode) return
         if (choice.id.startsWith('view_nation_') || choice.id.startsWith('view_playbook_')) {
@@ -53,33 +79,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
             setInfoLoading(false)
             return
         }
-
-        startTransition(async () => {
-            setValidationError(null)
-            // 1. Record the choice via Server Action
-            const result = await recordStoryChoice(
-                playerId,
-                currentNode.nodeId,
-                choice.id,
-                input,
-                choice.rewards
-            )
-
-            if (!result.success) {
-                setValidationError(result.error || 'Unable to continue. Please review your selections.')
-                return
-            }
-
-            // 2. Handle Navigation
-            if (choice.nextNodeId === 'dashboard') {
-                // Special case for ending
-                router.push('/dashboard')
-            } else {
-                // Refresh the route to fetch the next node from the server
-                // Alternatively, we could fetch just the next node here, but refreshing keeps server as source of truth
-                router.refresh()
-            }
-        })
+        submitChoice(currentNode.nodeId, choice, input)
     }
 
     if (!currentNode && !isPending) {
@@ -133,12 +133,18 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                         )}
                         <div className="flex gap-2 justify-end">
                             {infoNode.nodeId.startsWith('nation_info_') && (
-                                <button onClick={() => handleChoice({ id: `confirm_nation_${infoNode.nodeId.replace('nation_info_', '')}`, text: '', nextNodeId: 'playbook_select', rewards: { unlocks: [`nation:${infoNode.nodeId.replace('nation_info_', '')}`] } })} disabled={isPending} className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-sm">
+                                <button onClick={() => {
+                                    const choice = infoNode.choices.find(c => c.id.startsWith('confirm_nation_'))
+                                    if (choice) submitChoice(infoNode.nodeId, choice)
+                                }} disabled={isPending} className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-sm">
                                     Choose this nation
                                 </button>
                             )}
                             {infoNode.nodeId.startsWith('playbook_info_') && (
-                                <button onClick={() => handleChoice({ id: `confirm_playbook_${infoNode.nodeId.replace('playbook_info_', '')}`, text: '', nextNodeId: 'conclusion', rewards: { unlocks: [`playbook:${infoNode.nodeId.replace('playbook_info_', '')}`] } })} disabled={isPending} className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm">
+                                <button onClick={() => {
+                                    const choice = infoNode.choices.find(c => c.id.startsWith('confirm_playbook_'))
+                                    if (choice) submitChoice(infoNode.nodeId, choice)
+                                }} disabled={isPending} className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-sm">
                                     Choose this archetype
                                 </button>
                             )}
