@@ -4,14 +4,14 @@ import { StoryNode, StoryChoice, StoryProgress } from '@/app/conclave/guided/typ
 // Helper to format nation choice
 const getNationChoice = (nation: any): StoryChoice => ({
     id: `view_nation_${nation.id}`,
-    text: `View ${nation.name}`,
+    text: `Learn about ${nation.name}`,
     nextNodeId: `nation_info_${nation.id}`,
 })
 
 // Helper to format playbook choice
 const getPlaybookChoice = (playbook: any): StoryChoice => ({
     id: `view_playbook_${playbook.id}`,
-    text: `View ${playbook.name}`,
+    text: `Learn about ${playbook.name}`,
     nextNodeId: `playbook_info_${playbook.id}`,
 })
 
