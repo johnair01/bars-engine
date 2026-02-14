@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { StoryNode, StoryChoice, StoryProgress } from '../types'
@@ -21,6 +21,13 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
     const [infoNode, setInfoNode] = useState<StoryNode | null>(null)
     const [infoHandbook, setInfoHandbook] = useState<any | null>(null)
     const [infoLoading, setInfoLoading] = useState(false)
+
+    useEffect(() => {
+        if (!infoNode) return
+        const prev = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = prev }
+    }, [infoNode])
 
     // Use prop directly since we rely on router.refresh() to update content
     const currentNode = initialNode
@@ -110,8 +117,8 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
             )}
             {infoNode && (
                 <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="max-w-2xl w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
-                        <h3 className="text-xl font-bold text-white">{infoNode.title}</h3>
+                    <div className="max-w-2xl w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4 max-h-[90vh] overflow-y-auto overscroll-contain">
+                        <h3 className="text-xl font-bold text-white sticky top-0 z-10 bg-zinc-950 pb-2">{infoNode.title}</h3>
                         {infoHandbook ? (
                             <div className="space-y-4">
                                 {infoNode.nodeId.startsWith('playbook_info_') && infoHandbook.content && (
@@ -137,7 +144,7 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
                         ) : (
                             <p className="text-zinc-300 whitespace-pre-wrap text-sm">{infoNode.content}</p>
                         )}
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex gap-2 justify-end sticky bottom-0 z-10 bg-zinc-950 border-t border-zinc-800 pt-3">
                             {infoNode.nodeId.startsWith('nation_info_') && (
                                 <button onClick={() => {
                                     const choice = infoNode.choices.find(c => c.id.startsWith('confirm_nation_'))
