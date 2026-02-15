@@ -3,9 +3,6 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { generateObject } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { z } from 'zod'
 import { getHexagramStructure } from '@/lib/iching-struct'
 
 const STORY_CLOCK_PERIODS = 8
@@ -87,8 +84,10 @@ export async function advanceClock(amount: number = 1) {
         }
     })
 
-    // Generate Global Quest for this Hexagram
-    await generateGlobalQuest(hexagramId, newPeriod)
+    // When crossing into a new period, generate that period's story quests.
+    if (newPeriod !== state.currentPeriod) {
+        await ensurePeriodStoryQuests(newPeriod, sequence)
+    }
 
     revalidatePath('/')
     revalidatePath('/story-clock')
@@ -164,6 +163,15 @@ export async function startStoryClock() {
     // Generate new shuffled sequence
     const sequence = shuffle(Array.from({ length: 64 }, (_, i) => i + 1))
 
+    // Archive previous story-clock quests before starting a new run.
+    await db.customBar.updateMany({
+        where: {
+            status: 'active',
+            completionEffects: { contains: '"questSource":"story_clock"' }
+        },
+        data: { status: 'archived' }
+    })
+
     // Reset global state
     await db.globalState.upsert({
         where: { id: 'singleton' },
@@ -183,6 +191,8 @@ export async function startStoryClock() {
             hexagramSequence: JSON.stringify(sequence)
         }
     })
+
+    await ensurePeriodStoryQuests(1, sequence)
 
     revalidatePath('/')
     revalidatePath('/story-clock')
@@ -216,6 +226,7 @@ export async function advanceStoryPeriod() {
     const nextPeriod = currentPeriod + 1
     const nextClock = (nextPeriod - 1) * HEXAGRAMS_PER_PERIOD + 1
     const nextAct = getActFromPeriod(nextPeriod)
+    const sequence = JSON.parse(state.hexagramSequence || '[]') as number[]
 
     await db.globalState.update({
         where: { id: 'singleton' },
@@ -234,6 +245,8 @@ export async function advanceStoryPeriod() {
             description: `Advanced to Period ${nextPeriod} (Act ${nextAct})`
         }
     })
+
+    await ensurePeriodStoryQuests(nextPeriod, sequence)
 
     revalidatePath('/')
     revalidatePath('/admin')
@@ -299,83 +312,132 @@ export async function resetStoryClock() {
 }
 
 /**
- * Generate a Collective Quest based on a Hexagram with Trigram Gating
+ * Ensure exactly 8 story-clock quests exist for a period.
  */
-async function generateGlobalQuest(hexagramId: number, period: number) {
-    try {
-        // 1. Fetch Hexagram Data
-        const hexagram = await db.bar.findFirst({
-            where: { id: hexagramId }
-        })
+async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
+    if (period < 1 || period > STORY_CLOCK_PERIODS) return
+    const startIndex = (period - 1) * HEXAGRAMS_PER_PERIOD
+    const periodHexagrams = sequence.slice(startIndex, startIndex + HEXAGRAMS_PER_PERIOD)
+    if (periodHexagrams.length === 0) return
 
-        // 2. Get Structure (Trigrams)
+    const runId = buildStoryClockRunId(sequence)
+    const creator = await db.player.findFirst({ select: { id: true } })
+    if (!creator?.id) return
+
+    const allPlaybooks = await db.playbook.findMany({
+        select: { id: true, name: true, description: true }
+    })
+    const playbookByElement = new Map(
+        allPlaybooks
+            .map(playbook => {
+                const match = playbook.description?.match(/Element:\s*([A-Za-z]+)/i)
+                return match?.[1]
+                    ? [match[1].toLowerCase(), { id: playbook.id, name: playbook.name }] as const
+                    : null
+            })
+            .filter((entry): entry is readonly [string, { id: string, name: string }] => !!entry)
+    )
+
+    for (const hexagramId of periodHexagrams) {
         const structure = getHexagramStructure(hexagramId)
-        const allowedTrigrams = [structure.upper, structure.lower] // Visible to playbooks matching either
+        const mainArchetype = playbookByElement.get(structure.upper.toLowerCase()) || null
+        await generateGlobalQuest({
+            creatorId: creator.id,
+            hexagramId,
+            period,
+            periodIndex: period - 1,
+            runId,
+            mainArchetype
+        })
+    }
+}
 
-        // 3. Period theme
-        const periodThemes = [
-            '',  // 0 (unused)
-            'Awakening - The world stirs with new potential',
-            'Challenge - Obstacles emerge to test resolve',
-            'Coalition - Building alliances and shared visions',
-            'Revelation - Hidden truths come to light',
-            'Transformation - The old gives way to the new',
-            'Consolidation - Gains are secured and stabilized',
-            'Resolution - Loose ends are tied, choices made final',
-            'Culmination - The arc completes, the story concludes'
-        ]
+/**
+ * Generate a deterministic story-clock quest for one period hexagram.
+ */
+async function generateGlobalQuest(params: {
+    creatorId: string
+    hexagramId: number
+    period: number
+    periodIndex: number
+    runId: string
+    mainArchetype: { id: string, name: string } | null
+}) {
+    const { creatorId, hexagramId, period, periodIndex, runId, mainArchetype } = params
+    try {
+        const existingQuest = await db.customBar.findFirst({
+            where: {
+                status: 'active',
+                periodGenerated: period,
+                hexagramId,
+                completionEffects: {
+                    contains: `"storyClockRunId":"${runId}"`
+                }
+            },
+            select: { id: true }
+        })
+        if (existingQuest) return
 
-        const periodTheme = periodThemes[period] || 'Unknown'
+        const hexagram = await db.bar.findFirst({ where: { id: hexagramId } })
+        const structure = getHexagramStructure(hexagramId)
+        const periodTheme = getPeriodTheme(period)
+        const mainArchetypeLabel = mainArchetype?.name || `${structure.upper} archetype`
 
-        // 4. AI Generation
-        const systemPrompt = `You are the Voice of the Conclave.
-        The World Clock has ticked to Position ${hexagramId} in Period ${period}.
-        Period Theme: ${periodTheme}
-        Hexagram: ${hexagram?.name || 'Mystery'} (${hexagram?.tone || 'Unknown'}).
-        Meaning: ${hexagram?.text || 'The mists swirl...'}.
-        Trigrams: ${structure.upper} over ${structure.lower}.
-        
-        Generate a Global Community Quest for playbooks aligned with: ${allowedTrigrams.join(', ')}.
-        This quest should reflect the themes of this hexagram AND the current period.
-        The quest should feel aligned with "${periodTheme}".
-        `
-
-        const { object } = await generateObject({
-            model: openai('gpt-4o'),
-            schema: z.object({
-                title: z.string(),
-                description: z.string(),
-            }),
-            system: systemPrompt,
-            prompt: "Generate Global Quest"
+        const completionEffects = JSON.stringify({
+            questSource: 'story_clock',
+            storyClockRunId: runId,
+            periodIndex,
+            hexagramId,
+            mainArchetypeId: mainArchetype?.id || null,
+            mainArchetypeName: mainArchetype?.name || null
         })
 
-        // 5. Create CustomBar with proper tracking
         await db.customBar.create({
             data: {
-                creatorId: (await db.player.findFirst())?.id || 'unknown',
-
-                title: object.title,
-                description: object.description,
+                creatorId,
+                title: `P${period} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
+                description: `${periodTheme}. Main character: ${mainArchetypeLabel}. Allies can assist via vibeulon stake or by adding a BAR (including Vibes SOS).`,
                 type: 'story',
-                reward: 5,
+                reward: 1,
                 status: 'active',
                 storyPath: 'collective',
-                allowedTrigrams: JSON.stringify(allowedTrigrams), // Gating Check
-
-                // Story Clock Tracking
-                hexagramId: hexagramId,
+                visibility: 'public',
+                allowedTrigrams: '[]',
+                hexagramId,
                 periodGenerated: period,
-
+                completionEffects,
                 inputs: JSON.stringify([
-                    { key: 'contribution', label: 'Contribution', type: 'textarea' }
+                    { key: 'mainAction', label: 'Main character action', type: 'textarea', required: true },
+                    { key: 'allySupport', label: 'Ally support (vibeulon stake, BAR, or Vibes SOS)', type: 'textarea' }
                 ])
             }
         })
-
     } catch (e) {
         console.error("Global quest generation error:", e)
     }
+}
+
+function getPeriodTheme(period: number) {
+    const periodThemes = [
+        '',
+        'Awakening - The world stirs with new potential',
+        'Challenge - Obstacles emerge to test resolve',
+        'Coalition - Building alliances and shared visions',
+        'Revelation - Hidden truths come to light',
+        'Transformation - The old gives way to the new',
+        'Consolidation - Gains are secured and stabilized',
+        'Resolution - Loose ends are tied, choices made final',
+        'Culmination - The arc completes, the story concludes'
+    ]
+    return periodThemes[period] || 'Unknown'
+}
+
+function buildStoryClockRunId(sequence: number[]) {
+    const hash = sequence.reduce((acc, value, idx) => {
+        const weighted = value * (idx + 1)
+        return (acc + weighted) % 1000003
+    }, 0)
+    return `story-clock-${hash}`
 }
 
 // Fisher-Yates Shuffle

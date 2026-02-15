@@ -12,6 +12,7 @@ import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
 import { AlchemyCaster } from '@/components/AlchemyCaster'
 import { KotterGauge } from '@/components/KotterGauge'
+import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
@@ -136,6 +137,25 @@ export default async function Home() {
   })
 
   const globalState = await getGlobalState()
+  const globalStage = Math.max(1, Math.min(8, globalState.currentPeriod || Math.ceil(globalState.storyClock / 8))) as KotterStage
+  const stageInfo = KOTTER_STAGES[globalStage]
+
+  const periodStoryQuests = await db.customBar.findMany({
+    where: {
+      status: 'active',
+      periodGenerated: globalState.currentPeriod,
+      completionEffects: { contains: '"questSource":"story_clock"' }
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      reward: true,
+      hexagramId: true,
+      completionEffects: true
+    },
+    orderBy: { hexagramId: 'asc' }
+  })
 
   // Get onboarding status
   const onboardingStatus = await getOnboardingStatus()
@@ -178,11 +198,11 @@ export default async function Home() {
             <div className="flex flex-col gap-2">
               <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 text-center min-w-[70px]">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/8</div>
+                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/2</div>
               </div>
 
               {/* KOTTER GAUGE (Small) */}
-              <KotterGauge currentStage={Math.ceil(globalState.storyClock / 8)} label="Global Phase" />
+              <KotterGauge currentStage={globalStage} label="Global Phase" />
             </div>
 
             <Link href="/wallet" className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
@@ -221,6 +241,56 @@ export default async function Home() {
           )}
         </div>
       </header >
+
+      <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-widest text-zinc-500">
+              Global phase, stage {globalStage}: {stageInfo.name.toLowerCase()}
+            </div>
+            <div className="text-sm text-purple-300 font-mono">
+              Move {stageInfo.move.toLowerCase()}
+            </div>
+          </div>
+          <Link href="/story-clock" className="text-xs uppercase tracking-widest text-zinc-400 hover:text-white transition">
+            Open Story Clock →
+          </Link>
+        </div>
+
+        {periodStoryQuests.length === 0 ? (
+          <div className="text-sm text-zinc-500 italic">
+            No period quests are active yet. Ask an admin to start the Story Clock run.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {periodStoryQuests.map((quest) => {
+              const meta = parseStoryClockMeta(quest.completionEffects)
+              const isMainCharacter = !!player.playbookId && meta.mainArchetypeId === player.playbookId
+              return (
+                <div
+                  key={quest.id}
+                  className={`rounded border p-3 ${isMainCharacter
+                    ? 'border-yellow-500/70 bg-yellow-900/20'
+                    : 'border-zinc-800 bg-zinc-900/40'
+                    }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs text-zinc-500">Hexagram #{quest.hexagramId ?? '—'}</div>
+                    <div className="text-xs text-green-400 font-mono">+{quest.reward} ♦</div>
+                  </div>
+                  <div className="text-sm font-bold text-white mt-1">{quest.title}</div>
+                  <div className="text-xs text-zinc-400 mt-1 line-clamp-2">{quest.description}</div>
+                  <div className="mt-2 text-[10px] uppercase tracking-widest text-zinc-500">
+                    {isMainCharacter
+                      ? 'Main character: you'
+                      : `Main character: ${meta.mainArchetypeName || 'assigned archetype'}`}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
 
 
       {/* WELCOME SCREEN (if not seen yet) */}
@@ -420,4 +490,17 @@ export default async function Home() {
       </div>
     </div >
   )
+}
+
+function parseStoryClockMeta(raw: string | null) {
+  if (!raw) return { mainArchetypeId: null as string | null, mainArchetypeName: null as string | null }
+  try {
+    const parsed = JSON.parse(raw)
+    return {
+      mainArchetypeId: typeof parsed.mainArchetypeId === 'string' ? parsed.mainArchetypeId : null,
+      mainArchetypeName: typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : null
+    }
+  } catch {
+    return { mainArchetypeId: null as string | null, mainArchetypeName: null as string | null }
+  }
 }
