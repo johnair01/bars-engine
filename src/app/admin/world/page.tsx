@@ -20,6 +20,12 @@ export default function AdminWorldPage() {
             <header>
                 <h1 className="text-3xl font-bold text-white mb-2">World Data</h1>
                 <p className="text-zinc-400">Manage the core setting data (Nations and Archetypes).</p>
+                <Link
+                    href="/wiki/iching"
+                    className="inline-block mt-3 text-xs uppercase tracking-widest text-zinc-400 hover:text-zinc-200 transition"
+                >
+                    Open Public I Ching Guidebook →
+                </Link>
             </header>
 
             {/* NATIONS */}
