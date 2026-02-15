@@ -82,15 +82,27 @@ export async function completeQuestForPlayer(
 
     if (!quest) throw new Error('Quest not found')
 
+    const storyMeta = parseStoryQuestMeta(quest.completionEffects)
+    const isStoryClockQuest = storyMeta.questSource === 'story_clock'
+    const isPersonalIChingQuest =
+        storyMeta.questSource === 'personal_iching' ||
+        (quest.storyPath === 'personal' && quest.type === 'inspiration')
+
+    if (isPersonalIChingQuest && quest.creatorId === playerId) {
+        return {
+            error: 'You cannot complete your own personal I Ching quest. Offer it to the collective.'
+        }
+    }
+
     // CHECK FOR STORY CLOCK BONUS
     let bonusMultiplier = 1
     let isFirstCompleter = false
 
-    if (quest.hexagramId && quest.periodGenerated) {
+    if (isStoryClockQuest || (quest.hexagramId && quest.periodGenerated)) {
         const globalState = await db.globalState.findUnique({ where: { id: 'singleton' } })
 
         // Old period bonus
-        if (globalState && quest.periodGenerated < globalState.currentPeriod) {
+        if (!isStoryClockQuest && globalState && quest.periodGenerated < globalState.currentPeriod) {
             bonusMultiplier = 1.5 // +50% bonus
         }
 
@@ -132,6 +144,14 @@ export async function completeQuestForPlayer(
     // GRANT VIBEULONS with bonus
     const baseReward = quest.reward || 1
     let finalReward = Math.floor(baseReward * bonusMultiplier)
+
+    if (isStoryClockQuest) {
+        finalReward = isFirstCompleter ? 2 : 1
+    }
+
+    if (isPersonalIChingQuest) {
+        finalReward = 1
+    }
 
     // REPEATABLE FEEDBACK QUEST LOGIC
     if (questId === 'system-feedback') {
@@ -230,6 +250,18 @@ export async function completeQuestForPlayer(
     }
 
     return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
+}
+
+function parseStoryQuestMeta(raw: string | null) {
+    if (!raw) return { questSource: null as string | null }
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null
+        }
+    } catch {
+        return { questSource: null as string | null }
+    }
 }
 /**
  * Fire a trigger to auto-complete matching quests.
