@@ -15,6 +15,11 @@ The easiest way to deploy is via **Vercel**.
     - `OPENAI_API_KEY`: For the Story Clock AI generation.
 4.  **Build Command**: `npx prisma generate && next build` (Standard Next.js).
 5.  **Output Directory**: `.next`.
+6.  Before manual verification, print the current branch preview URL:
+
+```bash
+npm run preview:link
+```
 
 ## 2. Database Migration
 When deploying to production for the first time or after schema changes:
