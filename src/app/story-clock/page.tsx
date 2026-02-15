@@ -79,6 +79,8 @@ export default async function StoryClockPage() {
 }
 
 function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }) {
+    const { upperArchetypeName, lowerArchetypeName } = parseArchetypePair(quest.completionEffects)
+
     return (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-all relative overflow-hidden">
             {isBonus && (
@@ -104,6 +106,16 @@ function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }
                         </div>
                     </div>
 
+                    <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-400">
+                        <div className="uppercase tracking-widest text-zinc-500 mb-1">Main characters</div>
+                        <div>
+                            Upper trigram: <span className="text-zinc-200 font-semibold">{upperArchetypeName}</span>
+                        </div>
+                        <div>
+                            Lower trigram: <span className="text-zinc-200 font-semibold">{lowerArchetypeName}</span>
+                        </div>
+                    </div>
+
                     {quest.firstCompleter && (
                         <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-500">
                             <span className="text-yellow-500">🏆</span> First completed by{' '}
@@ -114,4 +126,30 @@ function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }
             </div>
         </div>
     )
+}
+
+function parseArchetypePair(raw: string | null) {
+    if (!raw) {
+        return {
+            upperArchetypeName: 'Unknown archetype',
+            lowerArchetypeName: 'Unknown archetype'
+        }
+    }
+
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            upperArchetypeName: typeof parsed.upperArchetypeName === 'string'
+                ? parsed.upperArchetypeName
+                : (typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : 'Unknown archetype'),
+            lowerArchetypeName: typeof parsed.lowerArchetypeName === 'string'
+                ? parsed.lowerArchetypeName
+                : (typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : 'Unknown archetype')
+        }
+    } catch {
+        return {
+            upperArchetypeName: 'Unknown archetype',
+            lowerArchetypeName: 'Unknown archetype'
+        }
+    }
 }

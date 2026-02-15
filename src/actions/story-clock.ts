@@ -59,6 +59,7 @@ export async function getStoryClockData() {
             description: quest.description,
             hexagramId: quest.hexagramId,
             reward: quest.reward,
+            completionEffects: quest.completionEffects,
             firstCompleter: firstCompleter ? {
                 id: firstCompleter.id,
                 name: firstCompleter.name

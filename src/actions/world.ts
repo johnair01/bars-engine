@@ -340,14 +340,16 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
 
     for (const hexagramId of periodHexagrams) {
         const structure = getHexagramStructure(hexagramId)
-        const mainArchetype = playbookByElement.get(structure.upper.toLowerCase()) || null
+        const upperArchetype = playbookByElement.get(structure.upper.toLowerCase()) || null
+        const lowerArchetype = playbookByElement.get(structure.lower.toLowerCase()) || null
         await generateGlobalQuest({
             creatorId: creator.id,
             hexagramId,
             period,
             periodIndex: period - 1,
             runId,
-            mainArchetype
+            upperArchetype,
+            lowerArchetype
         })
     }
 }
@@ -361,9 +363,10 @@ async function generateGlobalQuest(params: {
     period: number
     periodIndex: number
     runId: string
-    mainArchetype: { id: string, name: string } | null
+    upperArchetype: { id: string, name: string } | null
+    lowerArchetype: { id: string, name: string } | null
 }) {
-    const { creatorId, hexagramId, period, periodIndex, runId, mainArchetype } = params
+    const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype } = params
     try {
         const existingQuest = await db.customBar.findFirst({
             where: {
@@ -381,22 +384,26 @@ async function generateGlobalQuest(params: {
         const hexagram = await db.bar.findFirst({ where: { id: hexagramId } })
         const structure = getHexagramStructure(hexagramId)
         const periodTheme = getPeriodTheme(period)
-        const mainArchetypeLabel = mainArchetype?.name || `${structure.upper} archetype`
+        const upperArchetypeLabel = upperArchetype?.name || `${structure.upper} archetype`
+        const lowerArchetypeLabel = lowerArchetype?.name || `${structure.lower} archetype`
 
         const completionEffects = JSON.stringify({
             questSource: 'story_clock',
             storyClockRunId: runId,
             periodIndex,
             hexagramId,
-            mainArchetypeId: mainArchetype?.id || null,
-            mainArchetypeName: mainArchetype?.name || null
+            mainArchetypeIds: [upperArchetype?.id || null, lowerArchetype?.id || null],
+            upperArchetypeId: upperArchetype?.id || null,
+            upperArchetypeName: upperArchetype?.name || null,
+            lowerArchetypeId: lowerArchetype?.id || null,
+            lowerArchetypeName: lowerArchetype?.name || null
         })
 
         await db.customBar.create({
             data: {
                 creatorId,
                 title: `P${period} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
-                description: `${periodTheme}. Main character: ${mainArchetypeLabel}. Allies can assist via vibeulon stake or by adding a BAR (including Vibes SOS).`,
+                description: `${periodTheme}. Main characters: ${upperArchetypeLabel} (upper trigram) + ${lowerArchetypeLabel} (lower trigram). Allies can assist via vibeulon stake or by adding a BAR (including Vibes SOS).`,
                 type: 'story',
                 reward: 1,
                 status: 'active',
