@@ -28,7 +28,7 @@ export default function TwineStoryReader({ questId, title, description, logic }:
                         router.refresh()
                         return
                     }
-                    setError('error' in result ? result.error : 'Failed to complete quest')
+                    setError('error' in result ? (result.error ?? 'Failed to complete quest') : 'Failed to complete quest')
                 })}
             />
             {isPending && <div className="text-xs text-zinc-500 text-center">Completing quest...</div>}
