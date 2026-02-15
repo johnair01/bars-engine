@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { getHexagramStructure } from '@/lib/iching-struct'
+import { getHexagramStructure, verifyHexagramIntegrity } from '@/lib/iching-struct'
 
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
@@ -337,6 +337,21 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
             })
             .filter((entry): entry is readonly [string, { id: string, name: string }] => !!entry)
     )
+
+    const trigramToArchetype = Object.fromEntries(
+        Array.from(playbookByElement.entries()).map(([trigram, archetype]) => [trigram, archetype.name])
+    ) as Record<string, string>
+
+    const integrityTargets = [15, 20, periodHexagrams[0]].filter((hexagram): hexagram is number => typeof hexagram === 'number')
+    for (const hexagram of Array.from(new Set(integrityTargets))) {
+        const integrity = verifyHexagramIntegrity(hexagram, trigramToArchetype)
+        if (!integrity.valid) {
+            console.error('[StoryClock][HexagramIntegrity]', integrity)
+            if (process.env.NODE_ENV !== 'production') {
+                throw new Error(`Hexagram integrity failed for #${hexagram}: ${integrity.errors.join('; ')}`)
+            }
+        }
+    }
 
     for (const hexagramId of periodHexagrams) {
         const structure = getHexagramStructure(hexagramId)

@@ -3,6 +3,16 @@ export type Trigram = 'Heaven' | 'Earth' | 'Thunder' | 'Water' | 'Mountain' | 'W
 
 export const TRIGRAMS: Trigram[] = ['Heaven', 'Earth', 'Thunder', 'Water', 'Mountain', 'Wind', 'Fire', 'Lake']
 
+export type HexagramIntegrityResult = {
+    hexagram: number
+    upperTrigram: Trigram
+    lowerTrigram: Trigram
+    upperArchetype: string | null
+    lowerArchetype: string | null
+    valid: boolean
+    errors: string[]
+}
+
 interface HexagramStruct {
     upper: Trigram
     lower: Trigram
@@ -58,5 +68,84 @@ export function getHexagramStructure(id: number): HexagramStruct {
     return {
         lower: TRIGRAMS[lowerIdx],
         upper: TRIGRAMS[upperIdx]
+    }
+}
+
+const SPOT_CHECKS: Partial<Record<number, {
+    upperTrigram: Trigram
+    lowerTrigram: Trigram
+    upperArchetype: string
+    lowerArchetype: string
+}>> = {
+    20: {
+        upperTrigram: 'Wind',
+        lowerTrigram: 'Earth',
+        upperArchetype: 'The Subtle Influence',
+        lowerArchetype: 'The Devoted Guardian',
+    },
+    15: {
+        upperTrigram: 'Earth',
+        lowerTrigram: 'Mountain',
+        upperArchetype: 'The Devoted Guardian',
+        lowerArchetype: 'The Still Point',
+    },
+}
+
+export function verifyHexagramIntegrity(
+    hexagramNumber: number,
+    trigramToArchetype: Record<string, string> = {}
+): HexagramIntegrityResult {
+    const structure = getHexagramStructure(hexagramNumber)
+    const upperTrigram = structure.upper
+    const lowerTrigram = structure.lower
+    const upperArchetype = trigramToArchetype[upperTrigram.toLowerCase()] || null
+    const lowerArchetype = trigramToArchetype[lowerTrigram.toLowerCase()] || null
+    const errors: string[] = []
+
+    if (!upperArchetype) {
+        errors.push(`Missing archetype mapping for upper trigram "${upperTrigram}"`)
+    }
+    if (!lowerArchetype) {
+        errors.push(`Missing archetype mapping for lower trigram "${lowerTrigram}"`)
+    }
+
+    if (
+        upperTrigram !== lowerTrigram &&
+        upperArchetype &&
+        lowerArchetype &&
+        upperArchetype.toLowerCase() === lowerArchetype.toLowerCase()
+    ) {
+        errors.push(
+            `Distinct trigrams map to same archetype ("${upperTrigram}" and "${lowerTrigram}" -> "${upperArchetype}")`
+        )
+    }
+
+    const expected = SPOT_CHECKS[hexagramNumber]
+    if (expected) {
+        if (upperTrigram !== expected.upperTrigram || lowerTrigram !== expected.lowerTrigram) {
+            errors.push(
+                `Hexagram ${hexagramNumber} expected ${expected.upperTrigram} over ${expected.lowerTrigram}, got ${upperTrigram} over ${lowerTrigram}`
+            )
+        }
+        if (upperArchetype && upperArchetype !== expected.upperArchetype) {
+            errors.push(
+                `Hexagram ${hexagramNumber} upper trigram archetype expected "${expected.upperArchetype}", got "${upperArchetype}"`
+            )
+        }
+        if (lowerArchetype && lowerArchetype !== expected.lowerArchetype) {
+            errors.push(
+                `Hexagram ${hexagramNumber} lower trigram archetype expected "${expected.lowerArchetype}", got "${lowerArchetype}"`
+            )
+        }
+    }
+
+    return {
+        hexagram: hexagramNumber,
+        upperTrigram,
+        lowerTrigram,
+        upperArchetype,
+        lowerArchetype,
+        valid: errors.length === 0,
+        errors,
     }
 }
