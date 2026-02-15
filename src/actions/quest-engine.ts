@@ -102,7 +102,7 @@ export async function completeQuestForPlayer(
         const globalState = await db.globalState.findUnique({ where: { id: 'singleton' } })
 
         // Old period bonus
-        if (!isStoryClockQuest && globalState && quest.periodGenerated < globalState.currentPeriod) {
+        if (!isStoryClockQuest && globalState && quest.periodGenerated != null && quest.periodGenerated < globalState.currentPeriod) {
             bonusMultiplier = 1.5 // +50% bonus
         }
 
