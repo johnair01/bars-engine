@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { advanceClock, pauseStoryClock, resumeStoryClock, resetStoryClock, startStoryClock } from '@/actions/world'
 
 interface AdminClockControlsProps {
@@ -8,6 +9,7 @@ interface AdminClockControlsProps {
 }
 
 export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
 
@@ -18,6 +20,7 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
                 setFeedback(res.error || 'Failed to advance')
             } else {
                 setFeedback(`Advanced to Clock ${res.clock}, Period ${res.period}`)
+                router.refresh()
                 setTimeout(() => setFeedback(null), 3000)
             }
         })
@@ -27,6 +30,7 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
         startTransition(async () => {
             const res = isPaused ? await resumeStoryClock() : await pauseStoryClock()
             setFeedback(isPaused ? 'Clock resumed' : 'Clock paused')
+            router.refresh()
             setTimeout(() => setFeedback(null), 2000)
         })
     }
@@ -42,6 +46,7 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
                 setFeedback(res.error || 'Failed to reset')
             } else {
                 setFeedback('Story Clock has been reset!')
+                router.refresh()
                 setTimeout(() => setFeedback(null), 3000)
             }
         })
@@ -58,6 +63,7 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
                 setFeedback(res.error || 'Failed to start')
             } else {
                 setFeedback('Story Clock started!')
+                router.refresh()
                 setTimeout(() => setFeedback(null), 3000)
             }
         })

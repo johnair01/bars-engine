@@ -120,11 +120,15 @@ export async function generateQuestCore(playerId: string, hexagramId: number, us
                     ? `${object.description}\n\nFirst Aid Lens: ${firstAidLens.publicHint}`
                     : object.description,
                 type: 'inspiration', // MARK AS INSPIRATION (Raw Bar)
-                reward: 2,
+                reward: 1,
                 status: 'active',
                 storyPath: 'personal',
-                visibility: 'private',
                 moveType: firstAidLens?.preferredMoveType || null,
+                visibility: 'public',
+                completionEffects: JSON.stringify({
+                    questSource: 'personal_iching',
+                    originatorId: playerId
+                }),
                 inputs: JSON.stringify([
                     {
                         key: 'reflection',
@@ -135,16 +139,6 @@ export async function generateQuestCore(playerId: string, hexagramId: number, us
                             : `Use the move: ${object.selectedMove}`
                     }
                 ])
-            }
-        })
-
-        // Auto-assign to creator so it shows in "Active Quests"
-        await db.playerQuest.create({
-            data: {
-                playerId,
-                questId: newBar.id,
-                status: 'assigned',
-                assignedAt: new Date()
             }
         })
 

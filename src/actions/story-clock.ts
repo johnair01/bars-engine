@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { getHexagramStructure } from '@/lib/iching-struct'
 
 /**
  * Get Story Clock data including current period, quests by period, and completion tracking
@@ -21,6 +22,21 @@ export async function getStoryClockData() {
     }
 
     const sequence = JSON.parse(globalState.hexagramSequence) as number[]
+
+    // Canonical trigram -> archetype mapping (via playbook element metadata)
+    const playbooks = await db.playbook.findMany({
+        select: { id: true, name: true, description: true }
+    })
+    const playbookByElement = new Map(
+        playbooks
+            .map(playbook => {
+                const match = playbook.description?.match(/Element:\s*([A-Za-z]+)/i)
+                return match?.[1]
+                    ? [match[1].toLowerCase(), { id: playbook.id, name: playbook.name }] as const
+                    : null
+            })
+            .filter((entry): entry is readonly [string, { id: string, name: string }] => !!entry)
+    )
 
     // Fetch all story quests (quests with hexagramId)
     const storyQuests = await db.customBar.findMany({
@@ -52,6 +68,15 @@ export async function getStoryClockData() {
         }
 
         const firstCompleter = quest.assignments[0]?.player
+        const meta = parseStoryClockMeta(quest.completionEffects)
+        const structure = quest.hexagramId ? getHexagramStructure(quest.hexagramId) : null
+        const derivedUpper = structure ? playbookByElement.get(structure.upper.toLowerCase()) || null : null
+        const derivedLower = structure ? playbookByElement.get(structure.lower.toLowerCase()) || null : null
+
+        const upperArchetypeId = meta.upperArchetypeId || meta.mainArchetypeIds?.[0] || derivedUpper?.id || null
+        const upperArchetypeName = meta.upperArchetypeName || derivedUpper?.name || meta.mainArchetypeName || 'Unknown archetype'
+        const lowerArchetypeId = meta.lowerArchetypeId || meta.mainArchetypeIds?.[1] || derivedLower?.id || null
+        const lowerArchetypeName = meta.lowerArchetypeName || derivedLower?.name || meta.mainArchetypeName || 'Unknown archetype'
 
         questsByPeriod[period].push({
             id: quest.id,
@@ -59,6 +84,11 @@ export async function getStoryClockData() {
             description: quest.description,
             hexagramId: quest.hexagramId,
             reward: quest.reward,
+            completionEffects: quest.completionEffects,
+            upperArchetypeId,
+            upperArchetypeName,
+            lowerArchetypeId,
+            lowerArchetypeName,
             firstCompleter: firstCompleter ? {
                 id: firstCompleter.id,
                 name: firstCompleter.name
@@ -73,5 +103,39 @@ export async function getStoryClockData() {
         isPaused: globalState.isPaused,
         hexagramSequence: sequence,
         questsByPeriod
+    }
+}
+
+function parseStoryClockMeta(raw: string | null) {
+    if (!raw) {
+        return {
+            mainArchetypeIds: null as (string | null)[] | null,
+            mainArchetypeName: null as string | null,
+            upperArchetypeId: null as string | null,
+            upperArchetypeName: null as string | null,
+            lowerArchetypeId: null as string | null,
+            lowerArchetypeName: null as string | null
+        }
+    }
+
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            mainArchetypeIds: Array.isArray(parsed.mainArchetypeIds) ? parsed.mainArchetypeIds : null,
+            mainArchetypeName: typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : null,
+            upperArchetypeId: typeof parsed.upperArchetypeId === 'string' ? parsed.upperArchetypeId : null,
+            upperArchetypeName: typeof parsed.upperArchetypeName === 'string' ? parsed.upperArchetypeName : null,
+            lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
+            lowerArchetypeName: typeof parsed.lowerArchetypeName === 'string' ? parsed.lowerArchetypeName : null
+        }
+    } catch {
+        return {
+            mainArchetypeIds: null as (string | null)[] | null,
+            mainArchetypeName: null as string | null,
+            upperArchetypeId: null as string | null,
+            upperArchetypeName: null as string | null,
+            lowerArchetypeId: null as string | null,
+            lowerArchetypeName: null as string | null
+        }
     }
 }

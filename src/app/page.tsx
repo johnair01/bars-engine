@@ -172,6 +172,7 @@ export default async function Home() {
   })
 
   const globalState = await getGlobalState()
+  const globalStage = Math.max(1, Math.min(8, globalState.currentPeriod || Math.ceil(globalState.storyClock / 8)))
 
   // Get onboarding status
   const onboardingStatus = await getOnboardingStatus()
@@ -214,11 +215,13 @@ export default async function Home() {
             <div className="flex flex-col gap-2">
               <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 text-center min-w-[70px]">
                 <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/8</div>
+                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/2</div>
               </div>
 
               {/* KOTTER GAUGE (Small) */}
-              <KotterGauge currentStage={Math.ceil(globalState.storyClock / 8)} label="Global Phase" />
+              <Link href="/story-clock" className="block">
+                <KotterGauge currentStage={globalStage} label="Global Phase" />
+              </Link>
             </div>
 
             <Link href="/wallet" className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
@@ -257,7 +260,6 @@ export default async function Home() {
           )}
         </div>
       </header >
-
 
       {/* WELCOME SCREEN (if not seen yet) */}
       {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (

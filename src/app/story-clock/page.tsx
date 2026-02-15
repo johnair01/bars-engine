@@ -24,6 +24,12 @@ export default async function StoryClockPage() {
                     <p className="text-zinc-400">
                         Period {currentPeriod} • Clock Position {storyClock}/64
                     </p>
+                    <Link
+                        href="/wiki/iching"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-cyan-700/60 bg-cyan-900/20 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-800/30 text-xs uppercase tracking-widest font-semibold transition"
+                    >
+                        Verify mappings in wiki/iching →
+                    </Link>
                     {isPaused && (
                         <div className="inline-block px-4 py-2 bg-yellow-900/30 border border-yellow-600/50 rounded-lg text-yellow-300 text-sm">
                             ⏸️ Story Clock Paused
@@ -79,6 +85,9 @@ export default async function StoryClockPage() {
 }
 
 function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }) {
+    const upperArchetypeName = quest.upperArchetypeName || 'Unknown archetype'
+    const lowerArchetypeName = quest.lowerArchetypeName || 'Unknown archetype'
+
     return (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-all relative overflow-hidden">
             {isBonus && (
@@ -101,6 +110,16 @@ function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }
                         </div>
                         <div className="text-sm font-bold text-green-400">
                             {quest.reward} {isBonus ? '× 1.5' : ''} ♦
+                        </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-400">
+                        <div className="uppercase tracking-widest text-zinc-500 mb-1">Main characters</div>
+                        <div>
+                            Upper trigram: <span className="text-zinc-200 font-semibold">{upperArchetypeName}</span>
+                        </div>
+                        <div>
+                            Lower trigram: <span className="text-zinc-200 font-semibold">{lowerArchetypeName}</span>
                         </div>
                     </div>
 

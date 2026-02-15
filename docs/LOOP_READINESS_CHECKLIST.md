@@ -19,6 +19,7 @@ Goal: keep the loop reliable while minimizing compute.
 ## 0) Pre-Flight (2-3 min)
 
 - [ ] On correct branch and latest code is pushed
+- [ ] Preview URL printed for this branch (`npm run preview:link`)
 - [ ] `npm run build` passes
 - [ ] `DATABASE_URL` is set for any DB scripts you run
 - [ ] No planned destructive reset during this release window
@@ -26,6 +27,7 @@ Goal: keep the loop reliable while minimizing compute.
 ```bash
 git branch --show-current
 git status --short
+npm run preview:link
 npm run build
 ```
 
@@ -80,6 +82,8 @@ Expected:
 ---
 
 ## 3) Manual UI Smoke (5-8 min)
+
+- [ ] Run `npm run preview:link` and open that URL before manual verification
 
 ### Auth
 - [ ] `/login` loads
