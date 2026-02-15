@@ -8,6 +8,14 @@ import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { getHexagramStructure } from '@/lib/iching-struct'
 
+const STORY_CLOCK_PERIODS = 8
+const HEXAGRAMS_PER_PERIOD = 8
+const STORY_CLOCK_MAX = STORY_CLOCK_PERIODS * HEXAGRAMS_PER_PERIOD
+
+function getActFromPeriod(period: number) {
+    return period <= 4 ? 1 : 2
+}
+
 /**
  * Get the singleton global state (with auto-seeding)
  */
@@ -51,9 +59,9 @@ export async function advanceClock(amount: number = 1) {
     const sequence = JSON.parse(state.hexagramSequence) as number[]
 
     // Calculate new clock and period
-    const newClock = Math.min(64, state.storyClock + amount)
-    const newPeriod = Math.ceil(newClock / 8)
-    const newAct = Math.ceil(newClock / 8)
+    const newClock = Math.min(STORY_CLOCK_MAX, state.storyClock + amount)
+    const newPeriod = Math.max(1, Math.ceil(newClock / HEXAGRAMS_PER_PERIOD))
+    const newAct = getActFromPeriod(newPeriod)
 
     // Get the Hexagram ID from the shuffled sequence (using internal 0-index)
     // Clock 1 = Index 0
@@ -176,14 +184,61 @@ export async function startStoryClock() {
         }
     })
 
-    // Generate initial 8 quests for Period 1
-    for (let i = 0; i < 8; i++) {
-        await generateGlobalQuest(sequence[i], 1)
-    }
-
     revalidatePath('/')
     revalidatePath('/story-clock')
     return { success: true, message: 'Story Clock started with new sequence.' }
+}
+
+/**
+ * ADVANCE STORY PERIOD
+ * Move to the next period (8 total), with 2 acts of 4 periods each.
+ */
+export async function advanceStoryPeriod() {
+    // Admin check
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+    if (!playerId) return { error: 'Unauthorized' }
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { roles: { include: { role: true } } }
+    })
+
+    const isAdmin = player?.roles.some(r => r.role.key === 'admin' || r.role.key === 'ENGINEER')
+    if (!isAdmin) return { error: 'Forbidden: Only Admins can advance periods.' }
+
+    const state = await getGlobalState()
+    const currentPeriod = Math.max(1, Math.min(STORY_CLOCK_PERIODS, state.currentPeriod || 1))
+    if (currentPeriod >= STORY_CLOCK_PERIODS) {
+        return { error: 'Already at final period (8).' }
+    }
+
+    const nextPeriod = currentPeriod + 1
+    const nextClock = (nextPeriod - 1) * HEXAGRAMS_PER_PERIOD + 1
+    const nextAct = getActFromPeriod(nextPeriod)
+
+    await db.globalState.update({
+        where: { id: 'singleton' },
+        data: {
+            currentPeriod: nextPeriod,
+            currentAct: nextAct,
+            storyClock: nextClock
+        }
+    })
+
+    await db.storyTick.create({
+        data: {
+            tickNumber: nextClock,
+            actNumber: nextAct,
+            trigger: 'manual_admin_period_advance',
+            description: `Advanced to Period ${nextPeriod} (Act ${nextAct})`
+        }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/admin')
+    revalidatePath('/story-clock')
+    return { success: true, period: nextPeriod, act: nextAct, clock: nextClock }
 }
 
 /**

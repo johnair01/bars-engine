@@ -15,7 +15,11 @@ export default async function AdminDashboard() {
                     </div>
                     {/* TILT CONTROL */}
                     <div className="w-full sm:max-w-sm">
-                        <AdminTiltControl currentAct={globalState.currentAct} />
+                        <AdminTiltControl
+                            currentAct={globalState.currentAct}
+                            currentPeriod={globalState.currentPeriod}
+                            hexagramSequence={globalState.hexagramSequence}
+                        />
                     </div>
                 </div>
             </header>
