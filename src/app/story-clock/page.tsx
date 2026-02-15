@@ -79,7 +79,8 @@ export default async function StoryClockPage() {
 }
 
 function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }) {
-    const { upperArchetypeName, lowerArchetypeName } = parseArchetypePair(quest.completionEffects)
+    const upperArchetypeName = quest.upperArchetypeName || 'Unknown archetype'
+    const lowerArchetypeName = quest.lowerArchetypeName || 'Unknown archetype'
 
     return (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-all relative overflow-hidden">
@@ -126,30 +127,4 @@ function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }
             </div>
         </div>
     )
-}
-
-function parseArchetypePair(raw: string | null) {
-    if (!raw) {
-        return {
-            upperArchetypeName: 'Unknown archetype',
-            lowerArchetypeName: 'Unknown archetype'
-        }
-    }
-
-    try {
-        const parsed = JSON.parse(raw)
-        return {
-            upperArchetypeName: typeof parsed.upperArchetypeName === 'string'
-                ? parsed.upperArchetypeName
-                : (typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : 'Unknown archetype'),
-            lowerArchetypeName: typeof parsed.lowerArchetypeName === 'string'
-                ? parsed.lowerArchetypeName
-                : (typeof parsed.mainArchetypeName === 'string' ? parsed.mainArchetypeName : 'Unknown archetype')
-        }
-    } catch {
-        return {
-            upperArchetypeName: 'Unknown archetype',
-            lowerArchetypeName: 'Unknown archetype'
-        }
-    }
 }
