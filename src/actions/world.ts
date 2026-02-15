@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getHexagramStructure, verifyHexagramIntegrity } from '@/lib/iching-struct'
+import { assignCubeGeometry, defaultCubeBiasProvider, formatCubeGeometry, type CubeGeometry } from '@/lib/cube-engine'
 
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
@@ -357,6 +358,17 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
         const structure = getHexagramStructure(hexagramId)
         const upperArchetype = playbookByElement.get(structure.upper.toLowerCase()) || null
         const lowerArchetype = playbookByElement.get(structure.lower.toLowerCase()) || null
+        const cubeBias = defaultCubeBiasProvider.getBiasForHexagram(hexagramId)
+        const cube = assignCubeGeometry({
+            hexagramId,
+            bias: cubeBias,
+            seed: `${runId}:${hexagramId}`,
+        })
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.debug(`[CubeEngine] Hexagram #${hexagramId}: ${formatCubeGeometry(cube)}`)
+        }
+
         await generateGlobalQuest({
             creatorId: creator.id,
             hexagramId,
@@ -364,7 +376,8 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
             periodIndex: period - 1,
             runId,
             upperArchetype,
-            lowerArchetype
+            lowerArchetype,
+            cube,
         })
     }
 }
@@ -380,8 +393,9 @@ async function generateGlobalQuest(params: {
     runId: string
     upperArchetype: { id: string, name: string } | null
     lowerArchetype: { id: string, name: string } | null
+    cube: CubeGeometry
 }) {
-    const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype } = params
+    const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype, cube } = params
     try {
         const existingQuest = await db.customBar.findFirst({
             where: {
@@ -411,7 +425,9 @@ async function generateGlobalQuest(params: {
             upperArchetypeId: upperArchetype?.id || null,
             upperArchetypeName: upperArchetype?.name || null,
             lowerArchetypeId: lowerArchetype?.id || null,
-            lowerArchetypeName: lowerArchetype?.name || null
+            lowerArchetypeName: lowerArchetype?.name || null,
+            cube,
+            cubeState: cube.state
         })
 
         await db.customBar.create({
