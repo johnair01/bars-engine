@@ -37,6 +37,8 @@ export const HEXAGRAM_STRUCTURE: Record<number, HexagramStruct> = {
     6: { upper: 'Heaven', lower: 'Water' },
     7: { upper: 'Earth', lower: 'Water' },
     8: { upper: 'Water', lower: 'Earth' },
+    15: { upper: 'Earth', lower: 'Mountain' }, // Modesty/Humility
+    20: { upper: 'Wind', lower: 'Earth' },     // Contemplation/View
     // A simple filler for 9-64 to ensure playability without typing 64 entries manually in this turn.
     // I'll use a function to derive them if missing.
 }
