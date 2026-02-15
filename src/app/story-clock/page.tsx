@@ -24,8 +24,11 @@ export default async function StoryClockPage() {
                     <p className="text-zinc-400">
                         Period {currentPeriod} • Clock Position {storyClock}/64
                     </p>
-                    <Link href="/wiki/iching" className="inline-block text-xs uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition">
-                        Verify mappings in /wiki/iching
+                    <Link
+                        href="/wiki/iching"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-cyan-700/60 bg-cyan-900/20 text-cyan-300 hover:text-cyan-200 hover:bg-cyan-800/30 text-xs uppercase tracking-widest font-semibold transition"
+                    >
+                        Verify mappings in wiki/iching →
                     </Link>
                     {isPaused && (
                         <div className="inline-block px-4 py-2 bg-yellow-900/30 border border-yellow-600/50 rounded-lg text-yellow-300 text-sm">
