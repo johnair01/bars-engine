@@ -8,6 +8,17 @@ import { z } from 'zod'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { buildArchetypeMapByTrigram } from '@/lib/archetype-registry'
+import {
+    type ForensicsStyleCheck,
+    type QuestGenerationTrace,
+    composeQuestCacheKey,
+    normalizeInputs,
+    percentageDistinct,
+    percentageMatches,
+    resolveGeneratorVersion,
+    sha256Fingerprint,
+    stableJsonStringify,
+} from '@/lib/quest-forensics'
 
 type StoryClockRolloverPolicy = 'carry_unfinished' | 'archive_unfinished'
 type CubeProximity = 'HIDE' | 'SEEK'
@@ -75,6 +86,27 @@ type PersistedPlayerFacingQuest = {
     ally_help?: string
 }
 
+type StoryClockSeedOverrides = Partial<Omit<StoryClockSeed, 'upper_trigram' | 'lower_trigram'>> & {
+    upper_trigram?: Partial<TrigramReading>
+    lower_trigram?: Partial<TrigramReading>
+}
+
+type StyleViolation = {
+    code: string
+    message: string
+    fieldPath: string
+}
+
+type StyleValidationResult = {
+    pass: boolean
+    violations: StyleViolation[]
+}
+
+const QUEST_CACHE_KEY_VERSION = 'story-quest-cache-v1'
+const DEBUG_QUEST_TRACE = process.env.DEBUG_QUEST_TRACE === '1'
+const STYLE_GATE_ENABLED = process.env.STYLE_GATE_ENABLED === '1'
+const DEFAULT_QUEST_MODEL = process.env.QUEST_MODEL || 'gpt-4o-mini'
+
 const STORY_CLOCK_RESPONSE_SCHEMA = z.object({
     reading: z.object({
         hexagram_id: z.number(),
@@ -117,6 +149,13 @@ const STORY_CLOCK_RESPONSE_SCHEMA = z.object({
             first_completion_bonus: z.literal(1)
         })
     })
+})
+
+const QUEST_STYLE_REPAIR_SCHEMA = z.object({
+    title: z.string().max(40).optional(),
+    action: z.string().max(140),
+    done_when: z.string().max(90),
+    ally_help: z.string().max(90).optional(),
 })
 
 const TRIGRAM_DEFAULT_KEYWORDS: Record<string, { id: string, name: string, keywords: string[] }> = {
@@ -393,6 +432,134 @@ function hasPersistedPlayerFacingContract(raw: string | null) {
         && record.done_when.trim().length > 0
 }
 
+function mergeStoryClockSeed(base: StoryClockSeed, overrides?: StoryClockSeedOverrides) {
+    if (!overrides) return base
+    return {
+        ...base,
+        ...overrides,
+        upper_trigram: {
+            ...base.upper_trigram,
+            ...(overrides.upper_trigram || {})
+        },
+        lower_trigram: {
+            ...base.lower_trigram,
+            ...(overrides.lower_trigram || {})
+        },
+    }
+}
+
+function toStyleChecks(stage: 'first_pass' | 'after_repair', result: StyleValidationResult): ForensicsStyleCheck[] {
+    if (result.violations.length === 0) {
+        return [{
+            stage,
+            code: 'style_contract',
+            pass: true,
+            message: 'All style-guide checks passed.',
+            fieldPath: 'player_facing'
+        }]
+    }
+    return result.violations.map((violation) => ({
+        stage,
+        code: violation.code,
+        pass: false,
+        message: violation.message,
+        fieldPath: violation.fieldPath
+    }))
+}
+
+function validateQuestStyle(playerFacing: PersistedPlayerFacingQuest): StyleValidationResult {
+    const violations: StyleViolation[] = []
+    const title = normalizeText(playerFacing.title)
+    const action = normalizeText(playerFacing.action)
+    const doneWhen = normalizeText(playerFacing.done_when)
+    const allyHelp = normalizeText(playerFacing.ally_help)
+
+    const hasPrefix = (value: string, prefixes: string[]) => prefixes.some((prefix) => value.toLowerCase().startsWith(prefix.toLowerCase()))
+    const containsScaffolding = (value: string) =>
+        /(oracle stub|reading|upper trigram|lower trigram|template_id|constraints?|cube signature|phase|kotter)/i.test(value)
+    const genericAction = /(next concrete step|complete this quest|advance the big score)/i.test(action)
+
+    if (!action) {
+        violations.push({ code: 'ACTION_MISSING', message: 'Action is required.', fieldPath: 'action' })
+    } else {
+        if (action.length > 140) {
+            violations.push({ code: 'ACTION_TOO_LONG', message: 'Action must be <= 140 chars.', fieldPath: 'action' })
+        }
+        if (hasPrefix(action, ['Action:', 'Main move:', 'Do:'])) {
+            violations.push({ code: 'ACTION_LABEL_PREFIX', message: 'Action should not include UI labels.', fieldPath: 'action' })
+        }
+        if (containsScaffolding(action)) {
+            violations.push({ code: 'ACTION_SCAFFOLDING', message: 'Action leaks engine scaffolding text.', fieldPath: 'action' })
+        }
+        if (!hasConcreteMainMove(action)) {
+            violations.push({ code: 'ACTION_NOT_CONCRETE', message: 'Action must start with a concrete verb.', fieldPath: 'action' })
+        }
+        if (genericAction) {
+            violations.push({ code: 'ACTION_GENERIC', message: 'Action is generic and not tactical.', fieldPath: 'action' })
+        }
+    }
+
+    if (!doneWhen) {
+        violations.push({ code: 'DONE_WHEN_MISSING', message: 'Done when is required.', fieldPath: 'done_when' })
+    } else {
+        if (doneWhen.length > 90) {
+            violations.push({ code: 'DONE_WHEN_TOO_LONG', message: 'Done when must be <= 90 chars.', fieldPath: 'done_when' })
+        }
+        if (hasPrefix(doneWhen, ['Done when:', 'Done_when:'])) {
+            violations.push({ code: 'DONE_WHEN_LABEL_PREFIX', message: 'Done when should not include UI labels.', fieldPath: 'done_when' })
+        }
+        if (!hasObservableDoneWhen(doneWhen)) {
+            violations.push({ code: 'DONE_WHEN_NOT_OBSERVABLE', message: 'Done when should include an observable completion signal.', fieldPath: 'done_when' })
+        }
+    }
+
+    if (title) {
+        if (title.length > 40) {
+            violations.push({ code: 'TITLE_TOO_LONG', message: 'Title must be <= 40 chars.', fieldPath: 'title' })
+        }
+        if (hasPrefix(title, ['Title:'])) {
+            violations.push({ code: 'TITLE_LABEL_PREFIX', message: 'Title should not include UI labels.', fieldPath: 'title' })
+        }
+    }
+
+    if (allyHelp) {
+        if (allyHelp.length > 90) {
+            violations.push({ code: 'ALLY_HELP_TOO_LONG', message: 'Ally help must be <= 90 chars.', fieldPath: 'ally_help' })
+        }
+        if (hasPrefix(allyHelp, ['Ally help:', 'Ally_help:'])) {
+            violations.push({ code: 'ALLY_HELP_LABEL_PREFIX', message: 'Ally help should not include UI labels.', fieldPath: 'ally_help' })
+        }
+    }
+
+    return {
+        pass: violations.length === 0,
+        violations,
+    }
+}
+
+function applyPlayerFacingToPayload(payload: StoryClockQuestPayload, playerFacing: PersistedPlayerFacingQuest): StoryClockQuestPayload {
+    const nextPayload: StoryClockQuestPayload = {
+        ...payload,
+        quest: {
+            ...payload.quest,
+            title: clampText(normalizeText(playerFacing.title) || payload.quest.title, 40),
+            main_character_move: {
+                do: clampText(normalizeText(playerFacing.action) || payload.quest.main_character_move.do, 140),
+                done_when: clampText(normalizeText(playerFacing.done_when) || payload.quest.main_character_move.done_when, 90),
+            },
+            ally_moves: payload.quest.ally_moves.map((move, index) => {
+                if (index !== 0) return move
+                const repairedAlly = clampText(normalizeText(playerFacing.ally_help) || move.ask, 90)
+                return {
+                    ...move,
+                    ask: repairedAlly,
+                }
+            })
+        }
+    }
+    return nextPayload
+}
+
 function dedupeStrings(values: string[]) {
     const seen = new Set<string>()
     const out: string[] = []
@@ -549,6 +716,47 @@ function toAiPromptPaletteText() {
         .join('\n\n')
 }
 
+function buildStoryClockPrompt(seed: StoryClockSeed, signature: ReturnType<typeof parseCubeSignature>, seedTag: string | null) {
+    return [
+        'Generate Story Clock quest JSON using this seed:',
+        JSON.stringify({
+            hexagram_id: seed.hexagram_id,
+            upper_trigram: {
+                id: seed.upper_trigram.id,
+                name: seed.upper_trigram.name,
+                archetype: seed.upper_trigram.archetype,
+                keywords: seed.upper_trigram.keywords
+            },
+            lower_trigram: {
+                id: seed.lower_trigram.id,
+                name: seed.lower_trigram.name,
+                archetype: seed.lower_trigram.archetype,
+                keywords: seed.lower_trigram.keywords
+            },
+            eligible_archetypes: seed.eligible_archetypes,
+            nation_tone_primary: seed.nation_tone_primary,
+            nation_tone_secondary: seed.nation_tone_secondary,
+            cube_state: seed.cube_state,
+            face_context: seed.face_context,
+            generation_seed: seedTag,
+        }, null, 2),
+        '',
+        `Cube signature: ${signature.key} (${signature.signature_display})`,
+        `Required template_id: ${signature.template.template_id}`,
+        '',
+        '8-signature template palette:',
+        toAiPromptPaletteText(),
+        '',
+        'Hard constraints:',
+        '- Include at least one keyword from upper_trigram.keywords and one from lower_trigram.keywords in pitch/main move/constraints.',
+        '- main_character_move.do = one concrete action.',
+        '- main_character_move.done_when = observable completion signal.',
+        '- ally_moves must include BOTH VIBEULON and BAR.',
+        '- rewards must be completion_vibeulons=1 and first_completion_bonus=1.',
+        '- signature_display must be human-friendly, e.g. Hide • Truth • Interior.',
+    ].join('\n')
+}
+
 function buildCanonicalPayloadFromModel(
     modelPayload: StoryClockQuestPayload,
     seed: StoryClockSeed,
@@ -597,6 +805,67 @@ function buildCanonicalPayloadFromModel(
             ],
             rewards: { completion_vibeulons: 1, first_completion_bonus: 1 }
         }
+    }
+}
+
+async function repairQuestStyle(
+    payload: StoryClockQuestPayload,
+    violations: StyleViolation[],
+    seed: StoryClockSeed,
+    modelParams: { temperature: number | null; top_p: number | null; max_tokens: number | null }
+) {
+    const playerFacing = toPersistedPlayerFacingQuest(payload)
+    const deterministicRepair: PersistedPlayerFacingQuest = {
+        title: clampText(stripUiLabel(normalizeText(playerFacing.title), ['title']), 40) || undefined,
+        action: clampText(stripUiLabel(normalizeText(playerFacing.action), ['action', 'main move', 'do']), 140) || 'Take one concrete step that advances the Big Score.',
+        done_when: clampText(stripUiLabel(normalizeText(playerFacing.done_when), ['done when', 'done_when']), 90) || 'Marked complete in the app.',
+        ally_help: clampText(stripUiLabel(normalizeText(playerFacing.ally_help), ['ally help', 'ally_help']), 90) || undefined,
+    }
+
+    try {
+        const generationArgs: Record<string, unknown> = {
+            model: openai(DEFAULT_QUEST_MODEL),
+            schema: QUEST_STYLE_REPAIR_SCHEMA,
+            system: [
+                'You repair tactical quest copy to match a strict style guide.',
+                'Return JSON only with keys title/action/done_when/ally_help.',
+                'Keep semantics intact while making the text concrete and observable.',
+                'Do not include labels in values.',
+            ].join(' '),
+            prompt: [
+                'Quest style repair request',
+                `Seed hexagram: ${seed.hexagram_id} ${seed.hexagram_name}`,
+                `Nation tone: ${seed.nation_tone_primary} / ${seed.nation_tone_secondary}`,
+                `Cube signature: ${seed.cube_state}`,
+                '',
+                'Current player-facing fields:',
+                stableJsonStringify(playerFacing),
+                '',
+                'Violations:',
+                stableJsonStringify(violations),
+                '',
+                'Style constraints:',
+                '- title optional <= 40 chars',
+                '- action required, tactical, <= 140 chars, starts with concrete verb',
+                '- done_when required, observable, <= 90 chars',
+                '- ally_help optional <= 90 chars',
+            ].join('\n')
+        }
+        if (typeof modelParams.temperature === 'number') generationArgs.temperature = modelParams.temperature
+        if (typeof modelParams.top_p === 'number') generationArgs.topP = modelParams.top_p
+        if (typeof modelParams.max_tokens === 'number') generationArgs.maxTokens = modelParams.max_tokens
+
+        const { object } = await generateObject(generationArgs as any)
+        const repaired: PersistedPlayerFacingQuest = {
+            title: clampText(stripUiLabel(normalizeText(object.title), ['title']), 40) || undefined,
+            action: clampText(stripUiLabel(normalizeText(object.action), ['action', 'main move', 'do']), 140),
+            done_when: clampText(stripUiLabel(normalizeText(object.done_when), ['done when', 'done_when']), 90),
+            ally_help: clampText(stripUiLabel(normalizeText(object.ally_help), ['ally help', 'ally_help']), 90) || undefined,
+        }
+        return applyPlayerFacingToPayload(payload, repaired)
+    } catch (error: any) {
+        console.warn('[StoryClock][StyleRepair] Falling back to deterministic repair:', error?.message || error)
+        return applyPlayerFacingToPayload(payload, deterministicRepair)
     }
 }
 
@@ -738,8 +1007,42 @@ export async function getStoryClockData() {
     }
 }
 
+type StoryClockModelParams = {
+    temperature: number | null
+    top_p: number | null
+    max_tokens: number | null
+}
+
 type StoryClockGenerationOptions = {
     requireAuth: boolean
+    debug?: boolean
+    seed?: string | number | null
+    cacheBypass?: boolean
+    strictCacheKey?: boolean
+    dryRun?: boolean
+    styleGateEnabled?: boolean
+    modelParams?: Partial<StoryClockModelParams>
+    seedOverrides?: StoryClockSeedOverrides
+}
+
+function resolveModelParams(overrides?: Partial<StoryClockModelParams>): StoryClockModelParams {
+    return {
+        temperature: typeof overrides?.temperature === 'number' ? overrides.temperature : null,
+        top_p: typeof overrides?.top_p === 'number' ? overrides.top_p : null,
+        max_tokens: typeof overrides?.max_tokens === 'number' ? overrides.max_tokens : null,
+    }
+}
+
+function isStylePass(checks: ForensicsStyleCheck[], stage: 'first_pass' | 'after_repair') {
+    const scoped = checks.filter((check) => check.stage === stage)
+    if (scoped.length === 0) {
+        if (stage === 'after_repair') {
+            const first = checks.filter((check) => check.stage === 'first_pass')
+            return first.length > 0 && first.every((check) => check.pass)
+        }
+        return false
+    }
+    return scoped.every((check) => check.pass)
 }
 
 async function generateStoryClockQuestTextInternal(
@@ -766,18 +1069,82 @@ async function generateStoryClockQuestTextInternal(
 
     if (!quest) return { error: 'Quest not found' as const }
 
+    const debugEnabled = options.debug === true || DEBUG_QUEST_TRACE
+    const styleGateEnabled = options.styleGateEnabled === true || STYLE_GATE_ENABLED
+    const seedTag = options.seed != null ? String(options.seed) : null
+    const modelParams = resolveModelParams(options.modelParams)
+    const effectsObject = parseJsonObject(quest.completionEffects)
+    const existingCacheKey = typeof effectsObject.questCacheKey === 'string' ? effectsObject.questCacheKey : null
+    const cacheBypass = options.cacheBypass === true
+
     const meta = parseStoryClockMeta(quest.completionEffects)
     if (meta.questSource !== 'story_clock') {
         return { error: 'Only story_clock quests can be generated here.' as const }
     }
 
-    const seed = await buildStoryClockSeed(quest, meta)
+    const baseSeed = await buildStoryClockSeed(quest, meta)
+    const seed = mergeStoryClockSeed(baseSeed, options.seedOverrides)
     const signature = parseCubeSignature(seed.cube_state)
+    const prompt = buildStoryClockPrompt(seed, signature, seedTag)
+    const promptFingerprint = sha256Fingerprint(prompt)
+    const retrievalFingerprint = sha256Fingerprint({ documents: [] })
+    const retrievalQueryFingerprint = sha256Fingerprint({ query: null, params: null })
+
+    const inputsFingerprint = sha256Fingerprint(normalizeInputs({
+        questId,
+        seed,
+        generationSeed: seedTag,
+        modelParams,
+        styleGateEnabled,
+    }))
+
+    const cacheKey = composeQuestCacheKey({
+        version: QUEST_CACHE_KEY_VERSION,
+        questId,
+        seed: seedTag,
+        inputsFingerprint
+    })
+
     const existingPayload = parseExistingPayload(meta.aiBody)
     const hasValidExisting = !!existingPayload && validatePayload(existingPayload, signature)
+    const cacheKeyMatches = existingCacheKey === cacheKey
+    const canUseCached = !cacheBypass
+        && hasValidExisting
+        && !!meta.aiBody
+        && (!options.strictCacheKey || cacheKeyMatches)
+
+    const buildTrace = (
+        payload: StoryClockQuestPayload,
+        postprocessSteps: Array<{ name: string; version: string }>,
+        styleChecks: ForensicsStyleCheck[],
+        cacheStatus: {
+            layer: 'completionEffects.aiBody'
+            status: 'hit' | 'miss' | 'bypass'
+            cache_key: string
+            reason?: string
+        }
+    ): QuestGenerationTrace => ({
+        generator_version: resolveGeneratorVersion(),
+        timestamp: new Date().toISOString(),
+        seed: seedTag,
+        model_params: {
+            provider: 'openai',
+            model: DEFAULT_QUEST_MODEL,
+            temperature: modelParams.temperature,
+            top_p: modelParams.top_p,
+            max_tokens: modelParams.max_tokens,
+        },
+        cache_status: cacheStatus,
+        inputs_fingerprint: inputsFingerprint,
+        retrieval_fingerprint: retrievalFingerprint,
+        retrieval_query_fingerprint: retrievalQueryFingerprint,
+        prompt_fingerprint: promptFingerprint,
+        postprocess_steps: postprocessSteps,
+        style_guide_checks: styleChecks,
+        output_fingerprint: sha256Fingerprint(payload),
+    })
 
     const persistPayload = async (payload: StoryClockQuestPayload, isFallback: boolean) => {
-        const effectsObject = parseJsonObject(quest.completionEffects)
         const playerFacing = toPersistedPlayerFacingQuest(payload)
         const nextEffects = JSON.stringify({
             ...effectsObject,
@@ -794,34 +1161,66 @@ async function generateStoryClockQuestTextInternal(
             player_facing: playerFacing,
             playerFacing,
             summary: playerFacing,
+            questCacheKey: cacheKey,
         })
 
-        await db.customBar.update({
-            where: { id: questId },
-            data: { completionEffects: nextEffects }
-        })
+        if (!options.dryRun) {
+            await db.customBar.update({
+                where: { id: questId },
+                data: { completionEffects: nextEffects }
+            })
 
-        revalidatePath('/bars/available')
-        revalidatePath('/story-clock')
+            revalidatePath('/bars/available')
+            revalidatePath('/story-clock')
+        }
     }
 
-    if (hasValidExisting && existingPayload && meta.aiBody) {
-        if (!hasPersistedPlayerFacingContract(quest.completionEffects)) {
-            await persistPayload(existingPayload, meta.aiFallback === true)
+    if (canUseCached && existingPayload && meta.aiBody) {
+        let cachedPayload = existingPayload
+        const postprocessSteps: Array<{ name: string; version: string }> = [
+            { name: 'cache_read', version: 'v1' }
+        ]
+        const firstPass = validateQuestStyle(toPersistedPlayerFacingQuest(cachedPayload))
+        let styleChecks = toStyleChecks('first_pass', firstPass)
+
+        if (styleGateEnabled && !firstPass.pass) {
+            cachedPayload = await repairQuestStyle(cachedPayload, firstPass.violations, seed, modelParams)
+            postprocessSteps.push({ name: 'style_repair', version: 'v1' })
+            const afterRepair = validateQuestStyle(toPersistedPlayerFacingQuest(cachedPayload))
+            styleChecks = [...styleChecks, ...toStyleChecks('after_repair', afterRepair)]
+            await persistPayload(cachedPayload, meta.aiFallback === true)
+        } else if (!hasPersistedPlayerFacingContract(quest.completionEffects)) {
+            await persistPayload(cachedPayload, meta.aiFallback === true)
+        }
+
+        const trace = buildTrace(
+            cachedPayload,
+            postprocessSteps,
+            styleChecks,
+            {
+                layer: 'completionEffects.aiBody',
+                status: 'hit',
+                cache_key: cacheKey,
+                reason: cacheKeyMatches ? 'cache-key-match' : 'legacy-cache-hit-no-key-match'
+            }
+        )
+        if (debugEnabled) {
+            console.info('[StoryClock][Trace]', stableJsonStringify(trace))
         }
         return {
             success: true as const,
-            aiTitle: meta.aiTitle || existingPayload.quest.title || quest.title,
-            aiBody: meta.aiBody,
+            aiTitle: meta.aiTitle || cachedPayload.quest.title || quest.title,
+            aiBody: JSON.stringify(cachedPayload),
             isFallback: meta.aiFallback === true,
-            persisted: true,
-            seed
+            persisted: !options.dryRun,
+            seed,
+            trace: debugEnabled ? trace : undefined
         }
     }
 
     try {
-        const { object } = await generateObject({
-            model: openai('gpt-4o-mini'),
+        const generationArgs: Record<string, unknown> = {
+            model: openai(DEFAULT_QUEST_MODEL),
             schema: STORY_CLOCK_RESPONSE_SCHEMA,
             system: [
                 'You are the Story Cube quest oracle for Story Clock quests only.',
@@ -830,85 +1229,348 @@ async function generateStoryClockQuestTextInternal(
                 'Never output internal fused tokens like HIDE_DARE_INTERIOR in user-facing fields.',
                 'Use concrete actions and observable done_when signals.',
             ].join(' '),
-            prompt: [
-                'Generate Story Clock quest JSON using this seed:',
-                JSON.stringify({
-                    hexagram_id: seed.hexagram_id,
-                    upper_trigram: {
-                        id: seed.upper_trigram.id,
-                        name: seed.upper_trigram.name,
-                        archetype: seed.upper_trigram.archetype,
-                        keywords: seed.upper_trigram.keywords
-                    },
-                    lower_trigram: {
-                        id: seed.lower_trigram.id,
-                        name: seed.lower_trigram.name,
-                        archetype: seed.lower_trigram.archetype,
-                        keywords: seed.lower_trigram.keywords
-                    },
-                    eligible_archetypes: seed.eligible_archetypes,
-                    nation_tone_primary: seed.nation_tone_primary,
-                    nation_tone_secondary: seed.nation_tone_secondary,
-                    cube_state: seed.cube_state,
-                    face_context: seed.face_context
-                }, null, 2),
-                '',
-                `Cube signature: ${signature.key} (${signature.signature_display})`,
-                `Required template_id: ${signature.template.template_id}`,
-                '',
-                '8-signature template palette:',
-                toAiPromptPaletteText(),
-                '',
-                'Hard constraints:',
-                '- Include at least one keyword from upper_trigram.keywords and one from lower_trigram.keywords in pitch/main move/constraints.',
-                '- main_character_move.do = one concrete action.',
-                '- main_character_move.done_when = observable completion signal.',
-                '- ally_moves must include BOTH VIBEULON and BAR.',
-                '- rewards must be completion_vibeulons=1 and first_completion_bonus=1.',
-                '- signature_display must be human-friendly, e.g. Hide • Truth • Interior.',
-            ].join('\n')
-        })
+            prompt
+        }
+        if (typeof modelParams.temperature === 'number') generationArgs.temperature = modelParams.temperature
+        if (typeof modelParams.top_p === 'number') generationArgs.topP = modelParams.top_p
+        if (typeof modelParams.max_tokens === 'number') generationArgs.maxTokens = modelParams.max_tokens
+
+        const { object } = await generateObject(generationArgs as any)
+        const postprocessSteps: Array<{ name: string; version: string }> = [
+            { name: 'canonicalize_model_payload', version: 'v1' }
+        ]
 
         const canonicalPayload = buildCanonicalPayloadFromModel(object, seed, signature)
         const isValid = validatePayload(canonicalPayload, signature)
-        const finalPayload = isValid
+        let finalPayload = isValid
             ? canonicalPayload
             : buildDeterministicFallbackPayload(seed, signature)
         const isFallback = !isValid
+        if (!isValid) {
+            postprocessSteps.push({ name: 'deterministic_fallback_payload', version: 'v1' })
+        }
+
+        const firstPass = validateQuestStyle(toPersistedPlayerFacingQuest(finalPayload))
+        let styleChecks = toStyleChecks('first_pass', firstPass)
+        if (styleGateEnabled && !firstPass.pass) {
+            finalPayload = await repairQuestStyle(finalPayload, firstPass.violations, seed, modelParams)
+            postprocessSteps.push({ name: 'style_repair', version: 'v1' })
+            const afterRepair = validateQuestStyle(toPersistedPlayerFacingQuest(finalPayload))
+            styleChecks = [...styleChecks, ...toStyleChecks('after_repair', afterRepair)]
+        }
 
         await persistPayload(finalPayload, isFallback)
         const aiBody = JSON.stringify(finalPayload)
+        const trace = buildTrace(
+            finalPayload,
+            postprocessSteps,
+            styleChecks,
+            {
+                layer: 'completionEffects.aiBody',
+                status: cacheBypass ? 'bypass' : 'miss',
+                cache_key: cacheKey,
+                reason: cacheBypass ? 'explicit-cache-bypass' : 'cache-miss'
+            }
+        )
+        if (debugEnabled) {
+            console.info('[StoryClock][Trace]', stableJsonStringify(trace))
+        }
 
         return {
             success: true as const,
             aiTitle: finalPayload.quest.title,
             aiBody,
             isFallback,
-            persisted: true,
-            seed
+            persisted: !options.dryRun,
+            seed,
+            trace: debugEnabled ? trace : undefined,
+            styleFirstPass: isStylePass(styleChecks, 'first_pass'),
+            styleAfterRepair: isStylePass(styleChecks, 'after_repair'),
         }
     } catch (error: any) {
         console.error('[StoryClock][AI][generateStoryClockQuestText]', error?.message || error)
         const fallbackPayload = buildDeterministicFallbackPayload(seed, signature)
-        await persistPayload(fallbackPayload, true)
-        const fallbackBody = JSON.stringify(fallbackPayload)
+        const postprocessSteps: Array<{ name: string; version: string }> = [
+            { name: 'model_exception_fallback', version: 'v1' }
+        ]
+        const firstPass = validateQuestStyle(toPersistedPlayerFacingQuest(fallbackPayload))
+        let styleChecks = toStyleChecks('first_pass', firstPass)
+        let payload = fallbackPayload
+        if (styleGateEnabled && !firstPass.pass) {
+            payload = await repairQuestStyle(payload, firstPass.violations, seed, modelParams)
+            postprocessSteps.push({ name: 'style_repair', version: 'v1' })
+            const afterRepair = validateQuestStyle(toPersistedPlayerFacingQuest(payload))
+            styleChecks = [...styleChecks, ...toStyleChecks('after_repair', afterRepair)]
+        }
+
+        await persistPayload(payload, true)
+        const fallbackBody = JSON.stringify(payload)
+        const trace = buildTrace(
+            payload,
+            postprocessSteps,
+            styleChecks,
+            {
+                layer: 'completionEffects.aiBody',
+                status: cacheBypass ? 'bypass' : 'miss',
+                cache_key: cacheKey,
+                reason: 'model-error-fallback'
+            }
+        )
+        if (debugEnabled) {
+            console.info('[StoryClock][Trace]', stableJsonStringify(trace))
+        }
         return {
             success: true as const,
-            aiTitle: fallbackPayload.quest.title,
+            aiTitle: payload.quest.title,
             aiBody: fallbackBody,
             isFallback: true,
-            persisted: true,
-            seed
+            persisted: !options.dryRun,
+            seed,
+            trace: debugEnabled ? trace : undefined,
+            styleFirstPass: isStylePass(styleChecks, 'first_pass'),
+            styleAfterRepair: isStylePass(styleChecks, 'after_repair'),
         }
     }
 }
 
-export async function generateStoryClockQuestText(questId: string) {
-    return generateStoryClockQuestTextInternal(questId, { requireAuth: true })
+export async function generateStoryClockQuestText(
+    questId: string,
+    options?: Omit<StoryClockGenerationOptions, 'requireAuth'>
+) {
+    return generateStoryClockQuestTextInternal(questId, { requireAuth: true, ...(options || {}) })
 }
 
-export async function preGenerateStoryClockQuestText(questId: string) {
-    return generateStoryClockQuestTextInternal(questId, { requireAuth: false })
+export async function preGenerateStoryClockQuestText(
+    questId: string,
+    options?: Omit<StoryClockGenerationOptions, 'requireAuth'>
+) {
+    return generateStoryClockQuestTextInternal(questId, { requireAuth: false, ...(options || {}) })
+}
+
+type QuestForensicsMode = 'A' | 'B' | 'C'
+
+type QuestForensicsRunInput = {
+    questId: string
+    n?: number
+    mode: QuestForensicsMode
+    debug?: boolean
+    baseInputs?: StoryClockSeedOverrides
+    modelParams?: Partial<StoryClockModelParams>
+}
+
+type QuestForensicsSample = {
+    index: number
+    mode: QuestForensicsMode
+    dimension?: string
+    seed: string | null
+    inputs_fingerprint: string
+    prompt_fingerprint: string
+    output_fingerprint: string
+    cache_status: 'hit' | 'miss' | 'bypass'
+    style_first_pass: boolean
+    style_after_repair: boolean
+    postprocess_steps: string[]
+}
+
+function inferSamenessRootCause(mode: QuestForensicsMode, samples: QuestForensicsSample[]) {
+    const messages: string[] = []
+    const distinctInputs = percentageDistinct(samples.map((sample) => sample.inputs_fingerprint))
+    const distinctPrompts = percentageDistinct(samples.map((sample) => sample.prompt_fingerprint))
+    const distinctOutputs = percentageDistinct(samples.map((sample) => sample.output_fingerprint))
+    const cacheHitRate = percentageMatches(samples.map((sample) => sample.cache_status === 'hit'))
+    const fallbackRate = percentageMatches(
+        samples.map((sample) => sample.postprocess_steps.some((step) => step.startsWith('model_exception_fallback@')))
+    )
+
+    if (mode === 'A' && distinctInputs > 0 && distinctPrompts <= 20) {
+        messages.push('Mode A indicates seed is not materially changing prompt assembly.')
+    }
+    if (mode === 'B' && distinctPrompts <= 30) {
+        messages.push('Mode B indicates one or more varying fields are not wired into prompt assembly.')
+    }
+    if (mode === 'C' && cacheHitRate >= 70 && distinctOutputs <= 30) {
+        messages.push('Mode C indicates cached quest payload reuse is likely flattening output variety.')
+    }
+    if (fallbackRate >= 60) {
+        messages.push('Frequent model_exception_fallback indicates model call failures are forcing deterministic fallback output.')
+    }
+    if (distinctPrompts > 50 && distinctOutputs <= 20) {
+        messages.push('Postprocess may be collapsing variety after generation (canonicalization/style/fallback).')
+    }
+    if (messages.length === 0) {
+        messages.push('No single collapse point detected; inspect trace details for model params and fallback frequency.')
+    }
+    return messages
+}
+
+function summarizeForensics(samples: QuestForensicsSample[]) {
+    return {
+        total_runs: samples.length,
+        distinct_prompt_fingerprint_pct: percentageDistinct(samples.map((sample) => sample.prompt_fingerprint)),
+        distinct_output_fingerprint_pct: percentageDistinct(samples.map((sample) => sample.output_fingerprint)),
+        cache_hit_rate_pct: percentageMatches(samples.map((sample) => sample.cache_status === 'hit')),
+        style_pass_rate_first_pass_pct: percentageMatches(samples.map((sample) => sample.style_first_pass)),
+        style_pass_rate_after_repair_pct: percentageMatches(samples.map((sample) => sample.style_after_repair)),
+    }
+}
+
+function toForensicsSample(
+    mode: QuestForensicsMode,
+    index: number,
+    seed: string | null,
+    trace: QuestGenerationTrace,
+    dimension?: string
+): QuestForensicsSample {
+    const firstPass = trace.style_guide_checks
+        .filter((check) => check.stage === 'first_pass')
+        .every((check) => check.pass)
+    const afterRepairChecks = trace.style_guide_checks.filter((check) => check.stage === 'after_repair')
+    const afterRepair = afterRepairChecks.length > 0
+        ? afterRepairChecks.every((check) => check.pass)
+        : firstPass
+
+    return {
+        index,
+        mode,
+        dimension,
+        seed,
+        inputs_fingerprint: trace.inputs_fingerprint,
+        prompt_fingerprint: trace.prompt_fingerprint,
+        output_fingerprint: trace.output_fingerprint,
+        cache_status: trace.cache_status.status,
+        style_first_pass: firstPass,
+        style_after_repair: afterRepair,
+        postprocess_steps: trace.postprocess_steps.map((step) => `${step.name}@${step.version}`)
+    }
+}
+
+export async function runStoryQuestForensicsHarness(input: QuestForensicsRunInput) {
+    const runs = Math.max(1, Math.min(20, input.n || 6))
+    const baseModelParams = resolveModelParams({
+        temperature: input.modelParams?.temperature ?? 0.7,
+        top_p: input.modelParams?.top_p ?? 1,
+        max_tokens: input.modelParams?.max_tokens ?? 900,
+    })
+
+    const samples: QuestForensicsSample[] = []
+
+    if (input.mode === 'A') {
+        for (let i = 0; i < runs; i += 1) {
+            const seed = String(i + 1)
+            const result = await generateStoryClockQuestTextInternal(input.questId, {
+                requireAuth: false,
+                debug: true,
+                dryRun: true,
+                cacheBypass: true,
+                seed,
+                modelParams: baseModelParams,
+                seedOverrides: input.baseInputs
+            })
+            if ('error' in result) return result
+            if (!result.trace) continue
+            samples.push(toForensicsSample('A', i + 1, seed, result.trace))
+        }
+    }
+
+    if (input.mode === 'B') {
+        const stableSeed = 'forensics-b'
+        const dimensions: Array<{ name: string; overrides: StoryClockSeedOverrides[] }> = [
+            {
+                name: 'hexagram',
+                overrides: [
+                    { ...(input.baseInputs || {}) },
+                    { ...(input.baseInputs || {}), hexagram_id: 15, hexagram_name: 'Modesty' },
+                    { ...(input.baseInputs || {}), hexagram_id: 20, hexagram_name: 'Contemplation' },
+                ]
+            },
+            {
+                name: 'cube_state',
+                overrides: [
+                    { ...(input.baseInputs || {}), cube_state: 'HIDE_TRUTH_INTERIOR' },
+                    { ...(input.baseInputs || {}), cube_state: 'SEEK_TRUTH_EXTERIOR' },
+                    { ...(input.baseInputs || {}), cube_state: 'SEEK_DARE_EXTERIOR' },
+                ]
+            },
+            {
+                name: 'tone',
+                overrides: [
+                    { ...(input.baseInputs || {}), nation_tone_primary: 'urgent', nation_tone_secondary: 'focused' },
+                    { ...(input.baseInputs || {}), nation_tone_primary: 'patient', nation_tone_secondary: 'steady' },
+                    { ...(input.baseInputs || {}), nation_tone_primary: 'joyful', nation_tone_secondary: 'open' },
+                ]
+            },
+            {
+                name: 'face_context',
+                overrides: [
+                    { ...(input.baseInputs || {}), face_context: 'Open one back-channel with a collaborator.' },
+                    { ...(input.baseInputs || {}), face_context: 'Publish one visible update in a shared channel.' },
+                    { ...(input.baseInputs || {}), face_context: 'Book one concrete meeting to remove blockers.' },
+                ]
+            }
+        ]
+
+        let idx = 0
+        for (const dimension of dimensions) {
+            for (const overrides of dimension.overrides) {
+                idx += 1
+                const result = await generateStoryClockQuestTextInternal(input.questId, {
+                    requireAuth: false,
+                    debug: true,
+                    dryRun: true,
+                    cacheBypass: true,
+                    seed: stableSeed,
+                    modelParams: baseModelParams,
+                    seedOverrides: overrides,
+                })
+                if ('error' in result) return result
+                if (!result.trace) continue
+                samples.push(toForensicsSample('B', idx, stableSeed, result.trace, dimension.name))
+            }
+        }
+    }
+
+    if (input.mode === 'C') {
+        const seed = 'forensics-c'
+        for (let i = 0; i < runs; i += 1) {
+            const cached = await generateStoryClockQuestTextInternal(input.questId, {
+                requireAuth: false,
+                debug: true,
+                dryRun: true,
+                cacheBypass: false,
+                seed,
+                modelParams: baseModelParams,
+                seedOverrides: input.baseInputs
+            })
+            if ('error' in cached) return cached
+            if (cached.trace) {
+                samples.push(toForensicsSample('C', i + 1, seed, cached.trace, 'cache_on'))
+            }
+
+            const bypassed = await generateStoryClockQuestTextInternal(input.questId, {
+                requireAuth: false,
+                debug: true,
+                dryRun: true,
+                cacheBypass: true,
+                seed,
+                modelParams: baseModelParams,
+                seedOverrides: input.baseInputs
+            })
+            if ('error' in bypassed) return bypassed
+            if (bypassed.trace) {
+                samples.push(toForensicsSample('C', i + 1 + runs, seed, bypassed.trace, 'cache_bypass'))
+            }
+        }
+    }
+
+    const summary = summarizeForensics(samples)
+    const diagnosis = inferSamenessRootCause(input.mode, samples)
+    return {
+        success: true as const,
+        mode: input.mode,
+        summary,
+        diagnosis,
+        samples
+    }
 }
 
 function parseStoryClockMeta(raw: string | null) {
