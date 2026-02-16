@@ -92,6 +92,10 @@ model Player {
   createdBars     CustomBar[]   @relation("CreatedBars")
   claimedBars     CustomBar[]   @relation("ClaimedBars")
   
+  // BarShare relations
+  barSharesSent     BarShare[]  @relation("BarSharesSent")
+  barSharesReceived BarShare[]  @relation("BarSharesReceived")
+  
   createdAt       DateTime  @default(now())
 
   @@unique([contactType, contactValue]) // ensure unique email/phone
@@ -228,6 +232,9 @@ model CustomBar {
   // Active assignments (Multi-player progress)
   assignments     PlayerQuest[]
   
+  // BAR sharing
+  shares          BarShare[]
+  
   rootId          String?   // For fast lookups
   
   @@map("custom_bars")
@@ -248,6 +255,31 @@ model PlayerBar {
   acquiredAt      DateTime  @default(now())
   
   @@map("player_bars")
+}
+
+// --------------------------------------------------------
+// BAR SHARING (Player-to-Player BAR Passes)
+// --------------------------------------------------------
+
+model BarShare {
+  id          String   @id @default(cuid())
+  
+  barId       String
+  bar         CustomBar @relation(fields: [barId], references: [id])
+  
+  fromUserId  String
+  fromUser    Player   @relation("BarSharesSent", fields: [fromUserId], references: [id])
+  
+  toUserId    String
+  toUser      Player   @relation("BarSharesReceived", fields: [toUserId], references: [id])
+  
+  note        String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([fromUserId, createdAt])
+  @@index([toUserId, createdAt])
+  @@map("bar_shares")
 }
 
 // --------------------------------------------------------

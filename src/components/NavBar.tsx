@@ -8,9 +8,15 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
     const pathname = usePathname()
 
     const isActive = (path: string) => {
-        const active = path === '/'
-            ? pathname === '/'
-            : pathname === path || pathname.startsWith(`${path}/`)
+        let active: boolean
+        if (path === '/') {
+            active = pathname === '/'
+        } else if (path === '/bars') {
+            // /bars but NOT /bars/available
+            active = pathname === '/bars' || (pathname.startsWith('/bars/') && !pathname.startsWith('/bars/available'))
+        } else {
+            active = pathname === path || pathname.startsWith(`${path}/`)
+        }
         return active ? 'text-white bg-zinc-800' : 'text-zinc-500 hover:text-zinc-300'
     }
 
@@ -22,11 +28,10 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         <Link href="/" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/')}`}>
                             HOME
                         </Link>
-                        <Link href="/quest/create" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/quest/create')}`}>
-                            <span className="hidden sm:inline">CREATE</span>
-                            <span className="sm:hidden">+</span>
+                        <Link href="/bars" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars')}`}>
+                            BARS
                         </Link>
-                        <Link href="/bars/available" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars')}`}>
+                        <Link href="/bars/available" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/available')}`}>
                             QUESTS
                         </Link>
                         <Link href="/wallet" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/wallet')}`}>
