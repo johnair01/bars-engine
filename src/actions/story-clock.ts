@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { buildArchetypeMapByTrigram } from '@/lib/archetype-registry'
+import { getStoryFlowPhase, STORY_HEIST_META } from '@/lib/story-flowmap-v1'
 import {
     type ForensicsStyleCheck,
     type QuestGenerationTrace,
@@ -36,6 +37,14 @@ type TrigramReading = {
 type StoryClockSeed = {
     hexagram_id: number
     hexagram_name: string
+    phase_id: number
+    heist_name: string
+    heist_objective: string
+    kotter_stage: number
+    kotter_name: string
+    kotter_mechanic: string
+    big_score_name: string
+    big_score_goal: string
     upper_trigram: TrigramReading
     lower_trigram: TrigramReading
     eligible_archetypes: string[]
@@ -656,11 +665,32 @@ function buildDeterministicFallbackPayload(seed: StoryClockSeed, signature: Retu
     const upperKeyword = seed.upper_trigram.keywords[0] || 'clarity'
     const lowerKeyword = seed.lower_trigram.keywords[0] || 'action'
     const axisConstraints = buildAxisConstraints(signature)
+    const phaseObjective = clampText(seed.heist_objective, 88)
+    const kotterMechanic = clampText(seed.kotter_mechanic, 88)
+    const contextSnippet = clampText(seed.face_context || 'the current front', 64)
+    const actionVerb = signature.direction === 'EXTERIOR'
+        ? (signature.proximity === 'HIDE' ? 'Send' : 'Post')
+        : (signature.risk === 'DARE' ? 'Practice' : 'Write')
+    const actionNoun = signature.direction === 'EXTERIOR'
+        ? (signature.risk === 'DARE' ? 'commitment update' : 'targeted message')
+        : (signature.risk === 'DARE' ? 'rehearsal script' : 'clarity note')
     const constraints = dedupeStrings([
         ...axisConstraints,
-        ...signature.template.pattern.slice(0, 2),
+        `Phase ${seed.phase_id} ${seed.heist_name}: ${kotterMechanic}`,
+        `Advance ${seed.big_score_name} with ${upperKeyword} + ${lowerKeyword}.`,
         `Use ${upperKeyword} and ${lowerKeyword} language in the move framing.`,
     ]).slice(0, 5)
+
+    const action = clampText(
+        `${actionVerb} one ${actionNoun} for ${contextSnippet}, applying ${upperKeyword} and ${lowerKeyword}.`,
+        140
+    )
+    const doneWhen = clampText(
+        signature.direction === 'EXTERIOR'
+            ? 'Done when the update is visible and one collaborator confirms receipt.'
+            : 'Done when the note is recorded and one explicit next step is written.',
+        90
+    )
 
     return {
         reading: {
@@ -668,7 +698,7 @@ function buildDeterministicFallbackPayload(seed: StoryClockSeed, signature: Retu
             hexagram_name: seed.hexagram_name,
             upper_trigram: seed.upper_trigram,
             lower_trigram: seed.lower_trigram,
-            brief: `Hexagram ${seed.hexagram_id} (${seed.hexagram_name}) blends ${seed.upper_trigram.name} over ${seed.lower_trigram.name}, asking for ${seed.nation_tone_primary} with a ${seed.nation_tone_secondary} undertone.`,
+            brief: `Hexagram ${seed.hexagram_id} (${seed.hexagram_name}) in ${seed.heist_name}: ${phaseObjective}`,
         },
         cube: {
             proximity: signature.proximity,
@@ -677,26 +707,25 @@ function buildDeterministicFallbackPayload(seed: StoryClockSeed, signature: Retu
             signature_display: signature.signature_display,
         },
         quest: {
-            title: clampText(`${seed.hexagram_name} sprint`, 40),
-            pitch: clampText(`Use ${upperKeyword} + ${lowerKeyword} to push this phase objective now.`, 140),
+            title: clampText(`${seed.heist_name} ${seed.hexagram_id} Sprint`, 40),
+            pitch: clampText(
+                `Phase ${seed.phase_id}: ${kotterMechanic} Move ${seed.big_score_name} with ${upperKeyword} and ${lowerKeyword}.`,
+                140
+            ),
             template_id: signature.template.template_id,
             constraints,
             main_character_move: {
-                do: clampText(signature.proximity === 'HIDE'
-                    ? `Send one focused update in a selective channel that applies ${upperKeyword} to ${seed.face_context}.`
-                    : `Post one visible commitment that applies ${lowerKeyword} to ${seed.face_context}.`, 140),
-                done_when: clampText(signature.direction === 'EXTERIOR'
-                    ? 'Done when the message, artifact, or meeting confirmation is visible to at least one collaborator.'
-                    : 'Done when a written reflection and next-step boundary are recorded in your quest notes.', 90)
+                do: action,
+                done_when: doneWhen,
             },
             ally_moves: [
                 {
                     type: 'VIBEULON',
-                    ask: clampText(`Send one vibulon naming a concrete next move using ${upperKeyword}.`, 90)
+                    ask: clampText(`Send one vibulon sharpening the next ${upperKeyword} move.`, 90)
                 },
                 {
                     type: 'BAR',
-                    ask: clampText(`Create one BAR artifact that advances ${lowerKeyword} for this sprint.`, 90)
+                    ask: clampText(`Create one BAR making ${lowerKeyword} progress visible for ${seed.big_score_name}.`, 90)
                 }
             ],
             rewards: { completion_vibeulons: 1, first_completion_bonus: 1 }
@@ -721,6 +750,14 @@ function buildStoryClockPrompt(seed: StoryClockSeed, signature: ReturnType<typeo
         'Generate Story Clock quest JSON using this seed:',
         JSON.stringify({
             hexagram_id: seed.hexagram_id,
+            phase_id: seed.phase_id,
+            heist_name: seed.heist_name,
+            heist_objective: seed.heist_objective,
+            kotter_stage: seed.kotter_stage,
+            kotter_name: seed.kotter_name,
+            kotter_mechanic: seed.kotter_mechanic,
+            big_score_name: seed.big_score_name,
+            big_score_goal: seed.big_score_goal,
             upper_trigram: {
                 id: seed.upper_trigram.id,
                 name: seed.upper_trigram.name,
@@ -873,6 +910,7 @@ async function repairQuestStyle(
 async function buildStoryClockSeed(
     quest: {
         hexagramId: number | null
+        periodGenerated?: number | null
         description: string
         completionEffects: string | null
     },
@@ -893,9 +931,19 @@ async function buildStoryClockSeed(
     const eligible = [upperTrigram.archetype, lowerTrigram.archetype]
         .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
     const signature = parseCubeSignature(meta.cubeState, meta.cubeStateLegacy, meta.cubeAxisType)
+    const phaseId = Math.max(1, Math.min(8, meta.phaseId || quest.periodGenerated || 1))
+    const phase = getStoryFlowPhase(phaseId)
     return {
         hexagram_id: quest.hexagramId || 0,
         hexagram_name: hexagram?.name || `Hexagram ${quest.hexagramId || '?'}`,
+        phase_id: phase.id,
+        heist_name: meta.heistName || phase.heist_name,
+        heist_objective: meta.heistObjective || phase.heist_objective,
+        kotter_stage: meta.kotterStage || phase.kotter_stage,
+        kotter_name: meta.kotterName || phase.kotter_name,
+        kotter_mechanic: meta.kotterMechanic || phase.kotter_mechanic,
+        big_score_name: meta.bigScoreName || STORY_HEIST_META.big_score_name,
+        big_score_goal: meta.bigScoreGoal || STORY_HEIST_META.big_score_goal,
         upper_trigram: upperTrigram,
         lower_trigram: lowerTrigram,
         eligible_archetypes: eligible,
@@ -986,6 +1034,10 @@ export async function getStoryClockData() {
             hexagramId: quest.hexagramId,
             reward: quest.reward,
             completionEffects: quest.completionEffects,
+            phaseId: meta.phaseId || period,
+            kotterStage: meta.kotterStage || quest.kotterStage || null,
+            heistName: meta.heistName || null,
+            kotterName: meta.kotterName || null,
             upperArchetypeId,
             upperArchetypeName,
             lowerArchetypeId,
@@ -1064,6 +1116,7 @@ async function generateStoryClockQuestTextInternal(
             title: true,
             description: true,
             hexagramId: true,
+            periodGenerated: true,
             completionEffects: true
         }
     })
@@ -1074,6 +1127,9 @@ async function generateStoryClockQuestTextInternal(
     const styleGateEnabled = options.styleGateEnabled === true || STYLE_GATE_ENABLED
     const seedTag = options.seed != null ? String(options.seed) : null
     const modelParams = resolveModelParams(options.modelParams)
+    const useAiGeneration = process.env.ENABLE_AI_STORY_QUEST === '1'
+    const modelProvider = useAiGeneration ? 'openai' : 'deterministic'
+    const modelName = useAiGeneration ? DEFAULT_QUEST_MODEL : 'deterministic-v1'
     const effectsObject = parseJsonObject(quest.completionEffects)
     const existingCacheKey = typeof effectsObject.questCacheKey === 'string' ? effectsObject.questCacheKey : null
     const cacheBypass = options.cacheBypass === true
@@ -1129,8 +1185,8 @@ async function generateStoryClockQuestTextInternal(
         timestamp: new Date().toISOString(),
         seed: seedTag,
         model_params: {
-            provider: 'openai',
-            model: DEFAULT_QUEST_MODEL,
+            provider: modelProvider,
+            model: modelName,
             temperature: modelParams.temperature,
             top_p: modelParams.top_p,
             max_tokens: modelParams.max_tokens,
@@ -1219,9 +1275,51 @@ async function generateStoryClockQuestTextInternal(
         }
     }
 
+    if (!useAiGeneration) {
+        const postprocessSteps: Array<{ name: string; version: string }> = [
+            { name: 'deterministic_compiler', version: 'v1' }
+        ]
+        let finalPayload = buildDeterministicFallbackPayload(seed, signature)
+        const firstPass = validateQuestStyle(toPersistedPlayerFacingQuest(finalPayload))
+        let styleChecks = toStyleChecks('first_pass', firstPass)
+        if (styleGateEnabled && !firstPass.pass) {
+            finalPayload = await repairQuestStyle(finalPayload, firstPass.violations, seed, modelParams)
+            postprocessSteps.push({ name: 'style_repair', version: 'v1' })
+            const afterRepair = validateQuestStyle(toPersistedPlayerFacingQuest(finalPayload))
+            styleChecks = [...styleChecks, ...toStyleChecks('after_repair', afterRepair)]
+        }
+        await persistPayload(finalPayload, false)
+        const aiBody = JSON.stringify(finalPayload)
+        const trace = buildTrace(
+            finalPayload,
+            postprocessSteps,
+            styleChecks,
+            {
+                layer: 'completionEffects.aiBody',
+                status: cacheBypass ? 'bypass' : 'miss',
+                cache_key: cacheKey,
+                reason: useAiGeneration ? 'ai-generation' : 'deterministic-compiler'
+            }
+        )
+        if (debugEnabled) {
+            console.info('[StoryClock][Trace]', stableJsonStringify(trace))
+        }
+        return {
+            success: true as const,
+            aiTitle: finalPayload.quest.title,
+            aiBody,
+            isFallback: false,
+            persisted: !options.dryRun,
+            seed,
+            trace: debugEnabled ? trace : undefined,
+            styleFirstPass: isStylePass(styleChecks, 'first_pass'),
+            styleAfterRepair: isStylePass(styleChecks, 'after_repair'),
+        }
+    }
+
     try {
         const generationArgs: Record<string, unknown> = {
-            model: openai(DEFAULT_QUEST_MODEL),
+            model: openai(modelName),
             schema: STORY_CLOCK_RESPONSE_SCHEMA,
             system: [
                 'You are the Story Cube quest oracle for Story Clock quests only.',
@@ -1510,6 +1608,14 @@ export async function runStoryQuestForensicsHarness(input: QuestForensicsRunInpu
                     { ...(input.baseInputs || {}), face_context: 'Publish one visible update in a shared channel.' },
                     { ...(input.baseInputs || {}), face_context: 'Book one concrete meeting to remove blockers.' },
                 ]
+            },
+            {
+                name: 'phase',
+                overrides: [
+                    { ...(input.baseInputs || {}), phase_id: 1, heist_name: 'Recon', kotter_name: 'Create Urgency' },
+                    { ...(input.baseInputs || {}), phase_id: 4, heist_name: 'The Invite', kotter_name: 'Enlist Volunteer Army' },
+                    { ...(input.baseInputs || {}), phase_id: 8, heist_name: 'The Big Score', kotter_name: 'Institute Change' },
+                ]
             }
         ]
 
@@ -1590,6 +1696,14 @@ function parseStoryClockMeta(raw: string | null) {
             cubeState: null as string | null,
             cubeAxisType: null as string | null,
             cubeStateLegacy: null as string | null,
+            phaseId: null as number | null,
+            heistName: null as string | null,
+            heistObjective: null as string | null,
+            kotterStage: null as number | null,
+            kotterName: null as string | null,
+            kotterMechanic: null as string | null,
+            bigScoreName: null as string | null,
+            bigScoreGoal: null as string | null,
             nationTonePrimary: null as string | null,
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,
@@ -1614,6 +1728,14 @@ function parseStoryClockMeta(raw: string | null) {
             cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
             cubeAxisType: typeof parsed.cubeAxisType === 'string' ? parsed.cubeAxisType : null,
             cubeStateLegacy: typeof parsed.cubeStateLegacy === 'string' ? parsed.cubeStateLegacy : null,
+            phaseId: typeof parsed.phaseId === 'number' ? parsed.phaseId : null,
+            heistName: typeof parsed.heistName === 'string' ? parsed.heistName : null,
+            heistObjective: typeof parsed.heistObjective === 'string' ? parsed.heistObjective : null,
+            kotterStage: typeof parsed.kotterStage === 'number' ? parsed.kotterStage : null,
+            kotterName: typeof parsed.kotterName === 'string' ? parsed.kotterName : null,
+            kotterMechanic: typeof parsed.kotterMechanic === 'string' ? parsed.kotterMechanic : null,
+            bigScoreName: typeof parsed.bigScoreName === 'string' ? parsed.bigScoreName : null,
+            bigScoreGoal: typeof parsed.bigScoreGoal === 'string' ? parsed.bigScoreGoal : null,
             nationTonePrimary: typeof parsed.nationTonePrimary === 'string' ? parsed.nationTonePrimary : null,
             nationToneSecondary: typeof parsed.nationToneSecondary === 'string' ? parsed.nationToneSecondary : null,
             faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
@@ -1635,6 +1757,14 @@ function parseStoryClockMeta(raw: string | null) {
             cubeState: null as string | null,
             cubeAxisType: null as string | null,
             cubeStateLegacy: null as string | null,
+            phaseId: null as number | null,
+            heistName: null as string | null,
+            heistObjective: null as string | null,
+            kotterStage: null as number | null,
+            kotterName: null as string | null,
+            kotterMechanic: null as string | null,
+            bigScoreName: null as string | null,
+            bigScoreGoal: null as string | null,
             nationTonePrimary: null as string | null,
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,

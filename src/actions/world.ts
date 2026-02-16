@@ -7,6 +7,7 @@ import { getHexagramStructure, verifyHexagramIntegrity } from '@/lib/iching-stru
 import { assignCubeGeometry, defaultCubeBiasProvider, formatCubeGeometry, type CubeGeometry } from '@/lib/cube-engine'
 import { getStoryCubeRuleFromGeometry } from '@/lib/cube-quest-rules'
 import { buildArchetypeMapByTrigram, toTrigramArchetypeNameLookup } from '@/lib/archetype-registry'
+import { getStoryFlowPhase, STORY_HEIST_META } from '@/lib/story-flowmap-v1'
 
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
@@ -506,7 +507,7 @@ async function generateGlobalQuest(params: {
 
         const hexagram = await db.bar.findFirst({ where: { id: hexagramId } })
         const structure = getHexagramStructure(hexagramId)
-        const periodTheme = getPeriodTheme(period)
+        const phase = getStoryFlowPhase(period)
         const upperArchetypeLabel = upperArchetype?.name || `${structure.upper} archetype`
         const lowerArchetypeLabel = lowerArchetype?.name || `${structure.lower} archetype`
         const cubeRule = getStoryCubeRuleFromGeometry(cube)
@@ -515,6 +516,14 @@ async function generateGlobalQuest(params: {
             questSource: 'story_clock',
             storyClockRunId: runId,
             periodIndex,
+            phaseId: phase.id,
+            heistName: phase.heist_name,
+            heistObjective: phase.heist_objective,
+            kotterStage: phase.kotter_stage,
+            kotterName: phase.kotter_name,
+            kotterMechanic: phase.kotter_mechanic,
+            bigScoreName: STORY_HEIST_META.big_score_name,
+            bigScoreGoal: STORY_HEIST_META.big_score_goal,
             hexagramId,
             mainArchetypeIds: [upperArchetype?.id || null, lowerArchetype?.id || null],
             upperArchetypeId: upperArchetype?.id || null,
@@ -539,14 +548,15 @@ async function generateGlobalQuest(params: {
         const createdQuest = await db.customBar.create({
             data: {
                 creatorId,
-                title: `P${period} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
-                description: `${periodTheme}. Main characters: ${upperArchetypeLabel} (upper trigram) + ${lowerArchetypeLabel} (lower trigram). ${cubeRule.requiresAssist ? 'Requires at least one Assist Signal before completion.' : 'Solo completion is allowed for eligible archetypes.'}`,
+                title: `P${period} • ${phase.heist_name} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
+                description: `${phase.heist_objective} ${phase.kotter_mechanic} Main characters: ${upperArchetypeLabel} (upper trigram) + ${lowerArchetypeLabel} (lower trigram). ${cubeRule.requiresAssist ? 'Requires at least one Assist Signal before completion.' : 'Solo completion is allowed for eligible archetypes.'}`,
                 type: 'story',
                 reward: 1,
                 moveType: cubeRule.moveType,
                 status: 'active',
                 storyPath: 'collective',
                 visibility: 'public',
+                kotterStage: phase.kotter_stage,
                 allowedTrigrams: '[]',
                 hexagramId,
                 periodGenerated: period,
@@ -576,21 +586,6 @@ function assignStoryAxis(cube: CubeGeometry, seed: string) {
         axisValue,
         legacyState: cube.state,
     }
-}
-
-function getPeriodTheme(period: number) {
-    const periodThemes = [
-        '',
-        'Awakening - The world stirs with new potential',
-        'Challenge - Obstacles emerge to test resolve',
-        'Coalition - Building alliances and shared visions',
-        'Revelation - Hidden truths come to light',
-        'Transformation - The old gives way to the new',
-        'Consolidation - Gains are secured and stabilized',
-        'Resolution - Loose ends are tied, choices made final',
-        'Culmination - The arc completes, the story concludes'
-    ]
-    return periodThemes[period] || 'Unknown'
 }
 
 function buildStoryClockRunId(sequence: number[]) {
