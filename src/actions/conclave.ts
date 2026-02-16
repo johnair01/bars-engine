@@ -137,6 +137,27 @@ export async function createCharacter(prevState: any, formData: FormData) {
         // 6. Assign orientation threads (outside transaction for simplicity)
         await assignOrientationThreads(player.id)
 
+        // 7. Grant 5 starter vibeulons for MVP (allows creating first public quest)
+        await db.vibulon.createMany({
+            data: Array.from({ length: 5 }).map(() => ({
+                ownerId: player.id,
+                originSource: 'starter',
+                originId: 'onboarding_wizard',
+                originTitle: 'Welcome Gift'
+            }))
+        })
+
+        // Log the starter grant
+        await db.vibulonEvent.create({
+            data: {
+                playerId: player.id,
+                source: 'onboarding_starter',
+                amount: 5,
+                notes: 'Welcome to BARS! 5 starter vibeulons granted.',
+                archetypeMove: 'IGNITE'
+            }
+        })
+
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 
@@ -233,6 +254,27 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
         // Assign orientation threads
         const { assignOrientationThreads } = await import('./quest-thread')
         await assignOrientationThreads(player.id)
+
+        // Grant 5 starter vibeulons for MVP (allows creating first public quest)
+        await db.vibulon.createMany({
+            data: Array.from({ length: 5 }).map(() => ({
+                ownerId: player.id,
+                originSource: 'starter',
+                originId: 'onboarding_guided',
+                originTitle: 'Welcome Gift'
+            }))
+        })
+
+        // Log the starter grant
+        await db.vibulonEvent.create({
+            data: {
+                playerId: player.id,
+                source: 'onboarding_starter',
+                amount: 5,
+                notes: 'Welcome to BARS! 5 starter vibeulons granted.',
+                archetypeMove: 'IGNITE'
+            }
+        })
 
         const cookieStore = await cookies()
         // Use strict rules for production, lax for dev to ensure it setting
