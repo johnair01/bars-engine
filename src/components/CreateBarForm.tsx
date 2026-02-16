@@ -17,7 +17,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [showStory, setShowStory] = useState(false)
     const [storyMood, setStoryMood] = useState<string | null>(null)
     const [applyFirstAidLens, setApplyFirstAidLens] = useState(false)
-    const [state, formAction, isPending] = useActionState(createCustomBar, null)
+    const [state, formAction, isPending] = useActionState<any, FormData>(createCustomBar, null)
 
     useEffect(() => {
         if (isOpen && (players.length === 0 || linkableQuests.length === 0)) {
