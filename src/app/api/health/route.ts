@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import {
+    getQuestGeneratorMode,
+    getVibeulonLedgerMode,
+    isAuthBypassEmailVerificationEnabled
+} from '@/lib/mvp-flags'
 
 export async function GET() {
     try {
@@ -14,6 +19,11 @@ export async function GET() {
                 players: playerCount,
                 bars: barCount,
             },
+            mvpFlags: {
+                QUEST_GENERATOR_MODE: getQuestGeneratorMode(),
+                AUTH_BYPASS_EMAIL_VERIFICATION: isAuthBypassEmailVerificationEnabled(),
+                VIBEULON_LEDGER_MODE: getVibeulonLedgerMode(),
+            }
         })
     } catch (error: any) {
         return NextResponse.json(

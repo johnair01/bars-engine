@@ -13,10 +13,10 @@ export function LoginForm() {
 
     useEffect(() => {
         if (state.success) {
-            router.push('/')
+            router.push(state.redirectTo || '/')
             router.refresh()
         }
-    }, [state.success, router])
+    }, [state.success, state.redirectTo, router])
 
     return (
         <div className="w-full max-w-md mx-auto bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-8">

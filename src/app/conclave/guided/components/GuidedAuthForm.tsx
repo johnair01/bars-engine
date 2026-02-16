@@ -14,6 +14,7 @@ export function GuidedAuthForm() {
 
     useEffect(() => {
         if (state?.success) {
+            router.push('/onboarding/profile')
             router.refresh()
         }
         if (state?.error) {

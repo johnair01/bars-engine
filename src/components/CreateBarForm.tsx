@@ -1,16 +1,18 @@
 'use client'
 
 import { useState, useEffect, useActionState } from 'react'
-import { createCustomBar, getActivePlayers } from '@/actions/create-bar'
+import { createCustomBar, getActivePlayers, getLinkableQuests } from '@/actions/create-bar'
 import { useRouter } from 'next/navigation'
 
 type Player = { id: string; name: string }
+type LinkableQuest = { id: string; title: string }
 
 export function CreateBarForm({ setup }: { setup?: boolean }) {
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(setup || false)
     const [players, setPlayers] = useState<Player[]>([])
-    const [visibility, setVisibility] = useState<'public' | 'private'>('public')
+    const [linkableQuests, setLinkableQuests] = useState<LinkableQuest[]>([])
+    const [visibility, setVisibility] = useState<'public' | 'private'>('private')
     const [moveType, setMoveType] = useState<'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | null>(null)
     const [showStory, setShowStory] = useState(false)
     const [storyMood, setStoryMood] = useState<string | null>(null)
@@ -18,15 +20,19 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [state, formAction, isPending] = useActionState(createCustomBar, null)
 
     useEffect(() => {
-        if (isOpen && players.length === 0) {
-            getActivePlayers().then(setPlayers)
+        if (isOpen && (players.length === 0 || linkableQuests.length === 0)) {
+            Promise.all([getActivePlayers(), getLinkableQuests()]).then(([activePlayers, quests]) => {
+                setPlayers(activePlayers)
+                setLinkableQuests(quests)
+            })
         }
-    }, [isOpen, players.length])
+    }, [isOpen, players.length, linkableQuests.length])
 
     useEffect(() => {
         if (state?.success) {
             setIsOpen(false)
-            if (visibility === 'private') {
+            const finalVisibility = state.visibility || visibility
+            if (finalVisibility === 'private') {
                 router.push('/hand')
             } else {
                 router.push('/bars/available')
@@ -192,6 +198,34 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     <input type="hidden" name="visibility" value={visibility} />
                 </div>
 
+                <div className="space-y-2 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500">Link to Quest (Optional)</label>
+                    <select
+                        name="linkedQuestId"
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                    >
+                        <option value="">No quest link</option>
+                        {linkableQuests.map(quest => (
+                            <option key={quest.id} value={quest.id}>
+                                {quest.title}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-zinc-600">
+                        Tie this BAR to an existing quest for traceability in MVP.
+                    </p>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs uppercase text-zinc-500">Tags (Optional)</label>
+                    <input
+                        name="tags"
+                        type="text"
+                        placeholder="ritual, onboarding, logistics"
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                    />
+                </div>
+
                 {/* Move Type Selection */}
                 <div className="space-y-3 pt-4 border-t border-zinc-800">
                     <label className="text-xs uppercase text-zinc-500">Quest Type (Optional)</label>
@@ -263,6 +297,9 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
 
                 {state?.error && (
                     <div className="text-red-400 text-sm">{state.error}</div>
+                )}
+                {state?.warning && (
+                    <div className="text-yellow-300 text-sm">{state.warning}</div>
                 )}
 
                 <div className="flex justify-end gap-2 pt-2">

@@ -284,10 +284,10 @@ export default async function Home() {
             </div>
           </div>
           <Link
-            href="/conclave/guided?reset=true"
+            href="/onboarding/profile"
             className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
           >
-            Continue Journey →
+            Complete Profile →
           </Link>
         </section>
       )}
@@ -390,6 +390,14 @@ export default async function Home() {
                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">✨</div>
                 <div className="font-bold text-white mb-1">Create a New Quest</div>
                 <div className="text-sm text-zinc-500">Design a dream, scheme, or invitation</div>
+              </Link>
+
+              <Link
+                href="/create-bar"
+                className="mt-4 w-full group relative block p-4 border border-dashed border-zinc-800 rounded-xl hover:border-cyan-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="font-bold text-white mb-1">Create a BAR</div>
+                <div className="text-xs text-zinc-500">Optional: link it to an existing quest</div>
               </Link>
             </div>
 

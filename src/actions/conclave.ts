@@ -6,6 +6,8 @@ import { z } from 'zod'
 
 import { hashPassword } from '@/lib/auth-utils'
 import { assignOrientationThreads } from './quest-thread'
+import { createRequestId, logActionError } from '@/lib/mvp-observability'
+import { isAuthBypassEmailVerificationEnabled } from '@/lib/mvp-flags'
 
 const IdentitySchema = z.object({
     name: z.string().min(2),
@@ -160,6 +162,7 @@ function deriveTemporaryNameFromEmail(email: string): string {
 }
 
 export async function createGuidedPlayer(prevState: any, formData: FormData) {
+    const requestId = createRequestId()
     const rawData = {
         identity: formData.get('identity'),
     }
@@ -173,6 +176,10 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
     }
 
     try {
+        if (isAuthBypassEmailVerificationEnabled()) {
+            console.info(`[MVP][createGuidedPlayer] req=${requestId} AUTH_BYPASS_EMAIL_VERIFICATION enabled (dev-only)`)
+        }
+
         const existingAccount = await db.account.findUnique({ where: { email: identity.contact } })
         if (existingAccount) return { error: 'Account already exists. Please log in.' }
         const temporaryName = deriveTemporaryNameFromEmail(identity.contact)
@@ -244,8 +251,11 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
         })
 
     } catch (e: any) {
-        console.error("Guided creation failed:", e)
-        return { error: e.message }
+        logActionError(
+            { action: 'createGuidedPlayer', requestId, userId: null, extra: { email: identity?.contact } },
+            e
+        )
+        return { error: `Account creation failed (req: ${requestId})` }
     }
 
     return { success: true }

@@ -24,8 +24,23 @@ export default async function WalletPage() {
     // Fetch potential recipients
     const others = await db.player.findMany({
         where: { id: { not: playerId } },
-        select: { id: true, name: true },
+        select: {
+            id: true,
+            name: true,
+            contactValue: true,
+            account: { select: { email: true } }
+        },
         orderBy: { name: 'asc' }
+    })
+
+    const receivedTransfers = await db.vibulonEvent.findMany({
+        where: {
+            playerId,
+            source: 'p2p_transfer',
+            amount: { gt: 0 }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
     })
 
     return (
@@ -52,8 +67,35 @@ export default async function WalletPage() {
                 <VibulonTransfer
                     playerId={playerId}
                     balance={total}
-                    recipients={others}
+                    recipients={others.map((player) => ({
+                        id: player.id,
+                        name: player.name,
+                        username: player.name,
+                        email: player.account?.email || player.contactValue || null
+                    }))}
                 />
+            </section>
+
+            <section className="bg-zinc-900/20 border border-zinc-800 rounded-xl p-6">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <span>📥 Received Transfers</span>
+                </h2>
+                <div className="space-y-3">
+                    {receivedTransfers.length === 0 && (
+                        <div className="text-zinc-500 text-sm">No received vibeulons yet.</div>
+                    )}
+                    {receivedTransfers.map((event) => (
+                        <div key={event.id} className="rounded-lg border border-zinc-800 bg-black/40 px-4 py-3">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm text-green-400 font-mono">+{event.amount} ♦</div>
+                                <div className="text-xs text-zinc-600">
+                                    {new Date(event.createdAt).toLocaleString()}
+                                </div>
+                            </div>
+                            <div className="text-sm text-zinc-300 mt-1">{event.notes || 'Received transfer'}</div>
+                        </div>
+                    ))}
+                </div>
             </section>
 
             {/* Token History */}
