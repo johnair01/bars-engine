@@ -7,6 +7,7 @@ import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { buildArchetypeMapByTrigram } from '@/lib/archetype-registry'
 
 type StoryClockRolloverPolicy = 'carry_unfinished' | 'archive_unfinished'
 type CubeProximity = 'HIDE' | 'SEEK'
@@ -250,16 +251,58 @@ function splitTone(tone: string | null | undefined) {
     return { primary: cleaned, secondary: `${cleaned} undercurrent` }
 }
 
-function parseCubeSignature(cubeState: string | null | undefined) {
-    const normalized = (cubeState || '').trim().toUpperCase()
-    const parts = normalized.split('_')
-    const isValid =
-        parts.length === 3
-        && (parts[0] === 'HIDE' || parts[0] === 'SEEK')
-        && (parts[1] === 'TRUTH' || parts[1] === 'DARE')
-        && (parts[2] === 'INTERIOR' || parts[2] === 'EXTERIOR')
+function parseCubeSignature(
+    cubeState: string | null | undefined,
+    cubeStateLegacy?: string | null,
+    cubeAxisType?: string | null
+) {
+    const parseFullSignature = (raw: string | null | undefined): CubeSignatureKey | null => {
+        const normalized = (raw || '').trim().toUpperCase()
+        const parts = normalized.split('_')
+        const isValid =
+            parts.length === 3
+            && (parts[0] === 'HIDE' || parts[0] === 'SEEK')
+            && (parts[1] === 'TRUTH' || parts[1] === 'DARE')
+            && (parts[2] === 'INTERIOR' || parts[2] === 'EXTERIOR')
+        return isValid ? normalized as CubeSignatureKey : null
+    }
 
-    const key = (isValid ? normalized : 'SEEK_TRUTH_EXTERIOR') as CubeSignatureKey
+    const legacy = parseFullSignature(cubeStateLegacy)
+    const raw = (cubeState || '').trim().toUpperCase()
+    const direct = parseFullSignature(raw)
+
+    let key: CubeSignatureKey | null = direct
+    if (!key) {
+        const visibility = legacy ? (legacy.split('_')[0] as CubeProximity) : 'SEEK'
+        const risk = legacy ? (legacy.split('_')[1] as CubeRisk) : 'TRUTH'
+        const direction = legacy ? (legacy.split('_')[2] as CubeDirection) : 'EXTERIOR'
+        const axisType = (cubeAxisType || '').trim().toUpperCase()
+
+        if (raw === 'HIDE' || raw === 'SEEK') {
+            key = `${raw as CubeProximity}_${risk}_${direction}` as CubeSignatureKey
+        } else if (raw === 'TRUTH' || raw === 'DARE') {
+            key = `${visibility}_${raw as CubeRisk}_${direction}` as CubeSignatureKey
+        } else if (raw.startsWith('VISIBILITY_')) {
+            const value = raw.replace('VISIBILITY_', '')
+            if (value === 'HIDE' || value === 'SEEK') {
+                key = `${value as CubeProximity}_${risk}_${direction}` as CubeSignatureKey
+            }
+        } else if (raw.startsWith('REVELATION_')) {
+            const value = raw.replace('REVELATION_', '')
+            if (value === 'TRUTH' || value === 'DARE') {
+                key = `${visibility}_${value as CubeRisk}_${direction}` as CubeSignatureKey
+            }
+        } else if (axisType === 'VISIBILITY' && (raw === 'TRUTH' || raw === 'DARE')) {
+            key = `${visibility}_${raw as CubeRisk}_${direction}` as CubeSignatureKey
+        } else if (axisType === 'REVELATION' && (raw === 'HIDE' || raw === 'SEEK')) {
+            key = `${raw as CubeProximity}_${risk}_${direction}` as CubeSignatureKey
+        }
+    }
+
+    if (!key) {
+        key = legacy || 'SEEK_TRUTH_EXTERIOR'
+    }
+
     const [proximity, risk, direction] = key.split('_') as [CubeProximity, CubeRisk, CubeDirection]
     const template = CUBE_TEMPLATE_PALETTE[key]
 
@@ -520,7 +563,7 @@ async function buildStoryClockSeed(
     const lowerTrigram = resolveTrigramReading(lowerTrigramName, meta.lowerArchetypeName || null)
     const eligible = [upperTrigram.archetype, lowerTrigram.archetype]
         .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
-    const signature = parseCubeSignature(meta.cubeState)
+    const signature = parseCubeSignature(meta.cubeState, meta.cubeStateLegacy, meta.cubeAxisType)
     return {
         hexagram_id: quest.hexagramId || 0,
         hexagram_name: hexagram?.name || `Hexagram ${quest.hexagramId || '?'}`,
@@ -561,20 +604,11 @@ export async function getStoryClockData() {
     const features = parseFeaturesJson(appConfig?.features || '{}')
     const rolloverPolicy = resolveRolloverPolicy(features.storyClockRolloverPolicy)
 
-    // Canonical trigram -> archetype mapping (via playbook element metadata)
-    const playbooks = await db.playbook.findMany({
+    // Canonical trigram -> archetype mapping
+    const archetypes = await db.playbook.findMany({
         select: { id: true, name: true, description: true }
     })
-    const playbookByElement = new Map(
-        playbooks
-            .map(playbook => {
-                const match = playbook.description?.match(/Element:\s*([A-Za-z]+)/i)
-                return match?.[1]
-                    ? [match[1].toLowerCase(), { id: playbook.id, name: playbook.name }] as const
-                    : null
-            })
-            .filter((entry): entry is readonly [string, { id: string, name: string }] => !!entry)
-    )
+    const archetypeByTrigram = buildArchetypeMapByTrigram(archetypes)
 
     // Fetch all story quests (quests with hexagramId)
     const storyQuests = await db.customBar.findMany({
@@ -608,8 +642,8 @@ export async function getStoryClockData() {
         const firstCompleter = quest.assignments[0]?.player
         const meta = parseStoryClockMeta(quest.completionEffects)
         const structure = quest.hexagramId ? getHexagramStructure(quest.hexagramId) : null
-        const derivedUpper = structure ? playbookByElement.get(structure.upper.toLowerCase()) || null : null
-        const derivedLower = structure ? playbookByElement.get(structure.lower.toLowerCase()) || null : null
+        const derivedUpper = structure ? archetypeByTrigram.get(structure.upper.toLowerCase()) || null : null
+        const derivedLower = structure ? archetypeByTrigram.get(structure.lower.toLowerCase()) || null : null
 
         const upperArchetypeId = meta.upperArchetypeId || meta.mainArchetypeIds?.[0] || derivedUpper?.id || null
         const upperArchetypeName = meta.upperArchetypeName || derivedUpper?.name || meta.mainArchetypeName || 'Unknown archetype'
@@ -803,6 +837,8 @@ function parseStoryClockMeta(raw: string | null) {
             lowerArchetypeId: null as string | null,
             lowerArchetypeName: null as string | null,
             cubeState: null as string | null,
+            cubeAxisType: null as string | null,
+            cubeStateLegacy: null as string | null,
             nationTonePrimary: null as string | null,
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,
@@ -825,6 +861,8 @@ function parseStoryClockMeta(raw: string | null) {
             lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
             lowerArchetypeName: typeof parsed.lowerArchetypeName === 'string' ? parsed.lowerArchetypeName : null,
             cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
+            cubeAxisType: typeof parsed.cubeAxisType === 'string' ? parsed.cubeAxisType : null,
+            cubeStateLegacy: typeof parsed.cubeStateLegacy === 'string' ? parsed.cubeStateLegacy : null,
             nationTonePrimary: typeof parsed.nationTonePrimary === 'string' ? parsed.nationTonePrimary : null,
             nationToneSecondary: typeof parsed.nationToneSecondary === 'string' ? parsed.nationToneSecondary : null,
             faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
@@ -844,6 +882,8 @@ function parseStoryClockMeta(raw: string | null) {
             lowerArchetypeId: null as string | null,
             lowerArchetypeName: null as string | null,
             cubeState: null as string | null,
+            cubeAxisType: null as string | null,
+            cubeStateLegacy: null as string | null,
             nationTonePrimary: null as string | null,
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,

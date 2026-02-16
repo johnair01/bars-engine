@@ -93,7 +93,7 @@ export default async function AvailableBarsPage() {
         return <div className="p-8 text-center text-zinc-500">Access Denied</div>
     }
 
-    // Get player with playbook (already have from getCurrentPlayer, but need playbook)
+    // Get player with archetype relation (backed by legacy playbook table field)
     const player = await db.player.findUnique({
         where: { id: currentPlayer.id },
         include: { playbook: true }
@@ -127,8 +127,9 @@ export default async function AvailableBarsPage() {
         orderBy: { createdAt: 'desc' }
     })
 
-    // Extract player's trigram from playbook name (e.g., "Heaven (Qian)" -> "Heaven")
+    // Extract player's trigram from archetype name (legacy relation: player.playbook)
     const playerTrigram = player?.playbook?.name.split(' ')[0] || null
+    const playerArchetypeId = player?.playbookId ?? null
     const currentPeriod = globalState?.currentPeriod || 1
 
     const currentStoryQuests = availableBars.filter((bar) => {
@@ -160,9 +161,9 @@ export default async function AvailableBarsPage() {
         const meta = parseStoryMeta(bar.completionEffects)
         const hexagram = typeof bar.hexagramId === 'number' ? storyHexagramById.get(bar.hexagramId) : null
         const structure = typeof bar.hexagramId === 'number' ? getHexagramStructure(bar.hexagramId) : null
-        const canClaim = !!player?.playbookId && (
-            meta.upperArchetypeId === player.playbookId ||
-            meta.lowerArchetypeId === player.playbookId
+        const canClaim = !!playerArchetypeId && (
+            meta.upperArchetypeId === playerArchetypeId ||
+            meta.lowerArchetypeId === playerArchetypeId
         )
         const eligibleArchetypes = [meta.upperArchetypeName, meta.lowerArchetypeName]
             .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)

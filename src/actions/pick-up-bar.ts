@@ -57,6 +57,7 @@ export async function pickUpBar(formData: FormData) {
         where: { id: playerId },
         select: { id: true, playbookId: true }
     })
+    const playerArchetypeId = player?.playbookId ?? null
 
     const questMeta = parseQuestMeta(customBar.completionEffects)
     const isStoryClockQuest = questMeta.questSource === 'story_clock'
@@ -65,7 +66,7 @@ export async function pickUpBar(formData: FormData) {
     // Story Clock quests are public multi-claim quests:
     // any player can see; only eligible archetypes can claim; others can assist.
     if (isStoryClockQuest && eligibleArchetypeIds.size > 0) {
-        const isEligible = !!player?.playbookId && eligibleArchetypeIds.has(player.playbookId)
+        const isEligible = !!playerArchetypeId && eligibleArchetypeIds.has(playerArchetypeId)
         if (!isEligible) {
             return { error: 'This story quest is visible to all, but only eligible archetypes can claim it. You can still assist.' }
         }
@@ -161,8 +162,9 @@ export async function assistStoryQuest(formData: FormData) {
         where: { id: playerId },
         select: { id: true, playbookId: true }
     })
+    const playerArchetypeId = player?.playbookId ?? null
     const eligibleArchetypeIds = getEligibleArchetypeIds(questMeta)
-    const isEligibleToClaim = !!player?.playbookId && eligibleArchetypeIds.has(player.playbookId)
+    const isEligibleToClaim = !!playerArchetypeId && eligibleArchetypeIds.has(playerArchetypeId)
     if (isEligibleToClaim) {
         return { error: 'You are eligible to claim this story quest directly.' }
     }

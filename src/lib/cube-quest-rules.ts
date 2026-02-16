@@ -274,6 +274,29 @@ export const STORY_CUBE_RULES: Readonly<Record<EncounterState, StoryCubeRule>> =
     }),
 }
 
+const SINGLE_AXIS_STATE_TO_RULE: Record<string, EncounterState> = {
+    HIDE: 'HIDE_TRUTH_INTERIOR',
+    SEEK: 'SEEK_TRUTH_EXTERIOR',
+    TRUTH: 'SEEK_TRUTH_INTERIOR',
+    DARE: 'SEEK_DARE_EXTERIOR',
+    VISIBILITY_HIDE: 'HIDE_TRUTH_INTERIOR',
+    VISIBILITY_SEEK: 'SEEK_TRUTH_EXTERIOR',
+    REVELATION_TRUTH: 'SEEK_TRUTH_INTERIOR',
+    REVELATION_DARE: 'SEEK_DARE_EXTERIOR',
+}
+
+function normalizeStoryCubeState(state: unknown): EncounterState | null {
+    if (typeof state !== 'string') return null
+    const normalized = state.trim().toUpperCase()
+    if (normalized in STORY_CUBE_RULES) {
+        return normalized as EncounterState
+    }
+    if (normalized in SINGLE_AXIS_STATE_TO_RULE) {
+        return SINGLE_AXIS_STATE_TO_RULE[normalized]
+    }
+    return null
+}
+
 export function getStoryCubeRule(state: EncounterState): StoryCubeRule {
     return STORY_CUBE_RULES[state]
 }
@@ -283,9 +306,9 @@ export function getStoryCubeRuleFromGeometry(cube: Pick<CubeGeometry, 'state'>):
 }
 
 export function tryGetStoryCubeRule(state: unknown): StoryCubeRule | null {
-    if (typeof state !== 'string') return null
-    if (!(state in STORY_CUBE_RULES)) return null
-    return STORY_CUBE_RULES[state as EncounterState]
+    const normalizedState = normalizeStoryCubeState(state)
+    if (!normalizedState) return null
+    return STORY_CUBE_RULES[normalizedState]
 }
 
 function isStringArray(value: unknown): value is string[] {

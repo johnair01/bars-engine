@@ -6,11 +6,14 @@ import { cookies } from 'next/headers'
 import { getHexagramStructure, verifyHexagramIntegrity } from '@/lib/iching-struct'
 import { assignCubeGeometry, defaultCubeBiasProvider, formatCubeGeometry, type CubeGeometry } from '@/lib/cube-engine'
 import { getStoryCubeRuleFromGeometry } from '@/lib/cube-quest-rules'
+import { buildArchetypeMapByTrigram, toTrigramArchetypeNameLookup } from '@/lib/archetype-registry'
 
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
 const STORY_CLOCK_MAX = STORY_CLOCK_PERIODS * HEXAGRAMS_PER_PERIOD
 const STORY_CLOCK_ROLLOVER_FEATURE_KEY = 'storyClockRolloverPolicy'
+type StoryAxisType = 'VISIBILITY' | 'REVELATION'
+type StoryAxisState = 'HIDE' | 'SEEK' | 'TRUTH' | 'DARE'
 
 export type StoryClockRolloverPolicy = 'carry_unfinished' | 'archive_unfinished'
 
@@ -412,23 +415,11 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
     const creator = await db.player.findFirst({ select: { id: true } })
     if (!creator?.id) return
 
-    const allPlaybooks = await db.playbook.findMany({
+    const archetypes = await db.playbook.findMany({
         select: { id: true, name: true, description: true }
     })
-    const playbookByElement = new Map(
-        allPlaybooks
-            .map(playbook => {
-                const match = playbook.description?.match(/Element:\s*([A-Za-z]+)/i)
-                return match?.[1]
-                    ? [match[1].toLowerCase(), { id: playbook.id, name: playbook.name }] as const
-                    : null
-            })
-            .filter((entry): entry is readonly [string, { id: string, name: string }] => !!entry)
-    )
-
-    const trigramToArchetype = Object.fromEntries(
-        Array.from(playbookByElement.entries()).map(([trigram, archetype]) => [trigram, archetype.name])
-    ) as Record<string, string>
+    const archetypeByTrigram = buildArchetypeMapByTrigram(archetypes)
+    const trigramToArchetype = toTrigramArchetypeNameLookup(archetypeByTrigram)
 
     const integrityTargets = [15, 20, periodHexagrams[0]].filter((hexagram): hexagram is number => typeof hexagram === 'number')
     for (const hexagram of Array.from(new Set(integrityTargets))) {
@@ -443,17 +434,18 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
 
     for (const hexagramId of periodHexagrams) {
         const structure = getHexagramStructure(hexagramId)
-        const upperArchetype = playbookByElement.get(structure.upper.toLowerCase()) || null
-        const lowerArchetype = playbookByElement.get(structure.lower.toLowerCase()) || null
+        const upperArchetype = archetypeByTrigram.get(structure.upper.toLowerCase()) || null
+        const lowerArchetype = archetypeByTrigram.get(structure.lower.toLowerCase()) || null
         const cubeBias = defaultCubeBiasProvider.getBiasForHexagram(hexagramId)
         const cube = assignCubeGeometry({
             hexagramId,
             bias: cubeBias,
             seed: `${runId}:${hexagramId}`,
         })
+        const storyAxis = assignStoryAxis(cube, `${runId}:${hexagramId}`)
 
         if (process.env.NODE_ENV !== 'production') {
-            console.debug(`[CubeEngine] Hexagram #${hexagramId}: ${formatCubeGeometry(cube)}`)
+            console.debug(`[CubeEngine] Hexagram #${hexagramId}: ${formatCubeGeometry(cube)} -> ${storyAxis.axisType}:${storyAxis.axisValue}`)
         }
 
         await generateGlobalQuest({
@@ -465,6 +457,7 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
             upperArchetype,
             lowerArchetype,
             cube,
+            storyAxis,
         })
     }
 }
@@ -481,8 +474,9 @@ async function generateGlobalQuest(params: {
     upperArchetype: { id: string, name: string } | null
     lowerArchetype: { id: string, name: string } | null
     cube: CubeGeometry
+    storyAxis: { axisType: StoryAxisType; axisValue: StoryAxisState; legacyState: string }
 }) {
-    const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype, cube } = params
+    const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype, cube, storyAxis } = params
     try {
         const existingQuest = await db.customBar.findFirst({
             where: {
@@ -515,7 +509,10 @@ async function generateGlobalQuest(params: {
             lowerArchetypeId: lowerArchetype?.id || null,
             lowerArchetypeName: lowerArchetype?.name || null,
             cube,
-            cubeState: cube.state,
+            cubeStateMode: 'single_axis_v1',
+            cubeAxisType: storyAxis.axisType,
+            cubeState: storyAxis.axisValue,
+            cubeStateLegacy: storyAxis.legacyState,
             cubeMechanics: {
                 version: cubeRule.version,
                 moveType: cubeRule.moveType,
@@ -546,6 +543,22 @@ async function generateGlobalQuest(params: {
         })
     } catch (e) {
         console.error("Global quest generation error:", e)
+    }
+}
+
+function assignStoryAxis(cube: CubeGeometry, seed: string) {
+    const hash = seed.split('').reduce((acc, char, idx) => {
+        const weight = char.charCodeAt(0) * (idx + 1)
+        return (acc + weight) % 1000003
+    }, 0)
+    const axisType: StoryAxisType = hash % 2 === 0 ? 'VISIBILITY' : 'REVELATION'
+    const axisValue: StoryAxisState = axisType === 'VISIBILITY'
+        ? cube.visibility as StoryAxisState
+        : cube.revelation as StoryAxisState
+    return {
+        axisType,
+        axisValue,
+        legacyState: cube.state,
     }
 }
 

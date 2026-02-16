@@ -74,7 +74,14 @@ type PlayerFacingQuestView = {
 function humanizeCubeState(raw: string | null) {
     if (!raw) return null
     const parts = raw.split('_').filter(Boolean)
-    if (parts.length !== 3) return raw
+    if (parts.length === 1) {
+        return parts[0].slice(0, 1).toUpperCase() + parts[0].slice(1).toLowerCase()
+    }
+    if (parts.length !== 3) {
+        return parts
+            .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
+            .join(' • ')
+    }
     return parts
         .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
         .join(' • ')
