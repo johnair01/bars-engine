@@ -5,6 +5,8 @@ import { assistStoryQuest, pickUpBar } from '@/actions/pick-up-bar'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 import { formatStoryCubeRequirement, isStoryCubeMechanics, tryGetStoryCubeRule } from '@/lib/cube-quest-rules'
+import { getHexagramStructure } from '@/lib/iching-struct'
+import { StoryClockQuestSurface } from '@/components/story-clock/StoryClockQuestSurface'
 
 function parseStoryMeta(raw: string | null) {
     if (!raw) {
@@ -14,6 +16,12 @@ function parseStoryMeta(raw: string | null) {
             lowerArchetypeId: null as string | null,
             cubeState: null as string | null,
             cubeMechanics: null,
+            upperArchetypeName: null as string | null,
+            lowerArchetypeName: null as string | null,
+            nationTonePrimary: null as string | null,
+            nationToneSecondary: null as string | null,
+            faceContext: null as string | null,
+            aiBody: null as string | null,
         }
     }
     try {
@@ -27,6 +35,12 @@ function parseStoryMeta(raw: string | null) {
             lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
             cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
             cubeMechanics,
+            upperArchetypeName: typeof parsed.upperArchetypeName === 'string' ? parsed.upperArchetypeName : null,
+            lowerArchetypeName: typeof parsed.lowerArchetypeName === 'string' ? parsed.lowerArchetypeName : null,
+            nationTonePrimary: typeof parsed.nationTonePrimary === 'string' ? parsed.nationTonePrimary : null,
+            nationToneSecondary: typeof parsed.nationToneSecondary === 'string' ? parsed.nationToneSecondary : null,
+            faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
+            aiBody: typeof parsed.aiBody === 'string' ? parsed.aiBody : null,
         }
     } catch {
         return {
@@ -35,6 +49,12 @@ function parseStoryMeta(raw: string | null) {
             lowerArchetypeId: null as string | null,
             cubeState: null as string | null,
             cubeMechanics: null,
+            upperArchetypeName: null as string | null,
+            lowerArchetypeName: null as string | null,
+            nationTonePrimary: null as string | null,
+            nationToneSecondary: null as string | null,
+            faceContext: null as string | null,
+            aiBody: null as string | null,
         }
     }
 }
@@ -94,6 +114,58 @@ export default async function AvailableBarsPage() {
         return !(meta.questSource === 'story_clock' && (bar.periodGenerated || 1) === currentPeriod)
     })
 
+    const storyHexagramIds = Array.from(
+        new Set(
+            currentStoryQuests
+                .map((bar) => bar.hexagramId)
+                .filter((id): id is number => typeof id === 'number')
+        )
+    )
+    const storyHexagrams = storyHexagramIds.length > 0
+        ? await db.bar.findMany({
+            where: { id: { in: storyHexagramIds } },
+            select: { id: true, name: true, tone: true }
+        })
+        : []
+    const storyHexagramById = new Map(storyHexagrams.map((hexagram) => [hexagram.id, hexagram]))
+
+    const storyQuestCards = currentStoryQuests.map((bar) => {
+        const meta = parseStoryMeta(bar.completionEffects)
+        const hexagram = typeof bar.hexagramId === 'number' ? storyHexagramById.get(bar.hexagramId) : null
+        const structure = typeof bar.hexagramId === 'number' ? getHexagramStructure(bar.hexagramId) : null
+        const canClaim = !!player?.playbookId && (
+            meta.upperArchetypeId === player.playbookId ||
+            meta.lowerArchetypeId === player.playbookId
+        )
+        const eligibleArchetypes = [meta.upperArchetypeName, meta.lowerArchetypeName]
+            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        const tone = (hexagram?.tone || '').trim()
+        const toneParts = tone ? tone.split(/[\/,;|]/).map((part) => part.trim()).filter(Boolean) : []
+
+        return {
+            id: bar.id,
+            title: bar.title,
+            description: bar.description,
+            creatorName: bar.creator.name,
+            canClaim,
+            cubeState: meta.cubeState,
+            cubeRequirementLabel: meta.cubeMechanics ? formatStoryCubeRequirement(meta.cubeMechanics) : null,
+            completionFraming: meta.cubeMechanics?.completionFraming || null,
+            requiresAssist: !!meta.cubeMechanics?.requiresAssist,
+            hexagramId: bar.hexagramId,
+            hexagramName: hexagram?.name || null,
+            upperTrigram: structure?.upper || null,
+            lowerTrigram: structure?.lower || null,
+            eligibleArchetypes,
+            nationTonePrimary: meta.nationTonePrimary || toneParts[0] || tone || null,
+            nationToneSecondary: meta.nationToneSecondary || toneParts[1] || null,
+            faceContext: meta.faceContext || bar.description || null,
+            status: bar.status,
+            claimWindowExpiry: null as string | null,
+            aiBody: meta.aiBody,
+        }
+    })
+
     // Separate non-story into recommended (affinity match) and others
     const recommended: typeof nonStoryAvailable = []
     const others: typeof nonStoryAvailable = []
@@ -133,32 +205,15 @@ export default async function AvailableBarsPage() {
                 <h2 className="text-lg font-bold text-cyan-300 mb-4 flex items-center gap-2">
                     📦 Current Story Quests (Period {currentPeriod})
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {currentStoryQuests.length === 0 ? (
+                {storyQuestCards.length === 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="col-span-full py-8 text-center border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500">
                             No current period story quests available to claim.
                         </div>
-                    ) : (
-                        currentStoryQuests.map((bar) => {
-                            const meta = parseStoryMeta(bar.completionEffects)
-                            const isEligible = !!player?.playbookId && (
-                                meta.upperArchetypeId === player.playbookId ||
-                                meta.lowerArchetypeId === player.playbookId
-                            )
-                            return (
-                                <StoryQuestCard
-                                    key={bar.id}
-                                    bar={bar}
-                                    canClaim={isEligible}
-                                    cubeState={meta.cubeState}
-                                    cubeRequirementLabel={meta.cubeMechanics ? formatStoryCubeRequirement(meta.cubeMechanics) : null}
-                                    completionFraming={meta.cubeMechanics?.completionFraming || null}
-                                    requiresAssist={meta.cubeMechanics?.requiresAssist || false}
-                                />
-                            )
-                        })
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <StoryClockQuestSurface quests={storyQuestCards} />
+                )}
             </section>
 
             {/* Recommended Section */}
