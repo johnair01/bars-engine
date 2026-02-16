@@ -445,7 +445,7 @@ export function StarterQuestBoard({
         return (
             <div className="space-y-3">
                 {activeBarsWithDelegates.map(bar => ( // Changed to activeBarsWithDelegates
-                    bar.type === 'story' ? (
+                    (bar.type === 'story' && !bar.isCustom) ? (
                         <StoryBarCard key={bar.id} bar={bar} isActive={true} onPickUp={() => { }} />
                     ) : (
                         <VibeBarCard
@@ -468,7 +468,7 @@ export function StarterQuestBoard({
         return (
             <div className="space-y-3">
                 {availableBars.map(bar => (
-                    bar.type === 'story' ? (
+                    (bar.type === 'story' && !bar.isCustom) ? (
                         <StoryBarCard key={bar.id} bar={bar} isActive={false} onPickUp={() => handlePickUp(bar.id)} />
                     ) : (
                         <VibeBarCard

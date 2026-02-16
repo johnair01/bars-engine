@@ -5,6 +5,21 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { STARTER_BARS } from '@/lib/bars'
 
+function parseQuestMeta(raw: string | null) {
+    if (!raw) return { questSource: null as string | null, upperArchetypeId: null as string | null, lowerArchetypeId: null as string | null, mainArchetypeIds: [] as (string | null)[] }
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null,
+            upperArchetypeId: typeof parsed.upperArchetypeId === 'string' ? parsed.upperArchetypeId : null,
+            lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
+            mainArchetypeIds: Array.isArray(parsed.mainArchetypeIds) ? parsed.mainArchetypeIds : [],
+        }
+    } catch {
+        return { questSource: null as string | null, upperArchetypeId: null as string | null, lowerArchetypeId: null as string | null, mainArchetypeIds: [] as (string | null)[] }
+    }
+}
+
 export async function pickUpBar(formData: FormData) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -28,19 +43,43 @@ export async function pickUpBar(formData: FormData) {
         return { error: 'Quest is not active.' }
     }
 
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        select: { id: true, playbookId: true }
+    })
+
+    const questMeta = parseQuestMeta(customBar.completionEffects)
+    const isStoryClockQuest = questMeta.questSource === 'story_clock'
+    const eligibleArchetypeIds = new Set(
+        [
+            questMeta.upperArchetypeId,
+            questMeta.lowerArchetypeId,
+            ...questMeta.mainArchetypeIds,
+        ].filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+
+    // Story Clock quests are public multi-claim quests:
+    // any player can see; only eligible archetypes can claim; others can assist.
+    if (isStoryClockQuest && eligibleArchetypeIds.size > 0) {
+        const isEligible = !!player?.playbookId && eligibleArchetypeIds.has(player.playbookId)
+        if (!isEligible) {
+            return { error: 'This story quest is visible to all, but only eligible archetypes can claim it. You can still assist.' }
+        }
+    }
+
     // 2. Validate Access / Claiming
     // Check if already claimed by another player (for unique quests)
-    if (customBar.claimedById && customBar.claimedById !== playerId) {
+    if (!isStoryClockQuest && customBar.claimedById && customBar.claimedById !== playerId) {
         return { error: 'This quest has already been claimed by another player.' }
     }
 
     // Private bars logic
-    if (customBar.visibility === 'private' && customBar.creatorId !== playerId && !customBar.claimedById) {
+    if (!isStoryClockQuest && customBar.visibility === 'private' && customBar.creatorId !== playerId && !customBar.claimedById) {
         return { error: 'Private quests cannot be picked up directly.' }
     }
 
     // Claim the bar if not already claimed AND not a system quest
-    if (!customBar.claimedById && !customBar.isSystem) {
+    if (!isStoryClockQuest && !customBar.claimedById && !customBar.isSystem) {
         await db.customBar.update({
             where: { id: barId },
             data: { claimedById: playerId }

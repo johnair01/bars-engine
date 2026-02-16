@@ -5,6 +5,33 @@ import { pickUpBar } from '@/actions/pick-up-bar'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 
+function parseStoryMeta(raw: string | null) {
+    if (!raw) {
+        return {
+            questSource: null as string | null,
+            upperArchetypeId: null as string | null,
+            lowerArchetypeId: null as string | null,
+            cubeState: null as string | null,
+        }
+    }
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null,
+            upperArchetypeId: typeof parsed.upperArchetypeId === 'string' ? parsed.upperArchetypeId : null,
+            lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
+            cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
+        }
+    } catch {
+        return {
+            questSource: null as string | null,
+            upperArchetypeId: null as string | null,
+            lowerArchetypeId: null as string | null,
+            cubeState: null as string | null,
+        }
+    }
+}
+
 export default async function AvailableBarsPage() {
     const currentPlayer = await getCurrentPlayer()
 
@@ -18,12 +45,27 @@ export default async function AvailableBarsPage() {
         include: { playbook: true }
     })
 
+    const globalState = await db.globalState.findUnique({
+        where: { id: 'singleton' },
+        select: { currentPeriod: true }
+    })
+
+    const alreadyAssignedOrCompleted = await db.playerQuest.findMany({
+        where: {
+            playerId: currentPlayer.id,
+            status: { in: ['assigned', 'completed'] }
+        },
+        select: { questId: true }
+    })
+    const blockedQuestIds = alreadyAssignedOrCompleted.map(row => row.questId)
+
     // Get available bars
     const availableBars = await db.customBar.findMany({
         where: {
             status: 'active',
             visibility: 'public',
-            claimedById: null  // Not yet claimed
+            claimedById: null,  // Not yet claimed (story clock quests remain null for multi-claim)
+            id: { notIn: blockedQuestIds }
         },
         include: {
             creator: true
@@ -33,12 +75,23 @@ export default async function AvailableBarsPage() {
 
     // Extract player's trigram from playbook name (e.g., "Heaven (Qian)" -> "Heaven")
     const playerTrigram = player?.playbook?.name.split(' ')[0] || null
+    const currentPeriod = globalState?.currentPeriod || 1
 
-    // Separate into recommended (affinity match) and others
-    const recommended: typeof availableBars = []
-    const others: typeof availableBars = []
+    const currentStoryQuests = availableBars.filter((bar) => {
+        const meta = parseStoryMeta(bar.completionEffects)
+        return meta.questSource === 'story_clock' && (bar.periodGenerated || 1) === currentPeriod
+    })
 
-    availableBars.forEach(bar => {
+    const nonStoryAvailable = availableBars.filter((bar) => {
+        const meta = parseStoryMeta(bar.completionEffects)
+        return !(meta.questSource === 'story_clock' && (bar.periodGenerated || 1) === currentPeriod)
+    })
+
+    // Separate non-story into recommended (affinity match) and others
+    const recommended: typeof nonStoryAvailable = []
+    const others: typeof nonStoryAvailable = []
+
+    nonStoryAvailable.forEach(bar => {
         const stage = bar.kotterStage as KotterStage
         const stageInfo = KOTTER_STAGES[stage]
 
@@ -67,6 +120,36 @@ export default async function AvailableBarsPage() {
                     </p>
                 </div>
             </header>
+
+            {/* Current Story Quests */}
+            <section>
+                <h2 className="text-lg font-bold text-cyan-300 mb-4 flex items-center gap-2">
+                    📦 Current Story Quests (Period {currentPeriod})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentStoryQuests.length === 0 ? (
+                        <div className="col-span-full py-8 text-center border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500">
+                            No current period story quests available to claim.
+                        </div>
+                    ) : (
+                        currentStoryQuests.map((bar) => {
+                            const meta = parseStoryMeta(bar.completionEffects)
+                            const isEligible = !!player?.playbookId && (
+                                meta.upperArchetypeId === player.playbookId ||
+                                meta.lowerArchetypeId === player.playbookId
+                            )
+                            return (
+                                <StoryQuestCard
+                                    key={bar.id}
+                                    bar={bar}
+                                    canClaim={isEligible}
+                                    cubeState={meta.cubeState}
+                                />
+                            )
+                        })
+                    )}
+                </div>
+            </section>
 
             {/* Recommended Section */}
             {recommended.length > 0 && (
@@ -172,6 +255,57 @@ function QuestCard({ bar, isAffinity }: QuestCardProps) {
                         Accept Commission
                     </button>
                 </form>
+            </div>
+        </div>
+    )
+}
+
+function StoryQuestCard({
+    bar,
+    canClaim,
+    cubeState,
+}: {
+    bar: {
+        id: string
+        title: string
+        description: string
+        creator: { name: string }
+    }
+    canClaim: boolean
+    cubeState: string | null
+}) {
+    return (
+        <div className="bg-zinc-900 border border-cyan-900/60 rounded-xl overflow-hidden">
+            <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-white text-lg">{bar.title}</h3>
+                    <span className="text-[10px] bg-cyan-900/40 text-cyan-300 px-2 py-1 rounded uppercase tracking-widest">
+                        Story
+                    </span>
+                </div>
+
+                <div className="text-xs text-zinc-500">
+                    From {bar.creator.name}
+                    {cubeState ? <span className="ml-2 text-zinc-400">• {cubeState}</span> : null}
+                </div>
+
+                <p className="text-sm text-zinc-400 line-clamp-4">{bar.description}</p>
+
+                {canClaim ? (
+                    <form action={async (formData) => {
+                        'use server'
+                        await pickUpBar(formData)
+                    }}>
+                        <input type="hidden" name="barId" value={bar.id} />
+                        <button className="w-full py-2 rounded-lg font-bold transition-all bg-cyan-900/40 border border-cyan-700 text-cyan-200 hover:bg-cyan-900/60">
+                            Accept Story Quest
+                        </button>
+                    </form>
+                ) : (
+                    <div className="w-full py-2 rounded-lg font-bold text-center bg-zinc-900 border border-zinc-700 text-zinc-400">
+                        Assist Only (archetype not eligible to claim)
+                    </div>
+                )}
             </div>
         </div>
     )
