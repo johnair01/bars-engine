@@ -8,6 +8,24 @@ import { formatStoryCubeRequirement, isStoryCubeMechanics, tryGetStoryCubeRule }
 import { getHexagramStructure } from '@/lib/iching-struct'
 import { StoryClockQuestSurface } from '@/components/story-clock/StoryClockQuestSurface'
 
+function parseShortQuestBlock(raw: unknown) {
+    if (!raw || typeof raw !== 'object') return null
+    const parsed = raw as Record<string, unknown>
+    const action = typeof parsed.action === 'string' ? parsed.action.trim() : ''
+    const doneWhen = typeof parsed.done_when === 'string'
+        ? parsed.done_when.trim()
+        : (typeof parsed.doneWhen === 'string' ? parsed.doneWhen.trim() : '')
+    if (!action || !doneWhen) return null
+    return {
+        title: typeof parsed.title === 'string' ? parsed.title.trim() : undefined,
+        action,
+        done_when: doneWhen,
+        ally_help: typeof parsed.ally_help === 'string'
+            ? parsed.ally_help.trim()
+            : (typeof parsed.allyHelp === 'string' ? parsed.allyHelp.trim() : undefined),
+    }
+}
+
 function parseStoryMeta(raw: string | null) {
     if (!raw) {
         return {
@@ -23,6 +41,8 @@ function parseStoryMeta(raw: string | null) {
             faceContext: null as string | null,
             aiBody: null as string | null,
             aiFallback: false as boolean,
+            playerFacing: null as { title?: string; action: string; done_when: string; ally_help?: string } | null,
+            summary: null as { title?: string; action: string; done_when: string; ally_help?: string } | null,
         }
     }
     try {
@@ -43,6 +63,8 @@ function parseStoryMeta(raw: string | null) {
             faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
             aiBody: typeof parsed.aiBody === 'string' ? parsed.aiBody : null,
             aiFallback: typeof parsed.aiFallback === 'boolean' ? parsed.aiFallback : false,
+            playerFacing: parseShortQuestBlock(parsed.player_facing) || parseShortQuestBlock(parsed.playerFacing),
+            summary: parseShortQuestBlock(parsed.summary),
         }
     } catch {
         return {
@@ -58,6 +80,8 @@ function parseStoryMeta(raw: string | null) {
             faceContext: null as string | null,
             aiBody: null as string | null,
             aiFallback: false as boolean,
+            playerFacing: null as { title?: string; action: string; done_when: string; ally_help?: string } | null,
+            summary: null as { title?: string; action: string; done_when: string; ally_help?: string } | null,
         }
     }
 }
@@ -167,6 +191,8 @@ export default async function AvailableBarsPage() {
             claimWindowExpiry: null as string | null,
             aiBody: meta.aiBody,
             aiFallback: meta.aiFallback,
+            playerFacing: meta.playerFacing,
+            summary: meta.summary,
             questSource: meta.questSource,
             phaseId: bar.periodGenerated ?? null,
             kotterStage: bar.kotterStage ?? null,

@@ -26,6 +26,18 @@ type StoryClockQuestView = {
     claimWindowExpiry: string | null
     aiBody: string | null
     aiFallback: boolean
+    playerFacing?: {
+        title?: string
+        action: string
+        done_when: string
+        ally_help?: string
+    } | null
+    summary?: {
+        title?: string
+        action: string
+        done_when: string
+        ally_help?: string
+    } | null
     questSource?: string | null
     phaseId?: number | null
     kotterStage?: number | null
@@ -47,7 +59,7 @@ type PlayerFacingQuestView = {
     done_when: string
     ally_help?: string
     debug: {
-        parseStatus: 'short_schema' | 'story_payload' | 'legacy_payload' | 'plain_text' | 'fallback'
+        parseStatus: 'player_facing' | 'short_schema' | 'story_payload' | 'legacy_payload' | 'plain_text' | 'fallback'
         questSource: string | null
         hexagramId: number | null
         cubeState: string | null
@@ -55,6 +67,7 @@ type PlayerFacingQuestView = {
         kotterStage: number | null
         aiBodyLength: number
         rawAiPreview: string
+        parseError: string | null
     }
 }
 
@@ -67,18 +80,136 @@ function humanizeCubeState(raw: string | null) {
         .join(' • ')
 }
 
+function normalizeWhitespace(value: string) {
+    return value.replace(/\s+/g, ' ').trim()
+}
+
 function clampText(value: string, limit: number) {
-    const normalized = value.trim()
+    const normalized = normalizeWhitespace(value)
     if (normalized.length <= limit) return normalized
     return normalized.slice(0, limit).trim()
 }
 
-function tryParseJson(raw: string | null) {
-    if (!raw) return null
+function clampSentence(value: string, limit: number) {
+    const normalized = normalizeWhitespace(value)
+    if (normalized.length <= limit) return normalized
+    const window = normalized.slice(0, limit + 1)
+    const punctuation = Math.max(window.lastIndexOf('.'), window.lastIndexOf('!'), window.lastIndexOf('?'))
+    if (punctuation >= Math.floor(limit * 0.5)) {
+        return window.slice(0, punctuation + 1).trim()
+    }
+    const space = window.lastIndexOf(' ')
+    if (space >= Math.floor(limit * 0.6)) {
+        return window.slice(0, space).trim()
+    }
+    return normalized.slice(0, limit).trim()
+}
+
+function escapeRegex(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function stripLeadingLabels(value: string, labels: string[]) {
+    let cleaned = normalizeWhitespace(value.replace(/^[-*•]\s*/, '').replace(/^["']|["']$/g, ''))
+    let changed = true
+    while (changed) {
+        changed = false
+        for (const label of labels) {
+            const pattern = new RegExp(`^${escapeRegex(label).replace(/\s+/g, '\\s*')}\\s*:?\\s*`, 'i')
+            if (pattern.test(cleaned)) {
+                cleaned = normalizeWhitespace(cleaned.replace(pattern, ''))
+                changed = true
+            }
+        }
+    }
+    return cleaned
+}
+
+function sanitizeTitle(value: string | null) {
+    if (!value) return null
+    const cleaned = clampText(stripLeadingLabels(value, ['title']), 40)
+    if (!cleaned) return null
+    if (/^(oracle stub|reading|upper trigram|lower trigram|main characters?:|awakening\s*-)/i.test(cleaned)) return null
+    return cleaned
+}
+
+function sanitizeAction(value: string | null) {
+    if (!value) return null
+    const cleaned = clampSentence(
+        stripLeadingLabels(value, ['action', 'main move', 'main character move', 'do']),
+        140
+    )
+    if (!cleaned) return null
+    return cleaned
+}
+
+function sanitizeDoneWhen(value: string | null) {
+    if (!value) return null
+    const cleaned = clampSentence(
+        stripLeadingLabels(value, ['done when', 'done_when', 'completion signal', 'success when']),
+        90
+    )
+    if (!cleaned) return null
+    return cleaned
+}
+
+function sanitizeAllyHelp(value: string | null) {
+    if (!value) return null
+    const cleaned = clampSentence(
+        stripLeadingLabels(value, ['ally help', 'ally_help', 'ally', 'assist', 'assist signal']),
+        90
+    )
+    if (!cleaned) return null
+    return cleaned
+}
+
+function looksLikeScaffolding(line: string) {
+    const normalized = normalizeWhitespace(line)
+    if (!normalized) return true
+    if (/^[A-Z]+_[A-Z]+_[A-Z]+$/.test(normalized)) return true
+    if (/^(oracle stub|reading|upper trigram|lower trigram|main character move|constraints?|template_id|cube|hexagram|main characters?:|awakening\s*-|phase|kotter)\b/i.test(normalized)) return true
+    if (/^(done when|done_when|ally help|ally_help|title)\s*:/i.test(normalized)) return true
+    if (/^\{.*\}$/.test(normalized)) return true
+    return false
+}
+
+function extractLabelValue(rawText: string, labels: string[], sanitizer: (value: string | null) => string | null) {
+    const lines = rawText.split('\n')
+    for (const rawLine of lines) {
+        const line = normalizeWhitespace(rawLine.replace(/^[-*•]\s*/, ''))
+        if (!line) continue
+        for (const label of labels) {
+            const pattern = new RegExp(`^${escapeRegex(label).replace(/\s+/g, '\\s*')}\\s*:?\\s*(.+)$`, 'i')
+            const match = line.match(pattern)
+            if (match && match[1]) {
+                const cleaned = sanitizer(match[1])
+                if (cleaned) return cleaned
+            }
+        }
+    }
+    return null
+}
+
+function firstActionableLine(rawText: string) {
+    const lines = rawText.split('\n')
+    for (const rawLine of lines) {
+        const line = normalizeWhitespace(rawLine)
+        if (!line || looksLikeScaffolding(line)) continue
+        const action = sanitizeAction(line)
+        if (action && action.length >= 12) return action
+    }
+    return null
+}
+
+function tryParseJson(raw: string | null): { value: unknown; parseError: string | null } {
+    if (!raw || raw.trim().length === 0) return { value: null, parseError: null }
     try {
-        return JSON.parse(raw) as unknown
-    } catch {
-        return null
+        return { value: JSON.parse(raw) as unknown, parseError: null }
+    } catch (error) {
+        return {
+            value: null,
+            parseError: error instanceof Error ? error.message : 'Invalid JSON payload'
+        }
     }
 }
 
@@ -91,8 +222,35 @@ function pickFirstNonEmpty(values: Array<unknown>) {
     return null
 }
 
+function readPlayerFacingBlock(source: unknown) {
+    if (!source || typeof source !== 'object') return null
+    const record = source as Record<string, unknown>
+    const title = sanitizeTitle(pickFirstNonEmpty([record.title]))
+    const action = sanitizeAction(pickFirstNonEmpty([record.action, record.mainAction, record.main_action]))
+    const doneWhen = sanitizeDoneWhen(pickFirstNonEmpty([record.done_when, record.doneWhen]))
+    const allyHelp = sanitizeAllyHelp(pickFirstNonEmpty([record.ally_help, record.allyHelp]))
+    if (!action || !doneWhen) return null
+    return {
+        title: title || undefined,
+        action,
+        done_when: doneWhen,
+        ally_help: allyHelp || undefined
+    }
+}
+
+function readFirstAllyAsk(value: unknown) {
+    if (!Array.isArray(value)) return null
+    for (const item of value) {
+        if (item && typeof item === 'object' && typeof (item as { ask?: unknown }).ask === 'string') {
+            return (item as { ask: string }).ask
+        }
+    }
+    return null
+}
+
 function toPlayerFacingQuest(quest: StoryClockQuestView, rawAiBody: string | null): PlayerFacingQuestView {
     const aiBody = typeof rawAiBody === 'string' ? rawAiBody : ''
+    const preferredPlayerFacing = readPlayerFacingBlock(quest.playerFacing) || readPlayerFacingBlock(quest.summary)
     const baseDebug = {
         questSource: quest.questSource || null,
         hexagramId: quest.hexagramId ?? null,
@@ -101,90 +259,108 @@ function toPlayerFacingQuest(quest: StoryClockQuestView, rawAiBody: string | nul
         kotterStage: quest.kotterStage ?? null,
         aiBodyLength: aiBody.length,
         rawAiPreview: clampText(aiBody, 500),
+        parseError: null as string | null,
     }
 
-    const parsed = tryParseJson(aiBody)
+    if (preferredPlayerFacing) {
+        return {
+            ...preferredPlayerFacing,
+            debug: { ...baseDebug, parseStatus: 'player_facing' }
+        }
+    }
+
+    const parsedResult = tryParseJson(aiBody)
+    const parsed = parsedResult.value
     if (parsed && typeof parsed === 'object') {
         const obj = parsed as Record<string, any>
 
-        if (typeof obj.action === 'string' && typeof obj.done_when === 'string') {
+        const shortSchema = readPlayerFacingBlock(obj)
+            || readPlayerFacingBlock(obj.player_facing)
+            || readPlayerFacingBlock(obj.playerFacing)
+            || readPlayerFacingBlock(obj.summary)
+        if (shortSchema) {
             return {
-                title: typeof obj.title === 'string' ? clampText(obj.title, 40) : undefined,
-                action: clampText(obj.action, 140),
-                done_when: clampText(obj.done_when, 90),
-                ally_help: typeof obj.ally_help === 'string' ? clampText(obj.ally_help, 90) : undefined,
-                debug: { ...baseDebug, parseStatus: 'short_schema' }
+                ...shortSchema,
+                debug: { ...baseDebug, parseStatus: 'short_schema', parseError: parsedResult.parseError }
             }
         }
 
         const questBlock = obj.quest
         if (questBlock && typeof questBlock === 'object') {
-            const action = pickFirstNonEmpty([
+            const action = sanitizeAction(pickFirstNonEmpty([
                 questBlock?.main_character_move?.do,
                 questBlock?.pitch,
-                quest.description
-            ])
-            const doneWhen = pickFirstNonEmpty([
+            ]))
+            const doneWhen = sanitizeDoneWhen(pickFirstNonEmpty([
                 questBlock?.main_character_move?.done_when,
-                'Marked complete in the app.'
-            ])
-            const allyHelp = pickFirstNonEmpty([
-                Array.isArray(questBlock?.ally_moves) ? questBlock.ally_moves?.[0]?.ask : null,
-                'Allies can back you with a vibulon or BAR.'
-            ])
+            ]))
+            const allyHelp = sanitizeAllyHelp(readFirstAllyAsk(questBlock?.ally_moves))
+            const title = sanitizeTitle(pickFirstNonEmpty([questBlock?.title, quest.title]))
 
-            if (action && doneWhen) {
+            if (action && doneWhen && !looksLikeScaffolding(action)) {
                 return {
-                    title: clampText(questBlock?.title || quest.title, 40),
-                    action: clampText(action, 140),
-                    done_when: clampText(doneWhen, 90),
-                    ally_help: allyHelp ? clampText(allyHelp, 90) : undefined,
-                    debug: { ...baseDebug, parseStatus: 'story_payload' }
+                    title: title || undefined,
+                    action,
+                    done_when: doneWhen,
+                    ally_help: allyHelp || undefined,
+                    debug: { ...baseDebug, parseStatus: 'story_payload', parseError: parsedResult.parseError }
                 }
             }
         }
 
-        const legacyAction = pickFirstNonEmpty([
+        const legacyAction = sanitizeAction(pickFirstNonEmpty([
             Array.isArray(obj.moves) ? obj.moves[0] : null,
             Array.isArray(obj.paragraphs) ? obj.paragraphs[0] : null,
             obj.description,
             obj.omen
-        ])
-        if (legacyAction) {
+        ]))
+        const fallbackLegacyAction = firstActionableLine(aiBody)
+        const action = legacyAction && !looksLikeScaffolding(legacyAction)
+            ? legacyAction
+            : fallbackLegacyAction
+        if (action) {
+            const doneWhen = extractLabelValue(aiBody, ['done when', 'done_when', 'completion signal'], sanitizeDoneWhen)
+                || 'Marked complete in the app.'
+            const allyHelp = extractLabelValue(aiBody, ['ally help', 'ally_help', 'assist', 'ally'], sanitizeAllyHelp)
+                || 'Allies can back you with a vibulon or a BAR.'
             return {
-                title: typeof obj.title === 'string' ? clampText(obj.title, 40) : clampText(quest.title, 40),
-                action: clampText(legacyAction, 140),
-                done_when: 'Marked complete in the app.',
-                ally_help: 'Allies can back you with a vibulon or BAR.',
-                debug: { ...baseDebug, parseStatus: 'legacy_payload' }
+                title: sanitizeTitle(pickFirstNonEmpty([obj.title, quest.title])) || undefined,
+                action,
+                done_when: doneWhen,
+                ally_help: allyHelp,
+                debug: { ...baseDebug, parseStatus: 'legacy_payload', parseError: parsedResult.parseError }
             }
         }
     }
 
     if (aiBody.trim().length > 0) {
-        const plainLine = aiBody
-            .split('\n')
-            .map((line) => line.trim())
-            .find((line) => line.length > 0 && !line.toLowerCase().startsWith('title:'))
+        const plainLine = firstActionableLine(aiBody)
 
         if (plainLine) {
             return {
-                title: clampText(quest.title, 40),
-                action: clampText(plainLine, 140),
-                done_when: 'Marked complete in the app.',
-                ally_help: 'Allies can back you with a vibulon or BAR.',
-                debug: { ...baseDebug, parseStatus: 'plain_text' }
+                title: sanitizeTitle(quest.title) || undefined,
+                action: plainLine,
+                done_when: extractLabelValue(aiBody, ['done when', 'done_when'], sanitizeDoneWhen) || 'Marked complete in the app.',
+                ally_help: extractLabelValue(aiBody, ['ally help', 'ally_help', 'assist', 'ally'], sanitizeAllyHelp)
+                    || 'Allies can back you with a vibulon or a BAR.',
+                debug: { ...baseDebug, parseStatus: 'plain_text', parseError: parsedResult.parseError }
             }
         }
     }
 
     return {
-        title: clampText(quest.title, 40),
-        action: "Complete this quest's next concrete step.",
+        title: 'Next Move',
+        action: 'Take one concrete step that advances the Big Score.',
         done_when: 'Marked complete in the app.',
-        ally_help: 'Allies can back you with a vibulon or BAR.',
-        debug: { ...baseDebug, parseStatus: 'fallback' }
+        ally_help: 'Allies can back you with a vibulon or a BAR.',
+        debug: { ...baseDebug, parseStatus: 'fallback', parseError: parsedResult.parseError }
     }
+}
+
+function hasShortQuestContract(quest: StoryClockQuestView) {
+    const fromPlayerFacing = quest.playerFacing?.action && quest.playerFacing?.done_when
+    const fromSummary = quest.summary?.action && quest.summary?.done_when
+    return Boolean(fromPlayerFacing || fromSummary)
 }
 
 export function StoryClockQuestSurface({ quests, showActions = true }: StoryClockQuestSurfaceProps) {
@@ -199,6 +375,7 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
 
     const openQuestModal = (quest: StoryClockQuestView) => {
         setSelectedQuestId(quest.id)
+        if (hasShortQuestContract(quest)) return
         const existingBody = generatedById[quest.id]?.aiBody || quest.aiBody
         if (existingBody && existingBody.trim().length > 0) return
 
@@ -372,9 +549,10 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                                                 <Detail label="questSource" value={display.debug.questSource || 'N/A'} />
                                                 <Detail label="hexagram_id" value={display.debug.hexagramId != null ? String(display.debug.hexagramId) : 'N/A'} />
                                                 <Detail label="cube_signature" value={humanizeCubeState(display.debug.cubeState) || 'N/A'} />
-                                                <Detail label="phase" value={display.debug.phaseId != null ? String(display.debug.phaseId) : 'N/A'} />
-                                                <Detail label="kotter" value={display.debug.kotterStage != null ? String(display.debug.kotterStage) : 'N/A'} />
+                                                <Detail label="heist_phase" value={display.debug.phaseId != null ? String(display.debug.phaseId) : 'N/A'} />
+                                                <Detail label="kotter_stage" value={display.debug.kotterStage != null ? String(display.debug.kotterStage) : 'N/A'} />
                                                 <Detail label="parse_status" value={display.debug.parseStatus} />
+                                                <Detail label="parse_error" value={display.debug.parseError || 'N/A'} />
                                                 <Detail label="ai_body_length" value={String(display.debug.aiBodyLength)} />
                                                 <Detail label="raw_ai_preview" value={display.debug.rawAiPreview || 'N/A'} />
                                             </div>
