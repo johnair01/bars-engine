@@ -432,6 +432,8 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
         }
     }
 
+    const queuedQuestIds: string[] = []
+
     for (const hexagramId of periodHexagrams) {
         const structure = getHexagramStructure(hexagramId)
         const upperArchetype = archetypeByTrigram.get(structure.upper.toLowerCase()) || null
@@ -448,7 +450,7 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
             console.debug(`[CubeEngine] Hexagram #${hexagramId}: ${formatCubeGeometry(cube)} -> ${storyAxis.axisType}:${storyAxis.axisValue}`)
         }
 
-        await generateGlobalQuest({
+        const questId = await generateGlobalQuest({
             creatorId: creator.id,
             hexagramId,
             period,
@@ -459,6 +461,17 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
             cube,
             storyAxis,
         })
+        if (questId) {
+            queuedQuestIds.push(questId)
+        }
+    }
+
+    const { preGenerateStoryClockQuestText } = await import('@/actions/story-clock')
+    for (const questId of queuedQuestIds) {
+        const result = await preGenerateStoryClockQuestText(questId)
+        if ('error' in result) {
+            console.warn(`[StoryClock][Pregenerate] ${questId}: ${result.error}`)
+        }
     }
 }
 
@@ -475,7 +488,7 @@ async function generateGlobalQuest(params: {
     lowerArchetype: { id: string, name: string } | null
     cube: CubeGeometry
     storyAxis: { axisType: StoryAxisType; axisValue: StoryAxisState; legacyState: string }
-}) {
+}): Promise<string | null> {
     const { creatorId, hexagramId, period, periodIndex, runId, upperArchetype, lowerArchetype, cube, storyAxis } = params
     try {
         const existingQuest = await db.customBar.findFirst({
@@ -489,7 +502,7 @@ async function generateGlobalQuest(params: {
             },
             select: { id: true }
         })
-        if (existingQuest) return
+        if (existingQuest) return existingQuest.id
 
         const hexagram = await db.bar.findFirst({ where: { id: hexagramId } })
         const structure = getHexagramStructure(hexagramId)
@@ -523,7 +536,7 @@ async function generateGlobalQuest(params: {
             }
         })
 
-        await db.customBar.create({
+        const createdQuest = await db.customBar.create({
             data: {
                 creatorId,
                 title: `P${period} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
@@ -539,10 +552,13 @@ async function generateGlobalQuest(params: {
                 periodGenerated: period,
                 completionEffects,
                 inputs: JSON.stringify(cubeRule.inputs)
-            }
+            },
+            select: { id: true }
         })
+        return createdQuest.id
     } catch (e) {
         console.error("Global quest generation error:", e)
+        return null
     }
 }
 

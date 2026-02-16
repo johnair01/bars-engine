@@ -68,6 +68,13 @@ type StoryClockQuestPayload = {
     }
 }
 
+type PersistedPlayerFacingQuest = {
+    title?: string
+    action: string
+    done_when: string
+    ally_help?: string
+}
+
 const STORY_CLOCK_RESPONSE_SCHEMA = z.object({
     reading: z.object({
         hexagram_id: z.number(),
@@ -332,6 +339,58 @@ function clampText(value: string, max: number) {
     const normalized = value.trim()
     if (normalized.length <= max) return normalized
     return normalized.slice(0, max).trim()
+}
+
+function stripUiLabel(value: string, labels: string[]) {
+    let cleaned = value.trim()
+    let changed = true
+    while (changed) {
+        changed = false
+        for (const label of labels) {
+            const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const pattern = new RegExp(`^${escaped}\\s*:?\\s*`, 'i')
+            if (pattern.test(cleaned)) {
+                cleaned = cleaned.replace(pattern, '').trim()
+                changed = true
+            }
+        }
+    }
+    return cleaned
+}
+
+function normalizePlayerFacingText(value: string, max: number, labels: string[]) {
+    const stripped = stripUiLabel(value, labels)
+    return clampText(stripped, max)
+}
+
+function toPersistedPlayerFacingQuest(payload: StoryClockQuestPayload): PersistedPlayerFacingQuest {
+    const rawAction = normalizeText(payload.quest.main_character_move.do) || normalizeText(payload.quest.pitch)
+    const rawDoneWhen = normalizeText(payload.quest.main_character_move.done_when)
+    const firstAlly = payload.quest.ally_moves.find((move) => normalizeText(move.ask).length > 0)?.ask || ''
+
+    const title = normalizePlayerFacingText(normalizeText(payload.quest.title), 40, ['title'])
+    const action = normalizePlayerFacingText(rawAction, 140, ['action', 'main move', 'main_character_move', 'do'])
+    const doneWhen = normalizePlayerFacingText(rawDoneWhen, 90, ['done when', 'done_when'])
+    const allyHelp = normalizePlayerFacingText(firstAlly, 90, ['ally help', 'ally_help', 'ally'])
+
+    return {
+        title: title || undefined,
+        action: action || 'Take one concrete step that advances the Big Score.',
+        done_when: doneWhen || 'Marked complete in the app.',
+        ally_help: allyHelp || undefined,
+    }
+}
+
+function hasPersistedPlayerFacingContract(raw: string | null) {
+    if (!raw) return false
+    const parsed = parseJsonObject(raw)
+    const candidate = parsed.player_facing || parsed.playerFacing || parsed.summary
+    if (!candidate || typeof candidate !== 'object') return false
+    const record = candidate as Record<string, unknown>
+    return typeof record.action === 'string'
+        && record.action.trim().length > 0
+        && typeof record.done_when === 'string'
+        && record.done_when.trim().length > 0
 }
 
 function dedupeStrings(values: string[]) {
@@ -679,10 +738,19 @@ export async function getStoryClockData() {
     }
 }
 
-export async function generateStoryClockQuestText(questId: string) {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
-    if (!playerId) return { error: 'Not logged in' as const }
+type StoryClockGenerationOptions = {
+    requireAuth: boolean
+}
+
+async function generateStoryClockQuestTextInternal(
+    questId: string,
+    options: StoryClockGenerationOptions
+) {
+    if (options.requireAuth) {
+        const cookieStore = await cookies()
+        const playerId = cookieStore.get('bars_player_id')?.value
+        if (!playerId) return { error: 'Not logged in' as const }
+    }
     if (!questId) return { error: 'Missing quest ID' as const }
 
     const quest = await db.customBar.findUnique({
@@ -707,19 +775,10 @@ export async function generateStoryClockQuestText(questId: string) {
     const signature = parseCubeSignature(seed.cube_state)
     const existingPayload = parseExistingPayload(meta.aiBody)
     const hasValidExisting = !!existingPayload && validatePayload(existingPayload, signature)
-    if (hasValidExisting && meta.aiBody) {
-        return {
-            success: true as const,
-            aiTitle: meta.aiTitle || existingPayload.quest.title || quest.title,
-            aiBody: meta.aiBody,
-            isFallback: meta.aiFallback === true,
-            persisted: true,
-            seed
-        }
-    }
 
     const persistPayload = async (payload: StoryClockQuestPayload, isFallback: boolean) => {
         const effectsObject = parseJsonObject(quest.completionEffects)
+        const playerFacing = toPersistedPlayerFacingQuest(payload)
         const nextEffects = JSON.stringify({
             ...effectsObject,
             aiTitle: payload.quest.title,
@@ -731,6 +790,10 @@ export async function generateStoryClockQuestText(questId: string) {
             nationTonePrimary: seed.nation_tone_primary,
             nationToneSecondary: seed.nation_tone_secondary,
             faceContext: seed.face_context,
+            playerFacingVersion: 1,
+            player_facing: playerFacing,
+            playerFacing,
+            summary: playerFacing,
         })
 
         await db.customBar.update({
@@ -740,6 +803,20 @@ export async function generateStoryClockQuestText(questId: string) {
 
         revalidatePath('/bars/available')
         revalidatePath('/story-clock')
+    }
+
+    if (hasValidExisting && existingPayload && meta.aiBody) {
+        if (!hasPersistedPlayerFacingContract(quest.completionEffects)) {
+            await persistPayload(existingPayload, meta.aiFallback === true)
+        }
+        return {
+            success: true as const,
+            aiTitle: meta.aiTitle || existingPayload.quest.title || quest.title,
+            aiBody: meta.aiBody,
+            isFallback: meta.aiFallback === true,
+            persisted: true,
+            seed
+        }
     }
 
     try {
@@ -824,6 +901,14 @@ export async function generateStoryClockQuestText(questId: string) {
             seed
         }
     }
+}
+
+export async function generateStoryClockQuestText(questId: string) {
+    return generateStoryClockQuestTextInternal(questId, { requireAuth: true })
+}
+
+export async function preGenerateStoryClockQuestText(questId: string) {
+    return generateStoryClockQuestTextInternal(questId, { requireAuth: false })
 }
 
 function parseStoryClockMeta(raw: string | null) {
