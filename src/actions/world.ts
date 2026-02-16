@@ -9,9 +9,73 @@ import { assignCubeGeometry, defaultCubeBiasProvider, formatCubeGeometry, type C
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
 const STORY_CLOCK_MAX = STORY_CLOCK_PERIODS * HEXAGRAMS_PER_PERIOD
+const STORY_CLOCK_ROLLOVER_FEATURE_KEY = 'storyClockRolloverPolicy'
+
+export type StoryClockRolloverPolicy = 'carry_unfinished' | 'archive_unfinished'
 
 function getActFromPeriod(period: number) {
     return period <= 4 ? 1 : 2
+}
+
+function resolveStoryClockRolloverPolicy(value: unknown): StoryClockRolloverPolicy {
+    if (value === 'archive_unfinished') return 'archive_unfinished'
+    return 'carry_unfinished'
+}
+
+function parseFeaturesJson(raw: string | null) {
+    if (!raw) return {}
+    try {
+        const parsed = JSON.parse(raw)
+        return typeof parsed === 'object' && parsed ? parsed as Record<string, unknown> : {}
+    } catch {
+        return {}
+    }
+}
+
+export async function getStoryClockRolloverPolicy(): Promise<StoryClockRolloverPolicy> {
+    const appConfig = await db.appConfig.findUnique({
+        where: { id: 'singleton' },
+        select: { features: true }
+    })
+    const features = parseFeaturesJson(appConfig?.features || '{}')
+    return resolveStoryClockRolloverPolicy(features[STORY_CLOCK_ROLLOVER_FEATURE_KEY])
+}
+
+export async function setStoryClockRolloverPolicy(policy: StoryClockRolloverPolicy) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+    if (!playerId) return { error: 'Unauthorized' }
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { roles: { include: { role: true } } }
+    })
+    const isAdmin = player?.roles.some(r => r.role.key === 'admin' || r.role.key === 'ENGINEER')
+    if (!isAdmin) return { error: 'Forbidden: Only Admins can update rollover policy.' }
+
+    const current = await db.appConfig.findUnique({
+        where: { id: 'singleton' },
+        select: { features: true }
+    })
+    const features = parseFeaturesJson(current?.features || '{}')
+    features[STORY_CLOCK_ROLLOVER_FEATURE_KEY] = resolveStoryClockRolloverPolicy(policy)
+
+    await db.appConfig.upsert({
+        where: { id: 'singleton' },
+        create: {
+            id: 'singleton',
+            features: JSON.stringify(features),
+            updatedBy: playerId
+        },
+        update: {
+            features: JSON.stringify(features),
+            updatedBy: playerId
+        }
+    })
+
+    revalidatePath('/story-clock')
+    revalidatePath('/admin')
+    return { success: true, policy: resolveStoryClockRolloverPolicy(policy) }
 }
 
 /**
@@ -228,6 +292,21 @@ export async function advanceStoryPeriod() {
     const nextClock = (nextPeriod - 1) * HEXAGRAMS_PER_PERIOD + 1
     const nextAct = getActFromPeriod(nextPeriod)
     const sequence = JSON.parse(state.hexagramSequence || '[]') as number[]
+    const rolloverPolicy = await getStoryClockRolloverPolicy()
+    let archivedUnfinished = 0
+
+    if (rolloverPolicy === 'archive_unfinished') {
+        const archiveRes = await db.customBar.updateMany({
+            where: {
+                status: 'active',
+                firstCompleterId: null,
+                periodGenerated: { lt: nextPeriod },
+                completionEffects: { contains: '"questSource":"story_clock"' }
+            },
+            data: { status: 'archived' }
+        })
+        archivedUnfinished = archiveRes.count
+    }
 
     await db.globalState.update({
         where: { id: 'singleton' },
@@ -252,7 +331,14 @@ export async function advanceStoryPeriod() {
     revalidatePath('/')
     revalidatePath('/admin')
     revalidatePath('/story-clock')
-    return { success: true, period: nextPeriod, act: nextAct, clock: nextClock }
+    return {
+        success: true,
+        period: nextPeriod,
+        act: nextAct,
+        clock: nextClock,
+        rolloverPolicy,
+        archivedUnfinished
+    }
 }
 
 /**

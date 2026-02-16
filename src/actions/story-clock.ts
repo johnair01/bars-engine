@@ -3,6 +3,23 @@
 import { db } from '@/lib/db'
 import { getHexagramStructure } from '@/lib/iching-struct'
 
+type StoryClockRolloverPolicy = 'carry_unfinished' | 'archive_unfinished'
+
+function resolveRolloverPolicy(value: unknown): StoryClockRolloverPolicy {
+    if (value === 'archive_unfinished') return 'archive_unfinished'
+    return 'carry_unfinished'
+}
+
+function parseFeaturesJson(raw: string | null): Record<string, unknown> {
+    if (!raw) return {}
+    try {
+        const parsed = JSON.parse(raw)
+        return typeof parsed === 'object' && parsed ? parsed as Record<string, unknown> : {}
+    } catch {
+        return {}
+    }
+}
+
 /**
  * Get Story Clock data including current period, quests by period, and completion tracking
  */
@@ -17,11 +34,18 @@ export async function getStoryClockData() {
             storyClock: 0,
             isPaused: false,
             hexagramSequence: [],
-            questsByPeriod: {}
+            questsByPeriod: {},
+            rolloverPolicy: 'carry_unfinished' as StoryClockRolloverPolicy
         }
     }
 
     const sequence = JSON.parse(globalState.hexagramSequence) as number[]
+    const appConfig = await db.appConfig.findUnique({
+        where: { id: 'singleton' },
+        select: { features: true }
+    })
+    const features = parseFeaturesJson(appConfig?.features || '{}')
+    const rolloverPolicy = resolveRolloverPolicy(features.storyClockRolloverPolicy)
 
     // Canonical trigram -> archetype mapping (via playbook element metadata)
     const playbooks = await db.playbook.findMany({
@@ -102,7 +126,8 @@ export async function getStoryClockData() {
         storyClock: globalState.storyClock,
         isPaused: globalState.isPaused,
         hexagramSequence: sequence,
-        questsByPeriod
+        questsByPeriod,
+        rolloverPolicy
     }
 }
 

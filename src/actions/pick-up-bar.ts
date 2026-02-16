@@ -20,6 +20,16 @@ function parseQuestMeta(raw: string | null) {
     }
 }
 
+function getEligibleArchetypeIds(meta: ReturnType<typeof parseQuestMeta>) {
+    return new Set(
+        [
+            meta.upperArchetypeId,
+            meta.lowerArchetypeId,
+            ...meta.mainArchetypeIds,
+        ].filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+}
+
 export async function pickUpBar(formData: FormData) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -50,13 +60,7 @@ export async function pickUpBar(formData: FormData) {
 
     const questMeta = parseQuestMeta(customBar.completionEffects)
     const isStoryClockQuest = questMeta.questSource === 'story_clock'
-    const eligibleArchetypeIds = new Set(
-        [
-            questMeta.upperArchetypeId,
-            questMeta.lowerArchetypeId,
-            ...questMeta.mainArchetypeIds,
-        ].filter((id): id is string => typeof id === 'string' && id.length > 0)
-    )
+    const eligibleArchetypeIds = getEligibleArchetypeIds(questMeta)
 
     // Story Clock quests are public multi-claim quests:
     // any player can see; only eligible archetypes can claim; others can assist.
@@ -123,4 +127,57 @@ export async function pickUpBar(formData: FormData) {
         console.error("Pick up bar failed:", e?.message)
         return { error: 'Failed to pick up bar' }
     }
+}
+
+export async function assistStoryQuest(formData: FormData) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+    if (!playerId) return { error: 'Not logged in' }
+
+    const barId = formData.get('barId') as string
+    const note = (formData.get('assistNote') as string | null)?.trim() || null
+    if (!barId) return { error: 'Missing barId' }
+
+    const customBar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: {
+            id: true,
+            status: true,
+            title: true,
+            completionEffects: true
+        }
+    })
+
+    if (!customBar) return { error: 'Unknown bar' }
+    if (customBar.status !== 'active') return { error: 'Quest is not active.' }
+
+    const questMeta = parseQuestMeta(customBar.completionEffects)
+    const isStoryClockQuest = questMeta.questSource === 'story_clock'
+    if (!isStoryClockQuest) {
+        return { error: 'Assist is currently only available for story quests.' }
+    }
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        select: { id: true, playbookId: true }
+    })
+    const eligibleArchetypeIds = getEligibleArchetypeIds(questMeta)
+    const isEligibleToClaim = !!player?.playbookId && eligibleArchetypeIds.has(player.playbookId)
+    if (isEligibleToClaim) {
+        return { error: 'You are eligible to claim this story quest directly.' }
+    }
+
+    await db.vibulonEvent.create({
+        data: {
+            playerId,
+            source: 'story_assist',
+            amount: 0,
+            questId: barId,
+            notes: note || `Assist sent for story quest "${customBar.title}".`
+        }
+    })
+
+    revalidatePath('/bars/available')
+    revalidatePath('/story-clock')
+    return { success: true }
 }

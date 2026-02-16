@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 export default async function StoryClockPage() {
     const clockData = await getStoryClockData()
-    const { currentPeriod, storyClock, isPaused, questsByPeriod } = clockData
+    const { currentPeriod, storyClock, isPaused, questsByPeriod, rolloverPolicy } = clockData
 
     const currentPeriodQuests = questsByPeriod[currentPeriod] || []
     const previousPeriodQuests = Object.entries(questsByPeriod)
@@ -41,7 +41,7 @@ export default async function StoryClockPage() {
                 <StoryClockTimeline currentPeriod={currentPeriod} storyClock={storyClock} />
 
                 {/* ADMIN CONTROLS */}
-                <AdminClockControls isPaused={isPaused} />
+                <AdminClockControls isPaused={isPaused} rolloverPolicy={rolloverPolicy} />
 
                 {/* CURRENT PERIOD QUESTS */}
                 <section>

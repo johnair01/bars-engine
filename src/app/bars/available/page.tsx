@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
-import { pickUpBar } from '@/actions/pick-up-bar'
+import { assistStoryQuest, pickUpBar } from '@/actions/pick-up-bar'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 
@@ -302,8 +302,20 @@ function StoryQuestCard({
                         </button>
                     </form>
                 ) : (
-                    <div className="w-full py-2 rounded-lg font-bold text-center bg-zinc-900 border border-zinc-700 text-zinc-400">
-                        Assist Only (archetype not eligible to claim)
+                    <div className="space-y-2">
+                        <form action={async (formData) => {
+                            'use server'
+                            await assistStoryQuest(formData)
+                        }}>
+                            <input type="hidden" name="barId" value={bar.id} />
+                            <input type="hidden" name="assistNote" value={`Assist volunteered for ${bar.title}`} />
+                            <button className="w-full py-2 rounded-lg font-bold transition-all bg-zinc-900 border border-zinc-600 text-zinc-200 hover:bg-zinc-800">
+                                Send Assist Signal
+                            </button>
+                        </form>
+                        <div className="w-full py-2 rounded-lg font-bold text-center bg-zinc-900 border border-zinc-700 text-zinc-400">
+                            Assist Only (archetype not eligible to claim)
+                        </div>
                     </div>
                 )}
             </div>

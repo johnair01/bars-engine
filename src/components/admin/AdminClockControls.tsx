@@ -2,16 +2,26 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { advanceClock, pauseStoryClock, resumeStoryClock, resetStoryClock, startStoryClock } from '@/actions/world'
+import {
+    advanceClock,
+    pauseStoryClock,
+    resumeStoryClock,
+    resetStoryClock,
+    setStoryClockRolloverPolicy,
+    startStoryClock,
+    type StoryClockRolloverPolicy
+} from '@/actions/world'
 
 interface AdminClockControlsProps {
     isPaused: boolean
+    rolloverPolicy: StoryClockRolloverPolicy
 }
 
-export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
+export function AdminClockControls({ isPaused, rolloverPolicy: initialRolloverPolicy }: AdminClockControlsProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
+    const [rolloverPolicy, setRolloverPolicy] = useState<StoryClockRolloverPolicy>(initialRolloverPolicy)
 
     const handleAdvance = () => {
         startTransition(async () => {
@@ -69,6 +79,24 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
         })
     }
 
+    const handleSetRolloverPolicy = (policy: StoryClockRolloverPolicy) => {
+        startTransition(async () => {
+            const res = await setStoryClockRolloverPolicy(policy)
+            if ('error' in res) {
+                setFeedback(res.error || 'Failed to update rollover policy')
+            } else {
+                setRolloverPolicy(res.policy)
+                setFeedback(
+                    res.policy === 'archive_unfinished'
+                        ? 'Rollover policy set: archive unfinished quests on period advance.'
+                        : 'Rollover policy set: carry unfinished quests into later periods.'
+                )
+                router.refresh()
+                setTimeout(() => setFeedback(null), 3000)
+            }
+        })
+    }
+
     return (
         <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-900/50 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -111,6 +139,36 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
                 >
                     🚀 Start Clock
                 </button>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/80 p-3">
+                <p className="text-xs text-zinc-400 mb-2">
+                    Period rollover policy for unfinished story quests
+                </p>
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={() => handleSetRolloverPolicy('carry_unfinished')}
+                        disabled={isPending}
+                        className={`px-3 py-2 rounded text-sm font-bold transition disabled:opacity-50 ${
+                            rolloverPolicy === 'carry_unfinished'
+                                ? 'bg-emerald-900/60 border border-emerald-700 text-emerald-200'
+                                : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:bg-zinc-800'
+                        }`}
+                    >
+                        Carry unfinished forward
+                    </button>
+                    <button
+                        onClick={() => handleSetRolloverPolicy('archive_unfinished')}
+                        disabled={isPending}
+                        className={`px-3 py-2 rounded text-sm font-bold transition disabled:opacity-50 ${
+                            rolloverPolicy === 'archive_unfinished'
+                                ? 'bg-amber-900/60 border border-amber-700 text-amber-200'
+                                : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:bg-zinc-800'
+                        }`}
+                    >
+                        Archive unfinished on advance
+                    </button>
+                </div>
             </div>
 
             {feedback && (
