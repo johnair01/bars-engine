@@ -31,10 +31,8 @@ export default async function WalletPage() {
     // Fetch transfer history (sent and received)
     const transferEvents = await db.vibulonEvent.findMany({
         where: {
+            playerId: playerId,
             source: 'p2p_transfer',
-            OR: [
-                { playerId: playerId },
-            ]
         },
         orderBy: { createdAt: 'desc' },
         take: 20
