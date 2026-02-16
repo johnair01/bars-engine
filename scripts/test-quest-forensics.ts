@@ -30,29 +30,34 @@ async function resolveQuestId(inputQuestId?: string) {
 
 async function main() {
     const { strict, questId: maybeQuestId } = parseArgs(process.argv.slice(2))
-    const questId = await resolveQuestId(maybeQuestId)
-
     const keyA = composeQuestCacheKey({
         version: 'story-quest-cache-v1',
-        questId,
+        questId: maybeQuestId || 'quest-x',
         seed: '1',
         inputsFingerprint: 'abc'
     })
     const keyB = composeQuestCacheKey({
         version: 'story-quest-cache-v1',
-        questId,
+        questId: maybeQuestId || 'quest-x',
         seed: '2',
         inputsFingerprint: 'abc'
     })
     const keyC = composeQuestCacheKey({
         version: 'story-quest-cache-v1',
-        questId,
+        questId: maybeQuestId || 'quest-x',
         seed: '1',
         inputsFingerprint: 'xyz'
     })
     assert(keyA !== keyB, 'Cache key should change when seed changes.')
     assert(keyA !== keyC, 'Cache key should change when inputs fingerprint changes.')
-    assert(keyA.includes(`quest=${questId}`), 'Cache key should include questId.')
+    assert(keyA.includes(`quest=${maybeQuestId || 'quest-x'}`), 'Cache key should include questId.')
+
+    if (!process.env.DATABASE_URL) {
+        console.log('DATABASE_URL missing; skipped live forensics harness checks. Cache-key tests passed.')
+        return
+    }
+
+    const questId = await resolveQuestId(maybeQuestId)
 
     const sensitivity = await runStoryQuestForensicsHarness({
         questId,

@@ -856,11 +856,12 @@ async function repairQuestStyle(
         if (typeof modelParams.max_tokens === 'number') generationArgs.maxTokens = modelParams.max_tokens
 
         const { object } = await generateObject(generationArgs as any)
+        const repairedObject = (object || {}) as Record<string, unknown>
         const repaired: PersistedPlayerFacingQuest = {
-            title: clampText(stripUiLabel(normalizeText(object.title), ['title']), 40) || undefined,
-            action: clampText(stripUiLabel(normalizeText(object.action), ['action', 'main move', 'do']), 140),
-            done_when: clampText(stripUiLabel(normalizeText(object.done_when), ['done when', 'done_when']), 90),
-            ally_help: clampText(stripUiLabel(normalizeText(object.ally_help), ['ally help', 'ally_help']), 90) || undefined,
+            title: clampText(stripUiLabel(normalizeText(repairedObject.title), ['title']), 40) || undefined,
+            action: clampText(stripUiLabel(normalizeText(repairedObject.action), ['action', 'main move', 'do']), 140),
+            done_when: clampText(stripUiLabel(normalizeText(repairedObject.done_when), ['done when', 'done_when']), 90),
+            ally_help: clampText(stripUiLabel(normalizeText(repairedObject.ally_help), ['ally help', 'ally_help']), 90) || undefined,
         }
         return applyPlayerFacingToPayload(payload, repaired)
     } catch (error: any) {
@@ -1240,7 +1241,10 @@ async function generateStoryClockQuestTextInternal(
             { name: 'canonicalize_model_payload', version: 'v1' }
         ]
 
-        const canonicalPayload = buildCanonicalPayloadFromModel(object, seed, signature)
+        const modelPayload = (object && typeof object === 'object'
+            ? object
+            : buildDeterministicFallbackPayload(seed, signature)) as StoryClockQuestPayload
+        const canonicalPayload = buildCanonicalPayloadFromModel(modelPayload, seed, signature)
         const isValid = validatePayload(canonicalPayload, signature)
         let finalPayload = isValid
             ? canonicalPayload

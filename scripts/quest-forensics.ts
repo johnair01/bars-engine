@@ -37,6 +37,9 @@ function parseArgs(argv: string[]): CliArgs {
 }
 
 async function resolveQuestId(inputQuestId?: string) {
+    if (!process.env.DATABASE_URL) {
+        throw new Error('DATABASE_URL is required to run forensics harness.')
+    }
     if (inputQuestId) return inputQuestId
     const quest = await db.customBar.findFirst({
         where: {
