@@ -440,6 +440,14 @@ export default async function Home() {
                 <div className="font-bold text-white mb-1">Quick Quest</div>
                 <div className="text-sm text-zinc-500">Simple form</div>
               </Link>
+
+              <Link
+                href="/create-bar"
+                className="mt-4 w-full group relative block p-4 border border-dashed border-zinc-800 rounded-xl hover:border-cyan-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="font-bold text-white mb-1">Create a BAR</div>
+                <div className="text-xs text-zinc-500">Optional: link it to an existing quest</div>
+              </Link>
             </div>
 
             {/* I CHING */}

@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import {
+    getQuestGeneratorMode,
+    getVibeulonLedgerMode,
+    isAuthBypassEmailVerificationEnabled
+} from '@/lib/mvp-flags'
 
 export async function GET() {
     try {
@@ -60,6 +65,11 @@ export async function GET() {
                 barSharing: barSharesReady ? 'READY' : 'TABLE_MISSING',
                 vibulonTransfer: vibulonCount > 0 ? 'READY' : 'NO_TOKENS_YET',
                 twine: twineReady ? (publishedStories > 0 ? 'READY' : 'NO_STORIES') : 'TABLE_MISSING',
+            },
+            mvpFlags: {
+                QUEST_GENERATOR_MODE: getQuestGeneratorMode(),
+                AUTH_BYPASS_EMAIL_VERIFICATION: isAuthBypassEmailVerificationEnabled(),
+                VIBEULON_LEDGER_MODE: getVibeulonLedgerMode(),
             }
         })
     } catch (error: unknown) {

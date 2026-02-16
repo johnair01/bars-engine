@@ -6,11 +6,11 @@ import { transferVibulons } from '@/actions/economy'
 interface VibulonTransferProps {
     playerId: string
     balance: number
-    recipients: { id: string, name: string }[]
+    recipients: { id: string, name: string, email?: string | null, username?: string | null }[]
     onSuccess?: () => void
 }
 
-export function VibulonTransfer({ playerId, balance, recipients, onSuccess }: VibulonTransferProps) {
+export function VibulonTransfer({ balance, recipients, onSuccess }: VibulonTransferProps) {
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
@@ -30,22 +30,35 @@ export function VibulonTransfer({ playerId, balance, recipients, onSuccess }: Vi
     return (
         <div className="space-y-4">
             <form action={handleTransfer} className="space-y-4">
-                <input type="hidden" name="senderId" value={playerId} />
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                        <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Recipient</label>
-                        <select
-                            name="targetId"
+                        <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Recipient Email / Username</label>
+                        <input
+                            type="text"
+                            name="recipientIdentifier"
+                            list="recipient-options"
+                            placeholder="name or email"
                             className="w-full bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white focus:border-green-500/50 outline-none transition-all"
                             required
                             disabled={isPending}
-                        >
-                            <option value="">Select Player...</option>
-                            {recipients.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
+                        />
+                        <datalist id="recipient-options">
+                            {recipients.map((recipient) => (
+                                <option
+                                    key={recipient.id}
+                                    value={recipient.email || recipient.username || recipient.name}
+                                >
+                                    {recipient.name}
+                                </option>
                             ))}
-                        </select>
+                            {recipients
+                                .filter((recipient) => !!recipient.username && recipient.username !== recipient.email)
+                                .map((recipient) => (
+                                    <option key={`${recipient.id}-username`} value={recipient.username || recipient.name}>
+                                        {recipient.name}
+                                    </option>
+                                ))}
+                        </datalist>
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Amount</label>
@@ -60,6 +73,17 @@ export function VibulonTransfer({ playerId, balance, recipients, onSuccess }: Vi
                             disabled={isPending}
                         />
                     </div>
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Memo (Optional)</label>
+                    <input
+                        type="text"
+                        name="memo"
+                        placeholder="thanks for the assist"
+                        className="w-full bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white focus:border-green-500/50 outline-none transition-all"
+                        disabled={isPending}
+                    />
                 </div>
 
                 <button

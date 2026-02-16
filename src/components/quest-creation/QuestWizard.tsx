@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getQuestTemplates, validateQuestData } from '@/actions/quest-templates'
+import { getQuestTemplates } from '@/actions/quest-templates'
 import { QuestTemplate } from '@/lib/quest-templates'
 import { createQuestFromWizard, createCustomBar } from '@/actions/create-bar'
 import { listPublishedStories } from '@/actions/twine'
@@ -28,7 +28,7 @@ export function QuestWizard() {
     // Handlers
     const handleTemplateSelect = (template: QuestTemplate) => {
         setSelectedTemplate(template)
-        setFormData({ ...formData, templateId: template.id, category: template.category })
+        setFormData({ ...formData, templateId: template.id, category: template.category, visibility: 'private' })
         setStep(2)
     }
 
@@ -51,14 +51,6 @@ export function QuestWizard() {
         setError(null)
 
         try {
-            // Map wizard data to createCustomBar format
-            const payload = new FormData()
-            payload.append('title', formData.title || selectedTemplate?.title)
-            payload.append('description', formData.description || selectedTemplate?.description)
-            payload.append('type', formData.category || 'custom')
-            payload.append('visibility', formData.visibility || 'public')
-            payload.append('reward', (formData.reward || 5).toString())
-
             // Handle inputs based on template
             const inputs = selectedTemplate?.inputs.map(input => ({
                 key: input.key,
@@ -71,19 +63,12 @@ export function QuestWizard() {
                 // If custom builder used
             }
 
-            // Calls createCustomBar server action (we might need to adapt it or create a new one)
-            // For MVP, utilizing existing logic:
-
-            // Construct inputs schema for the quest
-            const inputsSchema = selectedTemplate?.inputs || []
-
-            // We need to pass this rich data. existing createCustomBar expects FormData with specific fields.
-            // Let's create a specific action for Wizard or adapt here.
-
-            // Using a new action might be cleaner.
             const result = await createQuestFromWizard({
                 ...formData,
+                title: formData.title || selectedTemplate?.title,
+                description: formData.description || selectedTemplate?.description,
                 category: selectedTemplate?.category || 'custom',
+                visibility: formData.visibility || 'private',
                 inputs,
                 applyFirstAidLens: !!formData.applyFirstAidLens,
             })
@@ -91,7 +76,11 @@ export function QuestWizard() {
             if (result?.error) {
                 setError(result.error)
             } else {
-                router.push('/bars/available')
+                if (result?.visibility === 'private') {
+                    router.push('/hand')
+                } else {
+                    router.push('/bars/available')
+                }
             }
 
         } catch (e: any) {
@@ -207,7 +196,7 @@ export function QuestWizard() {
                     <div className="flex gap-4">
                         <button
                             onClick={() => handleInputChange('visibility', 'public')}
-                            className={`flex-1 p-4 rounded-xl border text-left transition ${formData.visibility === 'public' || !formData.visibility
+                            className={`flex-1 p-4 rounded-xl border text-left transition ${formData.visibility === 'public'
                                 ? 'bg-green-900/20 border-green-500/50 text-green-300'
                                 : 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
                                 }`}
@@ -336,7 +325,7 @@ export function QuestWizard() {
                             </div>
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Visibility</span>
-                                <span className="text-white capitalize">{formData.visibility || 'Public'}</span>
+                                <span className="text-white capitalize">{formData.visibility || 'Private'}</span>
                             </div>
                             {formData.lifecycleFraming && (
                                 <div className="text-zinc-500">
@@ -362,7 +351,7 @@ export function QuestWizard() {
 
                 <div className="flex justify-between items-center pt-4">
                     <div className="text-sm text-zinc-500">
-                        {formData.visibility === 'public' && 'Creation Cost: 1 Vibeulon'}
+                        {(formData.visibility || 'private') === 'public' && 'Creation Cost: 1 Vibeulon'}
                     </div>
                     <button
                         onClick={handlePublish}

@@ -24,7 +24,12 @@ export default async function WalletPage() {
     // Fetch potential recipients
     const others = await db.player.findMany({
         where: { id: { not: playerId } },
-        select: { id: true, name: true },
+        select: {
+            id: true,
+            name: true,
+            contactValue: true,
+            account: { select: { email: true } }
+        },
         orderBy: { name: 'asc' }
     })
 
@@ -62,7 +67,12 @@ export default async function WalletPage() {
                 <VibulonTransfer
                     playerId={playerId}
                     balance={total}
-                    recipients={others}
+                    recipients={others.map((player) => ({
+                        id: player.id,
+                        name: player.name,
+                        username: player.name,
+                        email: player.account?.email || player.contactValue || null
+                    }))}
                 />
             </section>
 
