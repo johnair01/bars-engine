@@ -16,6 +16,8 @@
     "db:reset-history": "tsx scripts/check-reset-history.ts",
     "db:feedback-cap-history": "tsx scripts/check-feedback-cap-history.ts",
     "test:feedback-cap": "tsx scripts/test-feedback-quest-cap.ts",
+    "test:cube-engine": "tsx scripts/test-cube-engine.ts",
+    "test:cube-rules": "tsx scripts/test-cube-quest-rules.ts",
     "preview:link": "tsx scripts/print-preview-link.ts",
     "loop:ready": "tsx scripts/loop-readiness.ts",
     "loop:ready:quick": "tsx scripts/loop-readiness.ts --quick",

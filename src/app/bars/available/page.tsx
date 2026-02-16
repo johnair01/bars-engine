@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { assistStoryQuest, pickUpBar } from '@/actions/pick-up-bar'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
+import { formatStoryCubeRequirement, isStoryCubeMechanics, tryGetStoryCubeRule } from '@/lib/cube-quest-rules'
 
 function parseStoryMeta(raw: string | null) {
     if (!raw) {
@@ -12,15 +13,20 @@ function parseStoryMeta(raw: string | null) {
             upperArchetypeId: null as string | null,
             lowerArchetypeId: null as string | null,
             cubeState: null as string | null,
+            cubeMechanics: null,
         }
     }
     try {
         const parsed = JSON.parse(raw)
+        const cubeMechanics = isStoryCubeMechanics(parsed.cubeMechanics)
+            ? parsed.cubeMechanics
+            : (tryGetStoryCubeRule(parsed.cubeState) ?? null)
         return {
             questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null,
             upperArchetypeId: typeof parsed.upperArchetypeId === 'string' ? parsed.upperArchetypeId : null,
             lowerArchetypeId: typeof parsed.lowerArchetypeId === 'string' ? parsed.lowerArchetypeId : null,
             cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
+            cubeMechanics,
         }
     } catch {
         return {
@@ -28,6 +34,7 @@ function parseStoryMeta(raw: string | null) {
             upperArchetypeId: null as string | null,
             lowerArchetypeId: null as string | null,
             cubeState: null as string | null,
+            cubeMechanics: null,
         }
     }
 }
@@ -144,6 +151,9 @@ export default async function AvailableBarsPage() {
                                     bar={bar}
                                     canClaim={isEligible}
                                     cubeState={meta.cubeState}
+                                    cubeRequirementLabel={meta.cubeMechanics ? formatStoryCubeRequirement(meta.cubeMechanics) : null}
+                                    completionFraming={meta.cubeMechanics?.completionFraming || null}
+                                    requiresAssist={meta.cubeMechanics?.requiresAssist || false}
                                 />
                             )
                         })
@@ -264,6 +274,9 @@ function StoryQuestCard({
     bar,
     canClaim,
     cubeState,
+    cubeRequirementLabel,
+    completionFraming,
+    requiresAssist,
 }: {
     bar: {
         id: string
@@ -273,6 +286,9 @@ function StoryQuestCard({
     }
     canClaim: boolean
     cubeState: string | null
+    cubeRequirementLabel: string | null
+    completionFraming: string | null
+    requiresAssist: boolean
 }) {
     return (
         <div className="bg-zinc-900 border border-cyan-900/60 rounded-xl overflow-hidden">
@@ -289,7 +305,23 @@ function StoryQuestCard({
                     {cubeState ? <span className="ml-2 text-zinc-400">• {cubeState}</span> : null}
                 </div>
 
+                {cubeRequirementLabel ? (
+                    <div className="text-[11px] uppercase tracking-widest text-cyan-300/80">
+                        {cubeRequirementLabel}
+                    </div>
+                ) : null}
+
+                {completionFraming ? (
+                    <p className="text-xs text-zinc-500 leading-relaxed">{completionFraming}</p>
+                ) : null}
+
                 <p className="text-sm text-zinc-400 line-clamp-4">{bar.description}</p>
+
+                {requiresAssist ? (
+                    <div className="rounded border border-amber-700/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
+                        Requires at least one Assist Signal before completion.
+                    </div>
+                ) : null}
 
                 {canClaim ? (
                     <form action={async (formData) => {

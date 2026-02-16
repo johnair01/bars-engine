@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { getHexagramStructure, verifyHexagramIntegrity } from '@/lib/iching-struct'
 import { assignCubeGeometry, defaultCubeBiasProvider, formatCubeGeometry, type CubeGeometry } from '@/lib/cube-engine'
+import { getStoryCubeRuleFromGeometry } from '@/lib/cube-quest-rules'
 
 const STORY_CLOCK_PERIODS = 8
 const HEXAGRAMS_PER_PERIOD = 8
@@ -501,6 +502,7 @@ async function generateGlobalQuest(params: {
         const periodTheme = getPeriodTheme(period)
         const upperArchetypeLabel = upperArchetype?.name || `${structure.upper} archetype`
         const lowerArchetypeLabel = lowerArchetype?.name || `${structure.lower} archetype`
+        const cubeRule = getStoryCubeRuleFromGeometry(cube)
 
         const completionEffects = JSON.stringify({
             questSource: 'story_clock',
@@ -513,16 +515,25 @@ async function generateGlobalQuest(params: {
             lowerArchetypeId: lowerArchetype?.id || null,
             lowerArchetypeName: lowerArchetype?.name || null,
             cube,
-            cubeState: cube.state
+            cubeState: cube.state,
+            cubeMechanics: {
+                version: cubeRule.version,
+                moveType: cubeRule.moveType,
+                requiresAssist: cubeRule.requiresAssist,
+                requiredInputKeys: cubeRule.requiredInputKeys,
+                completionFraming: cubeRule.completionFraming,
+                assistPrompt: cubeRule.assistPrompt
+            }
         })
 
         await db.customBar.create({
             data: {
                 creatorId,
                 title: `P${period} • ${hexagram?.name || `Hexagram ${hexagramId}`}`,
-                description: `${periodTheme}. Main characters: ${upperArchetypeLabel} (upper trigram) + ${lowerArchetypeLabel} (lower trigram). Allies can assist via vibeulon stake or by adding a BAR (including Vibes SOS).`,
+                description: `${periodTheme}. Main characters: ${upperArchetypeLabel} (upper trigram) + ${lowerArchetypeLabel} (lower trigram). ${cubeRule.requiresAssist ? 'Requires at least one Assist Signal before completion.' : 'Solo completion is allowed for eligible archetypes.'}`,
                 type: 'story',
                 reward: 1,
+                moveType: cubeRule.moveType,
                 status: 'active',
                 storyPath: 'collective',
                 visibility: 'public',
@@ -530,10 +541,7 @@ async function generateGlobalQuest(params: {
                 hexagramId,
                 periodGenerated: period,
                 completionEffects,
-                inputs: JSON.stringify([
-                    { key: 'mainAction', label: 'Main character action', type: 'textarea', required: true },
-                    { key: 'allySupport', label: 'Ally support (vibeulon stake, BAR, or Vibes SOS)', type: 'textarea' }
-                ])
+                inputs: JSON.stringify(cubeRule.inputs)
             }
         })
     } catch (e) {

@@ -7,6 +7,7 @@ import { advanceThread } from '@/actions/quest-thread'
 import { getOnboardingStatus, completeOnboardingStep } from '@/actions/onboarding'
 import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
+import { isStoryCubeMechanics, type StoryCubeMechanics } from '@/lib/cube-quest-rules'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -91,6 +92,35 @@ export async function completeQuestForPlayer(
     if (isPersonalIChingQuest && quest.creatorId === playerId) {
         return {
             error: 'You cannot complete your own personal I Ching quest. Offer it to the collective.'
+        }
+    }
+
+    if (isStoryClockQuest && storyMeta.cubeMechanics) {
+        const responsePayload = (inputs && typeof inputs === 'object')
+            ? inputs as Record<string, unknown>
+            : {}
+
+        const missingRequired = storyMeta.cubeMechanics.requiredInputKeys
+            .filter((key) => !hasMeaningfulInputValue(responsePayload[key]))
+        if (missingRequired.length > 0) {
+            return {
+                error: `Missing required story responses: ${missingRequired.join(', ')}`
+            }
+        }
+
+        if (storyMeta.cubeMechanics.requiresAssist) {
+            const assistCount = await db.vibulonEvent.count({
+                where: {
+                    questId,
+                    source: 'story_assist',
+                    playerId: { not: playerId }
+                }
+            })
+            if (assistCount < 1) {
+                return {
+                    error: storyMeta.cubeMechanics.assistPrompt || 'This quest needs at least one Assist Signal from another player before completion.'
+                }
+            }
         }
     }
 
@@ -252,16 +282,44 @@ export async function completeQuestForPlayer(
     return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
 }
 
-function parseStoryQuestMeta(raw: string | null) {
-    if (!raw) return { questSource: null as string | null }
+type ParsedStoryQuestMeta = {
+    questSource: string | null
+    cubeMechanics: StoryCubeMechanics | null
+}
+
+function parseStoryQuestMeta(raw: string | null): ParsedStoryQuestMeta {
+    if (!raw) {
+        return {
+            questSource: null as string | null,
+            cubeMechanics: null
+        }
+    }
+
     try {
         const parsed = JSON.parse(raw)
+        const cubeMechanics = isStoryCubeMechanics(parsed.cubeMechanics)
+            ? parsed.cubeMechanics
+            : null
         return {
-            questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null
+            questSource: typeof parsed.questSource === 'string' ? parsed.questSource : null,
+            cubeMechanics
         }
     } catch {
-        return { questSource: null as string | null }
+        return {
+            questSource: null as string | null,
+            cubeMechanics: null
+        }
     }
+}
+
+function hasMeaningfulInputValue(value: unknown): boolean {
+    if (typeof value === 'string') {
+        return value.trim().length > 0
+    }
+    if (Array.isArray(value)) {
+        return value.some((entry) => hasMeaningfulInputValue(entry))
+    }
+    return value !== null && value !== undefined
 }
 /**
  * Fire a trigger to auto-complete matching quests.
