@@ -2,6 +2,7 @@
 
 import { startThread, advanceThread, archiveThread } from '@/actions/quest-thread'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
 
@@ -39,7 +40,7 @@ type QuestThreadData = {
     currentQuest?: ThreadQuest | null
 }
 
-export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThreadData, completedMoveTypes?: string[] }) {
+export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<ThreadQuest | null>(null)
@@ -100,6 +101,14 @@ export function QuestThread({ thread, completedMoveTypes }: { thread: QuestThrea
                         <h3 className="font-bold text-white">{thread.title}</h3>
                         {thread.description && (
                             <p className="text-sm text-zinc-400">{thread.description}</p>
+                        )}
+                        {isSetupIncomplete && thread.threadType === 'orientation' && (
+                            <Link
+                                href="/conclave/guided?reset=true"
+                                className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/20 px-2 py-0.5 rounded border border-yellow-900/50"
+                            >
+                                ⚡ Complete Setup to Unlock →
+                            </Link>
                         )}
                     </div>
                     {thread.completionReward > 0 && (

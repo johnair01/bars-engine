@@ -1,21 +1,30 @@
 
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { cookies } from 'next/headers'
 import { StoryReader } from './components/StoryReader'
-import { getStoryNode } from '@/actions/guided-onboarding'
+import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
 import { StoryProgress } from './types'
+import { GuidedAuthForm } from './components/GuidedAuthForm'
 
-export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string }> }) {
-    const { step } = await searchParams
+export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string }> }) {
+    const { step, reset } = await searchParams
+
+    if (reset === 'true') {
+        const cookieStore = await cookies()
+        const playerId = cookieStore.get('bars_player_id')?.value
+        if (playerId) {
+            await resetOnboarding(playerId)
+        }
+        redirect('/conclave/guided')
+    }
+
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center">
             <GuidedStoryLoader requestedStep={step} />
         </div>
     )
 }
-
-import { cookies } from 'next/headers'
-import { GuidedAuthForm } from './components/GuidedAuthForm'
 
 async function GuidedStoryLoader({ requestedStep }: { requestedStep?: string }) {
     const cookieStore = await cookies()

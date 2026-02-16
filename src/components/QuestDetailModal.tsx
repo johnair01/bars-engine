@@ -65,6 +65,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
+    const [archetypeError, setArchetypeError] = useState<string | null>(null)
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -75,7 +76,15 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     useEffect(() => {
         if (isOpen && quest.id === 'orientation-quest-2' && !isCompleted) {
             getArchetypeHandbookData().then(res => {
-                if (res.success) setArchetypeData(res.playbook)
+                if (res.success) {
+                    setArchetypeData(res.playbook)
+                } else {
+                    console.error('[QuestDetailModal] Archetype fetch failed:', res.error)
+                    setArchetypeError(res.error || 'Failed to load archetype')
+                }
+            }).catch(err => {
+                console.error('[QuestDetailModal] Archetype fetch exception:', err)
+                setArchetypeError('Network error loading archetype')
             })
         }
         if (isOpen && quest.id === 'orientation-quest-4' && !isCompleted) {
@@ -87,6 +96,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         if (!isOpen) {
             setHasScrolledToBottom(false)
             setArchetypeData(null)
+            setArchetypeError(null)
             setTransferContext(null)
         }
     }, [isOpen, quest.id, isCompleted])
@@ -320,6 +330,16 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         <div className="animate-in fade-in duration-700">
                             {archetypeData ? (
                                 <ArchetypeHandbookContent playbook={archetypeData} />
+                            ) : archetypeError ? (
+                                <div className="py-20 text-center space-y-4">
+                                    <div className="text-3xl">⚠️</div>
+                                    <p className="text-red-400 font-mono text-xs uppercase tracking-widest">
+                                        {archetypeError}
+                                    </p>
+                                    <p className="text-zinc-600 text-xs">
+                                        Your playbook may not be assigned yet. Try completing character setup first.
+                                    </p>
+                                </div>
                             ) : (
                                 <div className="py-20 text-center space-y-4">
                                     <div className="animate-spin text-3xl">✨</div>

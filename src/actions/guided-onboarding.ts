@@ -271,3 +271,28 @@ export async function finalizeOnboarding(
         return { success: false, error: 'Failed to complete onboarding' }
     }
 }
+
+export async function resetOnboarding(playerId: string) {
+    try {
+        await db.player.update({
+            where: { id: playerId },
+            data: {
+                nationId: null,
+                playbookId: null,
+                onboardingComplete: false,
+                storyProgress: JSON.stringify({
+                    currentNodeId: 'intro_001',
+                    completedNodes: [],
+                    decisions: [],
+                    vibeulonsEarned: 0,
+                    startedAt: new Date(),
+                    lastActiveAt: new Date()
+                })
+            }
+        })
+        return { success: true }
+    } catch (error) {
+        console.error('Failed to reset onboarding:', error)
+        return { success: false, error: 'Failed to reset progress' }
+    }
+}

@@ -199,6 +199,8 @@ export default async function Home() {
       .map(q => q.quest.moveType as string)
   ))
 
+  const isSetupIncomplete = !player.nationId || !player.playbookId
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
@@ -270,6 +272,26 @@ export default async function Home() {
       {!('error' in onboardingStatus) && !onboardingStatus.isComplete && (
         <OnboardingChecklist status={onboardingStatus} />
       )}
+
+      {/* INCOMPLETE SETUP BANNER */}
+      {isSetupIncomplete && (
+        <section className="bg-yellow-900/20 border border-yellow-900/50 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="text-3xl">⚡</div>
+            <div>
+              <h3 className="text-yellow-400 font-bold">Complete Your Setup</h3>
+              <p className="text-yellow-200/60 text-sm">Your character profile is missing its Nation or Archetype resonance.</p>
+            </div>
+          </div>
+          <Link
+            href="/conclave/guided?reset=true"
+            className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
+          >
+            Continue Journey →
+          </Link>
+        </section>
+      )}
+
       {/* QUEST JOURNEYS (Threads & Packs) */}
       {(threads.length > 0 || packs.length > 0) && (
         <section>
@@ -281,7 +303,12 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {threads.filter(t => !(t.playerProgress as any)?.isArchived).map(thread => (
-              <QuestThread key={thread.id} thread={thread as any} completedMoveTypes={completedMoveTypes} />
+              <QuestThread
+                key={thread.id}
+                thread={thread as any}
+                completedMoveTypes={completedMoveTypes}
+                isSetupIncomplete={isSetupIncomplete}
+              />
             ))}
             {packs.map(pack => (
               <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} />
