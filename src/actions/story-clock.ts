@@ -308,6 +308,12 @@ function hasObservableDoneWhen(text: string) {
     return /(when|once|after|sent|posted|scheduled|submitted|shared|completed|confirmed|published|received|recorded|visible|artifact|meeting)/.test(normalized)
 }
 
+function hasConcreteMainMove(text: string) {
+    const normalized = text.trim()
+    if (!normalized || normalized.includes('\n') || normalized.length > 220) return false
+    return /^(send|post|write|schedule|submit|share|record|publish|book|set|ask|invite|create|ship|draft|message|call|rehearse|practice|complete|announce)\b/i.test(normalized)
+}
+
 function resolveTrigramReading(trigramName: string, archetypeName: string | null): TrigramReading {
     const key = trigramName.trim().toLowerCase()
     const fallback = {
@@ -350,7 +356,7 @@ function validatePayload(payload: StoryClockQuestPayload, signature: ReturnType<
     if (payload.quest.ally_moves.length < 2) return false
     const allyTypes = new Set(payload.quest.ally_moves.map((move) => move.type))
     if (!allyTypes.has('VIBEULON') || !allyTypes.has('BAR')) return false
-    if (payload.quest.main_character_move.do.includes('\n')) return false
+    if (!hasConcreteMainMove(payload.quest.main_character_move.do)) return false
     if (!hasObservableDoneWhen(payload.quest.main_character_move.done_when)) return false
     if (payload.cube.proximity !== signature.proximity || payload.cube.risk !== signature.risk || payload.cube.direction !== signature.direction) return false
     if (payload.quest.template_id !== signature.template.template_id) return false
