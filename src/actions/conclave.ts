@@ -137,6 +137,18 @@ export async function createCharacter(prevState: any, formData: FormData) {
         // 6. Assign orientation threads (outside transaction for simplicity)
         await assignOrientationThreads(player.id)
 
+        // MVP: Seed starter vibeulons so new users can create quests immediately
+        const seedAmount = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10)
+        if (seedAmount > 0) {
+            const { mintVibulon } = await import('./economy')
+            await mintVibulon(player.id, seedAmount, {
+                source: 'signup_seed',
+                id: 'mvp_starter',
+                title: 'Welcome Starter Pack'
+            }, { skipRevalidate: true })
+            console.log(`[MVP] Seeded ${seedAmount} vibeulons for new player ${player.id}`)
+        }
+
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 
@@ -233,6 +245,18 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
         // Assign orientation threads
         const { assignOrientationThreads } = await import('./quest-thread')
         await assignOrientationThreads(player.id)
+
+        // MVP: Seed starter vibeulons so new users can create quests immediately
+        const seedAmount = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10)
+        if (seedAmount > 0) {
+            const { mintVibulon } = await import('./economy')
+            await mintVibulon(player.id, seedAmount, {
+                source: 'signup_seed',
+                id: 'mvp_starter',
+                title: 'Welcome Starter Pack'
+            }, { skipRevalidate: true })
+            console.log(`[MVP] Seeded ${seedAmount} vibeulons for new player ${player.id}`)
+        }
 
         const cookieStore = await cookies()
         // Use strict rules for production, lax for dev to ensure it setting

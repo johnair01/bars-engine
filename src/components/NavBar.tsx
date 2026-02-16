@@ -20,13 +20,17 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 {isAuthenticated && (
                     <>
                         <Link href="/" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/')}`}>
-                            TERMINAL
+                            HOME
                         </Link>
-                        <Link href="/town-square" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/town-square')}`}>
-                            MARKET
+                        <Link href="/quest/create" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/quest/create')}`}>
+                            <span className="hidden sm:inline">CREATE</span>
+                            <span className="sm:hidden">+</span>
                         </Link>
-                        <Link href="/emotional-first-aid" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/emotional-first-aid')}`}>
-                            VIBES SOS
+                        <Link href="/bars/available" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars')}`}>
+                            QUESTS
+                        </Link>
+                        <Link href="/wallet" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/wallet')}`}>
+                            WALLET
                         </Link>
                     </>
                 )}

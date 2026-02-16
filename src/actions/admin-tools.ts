@@ -142,6 +142,32 @@ export async function triggerSystemReset() {
 }
 
 /**
+ * Admin only: Mint vibeulons for a player (dev/testing tool)
+ */
+export async function adminMintVibeulons(targetPlayerId: string, amount: number) {
+    await ensureAdmin()
+
+    if (!targetPlayerId || amount <= 0 || amount > 100) {
+        return { error: 'Invalid parameters (amount must be 1-100)' }
+    }
+
+    const target = await db.player.findUnique({ where: { id: targetPlayerId }, select: { id: true, name: true } })
+    if (!target) return { error: 'Player not found' }
+
+    const { mintVibulon } = await import('./economy')
+    await mintVibulon(targetPlayerId, amount, {
+        source: 'admin_grant',
+        id: 'admin_mint',
+        title: 'Admin Grant'
+    })
+
+    console.log(`[ADMIN] Minted ${amount} vibeulons for player ${target.name} (${targetPlayerId})`)
+    revalidatePath('/')
+    revalidatePath('/wallet')
+    return { success: true, message: `Minted ${amount} vibeulons for ${target.name}` }
+}
+
+/**
  * Admin only: Get all players for the switcher
  */
 export async function getAllPlayersAdminPulse() {

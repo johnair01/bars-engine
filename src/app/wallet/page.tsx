@@ -28,6 +28,18 @@ export default async function WalletPage() {
         orderBy: { name: 'asc' }
     })
 
+    // Fetch transfer history (sent and received)
+    const transferEvents = await db.vibulonEvent.findMany({
+        where: {
+            source: 'p2p_transfer',
+            OR: [
+                { playerId: playerId },
+            ]
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+    })
+
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             {/* Header */}
@@ -55,6 +67,33 @@ export default async function WalletPage() {
                     recipients={others}
                 />
             </section>
+
+            {/* Transfer History */}
+            {transferEvents.length > 0 && (
+                <section>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="h-px bg-zinc-800 flex-1"></div>
+                        <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-bold">Transfer History</h2>
+                        <div className="h-px bg-zinc-800 flex-1"></div>
+                    </div>
+
+                    <div className="space-y-2">
+                        {transferEvents.map((event) => (
+                            <div key={event.id} className={`bg-zinc-900/20 border rounded-lg p-3 flex justify-between items-center ${event.amount > 0 ? 'border-green-900/50' : 'border-red-900/50'}`}>
+                                <div>
+                                    <div className={`font-mono text-sm ${event.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {event.amount > 0 ? '+' : ''}{event.amount} ♦
+                                    </div>
+                                    <div className="text-xs text-zinc-500 mt-1">{event.notes}</div>
+                                </div>
+                                <div className="text-xs text-zinc-600">
+                                    {new Date(event.createdAt).toLocaleDateString()} {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Token History */}
             <section>

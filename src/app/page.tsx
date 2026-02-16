@@ -283,12 +283,20 @@ export default async function Home() {
               <p className="text-yellow-200/60 text-sm">Your character profile is missing its Nation or Archetype resonance.</p>
             </div>
           </div>
-          <Link
-            href="/conclave/guided?reset=true"
-            className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
-          >
-            Continue Journey →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/onboarding"
+              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
+            >
+              Quick Setup →
+            </Link>
+            <Link
+              href="/conclave/guided?reset=true"
+              className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
+            >
+              Guided Story
+            </Link>
+          </div>
         </section>
       )}
 
