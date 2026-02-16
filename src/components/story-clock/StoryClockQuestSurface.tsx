@@ -26,6 +26,9 @@ type StoryClockQuestView = {
     claimWindowExpiry: string | null
     aiBody: string | null
     aiFallback: boolean
+    questSource?: string | null
+    phaseId?: number | null
+    kotterStage?: number | null
 }
 
 interface StoryClockQuestSurfaceProps {
@@ -38,62 +41,20 @@ type GeneratedBodyState = {
     isFallback: boolean
 }
 
-type StoryClockQuestPayload = {
-    reading: {
-        hexagram_id: number
-        hexagram_name: string
-        upper_trigram: {
-            id: string
-            name: string
-            archetype: string
-            keywords: string[]
-        }
-        lower_trigram: {
-            id: string
-            name: string
-            archetype: string
-            keywords: string[]
-        }
-        brief: string
-    }
-    cube: {
-        proximity: 'HIDE' | 'SEEK'
-        risk: 'TRUTH' | 'DARE'
-        direction: 'INTERIOR' | 'EXTERIOR'
-        signature_display: string
-    }
-    quest: {
-        title: string
-        pitch: string
-        template_id: string
-        constraints: string[]
-        main_character_move: {
-            do: string
-            done_when: string
-        }
-        ally_moves: Array<{
-            type: 'VIBEULON' | 'BAR'
-            ask: string
-        }>
-        rewards: {
-            completion_vibeulons: 1
-            first_completion_bonus: 1
-        }
-    }
-}
-
-function parseQuestPayload(raw: string | null): StoryClockQuestPayload | null {
-    if (!raw) return null
-    try {
-        const parsed = JSON.parse(raw)
-        if (!parsed || typeof parsed !== 'object') return null
-        if (!('reading' in parsed) || !('cube' in parsed) || !('quest' in parsed)) return null
-        const payload = parsed as StoryClockQuestPayload
-        if (!payload.reading?.brief || !payload.quest?.title || !payload.quest?.template_id || !payload.cube?.signature_display) return null
-        if (!Array.isArray(payload.quest?.ally_moves) || payload.quest.ally_moves.length < 1) return null
-        return payload
-    } catch {
-        return null
+type PlayerFacingQuestView = {
+    title?: string
+    action: string
+    done_when: string
+    ally_help?: string
+    debug: {
+        parseStatus: 'short_schema' | 'story_payload' | 'legacy_payload' | 'plain_text' | 'fallback'
+        questSource: string | null
+        hexagramId: number | null
+        cubeState: string | null
+        phaseId: number | null
+        kotterStage: number | null
+        aiBodyLength: number
+        rawAiPreview: string
     }
 }
 
@@ -104,6 +65,126 @@ function humanizeCubeState(raw: string | null) {
     return parts
         .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
         .join(' • ')
+}
+
+function clampText(value: string, limit: number) {
+    const normalized = value.trim()
+    if (normalized.length <= limit) return normalized
+    return normalized.slice(0, limit).trim()
+}
+
+function tryParseJson(raw: string | null) {
+    if (!raw) return null
+    try {
+        return JSON.parse(raw) as unknown
+    } catch {
+        return null
+    }
+}
+
+function pickFirstNonEmpty(values: Array<unknown>) {
+    for (const value of values) {
+        if (typeof value === 'string' && value.trim().length > 0) {
+            return value.trim()
+        }
+    }
+    return null
+}
+
+function toPlayerFacingQuest(quest: StoryClockQuestView, rawAiBody: string | null): PlayerFacingQuestView {
+    const aiBody = typeof rawAiBody === 'string' ? rawAiBody : ''
+    const baseDebug = {
+        questSource: quest.questSource || null,
+        hexagramId: quest.hexagramId ?? null,
+        cubeState: quest.cubeState || null,
+        phaseId: quest.phaseId ?? null,
+        kotterStage: quest.kotterStage ?? null,
+        aiBodyLength: aiBody.length,
+        rawAiPreview: clampText(aiBody, 500),
+    }
+
+    const parsed = tryParseJson(aiBody)
+    if (parsed && typeof parsed === 'object') {
+        const obj = parsed as Record<string, any>
+
+        if (typeof obj.action === 'string' && typeof obj.done_when === 'string') {
+            return {
+                title: typeof obj.title === 'string' ? clampText(obj.title, 40) : undefined,
+                action: clampText(obj.action, 140),
+                done_when: clampText(obj.done_when, 90),
+                ally_help: typeof obj.ally_help === 'string' ? clampText(obj.ally_help, 90) : undefined,
+                debug: { ...baseDebug, parseStatus: 'short_schema' }
+            }
+        }
+
+        const questBlock = obj.quest
+        if (questBlock && typeof questBlock === 'object') {
+            const action = pickFirstNonEmpty([
+                questBlock?.main_character_move?.do,
+                questBlock?.pitch,
+                quest.description
+            ])
+            const doneWhen = pickFirstNonEmpty([
+                questBlock?.main_character_move?.done_when,
+                'Marked complete in the app.'
+            ])
+            const allyHelp = pickFirstNonEmpty([
+                Array.isArray(questBlock?.ally_moves) ? questBlock.ally_moves?.[0]?.ask : null,
+                'Allies can back you with a vibulon or BAR.'
+            ])
+
+            if (action && doneWhen) {
+                return {
+                    title: clampText(questBlock?.title || quest.title, 40),
+                    action: clampText(action, 140),
+                    done_when: clampText(doneWhen, 90),
+                    ally_help: allyHelp ? clampText(allyHelp, 90) : undefined,
+                    debug: { ...baseDebug, parseStatus: 'story_payload' }
+                }
+            }
+        }
+
+        const legacyAction = pickFirstNonEmpty([
+            Array.isArray(obj.moves) ? obj.moves[0] : null,
+            Array.isArray(obj.paragraphs) ? obj.paragraphs[0] : null,
+            obj.description,
+            obj.omen
+        ])
+        if (legacyAction) {
+            return {
+                title: typeof obj.title === 'string' ? clampText(obj.title, 40) : clampText(quest.title, 40),
+                action: clampText(legacyAction, 140),
+                done_when: 'Marked complete in the app.',
+                ally_help: 'Allies can back you with a vibulon or BAR.',
+                debug: { ...baseDebug, parseStatus: 'legacy_payload' }
+            }
+        }
+    }
+
+    if (aiBody.trim().length > 0) {
+        const plainLine = aiBody
+            .split('\n')
+            .map((line) => line.trim())
+            .find((line) => line.length > 0 && !line.toLowerCase().startsWith('title:'))
+
+        if (plainLine) {
+            return {
+                title: clampText(quest.title, 40),
+                action: clampText(plainLine, 140),
+                done_when: 'Marked complete in the app.',
+                ally_help: 'Allies can back you with a vibulon or BAR.',
+                debug: { ...baseDebug, parseStatus: 'plain_text' }
+            }
+        }
+    }
+
+    return {
+        title: clampText(quest.title, 40),
+        action: "Complete this quest's next concrete step.",
+        done_when: 'Marked complete in the app.',
+        ally_help: 'Allies can back you with a vibulon or BAR.',
+        debug: { ...baseDebug, parseStatus: 'fallback' }
+    }
 }
 
 export function StoryClockQuestSurface({ quests, showActions = true }: StoryClockQuestSurfaceProps) {
@@ -119,8 +200,7 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
     const openQuestModal = (quest: StoryClockQuestView) => {
         setSelectedQuestId(quest.id)
         const existingBody = generatedById[quest.id]?.aiBody || quest.aiBody
-        const existingPayload = parseQuestPayload(existingBody)
-        if (existingPayload) return
+        if (existingBody && existingBody.trim().length > 0) return
 
         startGenerating(async () => {
             const result = await generateStoryClockQuestText(quest.id)
@@ -159,11 +239,7 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                 {quests.map((quest) => {
                     const generated = generatedById[quest.id]
                     const aiBody = generated?.aiBody || quest.aiBody
-                    const parsedPayload = parseQuestPayload(aiBody)
-                    const signatureDisplay = parsedPayload?.cube.signature_display || humanizeCubeState(quest.cubeState)
-                    const actionText = parsedPayload?.quest.main_character_move.do || parsedPayload?.quest.pitch || quest.description
-                    const doneWhenText = parsedPayload?.quest.main_character_move.done_when || null
-                    const allyHelpText = parsedPayload?.quest.ally_moves?.[0]?.ask || null
+                    const display = toPlayerFacingQuest(quest, aiBody)
 
                     return (
                         <div
@@ -181,7 +257,7 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                         >
                             <div className="p-5 space-y-4">
                                 <div className="flex items-center justify-between gap-2">
-                                    <h3 className="font-bold text-white text-lg">{quest.title}</h3>
+                                    <h3 className="font-bold text-white text-lg">{display.title || quest.title}</h3>
                                     <span className="text-[10px] bg-cyan-900/40 text-cyan-300 px-2 py-1 rounded uppercase tracking-widest">
                                         Story
                                     </span>
@@ -189,26 +265,11 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
 
                                 <div className="text-xs text-zinc-500">
                                     From {quest.creatorName}
-                                    {signatureDisplay ? <span className="ml-2 text-zinc-400">• {signatureDisplay}</span> : null}
                                 </div>
 
-                                {quest.cubeRequirementLabel ? (
-                                    <div className="text-[11px] uppercase tracking-widest text-cyan-300/80">
-                                        {quest.cubeRequirementLabel}
-                                    </div>
-                                ) : null}
-
-                                {quest.completionFraming ? (
-                                    <p className="text-xs text-zinc-500 leading-relaxed">{quest.completionFraming}</p>
-                                ) : null}
-
-                                <p className="text-sm text-zinc-300 line-clamp-2">{actionText}</p>
-                                {doneWhenText ? (
-                                    <p className="text-xs text-zinc-400 line-clamp-1">Done when: {doneWhenText}</p>
-                                ) : null}
-                                {allyHelpText ? (
-                                    <p className="text-xs text-zinc-500 line-clamp-1">Ally help: {allyHelpText}</p>
-                                ) : null}
+                                <p className="text-sm text-zinc-300 line-clamp-2">{display.action}</p>
+                                <p className="text-xs text-zinc-400 line-clamp-1">Done when: {display.done_when}</p>
+                                {display.ally_help ? <p className="text-xs text-zinc-500 line-clamp-1">Ally help: {display.ally_help}</p> : null}
 
                                 {quest.requiresAssist ? (
                                     <div className="rounded border border-amber-700/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
@@ -216,15 +277,7 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                                     </div>
                                 ) : null}
 
-                                {parsedPayload ? (
-                                    <div className="text-[11px] text-emerald-300/80 uppercase tracking-widest">
-                                        Quest text ready
-                                    </div>
-                                ) : (
-                                    <div className="text-[11px] text-zinc-500 uppercase tracking-widest">
-                                        Tap card to open details
-                                    </div>
-                                )}
+                                <div className="text-[11px] text-zinc-500 uppercase tracking-widest">Tap card to open details</div>
 
                                 {showActions ? (
                                     quest.canClaim ? (
@@ -270,12 +323,17 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                     <div className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
                         <div className="p-4 border-b border-zinc-800 flex items-start justify-between gap-3">
                             <div>
-                                <h3 className="text-lg font-bold text-white">{selectedQuest.title}</h3>
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    {selectedQuest.hexagramName
-                                        ? `Hexagram #${selectedQuest.hexagramId ?? '?'} • ${selectedQuest.hexagramName}`
-                                        : `Hexagram #${selectedQuest.hexagramId ?? '?'}`}
-                                </p>
+                                {(() => {
+                                    const generated = generatedById[selectedQuest.id]
+                                    const body = generated?.aiBody || selectedQuest.aiBody
+                                    const display = toPlayerFacingQuest(selectedQuest, body)
+                                    return (
+                                        <>
+                                            <h3 className="text-lg font-bold text-white">{display.title || selectedQuest.title}</h3>
+                                            <p className="text-xs text-zinc-500 mt-1">Hexagram #{selectedQuest.hexagramId ?? '?'}</p>
+                                        </>
+                                    )
+                                })()}
                             </div>
                             <button
                                 type="button"
@@ -287,112 +345,43 @@ export function StoryClockQuestSurface({ quests, showActions = true }: StoryCloc
                         </div>
 
                         <div className="p-4 space-y-4 overflow-y-auto flex-1">
-                            <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <Detail label="hexagram_id" value={selectedQuest.hexagramId != null ? String(selectedQuest.hexagramId) : 'N/A'} />
-                                <Detail label="hexagram_name" value={selectedQuest.hexagramName || 'N/A'} />
-                                <Detail label="upper_trigram" value={selectedQuest.upperTrigram || 'N/A'} />
-                                <Detail label="lower_trigram" value={selectedQuest.lowerTrigram || 'N/A'} />
-                                <Detail
-                                    label="eligible_archetypes"
-                                    value={
-                                        selectedQuest.eligibleArchetypes.length > 0
-                                            ? `[${selectedQuest.eligibleArchetypes.join(', ')}]`
-                                            : '[]'
-                                    }
-                                />
-                                <Detail label="nation_tone_primary" value={selectedQuest.nationTonePrimary || 'N/A'} />
-                                <Detail label="nation_tone_secondary" value={selectedQuest.nationToneSecondary || 'N/A'} />
-                                <Detail label="cube_signature" value={humanizeCubeState(selectedQuest.cubeState) || 'N/A'} />
-                                <Detail label="face_context" value={selectedQuest.faceContext || 'N/A'} />
-                                <Detail label="status" value={selectedQuest.status} />
-                                <Detail label="claim_window_expiry" value={selectedQuest.claimWindowExpiry || 'not set'} />
-                            </section>
+                            {(() => {
+                                const generated = generatedById[selectedQuest.id]
+                                const body = generated?.aiBody || selectedQuest.aiBody
+                                const display = toPlayerFacingQuest(selectedQuest, body)
 
-                            <section className="space-y-2">
-                                <p className="text-[11px] uppercase tracking-widest text-zinc-500">AI quest text</p>
-                                {(() => {
-                                    const generated = generatedById[selectedQuest.id]
-                                    const body = generated?.aiBody || selectedQuest.aiBody
-                                    const payload = parseQuestPayload(body)
-                                    const isFallback = generated?.isFallback ?? selectedQuest.aiFallback
-                                    const signatureDisplay = payload?.cube.signature_display || humanizeCubeState(selectedQuest.cubeState) || 'N/A'
-                                    if (!payload && isGenerating) {
-                                        return (
-                                            <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-4 text-sm text-zinc-400">
+                                return (
+                                    <section className="space-y-4">
+                                        {(!body || body.trim().length === 0) && isGenerating ? (
+                                            <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-3 text-sm text-zinc-400">
                                                 Generating...
                                             </div>
-                                        )
-                                    }
-                                    if (!payload) {
-                                        return (
-                                            <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-950/60 p-4 text-sm text-zinc-500">
-                                                AI quest JSON unavailable. Open this quest to trigger generation.
-                                            </div>
-                                        )
-                                    }
-                                    return (
-                                        <div className="rounded-lg border border-zinc-700 bg-zinc-950/80 p-4 space-y-4">
-                                            {isFallback ? (
-                                                <p className="text-[11px] uppercase tracking-widest text-amber-300 mb-2">Oracle stub</p>
-                                            ) : null}
-                                            <div className="space-y-2">
-                                                <p className="text-[11px] uppercase tracking-widest text-zinc-500">Reading</p>
-                                                <p className="text-sm text-zinc-200 leading-relaxed">{payload.reading.brief}</p>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                                    <div className="rounded border border-zinc-800 bg-zinc-900/60 p-2">
-                                                        <p className="uppercase tracking-widest text-zinc-500 text-[10px]">Upper trigram</p>
-                                                        <p className="text-zinc-100 mt-1">{payload.reading.upper_trigram.name} • {payload.reading.upper_trigram.archetype}</p>
-                                                        <p className="text-zinc-400 mt-1">{payload.reading.upper_trigram.keywords.join(', ')}</p>
-                                                    </div>
-                                                    <div className="rounded border border-zinc-800 bg-zinc-900/60 p-2">
-                                                        <p className="uppercase tracking-widest text-zinc-500 text-[10px]">Lower trigram</p>
-                                                        <p className="text-zinc-100 mt-1">{payload.reading.lower_trigram.name} • {payload.reading.lower_trigram.archetype}</p>
-                                                        <p className="text-zinc-400 mt-1">{payload.reading.lower_trigram.keywords.join(', ')}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        ) : null}
 
-                                            <div className="space-y-2">
-                                                <p className="text-[11px] uppercase tracking-widest text-zinc-500">Quest</p>
-                                                <p className="text-sm font-semibold text-white">{payload.quest.title}</p>
-                                                <p className="text-sm text-zinc-300">{payload.quest.pitch}</p>
-                                                <div className="flex flex-wrap gap-2 text-[11px]">
-                                                    <span className="px-2 py-1 rounded border border-cyan-700/50 bg-cyan-900/20 text-cyan-200">
-                                                        {signatureDisplay}
-                                                    </span>
-                                                    <span className="px-2 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300">
-                                                        {payload.quest.template_id}
-                                                    </span>
-                                                </div>
-                                                <div className="rounded border border-zinc-800 bg-zinc-900/60 p-3 text-sm space-y-1">
-                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest">Main character move</p>
-                                                    <p className="text-zinc-100">{payload.quest.main_character_move.do}</p>
-                                                    <p className="text-zinc-400 text-xs">Done when: {payload.quest.main_character_move.done_when}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">Constraints</p>
-                                                    <ul className="list-disc list-inside space-y-1 text-sm text-zinc-300">
-                                                        {payload.quest.constraints.map((constraint, idx) => (
-                                                            <li key={`${selectedQuest.id}-constraint-${idx}`}>{constraint}</li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                                <div>
-                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">Ally moves</p>
-                                                    <ul className="space-y-1">
-                                                        {payload.quest.ally_moves.map((move, idx) => (
-                                                            <li key={`${selectedQuest.id}-ally-${idx}`} className="text-sm text-zinc-300 flex items-start gap-2">
-                                                                <span className="text-[10px] mt-0.5 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">{move.type}</span>
-                                                                <span>{move.ask}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            </div>
+                                        <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950/80 p-4">
+                                            <p className="text-sm text-zinc-200 leading-relaxed">{display.action}</p>
+                                            <p className="text-xs text-zinc-400">Done when: {display.done_when}</p>
+                                            {display.ally_help ? (
+                                                <p className="text-xs text-zinc-500">Ally help: {display.ally_help}</p>
+                                            ) : null}
                                         </div>
-                                    )
-                                })()}
-                            </section>
+
+                                        <details className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-3">
+                                            <summary className="cursor-pointer text-xs uppercase tracking-widest text-zinc-400">Debug</summary>
+                                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                                <Detail label="questSource" value={display.debug.questSource || 'N/A'} />
+                                                <Detail label="hexagram_id" value={display.debug.hexagramId != null ? String(display.debug.hexagramId) : 'N/A'} />
+                                                <Detail label="cube_signature" value={humanizeCubeState(display.debug.cubeState) || 'N/A'} />
+                                                <Detail label="phase" value={display.debug.phaseId != null ? String(display.debug.phaseId) : 'N/A'} />
+                                                <Detail label="kotter" value={display.debug.kotterStage != null ? String(display.debug.kotterStage) : 'N/A'} />
+                                                <Detail label="parse_status" value={display.debug.parseStatus} />
+                                                <Detail label="ai_body_length" value={String(display.debug.aiBodyLength)} />
+                                                <Detail label="raw_ai_preview" value={display.debug.rawAiPreview || 'N/A'} />
+                                            </div>
+                                        </details>
+                                    </section>
+                                )
+                            })()}
                         </div>
                     </div>
                 </div>

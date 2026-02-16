@@ -167,6 +167,9 @@ export default async function AvailableBarsPage() {
             claimWindowExpiry: null as string | null,
             aiBody: meta.aiBody,
             aiFallback: meta.aiFallback,
+            questSource: meta.questSource,
+            phaseId: bar.periodGenerated ?? null,
+            kotterStage: bar.kotterStage ?? null,
         }
     })
 

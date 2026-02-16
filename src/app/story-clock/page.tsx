@@ -96,6 +96,9 @@ export default async function StoryClockPage() {
             claimWindowExpiry: null as string | null,
             aiBody: meta.aiBody,
             aiFallback: meta.aiFallback,
+            questSource: 'story_clock',
+            phaseId: null as number | null,
+            kotterStage: null as number | null,
         }
     }
 
