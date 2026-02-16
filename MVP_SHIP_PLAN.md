@@ -66,6 +66,32 @@
 10. **User A creates public quest** — Uses 1 vibeulon to stake a public quest
 11. **User B picks up quest** — Go to `/bars/available`, claim quest
 
+## Final Checklist
+
+| # | Requirement | Status | Notes |
+|---|------------|--------|-------|
+| A | Create an account | PASS | `/conclave/guided` → GuidedAuthForm → createGuidedPlayer (open signup, no invite needed) |
+| B | Select nation + archetype | PASS | Via guided flow OR `/onboarding` fallback page |
+| C | Create a quest (see in list) | PASS | `/quest/create` (wizard) or `/create-bar` (simple). Private quests free, public costs 1v |
+| D | Create a BAR (see in ledger) | PASS | BAR = CustomBar. Created via same flows. Visible on dashboard + `/bars/available` |
+| E | Send vibeulon (recipient sees it) | PASS | `/wallet` → VibulonTransfer. Transfer history shows sent/received events |
+
+## Files Changed
+
+- `src/actions/conclave.ts` — Seed starter vibeulons on signup (both guided and invite)
+- `src/actions/onboarding.ts` — Added `saveOnboardingSelections` for standalone page
+- `src/actions/admin-tools.ts` — Added `adminMintVibeulons` for testing
+- `src/actions/economy.ts` — Enhanced transfer logging
+- `src/app/onboarding/page.tsx` — New standalone onboarding page
+- `src/app/onboarding/OnboardingForm.tsx` — Client form for nation+archetype selection
+- `src/app/wallet/page.tsx` — Added transfer history section
+- `src/app/page.tsx` — Updated setup banner + added Quick Create link
+- `src/app/api/health/route.ts` — Enhanced with MVP diagnostics
+- `src/components/NavBar.tsx` — Updated with game loop links
+- `src/lib/feature-flags.ts` — New feature flags utility
+- `scripts/smoke-test-mvp.ts` — DB-level smoke test
+- `MVP_SHIP_PLAN.md` — This document
+
 ## Known Limitations (Ship Anyway)
 
 - AI quest generator not active in MVP (uses templates/manual creation)

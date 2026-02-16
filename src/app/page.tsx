@@ -390,14 +390,22 @@ export default async function Home() {
             </Link>
 
             {/* CREATE BAR */}
-            <div className="mt-8">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link
                 href="/quest/create"
-                className="w-full group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
               >
                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">✨</div>
-                <div className="font-bold text-white mb-1">Create a New Quest</div>
-                <div className="text-sm text-zinc-500">Design a dream, scheme, or invitation</div>
+                <div className="font-bold text-white mb-1">Quest Wizard</div>
+                <div className="text-sm text-zinc-500">Use a template to create</div>
+              </Link>
+              <Link
+                href="/create-bar"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-green-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">+</div>
+                <div className="font-bold text-white mb-1">Quick Create</div>
+                <div className="text-sm text-zinc-500">Simple form, no template</div>
               </Link>
             </div>
 
