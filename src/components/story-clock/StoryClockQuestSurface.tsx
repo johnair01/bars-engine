@@ -84,6 +84,14 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
         })
     }
 
+    const handlePickUp = async (formData: FormData) => {
+        await pickUpBar(formData)
+    }
+
+    const handleAssist = async (formData: FormData) => {
+        await assistStoryQuest(formData)
+    }
+
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,7 +156,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
 
                                 {quest.canClaim ? (
                                     <form
-                                        action={pickUpBar}
+                                        action={handlePickUp}
                                         onClick={(event) => event.stopPropagation()}
                                     >
                                         <input type="hidden" name="barId" value={quest.id} />
@@ -161,7 +169,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                     </form>
                                 ) : (
                                     <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
-                                        <form action={assistStoryQuest}>
+                                        <form action={handleAssist}>
                                             <input type="hidden" name="barId" value={quest.id} />
                                             <input type="hidden" name="assistNote" value={`Assist volunteered for ${quest.title}`} />
                                             <button
