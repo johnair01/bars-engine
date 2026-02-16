@@ -1,7 +1,63 @@
 import { getStoryClockData } from '@/actions/story-clock'
 import { StoryClockTimeline } from '@/components/StoryClockTimeline'
 import { AdminClockControls } from '@/components/admin/AdminClockControls'
+import { StoryClockQuestSurface } from '@/components/story-clock/StoryClockQuestSurface'
 import Link from 'next/link'
+
+function parseStoryMeta(raw: string | null) {
+    if (!raw) {
+        return {
+            cubeState: null as string | null,
+            cubeMechanics: null as {
+                requiresAssist: boolean
+                completionFraming: string
+            } | null,
+            upperTrigram: null as string | null,
+            lowerTrigram: null as string | null,
+            nationTonePrimary: null as string | null,
+            nationToneSecondary: null as string | null,
+            faceContext: null as string | null,
+            aiBody: null as string | null,
+            aiFallback: false,
+        }
+    }
+    try {
+        const parsed = JSON.parse(raw)
+        return {
+            cubeState: typeof parsed.cubeState === 'string' ? parsed.cubeState : null,
+            cubeMechanics: parsed.cubeMechanics && typeof parsed.cubeMechanics === 'object'
+                ? {
+                    requiresAssist: !!parsed.cubeMechanics.requiresAssist,
+                    completionFraming: typeof parsed.cubeMechanics.completionFraming === 'string'
+                        ? parsed.cubeMechanics.completionFraming
+                        : ''
+                }
+                : null,
+            upperTrigram: typeof parsed.upperTrigram === 'string' ? parsed.upperTrigram : null,
+            lowerTrigram: typeof parsed.lowerTrigram === 'string' ? parsed.lowerTrigram : null,
+            nationTonePrimary: typeof parsed.nationTonePrimary === 'string' ? parsed.nationTonePrimary : null,
+            nationToneSecondary: typeof parsed.nationToneSecondary === 'string' ? parsed.nationToneSecondary : null,
+            faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
+            aiBody: typeof parsed.aiBody === 'string' ? parsed.aiBody : null,
+            aiFallback: typeof parsed.aiFallback === 'boolean' ? parsed.aiFallback : false,
+        }
+    } catch {
+        return {
+            cubeState: null as string | null,
+            cubeMechanics: null as {
+                requiresAssist: boolean
+                completionFraming: string
+            } | null,
+            upperTrigram: null as string | null,
+            lowerTrigram: null as string | null,
+            nationTonePrimary: null as string | null,
+            nationToneSecondary: null as string | null,
+            faceContext: null as string | null,
+            aiBody: null as string | null,
+            aiFallback: false,
+        }
+    }
+}
 
 export default async function StoryClockPage() {
     const clockData = await getStoryClockData()
@@ -12,6 +68,39 @@ export default async function StoryClockPage() {
         .filter(([period, _]) => parseInt(period) < currentPeriod)
         .flatMap(([_, quests]) => quests)
         .filter(q => !q.firstCompleter) // Only incomplete quests
+
+    const toSurfaceQuest = (quest: any) => {
+        const meta = parseStoryMeta(quest.completionEffects)
+        const eligibleArchetypes = [quest.upperArchetypeName, quest.lowerArchetypeName]
+            .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+
+        return {
+            id: quest.id,
+            title: quest.title,
+            description: quest.description || '',
+            creatorName: 'Story Clock',
+            canClaim: false,
+            cubeState: meta.cubeState,
+            cubeRequirementLabel: null as string | null,
+            completionFraming: meta.cubeMechanics?.completionFraming || null,
+            requiresAssist: !!meta.cubeMechanics?.requiresAssist,
+            hexagramId: quest.hexagramId ?? null,
+            hexagramName: null as string | null,
+            upperTrigram: meta.upperTrigram || null,
+            lowerTrigram: meta.lowerTrigram || null,
+            eligibleArchetypes,
+            nationTonePrimary: meta.nationTonePrimary || null,
+            nationToneSecondary: meta.nationToneSecondary || null,
+            faceContext: meta.faceContext || quest.description || null,
+            status: quest.firstCompleter ? 'completed' : 'active',
+            claimWindowExpiry: null as string | null,
+            aiBody: meta.aiBody,
+            aiFallback: meta.aiFallback,
+        }
+    }
+
+    const currentSurfaceQuests = currentPeriodQuests.map(toSurfaceQuest)
+    const previousSurfaceQuests = previousPeriodQuests.map(toSurfaceQuest)
 
     return (
         <div className="min-h-screen bg-black text-white p-6 sm:p-12">
@@ -48,28 +137,20 @@ export default async function StoryClockPage() {
                     <h2 className="text-2xl font-bold mb-4 text-purple-400">
                         Period {currentPeriod} Quests
                     </h2>
-                    {currentPeriodQuests.length === 0 ? (
+                    {currentSurfaceQuests.length === 0 ? (
                         <div className="text-zinc-500 italic">No quests for this period yet.</div>
                     ) : (
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {currentPeriodQuests.map(quest => (
-                                <QuestCard key={quest.id} quest={quest} />
-                            ))}
-                        </div>
+                        <StoryClockQuestSurface quests={currentSurfaceQuests} showActions={false} />
                     )}
                 </section>
 
                 {/* PREVIOUS PERIOD QUESTS */}
-                {previousPeriodQuests.length > 0 && (
+                {previousSurfaceQuests.length > 0 && (
                     <section>
                         <h2 className="text-2xl font-bold mb-4 text-orange-400">
                             Previous Period Quests (+50% Bonus!)
                         </h2>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {previousPeriodQuests.map(quest => (
-                                <QuestCard key={quest.id} quest={quest} isBonus={true} />
-                            ))}
-                        </div>
+                        <StoryClockQuestSurface quests={previousSurfaceQuests} showActions={false} />
                     </section>
                 )}
 
@@ -78,57 +159,6 @@ export default async function StoryClockPage() {
                     <Link href="/" className="text-zinc-500 hover:text-white transition">
                         ← Back to Dashboard
                     </Link>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function QuestCard({ quest, isBonus = false }: { quest: any; isBonus?: boolean }) {
-    const upperArchetypeName = quest.upperArchetypeName || 'Unknown archetype'
-    const lowerArchetypeName = quest.lowerArchetypeName || 'Unknown archetype'
-
-    return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-all relative overflow-hidden">
-            {isBonus && (
-                <div className="absolute top-2 right-2 bg-orange-600 text-white text-xs font-bold px-2 py-1 rounded">
-                    +50% BONUS
-                </div>
-            )}
-
-            <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center text-2xl flex-shrink-0">
-                    ☰
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white mb-2">{quest.title}</h3>
-                    <p className="text-sm text-zinc-400 mb-4">{quest.description}</p>
-
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs text-zinc-600">
-                            Hexagram #{quest.hexagramId}
-                        </div>
-                        <div className="text-sm font-bold text-green-400">
-                            {quest.reward} {isBonus ? '× 1.5' : ''} ♦
-                        </div>
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-400">
-                        <div className="uppercase tracking-widest text-zinc-500 mb-1">Main characters</div>
-                        <div>
-                            Upper trigram: <span className="text-zinc-200 font-semibold">{upperArchetypeName}</span>
-                        </div>
-                        <div>
-                            Lower trigram: <span className="text-zinc-200 font-semibold">{lowerArchetypeName}</span>
-                        </div>
-                    </div>
-
-                    {quest.firstCompleter && (
-                        <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-zinc-500">
-                            <span className="text-yellow-500">🏆</span> First completed by{' '}
-                            <span className="font-bold text-white">{quest.firstCompleter.name}</span>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

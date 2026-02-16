@@ -285,6 +285,12 @@ function normalizeText(value: unknown) {
     return typeof value === 'string' ? value.trim() : ''
 }
 
+function clampText(value: string, max: number) {
+    const normalized = value.trim()
+    if (normalized.length <= max) return normalized
+    return normalized.slice(0, max).trim()
+}
+
 function dedupeStrings(values: string[]) {
     const seen = new Set<string>()
     const out: string[] = []
@@ -358,6 +364,11 @@ function validatePayload(payload: StoryClockQuestPayload, signature: ReturnType<
     if (!allyTypes.has('VIBEULON') || !allyTypes.has('BAR')) return false
     if (!hasConcreteMainMove(payload.quest.main_character_move.do)) return false
     if (!hasObservableDoneWhen(payload.quest.main_character_move.done_when)) return false
+    if (payload.quest.title.length > 40) return false
+    if (payload.quest.pitch.length > 140) return false
+    if (payload.quest.main_character_move.do.length > 140) return false
+    if (payload.quest.main_character_move.done_when.length > 90) return false
+    if (payload.quest.ally_moves.some((move) => move.ask.length > 90)) return false
     if (payload.cube.proximity !== signature.proximity || payload.cube.risk !== signature.risk || payload.cube.direction !== signature.direction) return false
     if (payload.quest.template_id !== signature.template.template_id) return false
 
@@ -397,26 +408,26 @@ function buildDeterministicFallbackPayload(seed: StoryClockSeed, signature: Retu
             signature_display: signature.signature_display,
         },
         quest: {
-            title: `${signature.signature_display} quest: ${seed.hexagram_name}`,
-            pitch: `Lead with ${upperKeyword} and ${lowerKeyword}. Eligible archetypes (${seed.eligible_archetypes.join(', ') || 'collective'}) should turn ${seed.face_context} into a concrete move this period.`,
+            title: clampText(`${seed.hexagram_name} sprint`, 40),
+            pitch: clampText(`Use ${upperKeyword} + ${lowerKeyword} to push this phase objective now.`, 140),
             template_id: signature.template.template_id,
             constraints,
             main_character_move: {
-                do: signature.proximity === 'HIDE'
+                do: clampText(signature.proximity === 'HIDE'
                     ? `Send one focused update in a selective channel that applies ${upperKeyword} to ${seed.face_context}.`
-                    : `Post one visible commitment that applies ${lowerKeyword} to ${seed.face_context}.`,
-                done_when: signature.direction === 'EXTERIOR'
+                    : `Post one visible commitment that applies ${lowerKeyword} to ${seed.face_context}.`, 140),
+                done_when: clampText(signature.direction === 'EXTERIOR'
                     ? 'Done when the message, artifact, or meeting confirmation is visible to at least one collaborator.'
-                    : 'Done when a written reflection and next-step boundary are recorded in your quest notes.'
+                    : 'Done when a written reflection and next-step boundary are recorded in your quest notes.', 90)
             },
             ally_moves: [
                 {
                     type: 'VIBEULON',
-                    ask: `Send a vibulon signal backing ${upperKeyword} and naming one concrete nudge for momentum.`
+                    ask: clampText(`Send one vibulon naming a concrete next move using ${upperKeyword}.`, 90)
                 },
                 {
                     type: 'BAR',
-                    ask: `Create a BAR artifact that advances ${lowerKeyword} and references this quest title.`
+                    ask: clampText(`Create one BAR artifact that advances ${lowerKeyword} for this sprint.`, 90)
                 }
             ],
             rewards: { completion_vibeulons: 1, first_completion_bonus: 1 }
@@ -470,17 +481,17 @@ function buildCanonicalPayloadFromModel(
             signature_display: signature.signature_display,
         },
         quest: {
-            title: normalizeText(modelPayload.quest.title),
-            pitch: normalizeText(modelPayload.quest.pitch),
+            title: clampText(normalizeText(modelPayload.quest.title), 40),
+            pitch: clampText(normalizeText(modelPayload.quest.pitch), 140),
             template_id: signature.template.template_id,
             constraints,
             main_character_move: {
-                do: normalizeText(modelPayload.quest.main_character_move.do),
-                done_when: normalizeText(modelPayload.quest.main_character_move.done_when),
+                do: clampText(normalizeText(modelPayload.quest.main_character_move.do), 140),
+                done_when: clampText(normalizeText(modelPayload.quest.main_character_move.done_when), 90),
             },
             ally_moves: [
-                { type: 'VIBEULON', ask: byType.get('VIBEULON') || '' },
-                { type: 'BAR', ask: byType.get('BAR') || '' },
+                { type: 'VIBEULON', ask: clampText(byType.get('VIBEULON') || '', 90) },
+                { type: 'BAR', ask: clampText(byType.get('BAR') || '', 90) },
             ],
             rewards: { completion_vibeulons: 1, first_completion_bonus: 1 }
         }

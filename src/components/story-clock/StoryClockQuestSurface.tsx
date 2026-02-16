@@ -30,6 +30,7 @@ type StoryClockQuestView = {
 
 interface StoryClockQuestSurfaceProps {
     quests: StoryClockQuestView[]
+    showActions?: boolean
 }
 
 type GeneratedBodyState = {
@@ -96,7 +97,16 @@ function parseQuestPayload(raw: string | null): StoryClockQuestPayload | null {
     }
 }
 
-export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) {
+function humanizeCubeState(raw: string | null) {
+    if (!raw) return null
+    const parts = raw.split('_').filter(Boolean)
+    if (parts.length !== 3) return raw
+    return parts
+        .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1).toLowerCase())
+        .join(' • ')
+}
+
+export function StoryClockQuestSurface({ quests, showActions = true }: StoryClockQuestSurfaceProps) {
     const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null)
     const [isGenerating, startGenerating] = useTransition()
     const [generatedById, setGeneratedById] = useState<Record<string, GeneratedBodyState>>({})
@@ -150,6 +160,10 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                     const generated = generatedById[quest.id]
                     const aiBody = generated?.aiBody || quest.aiBody
                     const parsedPayload = parseQuestPayload(aiBody)
+                    const signatureDisplay = parsedPayload?.cube.signature_display || humanizeCubeState(quest.cubeState)
+                    const actionText = parsedPayload?.quest.main_character_move.do || parsedPayload?.quest.pitch || quest.description
+                    const doneWhenText = parsedPayload?.quest.main_character_move.done_when || null
+                    const allyHelpText = parsedPayload?.quest.ally_moves?.[0]?.ask || null
 
                     return (
                         <div
@@ -175,7 +189,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
 
                                 <div className="text-xs text-zinc-500">
                                     From {quest.creatorName}
-                                    {quest.cubeState ? <span className="ml-2 text-zinc-400">• {quest.cubeState}</span> : null}
+                                    {signatureDisplay ? <span className="ml-2 text-zinc-400">• {signatureDisplay}</span> : null}
                                 </div>
 
                                 {quest.cubeRequirementLabel ? (
@@ -188,7 +202,13 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                     <p className="text-xs text-zinc-500 leading-relaxed">{quest.completionFraming}</p>
                                 ) : null}
 
-                                <p className="text-sm text-zinc-400 line-clamp-4">{quest.description}</p>
+                                <p className="text-sm text-zinc-300 line-clamp-2">{actionText}</p>
+                                {doneWhenText ? (
+                                    <p className="text-xs text-zinc-400 line-clamp-1">Done when: {doneWhenText}</p>
+                                ) : null}
+                                {allyHelpText ? (
+                                    <p className="text-xs text-zinc-500 line-clamp-1">Ally help: {allyHelpText}</p>
+                                ) : null}
 
                                 {quest.requiresAssist ? (
                                     <div className="rounded border border-amber-700/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
@@ -206,36 +226,38 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                     </div>
                                 )}
 
-                                {quest.canClaim ? (
-                                    <form
-                                        action={handlePickUp}
-                                        onClick={(event) => event.stopPropagation()}
-                                    >
-                                        <input type="hidden" name="barId" value={quest.id} />
-                                        <button
-                                            type="submit"
-                                            className="w-full py-2 rounded-lg font-bold transition-all bg-cyan-900/40 border border-cyan-700 text-cyan-200 hover:bg-cyan-900/60"
+                                {showActions ? (
+                                    quest.canClaim ? (
+                                        <form
+                                            action={handlePickUp}
+                                            onClick={(event) => event.stopPropagation()}
                                         >
-                                            Accept Story Quest
-                                        </button>
-                                    </form>
-                                ) : (
-                                    <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
-                                        <form action={handleAssist}>
                                             <input type="hidden" name="barId" value={quest.id} />
-                                            <input type="hidden" name="assistNote" value={`Assist volunteered for ${quest.title}`} />
                                             <button
                                                 type="submit"
-                                                className="w-full py-2 rounded-lg font-bold transition-all bg-zinc-900 border border-zinc-600 text-zinc-200 hover:bg-zinc-800"
+                                                className="w-full py-2 rounded-lg font-bold transition-all bg-cyan-900/40 border border-cyan-700 text-cyan-200 hover:bg-cyan-900/60"
                                             >
-                                                Send Assist Signal
+                                                Accept Story Quest
                                             </button>
                                         </form>
-                                        <div className="w-full py-2 rounded-lg font-bold text-center bg-zinc-900 border border-zinc-700 text-zinc-400">
-                                            Assist Only (archetype not eligible to claim)
+                                    ) : (
+                                        <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
+                                            <form action={handleAssist}>
+                                                <input type="hidden" name="barId" value={quest.id} />
+                                                <input type="hidden" name="assistNote" value={`Assist volunteered for ${quest.title}`} />
+                                                <button
+                                                    type="submit"
+                                                    className="w-full py-2 rounded-lg font-bold transition-all bg-zinc-900 border border-zinc-600 text-zinc-200 hover:bg-zinc-800"
+                                                >
+                                                    Send Assist Signal
+                                                </button>
+                                            </form>
+                                            <div className="w-full py-2 rounded-lg font-bold text-center bg-zinc-900 border border-zinc-700 text-zinc-400">
+                                                Assist Only (archetype not eligible to claim)
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )
+                                ) : null}
                             </div>
                         </div>
                     )
@@ -280,7 +302,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                 />
                                 <Detail label="nation_tone_primary" value={selectedQuest.nationTonePrimary || 'N/A'} />
                                 <Detail label="nation_tone_secondary" value={selectedQuest.nationToneSecondary || 'N/A'} />
-                                <Detail label="cube_state" value={selectedQuest.cubeState || 'N/A'} />
+                                <Detail label="cube_signature" value={humanizeCubeState(selectedQuest.cubeState) || 'N/A'} />
                                 <Detail label="face_context" value={selectedQuest.faceContext || 'N/A'} />
                                 <Detail label="status" value={selectedQuest.status} />
                                 <Detail label="claim_window_expiry" value={selectedQuest.claimWindowExpiry || 'not set'} />
@@ -293,6 +315,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                     const body = generated?.aiBody || selectedQuest.aiBody
                                     const payload = parseQuestPayload(body)
                                     const isFallback = generated?.isFallback ?? selectedQuest.aiFallback
+                                    const signatureDisplay = payload?.cube.signature_display || humanizeCubeState(selectedQuest.cubeState) || 'N/A'
                                     if (!payload && isGenerating) {
                                         return (
                                             <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-4 text-sm text-zinc-400">
@@ -335,7 +358,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                                 <p className="text-sm text-zinc-300">{payload.quest.pitch}</p>
                                                 <div className="flex flex-wrap gap-2 text-[11px]">
                                                     <span className="px-2 py-1 rounded border border-cyan-700/50 bg-cyan-900/20 text-cyan-200">
-                                                        {payload.cube.signature_display}
+                                                        {signatureDisplay}
                                                     </span>
                                                     <span className="px-2 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300">
                                                         {payload.quest.template_id}
