@@ -22,6 +22,7 @@ function parseStoryMeta(raw: string | null) {
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,
             aiBody: null as string | null,
+            aiFallback: false as boolean,
         }
     }
     try {
@@ -41,6 +42,7 @@ function parseStoryMeta(raw: string | null) {
             nationToneSecondary: typeof parsed.nationToneSecondary === 'string' ? parsed.nationToneSecondary : null,
             faceContext: typeof parsed.faceContext === 'string' ? parsed.faceContext : null,
             aiBody: typeof parsed.aiBody === 'string' ? parsed.aiBody : null,
+            aiFallback: typeof parsed.aiFallback === 'boolean' ? parsed.aiFallback : false,
         }
     } catch {
         return {
@@ -55,6 +57,7 @@ function parseStoryMeta(raw: string | null) {
             nationToneSecondary: null as string | null,
             faceContext: null as string | null,
             aiBody: null as string | null,
+            aiFallback: false as boolean,
         }
     }
 }
@@ -163,6 +166,7 @@ export default async function AvailableBarsPage() {
             status: bar.status,
             claimWindowExpiry: null as string | null,
             aiBody: meta.aiBody,
+            aiFallback: meta.aiFallback,
         }
     })
 

@@ -25,6 +25,7 @@ type StoryClockQuestView = {
     status: string
     claimWindowExpiry: string | null
     aiBody: string | null
+    aiFallback: boolean
 }
 
 interface StoryClockQuestSurfaceProps {
@@ -34,6 +35,65 @@ interface StoryClockQuestSurfaceProps {
 type GeneratedBodyState = {
     aiBody: string
     isFallback: boolean
+}
+
+type StoryClockQuestPayload = {
+    reading: {
+        hexagram_id: number
+        hexagram_name: string
+        upper_trigram: {
+            id: string
+            name: string
+            archetype: string
+            keywords: string[]
+        }
+        lower_trigram: {
+            id: string
+            name: string
+            archetype: string
+            keywords: string[]
+        }
+        brief: string
+    }
+    cube: {
+        proximity: 'HIDE' | 'SEEK'
+        risk: 'TRUTH' | 'DARE'
+        direction: 'INTERIOR' | 'EXTERIOR'
+        signature_display: string
+    }
+    quest: {
+        title: string
+        pitch: string
+        template_id: string
+        constraints: string[]
+        main_character_move: {
+            do: string
+            done_when: string
+        }
+        ally_moves: Array<{
+            type: 'VIBEULON' | 'BAR'
+            ask: string
+        }>
+        rewards: {
+            completion_vibeulons: 1
+            first_completion_bonus: 1
+        }
+    }
+}
+
+function parseQuestPayload(raw: string | null): StoryClockQuestPayload | null {
+    if (!raw) return null
+    try {
+        const parsed = JSON.parse(raw)
+        if (!parsed || typeof parsed !== 'object') return null
+        if (!('reading' in parsed) || !('cube' in parsed) || !('quest' in parsed)) return null
+        const payload = parsed as StoryClockQuestPayload
+        if (!payload.reading?.brief || !payload.quest?.title || !payload.quest?.template_id || !payload.cube?.signature_display) return null
+        if (!Array.isArray(payload.quest?.ally_moves) || payload.quest.ally_moves.length < 1) return null
+        return payload
+    } catch {
+        return null
+    }
 }
 
 export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) {
@@ -49,7 +109,8 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
     const openQuestModal = (quest: StoryClockQuestView) => {
         setSelectedQuestId(quest.id)
         const existingBody = generatedById[quest.id]?.aiBody || quest.aiBody
-        if (existingBody) return
+        const existingPayload = parseQuestPayload(existingBody)
+        if (existingPayload) return
 
         startGenerating(async () => {
             const result = await generateStoryClockQuestText(quest.id)
@@ -57,17 +118,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                 setGeneratedById((prev) => ({
                     ...prev,
                     [quest.id]: {
-                        aiBody: [
-                            `Title: Hexagram ${quest.hexagramId ?? '?'} Oracle Stub`,
-                            '',
-                            `Unable to generate live text right now. Face context: ${quest.faceContext || 'not provided'}.`,
-                            '',
-                            '- Move 1: Name one concrete action for this period.',
-                            '- Move 2: Invite one ally to assist this effort.',
-                            '- Move 3: Define one visible completion signal.',
-                            '',
-                            `Omen: ${quest.cubeState || 'UNKNOWN'} marks the active pressure line.`,
-                        ].join('\n'),
+                        aiBody: '',
                         isFallback: true,
                     }
                 }))
@@ -98,6 +149,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                 {quests.map((quest) => {
                     const generated = generatedById[quest.id]
                     const aiBody = generated?.aiBody || quest.aiBody
+                    const parsedPayload = parseQuestPayload(aiBody)
 
                     return (
                         <div
@@ -144,7 +196,7 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                     </div>
                                 ) : null}
 
-                                {aiBody ? (
+                                {parsedPayload ? (
                                     <div className="text-[11px] text-emerald-300/80 uppercase tracking-widest">
                                         Quest text ready
                                     </div>
@@ -239,27 +291,81 @@ export function StoryClockQuestSurface({ quests }: StoryClockQuestSurfaceProps) 
                                 {(() => {
                                     const generated = generatedById[selectedQuest.id]
                                     const body = generated?.aiBody || selectedQuest.aiBody
-                                    const isFallback = !!generated?.isFallback
-                                    if (!body && isGenerating) {
+                                    const payload = parseQuestPayload(body)
+                                    const isFallback = generated?.isFallback ?? selectedQuest.aiFallback
+                                    if (!payload && isGenerating) {
                                         return (
                                             <div className="rounded-lg border border-zinc-700 bg-zinc-950/70 p-4 text-sm text-zinc-400">
                                                 Generating...
                                             </div>
                                         )
                                     }
-                                    if (!body) {
+                                    if (!payload) {
                                         return (
                                             <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-950/60 p-4 text-sm text-zinc-500">
-                                                AI quest text unavailable. Open this quest again to retry generation.
+                                                AI quest JSON unavailable. Open this quest to trigger generation.
                                             </div>
                                         )
                                     }
                                     return (
-                                        <div className="rounded-lg border border-zinc-700 bg-zinc-950/80 p-4">
+                                        <div className="rounded-lg border border-zinc-700 bg-zinc-950/80 p-4 space-y-4">
                                             {isFallback ? (
                                                 <p className="text-[11px] uppercase tracking-widest text-amber-300 mb-2">Oracle stub</p>
                                             ) : null}
-                                            <pre className="whitespace-pre-wrap text-sm text-zinc-200 font-sans leading-relaxed">{body}</pre>
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] uppercase tracking-widest text-zinc-500">Reading</p>
+                                                <p className="text-sm text-zinc-200 leading-relaxed">{payload.reading.brief}</p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                                    <div className="rounded border border-zinc-800 bg-zinc-900/60 p-2">
+                                                        <p className="uppercase tracking-widest text-zinc-500 text-[10px]">Upper trigram</p>
+                                                        <p className="text-zinc-100 mt-1">{payload.reading.upper_trigram.name} • {payload.reading.upper_trigram.archetype}</p>
+                                                        <p className="text-zinc-400 mt-1">{payload.reading.upper_trigram.keywords.join(', ')}</p>
+                                                    </div>
+                                                    <div className="rounded border border-zinc-800 bg-zinc-900/60 p-2">
+                                                        <p className="uppercase tracking-widest text-zinc-500 text-[10px]">Lower trigram</p>
+                                                        <p className="text-zinc-100 mt-1">{payload.reading.lower_trigram.name} • {payload.reading.lower_trigram.archetype}</p>
+                                                        <p className="text-zinc-400 mt-1">{payload.reading.lower_trigram.keywords.join(', ')}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] uppercase tracking-widest text-zinc-500">Quest</p>
+                                                <p className="text-sm font-semibold text-white">{payload.quest.title}</p>
+                                                <p className="text-sm text-zinc-300">{payload.quest.pitch}</p>
+                                                <div className="flex flex-wrap gap-2 text-[11px]">
+                                                    <span className="px-2 py-1 rounded border border-cyan-700/50 bg-cyan-900/20 text-cyan-200">
+                                                        {payload.cube.signature_display}
+                                                    </span>
+                                                    <span className="px-2 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300">
+                                                        {payload.quest.template_id}
+                                                    </span>
+                                                </div>
+                                                <div className="rounded border border-zinc-800 bg-zinc-900/60 p-3 text-sm space-y-1">
+                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest">Main character move</p>
+                                                    <p className="text-zinc-100">{payload.quest.main_character_move.do}</p>
+                                                    <p className="text-zinc-400 text-xs">Done when: {payload.quest.main_character_move.done_when}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">Constraints</p>
+                                                    <ul className="list-disc list-inside space-y-1 text-sm text-zinc-300">
+                                                        {payload.quest.constraints.map((constraint, idx) => (
+                                                            <li key={`${selectedQuest.id}-constraint-${idx}`}>{constraint}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <div>
+                                                    <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">Ally moves</p>
+                                                    <ul className="space-y-1">
+                                                        {payload.quest.ally_moves.map((move, idx) => (
+                                                            <li key={`${selectedQuest.id}-ally-${idx}`} className="text-sm text-zinc-300 flex items-start gap-2">
+                                                                <span className="text-[10px] mt-0.5 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">{move.type}</span>
+                                                                <span>{move.ask}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
                                         </div>
                                     )
                                 })()}
