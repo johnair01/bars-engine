@@ -91,6 +91,15 @@ model Player {
   // CustomBar relations
   createdBars     CustomBar[]   @relation("CreatedBars")
   claimedBars     CustomBar[]   @relation("ClaimedBars")
+
+  // BarShare relations
+  barSharesSent       BarShare[] @relation("BarSharesSent")
+  barSharesReceived   BarShare[] @relation("BarSharesReceived")
+
+  // Twine relations
+  twineStoriesCreated  TwineStory[]   @relation("TwineStoriesCreated")
+  twineRunsPlayed      TwineRun[]     @relation("TwineRunsPlayed")
+  twineBindingsCreated TwineBinding[] @relation("TwineBindingsCreated")
   
   createdAt       DateTime  @default(now())
 
@@ -227,6 +236,9 @@ model CustomBar {
 
   // Active assignments (Multi-player progress)
   assignments     PlayerQuest[]
+
+  // Bar sharing
+  shares          BarShare[]
   
   rootId          String?   // For fast lookups
   
@@ -248,6 +260,32 @@ model PlayerBar {
   acquiredAt      DateTime  @default(now())
   
   @@map("player_bars")
+}
+
+// --------------------------------------------------------
+// BAR SHARING (Player-to-Player BAR Passes)
+// --------------------------------------------------------
+
+model BarShare {
+  id          String   @id @default(cuid())
+
+  barId       String
+  bar         CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  fromPlayerId String
+  fromPlayer   Player  @relation("BarSharesSent", fields: [fromPlayerId], references: [id], onDelete: Cascade)
+
+  toPlayerId   String
+  toPlayer     Player  @relation("BarSharesReceived", fields: [toPlayerId], references: [id], onDelete: Cascade)
+
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([fromPlayerId, createdAt])
+  @@index([toPlayerId, createdAt])
+  @@index([barId, createdAt])
+  @@map("bar_shares")
 }
 
 // --------------------------------------------------------
@@ -648,6 +686,84 @@ model StoryTick {
   createdAt       DateTime  @default(now())
   
   @@map("story_ticks")
+}
+
+// --------------------------------------------------------
+// TWINE STORIES (Interactive Adventures)
+// --------------------------------------------------------
+
+model TwineStory {
+  id            String   @id @default(cuid())
+
+  title         String
+  slug          String?  @unique
+
+  // Raw uploaded story content
+  sourceType    String   @default("twine_html") // twine_html, twison_json
+  sourceText    String
+
+  // Parsed / normalized representation the app can render
+  parsedJson    String   @default("{}")
+
+  isPublished   Boolean  @default(false)
+
+  createdById   String
+  createdBy     Player   @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  runs          TwineRun[]
+  bindings      TwineBinding[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdById, createdAt])
+  @@map("twine_stories")
+}
+
+model TwineRun {
+  id               String    @id @default(cuid())
+
+  storyId          String
+  story            TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  playerId         String
+  player           Player    @relation("TwineRunsPlayed", fields: [playerId], references: [id], onDelete: Cascade)
+
+  currentPassageId String
+  visited          String    @default("[]") // JSON array of passage names/ids
+  firedBindings    String    @default("[]") // JSON array of TwineBinding IDs already fired
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  completedAt      DateTime?
+
+  // One active run per player per story (the run is updated in-place)
+  @@unique([storyId, playerId])
+  @@index([playerId, updatedAt])
+  @@map("twine_runs")
+}
+
+model TwineBinding {
+  id            String   @id @default(cuid())
+
+  storyId       String
+  story         TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  // Scope: a specific passage or link within a passage
+  scopeType     String   // "passage" | "link"
+  scopeId       String   // passage name/id or link label
+
+  // Action this binding triggers in the game engine
+  actionType    String   // e.g. "EMIT_QUEST", "EMIT_BAR"
+  payload       String   // JSON payload (schema depends on actionType)
+
+  createdById   String
+  createdBy     Player   @relation("TwineBindingsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@index([storyId, scopeType, scopeId])
+  @@map("twine_bindings")
 }
 
 // --------------------------------------------------------
