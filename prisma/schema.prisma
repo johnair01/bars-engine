@@ -230,8 +230,12 @@ model CustomBar {
   packQuests      PackQuest[]
 
   // Twine Logic (Optional)
-  twineLogic      String?   // JSON representation of passages and choices
+  twineLogic      String?   // JSON representation of passages and choices (inline, legacy)
   completionEffects String? // JSON representation of effects upon completion
+  
+  // Twine Story reference (uploaded story-backed quest)
+  twineStoryId    String?
+  twineStory      TwineStory? @relation(fields: [twineStoryId], references: [id])
 
   // Active assignments (Multi-player progress)
   assignments     PlayerQuest[]
@@ -706,6 +710,7 @@ model TwineStory {
   
   runs          TwineRun[]
   bindings      TwineBinding[]
+  quests        CustomBar[]   // Quests backed by this story
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -722,6 +727,9 @@ model TwineRun {
   playerId        String
   player          Player    @relation("TwineRunsPlayed", fields: [playerId], references: [id])
   
+  // Quest-scoped runs: if questId is set, this run is tied to a specific quest
+  questId         String?
+  
   currentPassageId String
   visited         String    @default("[]") // JSON array of passage names
   firedBindings   String    @default("[]") // JSON array of binding IDs already fired
@@ -730,7 +738,7 @@ model TwineRun {
   updatedAt       DateTime  @updatedAt
   completedAt     DateTime?
   
-  @@unique([storyId, playerId])
+  @@unique([storyId, playerId, questId])
   @@map("twine_runs")
 }
 

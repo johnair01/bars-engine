@@ -18,6 +18,7 @@ type ThreadQuest = {
         inputs?: string | null
         moveType?: string | null
         twineLogic?: string | null
+        twineStoryId?: string | null
     }
 }
 
@@ -223,6 +224,7 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: {
                         inputs: selectedQuest.quest.inputs || '[]',
                         moveType: selectedQuest.quest.moveType || null,
                         twineLogic: selectedQuest.quest.twineLogic || null,
+                        twineStoryId: selectedQuest.quest.twineStoryId || null,
                     }}
                     context={{ threadId: thread.id }}
                     isCompleted={selectedQuest.position < currentPos}

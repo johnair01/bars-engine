@@ -214,7 +214,8 @@ export async function createQuestFromWizard(data: any) {
                 moveType: finalMoveType,
                 storyPath: 'collective',
                 rootId: 'temp',
-                storyContent: finalStoryContent
+                storyContent: finalStoryContent,
+                twineStoryId: data.twineStoryId || null,
             }
         })
 

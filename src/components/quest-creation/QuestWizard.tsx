@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getQuestTemplates, validateQuestData } from '@/actions/quest-templates'
 import { QuestTemplate } from '@/lib/quest-templates'
 import { createQuestFromWizard, createCustomBar } from '@/actions/create-bar'
+import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 
 export function QuestWizard() {
@@ -16,10 +17,12 @@ export function QuestWizard() {
     const [formData, setFormData] = useState<any>({})
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [twineStories, setTwineStories] = useState<{ id: string; title: string }[]>([])
 
-    // Load templates on mount
+    // Load templates + twine stories on mount
     useEffect(() => {
         getQuestTemplates().then(setTemplates)
+        listPublishedStories().then(stories => setTwineStories(stories))
     }, [])
 
     // Handlers
@@ -249,6 +252,24 @@ export function QuestWizard() {
                                 </button>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {/* Twine Adventure (Optional) */}
+                {twineStories.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-zinc-800">
+                        <label className="text-xs uppercase text-zinc-500">Twine Adventure (Optional)</label>
+                        <select
+                            value={(formData.twineStoryId as string) || ''}
+                            onChange={(e) => handleInputChange('twineStoryId', e.target.value || null)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm outline-none"
+                        >
+                            <option value="">None (standard quest)</option>
+                            {twineStories.map(s => (
+                                <option key={s.id} value={s.id}>{s.title}</option>
+                            ))}
+                        </select>
+                        <p className="text-[10px] text-zinc-600">Attach a Twine story. Players complete the quest by playing through it.</p>
                     </div>
                 )}
 

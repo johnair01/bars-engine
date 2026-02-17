@@ -1,0 +1,28 @@
+<html>
+<body>
+<tw-storydata name="The Quick Quest" startnode="1" creator="Twine" creator-version="2.3.16" ifid="quest-adventure-001" format="Harlowe" format-version="3.3.7" options="" hidden>
+<tw-passagedata pid="1" name="Start" tags="">You receive a mysterious message. It reads: &quot;Meet me at the crossroads.&quot;
+
+[[Go to the crossroads->Crossroads]]
+[[Ignore the message->Ignore]]</tw-passagedata>
+<tw-passagedata pid="2" name="Crossroads" tags="">At the crossroads you find a hooded figure. &quot;I have a task for you,&quot; they say. &quot;Find the three stones.&quot;
+
+[[Accept the task->Search]]
+[[Ask for more details->Details]]</tw-passagedata>
+<tw-passagedata pid="3" name="Ignore" tags="">You ignore the message. But curiosity gets the better of you...
+
+[[Go to the crossroads->Crossroads]]</tw-passagedata>
+<tw-passagedata pid="4" name="Details" tags="">The figure explains: &quot;The stones are scattered nearby. Each holds a piece of wisdom.&quot;
+
+[[Begin the search->Search]]</tw-passagedata>
+<tw-passagedata pid="5" name="Search" tags="">You search the area and find all three stones. Each glows with a soft light.
+
+[[Place the stones together->END_Complete]]</tw-passagedata>
+<tw-passagedata pid="6" name="END_Complete" tags="">The stones merge into a single crystal. The figure nods approvingly.
+
+&quot;Well done. You have proven yourself.&quot;
+
+Quest complete!</tw-passagedata>
+</tw-storydata>
+</body>
+</html>
