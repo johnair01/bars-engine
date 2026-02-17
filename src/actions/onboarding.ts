@@ -116,6 +116,48 @@ export async function completeOnboardingStep(
 }
 
 /**
+ * MVP: Save nation + archetype selections from standalone onboarding page
+ */
+export async function saveOnboardingSelections(
+    playerId: string,
+    nationId: string,
+    playbookId: string
+) {
+    try {
+        if (!nationId || !playbookId) {
+            return { error: 'Both nation and archetype are required.' }
+        }
+
+        // Verify nation and playbook exist
+        const [nation, playbook] = await Promise.all([
+            db.nation.findUnique({ where: { id: nationId } }),
+            db.playbook.findUnique({ where: { id: playbookId } })
+        ])
+
+        if (!nation) return { error: 'Invalid nation selected.' }
+        if (!playbook) return { error: 'Invalid archetype selected.' }
+
+        await db.player.update({
+            where: { id: playerId },
+            data: {
+                nationId,
+                playbookId,
+                onboardingComplete: true,
+                hasSeenWelcome: true,
+            }
+        })
+
+        console.log(`[MVP] Player ${playerId} completed onboarding: nation=${nation.name}, archetype=${playbook.name}`)
+
+        revalidatePath('/')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Failed to save onboarding selections:', error)
+        return { error: error.message || 'Failed to save selections' }
+    }
+}
+
+/**
  * Create tutorial/welcome quest for new player
  */
 export async function createTutorialQuest(playerId: string) {

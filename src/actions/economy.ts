@@ -81,7 +81,10 @@ export async function transferVibulons(formData: FormData) {
     const targetId = formData.get('targetId') as string
     const amount = parseInt(formData.get('amount') as string)
 
+    console.log(`[TRANSFER] senderId=${senderId} targetId=${targetId} amount=${amount}`)
+
     if (!senderId || !targetId || !amount || amount <= 0) {
+        console.error(`[TRANSFER] Invalid params: sender=${senderId} target=${targetId} amount=${amount}`)
         return { error: 'Invalid transfer details' }
     }
 

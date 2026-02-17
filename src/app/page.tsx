@@ -295,12 +295,20 @@ export default async function Home() {
               <p className="text-yellow-200/60 text-sm">Your character profile is missing its Nation or Archetype resonance.</p>
             </div>
           </div>
-          <Link
-            href="/conclave/guided?reset=true"
-            className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
-          >
-            Continue Journey →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/onboarding"
+              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
+            >
+              Quick Setup →
+            </Link>
+            <Link
+              href="/conclave/guided?reset=true"
+              className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
+            >
+              Guided Story
+            </Link>
+          </div>
         </section>
       )}
 
@@ -381,27 +389,56 @@ export default async function Home() {
               <div className="h-px bg-zinc-800 flex-1"></div>
             </div>
 
-            <Link href="/bars/available" className="block group">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex justify-between items-center group-hover:border-green-500/50 transition-all">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">Available Quests</h3>
-                  <p className="text-zinc-500"> Browse and accept new quests from other players.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link href="/bars" className="block group">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-purple-500/50 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">My BARs</h3>
+                    <p className="text-zinc-500 text-sm">Create &amp; share BARs</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-purple-900 group-hover:text-purple-400 transition-colors">
+                    →
+                  </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
-                  →
+              </Link>
+              <Link href="/bars/available" className="block group">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-green-500/50 transition-all">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Available Quests</h3>
+                    <p className="text-zinc-500 text-sm">Browse &amp; accept quests</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
+                    →
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
-            {/* CREATE BAR */}
-            <div className="mt-8">
+            {/* CREATE ACTIONS */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Link
+                href="/bars/create"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-green-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📜</div>
+                <div className="font-bold text-white mb-1">Create BAR</div>
+                <div className="text-sm text-zinc-500">Share an insight or story</div>
+              </Link>
               <Link
                 href="/quest/create"
-                className="w-full group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
               >
                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">✨</div>
-                <div className="font-bold text-white mb-1">Create a New Quest</div>
-                <div className="text-sm text-zinc-500">Design a dream, scheme, or invitation</div>
+                <div className="font-bold text-white mb-1">Create Quest</div>
+                <div className="text-sm text-zinc-500">Use a template</div>
+              </Link>
+              <Link
+                href="/create-bar"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-zinc-500/50 hover:bg-zinc-900/30 transition-all text-center"
+              >
+                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">+</div>
+                <div className="font-bold text-white mb-1">Quick Quest</div>
+                <div className="text-sm text-zinc-500">Simple form</div>
               </Link>
             </div>
 
