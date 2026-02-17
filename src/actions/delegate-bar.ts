@@ -3,109 +3,144 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { ensureWallet } from './economy'
-import { STARTER_BARS } from '@/lib/bars'
 
 export async function delegateBar(formData: FormData) {
     const cookieStore = await cookies()
-    const senderId = cookieStore.get('bars_player_id')?.value
-    if (!senderId) return { error: 'Not logged in' }
+    const fromUserId = cookieStore.get('bars_player_id')?.value
+    if (!fromUserId) return { error: 'Not logged in' }
 
-    const barId = formData.get('barId') as string
-    const targetPlayerId = formData.get('targetPlayerId') as string
+    const barId = (formData.get('barId') as string | null) || ''
+    const toUserId = (formData.get('targetPlayerId') as string | null) || ''
+    const noteRaw = formData.get('note')
+    const note = typeof noteRaw === 'string' && noteRaw.trim().length > 0 ? noteRaw.trim() : null
 
-    if (!barId || !targetPlayerId) return { error: 'Missing requirements' }
-    if (senderId === targetPlayerId) return { error: 'Cannot delegate to self' }
+    if (!barId || !toUserId) return { error: 'Missing requirements' }
+    if (fromUserId === toUserId) return { error: 'Cannot delegate to self' }
 
     try {
-        await ensureWallet(senderId)
-
-        return await db.$transaction(async (tx) => {
-            // 1. Get Sender's Wallet
-            const wallet = await tx.vibulon.findMany({
-                where: { ownerId: senderId },
-                orderBy: { createdAt: 'asc' }, // Use oldest first (FIFO)
-                take: 1
-            })
-
-            if (wallet.length === 0) {
-                throw new Error('Insufficient Vibulons')
-            }
-            const tokenToStake = wallet[0]
-
-            // 2. Identify the Bar and Prepare Transfer ID
-            let transferBarId = barId
-            let barTitle = 'Delegated Quest'
-
-            // If it's a static starter bar, we must instantiate it as a CustomBar to make it unique/stakable
-            const starterBar = STARTER_BARS.find(b => b.id === barId)
-            if (starterBar) {
-                const newBar = await tx.customBar.create({
-                    data: {
-                        title: starterBar.title, // Keep original title? Or specific?
-                        description: `Delegated by a fellow traveler. ${starterBar.description}`,
-                        type: starterBar.type,
-                        reward: starterBar.reward,
-                        inputs: JSON.stringify(starterBar.inputs || []),
-                        creatorId: senderId,
-                        status: 'active' // It becomes active immediately? Or available? User said "Remove from Active" implies active transfer.
+        const result = await db.$transaction(async (tx) => {
+            const [bar, recipient] = await Promise.all([
+                tx.customBar.findUnique({
+                    where: { id: barId },
+                    select: {
+                        id: true,
+                        title: true,
+                        status: true,
+                        isSystem: true,
+                        visibility: true,
+                        claimedById: true,
+                        creatorId: true,
                     }
+                }),
+                tx.player.findUnique({
+                    where: { id: toUserId },
+                    select: { id: true, name: true }
                 })
-                transferBarId = newBar.id
-                barTitle = starterBar.title
-            } else {
-                // Check CustomBar
-                const existingCustom = await tx.customBar.findUnique({ where: { id: barId } })
-                if (!existingCustom) throw new Error('Bar not found')
-                barTitle = existingCustom.title
+            ])
+
+            if (!bar) throw new Error('Quest not found')
+            if (bar.status !== 'active') throw new Error('Quest is not active')
+            if (bar.isSystem) throw new Error('System quests cannot be delegated')
+            if (!recipient) throw new Error('Target player not found')
+
+            const senderAssignment = await tx.playerQuest.findUnique({
+                where: { playerId_questId: { playerId: fromUserId, questId: barId } },
+                select: { status: true }
+            })
+
+            const senderHoldsQuest =
+                bar.claimedById === fromUserId ||
+                (senderAssignment?.status === 'assigned') ||
+                // Allow sending an unclaimed private draft you created
+                (bar.creatorId === fromUserId && bar.visibility === 'private' && !bar.claimedById)
+
+            if (!senderHoldsQuest) {
+                throw new Error('You can only delegate quests you currently hold')
             }
 
-            // 3. Remove from Sender's Active List
-            const senderPack = await tx.starterPack.findUnique({ where: { playerId: senderId } })
-            if (senderPack) {
-                const data = JSON.parse(senderPack.data) as { activeBars: string[] }
-                data.activeBars = data.activeBars.filter(id => id !== barId)
-                await tx.starterPack.update({
-                    where: { playerId: senderId },
-                    data: { data: JSON.stringify(data) }
-                })
+            const recipientAssignment = await tx.playerQuest.findUnique({
+                where: { playerId_questId: { playerId: toUserId, questId: barId } },
+                select: { status: true }
+            })
+
+            if (recipientAssignment?.status === 'completed') {
+                throw new Error('That player has already completed this quest')
             }
 
-            // 4. Add to Recipient's Active List (Available or Active?)
-            // "Give a BAR... remove it from active quests"
-            // Let's put it in Recipient's *Available* list? Or *Active*?
-            // "Give" implies they have it now. Let's put it in Active.
-            // But if their slots are full? We don't have slots yet.
-            // Let's put it in Active.
-            const targetPack = await tx.starterPack.findUnique({ where: { playerId: targetPlayerId } })
-            if (targetPack) {
-                const data = JSON.parse(targetPack.data) as { activeBars: string[] }
-                // Avoid dupes
-                if (!data.activeBars.includes(transferBarId)) {
-                    data.activeBars.push(transferBarId)
-                    await tx.starterPack.update({
-                        where: { playerId: targetPlayerId },
-                        data: { data: JSON.stringify(data) }
-                    })
-                }
-            } else {
-                // If target has no pack? unlikely if they are a player.
-                throw new Error('Target player not initialized')
+            // Spend 1 Vibulon (burn)
+            const tokenToBurn = await tx.vibulon.findFirst({
+                where: { ownerId: fromUserId },
+                orderBy: { createdAt: 'asc' },
+                select: { id: true }
+            })
+
+            if (!tokenToBurn) {
+                throw new Error('Need 1 Vibeulon to delegate a quest')
             }
 
-            // 5. Stake the Vibulon
-            await tx.vibulon.update({
-                where: { id: tokenToStake.id },
+            await tx.vibulon.delete({ where: { id: tokenToBurn.id } })
+
+            await tx.vibulonEvent.create({
                 data: {
-                    ownerId: null, // Escrow
-                    stakedOnBarId: transferBarId
+                    playerId: fromUserId,
+                    source: 'bar_share',
+                    amount: -1,
+                    notes: `Delegated quest: ${bar.title} → ${recipient.name}`,
+                    archetypeMove: 'NURTURE',
+                    questId: barId,
                 }
             })
 
-            return { success: true, transferBarId }
+            // Transfer claim / assignment to recipient
+            await tx.customBar.update({
+                where: { id: barId },
+                data: { claimedById: toUserId }
+            })
+
+            // Remove sender's active assignment (if present)
+            await tx.playerQuest.deleteMany({
+                where: {
+                    playerId: fromUserId,
+                    questId: barId,
+                    status: 'assigned',
+                }
+            })
+
+            // Ensure recipient has an active assignment
+            await tx.playerQuest.upsert({
+                where: { playerId_questId: { playerId: toUserId, questId: barId } },
+                update: {
+                    status: 'assigned',
+                    assignedAt: new Date(),
+                    completedAt: null,
+                },
+                create: {
+                    playerId: toUserId,
+                    questId: barId,
+                    status: 'assigned',
+                    assignedAt: new Date(),
+                }
+            })
+
+            // Audit trail
+            await tx.barShare.create({
+                data: {
+                    barId,
+                    fromUserId,
+                    toUserId,
+                    note,
+                }
+            })
+
+            return { success: true }
         })
+
+        revalidatePath('/')
+        revalidatePath('/hand')
+        revalidatePath('/bars/available')
+        return result
     } catch (e: any) {
-        console.error(e)
-        return { error: e.message || 'Failed to delegate' }
+        console.error('Delegate failed:', e)
+        return { error: e?.message || 'Failed to delegate' }
     }
 }

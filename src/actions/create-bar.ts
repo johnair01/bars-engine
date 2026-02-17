@@ -110,6 +110,38 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                 data: { rootId: newBar.id }
             })
 
+            // If this is a private assignment, make it appear in the recipient's Active Quests.
+            if (claimedById) {
+                await tx.playerQuest.upsert({
+                    where: {
+                        playerId_questId: {
+                            playerId: claimedById,
+                            questId: newBar.id
+                        }
+                    },
+                    update: {
+                        status: 'assigned',
+                        assignedAt: new Date(),
+                        completedAt: null,
+                    },
+                    create: {
+                        playerId: claimedById,
+                        questId: newBar.id,
+                        status: 'assigned',
+                        assignedAt: new Date(),
+                    }
+                })
+
+                await tx.barShare.create({
+                    data: {
+                        barId: newBar.id,
+                        fromUserId: playerId,
+                        toUserId: claimedById,
+                        note: 'Assigned on creation',
+                    }
+                })
+            }
+
             return newBar
         })
 

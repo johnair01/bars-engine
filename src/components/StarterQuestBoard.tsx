@@ -286,6 +286,7 @@ type CustomBarDef = {
     creatorId: string
     storyPath: string | null
     moveType: string | null
+    isSystem?: boolean
 }
 
 
@@ -395,7 +396,7 @@ export function StarterQuestBoard({
     }
 
     // Convert custom bars to BarDef format
-    const customAsBarDef: BarDef[] = customBars.map(cb => ({
+    const customAsBarDef: (BarDef & { isSystem?: boolean })[] = customBars.map(cb => ({
         id: cb.id,
         title: cb.title,
         description: cb.description,
@@ -405,6 +406,7 @@ export function StarterQuestBoard({
         unique: false,  // Custom bars are repeatable
         isCustom: true, // Mark as custom
         moveType: cb.moveType,
+        isSystem: cb.isSystem ?? false,
     }))
 
     // Convert I Ching readings to BarDef format
@@ -426,7 +428,7 @@ export function StarterQuestBoard({
     // Merge starter bars with custom bars and I Ching bars
     // Note: I Ching bars are only ever "active" or "completed", they don't appear in "available" usually (unless we wanted to show past ones)
     // But since localActive contains 'iching_X', we need them in allBars to be found by the filter.
-    const allBars = [...customAsBarDef, ...ichingAsBarDef]
+    const allBars = [...customAsBarDef, ...ichingAsBarDef] as (BarDef & { isSystem?: boolean })[]
 
     const availableBars = allBars.filter(b => !localCompleted.includes(b.id) && !localActive.includes(b.id))
     // const activeBarsFiltered = allBars.filter(b => localActive.includes(b.id)) // Original line
@@ -454,8 +456,8 @@ export function StarterQuestBoard({
                             isActive={true}
                             onPickUp={() => { }}
                             onComplete={(inputs) => handleComplete(bar.id, inputs)}
-                            onDelegate={(targetId) => handleDelegate(bar.id, targetId)}
-                            onRelease={bar.isCustom ? () => handleRelease(bar.id) : undefined}
+                            onDelegate={bar.isCustom && !bar.isSystem ? (targetId) => handleDelegate(bar.id, targetId) : undefined}
+                            onRelease={bar.isCustom && !bar.isSystem ? () => handleRelease(bar.id) : undefined}
                         />
                     )
                 ))}
