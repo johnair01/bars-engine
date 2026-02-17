@@ -55,6 +55,52 @@
 
 ---
 
+## BUG-002: Agent Analysis Loop — Token Limit Exceeded
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-02-16 |
+| **Severity** | 🟡 Medium |
+| **Component** | Agent process (meta — not app code) |
+| **Branch** | `main` |
+| **Environment** | Local (IDE agent) |
+
+### Symptoms
+- Agent response took >30s with no visible tool calls
+- System returned: `generation exceeded max tokens limit`
+- User had to cancel and switch models to recover
+
+### Root Cause
+Audio input ("use the skill to fix the intention display") triggered excessive internal deliberation. The agent tried to resolve all ambiguity — which skill file to read, which quest ID stores the intention, where to place the UI, whether to follow the debug skill protocol — in a single thinking block. This created a circular planning loop that repeated "I'll execute" thousands of times without ever calling a tool.
+
+### Detection Signals
+- No tool calls in the response
+- Token limit error from system
+- Agent output contains repetitive phrases
+
+### Fix
+1. Documented as **Known Failure Mode #7** in `known-failure-modes.md`
+2. User switched model to break the loop
+3. No code fix possible — this is a model behavior issue
+
+### Files Changed
+- `docs/skills/debugging/known-failure-modes.md` — Added failure mode #7
+- `docs/skills/debugging/bug-ledger.md` — This entry
+
+### Verification
+- Agent recovered after model switch and continued work
+- Documentation committed
+
+### Regression Guard
+- If agent appears stuck (>30s, no tool calls), cancel immediately
+- Rephrase ambiguous audio requests as text
+- Avoid compound requests that combine "use skill X" + "fix feature Y" in one message
+
+### Category
+`Agent Analysis Loop` (Meta)
+
+---
+
 <!-- 
 ## BUG-NNN: Title
 
