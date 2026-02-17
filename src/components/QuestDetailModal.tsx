@@ -11,6 +11,7 @@ import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
 import { QuestInputs, BarInput } from './QuestInputs'
 import { QuestTwinePlayer } from './QuestTwinePlayer'
+import { TwineQuestModal } from './TwineQuestModal'
 import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
 import Link from 'next/link'
@@ -26,6 +27,7 @@ interface QuestDetailModalProps {
         inputs?: string // JSON definition of inputs
         moveType?: string | null
         twineLogic?: string | null // JSON string of TwineLogic
+        twineStoryId?: string | null // Reference to uploaded TwineStory
     }
     context?: {
         packId?: string
@@ -120,6 +122,20 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     }
 
     if (!isOpen) return null
+
+    // If quest is backed by an uploaded TwineStory, render the dedicated modal
+    if (quest.twineStoryId) {
+        return (
+            <TwineQuestModal
+                isOpen={isOpen}
+                onClose={onClose}
+                questId={quest.id}
+                questTitle={quest.title}
+                twineStoryId={quest.twineStoryId}
+                isCompleted={isCompleted}
+            />
+        )
+    }
 
     const handleComplete = () => {
         if (isPending) return

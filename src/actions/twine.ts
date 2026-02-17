@@ -181,10 +181,10 @@ export async function listPublishedStories() {
 }
 
 // ---------------------------------------------------------------------------
-// PLAYER: Start or resume run
+// PLAYER: Start or resume run (supports quest-scoped runs)
 // ---------------------------------------------------------------------------
 
-export async function getOrCreateRun(storyId: string) {
+export async function getOrCreateRun(storyId: string, questId?: string | null) {
     const playerId = await requirePlayer()
 
     const story = await db.twineStory.findUnique({ where: { id: storyId } })
@@ -192,8 +192,13 @@ export async function getOrCreateRun(storyId: string) {
 
     const parsed = JSON.parse(story.parsedJson) as { startPassage: string }
 
-    let run = await db.twineRun.findUnique({
-        where: { storyId_playerId: { storyId, playerId } }
+    // Find existing run: quest-scoped or standalone
+    let run = await db.twineRun.findFirst({
+        where: {
+            storyId,
+            playerId,
+            questId: questId || null,
+        }
     })
 
     if (!run) {
@@ -201,6 +206,7 @@ export async function getOrCreateRun(storyId: string) {
             data: {
                 storyId,
                 playerId,
+                questId: questId || null,
                 currentPassageId: parsed.startPassage,
                 visited: JSON.stringify([parsed.startPassage]),
                 firedBindings: '[]',
@@ -215,13 +221,19 @@ export async function getOrCreateRun(storyId: string) {
 // PLAYER: Advance to a passage (choose a link)
 // ---------------------------------------------------------------------------
 
-export async function advanceRun(storyId: string, targetPassageName: string) {
+export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null) {
     const playerId = await requirePlayer()
 
-    const run = await db.twineRun.findUnique({
-        where: { storyId_playerId: { storyId, playerId } }
+    // Find the run (quest-scoped or standalone)
+    const run = await db.twineRun.findFirst({
+        where: {
+            storyId,
+            playerId,
+            questId: questId || null,
+        }
     })
     if (!run) return { error: 'No active run' }
+    if (run.completedAt) return { error: 'Run already completed' }
 
     const story = await db.twineStory.findUnique({ where: { id: storyId } })
     if (!story) return { error: 'Story not found' }
@@ -256,8 +268,92 @@ export async function advanceRun(storyId: string, targetPassageName: string) {
     // Execute bindings for this passage
     const bindingResult = await executeBindingsForPassage(storyId, targetPassageName, run.id, playerId)
 
+    // Check for END_ passage (quest auto-completion)
+    let questCompleted = false
+    if (questId && targetPassageName.startsWith('END_')) {
+        questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId)
+    }
+
     revalidatePath(`/adventures/${storyId}/play`)
-    return { success: true, emitted: bindingResult }
+    revalidatePath('/')
+    return { success: true, emitted: bindingResult, questCompleted }
+}
+
+// ---------------------------------------------------------------------------
+// INTERNAL: Auto-complete quest when player reaches an END_ passage
+// ---------------------------------------------------------------------------
+
+async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string): Promise<boolean> {
+    try {
+        // Check if quest is already completed
+        const assignment = await db.playerQuest.findFirst({
+            where: { playerId, questId, status: 'assigned' }
+        })
+
+        if (!assignment) {
+            // Already completed or not assigned — skip silently
+            return false
+        }
+
+        // Mark quest complete
+        await db.playerQuest.update({
+            where: { id: assignment.id },
+            data: {
+                status: 'completed',
+                inputs: JSON.stringify({ completedViaTwine: true, runId }),
+                completedAt: new Date(),
+            }
+        })
+
+        // Mark run as completed
+        await db.twineRun.update({
+            where: { id: runId },
+            data: { completedAt: new Date() }
+        })
+
+        // Grant vibeulon reward
+        const quest = await db.customBar.findUnique({ where: { id: questId } })
+        const rewardAmount = quest?.reward || 1
+        if (rewardAmount > 0) {
+            await db.vibulonEvent.create({
+                data: {
+                    playerId,
+                    source: 'quest',
+                    amount: rewardAmount,
+                    notes: `Twine quest completed: ${quest?.title || questId}`,
+                    archetypeMove: 'IGNITE',
+                    questId,
+                }
+            })
+
+            const { mintVibulon } = await import('./economy')
+            await mintVibulon(playerId, rewardAmount, {
+                source: 'twine_quest',
+                id: questId,
+                title: quest?.title || 'Twine Quest'
+            }, { skipRevalidate: true })
+        }
+
+        console.log(`[TWINE] Quest auto-completed: ${questId} for player ${playerId}`)
+        revalidatePath('/')
+        return true
+    } catch (e) {
+        console.error('[TWINE] Auto-complete failed:', e)
+        return false
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Get story data for quest modal (no admin required, published check)
+// ---------------------------------------------------------------------------
+
+export async function getTwineStoryForQuest(storyId: string) {
+    const story = await db.twineStory.findUnique({
+        where: { id: storyId },
+        select: { id: true, title: true, parsedJson: true, isPublished: true }
+    })
+    if (!story || !story.isPublished) return null
+    return story
 }
 
 // ---------------------------------------------------------------------------

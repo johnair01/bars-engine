@@ -16,6 +16,7 @@ type PackQuest = {
         inputs?: string | null
         moveType?: string | null
         twineLogic?: string | null
+        twineStoryId?: string | null
     }
 }
 
@@ -201,6 +202,7 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                         inputs: selectedQuest.quest.inputs || '[]',
                         moveType: selectedQuest.quest.moveType || null,
                         twineLogic: selectedQuest.quest.twineLogic || null,
+                        twineStoryId: selectedQuest.quest.twineStoryId || null,
                     }}
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}
