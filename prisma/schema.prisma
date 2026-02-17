@@ -272,18 +272,18 @@ model BarShare {
   barId       String
   bar         CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
 
-  fromPlayerId String
-  fromPlayer   Player  @relation("BarSharesSent", fields: [fromPlayerId], references: [id], onDelete: Cascade)
+  fromUserId  String
+  fromUser    Player  @relation("BarSharesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
 
-  toPlayerId   String
-  toPlayer     Player  @relation("BarSharesReceived", fields: [toPlayerId], references: [id], onDelete: Cascade)
+  toUserId    String
+  toUser      Player  @relation("BarSharesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
 
   note        String?
 
   createdAt   DateTime @default(now())
 
-  @@index([fromPlayerId, createdAt])
-  @@index([toPlayerId, createdAt])
+  @@index([fromUserId, createdAt])
+  @@index([toUserId, createdAt])
   @@index([barId, createdAt])
   @@map("bar_shares")
 }
