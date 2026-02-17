@@ -19,33 +19,32 @@ export async function generateQuestFromReading(hexagramId: number, useFirstAidLe
 
     const result = await generateQuestCore(playerId, hexagramId, useFirstAidLens)
 
-    if (result.success) {
-        // CHECK FOR QUEST COMPLETION (orientation-quest-3)
-        // Check for thread participation instead of assignment
-        const threadQuest = await db.threadQuest.findFirst({
-            where: { questId: 'orientation-quest-3' }
+    // Complete orientation-quest-3 regardless of AI result
+    // The hexagram reading is the core value; AI quest generation is bonus
+    const threadQuest = await db.threadQuest.findFirst({
+        where: { questId: 'orientation-quest-3' }
+    })
+
+    if (threadQuest) {
+        const progress = await db.threadProgress.findUnique({
+            where: {
+                threadId_playerId: {
+                    threadId: threadQuest.threadId,
+                    playerId
+                }
+            }
         })
 
-        if (threadQuest) {
-            const progress = await db.threadProgress.findUnique({
-                where: {
-                    threadId_playerId: {
-                        threadId: threadQuest.threadId,
-                        playerId
-                    }
-                }
-            })
-
-            if (progress) {
-                await completeQuest(threadQuest.questId, {
-                    hexagramId,
-                    generatedQuestId: result.quest?.title
-                }, { threadId: threadQuest.threadId })
-            }
+        if (progress) {
+            await completeQuest(threadQuest.questId, {
+                hexagramId,
+                generatedQuestId: result.quest?.title || null,
+                aiGenerated: result.success || false
+            }, { threadId: threadQuest.threadId })
         }
-
-        revalidatePath('/')
     }
+
+    revalidatePath('/')
 
     return result
 }

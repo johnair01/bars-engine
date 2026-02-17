@@ -392,15 +392,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         mode="modal"
                                         onComplete={async (hexagramId) => {
                                             const result = await generateQuestFromReading(hexagramId)
-                                            if (result.success) {
-                                                setFeedback('✨ Wisdom Received & Quest Completed!')
-                                                setTimeout(() => {
-                                                    onClose()
-                                                    router.refresh()
-                                                }, 2000)
-                                            } else {
-                                                setFeedback(`❌ ${result.error}`)
-                                            }
+                                            // Quest completes regardless; AI generation is bonus
+                                            setFeedback(result.success
+                                                ? '✨ Wisdom Received & Quest Generated!'
+                                                : '✨ Reading Accepted! (Quest generation unavailable)')
+                                            setTimeout(() => {
+                                                onClose()
+                                                router.refresh()
+                                            }, 2000)
                                         }}
                                     />
                                 </div>
