@@ -37,6 +37,10 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         <Link href="/wallet" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/wallet')}`}>
                             WALLET
                         </Link>
+                        <Link href="/adventures" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/adventures')}`}>
+                            <span className="hidden sm:inline">PLAY</span>
+                            <span className="sm:hidden">▶</span>
+                        </Link>
                     </>
                 )}
                 {isAdmin && (

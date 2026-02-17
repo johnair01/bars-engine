@@ -96,6 +96,10 @@ model Player {
   barSharesSent     BarShare[]  @relation("BarSharesSent")
   barSharesReceived BarShare[]  @relation("BarSharesReceived")
   
+  // Twine relations
+  twineStoriesCreated TwineStory[] @relation("TwineStoriesCreated")
+  twineRunsPlayed     TwineRun[]   @relation("TwineRunsPlayed")
+  
   createdAt       DateTime  @default(now())
 
   @@unique([contactType, contactValue]) // ensure unique email/phone
@@ -680,6 +684,73 @@ model StoryTick {
   createdAt       DateTime  @default(now())
   
   @@map("story_ticks")
+}
+
+// --------------------------------------------------------
+// TWINE STORIES (Interactive Adventures)
+// --------------------------------------------------------
+
+model TwineStory {
+  id            String   @id @default(cuid())
+  
+  title         String
+  slug          String?  @unique
+  sourceType    String   @default("twine_html") // twine_html, twison_json
+  sourceText    String   // Raw uploaded content
+  parsedJson    String   @default("{}") // Parsed passage structure (JSON)
+  
+  isPublished   Boolean  @default(false)
+  
+  createdById   String
+  createdBy     Player   @relation("TwineStoriesCreated", fields: [createdById], references: [id])
+  
+  runs          TwineRun[]
+  bindings      TwineBinding[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("twine_stories")
+}
+
+model TwineRun {
+  id              String    @id @default(cuid())
+  
+  storyId         String
+  story           TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  playerId        String
+  player          Player    @relation("TwineRunsPlayed", fields: [playerId], references: [id])
+  
+  currentPassageId String
+  visited         String    @default("[]") // JSON array of passage names
+  firedBindings   String    @default("[]") // JSON array of binding IDs already fired
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+  
+  @@unique([storyId, playerId])
+  @@map("twine_runs")
+}
+
+model TwineBinding {
+  id            String   @id @default(cuid())
+  
+  storyId       String
+  story         TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  
+  scopeType     String   // "passage" or "link"
+  scopeId       String   // passage name or link label
+  
+  actionType    String   // "EMIT_QUEST" or "EMIT_BAR"
+  payload       String   // JSON: { title, description, visibility, tags? }
+  
+  createdById   String
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("twine_bindings")
 }
 
 // --------------------------------------------------------

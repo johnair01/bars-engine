@@ -101,9 +101,16 @@ export function OnboardingForm({ playerId, playerName, currentNationId, currentP
             </button>
 
             {nations.length === 0 && (
-                <p className="text-center text-xs text-yellow-400">
-                    No nations found in database. An admin needs to seed world content first.
-                </p>
+                <div className="p-3 bg-yellow-900/20 border border-yellow-800/50 rounded-lg text-center space-y-1">
+                    <p className="text-xs text-yellow-400 font-bold">No nations found in database.</p>
+                    <p className="text-xs text-yellow-500">An admin needs to run the seed script: <code className="bg-black px-1 rounded">npm run db:seed</code></p>
+                </div>
+            )}
+            {playbooks.length === 0 && nations.length > 0 && (
+                <div className="p-3 bg-yellow-900/20 border border-yellow-800/50 rounded-lg text-center space-y-1">
+                    <p className="text-xs text-yellow-400 font-bold">No archetypes found in database.</p>
+                    <p className="text-xs text-yellow-500">An admin needs to run the seed script: <code className="bg-black px-1 rounded">npm run db:seed</code></p>
+                </div>
             )}
         </div>
     )
