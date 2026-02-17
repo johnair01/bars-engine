@@ -115,6 +115,7 @@ export async function sendBar(prevState: { error?: string; success?: boolean } |
     // 1. Verify BAR exists and sender owns it
     const bar = await db.customBar.findUnique({ where: { id: barId } })
     if (!bar) return { error: 'BAR not found' }
+    if (bar.type !== 'bar') return { error: 'Only BARs can be sent from this page' }
     if (bar.creatorId !== playerId) return { error: "You don't own this BAR" }
     if (bar.status !== 'active') return { error: 'BAR is not active' }
 
@@ -184,7 +185,10 @@ export async function listReceivedBars() {
     if (!playerId) return []
 
     const shares = await db.barShare.findMany({
-        where: { toUserId: playerId },
+        where: {
+            toUserId: playerId,
+            bar: { type: 'bar' },
+        },
         orderBy: { createdAt: 'desc' },
         include: {
             bar: {
@@ -214,7 +218,10 @@ export async function listSentBars() {
     if (!playerId) return []
 
     const shares = await db.barShare.findMany({
-        where: { fromUserId: playerId },
+        where: {
+            fromUserId: playerId,
+            bar: { type: 'bar' },
+        },
         orderBy: { createdAt: 'desc' },
         include: {
             bar: {
@@ -257,6 +264,7 @@ export async function getBarDetail(barId: string) {
     })
 
     if (!bar) return { error: 'BAR not found' }
+    if (bar.type !== 'bar') return { error: 'Not a BAR' }
 
     // Access check: owner, or has a share addressed to them, or public
     const isOwner = bar.creatorId === playerId

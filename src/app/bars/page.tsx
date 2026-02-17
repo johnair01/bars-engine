@@ -61,6 +61,12 @@ export default async function BarsPage() {
                                                 </div>
                                             </div>
                                         </div>
+                                        {share.note && (
+                                            <div className="mt-3 text-xs text-green-200/80 border-l-2 border-green-900/60 pl-3 line-clamp-2">
+                                                <span className="text-[10px] uppercase tracking-widest text-zinc-600 mr-2">Note</span>
+                                                {share.note}
+                                            </div>
+                                        )}
                                         {share.bar.storyContent && (
                                             <div className="flex gap-1.5 mt-2">
                                                 {share.bar.storyContent.split(',').map((tag, i) => (
@@ -148,15 +154,23 @@ export default async function BarsPage() {
 
                         <div className="space-y-2">
                             {sent.map((share) => (
-                                <div key={share.id} className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-3 flex justify-between items-center">
-                                    <div className="min-w-0 flex-1">
-                                        <Link href={`/bars/${share.bar.id}`} className="text-white text-sm font-medium hover:text-purple-400 transition-colors truncate block">
-                                            {share.bar.title}
-                                        </Link>
+                                <div key={share.id} className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-3 space-y-1">
+                                    <div className="flex justify-between items-center gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <Link href={`/bars/${share.bar.id}`} className="text-white text-sm font-medium hover:text-purple-400 transition-colors truncate block">
+                                                {share.bar.title}
+                                            </Link>
+                                        </div>
+                                        <div className="text-xs text-zinc-600 shrink-0">
+                                            → {share.toUser.name} &middot; {new Date(share.createdAt).toLocaleDateString()}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-zinc-600 shrink-0 ml-3">
-                                        → {share.toUser.name} &middot; {new Date(share.createdAt).toLocaleDateString()}
-                                    </div>
+                                    {share.note && (
+                                        <div className="text-xs text-zinc-500 line-clamp-2">
+                                            <span className="text-[10px] uppercase tracking-widest text-zinc-700 mr-2">Note</span>
+                                            {share.note}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>

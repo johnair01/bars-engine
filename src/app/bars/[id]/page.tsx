@@ -83,13 +83,21 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
                         </div>
                         <div className="space-y-2">
                             {bar.shares.map((share) => (
-                                <div key={share.id} className="flex items-center gap-3 text-xs text-zinc-500 bg-zinc-900/30 rounded-lg px-3 py-2">
-                                    <span className="text-zinc-400">{share.fromUser.name}</span>
-                                    <span>→</span>
-                                    <span className="text-zinc-400">{share.toUser.name}</span>
-                                    <span className="ml-auto text-zinc-600">
-                                        {new Date(share.createdAt).toLocaleDateString()}
-                                    </span>
+                                <div key={share.id} className="text-xs text-zinc-500 bg-zinc-900/30 rounded-lg px-3 py-2 space-y-1">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-zinc-400">{share.fromUser.name}</span>
+                                        <span>→</span>
+                                        <span className="text-zinc-400">{share.toUser.name}</span>
+                                        <span className="ml-auto text-zinc-600">
+                                            {new Date(share.createdAt).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    {share.note && (
+                                        <div className="text-[11px] text-zinc-600 border-l-2 border-zinc-700/60 pl-3 line-clamp-2">
+                                            <span className="text-[10px] uppercase tracking-widest text-zinc-700 mr-2">Note</span>
+                                            {share.note}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
