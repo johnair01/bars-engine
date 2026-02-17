@@ -131,6 +131,10 @@ export default async function Home() {
     .filter(q => q.status === 'assigned')
     .map(q => q.questId)
 
+  // Extract player's Intention from completed orientation quest
+  const intentionQuest = completedBars.find(b => b.id === 'orientation-quest-1')
+  const intention = intentionQuest?.inputs?.intention as string | undefined
+
   // Ensure system feedback is always "active" for the player
   if (!activeBars.includes('system-feedback')) {
     activeBars.push('system-feedback')
@@ -261,6 +265,14 @@ export default async function Home() {
             </div>
           )}
         </div>
+
+        {/* Player Intention */}
+        {intention && (
+          <div className="w-full px-4 py-3 bg-emerald-900/15 border border-emerald-900/40 rounded-lg">
+            <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">My Intention</div>
+            <p className="text-emerald-100/90 text-sm italic leading-relaxed">{intention}</p>
+          </div>
+        )}
       </header >
 
       {/* WELCOME SCREEN (if not seen yet) */}
