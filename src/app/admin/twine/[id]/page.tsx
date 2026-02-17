@@ -1,4 +1,4 @@
-import { getStoryForAdmin, deleteBinding } from '@/actions/twine'
+import { getStoryForAdmin } from '@/actions/twine'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BindingForm } from './BindingForm'

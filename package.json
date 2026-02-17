@@ -22,6 +22,7 @@
     "test:actions": "tsx scripts/test-actions.ts",
     "test:mvp": "tsx scripts/smoke-test-mvp.ts",
     "test:bars": "tsx scripts/smoke-test-bars.ts",
+    "test:twine": "tsx scripts/smoke-test-twine.ts",
     "feedback:sync": "tsx scripts/sync_feedback.ts",
     "postinstall": "prisma generate"
   },
