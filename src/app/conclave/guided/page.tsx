@@ -63,7 +63,13 @@ async function GuidedStoryLoader({ requestedStep }: { requestedStep?: string }) 
     }
 
     const visited = new Set([...(progress.completedNodes || []), progress.currentNodeId])
-    let effectiveNodeId = requestedStep && visited.has(requestedStep) ? requestedStep : progress.currentNodeId
+    // Allow direct jumps to mandatory setup steps even if they were not "visited" yet.
+    // This supports redirecting users from login directly to nation/archetype selection.
+    const alwaysAllowedSteps = new Set(['nation_select', 'playbook_select'])
+    let effectiveNodeId =
+        requestedStep && (visited.has(requestedStep) || alwaysAllowedSteps.has(requestedStep))
+            ? requestedStep
+            : progress.currentNodeId
 
     if (!player.nationId && (effectiveNodeId.startsWith('playbook') || effectiveNodeId === 'conclusion' || effectiveNodeId === 'dashboard')) {
         effectiveNodeId = 'nation_select'

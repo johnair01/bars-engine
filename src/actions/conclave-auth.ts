@@ -76,9 +76,11 @@ export async function login(formData: FormData) {
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 
-        const redirectTo = (!player.nationId || !player.playbookId)
-            ? '/onboarding/profile'
-            : '/'
+        // If the player hasn't selected Nation / Archetype yet, drive them into the guided narrative
+        // node where those choices are made.
+        const redirectTo = !player.nationId
+            ? '/conclave/guided?step=nation_select'
+            : (!player.playbookId ? '/conclave/guided?step=playbook_select' : '/')
 
         return { success: true, redirectTo } satisfies LoginState
     } catch (error) {

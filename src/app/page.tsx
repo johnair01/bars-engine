@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { DashboardCaster } from '@/components/DashboardCaster'
 import { QuestThread } from '@/components/QuestThread'
@@ -147,6 +148,14 @@ export default async function Home() {
 
   if (!player) {
     return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
+  }
+
+  // Force incomplete profiles through the guided setup steps.
+  if (!player.nationId) {
+    redirect('/conclave/guided?step=nation_select')
+  }
+  if (!player.playbookId) {
+    redirect('/conclave/guided?step=playbook_select')
   }
 
   await ensureWallet(playerId)

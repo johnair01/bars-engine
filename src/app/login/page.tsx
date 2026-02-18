@@ -10,9 +10,11 @@ export default async function LoginPage() {
     if (playerId) {
         const player = await db.player.findUnique({
             where: { id: playerId },
-            select: { id: true }
+            select: { id: true, nationId: true, playbookId: true }
         })
         if (player) {
+            if (!player.nationId) redirect('/conclave/guided?step=nation_select')
+            if (!player.playbookId) redirect('/conclave/guided?step=playbook_select')
             redirect('/')
         }
     }
