@@ -101,6 +101,10 @@ model Player {
   twineStoriesCreated  TwineStory[]   @relation("TwineStoriesCreated")
   twineRunsPlayed      TwineRun[]     @relation("TwineRunsPlayed")
   twineBindingsCreated TwineBinding[] @relation("TwineBindingsCreated")
+
+  // Instance relations (multi-instance platform)
+  instanceMemberships InstanceMembership[]
+  donations           Donation[]
   
   createdAt       DateTime  @default(now())
 
@@ -775,11 +779,100 @@ model TwineBinding {
 }
 
 // --------------------------------------------------------
+// INSTANCES (Multi-Instance Integral Emergence Engine)
+// --------------------------------------------------------
+
+model Instance {
+  id                String   @id @default(cuid())
+
+  // Human-friendly identifier for URLs / selection
+  slug              String   @unique
+  name              String
+
+  // party | hackathon | fundraiser | business | etc.
+  domainType         String
+
+  theme              String?
+  targetDescription  String?
+
+  // Fundraising (cents)
+  goalAmountCents    Int?
+  currentAmountCents Int     @default(0)
+
+  // Event mode: show progress + donate CTAs
+  isEventMode        Boolean @default(false)
+
+  // MVP payment links (external)
+  stripeOneTimeUrl   String?
+  patreonUrl         String?
+
+  startDate          DateTime?
+  endDate            DateTime?
+
+  donations          Donation[]
+  memberships        InstanceMembership[]
+  activeInConfigs    AppConfig[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("instances")
+}
+
+model Donation {
+  id         String   @id @default(cuid())
+
+  instanceId String
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  // Optional attribution
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  amountCents Int
+
+  // stripe_payment_link | patreon | manual | etc.
+  provider    String   @default("manual")
+  externalId  String?
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([instanceId, createdAt])
+  @@index([playerId, createdAt])
+  @@map("donations")
+}
+
+model InstanceMembership {
+  id          String   @id @default(cuid())
+
+  instanceId  String
+  instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  // MVP role selection (Rookie/Ace/Veteran/Leader/Engineer)
+  roleKey     String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([instanceId, playerId])
+  @@index([instanceId, createdAt])
+  @@map("instance_memberships")
+}
+
+// --------------------------------------------------------
 // ADMIN: APP CONFIGURATION & AUDIT
 // --------------------------------------------------------
 
 model AppConfig {
   id          String   @id @default("singleton")
+
+  // Active instance selection (optional; null = "single instance" mode)
+  activeInstanceId String?
+  activeInstance   Instance? @relation(fields: [activeInstanceId], references: [id], onDelete: SetNull)
   
   // Feature Flags (JSON object: { "iching": true, "wallet": true, ... })
   features    String     @default("{}")

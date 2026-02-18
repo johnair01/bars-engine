@@ -3,20 +3,59 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { Prisma } from '@prisma/client'
 
 // Get the singleton AppConfig (create if doesn't exist)
 export async function getAppConfig() {
-    let config = await db.appConfig.findUnique({
-        where: { id: 'singleton' }
+    const baseSelect = {
+        id: true,
+        features: true,
+        theme: true,
+        heroTitle: true,
+        heroSubtitle: true,
+        updatedAt: true,
+        updatedBy: true,
+    } as const
+
+    const selectWithInstance = {
+        ...baseSelect,
+        activeInstanceId: true,
+    } as const
+
+    // 1) Try reading with the newest schema fields
+    try {
+        const config = await db.appConfig.findUnique({
+            where: { id: 'singleton' },
+            select: selectWithInstance,
+        })
+        if (config) return config as any
+    } catch {
+        // If the DB hasn't been pushed yet, selecting new columns will throw.
+    }
+
+    // 2) Fallback read that avoids referencing newly-added columns.
+    let fallback = await db.appConfig.findUnique({
+        where: { id: 'singleton' },
+        select: baseSelect,
     })
 
-    if (!config) {
-        config = await db.appConfig.create({
-            data: { id: 'singleton' }
+    // 3) Ensure the singleton row exists without referencing any new columns.
+    if (!fallback) {
+        await db.$executeRaw(
+            Prisma.sql`INSERT INTO "app_config" ("id") VALUES ('singleton') ON CONFLICT ("id") DO NOTHING;`
+        )
+
+        fallback = await db.appConfig.findUnique({
+            where: { id: 'singleton' },
+            select: baseSelect,
         })
     }
 
-    return config
+    // Provide a consistent shape for callers.
+    return {
+        ...fallback,
+        activeInstanceId: null,
+    } as any
 }
 
 // Update feature flags
