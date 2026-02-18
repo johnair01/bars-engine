@@ -1,9 +1,15 @@
 import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
-import { listInstances, setActiveInstance, upsertInstance } from '@/actions/instance'
+import { getInstanceDbReadiness, listInstances, setActiveInstance, upsertInstance } from '@/actions/instance'
 
-export default async function AdminInstancesPage() {
+export default async function AdminInstancesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string; saved?: string; active?: string }>
+}) {
+  const sp = (await searchParams) || {}
   const config = await getAppConfig()
+  const readiness = await getInstanceDbReadiness()
   const instances = await listInstances()
   const activeInstanceId = (config as any).activeInstanceId as string | null
 
@@ -16,6 +22,44 @@ export default async function AdminInstancesPage() {
           Configure event / fundraiser “instances” without changing core engine code.
         </p>
       </header>
+
+      {sp.error && (
+        <section className="bg-red-950/30 border border-red-900/60 rounded-xl p-4 text-red-200">
+          <div className="font-bold">Action failed</div>
+          <div className="text-sm text-red-200/80 mt-1">{sp.error}</div>
+          <div className="text-xs text-red-200/60 mt-3 font-mono">
+            If this says schema is not updated: run <span className="text-red-100">prisma db push</span> against prod, then retry.
+          </div>
+        </section>
+      )}
+
+      {sp.saved === '1' && (
+        <section className="bg-green-950/30 border border-green-900/60 rounded-xl p-4 text-green-200">
+          <div className="font-bold">Saved</div>
+          <div className="text-sm text-green-200/80 mt-1">Instance saved successfully.</div>
+        </section>
+      )}
+
+      {(sp.active === '1' || sp.active === '0') && (
+        <section className="bg-purple-950/20 border border-purple-900/50 rounded-xl p-4 text-purple-200">
+          <div className="font-bold">Active instance updated</div>
+          <div className="text-sm text-purple-200/80 mt-1">
+            {sp.active === '1' ? 'An active instance is now set.' : 'Active instance cleared.'}
+          </div>
+        </section>
+      )}
+
+      {(!readiness.instancesTableReady || !readiness.appConfigActiveInstanceReady) && (
+        <section className="bg-amber-950/20 border border-amber-900/50 rounded-xl p-5 text-amber-200 space-y-2">
+          <div className="font-bold">Database schema not ready</div>
+          <div className="text-sm text-amber-200/80">
+            This usually means <span className="font-mono">prisma db push</span> has not been run against production since the Instances feature was added.
+          </div>
+          <div className="text-xs font-mono text-amber-200/70">
+            instances table: {readiness.instancesTableReady ? 'READY' : 'MISSING'} • app_config.activeInstanceId: {readiness.appConfigActiveInstanceReady ? 'READY' : 'MISSING'}
+          </div>
+        </section>
+      )}
 
       {/* ACTIVE INSTANCE */}
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
