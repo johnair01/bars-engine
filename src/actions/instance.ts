@@ -71,7 +71,7 @@ export async function listInstances() {
   }
 }
 
-export async function upsertInstance(formData: FormData) {
+export async function upsertInstance(formData: FormData): Promise<void> {
   await ensureAdmin()
 
   const id = (formData.get('id') as string | null)?.trim() || null
@@ -87,9 +87,9 @@ export async function upsertInstance(formData: FormData) {
   const goalAmountCents = toCents(formData.get('goalAmount'))
   const currentAmountCents = toCents(formData.get('currentAmount'))
 
-  if (!slug) return { error: 'Slug is required' }
-  if (!name) return { error: 'Name is required' }
-  if (!domainType) return { error: 'Domain type is required' }
+  if (!slug) throw new Error('Slug is required')
+  if (!name) throw new Error('Name is required')
+  if (!domainType) throw new Error('Domain type is required')
 
   if (id) {
     await db.instance.update({
@@ -140,10 +140,9 @@ export async function upsertInstance(formData: FormData) {
   revalidatePath('/admin/instances')
   revalidatePath('/event')
   revalidatePath('/')
-  return { success: true }
 }
 
-export async function setActiveInstance(formData: FormData) {
+export async function setActiveInstance(formData: FormData): Promise<void> {
   await ensureAdmin()
 
   const instanceId = (formData.get('instanceId') as string | null)?.trim() || null
@@ -159,6 +158,5 @@ export async function setActiveInstance(formData: FormData) {
   revalidatePath('/admin/instances')
   revalidatePath('/event')
   revalidatePath('/')
-  return { success: true }
 }
 
