@@ -62,39 +62,41 @@ function userSafeError(error: unknown): string {
 const METAL_NATION_NAME = 'Metal'
 
 async function ensureMetalNationMoves() {
-  // Note: this is safe to call on every request. It only upserts.
-  const metalNation = await db.nation.upsert({
-    where: { name: METAL_NATION_NAME },
-    update: {
-      description: 'Metal Nation. Standards, craft, clarity, recycling.'
-    },
-    create: {
-      name: METAL_NATION_NAME,
-      description: 'Metal Nation. Standards, craft, clarity, recycling.',
-      wakeUp: 'Call the Standard: Define the clarity BAR for what "good" means.',
-      cleanUp: 'Cut the Noise: Remove distraction and return to signal.',
-      growUp: 'Forge a Template: Turn craft into reusable form.',
-      showUp: 'Highlight the Craft: Name the prestige BAR and deliver it.'
-    }
-  })
+  // Make this all-or-nothing: if the move tables don't exist yet (schema drift during deploy),
+  // we don't want to partially seed "Metal" into nations without the supporting tables.
+  return db.$transaction(async (tx) => {
+    const metalNation = await tx.nation.upsert({
+      where: { name: METAL_NATION_NAME },
+      update: {
+        description: 'Metal Nation. Standards, craft, clarity, recycling.'
+      },
+      create: {
+        name: METAL_NATION_NAME,
+        description: 'Metal Nation. Standards, craft, clarity, recycling.',
+        wakeUp: 'Call the Standard: Define the clarity BAR for what "good" means.',
+        cleanUp: 'Cut the Noise: Remove distraction and return to signal.',
+        growUp: 'Forge a Template: Turn craft into reusable form.',
+        showUp: 'Highlight the Craft: Name the prestige BAR and deliver it.'
+      }
+    })
 
-  const [clarity, prestige, framework] = await Promise.all([
-    db.polarity.upsert({
+    const clarity = await tx.polarity.upsert({
       where: { key: 'clarity' },
       update: { name: 'Clarity', icon: 'compass' },
       create: { key: 'clarity', name: 'Clarity', description: 'Reduce ambiguity into a standard.', icon: 'compass' }
-    }),
-    db.polarity.upsert({
+    })
+
+    const prestige = await tx.polarity.upsert({
       where: { key: 'prestige' },
       update: { name: 'Prestige', icon: 'medal' },
       create: { key: 'prestige', name: 'Prestige', description: 'Highlight craft and raise the bar.', icon: 'medal' }
-    }),
-    db.polarity.upsert({
+    })
+
+    const framework = await tx.polarity.upsert({
       where: { key: 'framework' },
       update: { name: 'Framework', icon: 'tools' },
       create: { key: 'framework', name: 'Framework', description: 'Turn lessons into reusable templates.', icon: 'tools' }
     })
-  ])
 
   const emptyReq: RequirementsSchemaV1 = { version: 1, fields: [] }
 
@@ -163,9 +165,8 @@ async function ensureMetalNationMoves() {
     },
   ]
 
-  await Promise.all(
-    moves.map((m) =>
-      db.nationMove.upsert({
+    for (const m of moves) {
+      await tx.nationMove.upsert({
         where: { key: m.key },
         update: {
           nationId: metalNation.id,
@@ -191,10 +192,10 @@ async function ensureMetalNationMoves() {
           sortOrder: m.sortOrder,
         }
       })
-    )
-  )
+    }
 
-  return metalNation
+    return metalNation
+  })
 }
 
 // ---------------------------------------------------------------------------
