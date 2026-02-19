@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && ( [ -n \"$DATABASE_URL\" ] || [ -n \"$POSTGRES_PRISMA_URL\" ] && prisma db push --accept-data-loss || echo \"Skipping prisma db push\" ) && next build",
+    "dev": "npm run db:sync && next dev",
+    "build": "npm run db:sync && next build",
     "start": "next start",
     "lint": "eslint",
+    "db:sync": "tsx scripts/db-sync.ts",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",

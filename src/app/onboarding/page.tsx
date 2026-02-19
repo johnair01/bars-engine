@@ -35,6 +35,23 @@ export default async function OnboardingPage() {
         orderBy: { name: 'asc' }
     })
 
+    // If orientation adventure exists, redirect to it
+    const config = await db.appConfig.findUnique({ where: { id: 'singleton' } })
+    const orientationId = config?.orientationQuestId
+
+    if (orientationId) {
+        const orientationStory = await db.twineStory.findUnique({ where: { id: orientationId } })
+        if (orientationStory && orientationStory.isPublished) {
+            redirect(`/adventures/${orientationStory.id}/play`)
+        }
+    } else {
+        // Fallback to legacy hardcoded slug if no dynamic config set
+        const orientationStory = await db.twineStory.findUnique({ where: { slug: 'the-first-ritual' } })
+        if (orientationStory && orientationStory.isPublished) {
+            redirect(`/adventures/${orientationStory.id}/play`)
+        }
+    }
+
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center">
             <OnboardingForm

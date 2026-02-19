@@ -110,12 +110,20 @@ export async function startThread(threadId: string) {
 export async function advanceThread(threadId: string, questId: string) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
+    const result = await advanceThreadForPlayer(player.id, threadId, questId)
+    revalidatePath('/')
+    return result
+}
 
+/**
+ * Internal logic for thread advancement (test-friendly)
+ */
+export async function advanceThreadForPlayer(playerId: string, threadId: string, questId: string) {
     const thread = await db.questThread.findUnique({
         where: { id: threadId },
         include: {
             quests: { orderBy: { position: 'asc' }, include: { quest: true } },
-            progress: { where: { playerId: player.id } }
+            progress: { where: { playerId } }
         }
     })
 
@@ -146,7 +154,7 @@ export async function advanceThread(threadId: string, questId: string) {
         // Mint vibeulons for thread completion
         await db.vibulonEvent.create({
             data: {
-                playerId: player.id,
+                playerId,
                 source: 'thread_completion',
                 amount: thread.completionReward,
                 archetypeMove: 'IMMOVABLE', // Mountain trigram for anchoring
@@ -155,27 +163,23 @@ export async function advanceThread(threadId: string, questId: string) {
         })
     } else if (!isComplete) {
         // RECURSIVE CHECK: Is the *next* quest already done?
-        // (This handles out-of-order completions where user did a future step early)
         const nextQuest = thread.quests.find(q => q.position === nextPosition)
         if (nextQuest) {
             const assignment = await db.playerQuest.findFirst({
                 where: {
-                    playerId: player.id,
+                    playerId,
                     questId: nextQuest.questId,
                     status: 'completed'
                 }
             })
 
             if (assignment) {
-                // Recursively advance (with loose check since we know it's the right next step)
-                // We construct a "force" call or just recurse normally
                 console.log(`Auto-advancing thread ${threadId} past already-completed quest ${nextQuest.questId}`)
-                await advanceThread(threadId, nextQuest.questId)
+                await advanceThreadForPlayer(playerId, threadId, nextQuest.questId)
             }
         }
     }
 
-    revalidatePath('/')
     return {
         success: true,
         isComplete,

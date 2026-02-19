@@ -18,6 +18,8 @@ export default function EditQuestPage() {
     const [type, setType] = useState('standard')
     const [reward, setReward] = useState(0)
     const [inputs, setInputs] = useState('[]')
+    const [allowedNations, setAllowedNations] = useState('[]')
+    const [allowedTrigrams, setAllowedTrigrams] = useState('[]')
 
     const id = params.id
     const isNew = id === 'new-quest'
@@ -40,6 +42,8 @@ export default function EditQuestPage() {
                 setType(data.type)
                 setReward(data.reward)
                 setInputs(data.inputs || '[]')
+                setAllowedNations(data.allowedNations || '[]')
+                setAllowedTrigrams(data.allowedTrigrams || '[]')
             }
             setLoading(false)
         })
@@ -61,7 +65,9 @@ export default function EditQuestPage() {
                 description,
                 type,
                 reward,
-                inputs
+                inputs,
+                allowedNations: allowedNations === '[]' ? null : allowedNations,
+                allowedTrigrams: allowedTrigrams === '[]' ? null : allowedTrigrams
             })
             router.push('/admin/quests')
             router.refresh()
@@ -141,6 +147,30 @@ export default function EditQuestPage() {
                             value={reward}
                             onChange={e => setReward(parseInt(e.target.value))}
                             className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white"
+                        />
+                    </div>
+                </div>
+
+                {/* Gating Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-zinc-400">Allowed Nations (JSON Array)</label>
+                        <input
+                            type="text"
+                            value={allowedNations}
+                            onChange={e => setAllowedNations(e.target.value)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
+                            placeholder='["Argyra", "Pyrakanth"]'
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-zinc-400">Allowed Trigrams (JSON Array)</label>
+                        <input
+                            type="text"
+                            value={allowedTrigrams}
+                            onChange={e => setAllowedTrigrams(e.target.value)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
+                            placeholder='["Fire", "Water"]'
                         />
                     </div>
                 </div>

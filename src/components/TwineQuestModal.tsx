@@ -104,8 +104,16 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                     setCompleted(true)
                     setTimeout(() => {
                         onClose()
-                        router.refresh()
+                        if (result.redirect) {
+                            router.push(result.redirect)
+                        } else {
+                            router.refresh()
+                        }
                     }, 2500)
+                } else if (result.redirect) {
+                    // Immediate redirect if not a completion (special target like DASHBOARD)
+                    onClose()
+                    router.push(result.redirect)
                 }
             }
         })

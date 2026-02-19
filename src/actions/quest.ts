@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { completeQuestForPlayer } from '@/actions/quest-engine'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -19,41 +20,14 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
         }
     })
 
-    // Find the active quest
-    const activeQuest = await db.playerQuest.findFirst({
-        where: {
-            playerId: player.id,
-            questId,
-            status: 'assigned'
-        }
-    })
-
-    if (!activeQuest) {
-        revalidatePath('/wallet')
-        return redirect('/wallet')
+    // DELEGATE TO QUEST ENGINE
+    // This handles rewards, onboarding, thread advancement, etc.
+    try {
+        await completeQuestForPlayer(player.id, questId, responses)
+    } catch (e) {
+        console.error("[submitQuestReturn] Failed to complete quest via engine:", e)
+        return { error: e instanceof Error ? e.message : 'Failed to complete quest' }
     }
-
-    // Update Quest Status to 'completed'
-    await db.playerQuest.update({
-        where: { id: activeQuest.id },
-        data: {
-            status: 'completed',
-            inputs: JSON.stringify(responses), // Store dynamic responses
-            completedAt: new Date(),
-        }
-    })
-
-    // GRANT VIBULON (+1)
-    await db.vibulonEvent.create({
-        data: {
-            playerId: player.id,
-            source: 'quest',
-            amount: 1,
-            notes: `Quest Returned: ${questId}`,
-            archetypeMove: 'IGNITE',
-            questId: questId,
-        }
-    })
 
     revalidatePath('/wallet')
     redirect('/wallet')

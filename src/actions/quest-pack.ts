@@ -117,12 +117,20 @@ export async function startPack(packId: string) {
 export async function completePackQuest(packId: string, questId: string) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
+    const result = await completePackQuestForPlayer(player.id, packId, questId)
+    revalidatePath('/')
+    return result
+}
 
+/**
+ * Internal logic for pack completion (test-friendly)
+ */
+export async function completePackQuestForPlayer(playerId: string, packId: string, questId: string) {
     const pack = await db.questPack.findUnique({
         where: { id: packId },
         include: {
             quests: true,
-            progress: { where: { playerId: player.id } }
+            progress: { where: { playerId } }
         }
     })
 
@@ -139,7 +147,7 @@ export async function completePackQuest(packId: string, questId: string) {
         progress = await db.packProgress.create({
             data: {
                 packId,
-                playerId: player.id,
+                playerId,
                 completed: '[]'
             }
         })
@@ -163,7 +171,6 @@ export async function completePackQuest(packId: string, questId: string) {
         }
     })
 
-    revalidatePath('/')
     return {
         success: true,
         isPackComplete,

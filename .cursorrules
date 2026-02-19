@@ -1,0 +1,14 @@
+# Database Synchronization Rule
+
+When you modify the file `prisma/schema.prisma`, you MUST automatically run the following command to synchronize the database and regenerate types:
+
+```bash
+npm run db:sync
+```
+
+This ensures that:
+1. The database schema is updated (via `prisma db push`).
+2. The Prisma Client is regenerated with new types.
+3. Other developers on different machines receive the updates seamlessly.
+
+Do not wait for the user to ask; execute this command as a post-modification step.

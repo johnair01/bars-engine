@@ -14,7 +14,8 @@ import { getCurrentPlayer } from '@/lib/auth'
 export async function getMarketContent() {
     const player = await getCurrentPlayer()
 
-    const [publicPacks, publicQuests] = await Promise.all([
+    const [globalState, publicPacks, publicQuests] = await Promise.all([
+        db.globalState.findUnique({ where: { id: 'singleton' } }),
         // 1. Feature: Public Packs (Recycled Community Packs)
         db.questPack.findMany({
             where: {
@@ -25,9 +26,6 @@ export async function getMarketContent() {
                 quests: {
                     include: { quest: true }
                 },
-                // Include creator name?
-                // We'd need to fetch creator but creatorId is string.
-                // For now, simple.
                 progress: player ? {
                     where: { playerId: player.id }
                 } : undefined
@@ -40,21 +38,62 @@ export async function getMarketContent() {
             where: {
                 visibility: 'public',
                 status: 'active',
-                isSystem: false, // Don't show system prompts in market directly?
-                // Filter out ones user has already picked up?
-                // assignments: player ? { none: { playerId: player.id } } : undefined
+                isSystem: false,
             },
             orderBy: { createdAt: 'desc' },
             take: 50 // Limit for now
         })
     ])
 
+    // Filter quests
+    let filteredQuests = publicQuests
+
+    // 1. Filter story-clock quests if paused
+    if (globalState?.isPaused) {
+        filteredQuests = filteredQuests.filter(q => q.hexagramId === null)
+    }
+
+    // 2. Nation & Playbook Gating
+    if (player) {
+        filteredQuests = filteredQuests.filter(q => {
+            // Nation gating
+            if (q.allowedNations) {
+                try {
+                    const allowedNations = JSON.parse(q.allowedNations) as string[]
+                    if (allowedNations.length > 0 && player.nation && !allowedNations.includes(player.nation.name)) {
+                        return false
+                    }
+                } catch (e) {
+                    // Fallback to showing if parse error, but log it
+                    console.error('Error parsing allowedNations:', e)
+                }
+            }
+
+            // Playbook (Trigram) gating
+            if (q.allowedTrigrams) {
+                try {
+                    const allowedTrigrams = JSON.parse(q.allowedTrigrams) as string[]
+                    if (allowedTrigrams.length > 0 && player.playbook) {
+                        const playerTrigram = player.playbook.name.split(' ')[0]
+                        if (!allowedTrigrams.includes(playerTrigram)) {
+                            return false
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing allowedTrigrams:', e)
+                }
+            }
+
+            return true
+        })
+    }
+
     return {
         packs: publicPacks.map(p => ({
             ...p,
             isOwned: p.progress && p.progress.length > 0
         })),
-        quests: publicQuests
+        quests: filteredQuests
     }
 }
 
@@ -92,7 +131,7 @@ export async function pickupMarketPack(packId: string) {
         }
     })
 
-    revalidatePath('/town-square')
+    revalidatePath('/bars/available')
     revalidatePath('/')
     return { success: true }
 }
@@ -130,7 +169,7 @@ export async function pickupMarketQuest(questId: string) {
         }
     })
 
-    revalidatePath('/town-square')
+    revalidatePath('/bars/available')
     revalidatePath('/')
     return { success: true }
 }
@@ -163,6 +202,6 @@ export async function recyclePack(packId: string) {
         data: { visibility: 'public' }
     })
 
-    revalidatePath('/town-square')
+    revalidatePath('/bars/available')
     return { success: true }
 }

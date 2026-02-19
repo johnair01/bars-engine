@@ -8,10 +8,37 @@ export default async function QuestPage() {
     const player = await getCurrentPlayer()
     if (!player) return redirect('/invite/ANTIGRAVITY')
 
-    // Find active quest
-    const activeQuest = await db.playerQuest.findFirst({
+    // Find active quests for this player (specifically those assigned)
+    const activeAssignments = await db.playerQuest.findMany({
         where: { playerId: player.id, status: 'assigned' },
-        include: { quest: true }
+        include: {
+            quest: {
+                include: { creator: true }
+            }
+        }
+    })
+
+    // Filter by Gating (in case nation/playbook changed or bypassed)
+    const activeQuest = activeAssignments.find(a => {
+        const q = a.quest
+        // Nation gating
+        if (q.allowedNations) {
+            try {
+                const allowed = JSON.parse(q.allowedNations) as string[]
+                if (allowed.length > 0 && player.nation && !allowed.includes(player.nation.name)) return false
+            } catch (e) { }
+        }
+        // Playbook gating
+        if (q.allowedTrigrams) {
+            try {
+                const allowed = JSON.parse(q.allowedTrigrams) as string[]
+                if (allowed.length > 0 && player.playbook) {
+                    const playerTrigram = player.playbook.name.split(' ')[0]
+                    if (!allowed.includes(playerTrigram)) return false
+                }
+            } catch (e) { }
+        }
+        return true
     })
 
     if (!activeQuest) {

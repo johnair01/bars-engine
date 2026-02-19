@@ -117,139 +117,113 @@ export async function completeQuestForPlayer(
         }
     }
 
-    // MARK QUEST AS COMPLETE
-    // MARK QUEST AS COMPLETE
-    await db.playerQuest.upsert({
-        where: {
-            playerId_questId: {
-                playerId,
-                questId
-            }
-        },
-        update: {
-            status: 'completed',
-            inputs: JSON.stringify(inputs),
-            completedAt: new Date(),
-        },
-        create: {
-            playerId,
-            questId,
-            status: 'completed',
-            inputs: JSON.stringify(inputs),
-            completedAt: new Date(),
-            assignedAt: new Date()
-        }
-    })
-
-    // GRANT VIBEULONS with bonus
-    const baseReward = quest.reward || 1
-    let finalReward = Math.floor(baseReward * bonusMultiplier)
-
-    if (isStoryClockQuest) {
-        finalReward = isFirstCompleter ? 2 : 1
-    }
-
-    if (isPersonalIChingQuest) {
-        finalReward = 1
-    }
-
-    // REPEATABLE FEEDBACK QUEST LOGIC
-    if (questId === 'system-feedback') {
-        const feedbackCount = await db.vibulonEvent.count({
-            where: {
-                playerId,
-                questId: 'system-feedback',
-                source: 'quest'
-            }
-        })
-        if (feedbackCount >= 5) {
-            finalReward = 0
-            console.log(`[QuestEngine] Feedback cap reached for ${playerId}. Reward set to 0.`)
-        }
-    }
-
-    await db.vibulonEvent.create({
-        data: {
-            playerId,
-            source: 'quest',
-            amount: finalReward,
-            notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
-            archetypeMove: 'IGNITE',
-            questId: questId,
-        }
-    })
-
-    // Handle Pack/Thread progression
-    if (context?.packId) {
-        await completePackQuest(context.packId, questId) // Assuming completePackQuest handles progression
-    }
-
-    if (context?.threadId) {
-        await advanceThread(context.threadId, questId)
-    }
-
-    // CHECK ONBOARDING STATUS
-    const obStatus = await getOnboardingStatus(playerId)
-    if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
-        await completeOnboardingStep('firstQuest', playerId, { skipRevalidate: options?.skipRevalidate })
-    }
-
-    // MINT ACTUAL VIBULON TOKENS (Vibulon model)
-    await mintVibulon(playerId, finalReward, {
-        source: 'quest',
-        id: questId,
-        title: quest.title
-    }, { skipRevalidate: options?.skipRevalidate })
-
-    // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
-    if (questId === 'system-feedback') {
-        await db.playerQuest.delete({
+    // MARK QUEST AS COMPLETE AND GRANT REWARDS IN TRANSACTION
+    return await db.$transaction(async (tx) => {
+        await tx.playerQuest.upsert({
             where: {
                 playerId_questId: {
                     playerId,
-                    questId: 'system-feedback'
+                    questId
                 }
+            },
+            update: {
+                status: 'completed',
+                inputs: JSON.stringify(inputs),
+                completedAt: new Date(),
+            },
+            create: {
+                playerId,
+                questId,
+                status: 'completed',
+                inputs: JSON.stringify(inputs),
+                completedAt: new Date(),
+                assignedAt: new Date()
             }
         })
-    }
 
-    if (!options?.skipRevalidate) {
-        revalidatePath('/')
-        revalidatePath('/story-clock')
-        revalidatePath('/wallet')
-    }
+        // GRANT VIBEULONS with bonus
+        const baseReward = quest.reward || 1
+        let finalReward = Math.floor(baseReward * bonusMultiplier)
 
-    // PROCESS COMPLETION EFFECTS
-    if (quest.completionEffects) {
-        try {
-            const effects = JSON.parse(quest.completionEffects) as any
-
-            // Example Effect: Update Player Profile
-            if (effects.updatePlayer) {
-                await db.player.update({
-                    where: { id: playerId },
-                    data: effects.updatePlayer
-                })
-            }
-
-            // Example Effect: Log specialized event
-            if (effects.logEvent) {
-                await db.auditLog.create({
-                    data: {
-                        actorAdminId: 'system',
-                        action: effects.logEvent.action || 'QUEST_EFFECT',
-                        targetType: 'player',
-                        targetId: playerId,
-                        payloadJson: JSON.stringify(effects.logEvent.payload || {})
-                    }
-                })
-            }
-        } catch (e) {
-            console.error("Failed to process quest completion effects", e)
+        if (isStoryClockQuest) {
+            finalReward = isFirstCompleter ? 2 : 1
         }
-    }
 
-    return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
+        if (isPersonalIChingQuest) {
+            finalReward = 1
+        }
+
+        // REPEATABLE FEEDBACK QUEST LOGIC
+        if (questId === 'system-feedback') {
+            const feedbackCount = await tx.vibulonEvent.count({
+                where: {
+                    playerId,
+                    questId: 'system-feedback',
+                    source: 'quest'
+                }
+            })
+            if (feedbackCount >= 5) {
+                finalReward = 0
+                console.log(`[QuestEngine] Feedback cap reached for ${playerId}. Reward set to 0.`)
+            }
+        }
+
+        await tx.vibulonEvent.create({
+            data: {
+                playerId,
+                source: 'quest',
+                amount: finalReward,
+                notes: `Quest Completed: ${quest.title}${bonusMultiplier > 1 ? ' (+50% period bonus!)' : ''}${isFirstCompleter ? ' (FIRST!)' : ''}`,
+                archetypeMove: 'IGNITE',
+                questId: questId,
+            }
+        })
+
+        // MINT ACTUAL VIBULON TOKENS (Vibulon model)
+        const tokenData = []
+        for (let i = 0; i < finalReward; i++) {
+            tokenData.push({
+                ownerId: playerId,
+                originSource: 'quest',
+                originId: questId,
+                originTitle: quest.title
+            })
+        }
+        if (tokenData.length > 0) {
+            await tx.vibulon.createMany({ data: tokenData })
+        }
+
+        // Handle Pack/Thread progression
+        if (context?.packId) {
+            const { completePackQuestForPlayer } = await import('@/actions/quest-pack')
+            await completePackQuestForPlayer(playerId, context.packId, questId)
+        }
+
+        if (context?.threadId) {
+            const { advanceThreadForPlayer } = await import('@/actions/quest-thread')
+            await advanceThreadForPlayer(playerId, context.threadId, questId)
+        }
+
+        // CHECK ONBOARDING STATUS
+        const obStatus = await getOnboardingStatus(playerId)
+        if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
+            await completeOnboardingStep('firstQuest', playerId, { skipRevalidate: true })
+        }
+
+        // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
+        if (questId === 'system-feedback') {
+            await tx.playerQuest.delete({
+                where: {
+                    playerId_questId: {
+                        playerId,
+                        questId: 'system-feedback'
+                    }
+                }
+            })
+        }
+
+        return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
+    })
 }
 
 function parseStoryQuestMeta(raw: string | null) {
@@ -334,6 +308,42 @@ export async function fireTrigger(trigger: string) {
     }
 
     return { success: true, results }
+}
+
+/**
+ * Delete a BAR/Quest.
+ * Admin: Any BAR.
+ * Player: Own private BAR if not yet accepted as a quest or updated by another.
+ */
+export async function deleteBar(barId: string) {
+    const player = await getCurrentPlayer()
+    if (!player) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        include: {
+            assignments: { take: 1 },
+            children: { take: 1 }
+        }
+    })
+
+    if (!bar) return { error: 'BAR not found' }
+
+    const isAdmin = player.roles.some(r => r.role.key === 'ADMIN')
+
+    if (!isAdmin) {
+        if (bar.creatorId !== player.id) return { error: 'Unauthorized' }
+        if (bar.assignments.length > 0) return { error: 'Cannot delete a BAR that has been accepted as a quest' }
+        if (bar.children.length > 0) return { error: 'Cannot delete a BAR that has been updated or forked' }
+    }
+
+    await db.customBar.delete({
+        where: { id: barId }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/bars/available')
+    return { success: true }
 }
 
 /**

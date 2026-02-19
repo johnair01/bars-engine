@@ -253,6 +253,8 @@ export async function upsertQuest(data: {
         type: data.type || 'standard',
         inputs: data.inputs || '[]',
         visibility: 'public', // Default to public for system quests
+        allowedNations: (data as any).allowedNations || null,
+        allowedTrigrams: (data as any).allowedTrigrams || null,
     }
 
     let questId = data.id

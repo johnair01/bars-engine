@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getQuestTemplates } from '@/actions/quest-templates'
 import { QuestTemplate } from '@/lib/quest-templates'
-import { createQuestFromWizard, createCustomBar } from '@/actions/create-bar'
+import { createQuestFromWizard, createCustomBar, getGatingOptions } from '@/actions/create-bar'
 import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 
@@ -18,11 +18,15 @@ export function QuestWizard() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [twineStories, setTwineStories] = useState<{ id: string; title: string }[]>([])
+    const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
+    const [selectedNations, setSelectedNations] = useState<string[]>([])
+    const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
 
     // Load templates + twine stories on mount
     useEffect(() => {
         getQuestTemplates().then(setTemplates)
         listPublishedStories().then(stories => setTwineStories(stories))
+        getGatingOptions().then(setGatingOptions)
     }, [])
 
     // Handlers
@@ -71,6 +75,8 @@ export function QuestWizard() {
                 visibility: formData.visibility || 'private',
                 inputs,
                 applyFirstAidLens: !!formData.applyFirstAidLens,
+                allowedNations: selectedNations,
+                allowedTrigrams: selectedTrigrams
             })
 
             if (result?.error) {
@@ -261,6 +267,49 @@ export function QuestWizard() {
                         <p className="text-[10px] text-zinc-600">Attach a Twine story. Players complete the quest by playing through it.</p>
                     </div>
                 )}
+
+                {/* Nation & Trigram Gating */}
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase text-zinc-500 block">Restrict to Nations (Optional)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {gatingOptions.nations.map(nation => (
+                                <button
+                                    key={nation}
+                                    onClick={() => setSelectedNations(prev =>
+                                        prev.includes(nation) ? prev.filter(n => n !== nation) : [...prev, nation]
+                                    )}
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedNations.includes(nation)
+                                        ? 'bg-blue-900/20 border-blue-500/50 text-blue-300'
+                                        : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    {nation}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase text-zinc-500 block">Restrict to Trigrams (Optional)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {gatingOptions.trigrams.map(trigram => (
+                                <button
+                                    key={trigram}
+                                    onClick={() => setSelectedTrigrams(prev =>
+                                        prev.includes(trigram) ? prev.filter(t => t !== trigram) : [...prev, trigram]
+                                    )}
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedTrigrams.includes(trigram)
+                                        ? 'bg-purple-900/20 border-purple-500/50 text-purple-300'
+                                        : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    {trigram}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
                 <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
                     <input

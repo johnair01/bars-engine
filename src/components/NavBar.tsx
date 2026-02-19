@@ -32,7 +32,7 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             BARS
                         </Link>
                         <Link href="/bars/available" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/available')}`}>
-                            QUESTS
+                            MARKET
                         </Link>
                         <Link href="/wallet" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/wallet')}`}>
                             WALLET

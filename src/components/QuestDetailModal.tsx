@@ -5,6 +5,7 @@ import { completeQuest, getArchetypeHandbookData } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter } from 'next/navigation'
+import { pickupMarketQuest } from '@/actions/market'
 import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
@@ -149,6 +150,23 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 }, 1500)
             } else {
                 setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
+            }
+        })
+    }
+
+    const handleAccept = () => {
+        if (isPending) return
+        startTransition(async () => {
+            const result = await pickupMarketQuest(quest.id)
+            if (result.success) {
+                setFeedback('✨ Quest Accepted!')
+                setTimeout(() => {
+                    setFeedback(null)
+                    onClose()
+                    router.push('/') // Redirect to dashboard to see active quest
+                }, 1500)
+            } else {
+                setFeedback(`❌ ${result.error || 'Failed to accept quest'}`)
             }
         })
     }
@@ -462,11 +480,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
                         {!isCompleted && !isLocked && !shouldRenderTwine && (
                             <button
-                                onClick={handleComplete}
+                                onClick={isCompleted === undefined ? handleAccept : handleComplete}
                                 // Disable for triggered quests (except archetype reader)
                                 hidden={effectiveInputs.some(input => input.trigger === 'ICHING_CAST') ||
                                     quest.id === 'orientation-quest-3'}
-                                disabled={isPending || (isArchetypeQuest && !hasScrolledToBottom) || (!isArchetypeQuest && (() => {
+                                disabled={isPending || (isArchetypeQuest && !hasScrolledToBottom) || (!isArchetypeQuest && isCompleted !== undefined && (() => {
                                     const requiredMissing = effectiveInputs.some(input => input.required && !responses[input.key])
                                     return requiredMissing
                                 })())}
@@ -475,7 +493,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20'
                                     } disabled:opacity-50 disabled:grayscale`}
                             >
-                                {isPending ? 'Completing...' : (isArchetypeQuest ? 'Acknowledge' : 'Complete Quest')}
+                                {isPending ? (isCompleted === undefined ? 'Accepting...' : 'Completing...') :
+                                    (isCompleted === undefined ? 'Accept Quest' : (isArchetypeQuest ? 'Acknowledge' : 'Complete Quest'))}
                             </button>
                         )}
                     </div>

@@ -38,6 +38,8 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     const applyFirstAidLens = (formData.get('applyFirstAidLens') as string) === 'true'
     const linkedQuestId = ((formData.get('linkedQuestId') as string) || '').trim() || null
     const tags = parseTags((formData.get('tags') as string) || '')
+    const allowedNations = formData.get('allowedNations') as string || null
+    const allowedTrigrams = formData.get('allowedTrigrams') as string || null
 
     if (!title) {
         return { error: 'Title is required' }
@@ -153,7 +155,9 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                     storyMood: storyMood || null,
                     parentId: linkedQuest?.id || null,
                     completionEffects,
-                    rootId: rootIdSeed
+                    rootId: rootIdSeed,
+                    allowedNations,
+                    allowedTrigrams
                 }
             })
 
@@ -269,7 +273,8 @@ export async function createQuestFromWizard(data: any) {
     try {
         const {
             title, description, category, visibility,
-            reward, inputs, lifecycleFraming, approach, applyFirstAidLens
+            reward, inputs, lifecycleFraming, approach, applyFirstAidLens,
+            allowedNations, allowedTrigrams
         } = data
 
         const creator = await db.player.findUnique({
@@ -366,7 +371,9 @@ export async function createQuestFromWizard(data: any) {
                     storyPath: 'collective',
                     rootId: 'temp',
                     storyContent: finalStoryContent,
-                    completionEffects
+                    completionEffects,
+                    allowedNations: allowedNations ? JSON.stringify(allowedNations) : null,
+                    allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null
                 }
             })
 
@@ -413,5 +420,17 @@ export async function createQuestFromWizard(data: any) {
             error
         )
         return { error: `Failed to create quest (req: ${requestId})` }
+    }
+}
+
+export async function getGatingOptions() {
+    const [nations, playbooks] = await Promise.all([
+        db.nation.findMany({ select: { id: true, name: true } }),
+        db.playbook.findMany({ select: { id: true, name: true } })
+    ])
+
+    return {
+        nations: nations.map(n => n.name),
+        trigrams: Array.from(new Set(playbooks.map(p => p.name.split(' ')[0])))
     }
 }

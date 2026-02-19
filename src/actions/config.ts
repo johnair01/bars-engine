@@ -94,6 +94,39 @@ export async function updateHeroText(formData: FormData) {
     return { success: true }
 }
 
+// Update orientation quest
+export async function updateOrientationQuest(formData: FormData) {
+    const cookieStore = await cookies()
+    const adminId = cookieStore.get('bars_player_id')?.value
+
+    if (!adminId) return { error: 'Not authenticated' }
+
+    const orientationQuestId = formData.get('orientationQuestId') as string
+
+    await db.appConfig.update({
+        where: { id: 'singleton' },
+        data: {
+            orientationQuestId: orientationQuestId || null,
+            updatedBy: adminId
+        }
+    })
+
+    // Audit log
+    await db.adminAuditLog.create({
+        data: {
+            adminId,
+            action: 'config_update',
+            target: 'orientation_quest',
+            payload: JSON.stringify({ orientationQuestId })
+        }
+    })
+
+    revalidatePath('/admin/config')
+    revalidatePath('/')
+    revalidatePath('/onboarding')
+    return { success: true }
+}
+
 // Get recent audit logs
 export async function getRecentAuditLogs(limit = 10) {
     return db.adminAuditLog.findMany({

@@ -182,3 +182,61 @@ export async function getAllPlayersAdminPulse() {
         orderBy: { createdAt: 'desc' }
     })
 }
+/**
+ * Admin only: Wrap a simple quest (BAR) into a 3-node Twine adventure (Intro -> Quest -> Outro)
+ */
+export async function wrapQuestAsAdventure(questId: string, prologueText: string, epilogueText: string) {
+    const admin = await ensureAdmin()
+
+    const quest = await db.customBar.findUnique({ where: { id: questId } })
+    if (!quest) return { error: 'Quest not found' }
+
+    const slug = `${quest.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-adv-${Date.now()}`
+
+    const story = await db.twineStory.create({
+        data: {
+            title: `${quest.title} (Adventure)`,
+            slug,
+            sourceType: 'stitched',
+            sourceText: `Auto-wrapped adventure for BAR ${questId}`,
+            isPublished: true,
+            createdById: admin.id,
+            parsedJson: JSON.stringify({
+                title: `${quest.title} (Adventure)`,
+                startPassage: 'Prologue',
+                passages: [
+                    {
+                        name: 'Prologue',
+                        text: prologueText || `You have been assigned a new mission: ${quest.title}.`,
+                        links: [{ label: 'Accept Mission', target: 'The Trial' }]
+                    },
+                    {
+                        name: 'The Trial',
+                        text: quest.description,
+                        links: [{ label: 'Success', target: 'Epilogue' }]
+                    },
+                    {
+                        name: 'Epilogue',
+                        text: epilogueText || `Mission accomplished. You have earned your reward.`,
+                        links: [{ label: 'Return Home', target: 'DASHBOARD' }]
+                    }
+                ]
+            })
+        }
+    })
+
+    // Bind the quest to the 'The Trial' passage
+    await db.twineBinding.create({
+        data: {
+            storyId: story.id,
+            scopeType: 'passage',
+            scopeId: 'The Trial',
+            actionType: 'EMIT_QUEST',
+            payload: JSON.stringify({ id: quest.id, title: quest.title }),
+            createdById: admin.id
+        }
+    })
+
+    revalidatePath('/admin/twine')
+    return { success: true, storyId: story.id }
+}

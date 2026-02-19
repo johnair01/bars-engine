@@ -354,6 +354,8 @@ export default async function Home() {
               customBars={visibleCustomBars.filter(b => b.type !== 'inspiration')}
               ichingBars={ichingReadings}
               potentialDelegates={potentialDelegates}
+              playerId={playerId}
+              userRoles={player.roles.map(r => r.role.key)}
               view="active"
             />
           </section>
@@ -404,8 +406,8 @@ export default async function Home() {
               <Link href="/bars/available" className="block group">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-green-500/50 transition-all">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Available Quests</h3>
-                    <p className="text-zinc-500 text-sm">Browse &amp; accept quests</p>
+                    <h3 className="text-lg font-bold text-white mb-1">The Market</h3>
+                    <p className="text-zinc-500 text-sm">Browse &amp; accept collective quests</p>
                   </div>
                   <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
                     →
@@ -502,7 +504,7 @@ export default async function Home() {
 
               {/* Special Moves */}
               {player.playbook && (
-                <div className="bg-zinc-900/20 border border-zinc-800 p-3 rounded-lg">
+                <div className="bg-zinc-900/20 border border-zinc-800 p-3 rounded-lg mb-4">
                   <div className="text-xs uppercase text-zinc-500 font-bold mb-2">Special Moves ({player.playbook.name.split(' ')[0]})</div>
                   <div className="flex flex-wrap gap-2">
                     {JSON.parse(player.playbook.moves).map((move: string, i: number) => (
@@ -511,6 +513,33 @@ export default async function Home() {
                   </div>
                 </div>
               )}
+
+              {/* Elemental Moves (Nation Affinity) */}
+              {player.nation && (() => {
+                const { ELEMENTAL_MOVES, hasAffinity, NATION_AFFINITIES } = require('@/lib/elemental-moves')
+                const nationAffinities = NATION_AFFINITIES[player.nation.name] || []
+                const availableElementalMoves = Object.entries(ELEMENTAL_MOVES)
+                  .filter(([_, move]: [any, any]) => nationAffinities.includes(move.affinity))
+
+                if (availableElementalMoves.length === 0) return null
+
+                return (
+                  <div className="bg-cyan-900/10 border border-cyan-900/40 p-3 rounded-lg">
+                    <div className="text-xs uppercase text-cyan-500 font-bold mb-2">Elemental Moves ({player.nation.name})</div>
+                    <div className="flex flex-wrap gap-2">
+                      {availableElementalMoves.map(([name, move]: [any, any]) => (
+                        <AlchemyCaster
+                          key={name}
+                          moveName={name}
+                          isSpecial={true}
+                          description={move.description}
+                          icon={move.icon}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
             </section>
           )}
 

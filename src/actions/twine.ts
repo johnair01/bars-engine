@@ -184,8 +184,8 @@ export async function listPublishedStories() {
 // PLAYER: Start or resume run (supports quest-scoped runs)
 // ---------------------------------------------------------------------------
 
-export async function getOrCreateRun(storyId: string, questId?: string | null) {
-    const playerId = await requirePlayer()
+export async function getOrCreateRun(storyId: string, questId?: string | null, playerIdOverride?: string) {
+    const playerId = playerIdOverride || await requirePlayer()
 
     const story = await db.twineStory.findUnique({ where: { id: storyId } })
     if (!story || !story.isPublished) return { error: 'Story not found or not published' }
@@ -221,8 +221,8 @@ export async function getOrCreateRun(storyId: string, questId?: string | null) {
 // PLAYER: Advance to a passage (choose a link)
 // ---------------------------------------------------------------------------
 
-export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null) {
-    const playerId = await requirePlayer()
+export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null, playerIdOverride?: string) {
+    const playerId = playerIdOverride || await requirePlayer()
 
     // Find the run (quest-scoped or standalone)
     const run = await db.twineRun.findFirst({
@@ -242,16 +242,25 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
         passages: { name: string; links: { label: string; target: string }[] }[]
     }
 
-    // Validate the target passage exists
-    const targetPassage = parsed.passages.find(p => p.name === targetPassageName)
-    if (!targetPassage) return { error: `Passage "${targetPassageName}" not found` }
-
-    // Validate there is a link from current passage to target
     const currentPassage = parsed.passages.find(p => p.name === run.currentPassageId)
     if (currentPassage) {
         const validLink = currentPassage.links.some(l => l.target === targetPassageName)
         if (!validLink) return { error: 'Invalid link from current passage' }
     }
+
+    // Check for special targets
+    if (targetPassageName === 'DASHBOARD') {
+        await db.player.update({
+            where: { id: playerId },
+            data: { onboardingComplete: true }
+        })
+        try { revalidatePath('/') } catch (e) { }
+        return { success: true, redirect: '/', emitted: [], questCompleted: false }
+    }
+
+    // Validate the target passage exists
+    const targetPassage = parsed.passages.find(p => p.name === targetPassageName)
+    if (!targetPassage) return { error: `Passage "${targetPassageName}" not found` }
 
     // Update run state
     const visited = JSON.parse(run.visited) as string[]
@@ -274,9 +283,11 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
         questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId)
     }
 
-    revalidatePath(`/adventures/${storyId}/play`)
-    revalidatePath('/')
-    return { success: true, emitted: bindingResult, questCompleted }
+    try {
+        revalidatePath(`/adventures/${storyId}/play`)
+        revalidatePath('/')
+    } catch (e) { }
+    return { success: true, emitted: bindingResult, questCompleted, redirect: null as string | null }
 }
 
 // ---------------------------------------------------------------------------
@@ -335,7 +346,7 @@ async function autoCompleteQuestFromTwine(questId: string, runId: string, player
         }
 
         console.log(`[TWINE] Quest auto-completed: ${questId} for player ${playerId}`)
-        revalidatePath('/')
+        try { revalidatePath('/') } catch (e) { }
         return true
     } catch (e) {
         console.error('[TWINE] Auto-complete failed:', e)
@@ -378,16 +389,12 @@ async function executeBindingsForPassage(
     const run = await db.twineRun.findUnique({ where: { id: runId } })
     if (!run) return emitted
     const firedBindings = JSON.parse(run.firedBindings) as string[]
+    const newlyFiredIds: string[] = []
 
     for (const binding of bindings) {
         if (firedBindings.includes(binding.id)) continue // Already fired
 
-        const payload = JSON.parse(binding.payload) as {
-            title: string
-            description?: string
-            tags?: string
-            visibility?: string
-        }
+        const payload = JSON.parse(binding.payload) as any
 
         try {
             if (binding.actionType === 'EMIT_QUEST') {
@@ -426,22 +433,37 @@ async function executeBindingsForPassage(
                     }
                 })
                 emitted.push(`BAR: ${payload.title}`)
+            } else if (binding.actionType === 'SET_NATION') {
+                const nationId = payload.nationId || payload.id
+                await db.player.update({
+                    where: { id: playerId },
+                    data: { nationId }
+                })
+                emitted.push(`Nation set: ${nationId}`)
+            } else if (binding.actionType === 'SET_ARCHETYPE') {
+                const playbookId = payload.playbookId || payload.id
+                await db.player.update({
+                    where: { id: playerId },
+                    data: { playbookId }
+                })
+                emitted.push(`Archetype set: ${playbookId}`)
             }
 
-            // Mark binding as fired
-            firedBindings.push(binding.id)
+            // Mark binding as newly fired
+            newlyFiredIds.push(binding.id)
         } catch (err) {
             console.error(`[TWINE] Binding execution failed for ${binding.id}:`, err)
         }
     }
 
-    // Persist fired bindings
-    if (emitted.length > 0) {
+    // Persist newly fired bindings
+    if (newlyFiredIds.length > 0) {
+        const updatedFired = [...firedBindings, ...newlyFiredIds]
         await db.twineRun.update({
-            where: { id: runId },
-            data: { firedBindings: JSON.stringify(firedBindings) }
+            where: { id: run.id },
+            data: { firedBindings: JSON.stringify(updatedFired) }
         })
-        revalidatePath('/')
+        try { revalidatePath('/') } catch (e) { }
     }
 
     return emitted

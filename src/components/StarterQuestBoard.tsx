@@ -7,6 +7,7 @@ import { completeStarterQuest } from '@/actions/starter-quests'
 import { pickUpBar } from '@/actions/pick-up-bar'
 import { delegateBar } from '@/actions/delegate-bar'
 import { releaseBarToSaladBowl } from '@/actions/release-bar'
+import { deleteBar } from '@/actions/quest-engine'
 import Link from 'next/link'
 
 type CompletedBar = { id: string; inputs: Record<string, any> }
@@ -19,6 +20,9 @@ function VibeBarCard({
     onComplete,
     onDelegate, // Added onDelegate prop
     onRelease, // Added onRelease prop
+    onDelete,
+    isCreator,
+    isAdmin,
 }: {
     bar: BarDef
     isActive: boolean
@@ -26,6 +30,9 @@ function VibeBarCard({
     onComplete: (inputs: Record<string, any>) => void
     onDelegate?: (targetId: string) => void
     onRelease?: () => void
+    onDelete?: () => void
+    isCreator?: boolean
+    isAdmin?: boolean
 }) {
     const [open, setOpen] = useState(isActive)  // Auto-open if active
     const [inputs, setInputs] = useState<Record<string, any>>({})
@@ -163,7 +170,21 @@ function VibeBarCard({
                 <div className="p-4 pt-0 space-y-4 border-t border-yellow-800/50 mt-2">
                     {/* RELEASE UI (For Assigned/Custom Quests) */}
                     {onRelease && (
-                        <div className="flex justify-end mb-2 pt-2">
+                        <div className="flex justify-end gap-3 mb-2 pt-2">
+                            {onDelete && (isCreator || isAdmin) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (confirm('Permanently delete this BAR? This cannot be undone.')) {
+                                            onDelete()
+                                        }
+                                    }}
+                                    className="text-[10px] uppercase text-zinc-500 hover:text-red-500 font-mono flex items-center gap-1 transition-colors"
+                                >
+                                    <span>🗑 Delete</span>
+                                </button>
+                            )}
+
                             <button
                                 type="button"
                                 onClick={() => {
@@ -307,7 +328,9 @@ export function StarterQuestBoard({
     activeBars = [],
     customBars = [],
     ichingBars = [],
-    potentialDelegates = [], // New prop
+    potentialDelegates = [],
+    playerId,
+    userRoles,
     view
 }: {
     completedBars: CompletedBar[],
@@ -315,6 +338,8 @@ export function StarterQuestBoard({
     customBars?: CustomBarDef[],
     ichingBars?: IChingBarDef[],
     potentialDelegates?: { id: string, name: string }[], // New prop type
+    playerId?: string,
+    userRoles?: string[],
     view: 'available' | 'active' | 'completed'
 }) {
     const router = useRouter()
@@ -395,6 +420,16 @@ export function StarterQuestBoard({
         startTransition(() => { router.refresh() })
     }
 
+    const handleDelete = async (barId: string) => {
+        const result = await deleteBar(barId)
+        if (result && 'error' in result) {
+            alert("Delete failed: " + result.error)
+        }
+        startTransition(() => {
+            router.refresh()
+        })
+    }
+
     // Convert custom bars to BarDef format
     const customAsBarDef: (BarDef & { isSystem?: boolean })[] = customBars.map(cb => ({
         id: cb.id,
@@ -428,7 +463,7 @@ export function StarterQuestBoard({
     // Merge starter bars with custom bars and I Ching bars
     // Note: I Ching bars are only ever "active" or "completed", they don't appear in "available" usually (unless we wanted to show past ones)
     // But since localActive contains 'iching_X', we need them in allBars to be found by the filter.
-    const allBars = [...customAsBarDef, ...ichingAsBarDef] as (BarDef & { isSystem?: boolean })[]
+    const allBars = [...customAsBarDef, ...ichingAsBarDef] as (BarDef & { isSystem?: boolean, creatorId?: string })[]
 
     const availableBars = allBars.filter(b => !localCompleted.includes(b.id) && !localActive.includes(b.id))
     // const activeBarsFiltered = allBars.filter(b => localActive.includes(b.id)) // Original line
@@ -458,6 +493,9 @@ export function StarterQuestBoard({
                             onComplete={(inputs) => handleComplete(bar.id, inputs)}
                             onDelegate={bar.isCustom && !bar.isSystem ? (targetId) => handleDelegate(bar.id, targetId) : undefined}
                             onRelease={bar.isCustom && !bar.isSystem ? () => handleRelease(bar.id) : undefined}
+                            onDelete={() => handleDelete(bar.id)}
+                            isCreator={bar.creatorId === playerId}
+                            isAdmin={userRoles?.includes('ADMIN')}
                         />
                     )
                 ))}
@@ -479,6 +517,9 @@ export function StarterQuestBoard({
                             isActive={false}
                             onPickUp={() => handlePickUp(bar.id)}
                             onComplete={() => { }}
+                            onDelete={() => handleDelete(bar.id)}
+                            isCreator={(bar as any).creatorId === playerId}
+                            isAdmin={userRoles?.includes('ADMIN')}
                         />
                     )
                 ))}

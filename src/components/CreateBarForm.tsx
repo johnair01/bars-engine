@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useActionState } from 'react'
-import { createCustomBar, getActivePlayers, getLinkableQuests } from '@/actions/create-bar'
+import { createCustomBar, getActivePlayers, getLinkableQuests, getGatingOptions } from '@/actions/create-bar'
 import { useRouter } from 'next/navigation'
 
 type Player = { id: string; name: string }
@@ -17,13 +17,17 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [showStory, setShowStory] = useState(false)
     const [storyMood, setStoryMood] = useState<string | null>(null)
     const [applyFirstAidLens, setApplyFirstAidLens] = useState(false)
+    const [selectedNations, setSelectedNations] = useState<string[]>([])
+    const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
+    const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
     const [state, formAction, isPending] = useActionState<any, FormData>(createCustomBar, null)
 
     useEffect(() => {
-        if (isOpen && (players.length === 0 || linkableQuests.length === 0)) {
-            Promise.all([getActivePlayers(), getLinkableQuests()]).then(([activePlayers, quests]) => {
+        if (isOpen) {
+            Promise.all([getActivePlayers(), getLinkableQuests(), getGatingOptions()]).then(([activePlayers, quests, options]) => {
                 setPlayers(activePlayers)
                 setLinkableQuests(quests)
+                setGatingOptions(options)
             })
         }
     }, [isOpen, players.length, linkableQuests.length])
@@ -251,6 +255,53 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         ))}
                     </div>
                     <input type="hidden" name="moveType" value={moveType || ''} />
+                </div>
+
+                {/* Nation & Trigram Gating */}
+                <div className="space-y-4 pt-4 border-t border-zinc-800">
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase text-zinc-500 block">Restrict to Nations (Optional)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {gatingOptions.nations.map(nation => (
+                                <button
+                                    key={nation}
+                                    type="button"
+                                    onClick={() => setSelectedNations(prev =>
+                                        prev.includes(nation) ? prev.filter(n => n !== nation) : [...prev, nation]
+                                    )}
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedNations.includes(nation)
+                                        ? 'bg-blue-900/40 border-blue-600 text-blue-300'
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    {nation}
+                                </button>
+                            ))}
+                        </div>
+                        <input type="hidden" name="allowedNations" value={selectedNations.length > 0 ? JSON.stringify(selectedNations) : ''} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase text-zinc-500 block">Restrict to Trigrams (Optional)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {gatingOptions.trigrams.map(trigram => (
+                                <button
+                                    key={trigram}
+                                    type="button"
+                                    onClick={() => setSelectedTrigrams(prev =>
+                                        prev.includes(trigram) ? prev.filter(t => t !== trigram) : [...prev, trigram]
+                                    )}
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedTrigrams.includes(trigram)
+                                        ? 'bg-purple-900/40 border-purple-600 text-purple-300'
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    {trigram}
+                                </button>
+                            ))}
+                        </div>
+                        <input type="hidden" name="allowedTrigrams" value={selectedTrigrams.length > 0 ? JSON.stringify(selectedTrigrams) : ''} />
+                    </div>
                 </div>
 
                 <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">

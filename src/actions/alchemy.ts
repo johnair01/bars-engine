@@ -21,24 +21,28 @@ export async function castAlchemyMove(moveName: string, notes?: string) {
     try {
         const player = await db.player.findUnique({
             where: { id: playerId },
-            include: { playbook: true }
+            include: { playbook: true, nation: true }
         })
 
         if (!player || !player.playbook) {
             return { error: 'No playbook found' }
         }
 
-        // Parse moves from JSON string
+        // 1. Check Playbook Moves
         let allowedMoves: string[] = []
         try {
             allowedMoves = JSON.parse(player.playbook.moves)
         } catch (e) {
             console.error("Failed to parse playbook moves", e)
-            return { error: 'Invalid playbook data' }
         }
 
-        if (!allowedMoves.includes(moveName)) {
-            return { error: `You do not know the move "${moveName}"` }
+        // 2. Check Elemental Affinity Moves
+        const { ELEMENTAL_MOVES, hasAffinity } = await import('@/lib/elemental-moves')
+        const elementalMove = ELEMENTAL_MOVES[moveName]
+        const hasElementalAffinity = elementalMove && player.nation && hasAffinity(player.nation.name, elementalMove.affinity)
+
+        if (!allowedMoves.includes(moveName) && !hasElementalAffinity) {
+            return { error: `You do not know the move "${moveName}" or lack the affinity to cast it.` }
         }
 
         // Log the Move Cast
