@@ -56,7 +56,9 @@ export function GraveyardClient({
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-white">Reforge the Relic</h2>
-          <div className="text-xs text-zinc-500 font-mono">Status: DORMANT -> ACTIVE</div>
+          <div className="text-xs text-zinc-500 font-mono">
+            Status: DORMANT {'->'} ACTIVE
+          </div>
         </div>
 
         {dormantQuests.length === 0 ? (
