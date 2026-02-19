@@ -34,7 +34,7 @@ export type NationMovePanelData =
   | { error: string }
 
 export type ApplyNationMoveState =
-  | { ok: true; questId: string; barId: string; moveKey: string }
+  | { ok: true; questId: string; barId: string; barTitle: string; questStatus: string; moveKey: string }
   | { ok?: false; error: string }
 
 function safeParseJson<T>(raw: string | null, fallback: T): T {
@@ -623,7 +623,14 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
     revalidatePath('/bars/available')
     revalidatePath('/hand')
 
-    return { ok: true, questId, barId: result.barId, moveKey }
+    return {
+      ok: true,
+      questId,
+      questStatus: (effects.setQuestStatus || quest.status),
+      barId: result.barId,
+      barTitle: barTemplate.title,
+      moveKey
+    }
   } catch (error) {
     console.error('[nation-moves] applyNationMoveWithState failed:', error)
     return { error: userSafeError(error) }
