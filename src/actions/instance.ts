@@ -123,6 +123,9 @@ export async function listInstances() {
 }
 
 export async function upsertInstance(formData: FormData): Promise<void> {
+  let errorMessage: string | null = null
+  let successParams: Record<string, string> | null = null
+
   try {
     await ensureAdmin()
 
@@ -160,7 +163,6 @@ export async function upsertInstance(formData: FormData): Promise<void> {
         }
       })
     } else {
-      // Create, but allow re-submitting the form to update by slug.
       await db.instance.upsert({
         where: { slug },
         update: {
@@ -192,15 +194,23 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     revalidatePath('/admin/instances')
     revalidatePath('/event')
     revalidatePath('/')
-
-    redirectWithMessage('/admin/instances', { saved: '1' })
+    successParams = { saved: '1' }
   } catch (e) {
     console.error('[instance] upsertInstance failed:', e)
-    redirectWithMessage('/admin/instances', { error: toUserSafeErrorMessage(e) })
+    errorMessage = toUserSafeErrorMessage(e)
+  }
+
+  if (errorMessage) {
+    redirectWithMessage('/admin/instances', { error: errorMessage })
+  } else if (successParams) {
+    redirectWithMessage('/admin/instances', successParams)
   }
 }
 
 export async function setActiveInstance(formData: FormData): Promise<void> {
+  let errorMessage: string | null = null
+  let activeParam: string | null = null
+
   try {
     await ensureAdmin()
 
@@ -217,11 +227,16 @@ export async function setActiveInstance(formData: FormData): Promise<void> {
     revalidatePath('/admin/instances')
     revalidatePath('/event')
     revalidatePath('/')
-
-    redirectWithMessage('/admin/instances', { active: instanceId ? '1' : '0' })
+    activeParam = instanceId ? '1' : '0'
   } catch (e) {
     console.error('[instance] setActiveInstance failed:', e)
-    redirectWithMessage('/admin/instances', { error: toUserSafeErrorMessage(e) })
+    errorMessage = toUserSafeErrorMessage(e)
+  }
+
+  if (errorMessage) {
+    redirectWithMessage('/admin/instances', { error: errorMessage })
+  } else if (activeParam !== null) {
+    redirectWithMessage('/admin/instances', { active: activeParam })
   }
 }
 
