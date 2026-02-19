@@ -10,12 +10,14 @@ export function AdminNav() {
 
     const navItems = [
         { name: 'Dashboard', href: '/admin', icon: '🏠' },
+        { name: 'Instances', href: '/admin/instances', icon: '🧩' },
         { name: 'Journeys', href: '/admin/journeys', icon: '📜' },
         { name: 'Quests', href: '/admin/quests', icon: '⚔️' },
         { name: 'Players', href: '/admin/players', icon: '👥' },
         { name: 'World Data', href: '/admin/world', icon: '🌍' },
         { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
         { name: 'Twine Stories', href: '/admin/twine', icon: '📖' },
+        { name: 'Config', href: '/admin/config', icon: '⚙️' },
     ]
 
     const handleNavClick = () => {

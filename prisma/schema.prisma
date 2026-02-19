@@ -101,6 +101,14 @@ model Player {
   twineStoriesCreated  TwineStory[]   @relation("TwineStoriesCreated")
   twineRunsPlayed      TwineRun[]     @relation("TwineRunsPlayed")
   twineBindingsCreated TwineBinding[] @relation("TwineBindingsCreated")
+
+  // Instance relations (multi-instance platform)
+  instanceMemberships InstanceMembership[]
+  donations           Donation[]
+
+  // Nation moves (Integral Emergence Engine)
+  nationMoveUnlocks  PlayerNationMoveUnlock[]
+  questMoveLogs      QuestMoveLog[]
   
   createdAt       DateTime  @default(now())
 
@@ -247,6 +255,10 @@ model CustomBar {
 
   // Bar sharing
   shares          BarShare[]
+
+  // Nation move logs
+  questMoveLogs       QuestMoveLog[] @relation("QuestMoveQuest")
+  moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
   
   rootId          String?   // For fast lookups
   
@@ -547,10 +559,108 @@ model Nation {
   showUp      String?  // Action move
   
   players     Player[]
+
+  moves       NationMove[]
   
   createdAt   DateTime @default(now())
   
   @@map("nations")
+}
+
+// --------------------------------------------------------
+// NATION MOVES (Integral Emergence Engine)
+// --------------------------------------------------------
+
+model Polarity {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String?
+
+  moves       NationMove[]
+
+  createdAt   DateTime @default(now())
+
+  @@map("polarities")
+}
+
+model NationMove {
+  id                String   @id @default(cuid())
+  key               String   @unique
+
+  nationId          String
+  nation            Nation   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+
+  polarityId        String?
+  polarity          Polarity? @relation(fields: [polarityId], references: [id], onDelete: SetNull)
+
+  name              String
+  description       String
+
+  // Starting unlocked moves are immediately usable without any explicit unlock row.
+  isStartingUnlocked Boolean @default(false)
+
+  // JSON array of quest statuses this move can apply to (e.g. ["active","dormant"])
+  appliesToStatus   String   @default("[]")
+
+  // JSON schema (MVP) that defines required inputs for this move.
+  requirementsSchema String  @default("{}")
+
+  // JSON schema (MVP) describing lightweight effects (e.g. set quest status).
+  effectsSchema     String   @default("{}")
+
+  sortOrder         Int      @default(0)
+
+  unlocks           PlayerNationMoveUnlock[]
+  logs              QuestMoveLog[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([nationId, sortOrder])
+  @@map("nation_moves")
+}
+
+model PlayerNationMoveUnlock {
+  id          String    @id @default(cuid())
+
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  moveId      String
+  move        NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+
+  unlockedAt  DateTime  @default(now())
+
+  @@unique([playerId, moveId])
+  @@index([moveId, unlockedAt])
+  @@map("player_nation_move_unlocks")
+}
+
+model QuestMoveLog {
+  id           String   @id @default(cuid())
+
+  questId      String
+  quest        CustomBar @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
+
+  moveId       String
+  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdBarId String?
+  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id], onDelete: SetNull)
+
+  inputsJson   String?
+  effectsJson  String?
+
+  createdAt    DateTime @default(now())
+
+  @@index([questId, createdAt])
+  @@index([playerId, createdAt])
+  @@map("quest_move_logs")
 }
 
 model Playbook {
@@ -778,11 +888,100 @@ model TwineBinding {
 }
 
 // --------------------------------------------------------
+// INSTANCES (Multi-Instance Integral Emergence Engine)
+// --------------------------------------------------------
+
+model Instance {
+  id                String   @id @default(cuid())
+
+  // Human-friendly identifier for URLs / selection
+  slug              String   @unique
+  name              String
+
+  // party | hackathon | fundraiser | business | etc.
+  domainType         String
+
+  theme              String?
+  targetDescription  String?
+
+  // Fundraising (cents)
+  goalAmountCents    Int?
+  currentAmountCents Int     @default(0)
+
+  // Event mode: show progress + donate CTAs
+  isEventMode        Boolean @default(false)
+
+  // MVP payment links (external)
+  stripeOneTimeUrl   String?
+  patreonUrl         String?
+
+  startDate          DateTime?
+  endDate            DateTime?
+
+  donations          Donation[]
+  memberships        InstanceMembership[]
+  activeInConfigs    AppConfig[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("instances")
+}
+
+model Donation {
+  id         String   @id @default(cuid())
+
+  instanceId String
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  // Optional attribution
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  amountCents Int
+
+  // stripe_payment_link | patreon | manual | etc.
+  provider    String   @default("manual")
+  externalId  String?
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([instanceId, createdAt])
+  @@index([playerId, createdAt])
+  @@map("donations")
+}
+
+model InstanceMembership {
+  id          String   @id @default(cuid())
+
+  instanceId  String
+  instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  // MVP role selection (Rookie/Ace/Veteran/Leader/Engineer)
+  roleKey     String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([instanceId, playerId])
+  @@index([instanceId, createdAt])
+  @@map("instance_memberships")
+}
+
+// --------------------------------------------------------
 // ADMIN: APP CONFIGURATION & AUDIT
 // --------------------------------------------------------
 
 model AppConfig {
   id          String   @id @default("singleton")
+
+  // Active instance selection (optional; null = "single instance" mode)
+  activeInstanceId String?
+  activeInstance   Instance? @relation(fields: [activeInstanceId], references: [id], onDelete: SetNull)
   
   // Feature Flags (JSON object: { "iching": true, "wallet": true, ... })
   features    String     @default("{}")

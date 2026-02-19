@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef } from 'react'
+import { useState, useTransition, useEffect, useRef, useActionState } from 'react'
 import { completeQuest, getArchetypeHandbookData } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
@@ -16,6 +16,7 @@ import { TwineQuestModal } from './TwineQuestModal'
 import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
 import Link from 'next/link'
+import { applyNationMoveWithState, getNationMovePanelData, moveQuestToGraveyard, type NationMovePanelData, type ApplyNationMoveState } from '@/actions/nation-moves'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -66,6 +67,14 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [responses, setResponses] = useState<Record<string, any>>({})
     const [intentionMode, setIntentionMode] = useState<'direct' | 'guided'>('direct')
 
+    // Nation moves / graveyard state
+    const [movePanel, setMovePanel] = useState<NationMovePanelData | null>(null)
+    const [selectedMoveKey, setSelectedMoveKey] = useState<string>('')
+    const [moveApplyState, moveApplyAction, isApplyingMove] = useActionState<ApplyNationMoveState | null, FormData>(
+        applyNationMoveWithState,
+        null
+    )
+
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
     const [archetypeError, setArchetypeError] = useState<string | null>(null)
@@ -95,14 +104,45 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 if (res.success) setTransferContext(res)
             })
         }
+
+        if (isOpen) {
+            // Best-effort: if nation move tables haven't been pushed yet, this returns an error payload.
+            getNationMovePanelData(quest.id).then((res) => {
+                setMovePanel(res)
+                if ('success' in res && res.success) {
+                    const firstUsable = res.moves.find(m => m.unlocked && m.applicable)
+                    setSelectedMoveKey(firstUsable?.key || '')
+                }
+            }).catch(() => {
+                setMovePanel({ error: 'Failed to load nation moves' })
+            })
+        }
+
         // Cleanup if closed
         if (!isOpen) {
             setHasScrolledToBottom(false)
             setArchetypeData(null)
             setArchetypeError(null)
             setTransferContext(null)
+            setMovePanel(null)
+            setSelectedMoveKey('')
         }
     }, [isOpen, quest.id, isCompleted])
+
+    useEffect(() => {
+        if (!moveApplyState) return
+        if ('ok' in moveApplyState && moveApplyState.ok) {
+            setFeedback('✨ Move applied!')
+            setTimeout(() => {
+                setFeedback(null)
+                router.refresh()
+            }, 1200)
+            return
+        }
+        if ('error' in moveApplyState && moveApplyState.error) {
+            setFeedback(`❌ ${moveApplyState.error}`)
+        }
+    }, [moveApplyState, router])
 
     useEffect(() => {
         if (!isOpen) {
@@ -327,6 +367,140 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     return part
                                 })}
                             </p>
+                        </div>
+                    )}
+
+                    {/* NATION MOVES + GRAVEYARD (MVP) */}
+                    {movePanel && (
+                        <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+                            {'error' in movePanel ? (
+                                <div className="text-xs text-zinc-500">
+                                    Nation moves unavailable: {movePanel.error}
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Nation Moves</div>
+                                            <div className="text-sm text-zinc-200 font-semibold">
+                                                {movePanel.nation.name} (Quest status: {movePanel.quest.status})
+                                            </div>
+                                        </div>
+
+                                        {movePanel.canMoveToGraveyard && movePanel.quest.status === 'active' && !isCompleted && (
+                                            <button
+                                                type="button"
+                                                disabled={isPending}
+                                                onClick={() => startTransition(async () => {
+                                                    const ok = confirm('Move this quest to the Graveyard (DORMANT)?')
+                                                    if (!ok) return
+                                                    const res = await moveQuestToGraveyard(quest.id, true)
+                                                    if ('success' in res) {
+                                                        setFeedback('🪦 Moved to Graveyard')
+                                                        setTimeout(() => {
+                                                            onClose()
+                                                            router.refresh()
+                                                        }, 800)
+                                                    } else {
+                                                        setFeedback(`❌ ${res.error}`)
+                                                    }
+                                                })}
+                                                className="shrink-0 rounded-lg border border-zinc-800 bg-black px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-400 hover:text-red-300 hover:border-red-900/50 transition-colors disabled:opacity-50"
+                                            >
+                                                Graveyard
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {movePanel.moves.length === 0 ? (
+                                        <div className="text-xs text-zinc-500 italic">
+                                            No nation moves available for this nation yet.
+                                        </div>
+                                    ) : (
+                                        <form action={moveApplyAction} className="space-y-3">
+                                            <input type="hidden" name="questId" value={quest.id} />
+
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Move</label>
+                                                <select
+                                                    name="moveKey"
+                                                    value={selectedMoveKey}
+                                                    onChange={(e) => setSelectedMoveKey(e.target.value)}
+                                                    className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                >
+                                                    <option value="">Select a move...</option>
+                                                    {movePanel.moves.map((m) => (
+                                                        <option key={m.key} value={m.key} disabled={!m.unlocked}>
+                                                            {m.unlocked ? '' : '[LOCKED] '} {m.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {selectedMoveKey && (() => {
+                                                const move = movePanel.moves.find(m => m.key === selectedMoveKey)
+                                                if (!move) return null
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <div className="text-xs text-zinc-400">
+                                                            {move.description}
+                                                        </div>
+
+                                                        {!move.unlocked && (
+                                                            <div className="text-xs text-red-300">
+                                                                This move is locked.
+                                                            </div>
+                                                        )}
+
+                                                        {!move.applicable && (
+                                                            <div className="text-xs text-amber-300">
+                                                                Not applicable to status "{movePanel.quest.status}". Applies to: {move.appliesToStatus.join(', ') || '(any)'}.
+                                                            </div>
+                                                        )}
+
+                                                        {move.requirements.fields.map((f) => (
+                                                            <div key={f.key} className="space-y-1">
+                                                                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                                                                    {f.label || f.key}
+                                                                </label>
+                                                                {f.type === 'player_id' ? (
+                                                                    <select
+                                                                        name={f.key}
+                                                                        className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                                        required={f.required !== false}
+                                                                    >
+                                                                        <option value="">Select...</option>
+                                                                        {movePanel.collaborators.map((p) => (
+                                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                ) : (
+                                                                    <input
+                                                                        name={f.key}
+                                                                        type="text"
+                                                                        required={f.required !== false}
+                                                                        maxLength={f.maxLength}
+                                                                        className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        ))}
+
+                                                        <button
+                                                            type="submit"
+                                                            disabled={!move.unlocked || !move.applicable || isApplyingMove}
+                                                            className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 py-2.5 font-bold text-white text-sm disabled:opacity-50"
+                                                        >
+                                                            {isApplyingMove ? 'Applying...' : 'Apply Move'}
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })()}
+                                        </form>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
 
