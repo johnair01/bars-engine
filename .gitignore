@@ -45,3 +45,7 @@ next-env.d.ts
 # Local SQLite database
 *.db
 *.db-journal
+
+# Database backups (local cold storage)
+/backups/
+.prisma_hash

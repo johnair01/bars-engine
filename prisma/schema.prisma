@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,296 +8,182 @@ datasource db {
   directUrl = env("DATABASE_URL")
 }
 
-// --------------------------------------------------------
-// ENUMS & TYPES
-// --------------------------------------------------------
-
-// Simple enums for status/types
-// (SQLite doesn't support native enums well, but Prisma handles them)
-
-// --------------------------------------------------------
-// CORE: PLAYERS & IDENTITY
-// --------------------------------------------------------
-
 model Invite {
-  id                String    @id @default(cuid())
-  token             String    @unique
-  status            String    @default("active") // active, used, revoked
-  preassignedRoleKey String?  // Optional role to auto-grant
-  
-  maxUses           Int       @default(1)
-  uses              Int       @default(0)
-  
-  players           Player[]  @relation("InviteUsed")
-  
-  // Theme for specific landing page experiences (e.g. 'standard', 'oceans11')
-  theme             String    @default("standard")
-  
-  createdAt         DateTime  @default(now())
-  usedAt            DateTime?
-  
+  id                 String    @id @default(cuid())
+  token              String    @unique
+  status             String    @default("active")
+  preassignedRoleKey String?
+  maxUses            Int       @default(1)
+  uses               Int       @default(0)
+  theme              String    @default("standard")
+  createdAt          DateTime  @default(now())
+  usedAt             DateTime?
+  players            Player[]  @relation("InviteUsed")
+
   @@map("invites")
 }
 
 model Player {
-  id              String    @id @default(cuid())
-  
-  // Account Relation
-  accountId       String?
-  account         Account?  @relation(fields: [accountId], references: [id])
-
-  // Identity
-  name            String
-  contactType     String    // email, phone - TODO: Deprecate in favor of Account.email
-  contactValue    String    // TODO: Deprecate
-  passwordHash    String?   // TODO: Deprecate in favor of Account.passwordHash   // New P0 requirement for Auth Slice 1
-  
-  // Onboarding
-  onboardingMode         String?   @default("expert") // "expert" | "guided"
-  onboardingComplete     Boolean   @default(false)
-  storyProgress          String?   // Track guided mode progress (JSON string)
-  
-  // Onboarding Progress Tracking
-  hasSeenWelcome         Boolean   @default(false)
-  hasCompletedFirstQuest Boolean   @default(false)
-  hasCreatedFirstQuest   Boolean   @default(false)
+  id                     String                     @id @default(cuid())
+  accountId              String?
+  name                   String
+  contactType            String
+  contactValue           String
+  passwordHash           String?
+  onboardingMode         String?                    @default("expert")
+  onboardingComplete     Boolean                    @default(false)
+  storyProgress          String?
+  hasSeenWelcome         Boolean                    @default(false)
+  hasCompletedFirstQuest Boolean                    @default(false)
+  hasCreatedFirstQuest   Boolean                    @default(false)
   onboardingCompletedAt  DateTime?
-  
-  // Relations
-  inviteId        String    // removed @unique to allow reusable invites
-  invite          Invite    @relation("InviteUsed", fields: [inviteId], references: [id])
-  
-  roles           PlayerRole[]
-  
-  // Character Creation 2.0
-  nationId        String?
-  nation          Nation?   @relation(fields: [nationId], references: [id])
-  
-  playbookId      String?
-  playbook        Playbook? @relation(fields: [playbookId], references: [id])
-  
-  pronouns        String?
-  attendance      String?   // "in_person", "online"
-  starterPack     StarterPack?
+  inviteId               String
+  nationId               String?
+  playbookId             String?
+  pronouns               String?
+  attendance             String?
+  createdAt              DateTime                   @default(now())
+  barSharesSent          BarShare[]                 @relation("BarSharesSent")
+  barSharesReceived      BarShare[]                 @relation("BarSharesReceived")
+  claimedBars            CustomBar[]                @relation("ClaimedBars")
+  createdBars            CustomBar[]                @relation("CreatedBars")
+  donations              Donation[]
+  emotionalAidSessions   EmotionalFirstAidSession[]
+  instanceMemberships    InstanceMembership[]
+  bars                   PlayerBar[]
+  nationMoveUnlocks      PlayerNationMoveUnlock[]
+  quests                 PlayerQuest[]
+  roles                  PlayerRole[]
+  account                Account?                   @relation(fields: [accountId], references: [id])
+  invite                 Invite                     @relation("InviteUsed", fields: [inviteId], references: [id])
+  nation                 Nation?                    @relation(fields: [nationId], references: [id])
+  playbook               Playbook?                  @relation(fields: [playbookId], references: [id])
+  questMoveLogs          QuestMoveLog[]
+  starterPack            StarterPack?
+  twineBindingsCreated   TwineBinding[]             @relation("TwineBindingsCreated")
+  twineRunsPlayed        TwineRun[]                 @relation("TwineRunsPlayed")
+  twineStoriesCreated    TwineStory[]               @relation("TwineStoriesCreated")
+  vibulonEvents          VibulonEvent[]
+  vibulons               Vibulon[]
 
-  bars            PlayerBar[]
-  quests          PlayerQuest[]
-  vibulonEvents   VibulonEvent[]
-  vibulons        Vibulon[]
-  emotionalAidSessions EmotionalFirstAidSession[]
-  
-  // CustomBar relations
-  createdBars     CustomBar[]   @relation("CreatedBars")
-  claimedBars     CustomBar[]   @relation("ClaimedBars")
-
-  // BarShare relations
-  barSharesSent       BarShare[] @relation("BarSharesSent")
-  barSharesReceived   BarShare[] @relation("BarSharesReceived")
-
-  // Twine relations
-  twineStoriesCreated  TwineStory[]   @relation("TwineStoriesCreated")
-  twineRunsPlayed      TwineRun[]     @relation("TwineRunsPlayed")
-  twineBindingsCreated TwineBinding[] @relation("TwineBindingsCreated")
-
-  // Instance relations (multi-instance platform)
-  instanceMemberships InstanceMembership[]
-  donations           Donation[]
-
-  // Nation moves (Integral Emergence Engine)
-  nationMoveUnlocks  PlayerNationMoveUnlock[]
-  questMoveLogs      QuestMoveLog[]
-  
-  createdAt       DateTime  @default(now())
-
-  @@unique([contactType, contactValue]) // ensure unique email/phone
+  @@unique([contactType, contactValue])
   @@map("players")
 }
 
-// --------------------------------------------------------
-// ROLES & PROGRESSION
-// --------------------------------------------------------
-
 model Role {
-  id              String    @id @default(cuid())
-  key             String    @unique // ACE, VETERAN, ENGINEER, ROOKIE, LEADER
-  displayName     String
-  description     String
-  isForecasted    Boolean   @default(false)
-  
-  players         PlayerRole[]
-  
-  createdAt       DateTime  @default(now())
-  
+  id           String       @id @default(cuid())
+  key          String       @unique
+  displayName  String
+  description  String
+  isForecasted Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  players      PlayerRole[]
+
   @@map("roles")
 }
 
 model Account {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  passwordHash    String?
-  
-  players         Player[]
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  players      Player[]
+
   @@map("accounts")
 }
 
 model PlayerRole {
-  id              String    @id @default(cuid())
-  
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
-  
-  roleId          String
-  role            Role      @relation(fields: [roleId], references: [id])
-  
-  grantedByAdminId String?  // For audit
-  
-  grantedAt       DateTime  @default(now())
-  expiresAt       DateTime?
-  
+  id               String    @id @default(cuid())
+  playerId         String
+  roleId           String
+  grantedByAdminId String?
+  grantedAt        DateTime  @default(now())
+  expiresAt        DateTime?
+  player           Player    @relation(fields: [playerId], references: [id])
+  role             Role      @relation(fields: [roleId], references: [id])
+
   @@unique([playerId, roleId])
   @@map("player_roles")
 }
 
-// --------------------------------------------------------
-// STORY & STATE (BARS)
-// --------------------------------------------------------
-
 model Bar {
-  id              Int       @id // 1..64 (manual ID)
-  name            String    // "The Creative", "The Receptive", etc.
-  tone            String    // description or vibe
-  text            String    // poetic text
-  
-  assignedTo      PlayerBar[]
-  
-  createdAt       DateTime  @default(now())
-  
+  id         Int         @id
+  name       String
+  tone       String
+  text       String
+  createdAt  DateTime    @default(now())
+  assignedTo PlayerBar[]
+
   @@map("bars")
 }
 
-// User-created Bars (quests/tasks anyone can create)
 model CustomBar {
-  id              String    @id @default(cuid())
-  
-  creatorId       String
-  creator         Player    @relation("CreatedBars", fields: [creatorId], references: [id])
-  
-  title           String
-  description     String
-  type            String    @default("vibe") // vibe, story
-  reward          Int       @default(1)
-  
-  // Visibility: public (anyone can see/pick up), private (creator only, must delegate)
-  visibility      String    @default("public")
-  
-  // Who has claimed/picked up this bar (NULL = unclaimed, available)
-  claimedById     String?
-  claimedBy       Player?   @relation("ClaimedBars", fields: [claimedById], references: [id])
-  
-  // For story bars
-  storyPath       String? // "collective", "personal"
-  allowedTrigrams String? // JSON array of allowed Playbooks ["Heaven", "Earth"]
-  
-  // Input definition (JSON array of BarInput)
-  inputs          String    @default("[]")
-  
-  // Move Type: wakeUp, cleanUp, growUp, showUp (optional categorization)
-  moveType        String?   // wakeUp, cleanUp, growUp, showUp
-  
-  // Gating: JSON array of nation names ["Virelune", "Sunder"]
-  allowedNations  String?   
-  
-  status          String    @default("active") // active, archived
-  
-  // Kotter Stage: 1-8 (position in change cycle)
-  kotterStage     Int       @default(1)
-  
-  // Rich story/narrative content (markdown supported)
-  storyContent    String?   // Markdown content for the quest narrative
-  storyMood       String?   // Emotional tone: "dramatic", "playful", "serious", "mysterious"
-  
-  // System Quests (e.g. Starters) - Reusable, not unique to one claimer
-  isSystem        Boolean   @default(false)
-  
-  // Story Clock Integration
-  hexagramId      Int?      // Which hexagram generated this quest (1-64)
-  periodGenerated Int?      // Which period this quest was created in (1-8)
-  firstCompleterId String?  // Player who first completed this quest
-  
-  createdAt       DateTime  @default(now())
-  
-  // Recursion for Quest Trees
-  parentId        String?
-  parent          CustomBar? @relation("CustomBarTree", fields: [parentId], references: [id])
-  children        CustomBar[] @relation("CustomBarTree")
-  
-  // Relationships for Threads and Packs
-  threadQuests    ThreadQuest[]
-  packQuests      PackQuest[]
-
-  // Twine Logic (Optional)
-  twineLogic      String?   // JSON representation of passages and choices (inline, legacy)
-  completionEffects String? // JSON representation of effects upon completion
-  
-  // Twine Story reference (uploaded story-backed quest)
-  twineStoryId    String?
-  twineStory      TwineStory? @relation(fields: [twineStoryId], references: [id])
-
-  // Active assignments (Multi-player progress)
-  assignments     PlayerQuest[]
-
-  // Bar sharing
-  shares          BarShare[]
-
-  // Nation move logs
-  questMoveLogs       QuestMoveLog[] @relation("QuestMoveQuest")
+  id                   String         @id @default(cuid())
+  creatorId            String
+  title                String
+  description          String
+  type                 String         @default("vibe")
+  reward               Int            @default(1)
+  visibility           String         @default("public")
+  claimedById          String?
+  storyPath            String?
+  allowedTrigrams      String?
+  inputs               String         @default("[]")
+  moveType             String?
+  status               String         @default("active")
+  kotterStage          Int            @default(1)
+  storyContent         String?
+  storyMood            String?
+  isSystem             Boolean        @default(false)
+  hexagramId           Int?
+  periodGenerated      Int?
+  firstCompleterId     String?
+  createdAt            DateTime       @default(now())
+  parentId             String?
+  twineLogic           String?
+  completionEffects    String?
+  rootId               String?
+  allowedNations       String?
+  twineStoryId         String?
+  shares               BarShare[]
+  claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
+  creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
+  parent               CustomBar?     @relation("CustomBarTree", fields: [parentId], references: [id])
+  children             CustomBar[]    @relation("CustomBarTree")
+  twineStory           TwineStory?    @relation(fields: [twineStoryId], references: [id])
+  packQuests           PackQuest[]
+  assignments          PlayerQuest[]
   moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
-  
-  rootId          String?   // For fast lookups
-  
+  questMoveLogs        QuestMoveLog[] @relation("QuestMoveQuest")
+  threadQuests         ThreadQuest[]
+
   @@map("custom_bars")
 }
 
 model PlayerBar {
-  id              String    @id @default(cuid())
-  
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
-  
-  barId           Int
-  bar             Bar       @relation(fields: [barId], references: [id])
-  
-  source          String    // engine, admin, trade, ritual
-  notes           String?
-  
-  acquiredAt      DateTime  @default(now())
-  
+  id         String   @id @default(cuid())
+  playerId   String
+  barId      Int
+  source     String
+  notes      String?
+  acquiredAt DateTime @default(now())
+  bar        Bar      @relation(fields: [barId], references: [id])
+  player     Player   @relation(fields: [playerId], references: [id])
+
   @@map("player_bars")
 }
 
-// --------------------------------------------------------
-// BAR SHARING (Player-to-Player BAR Passes)
-// --------------------------------------------------------
-
 model BarShare {
-  id          String   @id @default(cuid())
-
-  barId       String
-  bar         CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
-
-  fromUserId  String
-  fromUser    Player  @relation("BarSharesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
-
-  toUserId    String
-  toUser      Player  @relation("BarSharesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
-
-  note        String?
-
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  barId      String
+  fromUserId String
+  toUserId   String
+  note       String?
+  createdAt  DateTime  @default(now())
+  bar        CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  fromUser   Player    @relation("BarSharesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     Player    @relation("BarSharesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
 
   @@index([fromUserId, createdAt])
   @@index([toUserId, createdAt])
@@ -308,330 +191,207 @@ model BarShare {
   @@map("bar_shares")
 }
 
-// --------------------------------------------------------
-// QUESTS & TASKS
-// --------------------------------------------------------
-
 model Quest {
-  id              String    @id @default(cuid())
-  title           String
-  prompt          String
-  returnType      String    // "text", "image", "gps"
-  
-  // DEPRECATED: assignments linked to CustomBar now
-  // assignments     PlayerQuest[]
-  
-  // Recursion
-  parentId        String?
-  parent          Quest?    @relation("QuestTree", fields: [parentId], references: [id])
-  children        Quest[]   @relation("QuestTree")
-  
-  rootId          String?   // For fast lookups of the whole tree
-  
-  createdAt       DateTime  @default(now())
-  
+  id         String   @id @default(cuid())
+  title      String
+  prompt     String
+  returnType String
+  parentId   String?
+  rootId     String?
+  createdAt  DateTime @default(now())
+  parent     Quest?   @relation("QuestTree", fields: [parentId], references: [id])
+  children   Quest[]  @relation("QuestTree")
+
   @@map("quests")
 }
 
 model PlayerQuest {
-  id              String    @id @default(cuid())
-  
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
-  
-  // Link to CustomBar (The Quest Definition)
-  questId         String
-  quest           CustomBar @relation(fields: [questId], references: [id])
-  
-  status          String    @default("assigned") // assigned, completed, failed
-  
-  // Submission Data (JSON)
-  inputs          String?   // JSON string of submitted values
-  
-  assignedAt      DateTime  @default(now())
-  completedAt     DateTime?
-  
-  @@unique([playerId, questId]) // Ensure unique assignment per quest
+  id          String    @id @default(cuid())
+  playerId    String
+  questId     String
+  status      String    @default("assigned")
+  inputs      String?
+  assignedAt  DateTime  @default(now())
+  completedAt DateTime?
+  player      Player    @relation(fields: [playerId], references: [id])
+  quest       CustomBar @relation(fields: [questId], references: [id])
+
+  @@unique([playerId, questId])
   @@map("player_quests")
 }
 
-// --------------------------------------------------------
-// QUEST THREADS (Sequential Quest Journeys)
-// --------------------------------------------------------
-
 model QuestThread {
-  id          String   @id @default(cuid())
-  
-  title       String
-  description String?
-  
-  // Thread type: orientation threads auto-assign to new players
-  threadType  String   @default("standard") // "orientation", "standard"
-  
-  // System or player-created (currently only system/admin can create)
-  creatorType String   @default("system") // "system", "admin"
-  creatorId   String?  // Admin player ID if applicable
-  
-  // Cost to create (in Vibeulons) - 0 for system threads
-  creationCost Int     @default(0)
-  
-  // Reward for completing entire thread
-  completionReward Int @default(0)
+  id               String           @id @default(cuid())
+  title            String
+  description      String?
+  threadType       String           @default("standard")
+  creatorType      String           @default("system")
+  creatorId        String?
+  creationCost     Int              @default(0)
+  completionReward Int              @default(0)
+  allowedPlaybooks String?
+  status           String           @default("active")
+  createdAt        DateTime         @default(now())
+  progress         ThreadProgress[]
+  quests           ThreadQuest[]
 
-  // Target Audience (JSON array of playbook names/IDs)
-  allowedPlaybooks String? 
-  
-  // Thread quests (ordered by position)
-  quests      ThreadQuest[]
-  
-  // Player progress
-  progress    ThreadProgress[]
-  
-  status      String   @default("active") // active, archived
-  
-  createdAt   DateTime @default(now())
-  
   @@map("quest_threads")
 }
 
 model ThreadQuest {
-  id          String   @id @default(cuid())
-  
-  threadId    String
-  thread      QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  
-  // Links to CustomBar (quest)
-  questId     String
-  quest       CustomBar @relation(fields: [questId], references: [id])
-  
-  // Order in thread (1, 2, 3...)
-  position    Int
-  
+  id       String      @id @default(cuid())
+  threadId String
+  questId  String
+  position Int
+  quest    CustomBar   @relation(fields: [questId], references: [id])
+  thread   QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
   @@unique([threadId, position])
   @@unique([threadId, questId])
   @@map("thread_quests")
 }
 
 model ThreadProgress {
-  id          String   @id @default(cuid())
-  
-  threadId    String
-  thread      QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  
-  playerId    String
-  
-  // Current position: 0 = not started, 1 = on first quest, etc.
-  currentPosition Int @default(0)
-  
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
-  isArchived  Boolean  @default(false)
-  
+  id              String      @id @default(cuid())
+  threadId        String
+  playerId        String
+  currentPosition Int         @default(0)
+  startedAt       DateTime    @default(now())
+  completedAt     DateTime?
+  isArchived      Boolean     @default(false)
+  thread          QuestThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
   @@unique([threadId, playerId])
   @@map("thread_progress")
 }
 
-// --------------------------------------------------------
-// QUEST PACKS (Unordered Quest Collections)
-// --------------------------------------------------------
-
 model QuestPack {
-  id          String   @id @default(cuid())
-  
-  title       String
-  description String?
-  
-  // System or player-created
-  creatorType String   @default("system") // "system", "player"
-  creatorId   String?  // Player ID if player-created
-  
-  // Target Audience (JSON array of playbook names/IDs)
+  id               String         @id @default(cuid())
+  title            String
+  description      String?
+  creatorType      String         @default("system")
+  creatorId        String?
   allowedPlaybooks String?
+  status           String         @default("active")
+  visibility       String         @default("private")
+  createdAt        DateTime       @default(now())
+  progress         PackProgress[]
+  quests           PackQuest[]
 
-  // Pack quests (unordered)
-  quests      PackQuest[]
-  
-  // Player progress
-  progress    PackProgress[]
-  
-  status      String   @default("active") // active, archived
-  visibility  String   @default("private") // private, public
-  
-  createdAt   DateTime @default(now())
-  
   @@map("quest_packs")
 }
 
 model PackQuest {
-  id          String   @id @default(cuid())
-  
-  packId      String
-  pack        QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  
-  // Links to CustomBar (quest)
-  questId     String
-  quest       CustomBar @relation(fields: [questId], references: [id])
-  
+  id      String    @id @default(cuid())
+  packId  String
+  questId String
+  pack    QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  quest   CustomBar @relation(fields: [questId], references: [id])
+
   @@unique([packId, questId])
   @@map("pack_quests")
 }
 
 model PackProgress {
-  id          String   @id @default(cuid())
-  
+  id          String    @id @default(cuid())
   packId      String
-  pack        QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  
   playerId    String
-  
-  // Completed quest IDs within this pack (JSON array)
-  completed   String   @default("[]")
-  
-  startedAt   DateTime @default(now())
+  completed   String    @default("[]")
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
-  isArchived  Boolean  @default(false)
-  
+  isArchived  Boolean   @default(false)
+  pack        QuestPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
   @@unique([packId, playerId])
   @@map("pack_progress")
 }
 
-// --------------------------------------------------------
-// ECONOMY (VIBULONS & EVENTS)
-// --------------------------------------------------------
-
 model VibulonEvent {
-  id              String    @id @default(cuid())
-  
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
-  
-  source          String    // quest, role, admin, ritual
-  amount          Int       // usually +1
-  notes           String?
-  
-  // Archetype move that generated this event
-  archetypeMove   String?   // THUNDERCLAP, NURTURE, COMMAND, EXPRESS, INFILTRATE, IGNITE, PERMEATE, IMMOVABLE
-  
-  // Link to quest (for provenance)
-  questId         String?
-  
-  createdAt       DateTime  @default(now())
-  
+  id            String   @id @default(cuid())
+  playerId      String
+  source        String
+  amount        Int
+  notes         String?
+  archetypeMove String?
+  questId       String?
+  createdAt     DateTime @default(now())
+  player        Player   @relation(fields: [playerId], references: [id])
+
   @@map("vibulon_events")
 }
 
 model Vibulon {
-  id          String   @id @default(cuid())
-  
-  ownerId     String?
-  owner       Player?   @relation(fields: [ownerId], references: [id])
-  
-  // Provenance (The "Story" carried by the coin)
-  originSource String   // "starter", "custom", "iching", "system"
-  originId     String   // ID of the bar/quest
-  originTitle  String   // Snapshot of title
-  
-  // Generation: How many hops from origin (starts at 1)
-  generation   Int      @default(1)
+  id            String   @id @default(cuid())
+  ownerId       String?
+  originSource  String
+  originId      String
+  originTitle   String
+  generation    Int      @default(1)
+  stakedOnBarId String?
+  createdAt     DateTime @default(now())
+  owner         Player?  @relation(fields: [ownerId], references: [id])
 
-  // Staking/Escrow (When attached to a Bar)
-  stakedOnBarId String? // ID of the PlayerBar or CustomBar instance
-  
-  createdAt   DateTime @default(now())
-  
   @@map("vibulons")
 }
 
-// --------------------------------------------------------
-// CHARACTER CREATION 2.0 (STORY ENGINE)
-// --------------------------------------------------------
-
 model Nation {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String       @id @default(cuid())
+  name        String       @unique
   description String
   imgUrl      String?
-  
-  // Basic Moves (Nation's interpretation)
-  wakeUp      String?  // Awareness move
-  cleanUp     String?  // Shadow work move
-  growUp      String?  // Development move
-  showUp      String?  // Action move
-  
+  wakeUp      String?
+  cleanUp     String?
+  growUp      String?
+  showUp      String?
+  createdAt   DateTime     @default(now())
+  moves       NationMove[]
   players     Player[]
 
-  moves       NationMove[]
-  
-  createdAt   DateTime @default(now())
-  
   @@map("nations")
 }
 
-// --------------------------------------------------------
-// NATION MOVES (Integral Emergence Engine)
-// --------------------------------------------------------
-
 model Polarity {
-  id          String   @id @default(cuid())
-  key         String   @unique
+  id          String       @id @default(cuid())
+  key         String       @unique
   name        String
   description String?
   icon        String?
-
+  createdAt   DateTime     @default(now())
   moves       NationMove[]
-
-  createdAt   DateTime @default(now())
 
   @@map("polarities")
 }
 
 model NationMove {
-  id                String   @id @default(cuid())
-  key               String   @unique
-
-  nationId          String
-  nation            Nation   @relation(fields: [nationId], references: [id], onDelete: Cascade)
-
-  polarityId        String?
-  polarity          Polarity? @relation(fields: [polarityId], references: [id], onDelete: SetNull)
-
-  name              String
-  description       String
-
-  // Starting unlocked moves are immediately usable without any explicit unlock row.
-  isStartingUnlocked Boolean @default(false)
-
-  // JSON array of quest statuses this move can apply to (e.g. ["active","dormant"])
-  appliesToStatus   String   @default("[]")
-
-  // JSON schema (MVP) that defines required inputs for this move.
-  requirementsSchema String  @default("{}")
-
-  // JSON schema (MVP) describing lightweight effects (e.g. set quest status).
-  effectsSchema     String   @default("{}")
-
-  sortOrder         Int      @default(0)
-
-  unlocks           PlayerNationMoveUnlock[]
-  logs              QuestMoveLog[]
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String                   @id @default(cuid())
+  key                String                   @unique
+  nationId           String
+  polarityId         String?
+  name               String
+  description        String
+  isStartingUnlocked Boolean                  @default(false)
+  appliesToStatus    String                   @default("[]")
+  requirementsSchema String                   @default("{}")
+  effectsSchema      String                   @default("{}")
+  sortOrder          Int                      @default(0)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  nation             Nation                   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+  polarity           Polarity?                @relation(fields: [polarityId], references: [id])
+  unlocks            PlayerNationMoveUnlock[]
+  logs               QuestMoveLog[]
 
   @@index([nationId, sortOrder])
   @@map("nation_moves")
 }
 
 model PlayerNationMoveUnlock {
-  id          String    @id @default(cuid())
-
-  playerId    String
-  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
-  moveId      String
-  move        NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
-
-  unlockedAt  DateTime  @default(now())
+  id         String     @id @default(cuid())
+  playerId   String
+  moveId     String
+  unlockedAt DateTime   @default(now())
+  move       NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, moveId])
   @@index([moveId, unlockedAt])
@@ -639,24 +399,18 @@ model PlayerNationMoveUnlock {
 }
 
 model QuestMoveLog {
-  id           String   @id @default(cuid())
-
+  id           String     @id @default(cuid())
   questId      String
-  quest        CustomBar @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
-
   moveId       String
-  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
-
   playerId     String
-  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
   createdBarId String?
-  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id], onDelete: SetNull)
-
   inputsJson   String?
   effectsJson  String?
-
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
+  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
+  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quest        CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
 
   @@index([questId, createdAt])
   @@index([playerId, createdAt])
@@ -664,200 +418,151 @@ model QuestMoveLog {
 }
 
 model Playbook {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  moves       String   // JSON string of special moves
-  content     String?  // Rich markdown content (Full Handbook Story)
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String
+  moves             String
+  content           String?
+  centralConflict   String?
+  primaryQuestion   String?
+  vibe              String?
+  energy            String?
+  shadowSignposts   String?
+  lightSignposts    String?
+  examples          String?
+  wakeUp            String?
+  cleanUp           String?
+  growUp            String?
+  showUp            String?
+  createdAt         DateTime @default(now())
+  emotionalFirstAid String?
+  players           Player[]
 
-  // Rich Data (Extracted from Handbook)
-  centralConflict String? // "Your comfort with danger versus..."
-  primaryQuestion String? // "Why choose this archetype?"
-  vibe            String? // "The river through rapids..."
-  energy          String? // Quote: "Dangerous? Perfect..."
-  shadowSignposts String? // JSON: What this is NOT about
-  lightSignposts  String? // JSON: What this IS about
-  examples        String? // JSON: Example Archetypes
-  
-  // Basic Moves (Playbook's interpretation)
-  wakeUp      String?  // Awareness move
-  cleanUp     String?  // Shadow work move
-  growUp      String?  // Development move
-  showUp      String?  // Action move
-  emotionalFirstAid String? // Archetype-specific first-aid protocol / clean-up lens
-  
-  players     Player[]
-  
-  createdAt   DateTime @default(now())
-  
   @@map("playbooks")
 }
 
 model EmotionalFirstAidTool {
-  id          String   @id @default(cuid())
-  key         String   @unique
+  id          String                     @id @default(cuid())
+  key         String                     @unique
   name        String
   description String
   icon        String?
-  moveType    String   @default("cleanUp") // usually cleanUp
-  tags        String   @default("[]")      // JSON array of emergency tags
-  twineLogic  String                    // JSON Twine logic
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-
+  moveType    String                     @default("cleanUp")
+  tags        String                     @default("[]")
+  twineLogic  String
+  isActive    Boolean                    @default(true)
+  sortOrder   Int                        @default(0)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
   sessions    EmotionalFirstAidSession[]
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
   @@map("emotional_first_aid_tools")
 }
 
 model EmotionalFirstAidSession {
-  id          String   @id @default(cuid())
-
-  playerId    String
-  player      Player   @relation(fields: [playerId], references: [id])
-
-  toolId      String?
-  tool        EmotionalFirstAidTool? @relation(fields: [toolId], references: [id], onDelete: SetNull)
-
-  contextQuestId String?
-  issueTag    String?
-  issueText   String?
-
-  stuckBefore Int
-  stuckAfter  Int?
-  delta       Int?
-
+  id                 String                 @id @default(cuid())
+  playerId           String
+  toolId             String?
+  contextQuestId     String?
+  issueTag           String?
+  issueText          String?
+  stuckBefore        Int
+  stuckAfter         Int?
+  delta              Int?
   recommendedToolKey String?
-  mintedAmount Int    @default(0)
-  applyToQuesting Boolean @default(false)
-
-  // Optional serialized variables from the completed Twine run
-  twineSnapshot String?
-  notes       String?
-
-  createdAt   DateTime @default(now())
-  completedAt DateTime?
+  mintedAmount       Int                    @default(0)
+  applyToQuesting    Boolean                @default(false)
+  twineSnapshot      String?
+  notes              String?
+  createdAt          DateTime               @default(now())
+  completedAt        DateTime?
+  player             Player                 @relation(fields: [playerId], references: [id])
+  tool               EmotionalFirstAidTool? @relation(fields: [toolId], references: [id])
 
   @@index([playerId, createdAt])
   @@map("emotional_first_aid_sessions")
 }
 
 model StarterPack {
-  id              String    @id @default(cuid())
-  
-  playerId        String    @unique
-  player          Player    @relation(fields: [playerId], references: [id])
-  
-  data            String    // JSON: { completedBars: [{ id, inputs }] }
+  id               String   @id @default(cuid())
+  playerId         String   @unique
+  data             String
   initialVibeulons Int      @default(0)
-  
-  createdAt       DateTime  @default(now())
-  
+  createdAt        DateTime @default(now())
+  player           Player   @relation(fields: [playerId], references: [id])
+
   @@map("starter_packs")
 }
 
 model AuditLog {
-  id              String    @id @default(cuid())
-  
-  actorAdminId    String
-  action          String    // "GRANT_ROLE", "RESET_BAR", etc.
-  targetType      String    // "player", "system"
-  targetId        String
-  payloadJson     String?   // Details
-  
-  createdAt       DateTime  @default(now())
-  
+  id           String   @id @default(cuid())
+  actorAdminId String
+  action       String
+  targetType   String
+  targetId     String
+  payloadJson  String?
+  createdAt    DateTime @default(now())
+
   @@map("audit_logs")
 }
 
 model GlobalState {
-  id              String    @id // Singleton: "singleton"
-  
-  storyClock      Int       @default(0)
-  currentAct      Int       @default(1)
-  currentPeriod   Int       @default(1)  // Current period (1-8)
-  isPaused        Boolean   @default(false) // Pause state
-  
-  // JSON array of unlocked tier IDs or flags
-  unlockedTiers   String    @default("[]") 
-  
-  // Shuffled sequence of 1-64
-  hexagramSequence String   @default("[]") 
-  
-  updatedAt       DateTime  @updatedAt
-  
+  id               String   @id
+  storyClock       Int      @default(0)
+  currentAct       Int      @default(1)
+  currentPeriod    Int      @default(1)
+  isPaused         Boolean  @default(false)
+  unlockedTiers    String   @default("[]")
+  hexagramSequence String   @default("[]")
+  updatedAt        DateTime @updatedAt
+
   @@map("global_state")
 }
 
 model StoryTick {
-  id              String    @id @default(cuid())
-  
-  tickNumber      Int       // The clock value at this tick
-  actNumber       Int       // The act value at this tick
-  
-  trigger         String    // "manual", "auto_threshold", "event_trigger"
-  description     String
-  
-  createdAt       DateTime  @default(now())
-  
+  id          String   @id @default(cuid())
+  tickNumber  Int
+  actNumber   Int
+  trigger     String
+  description String
+  createdAt   DateTime @default(now())
+
   @@map("story_ticks")
 }
 
-// --------------------------------------------------------
-// TWINE STORIES (Interactive Adventures)
-// --------------------------------------------------------
-
 model TwineStory {
-  id            String   @id @default(cuid())
-
-  title         String
-  slug          String?  @unique
-
-  // Raw uploaded story content
-  sourceType    String   @default("twine_html") // twine_html, twison_json
-  sourceText    String
-
-  // Parsed / normalized representation the app can render
-  parsedJson    String   @default("{}")
-
-  isPublished   Boolean  @default(false)
-
-  createdById   String
-  createdBy     Player   @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
-
-  runs          TwineRun[]
-  bindings      TwineBinding[]
-  quests        CustomBar[]   // Quests backed by this story
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String         @id @default(cuid())
+  title       String
+  slug        String?        @unique
+  sourceType  String         @default("twine_html")
+  sourceText  String
+  parsedJson  String         @default("{}")
+  isPublished Boolean        @default(false)
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  quests      CustomBar[]
+  bindings    TwineBinding[]
+  runs        TwineRun[]
+  createdBy   Player         @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById, createdAt])
   @@map("twine_stories")
 }
 
 model TwineRun {
-  id               String    @id @default(cuid())
-
+  id               String     @id @default(cuid())
   storyId          String
-  story            TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
-
   playerId         String
-  player           Player    @relation("TwineRunsPlayed", fields: [playerId], references: [id], onDelete: Cascade)
-
-  // Quest-scoped runs: if questId is set, this run is tied to a specific quest
   questId          String?
-
   currentPassageId String
-  visited          String    @default("[]") // JSON array of passage names
-  firedBindings    String    @default("[]") // JSON array of binding IDs already fired
-
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  visited          String     @default("[]")
+  firedBindings    String     @default("[]")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
   completedAt      DateTime?
+  player           Player     @relation("TwineRunsPlayed", fields: [playerId], references: [id], onDelete: Cascade)
+  story            TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
   @@unique([storyId, playerId, questId])
   @@index([playerId, updatedAt])
@@ -865,87 +570,55 @@ model TwineRun {
 }
 
 model TwineBinding {
-  id            String   @id @default(cuid())
-
-  storyId       String
-  story         TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
-
-  // Scope: a specific passage or link within a passage
-  scopeType     String   // "passage" | "link"
-  scopeId       String   // passage name/id or link label
-
-  // Action this binding triggers in the game engine
-  actionType    String   // e.g. "EMIT_QUEST", "EMIT_BAR"
-  payload       String   // JSON payload (schema depends on actionType)
-
-  createdById   String
-  createdBy     Player   @relation("TwineBindingsCreated", fields: [createdById], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime @default(now())
+  id          String     @id @default(cuid())
+  storyId     String
+  scopeType   String
+  scopeId     String
+  actionType  String
+  payload     String
+  createdById String
+  createdAt   DateTime   @default(now())
+  createdBy   Player     @relation("TwineBindingsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  story       TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
   @@index([storyId, scopeType, scopeId])
   @@map("twine_bindings")
 }
 
-// --------------------------------------------------------
-// INSTANCES (Multi-Instance Integral Emergence Engine)
-// --------------------------------------------------------
-
 model Instance {
-  id                String   @id @default(cuid())
-
-  // Human-friendly identifier for URLs / selection
-  slug              String   @unique
-  name              String
-
-  // party | hackathon | fundraiser | business | etc.
+  id                 String               @id @default(cuid())
+  slug               String               @unique
+  name               String
   domainType         String
-
   theme              String?
   targetDescription  String?
-
-  // Fundraising (cents)
   goalAmountCents    Int?
-  currentAmountCents Int     @default(0)
-
-  // Event mode: show progress + donate CTAs
-  isEventMode        Boolean @default(false)
-
-  // MVP payment links (external)
+  currentAmountCents Int                  @default(0)
+  isEventMode        Boolean              @default(false)
   stripeOneTimeUrl   String?
   patreonUrl         String?
-
   startDate          DateTime?
   endDate            DateTime?
-
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  activeInConfigs    AppConfig[]
   donations          Donation[]
   memberships        InstanceMembership[]
-  activeInConfigs    AppConfig[]
-
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
 
   @@map("instances")
 }
 
 model Donation {
-  id         String   @id @default(cuid())
-
-  instanceId String
-  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-
-  // Optional attribution
-  playerId   String?
-  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
-
+  id          String   @id @default(cuid())
+  instanceId  String
+  playerId    String?
   amountCents Int
-
-  // stripe_payment_link | patreon | manual | etc.
   provider    String   @default("manual")
   externalId  String?
   note        String?
-
   createdAt   DateTime @default(now())
+  instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player      Player?  @relation(fields: [playerId], references: [id])
 
   @@index([instanceId, createdAt])
   @@index([playerId, createdAt])
@@ -953,62 +626,42 @@ model Donation {
 }
 
 model InstanceMembership {
-  id          String   @id @default(cuid())
-
-  instanceId  String
-  instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-
-  playerId    String
-  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
-  // MVP role selection (Rookie/Ace/Veteran/Leader/Engineer)
-  roleKey     String?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  instanceId String
+  playerId   String
+  roleKey    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  instance   Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([instanceId, playerId])
   @@index([instanceId, createdAt])
   @@map("instance_memberships")
 }
 
-// --------------------------------------------------------
-// ADMIN: APP CONFIGURATION & AUDIT
-// --------------------------------------------------------
-
 model AppConfig {
-  id          String   @id @default("singleton")
-
-  // Active instance selection (optional; null = "single instance" mode)
-  activeInstanceId String?
-  activeInstance   Instance? @relation(fields: [activeInstanceId], references: [id], onDelete: SetNull)
-  
-  // Feature Flags (JSON object: { "iching": true, "wallet": true, ... })
-  features    String     @default("{}")
-  
-  // UI Configuration
-  theme       String     @default("{}")  // { "primaryColor": "#...", "mode": "dark" }
-  heroTitle   String?  // Landing page title override
-  heroSubtitle String? // Landing page subtitle override
-  
-  // Dynamic Orientation: Reference to the TwineStory used for onboarding
+  id                 String    @id @default("singleton")
+  features           String    @default("{}")
+  theme              String    @default("{}")
+  heroTitle          String?
+  heroSubtitle       String?
+  updatedAt          DateTime  @updatedAt
+  updatedBy          String?
+  activeInstanceId   String?
   orientationQuestId String?
-  
-  updatedAt   DateTime @updatedAt
-  updatedBy   String?  // Admin ID who made last change
-  
+  activeInstance     Instance? @relation(fields: [activeInstanceId], references: [id])
+
   @@map("app_config")
 }
 
 model AdminAuditLog {
-  id          String   @id @default(cuid())
-  
-  adminId     String   // Who performed the action
-  action      String   // "config_update", "feature_toggle", "data_edit"
-  target      String?  // What was affected (e.g., "features.wallet")
-  payload     String     // The change payload (JSON string)
-  
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  target    String?
+  payload   String
+  createdAt DateTime @default(now())
+
   @@map("admin_audit_log")
 }
