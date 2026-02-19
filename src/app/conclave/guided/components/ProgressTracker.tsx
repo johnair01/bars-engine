@@ -12,7 +12,7 @@ export function ProgressTracker({ currentStep, vibeulonsEarned }: ProgressTracke
         { key: 'intro', label: 'Welcome' },
         { key: 'identity', label: 'Identity' },
         { key: 'nation_discovery', label: 'Nation' },
-        { key: 'playbook_discovery', label: 'Playbook' },
+        { key: 'playbook_discovery', label: 'Archetype' },
         { key: 'finalization', label: 'Ready' },
     ]
 
@@ -34,10 +34,10 @@ export function ProgressTracker({ currentStep, vibeulonsEarned }: ProgressTracke
                             <div className="flex flex-col items-center">
                                 <div
                                     className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${isCompleted
-                                            ? 'bg-purple-600 text-white'
-                                            : isCurrent
-                                                ? 'bg-purple-500 text-white ring-4 ring-purple-500/20'
-                                                : 'bg-zinc-800 text-zinc-600'
+                                        ? 'bg-purple-600 text-white'
+                                        : isCurrent
+                                            ? 'bg-purple-500 text-white ring-4 ring-purple-500/20'
+                                            : 'bg-zinc-800 text-zinc-600'
                                         }`}
                                 >
                                     {isCompleted ? '✓' : index + 1}

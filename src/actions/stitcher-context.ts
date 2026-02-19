@@ -17,7 +17,7 @@ export async function getStitcherContext(storyId?: string) {
     })
     if (!adminRole) return { error: 'Admin access required' }
 
-    const nations = await db.nation.findMany({ select: { id: true, name: true } })
+    const nations = await db.nation.findMany({ where: { archived: false }, select: { id: true, name: true } })
     const playbooks = await db.playbook.findMany({ select: { id: true, name: true } })
     const quests = await db.customBar.findMany({
         where: { status: 'active' },

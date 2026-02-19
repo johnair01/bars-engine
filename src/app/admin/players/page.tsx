@@ -75,6 +75,7 @@ export default function AdminPlayersPage() {
                             <th className="px-6 py-5">Player</th>
                             <th className="px-6 py-5">Nation</th>
                             <th className="px-6 py-5">Archetype</th>
+                            <th className="px-6 py-5 text-center">Onboarding</th>
                             <th className="px-6 py-5 text-center">Wallet</th>
                             <th className="px-6 py-5">Roles</th>
                             <th className="px-6 py-5 text-right">Actions</th>
@@ -101,6 +102,13 @@ export default function AdminPlayersPage() {
                                     </td>
                                     <td className="px-6 py-5">
                                         <span className="text-zinc-300 text-sm">{archetype?.name || '—'}</span>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                        {player.onboardingComplete ? (
+                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-green-900/30 text-green-400 border border-green-800/50">✓ Done</span>
+                                        ) : (
+                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-900/20 text-amber-400 border border-amber-800/40">In Progress</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-5 text-center">
                                         <span className="font-mono text-green-400 font-bold">{player._count?.vibulons || 0} ♦</span>
@@ -150,6 +158,7 @@ export default function AdminPlayersPage() {
                                 <div className="text-right">
                                     <span className="font-mono text-green-400 font-bold block">{player._count?.vibulons || 0} ♦</span>
                                     {isAdmin && <span className="text-[10px] text-purple-400 font-bold uppercase mt-1 block">Admin</span>}
+                                    {!player.onboardingComplete && <span className="text-[10px] text-amber-400 font-bold uppercase mt-0.5 block">Onboarding</span>}
                                 </div>
                             </div>
 

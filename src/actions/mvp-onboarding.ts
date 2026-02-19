@@ -1,5 +1,12 @@
 'use server'
 
+/**
+ * @deprecated This module implements a simple form-based onboarding for nation/archetype selection.
+ * The new system uses QuestThread (threadType: 'orientation') with completionEffects.
+ * See: quest-engine.ts processCompletionEffects() and seed-onboarding-thread.ts.
+ * These functions remain for backward compatibility — new code should use the thread system.
+ */
+
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
@@ -12,6 +19,7 @@ export async function getMvpProfileSetupData() {
 
     const [nations, playbooks] = await Promise.all([
         db.nation.findMany({
+            where: { archived: false },
             select: { id: true, name: true, description: true },
             orderBy: { name: 'asc' }
         }),

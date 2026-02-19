@@ -425,7 +425,7 @@ export async function createQuestFromWizard(data: any) {
 
 export async function getGatingOptions() {
     const [nations, playbooks] = await Promise.all([
-        db.nation.findMany({ select: { id: true, name: true } }),
+        db.nation.findMany({ where: { archived: false }, select: { id: true, name: true } }),
         db.playbook.findMany({ select: { id: true, name: true } })
     ])
 

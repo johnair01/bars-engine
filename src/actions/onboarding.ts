@@ -1,5 +1,12 @@
 'use server'
 
+/**
+ * @deprecated This module uses boolean flags on the Player model for onboarding tracking.
+ * The new system uses QuestThread (threadType: 'orientation') with completionEffects.
+ * See: quest-engine.ts processCompletionEffects() and seed-onboarding-thread.ts.
+ * These functions remain for backward compatibility — new code should use the thread system.
+ */
+
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'

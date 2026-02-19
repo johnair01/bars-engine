@@ -8,11 +8,11 @@ const getNationChoice = (nation: any): StoryChoice => ({
     nextNodeId: `nation_info_${nation.id}`,
 })
 
-// Helper to format playbook choice
-const getPlaybookChoice = (playbook: any): StoryChoice => ({
-    id: `view_playbook_${playbook.id}`,
-    text: `Learn about ${playbook.name}`,
-    nextNodeId: `playbook_info_${playbook.id}`,
+// Helper to format archetype choice
+const getArchetypeChoice = (archetype: any): StoryChoice => ({
+    id: `view_playbook_${archetype.id}`,
+    text: `Learn about ${archetype.name}`,
+    nextNodeId: `playbook_info_${archetype.id}`,
 })
 
 export async function getStaticStoryNode(nodeId: string, playerId?: string): Promise<StoryNode | null> {
@@ -192,7 +192,7 @@ A crossroads lies ahead. One path smells of ozone, another echoes with distant l
     }
 
     if (nodeId === 'nation_reveal') {
-        const nations = await db.nation.findMany({ orderBy: { name: 'asc' } })
+        const nations = await db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } })
 
         // Suggestion Logic
         const counts: Record<string, number> = {}
@@ -268,7 +268,7 @@ Choose your nation. This determines your initial toolkit and social status withi
         }
     }
 
-    // 4. PLAYBOOK DISCOVERY (The Mini-Quest)
+    // 4. ARCHETYPE DISCOVERY (The Mini-Quest)
     if (nodeId === 'playbook_select') {
         return {
             id: 'playbook_select',
@@ -386,17 +386,17 @@ Your way of moving through the world is clear. The I Ching archetypes are more t
 
 ${featuredPlaybook ? `Your instincts align with **${topAlign.charAt(0).toUpperCase() + topAlign.slice(1)}**. Archetypes like **${featuredPlaybook.name}** might suit your style.` : ''}
 
-Select your playbook. This defines your unique moves and your contribution to the heist.
+Select your archetype. This defines your unique moves and your contribution to the heist.
             `,
             guideDialogue: featuredPlaybook ? `The way you handled that conflict... it speaks of the ${featuredPlaybook.name}. Use that spark.` : "The Eight Ways are before you. Which path do you walk?",
             choices: [
-                ...(featuredPlaybook ? [getPlaybookChoice(featuredPlaybook)] : []),
-                ...playbooks.filter(p => p.id !== featuredPlaybook?.id).map(getPlaybookChoice)
+                ...(featuredPlaybook ? [getArchetypeChoice(featuredPlaybook)] : []),
+                ...playbooks.filter(p => p.id !== featuredPlaybook?.id).map(getArchetypeChoice)
             ]
         }
     }
 
-    // PLAYBOOK INFO NODES
+    // ARCHETYPE INFO NODES
     if (nodeId.startsWith('playbook_info_')) {
         const playbookId = nodeId.replace('playbook_info_', '')
         const playbook = await db.playbook.findUnique({ where: { id: playbookId } })

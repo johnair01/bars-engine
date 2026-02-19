@@ -193,6 +193,9 @@ export async function completeQuestForPlayer(
             await tx.vibulon.createMany({ data: tokenData })
         }
 
+        // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
+        await processCompletionEffects(tx, playerId, quest, inputs)
+
         // Handle Pack/Thread progression
         if (context?.packId) {
             const { completePackQuestForPlayer } = await import('@/actions/quest-pack')
@@ -235,6 +238,126 @@ function parseStoryQuestMeta(raw: string | null) {
         }
     } catch {
         return { questSource: null as string | null }
+    }
+}
+
+// ============================================================
+// COMPLETION EFFECTS ENGINE
+// ============================================================
+
+interface CompletionEffect {
+    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons'
+    value?: string   // nationId, playbookId, etc.
+    amount?: number  // for grantVibeulons
+    fromInput?: string // key in quest inputs to read the value from
+}
+
+/**
+ * Parse and execute structured completion effects from a quest's completionEffects JSON.
+ * Effects can set player nation/playbook, mark onboarding complete, or grant bonus vibeulons.
+ *
+ * The `completionEffects` JSON can contain:
+ * - `effects`: an array of CompletionEffect objects
+ * - Legacy fields like `questSource` are ignored (handled by parseStoryQuestMeta)
+ *
+ * Example completionEffects JSON:
+ * {
+ *   "questSource": "onboarding",
+ *   "effects": [
+ *     { "type": "setNation", "fromInput": "nationId" },
+ *     { "type": "markOnboardingComplete" }
+ *   ]
+ * }
+ */
+async function processCompletionEffects(
+    tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
+    playerId: string,
+    quest: { id: string; completionEffects: string | null; title: string },
+    inputs: Record<string, any>
+) {
+    if (!quest.completionEffects) return
+
+    let parsed: { effects?: CompletionEffect[] }
+    try {
+        parsed = JSON.parse(quest.completionEffects)
+    } catch {
+        return // Not valid JSON or legacy format — skip silently
+    }
+
+    const effects = parsed.effects
+    if (!Array.isArray(effects) || effects.length === 0) return
+
+    for (const effect of effects) {
+        try {
+            switch (effect.type) {
+                case 'setNation': {
+                    const nationId = effect.fromInput
+                        ? inputs[effect.fromInput]
+                        : effect.value
+                    if (nationId) {
+                        await tx.player.update({
+                            where: { id: playerId },
+                            data: { nationId }
+                        })
+                        console.log(`[CompletionEffects] Set nation=${nationId} for player ${playerId}`)
+                    }
+                    break
+                }
+                case 'setPlaybook': {
+                    const playbookId = effect.fromInput
+                        ? inputs[effect.fromInput]
+                        : effect.value
+                    if (playbookId) {
+                        await tx.player.update({
+                            where: { id: playerId },
+                            data: { playbookId }
+                        })
+                        console.log(`[CompletionEffects] Set playbook=${playbookId} for player ${playerId}`)
+                    }
+                    break
+                }
+                case 'markOnboardingComplete': {
+                    await tx.player.update({
+                        where: { id: playerId },
+                        data: {
+                            onboardingComplete: true,
+                            onboardingCompletedAt: new Date()
+                        }
+                    })
+                    console.log(`[CompletionEffects] Marked onboarding complete for player ${playerId}`)
+                    break
+                }
+                case 'grantVibeulons': {
+                    const amount = effect.amount || 0
+                    if (amount > 0) {
+                        await tx.vibulonEvent.create({
+                            data: {
+                                playerId,
+                                source: 'completion_effect',
+                                amount,
+                                notes: `Bonus from quest: ${quest.title}`,
+                                archetypeMove: 'IGNITE',
+                                questId: quest.id,
+                            }
+                        })
+                        const bonusTokens = Array.from({ length: amount }, () => ({
+                            ownerId: playerId,
+                            originSource: 'completion_effect',
+                            originId: quest.id,
+                            originTitle: quest.title
+                        }))
+                        await tx.vibulon.createMany({ data: bonusTokens })
+                        console.log(`[CompletionEffects] Granted ${amount} bonus vibeulons to player ${playerId}`)
+                    }
+                    break
+                }
+                default:
+                    console.warn(`[CompletionEffects] Unknown effect type: ${(effect as any).type}`)
+            }
+        } catch (err) {
+            console.error(`[CompletionEffects] Failed to process effect ${effect.type}:`, err)
+            // Don't throw — process remaining effects
+        }
     }
 }
 /**

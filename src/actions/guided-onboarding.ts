@@ -1,5 +1,13 @@
 'use server'
 
+/**
+ * @deprecated This module implements story-JSON-based onboarding with StoryNode/StoryProgress.
+ * The new system uses QuestThread (threadType: 'orientation') with completionEffects
+ * to handle onboarding as an editable quest thread.
+ * See: quest-engine.ts processCompletionEffects() and seed-onboarding-thread.ts.
+ * These functions remain for backward compatibility — new code should use the thread system.
+ */
+
 import { db } from '@/lib/db'
 import { StoryNode, StoryProgress } from '../app/conclave/guided/types'
 

@@ -11,7 +11,9 @@ import {
     assignQuestToPlayer,
     assignThreadToPlayer,
     assignPackToPlayer,
-    deleteAdminPlayer
+    deleteAdminPlayer,
+    getPlayerOnboardingProgress,
+    resetPlayerThreadProgress
 } from '@/actions/admin'
 
 interface AdminPlayerEditorProps {
@@ -30,15 +32,56 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
     const [selectedQuestId, setSelectedQuestId] = useState('')
     const [selectedThreadId, setSelectedThreadId] = useState('')
     const [selectedPackId, setSelectedPackId] = useState('')
+    const [onboardingProgress, setOnboardingProgress] = useState<any[]>([])
+
+    const fetchData = async () => {
+        const [allQuests, journeys, obProgress] = await Promise.all([
+            getAdminQuests(),
+            getAdminJourneys(),
+            getPlayerOnboardingProgress(player.id)
+        ])
+        setQuests(allQuests)
+        setThreads(journeys.threads)
+        setPacks(journeys.packs)
+        setOnboardingProgress(obProgress)
+    }
 
     useEffect(() => {
-        startTransition(async () => {
-            const [allQuests, journeys] = await Promise.all([getAdminQuests(), getAdminJourneys()])
-            setQuests(allQuests)
-            setThreads(journeys.threads)
-            setPacks(journeys.packs)
-        })
+        startTransition(fetchData)
     }, [])
+
+    const handleResetOnboarding = async (threadId: string) => {
+        if (!confirm('Reset this player\'s onboarding progress to step 1?')) return
+        startTransition(async () => {
+            try {
+                await resetPlayerThreadProgress(player.id, threadId)
+                await fetchData()
+                onUpdate()
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
+
+    const handleAssignOnboarding = async () => {
+        // Find orientation threads not yet assigned to this player
+        const orientationThreads = threads.filter(t => t.threadType === 'orientation')
+        if (orientationThreads.length === 0) {
+            alert('No orientation threads found. Run the seed script first.')
+            return
+        }
+        startTransition(async () => {
+            try {
+                for (const t of orientationThreads) {
+                    await assignThreadToPlayer(player.id, t.id)
+                }
+                await fetchData()
+                onUpdate()
+            } catch (e: any) {
+                alert(e.message)
+            }
+        })
+    }
 
     const handleToggleAdmin = async () => {
         if (!confirm(`${isAdmin ? 'Revoke' : 'Grant'} Admin role for ${player.name}?`)) return
@@ -175,6 +218,79 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
                                 </select>
                             </div>
                         </div>
+                    </section>
+
+                    {/* Onboarding Status Section */}
+                    <section className="space-y-4">
+                        <h3 className="text-[10px] uppercase text-zinc-500 font-bold tracking-[0.2em]">Onboarding Status</h3>
+                        {onboardingProgress.length === 0 ? (
+                            <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-sm text-zinc-400">No onboarding thread assigned</div>
+                                        <div className="text-xs text-zinc-600 mt-1">Player has not been enrolled in orientation</div>
+                                    </div>
+                                    <button
+                                        onClick={handleAssignOnboarding}
+                                        disabled={isPending}
+                                        className="px-4 py-2 rounded-xl bg-purple-900/30 text-purple-300 border border-purple-800/50 hover:bg-purple-900/50 text-sm font-bold transition-all disabled:opacity-50"
+                                    >
+                                        Assign Onboarding
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            onboardingProgress.map((op: any) => (
+                                <div key={op.threadId} className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-sm font-bold text-white">{op.threadTitle}</div>
+                                            <div className="text-xs text-zinc-500 mt-0.5">
+                                                {op.isComplete
+                                                    ? <span className="text-green-400">✓ Completed</span>
+                                                    : `Step ${op.currentPosition} of ${op.totalQuests}`
+                                                }
+                                            </div>
+                                        </div>
+                                        {!op.isComplete && (
+                                            <button
+                                                onClick={() => handleResetOnboarding(op.threadId)}
+                                                disabled={isPending}
+                                                className="px-3 py-1.5 rounded-lg bg-amber-900/20 text-amber-400 border border-amber-800/40 hover:bg-amber-900/40 text-xs font-bold transition-all disabled:opacity-50"
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                        {op.isComplete && (
+                                            <button
+                                                onClick={() => handleResetOnboarding(op.threadId)}
+                                                disabled={isPending}
+                                                className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs font-bold transition-all disabled:opacity-50"
+                                            >
+                                                Re-assign
+                                            </button>
+                                        )}
+                                    </div>
+                                    {/* Progress bar */}
+                                    <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                                        <div
+                                            className={`h-1.5 rounded-full transition-all ${op.isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
+                                            style={{ width: `${op.isComplete ? 100 : ((op.currentPosition - 1) / op.totalQuests) * 100}%` }}
+                                        />
+                                    </div>
+                                    {/* Quest checklist */}
+                                    <div className="space-y-1">
+                                        {op.allQuests.map((q: any) => (
+                                            <div key={q.questId} className={`flex items-center gap-2 text-xs ${q.isCompleted ? 'text-zinc-500' : q.isCurrent ? 'text-white' : 'text-zinc-600'
+                                                }`}>
+                                                <span>{q.isCompleted ? '✓' : q.isCurrent ? '▸' : '○'}</span>
+                                                <span>{q.title}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </section>
 
                     {/* Vibeulon Section */}

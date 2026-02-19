@@ -545,7 +545,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         {archetypeError}
                                     </p>
                                     <p className="text-zinc-600 text-xs">
-                                        Your playbook may not be assigned yet. Try completing character setup first.
+                                        Your archetype may not be assigned yet. Try completing character setup first.
                                     </p>
                                 </div>
                             ) : (

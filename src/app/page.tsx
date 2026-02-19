@@ -150,12 +150,19 @@ export default async function Home() {
     return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
   }
 
-  // Force incomplete profiles through the guided setup steps.
-  if (!player.nationId) {
-    redirect('/conclave/guided?step=nation_select')
-  }
-  if (!player.playbookId) {
-    redirect('/conclave/guided?step=playbook_select')
+  // Force incomplete profiles through guided setup UNLESS they have an active orientation thread.
+  // If an orientation thread is assigned, the thread system handles onboarding on the dashboard.
+  const hasActiveOrientationThread = await db.threadProgress.findFirst({
+    where: { playerId, completedAt: null, thread: { threadType: 'orientation' } }
+  })
+
+  if (!hasActiveOrientationThread) {
+    if (!player.nationId) {
+      redirect('/conclave/guided?step=nation_select')
+    }
+    if (!player.playbookId) {
+      redirect('/conclave/guided?step=playbook_select')
+    }
   }
 
   await ensureWallet(playerId)
@@ -390,23 +397,30 @@ export default async function Home() {
             <div className="text-3xl">⚡</div>
             <div>
               <h3 className="text-yellow-400 font-bold">Complete Your Setup</h3>
-              <p className="text-yellow-200/60 text-sm">Your character profile is missing its Nation or Archetype resonance.</p>
+              <p className="text-yellow-200/60 text-sm">
+                {hasActiveOrientationThread
+                  ? 'Continue your onboarding journey below to choose your Nation and Archetype.'
+                  : 'Your character profile is missing its Nation or Archetype resonance.'
+                }
+              </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Link
-              href="/onboarding"
-              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
-            >
-              Quick Setup →
-            </Link>
-            <Link
-              href="/conclave/guided?reset=true"
-              className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
-            >
-              Guided Story
-            </Link>
-          </div>
+          {!hasActiveOrientationThread && (
+            <div className="flex gap-2">
+              <Link
+                href="/onboarding"
+                className="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-lg transition-colors whitespace-nowrap"
+              >
+                Quick Setup →
+              </Link>
+              <Link
+                href="/conclave/guided?reset=true"
+                className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
+              >
+                Guided Story
+              </Link>
+            </div>
+          )}
         </section>
       )}
 

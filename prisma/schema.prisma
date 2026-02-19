@@ -339,6 +339,7 @@ model Nation {
   name        String       @unique
   description String
   imgUrl      String?
+  archived    Boolean      @default(false)
   wakeUp      String?
   cleanUp     String?
   growUp      String?

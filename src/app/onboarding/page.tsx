@@ -26,6 +26,7 @@ export default async function OnboardingPage() {
     }
 
     const nations = await db.nation.findMany({
+        where: { archived: false },
         select: { id: true, name: true, description: true },
         orderBy: { name: 'asc' }
     })

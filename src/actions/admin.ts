@@ -416,6 +416,72 @@ export async function deleteAdminPlayer(playerId: string) {
 }
 
 // ===================================
+// ONBOARDING THREAD MANAGEMENT
+// ===================================
+
+/**
+ * Get a player's progress on all orientation threads.
+ * Returns thread info, current position, total quests, and current quest title.
+ */
+export async function getPlayerOnboardingProgress(playerId: string) {
+    await checkAdmin()
+
+    const progress = await db.threadProgress.findMany({
+        where: {
+            playerId,
+            thread: { threadType: 'orientation' }
+        },
+        include: {
+            thread: {
+                include: {
+                    quests: {
+                        orderBy: { position: 'asc' },
+                        include: { quest: { select: { id: true, title: true } } }
+                    }
+                }
+            }
+        }
+    })
+
+    return progress.map(p => ({
+        threadId: p.threadId,
+        threadTitle: p.thread.title,
+        currentPosition: p.currentPosition,
+        totalQuests: p.thread.quests.length,
+        isComplete: !!p.completedAt,
+        completedAt: p.completedAt,
+        startedAt: p.startedAt,
+        currentQuest: p.thread.quests.find(q => q.position === p.currentPosition)?.quest || null,
+        allQuests: p.thread.quests.map(q => ({
+            position: q.position,
+            questId: q.quest.id,
+            title: q.quest.title,
+            isCompleted: q.position < p.currentPosition,
+            isCurrent: q.position === p.currentPosition,
+        }))
+    }))
+}
+
+/**
+ * Reset a player's thread progress to position 1.
+ */
+export async function resetPlayerThreadProgress(playerId: string, threadId: string) {
+    await checkAdmin()
+
+    await db.threadProgress.update({
+        where: { threadId_playerId: { threadId, playerId } },
+        data: {
+            currentPosition: 1,
+            completedAt: null,
+            isArchived: false,
+        }
+    })
+
+    revalidatePath('/admin/players')
+    return { success: true }
+}
+
+// ===================================
 // WORLD DATA MANAGEMENT
 // ===================================
 
