@@ -236,6 +236,8 @@ export async function upsertQuest(data: {
     reward?: number
     type: string
     inputs: string // JSON string
+    allowedNations?: string | null
+    allowedTrigrams?: string | null
 }) {
     await checkAdmin()
 
@@ -253,8 +255,8 @@ export async function upsertQuest(data: {
         type: data.type || 'standard',
         inputs: data.inputs || '[]',
         visibility: 'public', // Default to public for system quests
-        allowedNations: (data as any).allowedNations || null,
-        allowedTrigrams: (data as any).allowedTrigrams || null,
+        allowedNations: data.allowedNations || null,
+        allowedTrigrams: data.allowedTrigrams || null,
     }
 
     let questId = data.id
