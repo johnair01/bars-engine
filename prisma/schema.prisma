@@ -105,6 +105,10 @@ model Player {
   // Instance relations (multi-instance platform)
   instanceMemberships InstanceMembership[]
   donations           Donation[]
+
+  // Nation moves (Integral Emergence Engine)
+  nationMoveUnlocks  PlayerNationMoveUnlock[]
+  questMoveLogs      QuestMoveLog[]
   
   createdAt       DateTime  @default(now())
 
@@ -248,6 +252,10 @@ model CustomBar {
 
   // Bar sharing
   shares          BarShare[]
+
+  // Nation move logs
+  questMoveLogs       QuestMoveLog[] @relation("QuestMoveQuest")
+  moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
   
   rootId          String?   // For fast lookups
   
@@ -548,10 +556,108 @@ model Nation {
   showUp      String?  // Action move
   
   players     Player[]
+
+  moves       NationMove[]
   
   createdAt   DateTime @default(now())
   
   @@map("nations")
+}
+
+// --------------------------------------------------------
+// NATION MOVES (Integral Emergence Engine)
+// --------------------------------------------------------
+
+model Polarity {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String?
+
+  moves       NationMove[]
+
+  createdAt   DateTime @default(now())
+
+  @@map("polarities")
+}
+
+model NationMove {
+  id                String   @id @default(cuid())
+  key               String   @unique
+
+  nationId          String
+  nation            Nation   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+
+  polarityId        String?
+  polarity          Polarity? @relation(fields: [polarityId], references: [id], onDelete: SetNull)
+
+  name              String
+  description       String
+
+  // Starting unlocked moves are immediately usable without any explicit unlock row.
+  isStartingUnlocked Boolean @default(false)
+
+  // JSON array of quest statuses this move can apply to (e.g. ["active","dormant"])
+  appliesToStatus   String   @default("[]")
+
+  // JSON schema (MVP) that defines required inputs for this move.
+  requirementsSchema String  @default("{}")
+
+  // JSON schema (MVP) describing lightweight effects (e.g. set quest status).
+  effectsSchema     String   @default("{}")
+
+  sortOrder         Int      @default(0)
+
+  unlocks           PlayerNationMoveUnlock[]
+  logs              QuestMoveLog[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([nationId, sortOrder])
+  @@map("nation_moves")
+}
+
+model PlayerNationMoveUnlock {
+  id          String    @id @default(cuid())
+
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  moveId      String
+  move        NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+
+  unlockedAt  DateTime  @default(now())
+
+  @@unique([playerId, moveId])
+  @@index([moveId, unlockedAt])
+  @@map("player_nation_move_unlocks")
+}
+
+model QuestMoveLog {
+  id           String   @id @default(cuid())
+
+  questId      String
+  quest        CustomBar @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
+
+  moveId       String
+  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdBarId String?
+  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id], onDelete: SetNull)
+
+  inputsJson   String?
+  effectsJson  String?
+
+  createdAt    DateTime @default(now())
+
+  @@index([questId, createdAt])
+  @@index([playerId, createdAt])
+  @@map("quest_move_logs")
 }
 
 model Playbook {
