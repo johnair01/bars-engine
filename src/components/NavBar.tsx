@@ -31,6 +31,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         <Link href="/event" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/event')}`}>
                             EVENT
                         </Link>
+                        <Link href="/graveyard" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/graveyard')}`}>
+                            GRAVEYARD
+                        </Link>
                         <Link href="/bars" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars')}`}>
                             BARS
                         </Link>
