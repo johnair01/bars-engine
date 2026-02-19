@@ -39,17 +39,23 @@ function sync() {
 
     // 2. Conditional Push
     if (needsPush) {
+        if (isProd) {
+            console.warn('⚠️  Schema changed in production. Skipping AUTO-PUSH for safety.')
+            console.warn('👉 Use "prisma migrate deploy" for production schema updates.')
+            // We still want to allow the build to continue if it's just a schema update, 
+            // but we absolutely NOT wipe the database.
+            return
+        }
+
         if (hasDbUrl) {
             console.log('🚀 Schema change detected. Pushing to Database...')
             try {
-                // We use --accept-data-loss for rapid iteration during MVP. 
-                // For later stages, we should switch to migrations.
-                execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+                // Remove --accept-data-loss for safety.
+                execSync('npx prisma db push', { stdio: 'inherit' })
                 if (currentHash) writeFileSync(HASH_FILE, currentHash)
                 console.log('✅ Database synchronized.')
             } catch (e) {
                 console.error('❌ Prisma DB Push failed. Check your DATABASE_URL.')
-                // In CI, we want to fail the build if push fails
                 if (isProd) process.exit(1)
             }
         } else {
