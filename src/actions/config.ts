@@ -42,7 +42,9 @@ export async function getAppConfig() {
     // 3) Ensure the singleton row exists without referencing any new columns.
     if (!fallback) {
         await db.$executeRaw(
-            Prisma.sql`INSERT INTO "app_config" ("id") VALUES ('singleton') ON CONFLICT ("id") DO NOTHING;`
+            // app_config.updatedAt is NOT NULL and has no DB default (it’s managed by Prisma).
+            // When we insert via raw SQL (schema-drift safe), we must supply it.
+            Prisma.sql`INSERT INTO "app_config" ("id", "updatedAt") VALUES ('singleton', NOW()) ON CONFLICT ("id") DO NOTHING;`
         )
 
         fallback = await db.appConfig.findUnique({
