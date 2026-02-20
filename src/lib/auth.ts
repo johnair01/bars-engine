@@ -30,3 +30,9 @@ export const getCurrentPlayer = cache(async () => {
         return null
     }
 })
+
+export async function requirePlayer() {
+    const player = await getCurrentPlayer()
+    if (!player) throw new Error('Authentication required')
+    return player.id
+}

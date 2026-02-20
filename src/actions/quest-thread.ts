@@ -118,11 +118,17 @@ export async function advanceThread(threadId: string, questId: string) {
 /**
  * Internal logic for thread advancement (test-friendly)
  */
-export async function advanceThreadForPlayer(playerId: string, threadId: string, questId: string) {
-    const thread = await db.questThread.findUnique({
+export async function advanceThreadForPlayer(
+    playerId: string,
+    threadId: string,
+    questId: string,
+    tx?: any // Allow passing a transaction client
+) {
+    const client = tx || db
+    const thread = await client.questThread.findUnique({
         where: { id: threadId },
         include: {
-            quests: { orderBy: { position: 'asc' }, include: { quest: true } },
+            quests: { orderBy: { position: 'asc' }, include: { quest: { include: { microTwine: true } } } },
             progress: { where: { playerId } }
         }
     })
@@ -133,7 +139,7 @@ export async function advanceThreadForPlayer(playerId: string, threadId: string,
     if (!progress) return { error: 'Thread not started' }
 
     // Verify the quest being completed is the current one
-    const currentQuest = thread.quests.find(q => q.position === progress.currentPosition)
+    const currentQuest = thread.quests.find((q: any) => q.position === progress.currentPosition)
     if (!currentQuest || currentQuest.questId !== questId) {
         return { error: 'This is not the current quest in the thread' }
     }
@@ -141,7 +147,7 @@ export async function advanceThreadForPlayer(playerId: string, threadId: string,
     const nextPosition = progress.currentPosition + 1
     const isComplete = nextPosition > thread.quests.length
 
-    await db.threadProgress.update({
+    await client.threadProgress.update({
         where: { id: progress.id },
         data: {
             currentPosition: nextPosition,
@@ -151,8 +157,8 @@ export async function advanceThreadForPlayer(playerId: string, threadId: string,
 
     // If thread complete, award completion reward
     if (isComplete && thread.completionReward > 0) {
-        // Mint vibeulons for thread completion
-        await db.vibulonEvent.create({
+        // 1. Log the event
+        await client.vibulonEvent.create({
             data: {
                 playerId,
                 source: 'thread_completion',
@@ -161,21 +167,36 @@ export async function advanceThreadForPlayer(playerId: string, threadId: string,
                 notes: `Completed thread: ${thread.title}`
             }
         })
+
+        // 2. Mint actual tokens
+        const tokenData = []
+        for (let i = 0; i < thread.completionReward; i++) {
+            tokenData.push({
+                ownerId: playerId,
+                originSource: 'thread_completion',
+                originId: threadId,
+                originTitle: thread.title
+            })
+        }
+        await client.vibulon.createMany({ data: tokenData })
     } else if (!isComplete) {
         // RECURSIVE CHECK: Is the *next* quest already done?
-        const nextQuest = thread.quests.find(q => q.position === nextPosition)
-        if (nextQuest) {
-            const assignment = await db.playerQuest.findFirst({
-                where: {
-                    playerId,
-                    questId: nextQuest.questId,
-                    status: 'completed'
-                }
-            })
+        // DISABLED for orientation threads to ensure players see the full narrative journey
+        if (thread.threadType !== 'orientation') {
+            const nextQuest = thread.quests.find((q: any) => q.position === nextPosition)
+            if (nextQuest) {
+                const assignment = await client.playerQuest.findFirst({
+                    where: {
+                        playerId,
+                        questId: nextQuest.questId,
+                        status: 'completed'
+                    }
+                })
 
-            if (assignment) {
-                console.log(`Auto-advancing thread ${threadId} past already-completed quest ${nextQuest.questId}`)
-                await advanceThreadForPlayer(playerId, threadId, nextQuest.questId)
+                if (assignment) {
+                    console.log(`Auto-advancing thread ${threadId} past already-completed quest ${nextQuest.questId}`)
+                    await advanceThreadForPlayer(playerId, threadId, nextQuest.questId, tx)
+                }
             }
         }
     }
@@ -183,7 +204,8 @@ export async function advanceThreadForPlayer(playerId: string, threadId: string,
     return {
         success: true,
         isComplete,
-        nextPosition: isComplete ? null : nextPosition
+        nextPosition: isComplete ? null : nextPosition,
+        threadType: thread.threadType
     }
 }
 
@@ -197,13 +219,32 @@ export async function assignOrientationThreads(playerId: string) {
     })
 
     for (const thread of orientationThreads) {
-        await db.threadProgress.create({
-            data: {
-                threadId: thread.id,
-                playerId,
-                currentPosition: 1
+        try {
+            // Use upsert with a try-catch for maximum resilience against race conditions in parallel requests
+            await db.threadProgress.upsert({
+                where: {
+                    threadId_playerId: {
+                        threadId: thread.id,
+                        playerId: playerId
+                    }
+                },
+                update: {}, // No changes if it exists
+                create: {
+                    threadId: thread.id,
+                    playerId,
+                    currentPosition: 1
+                }
+            })
+        } catch (error: any) {
+            // If it's a unique constraint error (P2002), we can safely ignore it as 
+            // the record clearly already exists.
+            if (error.code === 'P2002') {
+                console.info(`[QuestThread] Orientation thread ${thread.id} already assigned to ${playerId}, ignoring race condition.`)
+            } else {
+                console.error(`[QuestThread] Failed to assign orientation thread ${thread.id}:`, error)
+                throw error
             }
-        })
+        }
     }
 }
 

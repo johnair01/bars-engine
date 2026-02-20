@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { mintVibulon } from '@/actions/economy'
+import { hashPassword } from '@/lib/auth-utils'
 
 // ===================================
 // ADMIN STATS
@@ -488,7 +489,7 @@ export async function resetPlayerThreadProgress(playerId: string, threadId: stri
 export async function getAdminWorldData() {
     await checkAdmin()
     return Promise.all([
-        db.nation.findMany({ orderBy: { name: 'asc' } }),
+        db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
         db.playbook.findMany({ orderBy: { name: 'asc' } })
     ])
 }
@@ -619,5 +620,73 @@ export async function adminTransferVibulons(sourcePlayerId: string, targetPlayer
         revalidatePath('/wallet')
         return { success: true }
     })
+}
+
+// ===================================
+// PLAYER SPAWNER (FOR TESTING)
+// ===================================
+
+export async function spawnTestPlayer() {
+    await checkAdmin()
+
+    const timestamp = Date.now()
+    const email = `test.ritual.${timestamp}@conclave.xyz`
+    const rawPassword = `ritual_${timestamp}`
+    const passwordHash = await hashPassword(rawPassword)
+
+    try {
+        return await db.$transaction(async (tx) => {
+            // 1. Create Invite (required by Player model)
+            const invite = await tx.invite.create({
+                data: {
+                    token: `ritual_test_${timestamp}`,
+                    maxUses: 1,
+                    status: 'active'
+                }
+            })
+
+            // 2. Create Account
+            const account = await tx.account.create({
+                data: {
+                    email,
+                    passwordHash
+                }
+            })
+
+            // 3. Create Player
+            const player = await tx.player.create({
+                data: {
+                    accountId: account.id,
+                    name: `Wayfarer ${timestamp.toString().slice(-4)}`,
+                    contactType: 'email',
+                    contactValue: email,
+                    inviteId: invite.id,
+                    onboardingMode: 'guided',
+                    onboardingComplete: false,
+                    hasSeenWelcome: false,
+                    storyProgress: JSON.stringify({
+                        currentNodeId: 'intro_001',
+                        completedNodes: [],
+                        decisions: [],
+                        vibeulonsEarned: 0,
+                        startedAt: new Date(),
+                        lastActiveAt: new Date()
+                    })
+                }
+            })
+
+            return {
+                success: true,
+                credentials: {
+                    email,
+                    password: rawPassword
+                },
+                playerId: player.id
+            }
+        })
+    } catch (error) {
+        console.error('[spawnTestPlayer] Failed:', error)
+        return { success: false, error: 'Failed to spawn test player' }
+    }
 }
 

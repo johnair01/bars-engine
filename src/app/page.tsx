@@ -18,16 +18,26 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 
-export default async function Home() {
+export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string }> }) {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
-  // Get app config for dynamic content
-  const appConfig = await getAppConfig()
-  const heroTitle = appConfig.heroTitle || 'BARS ENGINE'
-  const heroSubtitle = appConfig.heroSubtitle || 'A quest system for the vibrational convergence'
+  // Safe DB calls — these run before auth check and must not crash the page
+  let appConfig: any = {}
+  let activeInstance: any = null
+  try {
+    appConfig = await getAppConfig()
+    activeInstance = await getActiveInstance()
+  } catch (err) {
+    // DB unreachable — continue with defaults
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Home] DB unreachable for config/instance lookup:', (err as any)?.message)
+    }
+  }
 
-  const activeInstance = await getActiveInstance()
+  const heroTitle = appConfig?.heroTitle || 'BARS ENGINE'
+  const heroSubtitle = appConfig?.heroSubtitle || 'A quest system for the vibrational convergence'
+
   const formatUsdCents = (cents: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -152,21 +162,84 @@ export default async function Home() {
 
   // Force incomplete profiles through guided setup UNLESS they have an active orientation thread.
   // If an orientation thread is assigned, the thread system handles onboarding on the dashboard.
-  const hasActiveOrientationThread = await db.threadProgress.findFirst({
-    where: { playerId, completedAt: null, thread: { threadType: 'orientation' } }
+  let hasActiveOrientationThread = await db.threadProgress.findFirst({
+    where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
+    include: {
+      thread: {
+        include: {
+          quests: {
+            orderBy: { position: 'asc' },
+            include: { quest: true }
+          }
+        }
+      }
+    }
   })
 
   if (!hasActiveOrientationThread) {
-    if (!player.nationId) {
-      redirect('/conclave/guided?step=nation_select')
-    }
-    if (!player.playbookId) {
-      redirect('/conclave/guided?step=playbook_select')
-    }
+    const { assignOrientationThreads } = await import('@/actions/quest-thread')
+    await assignOrientationThreads(playerId)
+
+    // Refresh the check
+    hasActiveOrientationThread = await db.threadProgress.findFirst({
+      where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
+      include: {
+        thread: {
+          include: {
+            quests: {
+              orderBy: { position: 'asc' },
+              include: { quest: true }
+            }
+          }
+        }
+      }
+    })
   }
+
+  // AUTO-TRIGGER: Complete the "Arrival" quest upon sign-in
+  if (!player.hasSeenWelcome) {
+    const { fireTrigger } = await import('@/actions/quest-engine')
+    await fireTrigger('SIGN_IN', { skipRevalidate: true })
+    await db.player.update({ where: { id: playerId }, data: { hasSeenWelcome: true } })
+
+    // Refresh thread one more time to show updated progress
+    hasActiveOrientationThread = await db.threadProgress.findFirst({
+      where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
+      include: {
+        thread: {
+          include: {
+            quests: {
+              orderBy: { position: 'asc' },
+              include: { quest: true }
+            }
+          }
+        }
+      }
+    })
+  }
+
+  /* 
+  if (hasActiveOrientationThread) {
+    // ENFORCE STICKY FLOW: If there's an orientation quest active, go back to onboarding controller
+    // This now covers ALL orientation quests, including the final signal.
+    redirect('/conclave/onboarding')
+  } else {
+  */
+  if (!player.nationId && !hasActiveOrientationThread) {
+    redirect('/conclave/guided?step=nation_select')
+  }
+  if (!player.playbookId && !hasActiveOrientationThread) {
+    redirect('/conclave/guided?step=playbook_select')
+  }
+
+  const searchParams = await props.searchParams
+  const ritualComplete = searchParams.ritualComplete === 'true'
+  const focusQuest = searchParams.focusQuest
 
   await ensureWallet(playerId)
   const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
+
+  const isRitualComplete = hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
 
   const potentialDelegates = await db.player.findMany({
     where: { id: { not: playerId } },
@@ -214,6 +287,7 @@ export default async function Home() {
         { visibility: 'private', creatorId: playerId, claimedById: null, status: 'active' },
       ]
     },
+    include: { microTwine: true },
     orderBy: { createdAt: 'desc' }
   })
 
@@ -329,6 +403,43 @@ export default async function Home() {
         )}
       </header >
 
+      {/* RITUAL SUCCESS BANNER */}
+      {ritualComplete && (
+        <section className="bg-purple-900/30 border border-purple-500/50 rounded-2xl p-8 text-center space-y-4 animate-in zoom-in-95 duration-700">
+          <div className="text-4xl">🌟</div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">The Ritual is Complete</h2>
+          <p className="text-purple-200 text-sm max-w-md mx-auto leading-relaxed">
+            You have successfully navigated the first gates of the Conclave.
+            The collective field is now open to you. Go forth and weave.
+          </p>
+          <div className="pt-2">
+            <Link href="/" className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-900/40">
+              Enter the Flow
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ORIENTATION RITUAL BANNER */}
+      {!isRitualComplete && hasActiveOrientationThread && (
+        <section className="bg-gradient-to-br from-purple-900/40 to-black border border-purple-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl shadow-purple-900/10 active:border-purple-500/50 transition-colors">
+          <div className="space-y-1 text-center sm:text-left">
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+              <span className="text-[10px] text-purple-400 font-black uppercase tracking-[0.2em]">Active Ritual</span>
+            </div>
+            <h2 className="text-xl font-bold text-white">{hasActiveOrientationThread.thread.title}</h2>
+            <p className="text-zinc-500 text-xs">Complete your orientation to unlock the full potential of the Conclave.</p>
+          </div>
+          <Link
+            href="/conclave/onboarding?ritual=true"
+            className="w-full sm:w-auto px-8 py-4 bg-white text-black hover:bg-zinc-200 font-black rounded-xl transition-all shadow-xl shadow-white/5 active:scale-95 text-center uppercase tracking-widest text-xs"
+          >
+            Continue Ritual →
+          </Link>
+        </section>
+      )}
+
       {/* EVENT MODE BANNER (Active Instance) */}
       {activeInstance?.isEventMode && (
         <section className="bg-green-950/20 border border-green-900/40 rounded-2xl p-6 space-y-4">
@@ -414,7 +525,7 @@ export default async function Home() {
                 Quick Setup →
               </Link>
               <Link
-                href="/conclave/guided?reset=true"
+                href="/conclave/onboarding?reset=true"
                 className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
               >
                 Guided Story
@@ -440,6 +551,7 @@ export default async function Home() {
                 thread={thread as any}
                 completedMoveTypes={completedMoveTypes}
                 isSetupIncomplete={isSetupIncomplete}
+                focusQuest={focusQuest}
               />
             ))}
             {packs.map(pack => (

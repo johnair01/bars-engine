@@ -17,6 +17,10 @@ type PackQuest = {
         moveType?: string | null
         twineLogic?: string | null
         twineStoryId?: string | null
+        microTwine?: {
+            htmlArtifact: string | null
+            isDraft: boolean
+        } | null
     }
 }
 
@@ -203,6 +207,7 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                         moveType: selectedQuest.quest.moveType || null,
                         twineLogic: selectedQuest.quest.twineLogic || null,
                         twineStoryId: selectedQuest.quest.twineStoryId || null,
+                        microTwine: selectedQuest.quest.microTwine || null,
                     }}
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}

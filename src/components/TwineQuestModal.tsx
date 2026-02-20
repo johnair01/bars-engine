@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
-import { advanceRun, getOrCreateRun, getTwineStoryForQuest } from '@/actions/twine'
+import { advanceRun, getOrCreateRun, getTwineStoryForQuest, completeTwineRunForQuest } from '@/actions/twine'
+import { getWorldData } from '@/actions/onboarding'
 import { useRouter } from 'next/navigation'
 import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
+import { OnboardingRecommendation } from './onboarding/OnboardingRecommendation'
 
 interface TwineQuestModalProps {
     isOpen: boolean
@@ -12,12 +14,17 @@ interface TwineQuestModalProps {
     questTitle: string
     twineStoryId: string
     isCompleted?: boolean
+    threadId?: string
+    isRitual?: boolean
 }
 
-export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineStoryId, isCompleted }: TwineQuestModalProps) {
+export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineStoryId, isCompleted, threadId, isRitual }: TwineQuestModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [story, setStory] = useState<ParsedTwineStory | null>(null)
+    const [bindings, setBindings] = useState<any[]>([])
+    const [nations, setNations] = useState<any[]>([])
+    const [playbooks, setPlaybooks] = useState<any[]>([])
     const [currentPassageName, setCurrentPassageName] = useState<string | null>(null)
     const [visited, setVisited] = useState<string[]>([])
     const [emitted, setEmitted] = useState<string[]>([])
@@ -32,9 +39,10 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         setError(null)
 
         try {
-            const [storyData, runData] = await Promise.all([
+            const [storyData, runData, worldData] = await Promise.all([
                 getTwineStoryForQuest(twineStoryId),
                 getOrCreateRun(twineStoryId, questId),
+                getWorldData()
             ])
 
             if (!storyData) {
@@ -49,15 +57,21 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                 return
             }
 
+            const [n, p] = worldData
+            setNations(n)
+            setPlaybooks(p)
+
             const parsed = JSON.parse(storyData.parsedJson) as ParsedTwineStory
             setStory(parsed)
+            setBindings((storyData as any).bindings || [])
             setCurrentPassageName(runData.run.currentPassageId)
             setVisited(JSON.parse(runData.run.visited))
 
             if (runData.run.completedAt) {
                 setCompleted(true)
             }
-        } catch {
+        } catch (e) {
+            console.error('[TwineQuestModal] Load failed:', e)
             setError('Failed to load adventure.')
         }
         setLoading(false)
@@ -106,6 +120,8 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                         onClose()
                         if (result.redirect) {
                             router.push(result.redirect)
+                        } else if (isRitual) {
+                            router.push('/conclave/onboarding?ritual=true')
                         } else {
                             router.refresh()
                         }
@@ -172,51 +188,79 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                     )}
 
                     {/* Active passage */}
-                    {currentPassage && !loading && !completed && (
-                        <div className="space-y-6 animate-in fade-in duration-500">
-                            <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">
-                                {currentPassage.name}
+                    {currentPassage && !loading && !completed && (() => {
+                        const recommendationBinding = isEnd ? bindings.find(b =>
+                            (b.actionType === 'SET_NATION' || b.actionType === 'SET_ARCHETYPE') &&
+                            b.scopeId === currentPassage.name
+                        ) : null
+
+                        const recommendationPayload = recommendationBinding ? JSON.parse(recommendationBinding.payload) : null
+
+                        return (
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                                <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">
+                                    {currentPassage.name}
+                                </div>
+
+                                {recommendationBinding ? (
+                                    <OnboardingRecommendation
+                                        type={recommendationBinding.actionType === 'SET_NATION' ? 'nation' : 'archetype'}
+                                        recommendedId={recommendationPayload.nationId || recommendationPayload.playbookId}
+                                        options={recommendationBinding.actionType === 'SET_NATION' ? nations : playbooks}
+                                        questId={questId}
+                                        threadId={threadId}
+                                        isRitual={isRitual}
+                                        onComplete={() => {
+                                            setCompleted(true)
+                                            startTransition(async () => {
+                                                await completeTwineRunForQuest(twineStoryId, questId)
+                                            })
+                                        }}
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+                                            <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-base">
+                                                {currentPassage.cleanText}
+                                            </p>
+                                        </div>
+
+                                        {/* Emitted items */}
+                                        {emitted.length > 0 && (
+                                            <div className="p-3 bg-green-900/20 border border-green-800/50 rounded-lg animate-in slide-in-from-bottom-2">
+                                                <p className="text-green-400 text-sm font-bold">Unlocked:</p>
+                                                {emitted.map((e, i) => (
+                                                    <p key={i} className="text-green-300 text-sm mt-1">+ {e}</p>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Choices */}
+                                        {isEnd ? (
+                                            <div className="text-center py-4">
+                                                <p className="text-zinc-500 italic">End of story.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {currentPassage.links.map((link, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => handleChoice(link.target)}
+                                                        disabled={isPending}
+                                                        className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
+                                                    >
+                                                        <span className="text-white group-hover:text-purple-400 transition-colors">
+                                                            {link.label}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
-
-                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                                <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-base">
-                                    {currentPassage.cleanText}
-                                </p>
-                            </div>
-
-                            {/* Emitted items */}
-                            {emitted.length > 0 && (
-                                <div className="p-3 bg-green-900/20 border border-green-800/50 rounded-lg animate-in slide-in-from-bottom-2">
-                                    <p className="text-green-400 text-sm font-bold">Unlocked:</p>
-                                    {emitted.map((e, i) => (
-                                        <p key={i} className="text-green-300 text-sm mt-1">+ {e}</p>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Choices */}
-                            {isEnd ? (
-                                <div className="text-center py-4">
-                                    <p className="text-zinc-500 italic">End of story.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {currentPassage.links.map((link, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => handleChoice(link.target)}
-                                            disabled={isPending}
-                                            className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
-                                        >
-                                            <span className="text-white group-hover:text-purple-400 transition-colors">
-                                                {link.label}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )
+                    })()}
                 </div>
 
                 {/* Footer */}

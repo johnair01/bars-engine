@@ -64,7 +64,9 @@ export function StoryReader({ initialNode, playerId, progress: initialProgress }
 
             setInfoNode(null)
             setInfoHandbook(null)
-            if (choice.nextNodeId === 'dashboard') {
+            if (result.redirectTo) {
+                router.push(result.redirectTo)
+            } else if (choice.nextNodeId === 'dashboard') {
                 router.push('/dashboard')
             } else {
                 router.push(`/conclave/guided?step=${encodeURIComponent(choice.nextNodeId)}`)

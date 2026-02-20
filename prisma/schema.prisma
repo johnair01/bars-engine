@@ -157,6 +157,7 @@ model CustomBar {
   moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
   questMoveLogs        QuestMoveLog[] @relation("QuestMoveQuest")
   threadQuests         ThreadQuest[]
+  microTwine           MicroTwineModule?
 
   @@map("custom_bars")
 }
@@ -230,6 +231,8 @@ model QuestThread {
   creationCost     Int              @default(0)
   completionReward Int              @default(0)
   allowedPlaybooks String?
+  gateNationId     String?
+  gatePlaybookId   String?
   status           String           @default("active")
   createdAt        DateTime         @default(now())
   progress         ThreadProgress[]
@@ -665,4 +668,18 @@ model AdminAuditLog {
   createdAt DateTime @default(now())
 
   @@map("admin_audit_log")
+}
+
+model MicroTwineModule {
+  id               String       @id @default(cuid())
+  questId          String       @unique
+  canonicalJson    String       // Form structure (Moments, Options)
+  tweeSource       String       // Generated SugarCube Twee
+  htmlArtifact     String?      // Compiled Twine HTML (Base64 or String)
+  isDraft          Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  quest            CustomBar    @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@map("micro_twine_modules")
 }

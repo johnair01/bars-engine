@@ -40,6 +40,7 @@ export async function getMarketContent() {
                 status: 'active',
                 isSystem: false,
             },
+            include: { microTwine: true },
             orderBy: { createdAt: 'desc' },
             take: 50 // Limit for now
         })

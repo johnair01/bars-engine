@@ -35,13 +35,18 @@ async function main() {
     const creator = admin || await db.player.findFirst()
     if (!creator) {
         console.error('❌ No players found. Create at least one player first.')
+        // @ts-ignore
         process.exit(1)
+        return // for TS
     }
     console.log(`Using creator: ${creator.name} (${creator.id})\n`)
 
     // 1. Fetch nations and playbooks for reference
     const nations = await db.nation.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: 'asc' } })
     const playbooks = await db.playbook.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: 'asc' } })
+
+    const pyrakanth = nations.find(n => n.name === 'Pyrakanth') || nations[0]
+    const dangerWalker = playbooks.find(p => p.name === 'The Danger Walker') || playbooks[0]
 
     if (nations.length === 0 || playbooks.length === 0) {
         console.error('❌ No nations or playbooks found. Run seed-world-content.ts first.')
@@ -52,6 +57,49 @@ async function main() {
     // 2. Create the 4 onboarding quests
     console.log('Creating onboarding quests...')
 
+    // Helper to ensure dummy Twine stories exist for onboarding
+    async function ensureSkeletonStory(title: string, startPassage: string) {
+        const existing = await db.twineStory.findFirst({ where: { title } })
+        if (existing) return existing
+
+        const skeletonJson = JSON.stringify({
+            startPassage,
+            passages: [
+                {
+                    name: startPassage,
+                    text: `Welcome to the ${title} journey. This is a skeleton story. Admin: edit this in the Twine section.`,
+                    cleanText: `Welcome to the ${title} journey. This is a skeleton story. Admin: edit this in the Twine section.`,
+                    links: []
+                }
+            ]
+        })
+
+        return db.twineStory.create({
+            data: {
+                title,
+                sourceText: `:: ${startPassage}\nWelcome to the ${title} journey. This is a skeleton story.`,
+                parsedJson: skeletonJson,
+                isPublished: true,
+                createdById: creator.id
+            }
+        })
+    }
+
+    // Get the real stories imported from the HTML
+    const getStory = async (title: string) => {
+        const s = await db.twineStory.findFirst({ where: { title } })
+        if (!s) {
+            console.warn(`Warning: Could not find story: ${title}. Using skeleton...`)
+            return ensureSkeletonStory(title, 'Start')
+        }
+        return s
+    }
+
+    const storyWelcome = await getStory('Welcome to the Conclave')
+    const storyNation = await getStory('Declare Your Nation')
+    const storyArchetype = await getStory('Discover Your Archetype')
+    const storySignal = await getStory('Send Your First Signal')
+
     // Quest 1: Welcome
     const q1 = await upsertQuestByTitle('Welcome to the Conclave', {
         description: `Welcome, traveler. You've been invited to the Conclave — a space where shared intention becomes tangible through quests, vibeulons, and collective action.\n\n**Your first task:** Tell us what brought you here. What are you hoping to find or build?\n\nThis begins your journey. Every step earns vibeulons ♦ — the currency of contribution.`,
@@ -60,7 +108,15 @@ async function main() {
         creatorId: creator.id,
         visibility: 'private',
         isSystem: true,
+        twineStoryId: storyWelcome.id,
         inputs: JSON.stringify([
+            {
+                key: 'playerName',
+                label: 'What is your name (CODEX ID)?',
+                type: 'text',
+                placeholder: 'Enter your preferred name...',
+                required: true
+            },
             {
                 key: 'introduction',
                 label: 'What brought you here?',
@@ -70,63 +126,56 @@ async function main() {
         ]),
         completionEffects: JSON.stringify({
             questSource: 'onboarding',
-            effects: []
-        })
-    })
-
-    // Quest 2: Choose Nation
-    // Build nation options into the quest description
-    const nationChoices = nations.map(n => `- **${n.name}**: ${n.description}`).join('\n')
-    const nationInputOptions = nations.map(n => ({ value: n.id, label: n.name }))
-
-    const q2 = await upsertQuestByTitle('Declare Your Nation', {
-        description: `Every player belongs to a Nation — a community that reflects how you show up in the world.\n\nEach nation has its own strengths, moves, and way of being. Choose the one that resonates with you:\n\n${nationChoices}\n\n*Don't overthink it — you can change your nation later through admin support.*`,
-        type: 'onboarding',
-        reward: 3,
-        creatorId: creator.id,
-        visibility: 'private',
-        isSystem: true,
-        inputs: JSON.stringify([
-            {
-                key: 'nationId',
-                label: 'Choose your Nation',
-                type: 'select',
-                options: nationInputOptions,
-                required: true
-            }
-        ]),
-        completionEffects: JSON.stringify({
-            questSource: 'onboarding',
             effects: [
-                { type: 'setNation', fromInput: 'nationId' }
+                { type: 'setPlayerName', fromInput: 'playerName' }
             ]
         })
     })
 
-    // Quest 3: Choose Archetype
-    const archetypeChoices = playbooks.map(p => `- **${p.name}**: ${p.description}`).join('\n')
-    const archetypeInputOptions = playbooks.map(p => ({ value: p.id, label: p.name }))
-
-    const q3 = await upsertQuestByTitle('Discover Your Archetype', {
-        description: `Your Archetype defines your style of play — the lens through which you engage with quests and community.\n\n${archetypeChoices}\n\n*Your archetype shapes the quests you receive and how you earn vibeulons. Choose what feels right.*`,
+    // Quest 2: Nation
+    const q2 = await upsertQuestByTitle('Declare Your Nation', {
+        description: `Your resonance is starting to show. Every player belongs to a Nation — a cultural and philosophical alignment that defines their origin and initial toolkit.\n\n**Your task:** Complete the narrative challenge to discover your Nation.`,
         type: 'onboarding',
         reward: 3,
         creatorId: creator.id,
         visibility: 'private',
         isSystem: true,
+        twineStoryId: storyNation.id,
         inputs: JSON.stringify([
             {
-                key: 'playbookId',
-                label: 'Choose your Archetype',
-                type: 'select',
-                options: archetypeInputOptions,
-                required: true
+                key: 'nationId',
+                label: 'Selected Nation',
+                type: 'hidden'
             }
         ]),
         completionEffects: JSON.stringify({
             questSource: 'onboarding',
             effects: [
-                { type: 'setPlaybook', fromInput: 'playbookId' }
+                { type: 'setNation', fromInput: 'nationId', value: pyrakanth.id }
+            ]
+        })
+    })
+
+    // Quest 3: Archetype
+    const q3 = await upsertQuestByTitle('Discover Your Archetype', {
+        description: `With your origin settled, we must find your function. Your Archetype (Playbook) defines your unique moves and how you contribute to collective action.\n\n**Your task:** Complete the narrative challenge to discover your Archetype.`,
+        type: 'onboarding',
+        reward: 3,
+        creatorId: creator.id,
+        visibility: 'private',
+        isSystem: true,
+        twineStoryId: storyArchetype.id,
+        inputs: JSON.stringify([
+            {
+                key: 'playbookId',
+                label: 'Selected Archetype',
+                type: 'hidden'
+            }
+        ]),
+        completionEffects: JSON.stringify({
+            questSource: 'onboarding',
+            effects: [
+                { type: 'setPlaybook', fromInput: 'playbookId', value: dangerWalker.id }
             ]
         })
     })
@@ -139,6 +188,7 @@ async function main() {
         creatorId: creator.id,
         visibility: 'private',
         isSystem: true,
+        twineStoryId: storySignal.id,
         inputs: JSON.stringify([
             {
                 key: 'signal',
@@ -209,6 +259,7 @@ async function main() {
 main()
     .catch((e) => {
         console.error('Seed failed:', e)
+        // @ts-ignore
         process.exit(1)
     })
     .finally(async () => {

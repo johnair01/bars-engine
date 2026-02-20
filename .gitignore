@@ -49,3 +49,4 @@ next-env.d.ts
 # Database backups (local cold storage)
 /backups/
 .prisma_hash
+.env*.local

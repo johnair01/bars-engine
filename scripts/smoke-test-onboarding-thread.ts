@@ -17,6 +17,7 @@ import { PrismaClient } from '@prisma/client'
 const db = new PrismaClient()
 
 const TEST_PREFIX = '__smoke_ob_test__'
+const TEST_EMAIL = `${TEST_PREFIX}@test.local`
 
 async function assert(label: string, value: any, expected?: any) {
     if (expected !== undefined) {
@@ -40,6 +41,8 @@ async function cleanup() {
         await db.player.delete({ where: { id: testPlayer.id } })
         console.log('  ✓ Cleaned up test player')
     }
+    await db.account.deleteMany({ where: { email: TEST_EMAIL } })
+    await db.invite.deleteMany({ where: { token: TEST_PREFIX } })
 }
 
 async function main() {
@@ -77,14 +80,21 @@ async function main() {
     await assert('Has quest with setPlaybook effect', questWithPlaybook)
     await assert('Has quest with markOnboardingComplete effect', questWithComplete)
 
-    // 2. Create test player
+    // 2. Create test player (requires Account + Invite per schema)
     console.log('\n[2] Creating test player...')
+    const invite = await db.invite.create({
+        data: { token: TEST_PREFIX, status: 'active' }
+    })
+    const account = await db.account.create({
+        data: { email: TEST_EMAIL, passwordHash: 'test_hash_not_real' }
+    })
     const testPlayer = await db.player.create({
         data: {
+            accountId: account.id,
             name: TEST_PREFIX,
             contactType: 'email',
-            contactValue: `${TEST_PREFIX}@test.local`,
-            passwordHash: 'test',
+            contactValue: TEST_EMAIL,
+            inviteId: invite.id,
             onboardingComplete: false,
         }
     })

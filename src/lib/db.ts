@@ -1,52 +1,53 @@
 import { PrismaClient } from '@prisma/client'
+import { withAccelerate } from '@prisma/extension-accelerate'
 
 function isPostgresUrl(url: string): boolean {
-    return /^postgres(ql)?:\/\//i.test(url)
+    return /^(prisma\+)?postgres(ql)?:\/\//i.test(url)
 }
 
-function describeUrl(url: string): string {
-    const match = url.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//)
-    if (match) return `scheme:${match[1]}`
-    if (url.includes('://')) return 'scheme:unknown'
-    return 'present'
+function isAccelerateUrl(url: string): boolean {
+    return /^prisma\+postgres(ql)?:\/\//i.test(url)
 }
 
-function resolveDatabaseUrl(): { url: string; source: string } {
-    // Vercel Postgres and older setups can expose different variable names.
-    // Prefer the new Vercel/Prisma names, but fall back to common legacy ones.
+function resolveDatabaseUrl(): { url: string; source: string; accelerate: boolean } | null {
+    // Priority: Accelerate URL first (works from localhost), then direct URLs
     const candidates: Array<[string, string | undefined]> = [
-        ['POSTGRES_PRISMA_URL', process.env.POSTGRES_PRISMA_URL],
         ['PRISMA_DATABASE_URL', process.env.PRISMA_DATABASE_URL],
+        ['POSTGRES_PRISMA_URL', process.env.POSTGRES_PRISMA_URL],
         ['DATABASE_URL', process.env.DATABASE_URL],
         ['POSTGRES_URL', process.env.POSTGRES_URL],
     ]
 
-    const invalid: string[] = []
-
     for (const [name, value] of candidates) {
         if (!value) continue
-        if (isPostgresUrl(value)) return { url: value, source: name }
-        invalid.push(`${name}(${describeUrl(value)})`)
+        if (isPostgresUrl(value)) {
+            return { url: value, source: name, accelerate: isAccelerateUrl(value) }
+        }
     }
 
-    const invalidSummary = invalid.length ? ` Invalid values: ${invalid.join(', ')}.` : ''
-    throw new Error(
-        `No valid Postgres connection string found.${invalidSummary} Set POSTGRES_PRISMA_URL (preferred) or PRISMA_DATABASE_URL / DATABASE_URL / POSTGRES_URL.`
-    )
+    return null
 }
 
 const prismaClientSingleton = () => {
-    const { url } = resolveDatabaseUrl()
+    const dbConfig = resolveDatabaseUrl()
 
-    // Override the datasource URL so the app can run even if the Prisma schema
-    // points at an env var that isn't present in a given environment.
-    return new PrismaClient({
-        // Helpful breadcrumb for debugging (does not log the secret value).
+    if (process.env.NODE_ENV === 'development' && dbConfig) {
+        console.log(`[DB] Using ${dbConfig.source}${dbConfig.accelerate ? ' (Accelerate)' : ''}`)
+    }
+
+    const client = new PrismaClient({
         log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
-        datasources: {
-            db: { url },
-        },
+        datasources: dbConfig ? {
+            db: { url: dbConfig.url },
+        } : undefined,
     })
+
+    // Extend with Accelerate when using prisma+postgres:// URLs
+    if (dbConfig?.accelerate) {
+        return client.$extends(withAccelerate()) as unknown as PrismaClient
+    }
+
+    return client
 }
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>

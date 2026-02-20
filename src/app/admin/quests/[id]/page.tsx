@@ -3,6 +3,7 @@
 import { getAdminQuest, upsertQuest, deleteQuest } from '@/actions/admin'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
+import { MicroTwineWizard } from '@/components/admin/MicroTwineWizard'
 
 export default function EditQuestPage() {
     const params = useParams<{ id: string }>()
@@ -219,6 +220,18 @@ export default function EditQuestPage() {
                     </div>
                 </div>
             </div>
+
+            {isNew ? (
+                <div className="bg-zinc-900/50 border border-zinc-800 border-dashed rounded-xl p-8 text-center space-y-2">
+                    <div className="text-2xl opacity-50">🔒</div>
+                    <h3 className="text-zinc-400 font-bold">Micro-Twine Ritual Locked</h3>
+                    <p className="text-zinc-600 text-xs">Save this quest first to establish its identity in the void before weaving its narrative.</p>
+                </div>
+            ) : (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                    <MicroTwineWizard questId={id} />
+                </div>
+            )}
         </div>
     )
 }

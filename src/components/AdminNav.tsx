@@ -10,6 +10,7 @@ export function AdminNav() {
 
     const navItems = [
         { name: 'Dashboard', href: '/admin', icon: '🏠' },
+        { name: 'Onboarding', href: '/admin/onboarding', icon: '✨' },
         { name: 'Instances', href: '/admin/instances', icon: '🧩' },
         { name: 'Journeys', href: '/admin/journeys', icon: '📜' },
         { name: 'Quests', href: '/admin/quests', icon: '⚔️' },
@@ -57,8 +58,8 @@ export function AdminNav() {
                                 href={item.href}
                                 onClick={handleNavClick}
                                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${isActive
-                                        ? 'bg-purple-900/20 text-purple-300 border border-purple-900/50'
-                                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent'
+                                    ? 'bg-purple-900/20 text-purple-300 border border-purple-900/50'
+                                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent'
                                     }`}
                             >
                                 <span className="text-lg">{item.icon}</span>

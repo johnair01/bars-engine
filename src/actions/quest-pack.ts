@@ -125,8 +125,14 @@ export async function completePackQuest(packId: string, questId: string) {
 /**
  * Internal logic for pack completion (test-friendly)
  */
-export async function completePackQuestForPlayer(playerId: string, packId: string, questId: string) {
-    const pack = await db.questPack.findUnique({
+export async function completePackQuestForPlayer(
+    playerId: string,
+    packId: string,
+    questId: string,
+    tx?: any // Allow passing a transaction client
+) {
+    const client = tx || db
+    const pack = await client.questPack.findUnique({
         where: { id: packId },
         include: {
             quests: true,
@@ -137,14 +143,14 @@ export async function completePackQuestForPlayer(playerId: string, packId: strin
     if (!pack) return { error: 'Pack not found' }
 
     // Verify quest is in pack
-    const questInPack = pack.quests.find(q => q.questId === questId)
+    const questInPack = pack.quests.find((q: any) => q.questId === questId)
     if (!questInPack) return { error: 'Quest not in this pack' }
 
     let progress = pack.progress[0]
 
     // Auto-start if not started
     if (!progress) {
-        progress = await db.packProgress.create({
+        progress = await client.packProgress.create({
             data: {
                 packId,
                 playerId,
@@ -163,7 +169,7 @@ export async function completePackQuestForPlayer(playerId: string, packId: strin
     completed.push(questId)
     const isPackComplete = completed.length === pack.quests.length
 
-    await db.packProgress.update({
+    await client.packProgress.update({
         where: { id: progress.id },
         data: {
             completed: JSON.stringify(completed),

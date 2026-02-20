@@ -26,15 +26,31 @@ export default async function GuidedModePage({ searchParams }: { searchParams: P
     )
 }
 
+import { getCurrentPlayerSafe } from '@/lib/auth-safe'
+
 async function GuidedStoryLoader({ requestedStep }: { requestedStep?: string }) {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
+    const { playerId, player, dbError, errorMessage } = await getCurrentPlayerSafe()
+
+    if (dbError) {
+        return (
+            <div className="text-center p-8 bg-zinc-900 rounded-xl border border-red-900/50 max-w-md mx-auto">
+                <h2 className="text-red-500 font-bold mb-4 text-xl tracking-tight uppercase">Database Unreachable</h2>
+                <div className="text-zinc-400 text-sm leading-relaxed mb-6">
+                    {errorMessage || "The database is currently unreachable. Guided Conclave require a functional database connection to load your story progress."}
+                </div>
+                <div className="space-y-4">
+                    <div className="bg-black/50 p-3 rounded text-[10px] font-mono text-zinc-500 break-all border border-zinc-800">
+                        Check your DATABASE_URL environment variable.
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     if (!playerId) {
         return <GuidedAuthForm />
     }
 
-    const player = await db.player.findUnique({ where: { id: playerId } })
     if (!player) redirect('/login')
 
     // Parse progress safe

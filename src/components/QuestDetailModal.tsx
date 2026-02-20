@@ -13,6 +13,7 @@ import { getTransferContext } from '@/actions/economy'
 import { QuestInputs, BarInput } from './QuestInputs'
 import { QuestTwinePlayer } from './QuestTwinePlayer'
 import { TwineQuestModal } from './TwineQuestModal'
+import { QuestTwineIframe } from './QuestTwineIframe'
 import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
 import Link from 'next/link'
@@ -30,10 +31,15 @@ interface QuestDetailModalProps {
         moveType?: string | null
         twineLogic?: string | null // JSON string of TwineLogic
         twineStoryId?: string | null // Reference to uploaded TwineStory
+        microTwine?: {
+            htmlArtifact: string | null
+            isDraft: boolean
+        } | null
     }
     context?: {
         packId?: string
         threadId?: string
+        threadType?: string
     }
     // Pre-calculated state from parent
     isCompleted?: boolean
@@ -174,6 +180,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 questTitle={quest.title}
                 twineStoryId={quest.twineStoryId}
                 isCompleted={isCompleted}
+                threadId={context?.threadId}
+                isRitual={context?.threadType === 'orientation'}
             />
         )
     }
@@ -186,7 +194,13 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 setFeedback('✨ Quest Complete!')
                 setTimeout(() => {
                     setFeedback(null)
-                    onClose()
+                    // RITUAL MODE: If this was part of an orientation thread, 
+                    // redirect back to the onboarding controller to maintain flow.
+                    if ('threadType' in result && result.threadType === 'orientation') {
+                        router.push('/conclave/onboarding?ritual=true')
+                    } else {
+                        onClose()
+                    }
                 }, 1500)
             } else {
                 setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
@@ -226,11 +240,16 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         : parsedTwineLogic
 
     const showingGuidedIntention = isIntentionQuest && intentionMode === 'guided'
+
+    // We prioritize the new Micro-Twine Ritual if one is compiled
+    const hasCompiledMicroTwine = !!quest.microTwine?.htmlArtifact && !quest.microTwine.isDraft
+
     const shouldRenderTwine = !!effectiveTwineLogic
         && !isCompleted
         && !isLocked
         && !isArchetypeQuest
         && !isTransferQuest
+        && !hasCompiledMicroTwine // Fallback if no MicroTwine
         && (!isIntentionQuest || showingGuidedIntention)
 
     return (
@@ -504,7 +523,19 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </div>
                     )}
 
-                    {/* TWINE NARRATIVE ENGINE */}
+                    {/* MICRO-TWINE RITUAL ENGINE */}
+                    {hasCompiledMicroTwine && quest.microTwine?.htmlArtifact && !isCompleted && !isLocked && (
+                        <QuestTwineIframe
+                            htmlArtifact={quest.microTwine.htmlArtifact}
+                            onComplete={(bindPayload) => {
+                                // Rite 5 preview: Handle the [BIND] message
+                                console.log('[MicroTwine] Bind received:', bindPayload)
+                                // For Rite 4, we just log it. Rite 5 will handle completion.
+                            }}
+                        />
+                    )}
+
+                    {/* TWINE NARRATIVE ENGINE (LEGACY/JSON) */}
                     {shouldRenderTwine && effectiveTwineLogic && (
                         <QuestTwinePlayer
                             logic={effectiveTwineLogic}
@@ -523,7 +554,13 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         setFeedback('✨ Quest Complete!')
                                         setTimeout(() => {
                                             setFeedback(null)
-                                            onClose()
+                                            // RITUAL MODE: If this was part of an orientation thread, 
+                                            // redirect back to the onboarding controller to maintain flow.
+                                            if ('threadType' in result && result.threadType === 'orientation') {
+                                                router.push('/conclave/onboarding?ritual=true')
+                                            } else {
+                                                onClose()
+                                            }
                                         }, 1500)
                                     } else {
                                         setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)

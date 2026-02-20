@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { completePackQuest } from '@/actions/quest-pack'
 import { advanceThread } from '@/actions/quest-thread'
-import { getOnboardingStatus, completeOnboardingStep } from '@/actions/onboarding'
+import { getOnboardingStatus, completeOnboardingStep, assignGatedThreads } from '@/actions/onboarding'
 import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
 
@@ -55,11 +55,17 @@ export async function checkQuestStatus(questId: string, context?: { packId?: str
 type QuestCompletionContext = { packId?: string, threadId?: string }
 type QuestCompletionOptions = { skipRevalidate?: boolean }
 
-export async function completeQuest(questId: string, inputs: any, context?: QuestCompletionContext) {
-    const player = await getCurrentPlayer()
-    if (!player) return { error: 'Not logged in' }
+export async function completeQuest(questId: string, inputs: any, context?: QuestCompletionContext, options?: QuestCompletionOptions) {
+    try {
+        const player = await getCurrentPlayer()
+        if (!player) return { error: 'Not logged in' }
 
-    return completeQuestForPlayer(player.id, questId, inputs, context)
+        console.log(`[QuestEngine] Completing quest ${questId} for player ${player.id}`)
+        return await completeQuestForPlayer(player.id, questId, inputs, context, options)
+    } catch (err: any) {
+        console.error(`[QuestEngine] Fatal error in completeQuest:`, err)
+        return { error: err.message || 'A technical error occurred while completing the quest.' }
+    }
 }
 
 /**
@@ -118,7 +124,17 @@ export async function completeQuestForPlayer(
     }
 
     // MARK QUEST AS COMPLETE AND GRANT REWARDS IN TRANSACTION
-    return await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
+        // CHECK IF ALREADY COMPLETED (for reward bypass)
+        const existingCompletion = await tx.playerQuest.findUnique({
+            where: {
+                playerId_questId: { playerId, questId }
+            }
+        })
+
+        const isRepeat = existingCompletion?.status === 'completed'
+        const isOnboarding = quest.type === 'onboarding'
+
         await tx.playerQuest.upsert({
             where: {
                 playerId_questId: {
@@ -141,9 +157,14 @@ export async function completeQuestForPlayer(
             }
         })
 
-        // GRANT VIBEULONS with bonus
+        // GRANT VIBEULONS with bonus (BYPASS IF REPEAT ONBOARDING)
         const baseReward = quest.reward || 1
         let finalReward = Math.floor(baseReward * bonusMultiplier)
+
+        if (isOnboarding && isRepeat) {
+            finalReward = 0
+            console.log(`[QuestEngine] Bypass rewards for repeated onboarding quest ${questId} for player ${playerId}`)
+        }
 
         if (isStoryClockQuest) {
             finalReward = isFirstCompleter ? 2 : 1
@@ -196,21 +217,19 @@ export async function completeQuestForPlayer(
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
         await processCompletionEffects(tx, playerId, quest, inputs)
 
-        // Handle Pack/Thread progression
+        // Handle Pack/Thread progression - PASSING TX for atomicity
         if (context?.packId) {
             const { completePackQuestForPlayer } = await import('@/actions/quest-pack')
-            await completePackQuestForPlayer(playerId, context.packId, questId)
+            await (completePackQuestForPlayer as any)(playerId, context.packId, questId, tx)
         }
 
+        let threadType: string | null = null
         if (context?.threadId) {
             const { advanceThreadForPlayer } = await import('@/actions/quest-thread')
-            await advanceThreadForPlayer(playerId, context.threadId, questId)
-        }
-
-        // CHECK ONBOARDING STATUS
-        const obStatus = await getOnboardingStatus(playerId)
-        if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
-            await completeOnboardingStep('firstQuest', playerId, { skipRevalidate: true })
+            const advanceResult = await advanceThreadForPlayer(playerId, context.threadId, questId, tx) as any
+            if ('threadType' in advanceResult) {
+                threadType = advanceResult.threadType
+            }
         }
 
         // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
@@ -225,8 +244,36 @@ export async function completeQuestForPlayer(
             })
         }
 
-        return { success: true, reward: finalReward, isFirstCompleter, bonusApplied: bonusMultiplier > 1 }
+        return {
+            success: true,
+            reward: finalReward,
+            isFirstCompleter,
+            bonusApplied: bonusMultiplier > 1,
+            threadType
+        }
+    }, {
+        timeout: 10000 // Increase timeout to 10s for intensive operations
     })
+
+    // LEGACY CHECK: Moved OUTSIDE transaction to avoid bloat
+    try {
+        const obStatus = await getOnboardingStatus(playerId)
+        if (!('error' in obStatus) && !obStatus.hasCompletedFirstQuest) {
+            await completeOnboardingStep('firstQuest', playerId, { skipRevalidate: true })
+        }
+    } catch (e) {
+        console.warn(`[QuestEngine] Non-critical onboarding update failed:`, e)
+    }
+
+    // Auto-assign any gated threads that the player now qualifies for
+    // (e.g. if they just set their nation/archetype via completion effects)
+    await assignGatedThreads(playerId)
+
+    if (!options?.skipRevalidate) {
+        revalidatePath('/')
+    }
+
+    return result
 }
 
 function parseStoryQuestMeta(raw: string | null) {
@@ -246,7 +293,7 @@ function parseStoryQuestMeta(raw: string | null) {
 // ============================================================
 
 interface CompletionEffect {
-    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons'
+    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName'
     value?: string   // nationId, playbookId, etc.
     amount?: number  // for grantVibeulons
     fromInput?: string // key in quest inputs to read the value from
@@ -327,6 +374,19 @@ async function processCompletionEffects(
                     console.log(`[CompletionEffects] Marked onboarding complete for player ${playerId}`)
                     break
                 }
+                case 'setPlayerName': {
+                    const name = effect.fromInput
+                        ? inputs[effect.fromInput]
+                        : effect.value
+                    if (name) {
+                        await tx.player.update({
+                            where: { id: playerId },
+                            data: { name }
+                        })
+                        console.log(`[CompletionEffects] Set name=${name} for player ${playerId}`)
+                    }
+                    break
+                }
                 case 'grantVibeulons': {
                     const amount = effect.amount || 0
                     if (amount > 0) {
@@ -363,7 +423,7 @@ async function processCompletionEffects(
 /**
  * Fire a trigger to auto-complete matching quests.
  */
-export async function fireTrigger(trigger: string) {
+export async function fireTrigger(trigger: string, options?: { skipRevalidate?: boolean }) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
 
@@ -409,7 +469,7 @@ export async function fireTrigger(trigger: string) {
 
     // Collect candidates from threads (only the CURRENT quest in the thread)
     for (const progress of activeThreads) {
-        const currentQuestEntry = progress.thread.quests.find(q => q.position === progress.currentPosition + 1)
+        const currentQuestEntry = progress.thread.quests.find(q => q.position === progress.currentPosition)
         if (currentQuestEntry) {
             const inputs = JSON.parse(currentQuestEntry.quest.inputs || '[]') as any[]
             if (inputs.some(input => input.trigger === trigger)) {
@@ -424,9 +484,12 @@ export async function fireTrigger(trigger: string) {
     if (candidates.length === 0) return { success: false, message: 'No matching quests found for trigger' }
 
     // 3. Complete them
+    console.log(`[QuestEngine] fireTrigger(${trigger}) found ${candidates.length} candidates for player ${player.id}`)
     const results = []
     for (const candidate of candidates) {
-        const result = await completeQuest(candidate.questId, { autoTriggered: true, trigger }, { threadId: candidate.threadId })
+        console.log(`[QuestEngine] fireTrigger executing completion for quest ${candidate.questId} (thread: ${candidate.threadId || 'none'})`)
+        const result = await completeQuest(candidate.questId, { autoTriggered: true, trigger }, { threadId: candidate.threadId }, options)
+        console.log(`[QuestEngine] fireTrigger result for ${candidate.questId}:`, JSON.stringify(result))
         results.push(result)
     }
 

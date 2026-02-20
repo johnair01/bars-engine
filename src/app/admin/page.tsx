@@ -1,6 +1,7 @@
 import { getGlobalState } from '@/actions/world'
 import { AdminTiltControl } from '@/components/admin/AdminTiltControl'
 import { AdminResetZone } from '@/components/admin/AdminResetZone'
+import { AdminPlayerSpawner } from '@/components/admin/AdminPlayerSpawner'
 
 export default async function AdminDashboard() {
     const globalState = await getGlobalState()
@@ -60,9 +61,9 @@ export default async function AdminDashboard() {
 
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">
                 <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Quick Actions</h2>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
+                    <AdminPlayerSpawner />
                     {/* Placeholder for quick actions like "Create Announcement" or "Mint Vibeulons" */}
-                    <div className="text-sm text-zinc-500 italic">Coming soon...</div>
                 </div>
             </div>
 

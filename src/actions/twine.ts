@@ -108,12 +108,21 @@ export async function createBinding(
         const scopeType = formData.get('scopeType') as string || 'passage'
         const scopeId = (formData.get('scopeId') as string || '').trim()
         const actionType = formData.get('actionType') as string
-        const payloadTitle = (formData.get('payloadTitle') as string || '').trim()
+        let payloadTitle = (formData.get('payloadTitle') as string || '').trim()
         const payloadDescription = (formData.get('payloadDescription') as string || '').trim()
         const payloadTags = (formData.get('payloadTags') as string || '').trim()
+        const nationId = formData.get('nationId') as string
+        const playbookId = formData.get('playbookId') as string
 
-        if (!storyId || !scopeId || !actionType || !payloadTitle) {
-            return { error: 'Missing required fields (story, passage, action, title)' }
+        if (!storyId || !scopeId || !actionType) {
+            return { error: 'Missing required fields (story, passage, action)' }
+        }
+
+        // Auto-fill title if missing for certain types
+        if (!payloadTitle) {
+            if (actionType === 'SET_NATION') payloadTitle = `Recommend Nation: ${nationId}`
+            else if (actionType === 'SET_ARCHETYPE') payloadTitle = `Recommend Archetype: ${playbookId}`
+            else return { error: 'Title is required' }
         }
 
         const payload = JSON.stringify({
@@ -121,6 +130,8 @@ export async function createBinding(
             description: payloadDescription,
             tags: payloadTags,
             visibility: 'private',
+            nationId,
+            playbookId,
         })
 
         await db.twineBinding.create({
@@ -187,7 +198,10 @@ export async function listPublishedStories() {
 export async function getOrCreateRun(storyId: string, questId?: string | null, playerIdOverride?: string) {
     const playerId = playerIdOverride || await requirePlayer()
 
-    const story = await db.twineStory.findUnique({ where: { id: storyId } })
+    const story = await db.twineStory.findUnique({
+        where: { id: storyId },
+        include: { bindings: true }
+    })
     if (!story || !story.isPublished) return { error: 'Story not found or not published' }
 
     const parsed = JSON.parse(story.parsedJson) as { startPassage: string }
@@ -202,16 +216,32 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
     })
 
     if (!run) {
-        run = await db.twineRun.create({
-            data: {
-                storyId,
-                playerId,
-                questId: questId || null,
-                currentPassageId: parsed.startPassage,
-                visited: JSON.stringify([parsed.startPassage]),
-                firedBindings: '[]',
+        try {
+            run = await db.twineRun.create({
+                data: {
+                    storyId,
+                    playerId,
+                    questId: questId || null,
+                    currentPassageId: parsed.startPassage,
+                    visited: JSON.stringify([parsed.startPassage]),
+                    firedBindings: '[]',
+                }
+            })
+        } catch (err: any) {
+            // RACE CONDITION: If another concurrent request created the run
+            // between our findFirst and create, catch the failure and fetch the winner.
+            if (err.code === 'P2002') {
+                run = await db.twineRun.findFirst({
+                    where: {
+                        storyId,
+                        playerId,
+                        questId: questId || null,
+                    }
+                })
             }
-        })
+
+            if (!run) throw err // Rethrow if it wasn't a constraint error or still missing
+        }
     }
 
     return { run, story }
@@ -294,7 +324,7 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
 // INTERNAL: Auto-complete quest when player reaches an END_ passage
 // ---------------------------------------------------------------------------
 
-async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string): Promise<boolean> {
+export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string): Promise<boolean> {
     try {
         // Check if quest is already completed
         const assignment = await db.playerQuest.findFirst({
@@ -361,7 +391,7 @@ async function autoCompleteQuestFromTwine(questId: string, runId: string, player
 export async function getTwineStoryForQuest(storyId: string) {
     const story = await db.twineStory.findUnique({
         where: { id: storyId },
-        select: { id: true, title: true, parsedJson: true, isPublished: true }
+        include: { bindings: true }
     })
     if (!story || !story.isPublished) return null
     return story
@@ -435,18 +465,10 @@ async function executeBindingsForPassage(
                 emitted.push(`BAR: ${payload.title}`)
             } else if (binding.actionType === 'SET_NATION') {
                 const nationId = payload.nationId || payload.id
-                await db.player.update({
-                    where: { id: playerId },
-                    data: { nationId }
-                })
-                emitted.push(`Nation set: ${nationId}`)
+                if (nationId) emitted.push(`Recommendation: ${nationId}`)
             } else if (binding.actionType === 'SET_ARCHETYPE') {
                 const playbookId = payload.playbookId || payload.id
-                await db.player.update({
-                    where: { id: playerId },
-                    data: { playbookId }
-                })
-                emitted.push(`Archetype set: ${playbookId}`)
+                if (playbookId) emitted.push(`Recommendation: ${playbookId}`)
             }
 
             // Mark binding as newly fired
@@ -481,4 +503,26 @@ export async function getStoryForAdmin(storyId: string) {
     })
     if (!story) return null
     return story
+}
+
+/**
+ * Mark a Twine run as completed for a specific quest
+ */
+export async function completeTwineRunForQuest(storyId: string, questId: string) {
+    const playerId = await requirePlayer()
+
+    await db.twineRun.update({
+        where: {
+            storyId_playerId_questId: {
+                storyId,
+                playerId,
+                questId: questId || null
+            }
+        },
+        data: { completedAt: new Date() }
+    })
+
+    console.log("[TWINE] Run completed for quest " + questId + " in story " + storyId)
+    revalidatePath('/')
+    return { success: true }
 }

@@ -19,7 +19,19 @@ interface QuestInputsProps {
 }
 
 export function QuestInputs({ inputs, values, onChange }: QuestInputsProps) {
-    const inputList: BarInput[] = typeof inputs === 'string' ? JSON.parse(inputs) : inputs
+    let inputList: BarInput[] = []
+    
+    try {
+        if (typeof inputs === 'string' && inputs !== '') {
+            const parsed = JSON.parse(inputs)
+            // Handle double stringification if it somehow happened
+            inputList = typeof parsed === 'string' ? JSON.parse(parsed) : parsed
+        } else if (Array.isArray(inputs)) {
+            inputList = inputs
+        }
+    } catch (e) {
+        console.error('[QuestInputs] Error parsing inputs:', e)
+    }
 
     if (!inputList || inputList.length === 0) return null
 

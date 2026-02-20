@@ -19,6 +19,10 @@ type ThreadQuest = {
         moveType?: string | null
         twineLogic?: string | null
         twineStoryId?: string | null
+        microTwine?: {
+            htmlArtifact: string | null
+            isDraft: boolean
+        } | null
     }
 }
 
@@ -41,10 +45,25 @@ type QuestThreadData = {
     currentQuest?: ThreadQuest | null
 }
 
-export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean }) {
+export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, focusQuest }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean, focusQuest?: string }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<ThreadQuest | null>(null)
+
+    // AUTO-OPEN: If focusQuest matches a quest in this thread, open it
+    useEffect(() => {
+        if (focusQuest) {
+            const match = thread.quests.find(tq => tq.questId === focusQuest)
+            if (match) {
+                const progress = thread.playerProgress
+                const currentPos = progress?.currentPosition || 0
+                // Only auto-open if it's the current or a previous quest (not locked)
+                if (match.position <= currentPos) {
+                    setSelectedQuest(match)
+                }
+            }
+        }
+    }, [focusQuest, thread.quests, thread.playerProgress])
 
     const progress = thread.playerProgress
     const currentPos = progress?.currentPosition || 0
@@ -99,16 +118,23 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="font-bold text-white">{thread.title}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                            {thread.threadType === 'orientation' && (
+                                <span className="text-[10px] px-2 py-0.5 bg-purple-900 text-purple-400 border border-purple-800 rounded-full font-bold uppercase tracking-widest">
+                                    Ritual
+                                </span>
+                            )}
+                            <h3 className="font-bold text-white">{thread.title}</h3>
+                        </div>
                         {thread.description && (
                             <p className="text-sm text-zinc-400">{thread.description}</p>
                         )}
                         {isSetupIncomplete && thread.threadType === 'orientation' && (
                             <Link
-                                href="/conclave/guided?reset=true"
+                                href="/conclave/onboarding?ritual=true"
                                 className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/20 px-2 py-0.5 rounded border border-yellow-900/50"
                             >
-                                ⚡ Complete Setup to Unlock →
+                                ⚡ Enter Ritual to Unlock →
                             </Link>
                         )}
                     </div>
@@ -200,7 +226,7 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: {
                         disabled={isPending}
                         className="w-full bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg font-medium disabled:opacity-50"
                     >
-                        {isPending ? 'Starting...' : 'Start Journey'}
+                        {isPending ? 'Starting...' : thread.threadType === 'orientation' ? 'Enter Ritual' : 'Start Journey'}
                     </button>
                 )}
 
@@ -225,8 +251,9 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete }: {
                         moveType: selectedQuest.quest.moveType || null,
                         twineLogic: selectedQuest.quest.twineLogic || null,
                         twineStoryId: selectedQuest.quest.twineStoryId || null,
+                        microTwine: selectedQuest.quest.microTwine || null,
                     }}
-                    context={{ threadId: thread.id }}
+                    context={{ threadId: thread.id, threadType: thread.threadType }}
                     isCompleted={selectedQuest.position < currentPos}
                     isLocked={selectedQuest.position > currentPos}
                     completedMoveTypes={completedMoveTypes}

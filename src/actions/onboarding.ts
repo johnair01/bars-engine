@@ -8,7 +8,7 @@
  */
 
 import { db } from '@/lib/db'
-import { getCurrentPlayer } from '@/lib/auth'
+import { getCurrentPlayer, requirePlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -123,7 +123,42 @@ export async function completeOnboardingStep(
 }
 
 /**
- * MVP: Save nation + archetype selections from standalone onboarding page
+ * Update player nation or archetype (playbook)
+ */
+export async function updatePlayerIdentity(
+    type: 'nation' | 'archetype',
+    id: string
+) {
+    try {
+        const player = await getCurrentPlayer()
+        if (!player) return { error: 'Not logged in' }
+
+        if (type === 'nation') {
+            await db.player.update({
+                where: { id: player.id },
+                data: { nationId: id }
+            })
+        } else {
+            await db.player.update({
+                where: { id: player.id },
+                data: { playbookId: id }
+            })
+        }
+
+        // Auto-assign any gated threads that the player now qualifies for
+        await assignGatedThreads(player.id)
+
+        revalidatePath('/')
+        revalidatePath('/adventures')
+        return { success: true }
+    } catch (error: any) {
+        console.error('Failed to update identity:', error)
+        return { error: error.message || 'Failed to update identity' }
+    }
+}
+
+/**
+ * Save both nation and archetype selections at once (Legacy Onboarding Form)
  */
 export async function saveOnboardingSelections(
     playerId: string,
@@ -131,30 +166,42 @@ export async function saveOnboardingSelections(
     playbookId: string
 ) {
     try {
-        if (!nationId || !playbookId) {
-            return { error: 'Both nation and archetype are required.' }
-        }
-
-        // Verify nation and playbook exist
-        const [nation, playbook] = await Promise.all([
-            db.nation.findUnique({ where: { id: nationId } }),
-            db.playbook.findUnique({ where: { id: playbookId } })
-        ])
-
-        if (!nation) return { error: 'Invalid nation selected.' }
-        if (!playbook) return { error: 'Invalid archetype selected.' }
-
-        await db.player.update({
+        const updatedPlayer = await db.player.update({
             where: { id: playerId },
             data: {
                 nationId,
                 playbookId,
                 onboardingComplete: true,
-                hasSeenWelcome: true,
+                onboardingCompletedAt: new Date()
             }
         })
 
-        console.log(`[MVP] Player ${playerId} completed onboarding: nation=${nation.name}, archetype=${playbook.name}`)
+        // EXPERT REWARDS & CLEANUP
+        if (updatedPlayer.onboardingMode === 'expert') {
+            // 1. Grant 5 Vibeulons bonus
+            const { mintVibulon } = await import('./economy')
+            await mintVibulon(playerId, 5, {
+                source: 'onboarding_complete',
+                id: 'expert_bonus',
+                title: 'Expert Orientation Bonus'
+            }, { skipRevalidate: true })
+            console.log(`[ExpertMode] Granted 5 vibeulons to ${playerId}`)
+
+            // 2. Mark orientation threads as completed so they don't show up on dashboard
+            await db.threadProgress.updateMany({
+                where: {
+                    playerId,
+                    thread: { threadType: 'orientation' }
+                },
+                data: {
+                    completedAt: new Date()
+                }
+            })
+            console.log(`[ExpertMode] Suppressed orientation threads for ${playerId}`)
+        }
+
+        // Auto-assign any gated threads
+        await assignGatedThreads(playerId)
 
         revalidatePath('/')
         return { success: true }
@@ -225,4 +272,66 @@ Complete this quest to earn your first 5 vibeulons and unlock the quest creation
         console.error('Failed to create tutorial quest:', error)
         return { error: error.message || 'Failed to create tutorial quest' }
     }
+}
+
+/**
+ * Get all nations and archetypes (for recommendation UI)
+ */
+export async function getWorldData() {
+    return Promise.all([
+        db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
+        db.playbook.findMany({ orderBy: { name: 'asc' } })
+    ])
+}
+
+/**
+ * Automatically assign quest threads that are gated by nation or archetype.
+ * Usually called when onboarding is complete or identity is updated.
+ */
+export async function assignGatedThreads(playerIdOverride?: string) {
+    const playerId = playerIdOverride || await requirePlayer()
+
+    // Get player details
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        select: { nationId: true, playbookId: true }
+    })
+
+    if (!player) return { error: 'Player not found' }
+
+    // Find matching threads (standard or orientation)
+    const matchingThreads = await (db.questThread.findMany as any)({
+        where: {
+            OR: [
+                { gateNationId: player.nationId || '---' },
+                { gatePlaybookId: player.playbookId || '---' }
+            ],
+            status: 'active'
+        }
+    })
+
+    if (matchingThreads.length === 0) return { success: true, count: 0 }
+
+    let assignedCount = 0
+    for (const thread of matchingThreads) {
+        // Check if already assigned
+        const existing = await db.threadProgress.findFirst({
+            where: { threadId: thread.id, playerId }
+        })
+
+        if (!existing) {
+            await db.threadProgress.create({
+                data: {
+                    threadId: thread.id,
+                    playerId,
+                    currentPosition: 1
+                }
+            })
+            assignedCount++
+            console.log("[ONBOARDING] Auto-assigned thread " + thread.title + " to player " + playerId)
+        }
+    }
+
+    if (assignedCount > 0) revalidatePath('/')
+    return { success: true, count: assignedCount }
 }

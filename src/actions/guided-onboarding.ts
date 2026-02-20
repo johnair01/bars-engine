@@ -208,6 +208,11 @@ export async function recordStoryChoice(
             }
         })
 
+        // NEW: If we just selected Guided mode, signal a redirect to the new onboarding controller
+        if (nodeId === 'mode_select' && choiceId === 'mode_guided') {
+            return { success: true, redirectTo: '/conclave/onboarding' }
+        }
+
         return { success: true }
     } catch (error) {
         console.error('Failed to record choice:', error)
@@ -245,7 +250,7 @@ export async function finalizeOnboarding(
             : { vibeulonsEarned: 0 }
 
         // Update player with character data
-        await db.player.update({
+        const updatedPlayer = await db.player.update({
             where: { id: playerId },
             data: {
                 nationId,
@@ -254,22 +259,31 @@ export async function finalizeOnboarding(
             }
         })
 
-        // Create vibeulons in wallet - ensure type safety
-        const vibeulonCount = progress.vibeulonsEarned || 0
-        if (vibeulonCount > 0) {
-            await db.vibulon.createMany({
-                data: Array.from({ length: vibeulonCount }).map(() => ({
-                    ownerId: playerId,
-                    sourceType: 'onboarding',
-                    sourceId: 'guided_completion',
-                    originSource: 'onboarding', // Added required fields
-                    originId: 'guided_completion',
-                    originTitle: 'Guided Onboarding'
-                }))
+        // EXPERT REWARDS & CLEANUP (Legacy Path)
+        if (updatedPlayer.onboardingMode === 'expert') {
+            // 1. Grant 5 Vibeulons bonus
+            const { mintVibulon } = await import('./economy')
+            await mintVibulon(playerId, 5, {
+                source: 'onboarding_complete',
+                id: 'expert_bonus_legacy',
+                title: 'Expert Orientation Bonus'
+            }, { skipRevalidate: true })
+            console.log(`[ExpertMode][Legacy] Granted 5 vibeulons to ${playerId}`)
+
+            // 2. Mark orientation threads as completed
+            await db.threadProgress.updateMany({
+                where: {
+                    playerId,
+                    thread: { threadType: 'orientation' }
+                },
+                data: {
+                    completedAt: new Date()
+                }
             })
+            console.log(`[ExpertMode][Legacy] Suppressed orientation threads for ${playerId}`)
         }
 
-        // Assign orientation quest thread
+        // Assign orientation quest thread (only for non-experts, though we already suppressed them above for experts)
         const { assignOrientationThreads } = await import('./quest-thread')
         await assignOrientationThreads(playerId)
 

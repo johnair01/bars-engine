@@ -13,8 +13,9 @@ export default async function LoginPage() {
             select: { id: true, nationId: true, playbookId: true }
         })
         if (player) {
-            if (!player.nationId) redirect('/conclave/guided?step=nation_select')
-            if (!player.playbookId) redirect('/conclave/guided?step=playbook_select')
+            if (!player.nationId || !player.playbookId) {
+                redirect('/conclave/onboarding')
+            }
             redirect('/')
         }
     }

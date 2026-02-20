@@ -26,26 +26,29 @@ export interface ParsedTwineStory {
 }
 
 /**
- * Parse Twine link syntax:
+ * Parse Twine link syntax handles:
  *   [[Label->Target]]   or   [[Label|Target]]   or   [[Target]]
+ *   Also handles triple brackets often used for scoped labels: [[[Label] Target]]
  */
 function parseLinks(text: string): ParsedLink[] {
     const links: ParsedLink[] = []
-    const re = /\[\[([^\]]+)\]\]/g
+    // Match anything between any number of brackets (at least 2)
+    const re = /\[{2,}([\s\S]*?)\]{2,}/g
     let m: RegExpExecArray | null
     while ((m = re.exec(text)) !== null) {
-        const inner = m[1]
-        // [[Label->Target]]
+        let inner = m[1].trim()
+
+        // Handle Harlowe-style label->target or pipe
         if (inner.includes('->')) {
             const [label, target] = inner.split('->')
             links.push({ label: label.trim(), target: target.trim() })
-        // [[Label|Target]]
         } else if (inner.includes('|')) {
             const [label, target] = inner.split('|')
             links.push({ label: label.trim(), target: target.trim() })
-        // [[Target]] (label == target)
         } else {
-            links.push({ label: inner.trim(), target: inner.trim() })
+            // Handle space-separated if no arrows (some formats use [[Label Target]])
+            // But usually [[Target]]
+            links.push({ label: inner, target: inner })
         }
     }
     return links
@@ -55,11 +58,8 @@ function parseLinks(text: string): ParsedLink[] {
  * Strip wiki-link markup from passage text, leaving only the label.
  */
 function stripLinkMarkup(text: string): string {
-    return text.replace(/\[\[([^\]]+)\]\]/g, (_match, inner: string) => {
-        if (inner.includes('->')) return inner.split('->')[0].trim()
-        if (inner.includes('|')) return inner.split('|')[0].trim()
-        return inner.trim()
-    })
+    // Replace anything between 2+ brackets with empty string to avoid "double text" in UI
+    return text.replace(/\[{2,}([\s\S]*?)\]{2,}/g, '').trim()
 }
 
 /**
