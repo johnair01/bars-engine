@@ -516,7 +516,7 @@ export async function completeTwineRunForQuest(storyId: string, questId: string)
             storyId_playerId_questId: {
                 storyId,
                 playerId,
-                questId: questId || null
+                questId
             }
         },
         data: { completedAt: new Date() }
