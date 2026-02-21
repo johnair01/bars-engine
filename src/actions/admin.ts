@@ -367,6 +367,63 @@ export async function assignQuestToPlayer(playerId: string, questId: string) {
     return { success: true }
 }
 
+/**
+ * Admin force-complete: mark a quest as completed on behalf of a stuck player.
+ * Grants reward and advances thread progress.
+ */
+export async function forceCompleteQuest(playerId: string, questId: string) {
+    await checkAdmin()
+
+    const assignment = await db.playerQuest.findFirst({
+        where: { playerId, questId, status: 'assigned' }
+    })
+    if (!assignment) return { error: 'Quest not assigned to this player' }
+
+    // Mark complete
+    await db.playerQuest.update({
+        where: { id: assignment.id },
+        data: {
+            status: 'completed',
+            inputs: JSON.stringify({ adminForceCompleted: true }),
+            completedAt: new Date(),
+        }
+    })
+
+    // Grant reward
+    const quest = await db.customBar.findUnique({ where: { id: questId } })
+    if (quest && quest.reward > 0) {
+        await db.vibulonEvent.create({
+            data: {
+                playerId,
+                source: 'quest',
+                amount: quest.reward,
+                notes: `Admin force-completed: ${quest.title || questId}`,
+            }
+        })
+    }
+
+    // Advance thread progress if applicable
+    const threadQuest = await db.threadQuest.findFirst({
+        where: { questId },
+        include: { thread: true }
+    })
+    if (threadQuest) {
+        const progress = await db.threadProgress.findFirst({
+            where: { playerId, threadId: threadQuest.threadId }
+        })
+        if (progress && progress.currentPosition === threadQuest.position) {
+            await db.threadProgress.update({
+                where: { id: progress.id },
+                data: { currentPosition: progress.currentPosition + 1 }
+            })
+        }
+    }
+
+    revalidatePath('/admin/players')
+    revalidatePath('/')
+    return { success: true }
+}
+
 export async function assignThreadToPlayer(playerId: string, threadId: string) {
     await checkAdmin()
     await db.threadProgress.upsert({

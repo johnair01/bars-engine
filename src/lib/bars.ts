@@ -25,6 +25,7 @@ export type BarDef = {
     storyPath?: string  // Path to story content JSON (e.g., 'blessed_object/start')
     isCustom?: boolean // Whether this implies a custom bar from DB
     moveType?: string | null
+    twineStoryId?: string | null // If set, quest completion happens via Twine adventure
 }
 
 export const JOURNEY_SEQUENCE = ['wakeUp', 'cleanUp', 'growUp', 'showUp']

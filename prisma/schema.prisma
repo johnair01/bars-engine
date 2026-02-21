@@ -562,6 +562,7 @@ model TwineRun {
   currentPassageId String
   visited          String     @default("[]")
   firedBindings    String     @default("[]")
+  diagnosticState  String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   completedAt      DateTime?

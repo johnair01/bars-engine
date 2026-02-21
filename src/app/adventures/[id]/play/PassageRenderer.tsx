@@ -98,7 +98,22 @@ export function PassageRenderer({
                 if (result.emitted && result.emitted.length > 0) {
                     setEmitted(result.emitted)
                 }
-                router.refresh()
+                if (result.questCompleted) {
+                    // Quest auto-completed! Redirect after brief pause
+                    setTimeout(() => {
+                        if (result.redirect) {
+                            router.push(result.redirect)
+                        } else if (isRitual) {
+                            router.push('/conclave/onboarding?ritual=true')
+                        } else {
+                            router.push('/')
+                        }
+                    }, 1500)
+                } else if (result.redirect) {
+                    router.push(result.redirect)
+                } else {
+                    router.refresh()
+                }
             }
         })
     }
