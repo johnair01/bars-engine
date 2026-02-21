@@ -30,6 +30,7 @@
     "feedback:sync": "tsx scripts/sync_feedback.ts",
     "check": "npm run lint && tsc --noEmit",
     "smoke": "tsx scripts/preflight-env.ts",
+    "seed:party": "tsx scripts/seed_party_bb_bday_001.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

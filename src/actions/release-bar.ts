@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
-const RELEASE_COST = 5 // Cost to release back to the salad bowl
+const RELEASE_COST = 1 // Cost to release back to the salad bowl
 
 export async function releaseBarToSaladBowl(barId: string) {
     const cookieStore = await cookies()

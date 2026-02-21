@@ -188,7 +188,7 @@ function VibeBarCard({
                             <button
                                 type="button"
                                 onClick={() => {
-                                    if (confirm('Release this quest to the Salad Bowl? (Costs 5 Vibeulons)')) {
+                                    if (confirm('Release this quest to the Salad Bowl? (Costs 1 Vibeulon)')) {
                                         onRelease()
                                     }
                                 }}
@@ -202,11 +202,11 @@ function VibeBarCard({
                     {/* DELEGATION UI */}
                     {onDelegate && (
                         <div className="bg-black/40 p-2 rounded flex gap-2 items-center mb-2">
-                            <label className="text-[10px] uppercase text-zinc-500 font-mono">Delegate (-1 ♦):</label>
+                            <label className="text-[10px] uppercase text-zinc-500 font-mono">Delegate (Free):</label>
                             <select
                                 className="bg-zinc-900 text-xs text-white border border-zinc-700 rounded px-1 py-1 flex-1"
                                 onChange={(e) => {
-                                    if (e.target.value && confirm(`Delegate "${bar.title}" to this player for 1 Vibulon?`)) {
+                                    if (e.target.value && confirm(`Delegate "${bar.title}" to this player for free?`)) {
                                         onDelegate(e.target.value)
                                     }
                                     e.target.value = "" // reset
@@ -221,15 +221,27 @@ function VibeBarCard({
                         </div>
                     )}
 
-                    {bar.inputs.map(renderInput)}
-                    <button
-                        type="button"
-                        disabled={!isValid}
-                        onClick={handleSubmit}
-                        className="w-full bg-yellow-500 text-black py-2 rounded font-bold disabled:opacity-50 hover:bg-yellow-400"
-                    >
-                        Complete Bar
-                    </button>
+                    {/* TWINE QUEST → Launch Adventure */}
+                    {bar.twineStoryId ? (
+                        <Link
+                            href={`/adventures/${bar.twineStoryId}/play?questId=${bar.id}`}
+                            className="block w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-bold text-center transition-colors shadow-lg shadow-purple-900/30"
+                        >
+                            ▶ Play Quest Adventure
+                        </Link>
+                    ) : (
+                        <>
+                            {bar.inputs.map(renderInput)}
+                            <button
+                                type="button"
+                                disabled={!isValid}
+                                onClick={handleSubmit}
+                                className="w-full bg-yellow-500 text-black py-2 rounded font-bold disabled:opacity-50 hover:bg-yellow-400"
+                            >
+                                Complete Quest
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
         </div>
@@ -308,6 +320,7 @@ type CustomBarDef = {
     storyPath: string | null
     moveType: string | null
     isSystem?: boolean
+    twineStoryId?: string | null
 }
 
 
@@ -442,6 +455,7 @@ export function StarterQuestBoard({
         isCustom: true, // Mark as custom
         moveType: cb.moveType,
         isSystem: cb.isSystem ?? false,
+        twineStoryId: cb.twineStoryId ?? null,
     }))
 
     // Convert I Ching readings to BarDef format

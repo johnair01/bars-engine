@@ -4,6 +4,16 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { parseTwineHtml } from '@/lib/twine-parser'
+import {
+    parseDiagnosticState,
+    serializeDiagnosticState,
+    addSignal,
+    addSignals,
+    resetSignals,
+    computeNationRecommendation,
+    computeArchetypeRecommendation,
+    confirmSelection,
+} from '@/lib/game/diagnostic-engine'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,26 +123,52 @@ export async function createBinding(
         const payloadTags = (formData.get('payloadTags') as string || '').trim()
         const nationId = formData.get('nationId') as string
         const playbookId = formData.get('playbookId') as string
+        const signalKey = formData.get('signalKey') as string
+        const signalAmount = parseInt(formData.get('signalAmount') as string || '1', 10)
+        const resetScope = formData.get('resetScope') as string || 'all'
 
         if (!storyId || !scopeId || !actionType) {
             return { error: 'Missing required fields (story, passage, action)' }
         }
 
-        // Auto-fill title if missing for certain types
-        if (!payloadTitle) {
+        // Build payload based on action type
+        const diagnosticActions = ['ADD_SIGNAL', 'COMPUTE_NATION', 'COMPUTE_ARCHETYPE', 'CONFIRM_NATION', 'CONFIRM_ARCHETYPE', 'RESET_SIGNALS']
+
+        if (diagnosticActions.includes(actionType)) {
+            // Auto-generate titles for diagnostic actions
+            if (!payloadTitle) {
+                if (actionType === 'ADD_SIGNAL') payloadTitle = `+${signalAmount} ${signalKey}`
+                else if (actionType === 'COMPUTE_NATION') payloadTitle = 'Compute Nation Recommendation'
+                else if (actionType === 'COMPUTE_ARCHETYPE') payloadTitle = 'Compute Archetype Recommendation'
+                else if (actionType === 'CONFIRM_NATION') payloadTitle = 'Confirm Nation Selection'
+                else if (actionType === 'CONFIRM_ARCHETYPE') payloadTitle = 'Confirm Archetype Selection'
+                else if (actionType === 'RESET_SIGNALS') payloadTitle = `Reset Signals (${resetScope})`
+            }
+        } else if (!payloadTitle) {
             if (actionType === 'SET_NATION') payloadTitle = `Recommend Nation: ${nationId}`
             else if (actionType === 'SET_ARCHETYPE') payloadTitle = `Recommend Archetype: ${playbookId}`
             else return { error: 'Title is required' }
         }
 
-        const payload = JSON.stringify({
+        // Build payload object
+        let payloadObj: Record<string, any> = {
             title: payloadTitle,
             description: payloadDescription,
             tags: payloadTags,
             visibility: 'private',
-            nationId,
-            playbookId,
-        })
+        }
+
+        if (actionType === 'ADD_SIGNAL') {
+            payloadObj.key = signalKey
+            payloadObj.amount = signalAmount
+        } else if (actionType === 'RESET_SIGNALS') {
+            payloadObj.scope = resetScope
+        } else {
+            payloadObj.nationId = nationId
+            payloadObj.playbookId = playbookId
+        }
+
+        const payload = JSON.stringify(payloadObj)
 
         await db.twineBinding.create({
             data: {
@@ -307,9 +343,10 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
     // Execute bindings for this passage
     const bindingResult = await executeBindingsForPassage(storyId, targetPassageName, run.id, playerId)
 
-    // Check for END_ passage (quest auto-completion)
+    // Check for end state: explicit END_ prefix OR passage has no outgoing links (dead end)
     let questCompleted = false
-    if (questId && targetPassageName.startsWith('END_')) {
+    const isEndPassage = targetPassageName.startsWith('END_') || targetPassage.links.length === 0
+    if (questId && isEndPassage) {
         questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId)
     }
 
@@ -421,6 +458,10 @@ async function executeBindingsForPassage(
     const firedBindings = JSON.parse(run.firedBindings) as string[]
     const newlyFiredIds: string[] = []
 
+    // Load diagnostic state for scoring actions
+    let diagState = parseDiagnosticState(run.diagnosticState)
+    let diagDirty = false
+
     for (const binding of bindings) {
         if (firedBindings.includes(binding.id)) continue // Already fired
 
@@ -469,6 +510,78 @@ async function executeBindingsForPassage(
             } else if (binding.actionType === 'SET_ARCHETYPE') {
                 const playbookId = payload.playbookId || payload.id
                 if (playbookId) emitted.push(`Recommendation: ${playbookId}`)
+
+                // ── Diagnostic Actions ──────────────────────────────
+            } else if (binding.actionType === 'ADD_SIGNAL') {
+                // payload: { signals: { fire: 1, water: 1 } } or { key: "fire", amount: 1 }
+                if (payload.signals && typeof payload.signals === 'object') {
+                    diagState = addSignals(diagState, payload.signals)
+                } else if (payload.key) {
+                    diagState = addSignal(diagState, payload.key, payload.amount ?? 1)
+                }
+                diagDirty = true
+                emitted.push(`Signal: ${JSON.stringify(payload.signals || { [payload.key]: payload.amount ?? 1 })}`)
+
+            } else if (binding.actionType === 'COMPUTE_NATION') {
+                diagState = computeNationRecommendation(diagState)
+                diagDirty = true
+                emitted.push(`NationRecommendation: ${diagState.recommendedNation}`)
+
+            } else if (binding.actionType === 'COMPUTE_ARCHETYPE') {
+                diagState = computeArchetypeRecommendation(diagState)
+                diagDirty = true
+                emitted.push(`ArchetypeRecommendation: ${diagState.recommendedArchetype}`)
+
+            } else if (binding.actionType === 'CONFIRM_NATION') {
+                const nationId = diagState.recommendedNation || payload.nationId
+                if (nationId) {
+                    // Look up the actual DB nation record by name/id
+                    const nation = await db.nation.findFirst({
+                        where: {
+                            OR: [
+                                { id: nationId },
+                                { name: { equals: nationId, mode: 'insensitive' } },
+                            ]
+                        }
+                    })
+                    if (nation) {
+                        await db.player.update({
+                            where: { id: playerId },
+                            data: { nationId: nation.id }
+                        })
+                        diagState = confirmSelection(diagState, 'nation')
+                        diagDirty = true
+                        emitted.push(`ConfirmedNation: ${nation.name}`)
+                    }
+                }
+
+            } else if (binding.actionType === 'CONFIRM_ARCHETYPE') {
+                const archetypeKey = diagState.recommendedArchetype || payload.archetypeId
+                if (archetypeKey) {
+                    const playbook = await db.playbook.findFirst({
+                        where: {
+                            OR: [
+                                { id: archetypeKey },
+                                { name: { equals: archetypeKey, mode: 'insensitive' } },
+                            ]
+                        }
+                    })
+                    if (playbook) {
+                        await db.player.update({
+                            where: { id: playerId },
+                            data: { playbookId: playbook.id }
+                        })
+                        diagState = confirmSelection(diagState, 'archetype')
+                        diagDirty = true
+                        emitted.push(`ConfirmedArchetype: ${playbook.name}`)
+                    }
+                }
+
+            } else if (binding.actionType === 'RESET_SIGNALS') {
+                const scope = payload.scope || 'all'
+                diagState = resetSignals(diagState, scope)
+                diagDirty = true
+                emitted.push(`ResetSignals: ${scope}`)
             }
 
             // Mark binding as newly fired
@@ -478,12 +591,15 @@ async function executeBindingsForPassage(
         }
     }
 
-    // Persist newly fired bindings
-    if (newlyFiredIds.length > 0) {
+    // Persist newly fired bindings + diagnostic state
+    if (newlyFiredIds.length > 0 || diagDirty) {
         const updatedFired = [...firedBindings, ...newlyFiredIds]
         await db.twineRun.update({
             where: { id: run.id },
-            data: { firedBindings: JSON.stringify(updatedFired) }
+            data: {
+                firedBindings: JSON.stringify(updatedFired),
+                ...(diagDirty ? { diagnosticState: serializeDiagnosticState(diagState) } : {}),
+            }
         })
         try { revalidatePath('/') } catch (e) { }
     }

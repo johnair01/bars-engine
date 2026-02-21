@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { parseTwineHtml } from '@/lib/twine-parser'
 
 export interface MicroTwineOption {
     text: string
@@ -151,7 +152,7 @@ ${passages.map(p => `  <tw-passagedata pid="${p.id}" name="${p.name}" tags="" x=
 
         const htmlArtifact = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Quest Narrative</title></head><body>${storyData}</body></html>`
 
-        // 3. Save to DB
+        // 3. Save to MicroTwine module
         await db.microTwineModule.update({
             where: { questId },
             data: {
@@ -160,6 +161,49 @@ ${passages.map(p => `  <tw-passagedata pid="${p.id}" name="${p.name}" tags="" x=
                 isDraft: false
             }
         })
+
+        // 4. Bridge to TwineStory system: upsert a TwineStory from compiled HTML
+        //    so the quest can be played via the full Twine player
+        const quest = await db.customBar.findUnique({
+            where: { id: questId },
+            select: { id: true, title: true, twineStoryId: true, creatorId: true }
+        })
+
+        if (quest) {
+            let twineStoryId = quest.twineStoryId
+
+            // Parse the HTML to get structured passage data
+            const parsedStory = parseTwineHtml(htmlArtifact)
+
+            if (twineStoryId) {
+                // Update existing TwineStory with recompiled HTML
+                await db.twineStory.update({
+                    where: { id: twineStoryId },
+                    data: {
+                        sourceText: htmlArtifact,
+                        parsedJson: JSON.stringify(parsedStory),
+                    }
+                })
+            } else {
+                // Create new TwineStory from compiled output
+                const twineStory = await db.twineStory.create({
+                    data: {
+                        title: quest.title || `${questId} Narrative`,
+                        sourceText: htmlArtifact,
+                        parsedJson: JSON.stringify(parsedStory),
+                        isPublished: true,
+                        createdById: quest.creatorId,
+                    }
+                })
+                twineStoryId = twineStory.id
+
+                // Link quest to the new TwineStory
+                await db.customBar.update({
+                    where: { id: questId },
+                    data: { twineStoryId }
+                })
+            }
+        }
 
         revalidatePath(`/admin/world/quest/${questId}`)
         return { success: true }

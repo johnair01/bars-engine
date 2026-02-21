@@ -67,25 +67,13 @@ export async function delegateBar(formData: FormData) {
                 throw new Error('That player has already completed this quest')
             }
 
-            // Spend 1 Vibulon (burn)
-            const tokenToBurn = await tx.vibulon.findFirst({
-                where: { ownerId: fromUserId },
-                orderBy: { createdAt: 'asc' },
-                select: { id: true }
-            })
-
-            if (!tokenToBurn) {
-                throw new Error('Need 1 Vibeulon to delegate a quest')
-            }
-
-            await tx.vibulon.delete({ where: { id: tokenToBurn.id } })
-
+            // Log the delegation (free — no Vibulon cost)
             await tx.vibulonEvent.create({
                 data: {
                     playerId: fromUserId,
                     source: 'bar_share',
-                    amount: -1,
-                    notes: `Delegated quest: ${bar.title} → ${recipient.name}`,
+                    amount: 0,
+                    notes: `Sent quest: ${bar.title} → ${recipient.name}`,
                     archetypeMove: 'NURTURE',
                     questId: barId,
                 }

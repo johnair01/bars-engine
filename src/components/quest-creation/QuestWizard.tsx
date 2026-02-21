@@ -370,7 +370,7 @@ export function QuestWizard() {
                         <div className="flex gap-4 pt-4 border-t border-zinc-800 text-sm">
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Reward</span>
-                                <span className="text-green-400 font-mono">5 ♦</span>
+                                <span className="text-green-400 font-mono">{formData.reward || 1} ♦</span>
                             </div>
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Visibility</span>

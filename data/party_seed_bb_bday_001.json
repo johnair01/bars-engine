@@ -1,0 +1,260 @@
+{
+    "instance": {
+        "id": "BB-BDAY-001",
+        "name": "Bruised Banana Birthday Residency",
+        "description": "Tonight is not just a party. It is a residency launch, a birthday ritual, a fundraiser, and a live Bars Engine experiment.",
+        "goalVibeulons": 3000,
+        "admins": [
+            "JJ",
+            "Wendell"
+        ],
+        "visibility": "public"
+    },
+    "campaigns": [
+        {
+            "id": "CAMP-BDAY",
+            "title": "The Birthday Ritual",
+            "description": "Prepare and execute the Bruised Banana Birthday Party.",
+            "baseRewardVibeulons": 50
+        },
+        {
+            "id": "CAMP-BANANA",
+            "title": "Banana Bread for the Bruised Banana",
+            "description": "At every Bruised Banana gathering, banana bread must exist.",
+            "baseRewardVibeulons": 75
+        },
+        {
+            "id": "CAMP-GRILL",
+            "title": "The Sacred Grill",
+            "description": "Propane. Ribs. Feeding the dancefloor.",
+            "baseRewardVibeulons": 80
+        },
+        {
+            "id": "CAMP-WHISKEY",
+            "title": "Whiskey & Tea Ceremony",
+            "description": "Japanese whiskey, ritual tea, and blessed objects arrive.",
+            "baseRewardVibeulons": 100
+        },
+        {
+            "id": "CAMP-RESIDENCY",
+            "title": "Fund the Bruised Banana Residency",
+            "description": "Raise support for the residency and expansion.",
+            "baseRewardVibeulons": 150
+        },
+        {
+            "id": "CAMP-ENGINE",
+            "title": "Improve Bars Engine",
+            "description": "Use the party as a live product lab: bugs, features, and DM support.",
+            "baseRewardVibeulons": 200
+        },
+        {
+            "id": "CAMP-VIBE",
+            "title": "Guard the Vibe",
+            "description": "Community care and consent-first vibe stewardship.",
+            "baseRewardVibeulons": 120
+        },
+        {
+            "id": "CAMP-OPS",
+            "title": "Setup & Cleanup Crew",
+            "description": "Make the space work. Make the reset sacred.",
+            "baseRewardVibeulons": 90
+        }
+    ],
+    "quests": [
+        {
+            "id": "Q-DECORATIONS",
+            "campaignId": "CAMP-BDAY",
+            "title": "Bring Decorations",
+            "rewardVibeulons": 40,
+            "subquests": [
+                "String lights",
+                "Table vibe",
+                "A blessed object",
+                "A banner or sign"
+            ]
+        },
+        {
+            "id": "Q-SETUP-SPACE",
+            "campaignId": "CAMP-OPS",
+            "title": "Prepare the Space",
+            "rewardVibeulons": 25,
+            "subquests": [
+                "Clear dance floor",
+                "Hot tub check",
+                "Cold plunge ready",
+                "Lighting mood"
+            ]
+        },
+        {
+            "id": "Q-CLEANUP-KIT",
+            "campaignId": "CAMP-OPS",
+            "title": "Cleanup Kit Drop",
+            "rewardVibeulons": 40,
+            "subquests": [
+                "Trash bags",
+                "Paper towels",
+                "Wipes",
+                "Gloves"
+            ]
+        },
+        {
+            "id": "Q-DOOR-STEWARD",
+            "campaignId": "CAMP-OPS",
+            "title": "Door Steward Shift (1 hour)",
+            "rewardVibeulons": 100,
+            "subquests": [
+                "Greet guests",
+                "Help them find the Instance",
+                "Explain 1 quest they can do",
+                "Hand off cleanly"
+            ]
+        },
+        {
+            "id": "Q-BRING-BANANAS",
+            "campaignId": "CAMP-BANANA",
+            "title": "Secure Bananas",
+            "rewardVibeulons": 30,
+            "subquests": []
+        },
+        {
+            "id": "Q-BAKE-BREAD",
+            "campaignId": "CAMP-BANANA",
+            "title": "Bake the Offering",
+            "rewardVibeulons": 60,
+            "subquests": [
+                "Mix batter",
+                "Bake",
+                "Slice",
+                "Serve"
+            ]
+        },
+        {
+            "id": "Q-PROPANE",
+            "campaignId": "CAMP-GRILL",
+            "title": "Secure Propane",
+            "rewardVibeulons": 50,
+            "subquests": []
+        },
+        {
+            "id": "Q-GRILL-RIBS",
+            "campaignId": "CAMP-GRILL",
+            "title": "Grill the Ribs",
+            "rewardVibeulons": 75,
+            "subquests": [
+                "Prep",
+                "Grill",
+                "Serve",
+                "Feed the dancefloor"
+            ]
+        },
+        {
+            "id": "Q-WHISKEY",
+            "campaignId": "CAMP-WHISKEY",
+            "title": "Acquire Japanese Whiskey",
+            "rewardVibeulons": 75,
+            "subquests": []
+        },
+        {
+            "id": "Q-TEA",
+            "campaignId": "CAMP-WHISKEY",
+            "title": "Acquire Tea",
+            "rewardVibeulons": 50,
+            "subquests": []
+        },
+        {
+            "id": "Q-LIGHTERS",
+            "campaignId": "CAMP-WHISKEY",
+            "title": "Secure Lighters",
+            "rewardVibeulons": 25,
+            "subquests": []
+        },
+        {
+            "id": "Q-BLESS-OBJECTS",
+            "campaignId": "CAMP-WHISKEY",
+            "title": "Bless Objects of the Party",
+            "rewardVibeulons": 70,
+            "subquests": [
+                "Choose 3 objects",
+                "Name what they protect",
+                "Place them intentionally"
+            ]
+        },
+        {
+            "id": "Q-DONATE",
+            "campaignId": "CAMP-RESIDENCY",
+            "title": "Contribute to the Residency",
+            "rewardVibeulons": 0,
+            "subquests": [
+                "Donate any amount",
+                "Screenshot or confirm with admin",
+                "Receive minted Vibeulons"
+            ]
+        },
+        {
+            "id": "Q-RECRUIT-DONOR",
+            "campaignId": "CAMP-RESIDENCY",
+            "title": "Recruit a Contributor",
+            "rewardVibeulons": 120,
+            "subquests": [
+                "Invite someone to donate",
+                "They donate",
+                "Confirm with admin"
+            ]
+        },
+        {
+            "id": "Q-FILE-BUG",
+            "campaignId": "CAMP-ENGINE",
+            "title": "File a Bug",
+            "rewardVibeulons": 40,
+            "subquests": [
+                "What happened",
+                "Steps to reproduce",
+                "Screenshot if possible"
+            ]
+        },
+        {
+            "id": "Q-SUGGEST-FEATURE",
+            "campaignId": "CAMP-ENGINE",
+            "title": "Suggest a Feature",
+            "rewardVibeulons": 50,
+            "subquests": [
+                "Problem",
+                "Proposed behavior",
+                "Why it matters tonight"
+            ]
+        },
+        {
+            "id": "Q-SHADOW-DM",
+            "campaignId": "CAMP-ENGINE",
+            "title": "Shadow Dungeon Master",
+            "rewardVibeulons": 100,
+            "subquests": [
+                "Feature 1 quest",
+                "Adjust 1 reward",
+                "Help 2 guests start playing"
+            ]
+        },
+        {
+            "id": "Q-CHECK-IN",
+            "campaignId": "CAMP-VIBE",
+            "title": "Check In on Someone",
+            "rewardVibeulons": 50,
+            "subquests": [
+                "Ask how they are",
+                "Offer water",
+                "Connect them to a quest or person"
+            ]
+        },
+        {
+            "id": "Q-RESOLVE-TENSION",
+            "campaignId": "CAMP-VIBE",
+            "title": "Resolve a Social Tension",
+            "rewardVibeulons": 110,
+            "subquests": [
+                "Name it gently",
+                "Consent-first reset",
+                "Hand to admin if needed"
+            ]
+        }
+    ]
+}
