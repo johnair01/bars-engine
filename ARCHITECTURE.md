@@ -21,7 +21,7 @@ BARs should maintain provenance:
 - references to other BARs/artifacts
 
 ### Artifacts
-Artifacts are the "blooms" from kernels. Examples:
+Artifacts are the “blooms” from kernels. Examples:
 - Specs, plans, task lists
 - Quest drafts, quest runs
 - Twine stories/modules and bindings
@@ -118,6 +118,8 @@ Weight is descriptive. It should:
 
 Avoid:
 - predictive "momentum multipliers"
+- increase as a BAR becomes more “loaded”
+- support vibeulon minting rules tied to real work
 - engineered acceleration mechanics
 
 Prefer:
@@ -132,4 +134,4 @@ For durability and auditability, prefer append-only events:
 - VisibilityChanged
 - ArtifactLinked
 
-Events can be used to build timelines, dashboards, and narrative "history of the world."
+Events can be used to build timelines, dashboards, and narrative “history of the world.”
