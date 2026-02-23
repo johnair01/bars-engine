@@ -38,7 +38,7 @@ export async function getMarketContent() {
             where: {
                 visibility: 'public',
                 status: 'active',
-                isSystem: false,
+                isSystem: player.isAdmin ? undefined : false,
             },
             include: {
                 microTwine: true,
