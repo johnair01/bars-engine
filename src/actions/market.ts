@@ -40,7 +40,15 @@ export async function getMarketContent() {
                 status: 'active',
                 isSystem: false,
             },
-            include: { microTwine: true },
+            include: {
+                microTwine: true,
+                creator: {
+                    include: {
+                        nation: true,
+                        playbook: true
+                    }
+                }
+            },
             orderBy: { createdAt: 'desc' },
             take: 50 // Limit for now
         })
