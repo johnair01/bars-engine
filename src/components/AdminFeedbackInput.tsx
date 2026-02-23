@@ -32,22 +32,23 @@ export function AdminFeedbackInput({ context }: { context?: any }) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 bg-zinc-900/50 p-4 border border-zinc-800 rounded-xl">
+            <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-tight">Signal Feed</h4>
             <textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Log any edge cases, broken UI, or unexpected logic here..."
-                className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-200 focus:border-purple-500 outline-none transition-colors"
+                className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-200 focus:border-purple-500 outline-none transition-colors resize-none"
             />
             <button
                 onClick={handleSubmit}
                 disabled={isPending || !feedback.trim()}
-                className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-lg transition-all disabled:opacity-50"
+                className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-sm font-bold rounded-lg transition-all disabled:opacity-30 active:scale-[0.98]"
             >
-                {isPending ? 'Logging...' : 'Push to Agent Feedback Log'}
+                {isPending ? 'Propagating...' : 'Push Signal to Agent'}
             </button>
             {status === 'error' && (
-                <p className="text-red-400 text-xs">Failed to log feedback. Check console.</p>
+                <p className="text-red-400 text-xs">Failed to log signal. Check console.</p>
             )}
         </div>
     )

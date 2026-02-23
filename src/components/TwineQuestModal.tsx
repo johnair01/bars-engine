@@ -136,6 +136,17 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         })
     }
 
+    function handleBack() {
+        if (visited.length <= 1) return
+        const newVisited = [...visited]
+        newVisited.pop() // Remove current
+        const prevPassage = newVisited[newVisited.length - 1]
+
+        setVisited(newVisited)
+        setCurrentPassageName(prevPassage)
+        setError(null)
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
@@ -184,7 +195,12 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                         <div className="text-center py-8 space-y-4 animate-in fade-in">
                             <div className="text-5xl">🎉</div>
                             <h3 className="text-xl font-bold text-green-400">Quest Complete!</h3>
-                            <p className="text-zinc-400 text-sm">You have finished this adventure.</p>
+                            <div className="flex flex-col items-center gap-2">
+                                <p className="text-zinc-400 text-sm">You have finished this adventure.</p>
+                                <div className="mt-2 px-4 py-2 bg-green-900/30 border border-green-500/30 rounded-full animate-bounce">
+                                    <span className="text-green-400 font-bold text-sm">+1 ♦ Vibeulon Minted</span>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -244,8 +260,16 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
 
                                         {/* Choices */}
                                         {isEnd ? (
-                                            <div className="text-center py-4">
+                                            <div className="text-center py-4 space-y-4">
                                                 <p className="text-zinc-500 italic">End of story.</p>
+                                                {visited.length > 1 && (
+                                                    <button
+                                                        onClick={handleBack}
+                                                        className="text-xs text-zinc-500 hover:text-white underline underline-offset-4"
+                                                    >
+                                                        ← Back to Previous Step
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="space-y-3">
@@ -261,6 +285,16 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                                                         </span>
                                                     </button>
                                                 ))}
+
+                                                {visited.length > 1 && (
+                                                    <button
+                                                        onClick={handleBack}
+                                                        disabled={isPending}
+                                                        className="w-full py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors"
+                                                    >
+                                                        ← Back to Previous Step
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </>
