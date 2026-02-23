@@ -6,6 +6,7 @@ import { getWorldData } from '@/actions/onboarding'
 import { useRouter } from 'next/navigation'
 import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from './onboarding/OnboardingRecommendation'
+import { AdminFeedbackInput } from './AdminFeedbackInput'
 
 interface TwineQuestModalProps {
     isOpen: boolean
@@ -224,6 +225,12 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                                                 {currentPassage.cleanText}
                                             </p>
                                         </div>
+
+                                        {currentPassage.name === 'BATTLE_REPORT' && (
+                                            <div className="animate-in fade-in slide-in-from-top-4 duration-700 delay-300">
+                                                <AdminFeedbackInput context={{ questId, storyId: twineStoryId }} />
+                                            </div>
+                                        )}
 
                                         {/* Emitted items */}
                                         {emitted.length > 0 && (
