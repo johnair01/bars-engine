@@ -1,7 +1,7 @@
 'use client'
 
 import { getMarketContent } from '@/actions/market'
-import { getWorldData } from '@/actions/world' // Assuming this exists or using local lists
+import { getWorldData } from '@/actions/onboarding'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuestDetailModal } from '@/components/QuestDetailModal'
