@@ -15,6 +15,7 @@ import {
     computeArchetypeRecommendation,
     confirmSelection,
 } from '@/lib/game/diagnostic-engine'
+import { ParsedTwineSchema, getStartPassageId } from '@/lib/schemas'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -241,7 +242,21 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
     })
     if (!story || !story.isPublished) return { error: 'Story not found or not published' }
 
-    const parsed = JSON.parse(story.parsedJson) as { startPassage: string }
+    const rawParsed = JSON.parse(story.parsedJson)
+    const parseResult = ParsedTwineSchema.safeParse(rawParsed)
+
+    if (!parseResult.success) {
+        console.error('Failed to validate Twine JSON:', parseResult.error)
+        return { error: 'Story data is corrupted.' }
+    }
+
+    const parsed = parseResult.data
+    let startPassageId: string
+    try {
+        startPassageId = getStartPassageId(parsed)
+    } catch (e: any) {
+        return { error: e.message }
+    }
 
     // Find existing run: quest-scoped or standalone
     let run = await db.twineRun.findFirst({
@@ -259,8 +274,8 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
                     storyId,
                     playerId,
                     questId: questId || null,
-                    currentPassageId: parsed.startPassage,
-                    visited: JSON.stringify([parsed.startPassage]),
+                    currentPassageId: startPassageId,
+                    visited: JSON.stringify([startPassageId]),
                     firedBindings: '[]',
                 }
             })

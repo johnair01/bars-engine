@@ -5,7 +5,8 @@ import { getWorldData } from '@/actions/onboarding'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { PassageRenderer } from './PassageRenderer'
-import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
+import { ParsedTwineSchema, getStartPassageId } from '@/lib/schemas'
+import { TwineErrorBoundary } from '@/components/TwineErrorBoundary'
 
 export default async function TwinePlayPage({
     params,
@@ -43,9 +44,24 @@ export default async function TwinePlayPage({
             where: { id: questId }
         })
     }
-    const parsed: ParsedTwineStory = JSON.parse(story.parsedJson)
-    const currentPassage: ParsedPassage | undefined = parsed.passages.find(
-        p => p.name === run.currentPassageId
+    const rawParsed = JSON.parse(story.parsedJson)
+    const parseResult = ParsedTwineSchema.safeParse(rawParsed)
+
+    if (!parseResult.success) {
+        return (
+            <div className="min-h-screen bg-black text-zinc-200 p-8 flex items-center justify-center">
+                <div className="text-center space-y-4 max-w-md border border-red-900/50 bg-red-950/20 p-8 rounded-2xl">
+                    <h2 className="text-xl font-bold text-red-500 font-mono uppercase tracking-widest">Quest Corrupted</h2>
+                    <p className="text-red-400 text-sm">JSON Parsing Error: The quest data shape is invalid.</p>
+                    <Link href="/adventures" className="text-zinc-500 hover:text-white text-sm">← Back to Adventures</Link>
+                </div>
+            </div>
+        )
+    }
+
+    const parsed = parseResult.data
+    const currentPassage = parsed.passages.find(
+        p => p.name === run.currentPassageId || p.pid === run.currentPassageId
     )
 
     if (!currentPassage) {
@@ -76,18 +92,20 @@ export default async function TwinePlayPage({
                 </div>
 
                 {/* Passage */}
-                <PassageRenderer
-                    storyId={storyId}
-                    passage={currentPassage}
-                    isEnd={currentPassage.links.length === 0}
-                    bindings={(story as any).bindings || []}
-                    nations={nations}
-                    playbooks={playbooks}
-                    questId={questId}
-                    quest={quest as any}
-                    threadId={threadId}
-                    isRitual={isRitual}
-                />
+                <TwineErrorBoundary>
+                    <PassageRenderer
+                        storyId={storyId}
+                        passage={currentPassage as any}
+                        isEnd={!currentPassage.links || currentPassage.links.length === 0}
+                        bindings={(story as any).bindings || []}
+                        nations={nations}
+                        playbooks={playbooks}
+                        questId={questId}
+                        quest={quest as any}
+                        threadId={threadId}
+                        isRitual={isRitual}
+                    />
+                </TwineErrorBoundary>
             </div>
         </div>
     )

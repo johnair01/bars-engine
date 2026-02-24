@@ -21,6 +21,5 @@
             "links": []
         }
     ],
-    "startPassagePid": "1",
-    "startPassageName": "Start"
+    "startPassage": "1"
 }
