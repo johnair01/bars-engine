@@ -1,0 +1,10 @@
+{
+  "id": "Path_Re_Interpret",
+  "text": "(Interpretation stub: structure, boundary, authority)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Re_Step1"
+    }
+  ]
+}

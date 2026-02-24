@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ar_Step1",
+  "text": "Step 1 (private): create Tension BAR (system inefficiency)\n<<set $tension_bar_id = \"BAR_TENSION_ARCHITECT_PLACEHOLDER\">>\n<<set $step1_done = true>>",
+  "choices": [
+    {
+      "text": "Commit an action (Step 2)",
+      "targetId": "Path_Ar_Step2"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { db } from '../src/lib/db'
+import { normalizeTwineStory } from '../src/lib/schemas'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -39,12 +40,15 @@ async function seed() {
         const filePath = path.join(storiesDir, questData.filename)
         const rawJson = fs.readFileSync(filePath, 'utf-8')
 
+        const normalized = normalizeTwineStory(JSON.parse(rawJson))
+        const normalizedJson = JSON.stringify(normalized)
+
         // 1. Seed TwineStory
         const story = await db.twineStory.upsert({
             where: { slug: questData.slug },
             update: {
                 title: questData.title,
-                parsedJson: rawJson,
+                parsedJson: normalizedJson,
                 isPublished: true
             },
             create: {
@@ -52,7 +56,7 @@ async function seed() {
                 slug: questData.slug,
                 sourceType: 'manual_seed',
                 sourceText: 'Implicitly defined in seed script files',
-                parsedJson: rawJson,
+                parsedJson: normalizedJson,
                 isPublished: true,
                 createdById
             }

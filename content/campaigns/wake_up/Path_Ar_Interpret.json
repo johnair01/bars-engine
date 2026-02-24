@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ar_Interpret",
+  "text": "(Interpretation stub: system redesign, prototype mind)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Ar_Step1"
+    }
+  ]
+}

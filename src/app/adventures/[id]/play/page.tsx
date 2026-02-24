@@ -5,7 +5,7 @@ import { getWorldData } from '@/actions/onboarding'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { PassageRenderer } from './PassageRenderer'
-import { ParsedTwineSchema, getStartPassageId } from '@/lib/schemas'
+import { normalizeTwineStory } from '@/lib/schemas'
 import { TwineErrorBoundary } from '@/components/TwineErrorBoundary'
 
 export default async function TwinePlayPage({

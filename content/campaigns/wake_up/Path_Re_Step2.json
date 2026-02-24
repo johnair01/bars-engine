@@ -1,0 +1,10 @@
+{
+  "id": "Path_Re_Step2",
+  "text": "Step 2 (private): create Action BAR linked to tension (establish boundary/rule)\n<<set $action_bar_id = \"BAR_ACTION_REGENT_PLACEHOLDER\">>\n<<set $step2_done = true>>",
+  "choices": [
+    {
+      "text": "Complete quest",
+      "targetId": "Path_Complete"
+    }
+  ]
+}

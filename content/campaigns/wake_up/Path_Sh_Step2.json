@@ -1,0 +1,10 @@
+{
+  "id": "Path_Sh_Step2",
+  "text": "Step 2 (private): create Action BAR linked to tension (symbolic act)\n<<set $action_bar_id = \"BAR_ACTION_SHAMAN_PLACEHOLDER\">>\n<<set $step2_done = true>>",
+  "choices": [
+    {
+      "text": "Complete quest",
+      "targetId": "Path_Complete"
+    }
+  ]
+}

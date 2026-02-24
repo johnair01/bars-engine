@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ar_Start",
+  "text": "(Entering Architect Path)\n<<set $active_face = \"architect\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "choices": [
+    {
+      "text": "Continue",
+      "targetId": "Path_Ar_Interpret"
+    }
+  ]
+}

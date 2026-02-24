@@ -15,7 +15,7 @@ import {
     computeArchetypeRecommendation,
     confirmSelection,
 } from '@/lib/game/diagnostic-engine'
-import { ParsedTwineSchema, getStartPassageId } from '@/lib/schemas'
+import { normalizeTwineStory } from '@/lib/schemas'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -243,20 +243,15 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
     if (!story || !story.isPublished) return { error: 'Story not found or not published' }
 
     const rawParsed = JSON.parse(story.parsedJson)
-    const parseResult = ParsedTwineSchema.safeParse(rawParsed)
-
-    if (!parseResult.success) {
-        console.error('Failed to validate Twine JSON:', parseResult.error)
+    let parsed
+    try {
+        parsed = normalizeTwineStory(rawParsed)
+    } catch (e: any) {
+        console.error('Failed to validate Twine JSON:', e)
         return { error: 'Story data is corrupted.' }
     }
 
-    const parsed = parseResult.data
-    let startPassageId: string
-    try {
-        startPassageId = getStartPassageId(parsed)
-    } catch (e: any) {
-        return { error: e.message }
-    }
+    const startPassageId = parsed.startPassage
 
     // Find existing run: quest-scoped or standalone
     let run = await db.twineRun.findFirst({
@@ -469,7 +464,6 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
         })
 
         // Grant vibeulon reward
-        const quest = await db.customBar.findUnique({ where: { id: questId } })
         const rewardAmount = quest?.reward || 1
         if (rewardAmount > 0) {
             await db.vibulonEvent.create({

@@ -1,0 +1,10 @@
+{
+  "id": "Path_Re_Step1",
+  "text": "Step 1 (private): create Tension BAR (missing boundary/rule)\n<<set $tension_bar_id = \"BAR_TENSION_REGENT_PLACEHOLDER\">>\n<<set $step1_done = true>>",
+  "choices": [
+    {
+      "text": "Commit an action (Step 2)",
+      "targetId": "Path_Re_Step2"
+    }
+  ]
+}

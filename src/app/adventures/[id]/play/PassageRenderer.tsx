@@ -185,7 +185,7 @@ export function PassageRenderer({
                     {/* Passage content */}
                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8">
                         <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-lg">
-                            {passage.cleanText || passage.text}
+                            {passage.cleanText}
                         </p>
                     </div>
 
@@ -278,12 +278,12 @@ export function PassageRenderer({
                                 {passage.links.map((link, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => handleChoice(link.target || link.link || '')}
+                                        onClick={() => handleChoice(link.target)}
                                         disabled={isPending}
                                         className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
                                     >
                                         <span className="text-white group-hover:text-purple-400 transition-colors">
-                                            {link.label || link.text || link.name || link.target}
+                                            {link.label}
                                         </span>
                                     </button>
                                 ))}

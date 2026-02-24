@@ -1,0 +1,10 @@
+{
+  "id": "Path_Re_Start",
+  "text": "(Entering Regent Path)\n<<set $active_face = \"regent\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "choices": [
+    {
+      "text": "Continue",
+      "targetId": "Path_Re_Interpret"
+    }
+  ]
+}

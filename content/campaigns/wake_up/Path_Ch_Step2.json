@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ch_Step2",
+  "text": "Step 2 (private): create Action BAR linked to tension (visible disruption)\n<<set $action_bar_id = \"BAR_ACTION_CHALLENGER_PLACEHOLDER\">>\n<<set $step2_done = true>>",
+  "choices": [
+    {
+      "text": "Complete quest",
+      "targetId": "Path_Complete"
+    }
+  ]
+}

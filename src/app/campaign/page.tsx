@@ -3,26 +3,22 @@ import fs from 'fs'
 import path from 'path'
 
 export default async function CampaignPage() {
-    // In a real app we'd load the JSON server-side and pass it down
-    // For now we'll mock it in the component but eventually do this:
-    /*
-    const contentPath = path.join(process.cwd(), 'content', 'campaigns', 'wake_up', 'intro.json')
-    const content = fs.readFileSync(contentPath, 'utf-8')
-    const initialNode = JSON.parse(content)
-    */
+    const mapPath = path.join(process.cwd(), 'content', 'campaigns', 'wake_up', 'map.json')
+    let startNodeId = 'Center_Witness' // fallback
 
-    const initialNode = {
-        id: 'intro',
-        text: "## The Wake-Up Call\n\nThe world is shifting. Do you feel it?\n\nThis is the beginning of the Wake-Up Campaign.",
-        choices: [
-            { text: "I feel it.", targetId: "act1" },
-            { text: "What are you talking about?", targetId: "act1" }
-        ]
+    try {
+        if (fs.existsSync(mapPath)) {
+            const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'))
+            if (mapData.startNodeId) startNodeId = mapData.startNodeId
+        }
+    } catch (e) {
+        console.error("Failed to read campaign map:", e)
     }
 
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center font-sans tracking-tight">
-            <CampaignReader initialNode={initialNode} />
+            {/* We pass a dummy initial node, but CampaignReader will immediately fetch it based on id */}
+            <CampaignReader initialNode={{ id: startNodeId, text: '', choices: [] }} />
         </div>
     )
 }

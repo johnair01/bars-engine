@@ -1,0 +1,10 @@
+{
+  "id": "Onboarding_QuestPool",
+  "text": "(Stub: show starting quests derived from completed flags.)\n\n<<print_status_report>>",
+  "choices": [
+    {
+      "text": "Enter the game",
+      "targetId": "Game_Login"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "Path_Sa_Interpret",
+  "text": "(Interpretation stub: pattern integration, synthesis)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Sa_Step1"
+    }
+  ]
+}

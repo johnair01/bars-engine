@@ -1,0 +1,34 @@
+{
+  "id": "Center_ChooseLens",
+  "text": "Choose a Face (altitudinal path). Exploration is allowed; onboarding requires completion of at least one path quest.",
+  "choices": [
+    {
+      "text": "Shaman (Magenta)",
+      "targetId": "Path_Sh_Start"
+    },
+    {
+      "text": "Challenger (Red)",
+      "targetId": "Path_Ch_Start"
+    },
+    {
+      "text": "Regent (Amber)",
+      "targetId": "Path_Re_Start"
+    },
+    {
+      "text": "Architect (Orange)",
+      "targetId": "Path_Ar_Start"
+    },
+    {
+      "text": "Diplomat (Green)",
+      "targetId": "Path_Di_Start"
+    },
+    {
+      "text": "Sage (Teal)",
+      "targetId": "Path_Sa_Start"
+    },
+    {
+      "text": "If onboarding already unlocked, continue",
+      "targetId": "Center_PostUnlock"
+    }
+  ]
+}

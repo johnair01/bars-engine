@@ -1,0 +1,10 @@
+{
+  "id": "Path_Di_Start",
+  "text": "(Entering Diplomat Path)\n<<set $active_face = \"diplomat\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "choices": [
+    {
+      "text": "Continue",
+      "targetId": "Path_Di_Interpret"
+    }
+  ]
+}

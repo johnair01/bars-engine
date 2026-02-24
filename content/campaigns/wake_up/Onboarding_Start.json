@@ -1,0 +1,10 @@
+{
+  "id": "Onboarding_Start",
+  "text": "(Character creation begins here)\n\n- Create character\n- Choose Nation\n- Choose Archetype\n- Starting quest pool is derived from completed altitude flags",
+  "choices": [
+    {
+      "text": "Continue",
+      "targetId": "Onboarding_QuestPool"
+    }
+  ]
+}

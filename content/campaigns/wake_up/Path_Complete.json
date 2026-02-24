@@ -1,0 +1,14 @@
+{
+  "id": "Path_Complete",
+  "text": "Quest Complete.\n<<complete_active_face>>",
+  "choices": [
+    {
+      "text": "Return to Center",
+      "targetId": "Center_PostUnlock"
+    },
+    {
+      "text": "Go back to Center",
+      "targetId": "Center_ChooseLens"
+    }
+  ]
+}

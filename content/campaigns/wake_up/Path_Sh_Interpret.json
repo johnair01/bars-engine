@@ -1,0 +1,10 @@
+{
+  "id": "Path_Sh_Interpret",
+  "text": "(Interpretation stub: mythic rupture, threshold)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Sh_Step1"
+    }
+  ]
+}

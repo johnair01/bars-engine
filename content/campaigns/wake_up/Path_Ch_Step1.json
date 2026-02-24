@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ch_Step1",
+  "text": "Step 1 (private): create Tension BAR (something tolerated)\n<<set $tension_bar_id = \"BAR_TENSION_CHALLENGER_PLACEHOLDER\">>\n<<set $step1_done = true>>",
+  "choices": [
+    {
+      "text": "Commit an action (Step 2)",
+      "targetId": "Path_Ch_Step2"
+    }
+  ]
+}

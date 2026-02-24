@@ -1,0 +1,10 @@
+{
+  "id": "Path_Ch_Interpret",
+  "text": "(Interpretation stub: provocation, decisive break)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Ch_Step1"
+    }
+  ]
+}

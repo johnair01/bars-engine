@@ -1,0 +1,10 @@
+{
+  "id": "Path_Di_Interpret",
+  "text": "(Interpretation stub: relational field, coalition)",
+  "choices": [
+    {
+      "text": "Name the tension (Step 1)",
+      "targetId": "Path_Di_Step1"
+    }
+  ]
+}

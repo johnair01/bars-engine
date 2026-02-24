@@ -1,0 +1,10 @@
+{
+  "id": "Center_Witness",
+  "text": "(Facts)\n- Fired by text (Feb 18), day before birthday\n- Feb 21 party proof: 25 people, characters created, quests assigned, BARs traded physical+digital\n- Heist at the Construct Conclave: Oceans 11 x Gundam/Eva, Five Nations power constructs, annual awards, this year robbed\n\nChoose an interpretive lens.",
+  "choices": [
+    {
+      "text": "Choose an interpretive lens",
+      "targetId": "Center_ChooseLens"
+    }
+  ]
+}

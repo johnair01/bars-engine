@@ -1,0 +1,14 @@
+{
+  "id": "Center_PostUnlock",
+  "text": "(Onboarding is now available.)\n\nYou can:\n- Explore another altitude path (adds starting quest variety)\n- Proceed to onboarding (character creation + nation/archetype)",
+  "choices": [
+    {
+      "text": "Explore another lens",
+      "targetId": "Center_ChooseLens"
+    },
+    {
+      "text": "Proceed to Onboarding",
+      "targetId": "Onboarding_Start"
+    }
+  ]
+}
