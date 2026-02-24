@@ -118,6 +118,18 @@ export function PassageRenderer({
         })
     }
 
+    function handleBack() {
+        setError(null)
+        startTransition(async () => {
+            const result = await revertRun(storyId, questId)
+            if (result.error) {
+                setError(result.error)
+            } else {
+                router.refresh()
+            }
+        })
+    }
+
     // Check for inputs tag
     const showInputs = isEnd || (passage.tags && passage.tags.includes('inputs'))
 
@@ -242,13 +254,32 @@ export function PassageRenderer({
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            ← Back to Previous Step
-                        </button>
+                            <div className="space-y-3">
+                                {passage.links.map((link, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => handleChoice(link.target)}
+                                        disabled={isPending}
+                                        className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
+                                    >
+                                        <span className="text-white group-hover:text-purple-400 transition-colors">
+                                            {link.label}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={handleBack}
+                                disabled={isPending}
+                                className="w-full py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors"
+                            >
+                                ← Back to Previous Step
+                            </button>
                         </div>
                     )}
-        </>
-    )
-}
-        </div >
+                </>
+            )}
+        </div>
     )
 }
