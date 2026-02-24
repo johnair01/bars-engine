@@ -1,13 +1,21 @@
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { listPublishedStories } from '@/actions/twine'
+import { db } from '@/lib/db'
 import Link from 'next/link'
+import { CustomBar, PlayerQuest } from '@prisma/client'
 
 export default async function AdventuresPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
 
     const stories = await listPublishedStories()
+
+    // Fetch associated quests for these stories to see if they are "Certification Quests"
+    const storyQuests = await db.customBar.findMany({
+        where: { twineStoryId: { in: stories.map(s => s.id) } },
+        include: { assignments: { where: { playerId: player.id } } }
+    })
 
     return (
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -26,17 +34,37 @@ export default async function AdventuresPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {stories.map(story => (
-                            <Link key={story.id} href={`/adventures/${story.id}/play`} className="group block">
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors h-full">
-                                    <div className="text-3xl mb-3">📖</div>
-                                    <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{story.title}</h3>
-                                    <p className="text-xs text-zinc-500 mt-2">
-                                        Added {new Date(story.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </Link>
-                        ))}
+                        {stories.map(story => {
+                            const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)
+                            const assignment = quest?.assignments?.[0] as PlayerQuest | undefined
+                            const isCompleted = assignment?.status === 'completed'
+
+                            return (
+                                <Link
+                                    key={story.id}
+                                    href={quest ? `/adventures/${story.id}/play?questId=${quest.id}` : `/adventures/${story.id}/play`}
+                                    className={`group block ${isCompleted ? 'opacity-50' : ''}`}
+                                >
+                                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors h-full flex flex-col">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="text-3xl">📖</div>
+                                            {quest?.isSystem && (
+                                                <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded font-mono uppercase">Certification</span>
+                                            )}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{story.title}</h3>
+                                        <div className="mt-auto pt-4 flex items-center justify-between">
+                                            <p className="text-xs text-zinc-500">
+                                                Added {new Date(story.createdAt).toLocaleDateString()}
+                                            </p>
+                                            {isCompleted && (
+                                                <span className="text-[10px] font-bold text-green-500 uppercase">Completed</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Link>
+                            )
+                        })}
                     </div>
                 )}
             </div>

@@ -164,4 +164,33 @@ export class LedgerService {
             })
         })
     }
+
+    /**
+     * Mint new vibeulons to the player's global reserve.
+     */
+    static async mint(playerId: string, amount: number, metadata?: any) {
+        if (amount <= 0) throw new Error('Minting amount must be positive')
+
+        return await db.$transaction(async (tx) => {
+            const tokens = []
+            for (let i = 0; i < amount; i++) {
+                tokens.push({
+                    ownerId: playerId,
+                    originSource: 'mint',
+                    originId: metadata?.questId || 'system',
+                    originTitle: metadata?.questTitle || 'System Mint'
+                })
+            }
+            await tx.vibulon.createMany({ data: tokens })
+
+            return await tx.vibeulonLedger.create({
+                data: {
+                    playerId,
+                    amount,
+                    type: 'MINT',
+                    metadata: JSON.stringify(metadata || {})
+                }
+            })
+        })
+    }
 }

@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { LedgerService } from '@/lib/economy-ledger'
 import { parseTwineHtml } from '@/lib/twine-parser'
 import {
     parseDiagnosticState,
@@ -450,12 +451,13 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
                 }
             })
 
-            const { mintVibulon } = await import('./economy')
-            await mintVibulon(playerId, rewardAmount, {
-                source: 'twine_quest',
-                id: questId,
-                title: quest?.title || 'Twine Quest'
-            }, { skipRevalidate: true })
+            // Ledger Integration: MINT to global reserve
+            await LedgerService.mint(playerId, rewardAmount, {
+                questId,
+                questTitle: quest?.title,
+                runId,
+                source: 'twine_completion'
+            })
         }
 
         console.log(`[TWINE] Quest auto-completed: ${questId} for player ${playerId}`)

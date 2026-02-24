@@ -12,6 +12,7 @@ import Link from 'next/link'
 type MarketContent = {
     packs: any[]
     quests: any[]
+    graveyardQuests?: any[]
 }
 
 export default function AvailableBarsPage() {
@@ -27,7 +28,7 @@ export default function AvailableBarsPage() {
     const [showAdvanced, setShowAdvanced] = useState(false)
 
     useEffect(() => {
-        getMarketContent().then(setContent)
+        getMarketContent().then(data => setContent(data as any))
         getWorldData().then(data => {
             setWorldData({ nations: data[0], playbooks: data[1] })
         })
@@ -187,29 +188,75 @@ export default function AvailableBarsPage() {
                     quest={selectedQuest}
                 />
             )}
+
+            {/* Admin Graveyard Section */}
+            {content.graveyardQuests && content.graveyardQuests.length > 0 && (
+                <section className="mt-16 pt-8 border-t border-zinc-800">
+                    <div className="flex items-center gap-2 mb-6 text-zinc-500">
+                        <span className="text-xl">🪦</span>
+                        <h2 className="text-xl font-bold uppercase tracking-tighter">The Graveyard</h2>
+                        <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-600 font-mono">Completed Certification Quests</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60 hover:opacity-100 transition-opacity">
+                        {content.graveyardQuests.map(bar => (
+                            <QuestCard
+                                key={bar.id}
+                                bar={bar}
+                                onSelect={() => setSelectedQuest(bar)}
+                                isPending={isPending}
+                                isGraveyard
+                                onRestore={async () => {
+                                    const { restoreCertificationQuest } = await import('@/actions/admin-certification')
+                                    const result = await restoreCertificationQuest(bar.id)
+                                    if (result.success) {
+                                        window.location.reload()
+                                    } else {
+                                        alert(result.error)
+                                    }
+                                }}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
         </div>
     )
 }
 
-function QuestCard({ bar, onSelect, isPending }: { bar: any, onSelect: () => void, isPending: boolean }) {
+function QuestCard({
+    bar,
+    onSelect,
+    isPending,
+    isGraveyard = false,
+    onRestore
+}: {
+    bar: any,
+    onSelect: () => void,
+    isPending: boolean,
+    isGraveyard?: boolean,
+    onRestore?: () => Promise<void>
+}) {
     const stageInfo = KOTTER_STAGES[bar.kotterStage as KotterStage]
     const creator = bar.creator
     const nation = creator?.nation
     const playbook = creator?.playbook
     const isAnonymous = bar.isAnonymous || (bar.visibility === 'public' && !bar.showCreatorName) // Derived or explicit
 
+    const [isRestoring, setIsRestoring] = useState(false)
+
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden transition-colors hover:border-zinc-700 flex flex-col">
+        <div className={`bg-zinc-900 border ${isGraveyard ? 'border-zinc-800/50' : 'border-zinc-800'} rounded-xl overflow-hidden transition-colors hover:border-zinc-700 flex flex-col`}>
             <div className="p-5 space-y-4 flex-1">
                 <div>
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-white text-lg">{bar.title}</h3>
+                            <h3 className={`font-bold ${isGraveyard ? 'text-zinc-500' : 'text-white'} text-lg`}>{bar.title}</h3>
                             {bar.isSystem && (
                                 <span className="text-[8px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.5 rounded font-mono uppercase tracking-tighter">System</span>
                             )}
                         </div>
-                        <span className="text-xs font-mono text-yellow-500 bg-yellow-900/20 px-2 py-1 rounded">
+                        <span className={`text-xs font-mono ${isGraveyard ? 'text-zinc-700 bg-zinc-900/50' : 'text-yellow-500 bg-yellow-900/20'} px-2 py-1 rounded`}>
                             {bar.reward}ⓥ
                         </span>
                     </div>
@@ -217,12 +264,12 @@ function QuestCard({ bar, onSelect, isPending }: { bar: any, onSelect: () => voi
                     {/* Creator Identity */}
                     <div className="flex flex-wrap gap-2 mt-2">
                         {nation && (
-                            <span className="px-1.5 py-0.5 rounded bg-blue-900/20 text-blue-400 text-[9px] font-bold border border-blue-800/50 uppercase tracking-tighter">
+                            <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-blue-900/20 text-blue-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-blue-800/50'} uppercase tracking-tighter`}>
                                 {nation.name}
                             </span>
                         )}
                         {playbook && (
-                            <span className="px-1.5 py-0.5 rounded bg-purple-900/20 text-purple-400 text-[9px] font-bold border border-purple-800/50 uppercase tracking-tighter">
+                            <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-purple-900/20 text-purple-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-purple-800/50'} uppercase tracking-tighter`}>
                                 {playbook.name}
                             </span>
                         )}
@@ -232,11 +279,11 @@ function QuestCard({ bar, onSelect, isPending }: { bar: any, onSelect: () => voi
                     </div>
                 </div>
 
-                <p className="text-sm text-zinc-400 line-clamp-3">
+                <p className={`text-sm ${isGraveyard ? 'text-zinc-600' : 'text-zinc-400'} line-clamp-3`}>
                     {bar.description}
                 </p>
 
-                {stageInfo && (
+                {stageInfo && !isGraveyard && (
                     <div className="flex items-center gap-2 text-[10px] text-zinc-500">
                         <span>{stageInfo.emoji}</span>
                         <span>Stage {bar.kotterStage}: {stageInfo.name}</span>
@@ -245,13 +292,28 @@ function QuestCard({ bar, onSelect, isPending }: { bar: any, onSelect: () => voi
             </div>
 
             <div className="p-5 pt-0">
-                <button
-                    onClick={onSelect}
-                    disabled={isPending}
-                    className="w-full py-2 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-800/50 rounded-lg font-bold text-purple-200 hover:from-purple-900/40 hover:to-indigo-900/40 transition-all text-sm"
-                >
-                    Details & Accept
-                </button>
+                {isGraveyard ? (
+                    <button
+                        onClick={async (e) => {
+                            e.stopPropagation()
+                            setIsRestoring(true)
+                            await onRestore?.()
+                            setIsRestoring(false)
+                        }}
+                        disabled={isRestoring}
+                        className="w-full py-2 bg-zinc-950 border border-zinc-800 rounded-lg font-bold text-zinc-500 hover:text-white hover:border-zinc-600 transition-all text-sm uppercase tracking-widest"
+                    >
+                        {isRestoring ? 'Resurrecting...' : 'Restore to Market'}
+                    </button>
+                ) : (
+                    <button
+                        onClick={onSelect}
+                        disabled={isPending}
+                        className="w-full py-2 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-800/50 rounded-lg font-bold text-purple-200 hover:from-purple-900/40 hover:to-indigo-900/40 transition-all text-sm"
+                    >
+                        Details & Accept
+                    </button>
+                )}
             </div>
         </div>
     )

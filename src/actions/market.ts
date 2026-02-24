@@ -13,8 +13,13 @@ import { getCurrentPlayer } from '@/lib/auth'
  */
 export async function getMarketContent() {
     const player = await getCurrentPlayer()
+    const playerWithRoles = player ? await db.player.findUnique({
+        where: { id: player.id },
+        include: { roles: { include: { role: true } } }
+    }) : null
+    const isAdmin = !!playerWithRoles?.roles.some(r => r.role.key === 'admin')
 
-    const [globalState, publicPacks, publicQuests] = await Promise.all([
+    const [globalState, publicPacks, publicQuests, graveyardQuests] = await Promise.all([
         db.globalState.findUnique({ where: { id: 'singleton' } }),
         // 1. Feature: Public Packs (Recycled Community Packs)
         db.questPack.findMany({
@@ -38,7 +43,7 @@ export async function getMarketContent() {
             where: {
                 visibility: 'public',
                 status: 'active',
-                isSystem: player.isAdmin ? undefined : false,
+                isSystem: isAdmin ? undefined : false,
             },
             include: {
                 microTwine: true,
@@ -51,7 +56,30 @@ export async function getMarketContent() {
             },
             orderBy: { createdAt: 'desc' },
             take: 50 // Limit for now
-        })
+        }),
+
+        // 3. Admin: Graveyard (Completed System Quests)
+        isAdmin ? db.customBar.findMany({
+            where: {
+                isSystem: true,
+                assignments: {
+                    some: {
+                        playerId: player!.id,
+                        status: 'completed'
+                    }
+                }
+            },
+            include: {
+                microTwine: true,
+                creator: {
+                    include: {
+                        nation: true,
+                        playbook: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        }) : Promise.resolve([])
     ])
 
     // Filter quests
@@ -59,7 +87,7 @@ export async function getMarketContent() {
 
     // 1. Filter story-clock quests if paused
     if (globalState?.isPaused) {
-        filteredQuests = filteredQuests.filter(q => q.hexagramId === null)
+        filteredQuests = publicQuests.filter(q => q.kotterStage === 1)
     }
 
     // 2. Nation & Playbook Gating
@@ -96,13 +124,13 @@ export async function getMarketContent() {
             return true
         })
     }
-
     return {
         packs: publicPacks.map(p => ({
             ...p,
             isOwned: p.progress && p.progress.length > 0
         })),
-        quests: filteredQuests
+        quests: filteredQuests,
+        graveyardQuests: graveyardQuests || []
     }
 }
 

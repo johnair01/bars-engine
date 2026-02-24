@@ -100,6 +100,33 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${story.title} (${story.id})`)
     console.log(`✅ Quest seeded: ${quest.title} (${quest.id})`)
+
+    // 4. Admin Certification Quest
+    const certStory = await db.twineStory.findFirst({
+        where: { title: { contains: 'Blessed Object' } } // Use existing story or fallback
+    })
+
+    await db.customBar.upsert({
+        where: { id: 'admin-cert-v0-1-0' },
+        update: {
+            twineStoryId: certStory?.id,
+            isSystem: true,
+            reward: 1
+        },
+        create: {
+            id: 'admin-cert-v0-1-0',
+            creatorId: createdById, // Assuming 'admin' refers to the 'creator' found earlier
+            title: 'v0.1.0 Certification Ritual',
+            description: 'Verify the stable release of the Vibeulon Ledger, Market Identity, and Graveyard lifecycle.',
+            isSystem: true,
+            reward: 1,
+            visibility: 'public',
+            status: 'active',
+            twineStoryId: certStory?.id
+        }
+    })
+
+    console.log('✅ Validation quests seeded.')
 }
 
 seed().catch(console.error)
