@@ -39,6 +39,18 @@ export function PassageRenderer({
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
+    // Parse inputs safely
+    let parsedInputs: any[] = []
+    if (quest?.inputs) {
+        try {
+            parsedInputs = typeof quest.inputs === 'string' ? JSON.parse(quest.inputs) : quest.inputs
+            if (!Array.isArray(parsedInputs)) parsedInputs = []
+        } catch (e) {
+            parsedInputs = []
+        }
+    }
+    const hasActualInputs = parsedInputs.length > 0
+
     function handleEnd() {
         if (!questId) {
             router.push('/adventures')
@@ -47,10 +59,18 @@ export function PassageRenderer({
 
         setError(null)
 
+        // If there are no actual inputs, the end passage auto-completes. 
+        // Do not call completeQuest again.
+        if (!hasActualInputs) {
+            setIsSuccess(true)
+            const ritualParam = isRitual ? '?ritual=true' : ''
+            router.push(isRitual ? `/conclave/onboarding${ritualParam}` : '/')
+            return
+        }
+
         // Validation: Check for required inputs
-        if (quest?.inputs) {
-            const inputList = typeof quest.inputs === 'string' ? JSON.parse(quest.inputs) : quest.inputs
-            for (const input of inputList) {
+        if (hasActualInputs) {
+            for (const input of parsedInputs) {
                 if (input.required && (!inputValues[input.key] || inputValues[input.key].trim() === '')) {
                     setError(`${input.label} is required.`)
                     return
@@ -131,7 +151,7 @@ export function PassageRenderer({
     }
 
     // Check for inputs tag
-    const showInputs = isEnd || (passage.tags && passage.tags.includes('inputs'))
+    const showInputs = hasActualInputs && (isEnd || (passage.tags && passage.tags.includes('inputs')))
 
     // Check for onboarding recommendation bindings if we are at an END passage
     const recommendationBinding = isEnd ? bindings.find(b =>
@@ -165,7 +185,7 @@ export function PassageRenderer({
                     {/* Passage content */}
                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8">
                         <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-lg">
-                            {passage.cleanText}
+                            {passage.cleanText || passage.text}
                         </p>
                     </div>
 
@@ -187,11 +207,11 @@ export function PassageRenderer({
                     )}
 
                     {/* Quest Inputs (Inline if tagged, or at end) */}
-                    {showInputs && quest?.inputs && !isSuccess && (
+                    {showInputs && !isSuccess && (
                         <div className="text-left bg-zinc-900 border-2 border-purple-500/20 p-6 rounded-xl space-y-4 animate-in zoom-in-95 duration-300">
                             <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Required Action</h3>
                             <QuestInputs
-                                inputs={quest.inputs}
+                                inputs={parsedInputs}
                                 values={inputValues}
                                 onChange={(key, val) => setInputValues(v => ({ ...v, [key]: val }))}
                             />
@@ -258,12 +278,12 @@ export function PassageRenderer({
                                 {passage.links.map((link, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => handleChoice(link.target)}
+                                        onClick={() => handleChoice(link.target || link.link || '')}
                                         disabled={isPending}
                                         className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
                                     >
                                         <span className="text-white group-hover:text-purple-400 transition-colors">
-                                            {link.label}
+                                            {link.label || link.text || link.name || link.target}
                                         </span>
                                     </button>
                                 ))}

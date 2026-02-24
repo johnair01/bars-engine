@@ -425,6 +425,23 @@ export async function revertRun(storyId: string, questId?: string | null, player
 
 export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string): Promise<boolean> {
     try {
+        // Fetch quest to check for inputs
+        const quest = await db.customBar.findUnique({ where: { id: questId } })
+        if (!quest) return false
+
+        let hasActualInputs = false
+        if (quest.inputs) {
+            try {
+                const parsedInputs = typeof quest.inputs === 'string' ? JSON.parse(quest.inputs) : quest.inputs
+                if (Array.isArray(parsedInputs) && parsedInputs.length > 0) {
+                    hasActualInputs = true
+                }
+            } catch (e) { }
+        }
+
+        // If the quest requires manual inputs, do NOT auto-complete it. Let the UI submit handle it.
+        if (hasActualInputs) return false
+
         // Check if quest is already completed
         const assignment = await db.playerQuest.findFirst({
             where: { playerId, questId, status: 'assigned' }
