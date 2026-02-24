@@ -1,0 +1,14 @@
+{
+    "id": "intro",
+    "text": "## The Wake-Up Call\n\nThe world is shifting. Do you feel it?\n\nThis is the beginning of the Wake-Up Campaign.",
+    "choices": [
+        {
+            "text": "I feel it.",
+            "targetId": "act1"
+        },
+        {
+            "text": "What are you talking about?",
+            "targetId": "act1"
+        }
+    ]
+}

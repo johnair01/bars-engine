@@ -1,0 +1,26 @@
+{
+    "title": "The Quick Mint",
+    "passages": [
+        {
+            "name": "Start",
+            "pid": "1",
+            "text": "Welcome to the Quick Mint validation. This is a one-step quest designed solely to test if the Vibeulon minting engine triggers correctly and if the quest transitions successfully to the Graveyard.",
+            "tags": [],
+            "links": [
+                {
+                    "text": "Confirm & Mint",
+                    "target": "END_MINT"
+                }
+            ]
+        },
+        {
+            "name": "END_MINT",
+            "pid": "2",
+            "text": "The validation is complete. If the ledger operates as designed, 1 Vibeulon has been minted to your global reserve.",
+            "tags": [],
+            "links": []
+        }
+    ],
+    "startPassagePid": "1",
+    "startPassageName": "Start"
+}

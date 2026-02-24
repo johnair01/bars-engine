@@ -1,0 +1,26 @@
+{
+    "title": "The Resurrection Loop",
+    "passages": [
+        {
+            "name": "Start",
+            "pid": "1",
+            "text": "Welcome to the Resurrection Loop. Complete this quest now, verify it lands in the Graveyard. Then, invoke the Resurrection Ritual to restore it back to the active market. If the loop holds, you should be able to run this again.",
+            "tags": [],
+            "links": [
+                {
+                    "text": "Complete Cycle",
+                    "target": "END_CYCLE"
+                }
+            ]
+        },
+        {
+            "name": "END_CYCLE",
+            "pid": "2",
+            "text": "Cycle complete. Await burial. Await resurrection.",
+            "tags": [],
+            "links": []
+        }
+    ],
+    "startPassagePid": "1",
+    "startPassageName": "Start"
+}

@@ -1,0 +1,61 @@
+{
+    "title": "The Labyrinth",
+    "passages": [
+        {
+            "name": "Start",
+            "pid": "1",
+            "text": "You stand at the beginning of the Labyrinth. This structure is intended to test bidirectional passage navigation (the `revertRun` server action). Please traverse deeply, turn back, and try alternate paths.",
+            "tags": [],
+            "links": [
+                {
+                    "text": "Enter the Left Corridor",
+                    "target": "Left Corridor"
+                },
+                {
+                    "text": "Enter the Right Corridor",
+                    "target": "Right Corridor"
+                }
+            ]
+        },
+        {
+            "name": "Left Corridor",
+            "pid": "2",
+            "text": "The corridor is dark. You hear a sound ahead.",
+            "tags": [],
+            "links": [
+                {
+                    "text": "Investigate the sound",
+                    "target": "END_LEFT"
+                }
+            ]
+        },
+        {
+            "name": "Right Corridor",
+            "pid": "3",
+            "text": "The corridor is well-lit. There is a door ahead.",
+            "tags": [],
+            "links": [
+                {
+                    "text": "Open the door",
+                    "target": "END_RIGHT"
+                }
+            ]
+        },
+        {
+            "name": "END_LEFT",
+            "pid": "4",
+            "text": "You discovered the source of the sound. The labyrinth test is concluded.",
+            "tags": [],
+            "links": []
+        },
+        {
+            "name": "END_RIGHT",
+            "pid": "5",
+            "text": "You opened the door and found an exit. The labyrinth test is concluded.",
+            "tags": [],
+            "links": []
+        }
+    ],
+    "startPassagePid": "1",
+    "startPassageName": "Start"
+}

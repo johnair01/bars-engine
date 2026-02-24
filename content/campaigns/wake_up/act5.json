@@ -1,0 +1,10 @@
+{
+    "id": "act5",
+    "text": "## Act 5: The Oath\n\nYou've seen the fracture. You've made your choice. Are you ready to step into the Conclave?\n\nThis is where the story truly begins. Create your resonance signature to enter.",
+    "choices": [
+        {
+            "text": "I am ready.",
+            "targetId": "signup"
+        }
+    ]
+}

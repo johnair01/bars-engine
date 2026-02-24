@@ -1,0 +1,14 @@
+{
+    "id": "act1",
+    "text": "## Act 1: Fracture\n\nThings can't go on as they have. You need to make a choice about your path.",
+    "choices": [
+        {
+            "text": "I will build something new.",
+            "targetId": "act5"
+        },
+        {
+            "text": "I will protect what is good.",
+            "targetId": "act5"
+        }
+    ]
+}
