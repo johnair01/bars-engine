@@ -17,6 +17,7 @@ interface CampaignNode {
 
 interface CampaignReaderProps {
     initialNode: CampaignNode
+    adventureSlug?: string
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -138,7 +139,7 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode }: CampaignReaderProps) {
+export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [campaignState, setCampaignState] = useState<Record<string, any>>({
@@ -171,8 +172,14 @@ export function CampaignReader({ initialNode }: CampaignReaderProps) {
     const fetchNode = async (nodeId: string) => {
         setLoading(true)
         try {
-            // In a real app we fetch from API. For now, hitting our static content files
-            const res = await fetch(`/api/campaigns/wake_up/${nodeId}`)
+            // Try fetching from the DB first using the new dynamic route
+            let res = await fetch(`/api/adventures/${adventureSlug}/${nodeId}`)
+
+            // Fallback to static JSON if DB route 404s (for backwards compatibility while migrating)
+            if (!res.ok) {
+                res = await fetch(`/api/campaigns/${adventureSlug}/${nodeId}`)
+            }
+
             if (res.ok) {
                 const node = await res.json()
 

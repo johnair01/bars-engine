@@ -67,6 +67,7 @@ model Player {
   vibulons               Vibulon[]
   vibeulonLedger         VibeulonLedger[]
   participations         InstanceParticipation[]
+  adventureProgress      PlayerAdventureProgress[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -716,3 +717,52 @@ model InstanceParticipation {
   @@unique([playerId, instanceId])
   @@map("instance_participation")
 }
+
+model Adventure {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  title        String
+  description  String?
+  status       String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
+  visibility   String    @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
+  startNodeId  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  passages     Passage[]
+  progress     PlayerAdventureProgress[]
+
+  @@map("adventures")
+}
+
+model Passage {
+  id          String    @id @default(cuid())
+  adventureId String
+  nodeId      String
+  text        String    // Markdown + macros
+  choices     String    @default("[]") // JSON array
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  adventure   Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+
+  @@unique([adventureId, nodeId])
+  @@map("passages")
+}
+
+model PlayerAdventureProgress {
+  id            String    @id @default(cuid())
+  playerId      String
+  adventureId   String
+  currentNodeId String?
+  stateData     String    @default("{}") // JSON map of resolved state
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  adventure     Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, adventureId])
+  @@map("player_adventure_progress")
+}
+

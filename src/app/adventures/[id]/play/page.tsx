@@ -45,9 +45,10 @@ export default async function TwinePlayPage({
         })
     }
     const rawParsed = JSON.parse(story.parsedJson)
-    const parseResult = ParsedTwineSchema.safeParse(rawParsed)
-
-    if (!parseResult.success) {
+    let parsed
+    try {
+        parsed = normalizeTwineStory(rawParsed)
+    } catch (e: any) {
         return (
             <div className="min-h-screen bg-black text-zinc-200 p-8 flex items-center justify-center">
                 <div className="text-center space-y-4 max-w-md border border-red-900/50 bg-red-950/20 p-8 rounded-2xl">
@@ -58,8 +59,6 @@ export default async function TwinePlayPage({
             </div>
         )
     }
-
-    const parsed = parseResult.data
     const currentPassage = parsed.passages.find(
         p => p.name === run.currentPassageId || p.pid === run.currentPassageId
     )
