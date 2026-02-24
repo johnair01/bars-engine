@@ -358,6 +358,52 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
 }
 
 // ---------------------------------------------------------------------------
+// PLAYER: Revert to previous passage (Back button)
+// ---------------------------------------------------------------------------
+
+export async function revertRun(storyId: string, questId?: string | null, playerIdOverride?: string) {
+    const playerId = playerIdOverride || await requirePlayer()
+
+    const run = await db.twineRun.findFirst({
+        where: {
+            storyId,
+            playerId,
+            questId: questId || null,
+        }
+    })
+
+    if (!run) return { error: 'No active run' }
+
+    const visited = JSON.parse(run.visited) as string[]
+    if (visited.length <= 1) return { error: 'At the beginning of the story' }
+
+    // Remove current passage
+    visited.pop()
+    const prevPassageName = visited[visited.length - 1]
+
+    await db.twineRun.update({
+        where: { id: run.id },
+        data: {
+            currentPassageId: prevPassageName,
+            visited: JSON.stringify(visited),
+            completedAt: null, // Allow un-finishing if traversing back
+        }
+    })
+
+    // If it's a quest-scoped run, we might need to "un-complete" the quest
+    // But this is risky for rewards. For now, we only un-complete the TwineRun.
+    // If the quest is already marked complete in PlayerQuest, the UI might still show 'Completed'
+    // but the Twine traversal will be unlocked.
+
+    try {
+        revalidatePath(`/adventures/${storyId}/play`)
+        revalidatePath('/')
+    } catch (e) { }
+
+    return { success: true, currentPassageId: prevPassageName }
+}
+
+// ---------------------------------------------------------------------------
 // INTERNAL: Auto-complete quest when player reaches an END_ passage
 // ---------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { advanceRun } from '@/actions/twine'
+import { advanceRun, revertRun } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 import type { ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from '@/components/onboarding/OnboardingRecommendation'
@@ -210,44 +210,45 @@ export function PassageRenderer({
                                 {!isSuccess && (
                                     <>
                                         <p className="text-zinc-500 italic">End of story.</p>
-                                        <button
-                                            onClick={handleEnd}
-                                            disabled={isPending}
-                                            className="inline-block px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition shadow-lg shadow-purple-900/40 font-bold uppercase tracking-widest text-sm disabled:opacity-50 min-w-[200px]"
-                                        >
-                                            <div className="flex items-center justify-center gap-2">
-                                                {isPending ? (
-                                                    <>
-                                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                        <span>Saving...</span>
-                                                    </>
-                                                ) : (
-                                                    <span>{questId ? 'Continue Journey' : 'Finish Story'}</span>
-                                                )}
-                                            </div>
-                                        </button>
+                                        <div className="flex flex-col items-center gap-4">
+                                            <button
+                                                onClick={handleEnd}
+                                                disabled={isPending}
+                                                className="inline-block px-8 py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition shadow-lg shadow-purple-900/40 font-bold uppercase tracking-widest text-sm disabled:opacity-50 min-w-[200px]"
+                                            >
+                                                <div className="flex items-center justify-center gap-2">
+                                                    {isPending ? (
+                                                        <>
+                                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            <span>Saving...</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>{questId ? 'Continue Journey' : 'Finish Story'}</span>
+                                                    )}
+                                                </div>
+                                            </button>
+
+                                            <button
+                                                onClick={handleBack}
+                                                disabled={isPending}
+                                                className="text-xs text-zinc-500 hover:text-white underline underline-offset-4"
+                                            >
+                                                ← Back to Previous Step
+                                            </button>
+                                        </div>
                                     </>
                                 )}
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {passage.links.map((link, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handleChoice(link.target)}
-                                    disabled={isPending}
-                                    className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
-                                >
-                                    <span className="text-white group-hover:text-purple-400 transition-colors">
-                                        {link.label}
-                                    </span>
-                                </button>
-                            ))}
+                        <div className="space-y-4">
+                            ← Back to Previous Step
+                        </button>
                         </div>
                     )}
-                </>
-            )}
-        </div>
+        </>
+    )
+}
+        </div >
     )
 }
