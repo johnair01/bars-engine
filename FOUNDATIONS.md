@@ -80,6 +80,19 @@ BARs can accumulate “weight” as they become more structurally mature and art
 
 Acceleration is emergent. The system records and rewards real work; it does not fabricate social physics.
 
+## Contextual Inspiration: Attunement and Transmutation
+Inspiration belongs to the player, not to a single character or instance. BARs are portable kernels and can be carried across worlds freely.
+
+Vibeulons operate in two layers:
+- A global inspiration reserve (persistent, player-owned)
+- Local instance liquidity (bounded, context-specific leverage)
+
+Players may **attune** global inspiration into a specific instance to gain local leverage. This is voluntary and recorded.
+
+Local liquidity is intentionally scarce. It creates meaningful choices and prevents economic flattening across worlds.
+
+Local liquidity does not automatically return to the global reserve. Cross-context carry is possible only through a rare, recorded governance move (transmutation), where a circle ratifies that local value should matter beyond its originating world.
+
 ## What This Project Is
 BARs Engine is an ecology:
 - kernels (BARs)

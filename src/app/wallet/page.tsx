@@ -35,12 +35,16 @@ export default async function WalletPage() {
 
     // Fetch transfer history (sent and received)
     const transferEvents = await db.vibulonEvent.findMany({
-        where: {
-            playerId: playerId,
-            source: 'p2p_transfer',
-        },
+        where: { playerId: playerId, source: 'p2p_transfer' },
         orderBy: { createdAt: 'desc' },
         take: 20
+    })
+
+    // Fetch local instance participations
+    const participations = await db.instanceParticipation.findMany({
+        where: { playerId },
+        include: { instance: true },
+        orderBy: { updatedAt: 'desc' }
     })
 
     return (
@@ -57,6 +61,21 @@ export default async function WalletPage() {
                     <div className="text-4xl font-mono text-green-400">{total} ♦</div>
                 </div>
             </div>
+
+            {/* Local Balances */}
+            {participations.length > 0 && (
+                <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {participations.map((p: any) => (
+                        <div key={p.id} className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 flex justify-between items-center group hover:border-purple-500/50 transition-all">
+                            <div>
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Local Liquidity</div>
+                                <div className="text-white font-bold">{p.instance.name}</div>
+                            </div>
+                            <div className="text-2xl font-mono text-purple-400">{p.localBalance} ♦</div>
+                        </div>
+                    ))}
+                </section>
+            )}
 
             {/* Transfer Section */}
             <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">

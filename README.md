@@ -69,3 +69,20 @@ We have several utility scripts to help manage the game state.
 
 ## 📚 Documentation
 - [RUNBOOK.md](./RUNBOOK.md) - Detailed deployment and operations guide.
+
+---
+
+## 🌀 Spec Kit Integration (SDD)
+
+The repository is equipped with **GitHub Spec Kit** for Spec-Driven Development. To ensure no system-wide dependencies are modified, it is installed in a local virtual environment.
+
+### Local Invocation
+Use the local wrapper to run `specify` commands:
+```bash
+./tools/venv/bin/specify <command>
+```
+
+**Common Commands:**
+- `./tools/venv/bin/specify init --here` - Re-initialize or update Spec Kit
+- `./tools/venv/bin/specify check` - Verify local tool integrity
+- `./tools/venv/bin/specify version` - Check version information

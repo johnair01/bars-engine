@@ -65,6 +65,8 @@ model Player {
   twineStoriesCreated    TwineStory[]               @relation("TwineStoriesCreated")
   vibulonEvents          VibulonEvent[]
   vibulons               Vibulon[]
+  vibeulonLedger         VibeulonLedger[]
+  participations         InstanceParticipation[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -139,6 +141,7 @@ model CustomBar {
   hexagramId           Int?
   periodGenerated      Int?
   firstCompleterId     String?
+  maxAssignments       Int            @default(1)
   createdAt            DateTime       @default(now())
   parentId             String?
   twineLogic           String?
@@ -609,6 +612,7 @@ model Instance {
   activeInConfigs    AppConfig[]
   donations          Donation[]
   memberships        InstanceMembership[]
+  participations     InstanceParticipation[]
 
   @@map("instances")
 }
@@ -683,4 +687,32 @@ model MicroTwineModule {
   quest            CustomBar    @relation(fields: [questId], references: [id], onDelete: Cascade)
 
   @@map("micro_twine_modules")
+}
+
+model VibeulonLedger {
+  id               String   @id @default(cuid())
+  playerId         String
+  sourceInstanceId String?
+  targetInstanceId String?
+  amount           Int
+  type             String   // MINT, ATTUNE, SPEND, TRANSMUTE
+  metadata         String?  // JSON
+  createdAt        DateTime @default(now())
+  player           Player   @relation(fields: [playerId], references: [id])
+
+  @@map("vibeulon_ledger")
+}
+
+model InstanceParticipation {
+  id           String   @id @default(cuid())
+  playerId     String
+  instanceId   String
+  localBalance Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  player       Player   @relation(fields: [playerId], references: [id])
+  instance     Instance @relation(fields: [instanceId], references: [id])
+
+  @@unique([playerId, instanceId])
+  @@map("instance_participation")
 }

@@ -203,7 +203,12 @@ function QuestCard({ bar, onSelect, isPending }: { bar: any, onSelect: () => voi
             <div className="p-5 space-y-4 flex-1">
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-white text-lg">{bar.title}</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-white text-lg">{bar.title}</h3>
+                            {bar.isSystem && (
+                                <span className="text-[8px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.5 rounded font-mono uppercase tracking-tighter">System</span>
+                            )}
+                        </div>
                         <span className="text-xs font-mono text-yellow-500 bg-yellow-900/20 px-2 py-1 rounded">
                             {bar.reward}ⓥ
                         </span>

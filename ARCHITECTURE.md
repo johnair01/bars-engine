@@ -124,6 +124,30 @@ Prefer:
 - event logs
 - observable signals (artifact density, ratifications, forks, contributors)
 
+## Economy and Translation (Attunement)
+Vibeulons are modeled as:
+- Global balance (player-level reserve)
+- Local balance (per instance participation)
+
+Mechanics:
+- Attunement allocates from global → local.
+- Spending happens locally within an instance.
+- Transmutation is a governance-sanctioned conversion of local value into another context (global or another instance).
+
+Recommended primitives:
+- `InstanceParticipation(playerId, instanceId, localBalance, caps...)`
+- `VibeulonLedger(playerId, sourceInstanceId?, targetInstanceId?, amount, type, createdAt, metadata)`
+
+Ledger event types:
+- MINT (global reserve increases)
+- ATTUNE (global decreases, local increases)
+- SPEND (local decreases)
+- TRANSMUTE (local decreases; global or target-local increases; requires ratification)
+
+Operational constraint (first 30 days):
+- Default conversion rate is 1:1.
+- No automatic reverse attunement; transmutation requires governance ratification and is logged.
+
 ## Event Log Orientation
 For durability and auditability, prefer append-only events:
 - SpecPhaseAdvanced

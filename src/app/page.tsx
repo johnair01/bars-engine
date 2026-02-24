@@ -17,6 +17,7 @@ import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
+import { AttuneButton } from '@/components/AttuneButton'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string }> }) {
   const cookieStore = await cookies()
@@ -471,6 +472,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   Sponsor
                 </a>
               )}
+              <AttuneButton instanceId={activeInstance.id} maxAmount={vibulons} />
             </div>
           </div>
 
