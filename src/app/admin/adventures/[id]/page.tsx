@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
+import { StartNodeForm } from "./StartNodeForm"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -60,9 +61,11 @@ export default async function AdventureDetailPage({
                             </div>
                             <div>
                                 <div className="text-zinc-500 mb-1">Start Node</div>
-                                <div className="font-medium text-zinc-300">
-                                    {adventure.startNodeId || <span className="text-red-400">Not Set</span>}
-                                </div>
+                                <StartNodeForm
+                                    adventureId={adventure.id}
+                                    passages={adventure.passages}
+                                    currentStartNodeId={adventure.startNodeId}
+                                />
                             </div>
                             {adventure.description && (
                                 <div>

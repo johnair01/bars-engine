@@ -32,6 +32,9 @@
     "smoke": "tsx scripts/preflight-env.ts",
     "seed:party": "tsx scripts/seed_party_bb_bday_001.ts",
     "seed:onboarding": "tsx scripts/seed-onboarding-thread.ts",
+    "seed:cert:cyoa": "tsx scripts/seed-cyoa-certification-quests.ts",
+    "seed:wake-up": "tsx scripts/seed-wake-up-adventure.ts",
+    "env:pull": "vercel env pull .env.local",
     "postinstall": "prisma generate"
   },
   "dependencies": {

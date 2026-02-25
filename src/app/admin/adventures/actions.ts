@@ -57,3 +57,15 @@ export async function createAdventure(prevState: any, formData: FormData) {
     revalidatePath('/admin/adventures')
     redirect(`/admin/adventures/${adventure.id}`)
 }
+
+export async function updateAdventureStartNode(formData: FormData) {
+    const adventureId = formData.get('adventureId') as string
+    const raw = formData.get('startNodeId') as string
+    const startNodeId = raw?.trim() || null
+    if (!adventureId) return
+    await db.adventure.update({
+        where: { id: adventureId },
+        data: { startNodeId }
+    })
+    revalidatePath(`/admin/adventures/${adventureId}`)
+}

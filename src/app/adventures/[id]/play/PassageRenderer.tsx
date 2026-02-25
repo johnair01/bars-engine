@@ -1,11 +1,13 @@
 'use client'
 
 import { useTransition, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { advanceRun, revertRun } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 import type { ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from '@/components/onboarding/OnboardingRecommendation'
 import { QuestInputs } from '@/components/QuestInputs'
+import { logCertificationFeedback } from '@/actions/certification-feedback'
 
 interface Props {
     storyId: string
@@ -37,7 +39,12 @@ export function PassageRenderer({
     const [inputValues, setInputValues] = useState<Record<string, any>>({})
     const [isSuccess, setIsSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [feedbackText, setFeedbackText] = useState('')
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+    const [feedbackPending, setFeedbackPending] = useState(false)
     const router = useRouter()
+
+    const isFeedbackPassage = passage.name === 'FEEDBACK' || (passage.tags && passage.tags.includes('feedback'))
 
     // Parse inputs safely
     let parsedInputs: any[] = []
@@ -161,13 +168,92 @@ export function PassageRenderer({
 
     const recommendationPayload = recommendationBinding ? JSON.parse(recommendationBinding.payload) : null
 
+    async function handleFeedbackSubmit() {
+        if (!questId || !feedbackText.trim()) return
+        setError(null)
+        setFeedbackPending(true)
+        const result = await logCertificationFeedback(questId, passage.name, feedbackText.trim())
+        setFeedbackPending(false)
+        if (result.error) {
+            setError(result.error)
+        } else {
+            setFeedbackSubmitted(true)
+        }
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Passage name */}
             <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{passage.name}</div>
 
-            {/* Recommendation UI or Standard Passage */}
-            {recommendationBinding ? (
+            {/* Feedback passage (Report Issue branch) */}
+            {isFeedbackPassage && questId ? (
+                <div className="space-y-6">
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8">
+                        <ReactMarkdown
+                            components={{
+                                a: ({ href, children }) => (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                        {children}
+                                    </a>
+                                )
+                            }}
+                        >
+                            {passage.cleanText}
+                        </ReactMarkdown>
+                    </div>
+                    {feedbackSubmitted ? (
+                        <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+                            <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
+                                <p className="text-green-400 font-bold">Thank you. Your feedback has been logged.</p>
+                                <p className="text-zinc-400 text-sm mt-1">The team will triage this as a bug to fix.</p>
+                            </div>
+                            <button
+                                onClick={handleBack}
+                                disabled={isPending}
+                                className="w-full py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
+                            >
+                                ← Back to Previous Step
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="cert-feedback" className="block text-sm font-medium text-zinc-400 mb-2">
+                                    Describe what isn&apos;t working
+                                </label>
+                                <textarea
+                                    id="cert-feedback"
+                                    value={feedbackText}
+                                    onChange={(e) => setFeedbackText(e.target.value)}
+                                    placeholder="e.g. The homepage CTA didn't link to /campaign..."
+                                    rows={4}
+                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                                />
+                            </div>
+                            {error && (
+                                <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg">{error}</div>
+                            )}
+                            <div className="flex gap-3">
+                            <button
+                                onClick={handleFeedbackSubmit}
+                                disabled={feedbackPending || !feedbackText.trim()}
+                                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {feedbackPending ? 'Submitting...' : 'Submit Feedback'}
+                            </button>
+                            <button
+                                onClick={handleBack}
+                                disabled={feedbackPending}
+                                    className="py-3 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : recommendationBinding ? (
                 <OnboardingRecommendation
                     type={recommendationBinding.actionType === 'SET_NATION' ? 'nation' : 'archetype'}
                     recommendedId={recommendationPayload.nationId || recommendationPayload.playbookId}
@@ -183,10 +269,18 @@ export function PassageRenderer({
             ) : (
                 <>
                     {/* Passage content */}
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8">
-                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-lg">
+                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+                        <ReactMarkdown
+                            components={{
+                                a: ({ href, children }) => (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                        {children}
+                                    </a>
+                                )
+                            }}
+                        >
                             {passage.cleanText}
-                        </p>
+                        </ReactMarkdown>
                     </div>
 
                     {/* Emitted items notification (Filtered for polish) */}
