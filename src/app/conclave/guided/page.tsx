@@ -53,6 +53,16 @@ async function GuidedStoryLoader({ requestedStep }: { requestedStep?: string }) 
 
     if (!player) redirect('/login')
 
+    // Campaign users: skip guided and go straight to orientation quests
+    try {
+        const raw = player.storyProgress ? JSON.parse(player.storyProgress as string) : null
+        if (raw && typeof raw === 'object' && raw.campaignBypass === true) {
+            redirect('/conclave/onboarding')
+        }
+    } catch {
+        // ignore parse errors
+    }
+
     // Parse progress safe
     let progress: StoryProgress
     try {

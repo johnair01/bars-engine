@@ -86,9 +86,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         )}
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
+          <Link
+            href="/campaign"
+            className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
+          >
+            Begin the Journey
+          </Link>
+
           <a
             href="/conclave/guided"
-            className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Sign Up
           </a>
@@ -103,7 +110,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         </div>
 
         <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          New players can sign up directly. Existing players can sign in to continue their journey.
+          Begin the story to discover your path, or sign up directly. Existing players can log in to continue.
         </div>
       </div>
     )

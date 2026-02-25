@@ -18,7 +18,7 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
 
     useEffect(() => {
         if (state?.success) {
-            router.push('/conclave/guided')
+            router.push('/conclave/onboarding')
             router.refresh()
         }
         if (state?.error) {

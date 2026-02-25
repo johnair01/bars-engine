@@ -104,6 +104,38 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
         const { assignOrientationThreads } = await import('@/actions/quest-thread')
         await assignOrientationThreads(player.id)
 
+        // Apply campaign state: prefill nation/playbook when the campaign collected them
+        const state = campaignState as Record<string, unknown>
+        let nationId: string | null = null
+        let playbookId: string | null = null
+        if (state?.nationId && typeof state.nationId === 'string') {
+            const exists = await db.nation.findUnique({ where: { id: state.nationId }, select: { id: true } })
+            if (exists) nationId = state.nationId
+        }
+        if (!nationId && state?.nation && typeof state.nation === 'string') {
+            const byName = await db.nation.findFirst({ where: { name: { equals: state.nation, mode: 'insensitive' } }, select: { id: true } })
+            if (byName) nationId = byName.id
+        }
+        if (state?.playbookId && typeof state.playbookId === 'string') {
+            const exists = await db.playbook.findUnique({ where: { id: state.playbookId }, select: { id: true } })
+            if (exists) playbookId = state.playbookId
+        }
+        if (!playbookId && state?.playbook && typeof state.playbook === 'string') {
+            const byName = await db.playbook.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
+            if (byName) playbookId = byName.id
+        }
+        if (nationId !== null || playbookId !== null) {
+            await db.player.update({
+                where: { id: player.id },
+                data: {
+                    ...(nationId !== null && { nationId }),
+                    ...(playbookId !== null && { playbookId })
+                }
+            })
+            const { assignGatedThreads } = await import('@/actions/onboarding')
+            await assignGatedThreads(player.id)
+        }
+
         // Seed Vibeulons (Give 5 instead of 3 for Campaign heroes as a reward for completing Act 5)
         const seedAmount = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10) + 2
 
@@ -114,9 +146,6 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             title: 'Wake-Up Campaign Bonus'
         }, { skipRevalidate: true })
         console.log(`[MVP] Seeded ${seedAmount} vibeulons for campaign player ${player.id}`)
-
-        // TODO: In the future, parse specific answers from campaignState to unlock special threads
-        // e.g. if campaignState["act1"] === "I will build something new", assign Thread Z.
 
         const cookieStore = await cookies()
         cookieStore.set('bars_player_id', player.id, {
