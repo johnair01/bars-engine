@@ -2,6 +2,24 @@
 
 This document maps BARs Engine’s ontology to implementable mechanics and schema patterns.
 
+## Conceptual Model
+
+The five dimensions (WHO, WHAT, WHERE, Energy, Personal throughput) map to schema as follows:
+
+| Dimension | Schema / Models |
+|-----------|-----------------|
+| **WHO** | `Nation`, `Playbook`, `allowedNations`, `allowedTrigrams` |
+| **WHAT** | `CustomBar` (quests) |
+| **WHERE** | `allyshipDomain`, `campaignDomainPreference` |
+| **Energy** | `Vibulon`, `InstanceParticipation.localBalance` |
+| **Personal throughput** | `moveType`, Playbook/Nation `wakeUp`/`cleanUp`/`growUp`/`showUp` |
+
+**Allyship domains** (WHERE): `GATHERING_RESOURCES`, `DIRECT_ACTION`, `RAISE_AWARENESS`, `SKILLFUL_ORGANIZING`. Quests can have `allyshipDomain`; players can filter by `campaignDomainPreference`.
+
+**4 moves** (personal throughput): Wake Up = see more, Clean Up = emotional energy/unblocking, Grow Up = skill capacity, Show Up = completing quests. Distinct from the 8 archetype moves (Kotter stages).
+
+**Domain × Kotter**: The same 8 Kotter stages manifest differently per allyship domain. See [.agent/context/kotter-by-domain.md](.agent/context/kotter-by-domain.md).
+
 ## Core Objects
 
 ### BAR (Kernel)

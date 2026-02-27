@@ -16,6 +16,7 @@ import { TwineQuestModal } from './TwineQuestModal'
 import { QuestTwineIframe } from './QuestTwineIframe'
 import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
+import { getIntentionOptionsForPreference } from '@/lib/intention-options'
 import Link from 'next/link'
 import { applyNationMoveWithState, getNationMovePanelData, moveQuestToGraveyard, type NationMovePanelData, type ApplyNationMoveState } from '@/actions/nation-moves'
 
@@ -45,6 +46,7 @@ interface QuestDetailModalProps {
     isCompleted?: boolean
     isLocked?: boolean
     completedMoveTypes?: string[] // Optional: types already achieved by player
+    campaignDomainPreference?: string[] // For domain-aligned intention options
 }
 
 function parseQuestInputs(inputs?: string): BarInput[] {
@@ -66,12 +68,12 @@ function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
     }
 }
 
-export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes }: QuestDetailModalProps) {
+export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [] }: QuestDetailModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [responses, setResponses] = useState<Record<string, any>>({})
-    const [intentionMode, setIntentionMode] = useState<'direct' | 'guided'>('direct')
+    const [intentionMode, setIntentionMode] = useState<'direct' | 'guided' | 'options'>('direct')
 
     // Nation moves / graveyard state
     const [movePanel, setMovePanel] = useState<NationMovePanelData | null>(null)
@@ -343,11 +345,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </div>
                     )}
 
-                    {/* Intention Quest: Direct vs Guided Path */}
+                    {/* Intention Quest: Direct vs Guided vs Options Path */}
                     {isIntentionQuest && !isCompleted && !isLocked && (
                         <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
                             <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Choose your path</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setIntentionMode('direct')}
@@ -356,8 +358,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
                                         }`}
                                 >
-                                    <div className="font-semibold">Write intention directly</div>
-                                    <div className="text-xs text-zinc-500 mt-1">I already know what I want to commit to.</div>
+                                    <div className="font-semibold">Write directly</div>
+                                    <div className="text-xs text-zinc-500 mt-1">I already know what I want.</div>
                                 </button>
                                 <button
                                     type="button"
@@ -367,9 +369,43 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
                                         }`}
                                 >
-                                    <div className="font-semibold">Need help figuring it out?</div>
-                                    <div className="text-xs text-zinc-500 mt-1">Use a guided journey to discover an intention.</div>
+                                    <div className="font-semibold">Guided journey</div>
+                                    <div className="text-xs text-zinc-500 mt-1">Help me discover an intention.</div>
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIntentionMode('options')}
+                                    className={`rounded-lg border px-3 py-2 text-left text-sm transition ${intentionMode === 'options'
+                                        ? 'border-teal-500 bg-teal-900/20 text-teal-100'
+                                        : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    <div className="font-semibold">Choose from options</div>
+                                    <div className="text-xs text-zinc-500 mt-1">Pick a predefined intention.</div>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Intention Quest: Options grid (when options mode) */}
+                    {isIntentionQuest && intentionMode === 'options' && !isCompleted && !isLocked && (
+                        <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+                            <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Select your intention</p>
+                            <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
+                                {getIntentionOptionsForPreference(campaignDomainPreference).map((opt) => (
+                                    <button
+                                        key={opt.text}
+                                        type="button"
+                                        onClick={() => setResponses((prev) => ({ ...prev, intention: opt.text }))}
+                                        className={`rounded-lg border px-3 py-2.5 text-left text-sm transition ${
+                                            responses.intention === opt.text
+                                                ? 'border-teal-500 bg-teal-900/30 text-teal-100'
+                                                : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700'
+                                        }`}
+                                    >
+                                        {opt.text}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -627,7 +663,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Input (if not completed and not locked) */}
-                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !shouldRenderTwine && (
+                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !shouldRenderTwine && !(isIntentionQuest && intentionMode === 'options') && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
                             {effectiveInputs.some(input => input.trigger === 'ICHING_CAST') || quest.id === 'orientation-quest-3' ? (

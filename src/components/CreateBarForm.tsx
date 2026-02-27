@@ -3,6 +3,7 @@
 import { useState, useEffect, useActionState } from 'react'
 import { createCustomBar, getActivePlayers, getLinkableQuests, getGatingOptions } from '@/actions/create-bar'
 import { useRouter } from 'next/navigation'
+import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 
 type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
@@ -19,6 +20,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [applyFirstAidLens, setApplyFirstAidLens] = useState(false)
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
+    const [allyshipDomain, setAllyshipDomain] = useState<string | null>(null)
     const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
     const [state, formAction, isPending] = useActionState<any, FormData>(createCustomBar, null)
 
@@ -255,6 +257,28 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         ))}
                     </div>
                     <input type="hidden" name="moveType" value={moveType || ''} />
+                </div>
+
+                {/* Allyship Domain (WHERE) */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Optional)</label>
+                    <p className="text-xs text-zinc-600">WHERE the work happens. Distinct from moves (how you get it done).</p>
+                    <div className="flex flex-wrap gap-2">
+                        {ALLYSHIP_DOMAINS.map((d) => (
+                            <button
+                                key={d.key}
+                                type="button"
+                                onClick={() => setAllyshipDomain(allyshipDomain === d.key ? null : d.key)}
+                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                    ? 'bg-teal-900/40 border-teal-600 text-teal-300'
+                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                    }`}
+                            >
+                                {d.label}
+                            </button>
+                        ))}
+                    </div>
+                    <input type="hidden" name="allyshipDomain" value={allyshipDomain || ''} />
                 </div>
 
                 {/* Nation & Trigram Gating */}

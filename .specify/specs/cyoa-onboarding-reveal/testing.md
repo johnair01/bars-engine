@@ -64,7 +64,25 @@ You should see output like: `Thread: "Welcome to the Conclave"`, four quests (We
 
 ---
 
-## 3. Agent prompt: create quests in app and test
+## 3. Certification quest verification
+
+A certification quest runs through the same flow as the manual test and rewards vibeulons on completion.
+
+1. **Seed the certification quest**
+   ```bash
+   npm run seed:cert:cyoa
+   ```
+   You should see: `Story seeded: Certification: CYOA Onboarding V1`, `Quest seeded: ...`, `CYOA Certification Quests seeded.`
+
+2. **Open Adventures** (e.g. http://localhost:3000/adventures), find the quest **"Certification: CYOA Onboarding V1"** with the **Certification** badge.
+
+3. **Play through** the Twine story: follow each step (landing CTA â†’ campaign â†’ sign-up redirect â†’ first quest visible), then reach the final passage and complete the quest.
+
+4. **Confirm** you receive the vibeulon reward and that each step in the story matches the feature (landing, campaign, sign-up redirect, first quest).
+
+---
+
+## 4. Agent prompt: create quests in app and test
 
 Copy the block below into your agent (e.g. Antigravity) so it can create quests on the local server and verify the features.
 
@@ -99,7 +117,7 @@ The bars-engine app has recently shipped: (1) landing CTA "Begin the Journey" â†
 
 ---
 
-## 4. Quick reference
+## 5. Quick reference
 
 | What | Where |
 |------|--------|
@@ -108,3 +126,4 @@ The bars-engine app has recently shipped: (1) landing CTA "Begin the Journey" â†
 | Admin Journeys (threads) | http://localhost:3000/admin/journeys |
 | Admin thread edit | http://localhost:3000/admin/journeys/thread/[id] |
 | Seed onboarding | `npm run seed:onboarding` or `npx tsx scripts/seed-onboarding-thread.ts` |
+| Seed CYOA cert quest | `npm run seed:cert:cyoa` |

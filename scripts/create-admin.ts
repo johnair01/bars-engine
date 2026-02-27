@@ -1,3 +1,4 @@
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { hashPassword } from '../src/lib/auth-utils'
 

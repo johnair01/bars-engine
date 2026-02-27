@@ -1,12 +1,20 @@
 /**
  * Conclave Preflight Check
- * 
+ *
  * Validates essential environment variables and database connectivity.
- * Run with: npx tsx scripts/preflight-env.ts
+ * Loads .env.local then .env (same precedence as Next.js) so you can run
+ * this after `npm run env:pull` or with a local .env to confirm DB access.
+ *
+ * Run with: npm run smoke   or   npx tsx scripts/preflight-env.ts
  */
 
+import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
 import process from 'process'
+
+// Load .env.local first, then .env (Next.js order)
+config({ path: '.env.local' })
+config({ path: '.env' })
 
 async function checkEnv() {
     console.log('🔍 Running Conclave Preflight Checks...')

@@ -10,7 +10,7 @@ Follow these steps to get the engine running locally.
 
 ### 1. Prerequisites
 - Node.js (v18+)
-- SQLite (for local development)
+- PostgreSQL (for local development; connection string in `.env` as `DATABASE_URL`)
 
 ### 2. Installation
 
@@ -27,10 +27,14 @@ npm run db:seed
 ```
 
 ### 3. Environment Variables
-Create a `.env` file in the root directory if it doesn't exist:
+The app requires **PostgreSQL** and a `DATABASE_URL`. For the canonical setup (including getting `DATABASE_URL` from Vercel), see [docs/ENV_AND_VERCEL.md](docs/ENV_AND_VERCEL.md).
 
-```env
-DATABASE_URL="file:./dev.db"
+**Fallback** (if you don’t have Vercel project access): copy the example and set your database URL:
+
+```bash
+cp .env.example .env
+# Edit .env and set DATABASE_URL to your Postgres connection string, e.g.:
+# DATABASE_URL="postgresql://user:password@localhost:5432/bars_engine"
 ```
 
 ### 4. Run Development Server
@@ -61,9 +65,10 @@ We have several utility scripts to help manage the game state.
 - **Database**: PostgreSQL (Production) / SQLite (Dev), managed via Prisma ORM.
 - **Styling**: Tailwind CSS.
 - **Key Concepts**:
+  - **Five dimensions**: WHO (Nation, Archetype), WHAT (Quests), WHERE (Allyship domains), Energy (Vibeulons), Personal throughput (4 moves: Wake Up, Clean Up, Grow Up, Show Up). See [FOUNDATIONS.md](./FOUNDATIONS.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
   - **Player**: The central entity.
   - **Bar**: A unit of narrative/quest content. Can be system-generated or user-created (`CustomBar`).
-  - **Vibeulon**: The currency of the realm.
+  - **Vibeulon**: The currency of the realm (Energy).
   - **Archetypes**: `Nation` and `Playbook` determine character moves and story progression.
   - **Story Clock**: A global state tracker for the narrative phase.
 

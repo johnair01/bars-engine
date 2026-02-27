@@ -3,6 +3,8 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
+import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
+import { getActiveInstance } from '@/actions/instance'
 
 // ===================================
 // TOWN SQUARE (MARKET) ACTIONS
@@ -19,8 +21,9 @@ export async function getMarketContent() {
     }) : null
     const isAdmin = !!playerWithRoles?.roles.some(r => r.role.key === 'admin')
 
-    const [globalState, publicPacks, publicQuests, graveyardQuests] = await Promise.all([
+    const [globalState, activeInstance, publicPacks, publicQuests, graveyardQuests] = await Promise.all([
         db.globalState.findUnique({ where: { id: 'singleton' } }),
+        getActiveInstance(),
         // 1. Feature: Public Packs (Recycled Community Packs)
         db.questPack.findMany({
             where: {
@@ -90,7 +93,13 @@ export async function getMarketContent() {
         filteredQuests = publicQuests.filter(q => q.kotterStage === 1)
     }
 
-    // 2. Nation & Playbook Gating
+    // 2. Filter by active instance Kotter stage (when instance exists)
+    if (activeInstance) {
+        const instanceStage = activeInstance.kotterStage ?? 1
+        filteredQuests = filteredQuests.filter(q => q.kotterStage === instanceStage)
+    }
+
+    // 3. Nation & Playbook Gating
     if (player) {
         filteredQuests = filteredQuests.filter(q => {
             // Nation gating
@@ -121,6 +130,15 @@ export async function getMarketContent() {
                 }
             }
 
+            // Campaign domain preference (allyship domain filter)
+            const pref = playerWithRoles?.campaignDomainPreference
+                ? parseCampaignDomainPreference(playerWithRoles.campaignDomainPreference)
+                : []
+            if (pref.length > 0) {
+                if (!q.allyshipDomain) return false
+                if (!pref.includes(q.allyshipDomain)) return false
+            }
+
             return true
         })
     }
@@ -130,7 +148,10 @@ export async function getMarketContent() {
             isOwned: p.progress && p.progress.length > 0
         })),
         quests: filteredQuests,
-        graveyardQuests: graveyardQuests || []
+        graveyardQuests: graveyardQuests || [],
+        campaignDomainPreference: playerWithRoles?.campaignDomainPreference ?? null,
+        activeInstanceKotterStage: activeInstance?.kotterStage ?? null,
+        activeInstanceName: activeInstance?.name ?? null
     }
 }
 

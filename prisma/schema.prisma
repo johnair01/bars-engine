@@ -40,6 +40,7 @@ model Player {
   inviteId               String
   nationId               String?
   playbookId             String?
+  campaignDomainPreference String?   // JSON array: ["GATHERING_RESOURCES","DIRECT_ACTION"]; null or [] = show all
   pronouns               String?
   attendance             String?
   createdAt              DateTime                   @default(now())
@@ -149,6 +150,7 @@ model CustomBar {
   completionEffects    String?
   rootId               String?
   allowedNations       String?
+  allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
   twineStoryId         String?
   shares               BarShare[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
@@ -603,6 +605,7 @@ model Instance {
   targetDescription  String?
   goalAmountCents    Int?
   currentAmountCents Int                  @default(0)
+  kotterStage        Int                  @default(1) // 1–8; admin advances
   isEventMode        Boolean              @default(false)
   stripeOneTimeUrl   String?
   patreonUrl         String?

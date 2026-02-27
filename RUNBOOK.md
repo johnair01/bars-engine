@@ -4,10 +4,11 @@
 **Status**: MVP Logic Implemented.
 
 ## 1. Prerequisites (Local & Vercel)
-Ensure you have the following Environment Variables set:
+Ensure you have the following Environment Variables set. Copy from `.env.example` and fill in:
+
 ```env
-DATABASE_URL="file:./dev.db"  # For Local
-# DATABASE_URL="..."          # For Vercel (Postgres Connection String)
+# Required: Postgres connection string (local or Vercel)
+DATABASE_URL="postgresql://user:password@localhost:5432/bars_engine"
 ```
 
 ## 2. Initialization Commands

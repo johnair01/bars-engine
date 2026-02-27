@@ -17,3 +17,4 @@
 
 - Spec: [.specify/specs/certification-quest-ux/spec.md](../../specs/certification-quest-ux/spec.md)
 - Action: [src/actions/certification-feedback.ts](../../../src/actions/certification-feedback.ts)
+- Feedback location & automation: [docs/CERTIFICATION_FEEDBACK.md](../../../docs/CERTIFICATION_FEEDBACK.md)

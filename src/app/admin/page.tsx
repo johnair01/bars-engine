@@ -45,6 +45,12 @@ export default async function AdminDashboard() {
                     icon="⚔️"
                 />
                 <DashboardCard
+                    title="Adventures"
+                    value="CYOA"
+                    href="/admin/adventures"
+                    icon="🗺️"
+                />
+                <DashboardCard
                     title="System Status"
                     value="Online"
                     color="text-green-400"

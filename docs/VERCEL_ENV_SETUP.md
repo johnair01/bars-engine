@@ -1,5 +1,10 @@
 # Vercel Environment Variable Setup
 
+## Database and all env vars
+For a single place that covers **DATABASE_URL**, **OPENAI_API_KEY**, and how to keep local env in sync with Vercel, see [ENV_AND_VERCEL.md](ENV_AND_VERCEL.md). The rest of this doc focuses on the OpenAI-specific flow.
+
+---
+
 ## Issue
 When trying to generate I Ching hexagrams on the deployed app, you get an error:
 ```

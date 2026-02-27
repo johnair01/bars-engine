@@ -1,4 +1,4 @@
-
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { completeQuestLogic } from '../src/actions/starter-quests'
 

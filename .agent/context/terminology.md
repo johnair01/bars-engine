@@ -23,6 +23,28 @@ description: Canonical spelling and terminology for the project
 
 ---
 
+## The 4 Moves (Personal Throughput)
+
+| Move | Meaning |
+|------|---------|
+| Wake Up | See more of what's available (who, what, where, how) |
+| Clean Up | Get more emotional energy; unblock vibeulon-generating actions |
+| Grow Up | Increase skill capacity through developmental lines |
+| Show Up | Do the work of completing quests |
+
+---
+
+## Allyship Domains (WHERE)
+
+| Key | Label |
+|-----|-------|
+| GATHERING_RESOURCES | Gathering Resources |
+| DIRECT_ACTION | Direct Action |
+| RAISE_AWARENESS | Raise Awareness |
+| SKILLFUL_ORGANIZING | Skillful Organizing |
+
+---
+
 ## The 8 Moves
 
 | Symbol | Name | Stage | Trigram |

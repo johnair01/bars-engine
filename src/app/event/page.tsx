@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
+import { hasClaimedSupportToken } from '@/actions/donate'
+import { KOTTER_STAGES } from '@/lib/kotter'
+import { ClaimSupportTokenButton } from './ClaimSupportTokenButton'
+import { InviteButton } from './InviteButton'
 
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
@@ -14,6 +18,7 @@ function formatUsdCents(cents: number) {
 export default async function EventPage() {
   const instance = await getActiveInstance()
   const player = await getCurrentPlayer()
+  const hasClaimed = player && instance ? await hasClaimedSupportToken(instance.id) : false
 
   if (!instance) {
     return (
@@ -46,8 +51,13 @@ export default async function EventPage() {
       <div className="max-w-3xl mx-auto space-y-10">
         <header className="space-y-3">
           <Link href="/" className="text-sm text-zinc-500 hover:text-white">← Back</Link>
-          <div className="text-xs uppercase tracking-widest text-zinc-500">
-            {instance.domainType}
+          <div className="flex flex-wrap gap-3 items-center">
+            <span className="text-xs uppercase tracking-widest text-zinc-500">
+              {instance.domainType}
+            </span>
+            <span className="text-xs text-teal-400">
+              Stage {instance.kotterStage ?? 1}: {KOTTER_STAGES[(instance.kotterStage ?? 1) as keyof typeof KOTTER_STAGES]?.name ?? 'Urgency'}
+            </span>
           </div>
           <h1 className="text-4xl font-bold text-white">{instance.name}</h1>
           {instance.theme && (
@@ -57,6 +67,25 @@ export default async function EventPage() {
             <p className="text-zinc-400">{instance.targetDescription}</p>
           )}
         </header>
+
+        <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
+          <h2 className="text-lg font-bold text-white">Wake Up: Learn the story</h2>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
+            Your awareness and participation help the collective thrive.
+          </p>
+          {(instance.theme || instance.targetDescription) && (
+            <details className="mt-3">
+              <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
+                Read more
+              </summary>
+              <div className="mt-3 space-y-2 text-zinc-400 text-sm">
+                {instance.theme && <p>{instance.theme}</p>}
+                {instance.targetDescription && <p>{instance.targetDescription}</p>}
+              </div>
+            </details>
+          )}
+        </section>
 
         {goal > 0 && instance.isEventMode && (
           <section className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 space-y-4">
@@ -104,21 +133,32 @@ export default async function EventPage() {
           </section>
         )}
 
+        {player && (
+          <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
+            <h2 className="text-lg font-bold text-white">Support the cause</h2>
+            <p className="text-zinc-400 text-sm">
+              Declare your support and receive 1 vibeulon (Energy) as a thank-you.
+            </p>
+            <ClaimSupportTokenButton instanceId={instance.id} hasClaimed={hasClaimed} />
+          </section>
+        )}
+
         <section className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Enter the engine</h2>
-          <p className="text-zinc-500">
-            This instance runs on the same core mechanics: quests, BARs, vibeulons, and story clock —
-            wrapped in a domain-specific event context.
+          <h2 className="text-lg font-bold text-white">Show Up: Contribute to the campaign</h2>
+          <p className="text-zinc-500 text-sm">
+            Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
+            This instance runs on quests, BARs, vibeulons, and story clock.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
+            <InviteButton />
             {player ? (
               <Link href="/" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold">
                 Go to Dashboard
               </Link>
             ) : (
               <>
-                <Link href="/conclave/guided" className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">
-                  Sign Up
+                <Link href="/conclave/guided?ref=bruised-banana" className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">
+                  Play the game — Sign Up
                 </Link>
                 <Link href="/login" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-bold">
                   Log In

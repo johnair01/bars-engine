@@ -22,6 +22,14 @@ Each I Ching reading produces a hexagram—two archetypes in relationship. This 
 
 ---
 
+## 4 Moves vs 8 Archetype Moves
+
+**4 moves (personal throughput)** — how players get things done: Wake Up (see more), Clean Up (emotional energy/unblocking), Grow Up (skill capacity), Show Up (completing quests). See [terminology.md](terminology.md).
+
+**8 archetype moves** (below) — Kotter stages, mapped to Enneagram × Trigram. Distinct from the 4 moves.
+
+---
+
 ## Archetype × Kotter × Trigram Matrix
 
 | Type | Archetype | Trigram | Symbol | Kotter Stage | Move |

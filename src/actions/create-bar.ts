@@ -40,6 +40,7 @@ export async function createCustomBar(prevState: any, formData: FormData) {
     const tags = parseTags((formData.get('tags') as string) || '')
     const allowedNations = formData.get('allowedNations') as string || null
     const allowedTrigrams = formData.get('allowedTrigrams') as string || null
+    const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
 
     if (!title) {
         return { error: 'Title is required' }
@@ -157,7 +158,8 @@ export async function createCustomBar(prevState: any, formData: FormData) {
                     completionEffects,
                     rootId: rootIdSeed,
                     allowedNations,
-                    allowedTrigrams
+                    allowedTrigrams,
+                    allyshipDomain
                 }
             })
 
@@ -274,7 +276,7 @@ export async function createQuestFromWizard(data: any) {
         const {
             title, description, category, visibility,
             reward, inputs, lifecycleFraming, approach, applyFirstAidLens,
-            allowedNations, allowedTrigrams
+            allowedNations, allowedTrigrams, allyshipDomain
         } = data
 
         const creator = await db.player.findUnique({
@@ -373,7 +375,8 @@ export async function createQuestFromWizard(data: any) {
                     storyContent: finalStoryContent,
                     completionEffects,
                     allowedNations: allowedNations ? JSON.stringify(allowedNations) : null,
-                    allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null
+                    allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null,
+                    allyshipDomain: allyshipDomain || null
                 }
             })
 

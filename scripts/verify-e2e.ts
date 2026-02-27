@@ -1,3 +1,4 @@
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { advanceRun, getOrCreateRun } from '../src/actions/twine'
 import { completeQuestForPlayer } from '../src/actions/quest-engine'

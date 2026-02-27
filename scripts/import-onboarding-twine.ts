@@ -1,3 +1,4 @@
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { parseTwineHtml } from '../src/lib/twine-parser'
 import * as fs from 'fs'

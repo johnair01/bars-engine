@@ -1,4 +1,4 @@
-
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { STARTER_BARS } from '../src/lib/bars'
 

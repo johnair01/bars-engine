@@ -32,3 +32,4 @@ Improve certification quest UX so testers can open referenced URLs in new tabs (
 - PassageRenderer: [src/app/adventures/[id]/play/PassageRenderer.tsx](../../src/app/adventures/[id]/play/PassageRenderer.tsx)
 - Admin feedback pattern: [src/actions/admin-feedback.ts](../../src/actions/admin-feedback.ts)
 - Certification quests seed: [scripts/seed-cyoa-certification-quests.ts](../../scripts/seed-cyoa-certification-quests.ts)
+- Feedback location & automation: [docs/CERTIFICATION_FEEDBACK.md](../../docs/CERTIFICATION_FEEDBACK.md)

@@ -142,6 +142,9 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const goalAmountCents = toCents(formData.get('goalAmount'))
     const currentAmountCents = toCents(formData.get('currentAmount'))
 
+    const kotterStageRaw = (formData.get('kotterStage') as string | null)?.trim()
+    const kotterStage = kotterStageRaw ? Math.min(8, Math.max(1, parseInt(kotterStageRaw, 10) || 1)) : 1
+
     if (!slug) throw new Error('Slug is required')
     if (!name) throw new Error('Name is required')
     if (!domainType) throw new Error('Domain type is required')
@@ -174,6 +177,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           patreonUrl,
           isEventMode,
           goalAmountCents,
+          kotterStage,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         },
         create: {
@@ -186,6 +190,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           patreonUrl,
           isEventMode,
           goalAmountCents,
+          kotterStage,
           currentAmountCents: currentAmountCents ?? 0,
         }
       })
@@ -204,6 +209,37 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     redirectWithMessage('/admin/instances', { error: errorMessage })
   } else if (successParams) {
     redirectWithMessage('/admin/instances', successParams)
+  }
+}
+
+export async function updateInstanceKotterStage(formData: FormData): Promise<void> {
+  let errorMessage: string | null = null
+
+  try {
+    await ensureAdmin()
+
+    const instanceId = (formData.get('instanceId') as string | null)?.trim() || null
+    const stageRaw = (formData.get('kotterStage') as string | null)?.trim()
+    const kotterStage = stageRaw ? Math.min(8, Math.max(1, parseInt(stageRaw, 10) || 1)) : 1
+
+    if (!instanceId) throw new Error('Instance ID is required')
+
+    await db.instance.update({
+      where: { id: instanceId },
+      data: { kotterStage }
+    })
+
+    revalidatePath('/admin/instances')
+    revalidatePath('/event')
+    revalidatePath('/')
+    redirectWithMessage('/admin/instances', { saved: '1' })
+  } catch (e) {
+    console.error('[instance] updateInstanceKotterStage failed:', e)
+    errorMessage = toUserSafeErrorMessage(e)
+  }
+
+  if (errorMessage) {
+    redirectWithMessage('/admin/instances', { error: errorMessage })
   }
 }
 

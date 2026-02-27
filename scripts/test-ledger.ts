@@ -1,3 +1,4 @@
+import './require-db-env'
 import { LedgerService } from '../src/lib/economy-ledger'
 import { db } from '../src/lib/db'
 

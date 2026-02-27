@@ -18,10 +18,17 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 import { AttuneButton } from '@/components/AttuneButton'
+import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
+import { IntentionDisplay } from '@/components/IntentionDisplay'
 
-export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string }> }) {
+export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
+  const searchParams = await props.searchParams
+  const campaignRef = searchParams.ref ?? null
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
+  if (!playerId && campaignRef === 'bruised-banana') {
+    redirect(`/event?ref=${encodeURIComponent(campaignRef)}`)
+  }
 
   // Safe DB calls — these run before auth check and must not crash the page
   let appConfig: any = {}
@@ -87,18 +94,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
-            href="/campaign"
+            href={`/conclave/guided${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
+          >
+            Sign Up
+          </Link>
+
+          <Link
+            href="/campaign"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Begin the Journey
           </Link>
-
-          <a
-            href="/conclave/guided"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
-          >
-            Sign Up
-          </a>
 
           <a
             href="/login"
@@ -107,10 +114,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             Log In
           </a>
 
+          <Link
+            href="/event"
+            className="w-full py-2 px-4 text-sm text-zinc-500 hover:text-green-400 transition-colors text-center"
+          >
+            Support the Residency →
+          </Link>
         </div>
 
         <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          Begin the story to discover your path, or sign up directly. Existing players can log in to continue.
+          Sign up to join the engine. Explore the story to discover your path. Existing players can log in to continue.
         </div>
       </div>
     )
@@ -240,7 +253,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     redirect('/conclave/guided?step=playbook_select')
   }
 
-  const searchParams = await props.searchParams
   const ritualComplete = searchParams.ritualComplete === 'true'
   const focusQuest = searchParams.focusQuest
 
@@ -266,9 +278,15 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     .filter(q => q.status === 'assigned')
     .map(q => q.questId)
 
-  // Extract player's Intention from completed orientation quest
+  // Extract player's Intention: storyProgress (updated) or completed orientation quest
   const intentionQuest = completedBars.find(b => b.id === 'orientation-quest-1')
-  const intention = intentionQuest?.inputs?.intention as string | undefined
+  let intention: string | undefined
+  try {
+    const sp = player.storyProgress ? (JSON.parse(player.storyProgress) as Record<string, unknown>) : {}
+    intention = (sp.intention as string) || (intentionQuest?.inputs?.intention as string)
+  } catch {
+    intention = intentionQuest?.inputs?.intention as string | undefined
+  }
 
   // Ensure system feedback is always "active" for the player
   if (!activeBars.includes('system-feedback')) {
@@ -400,14 +418,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
               </div>
             </div>
           )}
+          <Link href="/campaign" className="px-4 py-2 bg-emerald-900/20 border border-emerald-800/50 rounded-lg hover:border-emerald-600/60 transition">
+            <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
+            <div className="text-emerald-100 font-bold">Begin the Journey</div>
+          </Link>
         </div>
 
         {/* Player Intention */}
         {intention && (
-          <div className="w-full px-4 py-3 bg-emerald-900/15 border border-emerald-900/40 rounded-lg">
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">My Intention</div>
-            <p className="text-emerald-100/90 text-sm italic leading-relaxed">{intention}</p>
-          </div>
+          <IntentionDisplay
+            intention={intention}
+            campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
+          />
         )}
       </header >
 
@@ -561,6 +583,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                 completedMoveTypes={completedMoveTypes}
                 isSetupIncomplete={isSetupIncomplete}
                 focusQuest={focusQuest}
+                campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
               />
             ))}
             {packs.map(pack => (
@@ -792,7 +815,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   {threads
                     .filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
                     .map(thread => (
-                      <QuestThread key={thread.id} thread={thread as any} />
+                      <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} />
                     ))}
                   {packs
                     .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)

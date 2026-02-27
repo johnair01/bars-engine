@@ -1,4 +1,6 @@
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env' })
+config({ path: '.env.local' })
 import { PrismaClient } from '@prisma/client'
 import { runSeed } from '../src/lib/seed-utils'
 

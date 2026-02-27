@@ -1,3 +1,4 @@
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { normalizeTwineStory } from '../src/lib/schemas'
 import * as fs from 'fs'

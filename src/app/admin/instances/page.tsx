@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
-import { getInstanceDbReadiness, listInstances, setActiveInstance, upsertInstance } from '@/actions/instance'
+import { getInstanceDbReadiness, listInstances, setActiveInstance, updateInstanceKotterStage, upsertInstance } from '@/actions/instance'
+import { KOTTER_STAGES } from '@/lib/kotter'
 
 export default async function AdminInstancesPage({
   searchParams,
@@ -134,6 +135,17 @@ export default async function AdminInstancesPage({
             <input name="patreonUrl" placeholder="https://patreon.com/..." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Kotter Stage</label>
+            <select name="kotterStage" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" defaultValue={1}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  {n}. {KOTTER_STAGES[n as keyof typeof KOTTER_STAGES].name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <label className="md:col-span-2 flex items-center gap-3 text-sm text-zinc-300">
             <input type="checkbox" name="isEventMode" className="w-4 h-4" defaultChecked />
             Event Mode (show progress bar + donate CTAs)
@@ -178,9 +190,25 @@ export default async function AdminInstancesPage({
                   <div className="text-xs text-zinc-500 font-mono mt-1 truncate">
                     {inst.slug} • {inst.domainType} • {inst.id}
                   </div>
+                  <div className="text-xs text-teal-400 mt-1">
+                    Stage {(inst as { kotterStage?: number }).kotterStage ?? 1}: {KOTTER_STAGES[((inst as { kotterStage?: number }).kotterStage ?? 1) as keyof typeof KOTTER_STAGES]?.name ?? 'Urgency'}
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
+                  <form action={updateInstanceKotterStage} className="flex items-center gap-2">
+                    <input type="hidden" name="instanceId" value={inst.id} />
+                    <select name="kotterStage" className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200" defaultValue={(inst as { kotterStage?: number }).kotterStage ?? 1}>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                        <option key={n} value={n}>
+                          {n}. {KOTTER_STAGES[n as keyof typeof KOTTER_STAGES].name}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="submit" className="px-2 py-1 rounded bg-teal-900/50 hover:bg-teal-800/50 text-teal-300 text-xs font-bold border border-teal-700">
+                      Set Stage
+                    </button>
+                  </form>
                   <form action={setActiveInstance}>
                     <input type="hidden" name="instanceId" value={inst.id} />
                     <button className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold">

@@ -18,6 +18,7 @@ export function AdminNav() {
         { name: 'World Data', href: '/admin/world', icon: '🌍' },
         { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
         { name: 'Twine Stories', href: '/admin/twine', icon: '📖' },
+        { name: 'Adventures', href: '/admin/adventures', icon: '🗺️' },
         { name: 'Config', href: '/admin/config', icon: '⚙️' },
     ]
 

@@ -1,4 +1,5 @@
 // Test script to verify nation data access
+import './require-db-env'
 import { db } from '../src/lib/db'
 
 async function testNationAccess() {

@@ -20,15 +20,22 @@ export async function switchIdentity(targetPlayerId: string) {
 }
 
 /**
- * Dev only: Get all players for the switcher
+ * Dev only: Get all players for the switcher.
+ * Returns [] if DB is unavailable (e.g. DATABASE_URL missing) so the page does not crash.
  */
-export async function getAllPlayers() {
+export async function getAllPlayers(): Promise<{ id: string, name: string, contactValue: string | null }[]> {
     if (process.env.NODE_ENV !== 'development') {
         return []
     }
 
-    return db.player.findMany({
-        select: { id: true, name: true, contactValue: true },
-        orderBy: { createdAt: 'desc' }
-    })
+    try {
+        return await db.player.findMany({
+            select: { id: true, name: true, contactValue: true },
+            orderBy: { createdAt: 'desc' }
+        })
+    } catch (err) {
+        // DATABASE_URL missing, DB unreachable, or Prisma init error — don't crash the page
+        console.warn('[dev] getAllPlayers failed (DB/env):', (err as Error)?.message)
+        return []
+    }
 }

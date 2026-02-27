@@ -1,4 +1,4 @@
-
+import './require-db-env'
 import { db } from '../src/lib/db'
 import { createCustomBar } from '../src/actions/create-bar'
 import { releaseBarToSaladBowl } from '../src/actions/release-bar'

@@ -1,4 +1,5 @@
 
+import './require-db-env'
 import { generateQuestCore } from '../src/actions/generate-quest'
 import { db } from '../src/lib/db'
 

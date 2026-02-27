@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getQuestTemplates } from '@/actions/quest-templates'
 import { QuestTemplate } from '@/lib/quest-templates'
-import { createQuestFromWizard, createCustomBar, getGatingOptions } from '@/actions/create-bar'
+import { createQuestFromWizard, getGatingOptions } from '@/actions/create-bar'
+import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 
@@ -21,6 +22,7 @@ export function QuestWizard() {
     const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
+    const [allyshipDomain, setAllyshipDomain] = useState<string | null>(null)
 
     // Load templates + twine stories on mount
     useEffect(() => {
@@ -76,7 +78,8 @@ export function QuestWizard() {
                 inputs,
                 applyFirstAidLens: !!formData.applyFirstAidLens,
                 allowedNations: selectedNations,
-                allowedTrigrams: selectedTrigrams
+                allowedTrigrams: selectedTrigrams,
+                allyshipDomain
             })
 
             if (result?.error) {
@@ -311,6 +314,26 @@ export function QuestWizard() {
                     </div>
                 </div>
 
+                {/* Allyship Domain (WHERE) */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Optional)</label>
+                    <p className="text-[10px] text-zinc-600">WHERE the work happens. Distinct from moves.</p>
+                    <div className="flex flex-wrap gap-2">
+                        {ALLYSHIP_DOMAINS.map((d) => (
+                            <button
+                                key={d.key}
+                                onClick={() => setAllyshipDomain(allyshipDomain === d.key ? null : d.key)}
+                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                    ? 'bg-teal-900/20 border-teal-500/50 text-teal-300'
+                                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                    }`}
+                            >
+                                {d.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
                     <input
                         type="checkbox"
@@ -386,6 +409,12 @@ export function QuestWizard() {
                                 <div className="text-zinc-500">
                                     <span className="block text-xs uppercase tracking-widest mb-1">Lens</span>
                                     <span className="text-cyan-400">Emotional First Aid</span>
+                                </div>
+                            )}
+                            {allyshipDomain && (
+                                <div className="text-zinc-500">
+                                    <span className="block text-xs uppercase tracking-widest mb-1">Domain</span>
+                                    <span className="text-teal-400">{ALLYSHIP_DOMAINS.find(d => d.key === allyshipDomain)?.label || allyshipDomain}</span>
                                 </div>
                             )}
                         </div>

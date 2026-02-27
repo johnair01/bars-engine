@@ -1,3 +1,4 @@
+import './require-db-env'
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -68,6 +69,18 @@ async function main() {
         console.log(`✅ Campaign UPSERTED: ${thread.title}`)
     }
 
+    // Campaign → Allyship Domain (WHERE) mapping
+    const campaignToDomain: Record<string, string> = {
+        'CAMP-BDAY': 'RAISE_AWARENESS',
+        'CAMP-BANANA': 'GATHERING_RESOURCES',
+        'CAMP-GRILL': 'GATHERING_RESOURCES',
+        'CAMP-WHISKEY': 'GATHERING_RESOURCES',
+        'CAMP-RESIDENCY': 'DIRECT_ACTION',
+        'CAMP-ENGINE': 'SKILLFUL_ORGANIZING',
+        'CAMP-VIBE': 'RAISE_AWARENESS',
+        'CAMP-OPS': 'SKILLFUL_ORGANIZING',
+    }
+
     // 3. Upsert Quests (CustomBars)
     for (const qData of seedData.quests) {
         const subquestText = qData.subquests.length > 0
@@ -75,6 +88,7 @@ async function main() {
             : ''
 
         const description = `${qData.description || ''}${subquestText}`
+        const allyshipDomain = campaignToDomain[qData.campaignId] || null
 
         const quest = await db.customBar.upsert({
             where: { id: qData.id },
@@ -82,7 +96,8 @@ async function main() {
                 title: qData.title,
                 description,
                 reward: qData.rewardVibeulons,
-                visibility: 'public'
+                visibility: 'public',
+                allyshipDomain
             },
             create: {
                 id: qData.id,
@@ -92,7 +107,8 @@ async function main() {
                 creatorId: creator.id,
                 type: 'vibe',
                 visibility: 'public',
-                isSystem: true
+                isSystem: true,
+                allyshipDomain
             }
         })
 
@@ -120,6 +136,7 @@ async function main() {
     }
 
     console.log(`\n🚀 Seeding Complete!`)
+    console.log(`\nTo enable donations: Admin → Instances → set Stripe URL (stripeOneTimeUrl) for "${instance.name}"`)
 }
 
 main()

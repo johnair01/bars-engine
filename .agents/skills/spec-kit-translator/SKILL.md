@@ -8,6 +8,30 @@ Users often express complex requirements in relative, narrative, or abstract ter
 2. **Plans**: Architectural strategy and file impacts.
 3. **Tasks**: Step-by-step implementation phases with bash commands and verification markers.
 
+## Conceptual Model (Game Language)
+
+Use this language when drafting specs and plans. It is the canonical ontology for the engine:
+
+| Dimension | Meaning | Schema / Examples |
+|-----------|---------|-------------------|
+| **WHO** | Identity | Nation, Archetype (Playbook) |
+| **WHAT** | The work | Quests (CustomBar) |
+| **WHERE** | Context of work | Allyship domains: Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing |
+| **Energy** | What makes things happen | Vibeulons |
+| **Personal throughput** | How people get things done | 4 moves: Wake Up, Clean Up, Grow Up, Show Up |
+
+**4 moves (personal throughput)** — distinct from allyship domains:
+- **Wake Up** — See more of what's available (who, what, where, how)
+- **Clean Up** — Get more emotional energy; unblock vibeulon-generating actions
+- **Grow Up** — Increase skill capacity through developmental lines
+- **Show Up** — Do the work of completing quests
+
+**Allyship domains** = WHERE the work happens. **Moves** = how the player gets it done. A quest in "Direct Action" (WHERE) might require Show Up (move); a quest in "Raise Awareness" might benefit from Wake Up.
+
+When writing specs: tag quests with WHO (allowedNations, allowedTrigrams), WHAT (quest content), WHERE (allyshipDomain), and optionally which move (moveType) helps players complete it.
+
+**Canonical reference**: [.specify/memory/conceptual-model.md](.specify/memory/conceptual-model.md)
+
 ## Protocol: The Interview
 When a user provides a high-level request, follow this interaction protocol:
 1. **Clarify Objects**: Ask what new models or fields are implied.
@@ -15,9 +39,11 @@ When a user provides a high-level request, follow this interaction protocol:
 3. **Clarify Governance**: Ask how admins or systems control this feature.
 4. **Draft the Spec**: Compile these into a `.specify/specs/` structure.
 
-## Verification Quests (UX Features)
+## Verification Quests (UX Features) — Required
 
-When implementing a feature with **UX implications** (user-facing flows, pages, or components), include a **verification quest** in the implementation plan. Verification quests:
+When implementing a feature with **UX implications** (user-facing flows, pages, or components), a **verification quest is required** — not optional. Verification quests that affect UI must be implemented as part of the feature.
+
+Verification quests:
 
 1. **Validate the feature** — Step-by-step Twine story that walks a tester through the UX (each passage = one verification step; final passage has no link so completing the quest mints the reward).
 2. **Advance the Bruised Banana Fundraiser** — Frame the narrative toward the fundraiser goal: preparing the party, improving the Bars Engine, or contributing to the residency. Examples:
@@ -27,10 +53,11 @@ When implementing a feature with **UX implications** (user-facing flows, pages, 
 3. **Structure** — TwineStory + CustomBar with `isSystem: true`, `visibility: 'public'`, deterministic id (e.g. `cert-<feature>-v1`), idempotent seed script.
 4. **Reference** — Follow [.specify/specs/cyoa-certification-quests/](.specify/specs/cyoa-certification-quests/) and [scripts/seed-cyoa-certification-quests.ts](scripts/seed-cyoa-certification-quests.ts).
 
-### Checklist for UX features
+### Checklist for UX features (all required)
 - [ ] Spec includes a "Verification quest" user story or FR.
 - [ ] Plan includes: Twine passages (steps), seed script, npm script (e.g. `seed:cert:<feature>`).
 - [ ] Quest narrative ties to Bruised Banana Fundraiser where relevant (party prep, engine improvement, residency support).
+- [ ] Verification quest is implemented — do not mark a UI feature complete without its verification quest.
 
 ## Prompt Template: Natural Language to Spec
 When generating a Spec Kit prompt for the agent itself, use this structure:
@@ -61,6 +88,18 @@ You are a Spec Kit agent responsible for [Objective].
 | "I want to move Vibeulons to instances" | "Implement an Attunement system with InstanceParticipation models and LedgerService atomic moves." |
 | "We lost quest filtering!" | "Restore search-based and stage-pill filtering logic in Market page using client-side state." |
 | "Add in-app CYOA editing" | "Implement passage edit + campaign DB preference; add verification quest 'cert-cyoa-editing-v1' that walks through editing a node and confirming it on /campaign — framed as preparing the party narrative for the Bruised Banana Fundraiser." |
+| "Donation link for the residency" | "Surface /event from landing and campaign; configure Instance with Stripe URL; add vibeulon mint on donation (Energy flows when players support the cause)." |
+| "Let players choose their campaign area" | "Add allyshipDomain (WHERE) to CustomBar, campaignDomainPreference to Player; multi-select + opt-out UX; persistent 'Update campaign path' on Market; filter Market by preference when set." |
+| "Update lore to match the game" | "Add five dimensions (WHO, WHAT, WHERE, Energy, Personal throughput) to FOUNDATIONS.md and ARCHITECTURE.md; update narrative-mechanics.md move definitions; add terminology tables." |
+
+## Spec Kit ↔ Cursor Plan (Operational Discipline)
+
+**Spec Kit is the implementation authority.** Cursor plan and BACKLOG are strategic layers that select which spec to implement next.
+
+- **Implementation rule:** Always implement from a Spec Kit spec → plan → tasks. Never implement from Cursor plan or backlog item alone.
+- **Cursor plan:** Strategic overlay; can be larger than Spec Kit backlog. Points to specs. If it lists an item not yet spec'd, create the spec first, then implement.
+- **BACKLOG.md:** Ledger of Spec Kit items; status, dependencies, campaign alignment.
+- **Spec Kit specs:** `.specify/specs/` — bruised-banana-*, lore-conceptual-model, etc. Use game language (WHO, WHAT, WHERE, Energy, moves) in all specs.
 
 ## Usage
 1. Read the user's natural language request.

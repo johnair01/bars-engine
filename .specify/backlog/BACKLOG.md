@@ -22,6 +22,32 @@ This is the central ledger for all pending development objectives and emergent n
 | 9 | M | [Admin Adventures Discoverability](.specify/specs/admin-adventures-discoverability/spec.md) | UI | [x] Done | - |
 | 10 | N | [Verification Quest Completion Display](.specify/specs/verification-quest-completion/spec.md) | UI | [x] Done | - |
 | 11 | O | Verification Quest → Backlog Update (completed quests update corresponding backlog prompt) | Infra | [ ] Ready | N |
+| 12 | P | [Bruised Banana Donation Link](.specify/specs/bruised-banana-donation/spec.md) | UI | [x] Done | - |
+| 13 | Q | [Allyship Domains (WHERE) + Campaign Path](.specify/specs/bruised-banana-allyship-domains/spec.md) | UI | [x] Done | - |
+| 14 | R | [Lore: Conceptual Model](.specify/specs/lore-conceptual-model/spec.md) | Docs | [x] Done | - |
+| 15 | S | [Campaign Kotter Structure + Domain × Kotter](.specify/specs/campaign-kotter-domains/spec.md) | UI/Docs | [x] Done | Q, R |
+| 16 | T | [Landing + Invitation Throughput](.specify/specs/cyoa-invitation-throughput/spec.md) | UI | [ ] Ready | - |
+| 17 | U | [Domain-Aligned Intentions](.specify/specs/domain-aligned-intentions/spec.md) (intention options keyed by allyship domain) | UI | [x] Done | D, Q |
+| 18 | V | Vibeulon Visibility (movement feed: who earned what, for what) | UI | [ ] Ready | - |
+| 19 | W | Appreciation Mechanic (give vibeulons to player/quest) | Economy | [ ] Ready | - |
+| 20 | X | Signature Vibeulons (creatorId on Vibulon; EFA + BAR completion) | Economy | [ ] Ready | - |
+| 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
+
+## Bruised Banana Campaign (Cursor Plan Alignment)
+
+The following items align with [.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md](.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md). Use game language (WHO, WHAT, WHERE, Energy, Personal throughput) in specs. Backlog prompts: [bruised-banana-donation](.specify/backlog/prompts/bruised-banana-donation.md), [bruised-banana-allyship-domains](.specify/backlog/prompts/bruised-banana-allyship-domains.md), [lore-conceptual-model](.specify/backlog/prompts/lore-conceptual-model.md), [campaign-kotter-domains](.specify/backlog/prompts/campaign-kotter-domains.md).
+
+**House integration**: See [.specify/specs/bruised-banana-house-integration/ANALYSIS.md](.specify/specs/bruised-banana-house-integration/ANALYSIS.md) for domain definitions, blocker catalog, and phased plan. **Emergent blocker**: CYOA not safe to share until perfected; T = landing with 4 moves + sign-up for interest (safe to go live). CYOA dripped to existing players. Prioritize: T → U → V, W, X.
+
+## Certification Feedback (Emergent)
+
+Feedback from `.feedback/cert_feedback.jsonl` triaged into backlog:
+
+| Source | Issue | Status |
+|--------|-------|--------|
+| cert-allyship-domains-v1 | Clear filters didn't remove the filters and bring back filtered out quests | [ ] Ready → [market-clear-filters](prompts/market-clear-filters.md) |
+
+---
 
 ## Prioritization Logic
 - **Priority 1**: Emergent blocks or high-leverage UI/UX fixes.

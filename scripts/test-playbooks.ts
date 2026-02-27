@@ -1,4 +1,5 @@
 // Test script to get playbook data
+import './require-db-env'
 import { db } from '../src/lib/db'
 
 async function getPlaybooks() {

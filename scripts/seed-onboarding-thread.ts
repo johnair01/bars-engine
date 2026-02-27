@@ -9,6 +9,7 @@
  * Idempotent — safe to re-run. Updates existing quests/thread if found.
  */
 
+import './require-db-env'
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()

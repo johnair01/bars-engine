@@ -7,12 +7,17 @@ import { useRouter } from 'next/navigation'
 import { QuestDetailModal } from '@/components/QuestDetailModal'
 import { StageIndicator } from '@/components/StageIndicator'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
+import { CampaignPathForm } from '@/components/CampaignPathForm'
+import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import Link from 'next/link'
 
 type MarketContent = {
     packs: any[]
     quests: any[]
     graveyardQuests?: any[]
+    campaignDomainPreference?: string | null
+    activeInstanceKotterStage?: number | null
+    activeInstanceName?: string | null
 }
 
 export default function AvailableBarsPage() {
@@ -26,9 +31,14 @@ export default function AvailableBarsPage() {
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>([])
     const [showAdvanced, setShowAdvanced] = useState(false)
+    const [showCampaignPath, setShowCampaignPath] = useState(false)
+
+    const refreshContent = () => {
+        getMarketContent().then(data => setContent(data as any))
+    }
 
     useEffect(() => {
-        getMarketContent().then(data => setContent(data as any))
+        refreshContent()
         getWorldData().then(data => {
             setWorldData({ nations: data[0], playbooks: data[1] })
         })
@@ -77,15 +87,42 @@ export default function AvailableBarsPage() {
                         <p className="text-zinc-400">
                             Collective quests and commissions awaiting activation.
                         </p>
+                        {content?.activeInstanceKotterStage && (
+                            <p className="text-xs text-teal-400 mt-1">
+                                Campaign: Stage {content.activeInstanceKotterStage} — {KOTTER_STAGES[content.activeInstanceKotterStage as KotterStage]?.name ?? 'Urgency'}
+                                {content.activeInstanceName && ` (${content.activeInstanceName})`}
+                            </p>
+                        )}
                     </div>
                 </div>
-                <button
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-xs font-bold text-zinc-500 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
-                >
-                    {showAdvanced ? 'Hide Advanced' : 'Advanced Filters'} {showAdvanced ? '▴' : '▾'}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowCampaignPath(!showCampaignPath)}
+                        className="text-xs font-bold text-teal-500 hover:text-teal-400 transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
+                    >
+                        {showCampaignPath ? 'Hide' : 'Update campaign path'} {showCampaignPath ? '▴' : '▾'}
+                    </button>
+                    <button
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        className="text-xs font-bold text-zinc-500 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
+                    >
+                        {showAdvanced ? 'Hide Advanced' : 'Advanced Filters'} {showAdvanced ? '▴' : '▾'}
+                    </button>
+                </div>
             </header>
+
+            {/* Campaign Path (Choose your domains) */}
+            {showCampaignPath && (
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 animate-in fade-in slide-in-from-top-2">
+                    <h3 className="text-sm font-bold text-white mb-2">Choose your campaign path</h3>
+                    <CampaignPathForm
+                        initialPreference={content?.campaignDomainPreference ?? null}
+                        onSaved={() => {
+                            refreshContent()
+                        }}
+                    />
+                </div>
+            )}
 
             {/* Filter UI */}
             <div className="space-y-4">
@@ -271,6 +308,11 @@ function QuestCard({
                         {playbook && (
                             <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-purple-900/20 text-purple-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-purple-800/50'} uppercase tracking-tighter`}>
                                 {playbook.name}
+                            </span>
+                        )}
+                        {bar.allyshipDomain && (
+                            <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-teal-900/20 text-teal-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-teal-800/50'} uppercase tracking-tighter`}>
+                                {ALLYSHIP_DOMAINS.find(d => d.key === bar.allyshipDomain)?.short ?? bar.allyshipDomain}
                             </span>
                         )}
                         <span className="text-[9px] text-zinc-600 italic ml-auto pt-0.5">

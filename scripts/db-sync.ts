@@ -4,8 +4,9 @@ import { createHash } from 'crypto'
 import { execSync } from 'child_process'
 import { config } from 'dotenv'
 
-// Load .env
-config()
+// Load .env.local first, then .env (same order as Next.js and require-db-env)
+config({ path: '.env.local' })
+config({ path: '.env' })
 
 const ROOT = process.cwd()
 const SCHEMA_PATH = join(ROOT, 'prisma', 'schema.prisma')
@@ -59,7 +60,14 @@ function sync() {
                 if (isProd) process.exit(1)
             }
         } else {
-            console.warn('⚠️ Schema changed but no DATABASE_URL found. Skipping push.')
+            console.error('❌ Schema changed but DATABASE_URL is not set. DB sync cannot complete.')
+            console.error('')
+            console.error('To fix:')
+            console.error('  • With Vercel access: npm run env:pull')
+            console.error('  • Without: cp .env.example .env and add DATABASE_URL')
+            console.error('')
+            console.error('See docs/ENV_AND_VERCEL.md')
+            process.exit(1)
         }
     } else {
         console.log('⏭️ Schema unchanged. Skipping DB push.')

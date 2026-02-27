@@ -27,10 +27,10 @@ This document outlines the collaborative storytelling inspirations behind the In
 **Schema Mapping:**
 - **Playbooks:** The `Playbook` model defines the archetype.
 - **Moves:** Stored as `moves` (JSON) and specific lifecycle moves:
-    - `wakeUp` (Awareness)
-    - `cleanUp` (Shadow work)
-    - `growUp` (Development)
-    - `showUp` (Action/Climax)
+    - `wakeUp` — See more (awareness)
+    - `cleanUp` — Emotional energy, unblocking
+    - `growUp` — Skill capacity, development
+    - `showUp` — Completing quests, action
 - **Progression:** The `QuestThread` and `QuestPack` structures likely manage the "Arc", with `allowedPlaybooks` filtering content relevant to specific narrative paths.
 
 ### 3. The Quiet Year
@@ -56,11 +56,20 @@ This document outlines the collaborative storytelling inspirations behind the In
 ## System Implementation Analysis
 
 ### Move Rendering
-The system renders "moves" primarily through:
+
+**4 moves (personal throughput)** — distinct from allyship domains and the 8 archetype moves:
+- **Wake Up** — See more of what's available (who, what, where, how)
+- **Clean Up** — Get more emotional energy; unblock vibeulon-generating actions
+- **Grow Up** — Increase skill capacity through developmental lines
+- **Show Up** — Do the work of completing quests
+
+**Allyship domains** = WHERE the work happens (Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing). Campaign context for quests.
+
+The system renders moves through:
 - **Playbook Definitions:** `Playbook` records containing JSON definitions of special moves.
 - **Lifecycle Triggers:** Explicit columns for `wakeUp`, `cleanUp`, `growUp`, `showUp` on `Playbook` and `Nation` models.
-- **Action Events:** `VibulonEvent` tracks `archetypeMove` execution (e.g., THUNDERCLAP, NURTURE, COMMAND) which align with role archetypes.
-- **Quest/Bar Types:** `CustomBar` has a `moveType` field, linking specific quests to these lifecycle stages.
+- **Action Events:** `VibulonEvent` tracks `archetypeMove` execution (e.g., THUNDERCLAP, NURTURE, COMMAND) which align with role archetypes (the 8 moves).
+- **Quest/Bar Types:** `CustomBar` has a `moveType` field, linking specific quests to the 4 lifecycle stages. `CustomBar` can also have `allyshipDomain` for WHERE.
 
 ### Future Alignment Goals
 - Ensure the "bidding" mechanic from Hearts Blazing is felt in the Vibeulon economy.

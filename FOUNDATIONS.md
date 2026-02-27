@@ -20,6 +20,38 @@ A kernel is a compressed unit of potential: small enough to carry, rich enough t
 
 BARs are not “notes.” They are **seeds with provenance**.
 
+## The Five Dimensions
+
+The game is structured around five dimensions. Use this ontology when writing specs, quests, and lore:
+
+| Dimension | Meaning | Examples |
+|-----------|---------|----------|
+| **WHO** | Identity | Nation, Archetype |
+| **WHAT** | The work | Quests |
+| **WHERE** | Context of work | Allyship domains (Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing) |
+| **Energy** | What makes things happen | Vibeulons |
+| **Personal throughput** | How people get things done | 4 moves: Wake Up, Clean Up, Grow Up, Show Up |
+
+**4 moves (personal throughput)** — distinct from allyship domains:
+- **Wake Up** — See more of what's available (who, what, where, how)
+- **Clean Up** — Get more emotional energy; unblock vibeulon-generating actions
+- **Grow Up** — Increase skill capacity through developmental lines
+- **Show Up** — Do the work of completing quests
+
+Allyship domains = WHERE the work happens. Moves = how the player gets it done.
+
+## Framework Influences
+
+The following frameworks inform the app's design:
+
+| Framework | Author(s) | Influence on the app |
+|-----------|-----------|----------------------|
+| Integral Theory | Ken Wilber | Developmental lines, quadrants, stages of growth |
+| Octalysis Framework | Yu-Kai Chou | Gamification, core drives, player motivation |
+| I Ching interpretation | Carol K. Anthony, Hannah Moog | Hexagram/quest readings, archetypal wisdom |
+| Mastering the Game of Life | Wendell Britt | Life-as-game, personal development |
+| Mastering the Game of Allyship | Wendell Britt | Allyship as practice, collective action |
+
 ## Two Axes of Change
 BARs Engine treats collective change as two orthogonal processes:
 

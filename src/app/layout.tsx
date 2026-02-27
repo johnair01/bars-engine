@@ -52,7 +52,7 @@ export default async function RootLayout({
       >
         {dbError && process.env.NODE_ENV !== 'production' && (
           <div className="fixed top-0 left-0 right-0 z-[100] bg-red-600 text-white text-[10px] font-bold py-1 px-4 text-center uppercase tracking-widest shadow-lg">
-            ⚠️ {errorMessage || "Database Unreachable"} — Running in Guest Mode (Check DATABASE_URL)
+            ⚠️ Database unreachable. See docs/ENV_AND_VERCEL.md or run vercel env pull .env.local
           </div>
         )}
         <NavBar isAdmin={isAdmin} isAuthenticated={!!playerId} />

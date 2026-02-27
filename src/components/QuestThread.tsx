@@ -45,7 +45,7 @@ type QuestThreadData = {
     currentQuest?: ThreadQuest | null
 }
 
-export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, focusQuest }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean, focusQuest?: string }) {
+export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, focusQuest, campaignDomainPreference = [] }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean, focusQuest?: string, campaignDomainPreference?: string[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<ThreadQuest | null>(null)
@@ -257,6 +257,7 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                     isCompleted={selectedQuest.position < currentPos}
                     isLocked={selectedQuest.position > currentPos}
                     completedMoveTypes={completedMoveTypes}
+                    campaignDomainPreference={campaignDomainPreference}
                 />
             )}
         </>

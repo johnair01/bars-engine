@@ -2,6 +2,8 @@
 
 This directory contains all canonical narrative content for the Construct Conclave story game.
 
+The game is structured around five dimensions: **WHO** (Nation, Archetype), **WHAT** (Quests), **WHERE** (Allyship domains), **Energy** (Vibeulons), and **Personal throughput** (4 moves: Wake Up, Clean Up, Grow Up, Show Up). See [FOUNDATIONS](../../FOUNDATIONS.md) and [terminology](../../.agent/context/terminology.md).
+
 ## Directory Structure
 
 ```

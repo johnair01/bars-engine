@@ -177,6 +177,7 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
     const requestId = createRequestId()
     const rawData = {
         identity: formData.get('identity'),
+        ref: formData.get('ref'),
     }
 
     let identity
@@ -274,6 +275,19 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
             maxAge: 60 * 60 * 24 * 30 // 30 days
         })
 
+        // Store campaign ref in storyProgress for attribution
+        const campaignRef = typeof rawData.ref === 'string' ? rawData.ref.trim() : null
+        if (campaignRef) {
+            await db.player.update({
+                where: { id: player.id },
+                data: {
+                    storyProgress: JSON.stringify({ campaignRef }),
+                },
+            })
+        }
+
+        const redirectTo = campaignRef === 'bruised-banana' ? '/event' : undefined
+        return { success: true, redirectTo }
     } catch (e: any) {
         logActionError(
             { action: 'createGuidedPlayer', requestId, userId: null, extra: { email: identity?.contact } },
@@ -281,6 +295,4 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
         )
         return { error: `Account creation failed (req: ${requestId})` }
     }
-
-    return { success: true }
 }
