@@ -26,9 +26,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const campaignRef = searchParams.ref ?? null
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
-  if (!playerId && campaignRef === 'bruised-banana') {
-    redirect(`/event?ref=${encodeURIComponent(campaignRef)}`)
-  }
 
   // Safe DB calls — these run before auth check and must not crash the page
   let appConfig: any = {}
@@ -57,12 +54,36 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   if (!playerId) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
+      <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
         <div className="text-center space-y-4">
           <h1 className="text-5xl tracking-tighter font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent">
             {heroTitle}
           </h1>
           <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
+        </div>
+
+        {/* 4 moves (safe to go live per T spec) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-2xl">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+            <div className="text-2xl mb-2">👁</div>
+            <div className="text-sm font-bold text-white">Wake Up</div>
+            <div className="text-xs text-zinc-500 mt-1">See more of what&apos;s available</div>
+          </div>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+            <div className="text-2xl mb-2">🧹</div>
+            <div className="text-sm font-bold text-white">Clean Up</div>
+            <div className="text-xs text-zinc-500 mt-1">Unblock emotional energy</div>
+          </div>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+            <div className="text-2xl mb-2">🌱</div>
+            <div className="text-sm font-bold text-white">Grow Up</div>
+            <div className="text-xs text-zinc-500 mt-1">Increase skill capacity</div>
+          </div>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+            <div className="text-2xl mb-2">🎯</div>
+            <div className="text-sm font-bold text-white">Show Up</div>
+            <div className="text-xs text-zinc-500 mt-1">Complete quests</div>
+          </div>
         </div>
 
         {activeInstance?.isEventMode && (
@@ -97,7 +118,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             href={`/conclave/guided${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
-            Sign Up
+            Join
           </Link>
 
           <Link
@@ -123,7 +144,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         </div>
 
         <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          Sign up to join the engine. Explore the story to discover your path. Existing players can log in to continue.
+          Sign up for your interest. Choose your path: Wake Up, Clean Up, Grow Up, Show Up. Existing players can log in to continue.
         </div>
       </div>
     )

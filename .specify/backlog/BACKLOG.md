@@ -32,12 +32,21 @@ This is the central ledger for all pending development objectives and emergent n
 | 19 | W | Appreciation Mechanic (give vibeulons to player/quest) | Economy | [ ] Ready | - |
 | 20 | X | Signature Vibeulons (creatorId on Vibulon; EFA + BAR completion) | Economy | [ ] Ready | - |
 | 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
+| 22 | Z | [Offers, Bounty Board, Donation Packs](.specify/specs/offers-bounty-donation-packs/spec.md) | Economy | [ ] Ready | P |
+| 23 | AA | [Event Page Campaign Editor](.specify/specs/event-page-campaign-editor/spec.md) (high priority) | UI | [ ] Ready | - |
+| 24 | AB | [Event Donation Honor System](.specify/specs/event-donation-honor-system/spec.md) (high priority) | UI/Economy | [x] Done | P, Z |
+| 25 | AC | [Event-Driven CYOA + Developmental Assessment](.specify/backlog/prompts/event-driven-cyoa-developmental-assessment.md) | UI | [ ] Ready | T, K |
+| 26 | AD | [2D Sprite Avatar from CYOA Choices](.specify/backlog/prompts/avatar-from-cyoa-choices.md) | UI | [ ] Ready | AC |
+| 27 | AE | [Story/Quest Map Exploration](.specify/backlog/prompts/story-quest-map-exploration.md) | UI/Exploration | [ ] Ready | - |
+| 28 | AF | [Lore Index and Knowledge Base](.specify/specs/lore-index-knowledge-base/spec.md) | Docs/UI | [ ] Ready | R |
 
 ## Bruised Banana Campaign (Cursor Plan Alignment)
 
-The following items align with [.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md](.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md). Use game language (WHO, WHAT, WHERE, Energy, Personal throughput) in specs. Backlog prompts: [bruised-banana-donation](.specify/backlog/prompts/bruised-banana-donation.md), [bruised-banana-allyship-domains](.specify/backlog/prompts/bruised-banana-allyship-domains.md), [lore-conceptual-model](.specify/backlog/prompts/lore-conceptual-model.md), [campaign-kotter-domains](.specify/backlog/prompts/campaign-kotter-domains.md).
+The following items align with [.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md](.cursor/plans/bruised_banana_campaign_unblock_3fab45ae.plan.md). Use game language (WHO, WHAT, WHERE, Energy, Personal throughput) in specs. Backlog prompts: [bruised-banana-donation](.specify/backlog/prompts/bruised-banana-donation.md), [bruised-banana-allyship-domains](.specify/backlog/prompts/bruised-banana-allyship-domains.md), [lore-conceptual-model](.specify/backlog/prompts/lore-conceptual-model.md), [campaign-kotter-domains](.specify/backlog/prompts/campaign-kotter-domains.md), [offers-bounty-donation-packs](.specify/backlog/prompts/offers-bounty-donation-packs.md), [event-page-campaign-editor](.specify/backlog/prompts/event-page-campaign-editor.md), [event-driven-cyoa-developmental-assessment](.specify/backlog/prompts/event-driven-cyoa-developmental-assessment.md), [avatar-from-cyoa-choices](.specify/backlog/prompts/avatar-from-cyoa-choices.md), [story-quest-map-exploration](.specify/backlog/prompts/story-quest-map-exploration.md), [lore-index-knowledge-base](.specify/backlog/prompts/lore-index-knowledge-base.md).
 
 **House integration**: See [.specify/specs/bruised-banana-house-integration/ANALYSIS.md](.specify/specs/bruised-banana-house-integration/ANALYSIS.md) for domain definitions, blocker catalog, and phased plan. **Emergent blocker**: CYOA not safe to share until perfected; T = landing with 4 moves + sign-up for interest (safe to go live). CYOA dripped to existing players. Prioritize: T → U → V, W, X.
+
+**Future**: BAR editing flow — edit own BARs before sent; after sent, recipients can add data (original kept) or pay vibeulon + move to change. Instance ownership (roleKey) for campaign editing. Spec when ready.
 
 ## Certification Feedback (Emergent)
 
@@ -46,6 +55,7 @@ Feedback from `.feedback/cert_feedback.jsonl` triaged into backlog:
 | Source | Issue | Status |
 |--------|-------|--------|
 | cert-allyship-domains-v1 | Clear filters didn't remove the filters and bring back filtered out quests | [ ] Ready → [market-clear-filters](prompts/market-clear-filters.md) |
+| cert-event-donation-honor-v1 | No Venmo, Stripe, PayPal, or Cash App links on donation page | [x] Fixed — seed now sets placeholder URLs on active instance |
 
 ---
 
