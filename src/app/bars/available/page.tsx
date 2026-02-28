@@ -1,6 +1,7 @@
 'use client'
 
 import { getMarketContent } from '@/actions/market'
+import { updateCampaignDomainPreference } from '@/actions/campaign-domain-preference'
 import { getWorldData } from '@/actions/onboarding'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -195,11 +196,13 @@ export default function AvailableBarsPage() {
                     {others.length === 0 ? (
                         <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
                             <p className="text-zinc-500">No matching commissions found.</p>
-                            <button onClick={() => {
+                            <button onClick={async () => {
                                 setSearchQuery('')
                                 setActiveStage(null)
                                 setSelectedNations([])
                                 setSelectedArchetypes([])
+                                await updateCampaignDomainPreference([])
+                                refreshContent()
                             }} className="text-purple-400 hover:text-purple-300 font-bold mt-2">
                                 Clear all filters
                             </button>

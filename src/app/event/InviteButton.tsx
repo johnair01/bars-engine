@@ -7,8 +7,8 @@ export function InviteButton() {
 
   async function handleCopy() {
     const url = typeof window !== 'undefined'
-      ? `${window.location.origin}/event?ref=bruised-banana`
-      : '/event?ref=bruised-banana'
+      ? `${window.location.origin}/?ref=bruised-banana`
+      : '/?ref=bruised-banana'
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)

@@ -21,7 +21,7 @@
 ## Phase 3: Event page Invite CTA
 
 - [x] Add "Invite friends" or "Share" button on Event page
-- [x] Copies `{origin}/?ref=bruised-banana` to clipboard
+- [x] Copies `{origin}/?ref=bruised-banana` to clipboard (InviteButton updated from /event to /)
 
 ## Verification
 
