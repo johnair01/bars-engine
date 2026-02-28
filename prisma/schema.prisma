@@ -69,6 +69,7 @@ model Player {
   vibeulonLedger         VibeulonLedger[]
   participations         InstanceParticipation[]
   adventureProgress      PlayerAdventureProgress[]
+  redemptionPacks        RedemptionPack[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -603,12 +604,18 @@ model Instance {
   domainType         String
   theme              String?
   targetDescription  String?
+  wakeUpContent      String?              // Editable "Learn the story" paragraph
+  showUpContent      String?             // Editable "Contribute to the campaign" paragraph
   goalAmountCents    Int?
   currentAmountCents Int                  @default(0)
   kotterStage        Int                  @default(1) // 1–8; admin advances
   isEventMode        Boolean              @default(false)
   stripeOneTimeUrl   String?
   patreonUrl         String?
+  venmoUrl           String?
+  cashappUrl         String?
+  paypalUrl          String?
+  donationPackRateCents Int?   @default(100) // 100 = 1 pack per $1
   startDate          DateTime?
   endDate            DateTime?
   createdAt          DateTime             @default(now())
@@ -617,8 +624,29 @@ model Instance {
   donations          Donation[]
   memberships        InstanceMembership[]
   participations     InstanceParticipation[]
+  redemptionPacks    RedemptionPack[]
 
   @@map("instances")
+}
+
+model RedemptionPack {
+  id             String   @id @default(cuid())
+  instanceId     String
+  playerId       String
+  donationId     String?
+  packType       String   @default("donation")
+  status         String   @default("unredeemed") // unredeemed | redeemed
+  vibeulonAmount Int
+  metadata       String?  // JSON
+  createdAt      DateTime @default(now())
+  redeemedAt     DateTime?
+  instance       Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  donation       Donation? @relation(fields: [donationId], references: [id], onDelete: SetNull)
+
+  @@index([playerId, status])
+  @@index([instanceId, packType])
+  @@map("redemption_packs")
 }
 
 model Donation {
@@ -632,6 +660,7 @@ model Donation {
   createdAt   DateTime @default(now())
   instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
   player      Player?  @relation(fields: [playerId], references: [id])
+  redemptionPacks RedemptionPack[]
 
   @@index([instanceId, createdAt])
   @@index([playerId, createdAt])

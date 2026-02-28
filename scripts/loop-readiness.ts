@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 import { config } from 'dotenv'
-config({ path: '.env' })
 config({ path: '.env.local' })
+config({ path: '.env' })
 import { execSync } from 'child_process'
 import { PrismaClient } from '@prisma/client'
 
