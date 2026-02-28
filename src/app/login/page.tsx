@@ -3,7 +3,14 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { LoginForm } from './LoginForm'
 
-export default async function LoginPage() {
+export default async function LoginPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ returnTo?: string }>
+}) {
+    const sp = searchParams ? await searchParams : {}
+    const returnTo = typeof sp.returnTo === 'string' ? sp.returnTo : undefined
+
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -16,13 +23,13 @@ export default async function LoginPage() {
             if (!player.nationId || !player.playbookId) {
                 redirect('/conclave/onboarding')
             }
-            redirect('/')
+            redirect(returnTo && returnTo.startsWith('/') ? returnTo : '/')
         }
     }
 
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center">
-            <LoginForm />
+            <LoginForm returnTo={returnTo} />
         </div>
     )
 }

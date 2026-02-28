@@ -44,6 +44,7 @@ export async function login(formData: FormData) {
     const requestId = createRequestId()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const returnTo = (formData.get('returnTo') as string)?.trim()
 
     if (!email || !password) return { error: 'Email and password required' } satisfies LoginState
 
@@ -78,11 +79,14 @@ export async function login(formData: FormData) {
 
         // If the player hasn't selected Nation / Archetype yet, drive them into the guided narrative
         // node where those choices are made.
-        const redirectTo = !player.nationId
+        let redirectToPath = !player.nationId
             ? '/conclave/guided?step=nation_select'
             : (!player.playbookId ? '/conclave/guided?step=playbook_select' : '/')
+        if (redirectToPath === '/' && returnTo && returnTo.startsWith('/')) {
+            redirectToPath = returnTo
+        }
 
-        return { success: true, redirectTo } satisfies LoginState
+        return { success: true, redirectTo: redirectToPath } satisfies LoginState
     } catch (error) {
         logActionError(
             { action: 'login', requestId, userId: null, extra: { email } },

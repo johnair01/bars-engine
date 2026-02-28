@@ -7,7 +7,7 @@ import { loginWithState, type LoginState } from '@/actions/conclave-auth'
 
 const initialState: LoginState = {}
 
-export function LoginForm() {
+export function LoginForm({ returnTo }: { returnTo?: string }) {
     const router = useRouter()
     const [state, formAction, isPending] = useActionState(loginWithState, initialState)
 
@@ -27,6 +27,7 @@ export function LoginForm() {
             </div>
 
             <form action={formAction} className="space-y-4">
+                {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
                 <div>
                     <label className="block text-xs uppercase text-zinc-500 mb-1">Email</label>
                     <input
@@ -67,7 +68,7 @@ export function LoginForm() {
 
                 <div className="text-center pt-4 text-xs text-zinc-500">
                     New here?{' '}
-                    <Link href="/conclave/guided" className="hover:text-white transition">
+                    <Link href={returnTo ? `/conclave/guided?returnTo=${encodeURIComponent(returnTo)}` : '/conclave/guided'} className="hover:text-white transition">
                         Create an account
                     </Link>
                 </div>

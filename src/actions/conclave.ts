@@ -175,10 +175,11 @@ function deriveTemporaryNameFromEmail(email: string): string {
 
 export async function createGuidedPlayer(prevState: any, formData: FormData) {
     const requestId = createRequestId()
-    const rawData = {
-        identity: formData.get('identity'),
-        ref: formData.get('ref'),
-    }
+        const rawData = {
+            identity: formData.get('identity'),
+            ref: formData.get('ref'),
+            returnTo: formData.get('returnTo'),
+        }
 
     let identity
     try {
@@ -286,7 +287,12 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
             })
         }
 
-        const redirectTo = campaignRef === 'bruised-banana' ? '/event' : undefined
+        const returnToPath = typeof rawData.returnTo === 'string' ? rawData.returnTo.trim() : null
+        const redirectTo = returnToPath && returnToPath.startsWith('/')
+            ? returnToPath
+            : campaignRef === 'bruised-banana'
+                ? '/event'
+                : undefined
         return { success: true, redirectTo }
     } catch (e: any) {
         logActionError(

@@ -4,7 +4,7 @@ import { useActionState, useState, useEffect } from 'react'
 import { createGuidedPlayer } from '@/actions/conclave'
 import { useRouter } from 'next/navigation'
 
-export function GuidedAuthForm({ campaignRef }: { campaignRef?: string }) {
+export function GuidedAuthForm({ campaignRef, returnTo }: { campaignRef?: string; returnTo?: string }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -63,6 +63,9 @@ export function GuidedAuthForm({ campaignRef }: { campaignRef?: string }) {
                 />
                 {campaignRef && (
                     <input type="hidden" name="ref" value={campaignRef} />
+                )}
+                {returnTo && (
+                    <input type="hidden" name="returnTo" value={returnTo} />
                 )}
 
                 {error && (

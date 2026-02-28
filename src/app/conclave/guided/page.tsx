@@ -7,8 +7,8 @@ import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
 import { StoryProgress } from './types'
 import { GuidedAuthForm } from './components/GuidedAuthForm'
 
-export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string }> }) {
-    const { step, reset, ref: campaignRef } = await searchParams
+export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string, returnTo?: string }> }) {
+    const { step, reset, ref: campaignRef, returnTo } = await searchParams
 
     if (reset === 'true') {
         const cookieStore = await cookies()
@@ -21,14 +21,14 @@ export default async function GuidedModePage({ searchParams }: { searchParams: P
 
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex items-center justify-center">
-            <GuidedStoryLoader requestedStep={step} campaignRef={campaignRef ?? undefined} />
+            <GuidedStoryLoader requestedStep={step} campaignRef={campaignRef ?? undefined} returnTo={returnTo ?? undefined} />
         </div>
     )
 }
 
 import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
-async function GuidedStoryLoader({ requestedStep, campaignRef }: { requestedStep?: string, campaignRef?: string }) {
+async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { requestedStep?: string, campaignRef?: string, returnTo?: string }) {
     const { playerId, player, dbError, errorMessage } = await getCurrentPlayerSafe()
 
     if (dbError) {
@@ -48,7 +48,7 @@ async function GuidedStoryLoader({ requestedStep, campaignRef }: { requestedStep
     }
 
     if (!playerId) {
-        return <GuidedAuthForm campaignRef={campaignRef} />
+        return <GuidedAuthForm campaignRef={campaignRef} returnTo={returnTo} />
     }
 
     if (!player) redirect('/login')
