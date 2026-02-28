@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getWallet } from '@/actions/economy'
 import { redirect } from 'next/navigation'
 import { VibulonTransfer } from '@/components/VibulonTransfer'
+import { RedemptionPacksSection } from '@/components/RedemptionPacksSection'
 
 export default async function WalletPage() {
     const cookieStore = await cookies()
@@ -47,6 +48,13 @@ export default async function WalletPage() {
         orderBy: { updatedAt: 'desc' }
     })
 
+    // Fetch unredeemed redemption packs (BARs from donations)
+    const redemptionPacks = await db.redemptionPack.findMany({
+        where: { playerId, status: 'unredeemed' },
+        include: { instance: true },
+        orderBy: { createdAt: 'desc' }
+    })
+
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             {/* Header */}
@@ -61,6 +69,11 @@ export default async function WalletPage() {
                     <div className="text-4xl font-mono text-green-400">{total} ♦</div>
                 </div>
             </div>
+
+            {/* Redemption Packs (BARs from donations) */}
+            {redemptionPacks.length > 0 && (
+                <RedemptionPacksSection packs={redemptionPacks} />
+            )}
 
             {/* Local Balances */}
             {participations.length > 0 && (

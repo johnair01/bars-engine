@@ -115,6 +115,16 @@ export default async function AdminInstancesPage({
             <input name="targetDescription" placeholder="Raise $3000 for Bruised Banana Residency Fund (Allyship target: Wendell)" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Wake Up: Learn the story</label>
+            <textarea name="wakeUpContent" rows={4} placeholder="The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers. Your awareness and participation help the collective thrive." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Show Up: Contribute to the campaign</label>
+            <textarea name="showUpContent" rows={4} placeholder="Contribute money (Sponsor above) or play the game by signing up and choosing your domains. This instance runs on quests, BARs, vibeulons, and story clock." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Goal Amount (USD)</label>
             <input name="goalAmount" inputMode="decimal" placeholder="3000" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
@@ -133,6 +143,21 @@ export default async function AdminInstancesPage({
           <div className="space-y-1 md:col-span-2">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Patreon Link</label>
             <input name="patreonUrl" placeholder="https://patreon.com/..." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Venmo Link</label>
+            <input name="venmoUrl" placeholder="https://venmo.com/..." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Cash App Link</label>
+            <input name="cashappUrl" placeholder="https://cash.app/..." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">PayPal Link</label>
+            <input name="paypalUrl" placeholder="https://paypal.me/..." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
           <div className="space-y-1">

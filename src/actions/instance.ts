@@ -135,8 +135,13 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const domainType = (formData.get('domainType') as string | null)?.trim() || ''
     const theme = (formData.get('theme') as string | null)?.trim() || null
     const targetDescription = (formData.get('targetDescription') as string | null)?.trim() || null
+    const wakeUpContent = (formData.get('wakeUpContent') as string | null)?.trim() || null
+    const showUpContent = (formData.get('showUpContent') as string | null)?.trim() || null
     const stripeOneTimeUrl = (formData.get('stripeOneTimeUrl') as string | null)?.trim() || null
     const patreonUrl = (formData.get('patreonUrl') as string | null)?.trim() || null
+    const venmoUrl = (formData.get('venmoUrl') as string | null)?.trim() || null
+    const cashappUrl = (formData.get('cashappUrl') as string | null)?.trim() || null
+    const paypalUrl = (formData.get('paypalUrl') as string | null)?.trim() || null
     const isEventMode = formData.get('isEventMode') === 'on'
 
     const goalAmountCents = toCents(formData.get('goalAmount'))
@@ -158,8 +163,13 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           domainType,
           theme,
           targetDescription,
+          wakeUpContent,
+          showUpContent,
           stripeOneTimeUrl,
           patreonUrl,
+          venmoUrl,
+          cashappUrl,
+          paypalUrl,
           isEventMode,
           goalAmountCents,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
@@ -173,8 +183,13 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           domainType,
           theme,
           targetDescription,
+          wakeUpContent,
+          showUpContent,
           stripeOneTimeUrl,
           patreonUrl,
+          venmoUrl,
+          cashappUrl,
+          paypalUrl,
           isEventMode,
           goalAmountCents,
           kotterStage,
@@ -186,8 +201,13 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           domainType,
           theme,
           targetDescription,
+          wakeUpContent,
+          showUpContent,
           stripeOneTimeUrl,
           patreonUrl,
+          venmoUrl,
+          cashappUrl,
+          paypalUrl,
           isEventMode,
           goalAmountCents,
           kotterStage,
@@ -240,6 +260,43 @@ export async function updateInstanceKotterStage(formData: FormData): Promise<voi
 
   if (errorMessage) {
     redirectWithMessage('/admin/instances', { error: errorMessage })
+  }
+}
+
+/**
+ * Update campaign copy (Wake Up, Show Up, theme, target description).
+ * Admin only. Used by event page Edit modal.
+ */
+export async function updateInstanceCampaignCopy(
+  instanceId: string,
+  data: {
+    wakeUpContent?: string | null
+    showUpContent?: string | null
+    theme?: string | null
+    targetDescription?: string | null
+  }
+): Promise<{ error?: string }> {
+  try {
+    await ensureAdmin()
+    if (!instanceId?.trim()) return { error: 'Instance ID is required' }
+
+    await db.instance.update({
+      where: { id: instanceId },
+      data: {
+        ...(data.wakeUpContent !== undefined && { wakeUpContent: data.wakeUpContent?.trim() || null }),
+        ...(data.showUpContent !== undefined && { showUpContent: data.showUpContent?.trim() || null }),
+        ...(data.theme !== undefined && { theme: data.theme?.trim() || null }),
+        ...(data.targetDescription !== undefined && { targetDescription: data.targetDescription?.trim() || null }),
+      },
+    })
+
+    revalidatePath('/event')
+    revalidatePath('/')
+    revalidatePath('/admin/instances')
+    return {}
+  } catch (e) {
+    console.error('[instance] updateInstanceCampaignCopy failed:', e)
+    return { error: toUserSafeErrorMessage(e) }
   }
 }
 

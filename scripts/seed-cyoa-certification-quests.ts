@@ -431,6 +431,114 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${intentionsStory.title} (${intentionsStory.id})`)
     console.log(`✅ Quest seeded: ${intentionsQuest.title} (${intentionsQuest.id})`)
+
+    // --- Certification: Event Page Campaign Editor (AA) ---
+    const editorTitle = 'Certification: Event Page Campaign Editor V1'
+    const editorSlug = 'cert-event-campaign-editor-v1'
+
+    const editorPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the event page campaign editor. Prepare the Bruised Banana Fundraiser invitation by confirming you can edit Wake Up and Show Up copy directly from the event page.',
+            cleanText: 'This certification quest verifies the event page campaign editor. Prepare the Bruised Banana Fundraiser invitation by confirming you can edit Wake Up and Show Up copy directly from the event page.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open the event page\n\nLog in as admin. [Open /event](/event) in a new tab. Confirm you see the Bruised Banana (or active instance) event page.',
+            cleanText: '### Step 1: Open the event page\n\nLog in as admin. [Open /event](/event) in a new tab. Confirm you see the Bruised Banana (or active instance) event page.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Click Edit campaign\n\nFind the **Edit campaign** button (top right). Click it to open the edit modal.',
+            cleanText: '### Step 2: Click Edit campaign\n\nFind the **Edit campaign** button (top right). Click it to open the edit modal.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Update Wake Up content\n\nIn the modal, add a small edit to the Wake Up content (e.g. append " — verified" or paste from ChatGPT). Click **Save**.',
+            cleanText: '### Step 3: Update Wake Up content\n\nIn the modal, add a small edit to the Wake Up content (e.g. append " — verified" or paste from ChatGPT). Click **Save**.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Confirm the change\n\nRefresh the page or close the modal. Confirm the Wake Up section shows your updated text.',
+            cleanText: '### Step 4: Confirm the change\n\nRefresh the page or close the modal. Confirm the Wake Up section shows your updated text.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have confirmed the event page campaign editor. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete. You have confirmed the event page campaign editor. Complete this quest to receive your vibeulon reward.',
+            links: []
+        }
+    ]
+
+    const editorParsedJson = JSON.stringify({
+        title: editorTitle,
+        startPassage: 'START',
+        passages: editorPassages
+    })
+
+    const editorStory = await db.twineStory.upsert({
+        where: { slug: editorSlug },
+        update: {
+            title: editorTitle,
+            parsedJson: editorParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: editorTitle,
+            slug: editorSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Event page campaign editor certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: editorParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const editorQuest = await db.customBar.upsert({
+        where: { id: editorSlug },
+        update: {
+            title: editorTitle,
+            description: 'Step-by-step verification of the event page campaign editor: Edit button, modal, update Wake Up, confirm change. Prepares the Bruised Banana Fundraiser invitation.',
+            reward: 1,
+            twineStoryId: editorStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: editorSlug,
+            title: editorTitle,
+            description: 'Step-by-step verification of the event page campaign editor: Edit button, modal, update Wake Up, confirm change. Prepares the Bruised Banana Fundraiser invitation.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: editorStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${editorStory.title} (${editorStory.id})`)
+    console.log(`✅ Quest seeded: ${editorQuest.title} (${editorQuest.id})`)
     console.log('✅ CYOA Certification Quests seeded.')
 }
 

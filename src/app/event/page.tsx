@@ -1,10 +1,15 @@
 import Link from 'next/link'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
-import { hasClaimedSupportToken } from '@/actions/donate'
 import { KOTTER_STAGES } from '@/lib/kotter'
-import { ClaimSupportTokenButton } from './ClaimSupportTokenButton'
 import { InviteButton } from './InviteButton'
+import { EventCampaignEditor } from './EventCampaignEditor'
+
+const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
+Your awareness and participation help the collective thrive.`
+
+const DEFAULT_SHOW_UP = `Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
+This instance runs on quests, BARs, vibeulons, and story clock.`
 
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
@@ -18,7 +23,6 @@ function formatUsdCents(cents: number) {
 export default async function EventPage() {
   const instance = await getActiveInstance()
   const player = await getCurrentPlayer()
-  const hasClaimed = player && instance ? await hasClaimedSupportToken(instance.id) : false
 
   if (!instance) {
     return (
@@ -45,12 +49,26 @@ export default async function EventPage() {
   const goal = instance.goalAmountCents ?? 0
   const current = instance.currentAmountCents ?? 0
   const pct = goal > 0 ? Math.max(0, Math.min(1, current / goal)) : 0
+  const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
+  const wakeUpContent = instance.wakeUpContent ?? DEFAULT_WAKE_UP
+  const showUpContent = instance.showUpContent ?? DEFAULT_SHOW_UP
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12">
       <div className="max-w-3xl mx-auto space-y-10">
         <header className="space-y-3">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-white">← Back</Link>
+          <div className="flex justify-between items-start">
+            <Link href="/" className="text-sm text-zinc-500 hover:text-white">← Back</Link>
+            {isAdmin && (
+              <EventCampaignEditor
+                instanceId={instance.id}
+                initialWakeUp={wakeUpContent}
+                initialShowUp={showUpContent}
+                initialTheme={instance.theme ?? ''}
+                initialTargetDescription={instance.targetDescription ?? ''}
+              />
+            )}
+          </div>
           <div className="flex flex-wrap gap-3 items-center">
             <span className="text-xs uppercase tracking-widest text-zinc-500">
               {instance.domainType}
@@ -70,9 +88,8 @@ export default async function EventPage() {
 
         <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">Wake Up: Learn the story</h2>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
-            Your awareness and participation help the collective thrive.
+          <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
+            {wakeUpContent}
           </p>
           {(instance.theme || instance.targetDescription) && (
             <details className="mt-3">
@@ -109,47 +126,25 @@ export default async function EventPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              {instance.stripeOneTimeUrl && (
-                <a
-                  href={instance.stripeOneTimeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
-                >
-                  Sponsor the Heist (One-time)
-                </a>
-              )}
-              {instance.patreonUrl && (
-                <a
-                  href={instance.patreonUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold"
-                >
-                  Join Patreon (Recurring)
-                </a>
-              )}
+              <Link
+                href="/event/donate"
+                className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
+              >
+                Donate
+              </Link>
             </div>
-          </section>
-        )}
-
-        {player && (
-          <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-white">Support the cause</h2>
-            <p className="text-zinc-400 text-sm">
-              Declare your support and receive 1 vibeulon (Energy) as a thank-you.
-            </p>
-            <ClaimSupportTokenButton instanceId={instance.id} hasClaimed={hasClaimed} />
           </section>
         )}
 
         <section className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">Show Up: Contribute to the campaign</h2>
-          <p className="text-zinc-500 text-sm">
-            Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
-            This instance runs on quests, BARs, vibeulons, and story clock.
+          <p className="text-zinc-500 text-sm whitespace-pre-wrap">
+            {showUpContent}
           </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+            <Link href="/event/donate" className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600/80 hover:bg-green-500/80 text-white font-bold border border-green-500/50">
+              Donate
+            </Link>
             <InviteButton />
             {player ? (
               <Link href="/" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold">
