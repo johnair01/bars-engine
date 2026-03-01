@@ -15,10 +15,13 @@ export function AdminNav() {
         { name: 'Journeys', href: '/admin/journeys', icon: '📜' },
         { name: 'Quests', href: '/admin/quests', icon: '⚔️' },
         { name: 'Players', href: '/admin/players', icon: '👥' },
+        { name: 'Avatars', href: '/admin/avatars', icon: '🎭' },
         { name: 'World Data', href: '/admin/world', icon: '🌍' },
         { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
         { name: 'Twine Stories', href: '/admin/twine', icon: '📖' },
         { name: 'Adventures', href: '/admin/adventures', icon: '🗺️' },
+        { name: 'Library', href: '/admin/library', icon: '📚' },
+        { name: 'Docs', href: '/admin/docs', icon: '📄' },
         { name: 'Config', href: '/admin/config', icon: '⚙️' },
     ]
 

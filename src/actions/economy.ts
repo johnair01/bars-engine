@@ -218,6 +218,48 @@ export async function transferVibulons(formData: FormData) {
 }
 
 /**
+ * Get movement feed: who earned what, for what.
+ * Returns recent VibulonEvent records where amount > 0.
+ */
+export async function getMovementFeed(limit = 20) {
+    const events = await db.vibulonEvent.findMany({
+        where: { amount: { gt: 0 } },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        include: {
+            player: { select: { id: true, name: true } }
+        }
+    })
+
+    const questIds = [...new Set(events.map((e) => e.questId).filter(Boolean))] as string[]
+    const quests =
+        questIds.length > 0
+            ? await db.customBar.findMany({
+                  where: { id: { in: questIds } },
+                  select: { id: true, title: true }
+              })
+            : []
+    const questMap = Object.fromEntries(quests.map((q) => [q.id, q.title]))
+
+    return events.map((e) => ({
+        id: e.id,
+        playerId: e.playerId,
+        playerName: e.player?.name || 'A player',
+        amount: e.amount,
+        source: e.source,
+        notes: e.notes,
+        questId: e.questId,
+        forWhat:
+            e.questId && questMap[e.questId]
+                ? questMap[e.questId]
+                : e.source === 'p2p_transfer'
+                  ? (e.notes?.replace(/^Received from /, '')?.split(' • ')[0] || 'transfer')
+                  : e.notes?.replace(/^Quest Completed: /, '')?.replace(/^Bonus from quest: /, '')?.split(' (')[0] || e.source,
+        createdAt: e.createdAt
+    }))
+}
+
+/**
  * Get context for a transfer (balance + other players)
  */
 export async function getTransferContext() {

@@ -77,6 +77,24 @@ export default async function TwinePlayPage({
     const visited = JSON.parse(run.visited) as string[]
     const progress = Math.round((visited.length / parsed.passages.length) * 100)
 
+    const isFeedbackPassage = currentPassage.name === 'FEEDBACK' || (currentPassage.tags && (currentPassage.tags as string[]).includes('feedback'))
+    const feedbackSourceStep = isFeedbackPassage && visited.length >= 2 ? visited[visited.length - 2] : undefined
+
+    // Avatar preview for Build Your Character: derive on-the-fly when player has nation+playbook but no avatarConfig
+    const isBuildCharQuest = questId === 'build-character-quest'
+    let avatarPreviewConfig: string | null = null
+    if (isBuildCharQuest && player && !player.avatarConfig && player.nationId && player.playbookId) {
+        const { deriveAvatarConfig } = await import('@/lib/avatar-utils')
+        const nation = nations.find((n: { id: string }) => n.id === player.nationId)
+        const playbook = playbooks.find((p: { id: string }) => p.id === player.playbookId)
+        avatarPreviewConfig = deriveAvatarConfig(
+            player.nationId,
+            player.playbookId,
+            player.campaignDomainPreference,
+            { nationName: nation?.name, playbookName: playbook?.name, pronouns: player.pronouns }
+        )
+    }
+
     return (
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
             <div className="max-w-2xl mx-auto space-y-6">
@@ -103,6 +121,9 @@ export default async function TwinePlayPage({
                         quest={quest as any}
                         threadId={threadId}
                         isRitual={isRitual}
+                        feedbackSourceStep={feedbackSourceStep}
+                        player={player}
+                        avatarPreviewConfig={avatarPreviewConfig}
                     />
                 </TwineErrorBoundary>
             </div>

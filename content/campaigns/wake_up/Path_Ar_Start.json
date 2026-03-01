@@ -1,6 +1,6 @@
 {
   "id": "Path_Ar_Start",
-  "text": "(Entering Architect Path)\n<<set $active_face = \"architect\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "text": "Enter through the blueprint: the residency as a project to build, Wendell's technology as an advantage. Your journey begins in strategy.\n\n<<set $active_face = \"architect\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
   "choices": [
     {
       "text": "Continue",

@@ -7,9 +7,10 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuestDetailModal } from '@/components/QuestDetailModal'
 import { StageIndicator } from '@/components/StageIndicator'
+import { Avatar } from '@/components/Avatar'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 import { CampaignPathForm } from '@/components/CampaignPathForm'
-import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { ALLYSHIP_DOMAINS, parseCampaignDomainPreference } from '@/lib/allyship-domains'
 import Link from 'next/link'
 
 type MarketContent = {
@@ -34,8 +35,19 @@ export default function AvailableBarsPage() {
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [showCampaignPath, setShowCampaignPath] = useState(false)
 
-    const refreshContent = () => {
-        getMarketContent().then(data => setContent(data as any))
+    const refreshContent = () => getMarketContent().then(data => setContent(data as any))
+
+    const hasDomainFilter = parseCampaignDomainPreference(content?.campaignDomainPreference ?? null).length > 0
+    const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0
+    const hasAnyFilter = hasDomainFilter || hasClientFilters
+
+    const handleClearAllFilters = async () => {
+        setSearchQuery('')
+        setActiveStage(null)
+        setSelectedNations([])
+        setSelectedArchetypes([])
+        await updateCampaignDomainPreference([])
+        await refreshContent()
     }
 
     useEffect(() => {
@@ -96,20 +108,28 @@ export default function AvailableBarsPage() {
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setShowCampaignPath(!showCampaignPath)}
-                        className="text-xs font-bold text-teal-500 hover:text-teal-400 transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
-                    >
-                        {showCampaignPath ? 'Hide' : 'Update campaign path'} {showCampaignPath ? '▴' : '▾'}
-                    </button>
-                    <button
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="text-xs font-bold text-zinc-500 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
-                    >
-                        {showAdvanced ? 'Hide Advanced' : 'Advanced Filters'} {showAdvanced ? '▴' : '▾'}
-                    </button>
-                </div>
+                    <div className="flex items-center gap-2">
+                        {hasAnyFilter && (
+                            <button
+                                onClick={handleClearAllFilters}
+                                className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
+                            >
+                                Clear all filters
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowCampaignPath(!showCampaignPath)}
+                            className="text-xs font-bold text-teal-500 hover:text-teal-400 transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
+                        >
+                            {showCampaignPath ? 'Hide' : 'Update campaign path'} {showCampaignPath ? '▴' : '▾'}
+                        </button>
+                        <button
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                            className="text-xs font-bold text-zinc-500 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800"
+                        >
+                            {showAdvanced ? 'Hide Advanced' : 'Advanced Filters'} {showAdvanced ? '▴' : '▾'}
+                        </button>
+                    </div>
             </header>
 
             {/* Campaign Path (Choose your domains) */}
@@ -196,14 +216,7 @@ export default function AvailableBarsPage() {
                     {others.length === 0 ? (
                         <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
                             <p className="text-zinc-500">No matching commissions found.</p>
-                            <button onClick={async () => {
-                                setSearchQuery('')
-                                setActiveStage(null)
-                                setSelectedNations([])
-                                setSelectedArchetypes([])
-                                await updateCampaignDomainPreference([])
-                                refreshContent()
-                            }} className="text-purple-400 hover:text-purple-300 font-bold mt-2">
+                            <button onClick={handleClearAllFilters} className="text-purple-400 hover:text-purple-300 font-bold mt-2">
                                 Clear all filters
                             </button>
                         </div>
@@ -318,7 +331,10 @@ function QuestCard({
                                 {ALLYSHIP_DOMAINS.find(d => d.key === bar.allyshipDomain)?.short ?? bar.allyshipDomain}
                             </span>
                         )}
-                        <span className="text-[9px] text-zinc-600 italic ml-auto pt-0.5">
+                        <span className="flex items-center gap-1.5 text-[9px] text-zinc-600 italic ml-auto pt-0.5">
+                            {!isAnonymous && creator && (
+                                <Avatar player={{ name: creator.name ?? 'System', avatarConfig: creator.avatarConfig }} size="sm" />
+                            )}
                             by {isAnonymous ? 'Anonymous' : (creator?.name || 'System')}
                         </span>
                     </div>

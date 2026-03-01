@@ -125,6 +125,16 @@ export default async function AdminInstancesPage({
             <textarea name="showUpContent" rows={4} placeholder="Contribute money (Sponsor above) or play the game by signing up and choosing your domains. This instance runs on quests, BARs, vibeulons, and story clock." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Story bridge (game ↔ real world)</label>
+            <textarea name="storyBridgeCopy" rows={2} placeholder="This residency is your Conclave; the fundraiser is the heist; your contribution powers the construct; vibeulons are the emotional energy that moves through this space." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref (default when /campaign has no ref)</label>
+            <input name="campaignRef" placeholder="bruised-banana" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Goal Amount (USD)</label>
             <input name="goalAmount" inputMode="decimal" placeholder="3000" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />

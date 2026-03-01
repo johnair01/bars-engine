@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { CampaignAuthForm } from './CampaignAuthForm'
+import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
+import { chunkIntoSlides } from '@/lib/slide-chunker'
 
 interface CampaignChoice {
     text: string
@@ -13,11 +15,14 @@ interface CampaignNode {
     id: string
     text: string
     choices: CampaignChoice[]
+    stepIndex?: number
+    totalSteps?: number
 }
 
 interface CampaignReaderProps {
     initialNode: CampaignNode
     adventureSlug?: string
+    campaignRef?: string
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -139,10 +144,13 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: CampaignReaderProps) {
+export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef }: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
+    const [fetchError, setFetchError] = useState<string | null>(null)
+    const [lastFailedNodeId, setLastFailedNodeId] = useState<string | null>(null)
     const [campaignState, setCampaignState] = useState<Record<string, any>>({
+        ref: campaignRef ?? undefined,
         completed_shaman: false,
         completed_challenger: false,
         completed_regent: false,
@@ -162,6 +170,7 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: Campa
 
     const [renderedText, setRenderedText] = useState(initialNode.text)
     const [availableChoices, setAvailableChoices] = useState(initialNode.choices)
+    const [slideIndex, setSlideIndex] = useState(0)
 
     useEffect(() => {
         // Load the initial map to ensure we have it cached (in a real app)
@@ -171,13 +180,15 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: Campa
 
     const fetchNode = async (nodeId: string) => {
         setLoading(true)
+        setFetchError(null)
         try {
+            const refParam = campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''
             // Try fetching from the DB first using the new dynamic route
-            let res = await fetch(`/api/adventures/${adventureSlug}/${nodeId}`)
+            let res = await fetch(`/api/adventures/${adventureSlug}/${nodeId}${refParam}`)
 
             // Fallback to static JSON if DB route 404s (for backwards compatibility while migrating)
             if (!res.ok) {
-                res = await fetch(`/api/campaigns/${adventureSlug}/${nodeId}`)
+                res = await fetch(`/api/campaigns/${adventureSlug}/${nodeId}${refParam}`)
             }
 
             if (res.ok) {
@@ -190,14 +201,18 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: Campa
                 setCampaignState(newState)
                 setCurrentNode(node)
                 setRenderedText(cleanText)
+                setSlideIndex(0)
 
                 // Filter choices based on their conditions (if they had any, though in this skeleton we use <<if>> blocks in the text instead)
                 setAvailableChoices(node.choices)
             } else {
-                console.error("Failed to load node", nodeId)
+                setLastFailedNodeId(nodeId)
+                setFetchError('Could not load this step.')
             }
         } catch (e) {
             console.error(e)
+            setLastFailedNodeId(nodeId)
+            setFetchError('Something went wrong. Try again or continue later.')
         }
         setLoading(false)
     }
@@ -215,17 +230,111 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: Campa
         return <CampaignAuthForm campaignState={campaignState} />
     }
 
+    if (fetchError && !loading) {
+        return (
+            <div className="w-full max-w-2xl mx-auto space-y-6 p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl text-center">
+                <p className="text-zinc-400">{fetchError}</p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                    <button
+                        onClick={() => fetchNode(lastFailedNodeId ?? initialNode.id)}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-sm"
+                    >
+                        Retry
+                    </button>
+                    <a
+                        href="/event"
+                        className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg font-bold text-sm border border-zinc-700"
+                    >
+                        Continue later
+                    </a>
+                </div>
+            </div>
+        )
+    }
+
     if (loading || !currentNode) {
         return <div className="text-zinc-500 animate-pulse text-center p-8">Reading timeline...</div>
     }
 
+    const stepIndex = (currentNode as CampaignNode & { stepIndex?: number }).stepIndex
+    const totalSteps = (currentNode as CampaignNode & { totalSteps?: number }).totalSteps
+
+    const isPreSplitSlideNode = /^BB_Intro_\d+$|^BB_ShowUp_\d+$/.test(currentNode.id)
+    const slides = isPreSplitSlideNode ? [renderedText] : chunkIntoSlides(renderedText)
+    const useSlideMode = slides.length > 1
+    const displayText = useSlideMode ? slides[slideIndex] : renderedText
+
     return (
         <div className="w-full max-w-2xl mx-auto space-y-8 animate-in fade-in relative min-h-[60vh] flex flex-col items-center justify-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl shadow-2xl">
+            {campaignRef === 'bruised-banana' && (
+                <OnboardingAvatarPreview
+                    campaignState={campaignState}
+                    currentNodeId={currentNode.id}
+                />
+            )}
+            {stepIndex != null && totalSteps != null && totalSteps > 0 && (
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                    <div className="text-xs text-zinc-500 font-mono">
+                        Step {stepIndex} of {totalSteps}
+                    </div>
+                    <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-500 transition-all duration-500"
+                            style={{ width: `${(stepIndex / totalSteps) * 100}%` }}
+                        />
+                    </div>
+                </div>
+            )}
             <div className="prose prose-invert prose-lg max-w-none w-full text-left font-sans">
-                <ReactMarkdown>{renderedText}</ReactMarkdown>
+                <ReactMarkdown
+                    components={{
+                        a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                {children}
+                            </a>
+                        )
+                    }}
+                >
+                    {displayText}
+                </ReactMarkdown>
             </div>
 
-            <div className="w-full pt-8 flex flex-col gap-3 max-w-md">
+            {useSlideMode ? (
+                <div className="w-full pt-8 flex flex-col gap-3 max-w-md">
+                    <button
+                        onClick={() => {
+                            if (slideIndex < slides.length - 1) {
+                                setSlideIndex((i) => i + 1)
+                            } else if (availableChoices.length > 0) {
+                                handleChoice(availableChoices[0])
+                            }
+                        }}
+                        className="w-full text-left bg-zinc-900 border border-zinc-700 hover:border-purple-500 hover:bg-zinc-800 text-zinc-300 hover:text-white p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center group relative overflow-hidden"
+                    >
+                        <span className="relative z-10">Continue</span>
+                        <span className="text-purple-500/0 group-hover:text-purple-500 transition-colors relative z-10">→</span>
+                    </button>
+                    {slideIndex > 0 && (
+                        <button
+                            onClick={() => setSlideIndex((i) => i - 1)}
+                            className="py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors"
+                        >
+                            ← Back
+                        </button>
+                    )}
+                    {availableChoices.slice(1).map((choice, i) => (
+                        <button
+                            key={i}
+                            onClick={() => handleChoice(choice)}
+                            className="w-full text-left bg-zinc-900 border border-zinc-700 hover:border-purple-500 hover:bg-zinc-800 text-zinc-300 hover:text-white p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center group relative overflow-hidden"
+                        >
+                            <span className="relative z-10">{choice.text}</span>
+                            <span className="text-purple-500/0 group-hover:text-purple-500 transition-colors relative z-10">→</span>
+                        </button>
+                    ))}
+                </div>
+            ) : (
+                <div className="w-full pt-8 flex flex-col gap-3 max-w-md">
                 {availableChoices.map((choice, i) => (
                     <button
                         key={i}
@@ -236,7 +345,8 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up' }: Campa
                         <span className="text-purple-500/0 group-hover:text-purple-500 transition-colors relative z-10">→</span>
                     </button>
                 ))}
-            </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -41,6 +41,7 @@ model Player {
   nationId               String?
   playbookId             String?
   campaignDomainPreference String?   // JSON array: ["GATHERING_RESOURCES","DIRECT_ACTION"]; null or [] = show all
+  avatarConfig            String?   // JSON: { nationKey, playbookKey, domainKey, variant } derived from CYOA choices
   pronouns               String?
   attendance             String?
   createdAt              DateTime                   @default(now())
@@ -70,6 +71,7 @@ model Player {
   participations         InstanceParticipation[]
   adventureProgress      PlayerAdventureProgress[]
   redemptionPacks        RedemptionPack[]
+  libraryRequests        LibraryRequest[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -153,6 +155,8 @@ model CustomBar {
   allowedNations       String?
   allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
   twineStoryId         String?
+  docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
+  evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
   shares               BarShare[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
   creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
@@ -165,6 +169,7 @@ model CustomBar {
   questMoveLogs        QuestMoveLog[] @relation("QuestMoveQuest")
   threadQuests         ThreadQuest[]
   microTwine           MicroTwineModule?
+  libraryRequestsSpawned LibraryRequest[] @relation("LibraryRequestSpawnedQuest")
 
   @@map("custom_bars")
 }
@@ -606,6 +611,8 @@ model Instance {
   targetDescription  String?
   wakeUpContent      String?              // Editable "Learn the story" paragraph
   showUpContent      String?             // Editable "Contribute to the campaign" paragraph
+  storyBridgeCopy    String?             // Optional: game↔real world bridge ("This residency is your Conclave...")
+  campaignRef        String?             // Default campaign when /campaign has no ref (e.g. bruised-banana)
   goalAmountCents    Int?
   currentAmountCents Int                  @default(0)
   kotterStage        Int                  @default(1) // 1–8; admin advances
@@ -625,6 +632,7 @@ model Instance {
   memberships        InstanceMembership[]
   participations     InstanceParticipation[]
   redemptionPacks    RedemptionPack[]
+  libraryRequests    LibraryRequest[]
 
   @@map("instances")
 }
@@ -758,9 +766,10 @@ model Adventure {
   status       String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
   visibility   String    @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
   startNodeId  String?
+  campaignRef  String?   // e.g. bruised-banana; when set, campaign page uses this Adventure for ref=bruised-banana
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  
+
   passages     Passage[]
   progress     PlayerAdventureProgress[]
 
@@ -796,5 +805,102 @@ model PlayerAdventureProgress {
 
   @@unique([playerId, adventureId])
   @@map("player_adventure_progress")
+}
+
+// --- K-Space Librarian ---
+
+model LibraryRequest {
+  id                    String    @id @default(cuid())
+  createdAt             DateTime  @default(now())
+  createdById           String
+  instanceId            String?
+  requestText           String
+  requestType           String    @default("other") // rules, ux, tech, lore, social, other
+  privacy               String    @default("anonymized") // private, anonymized, public
+  contextJson           String?   // JSON: screen, questId, actionId, etc.
+  status                String    @default("new") // new, resolved, spawned, closed
+  resolvedDocNodeId     String?
+  spawnedBacklogItemId  String?   @unique
+  spawnedDocQuestId     String?   @unique
+  createdBy             Player    @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  instance              Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  resolvedDocNode       DocNode?  @relation("LibraryRequestResolved", fields: [resolvedDocNodeId], references: [id], onDelete: SetNull)
+  spawnedBacklogItem    BacklogItem? @relation("BacklogItemSpawnedBy", fields: [spawnedBacklogItemId], references: [id], onDelete: SetNull)
+  spawnedDocQuest       CustomBar? @relation("LibraryRequestSpawnedQuest", fields: [spawnedDocQuestId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([instanceId, createdAt])
+  @@map("library_requests")
+}
+
+model DocNode {
+  id                  String    @id @default(cuid())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  nodeType            String    @default("handbook") // handbook, codex, lore, request_record
+  title               String
+  slug                String    @unique
+  scope               String    @default("experimental") // local, campaign, global, experimental, deprecated
+  versionMin          String?
+  versionMax          String?
+  buildHash           String?
+  tags                String    @default("[]") // JSON array
+  bodyRst             String?  @db.Text
+  bodySource          String    @default("curated") // generated, curated
+  canonicalStatus     String    @default("draft") // draft, validated, canonical, deprecated
+  mergedIntoDocNodeId String?
+  provenanceJson      String?   // JSON: libraryRequestId, questIds, barIds, instanceIds
+  mergedInto          DocNode?  @relation("DocNodeMerge", fields: [mergedIntoDocNodeId], references: [id], onDelete: SetNull)
+  mergedFrom          DocNode[] @relation("DocNodeMerge")
+  resolvedRequests    LibraryRequest[] @relation("LibraryRequestResolved")
+  evidenceLinks       DocEvidenceLink[]
+
+  @@index([canonicalStatus, scope])
+  @@index([slug])
+  @@map("doc_nodes")
+}
+
+model DocEvidenceLink {
+  id            String   @id @default(cuid())
+  docNodeId     String
+  customBarId   String?
+  questId       String?  // CustomBar id of DocQuest
+  playerQuestId String?
+  kind          String   @default("observation") // observation, instruction, canon_statement, spec_clause, lore, schism
+  weight        Float    @default(1.0)
+  confidence    Float?   // 0..1
+  docNode       DocNode  @relation(fields: [docNodeId], references: [id], onDelete: Cascade)
+
+  @@index([docNodeId])
+  @@map("doc_evidence_links")
+}
+
+model BacklogItem {
+  id                    String    @id @default(cuid())
+  createdAt             DateTime  @default(now())
+  title                 String
+  description           String    @db.Text
+  severity              String    @default("medium") // low, medium, high, blocking
+  area                  String    @default("other") // rules, ux, tech, lore, social
+  status                String    @default("new") // new, triaged, in_progress, done, wontfix
+  linkedDocNodeId       String?
+  linkedDocQuestId      String?
+  sourceLibraryRequest  LibraryRequest? @relation("BacklogItemSpawnedBy")
+
+  @@index([status])
+  @@map("backlog_items")
+}
+
+model Schism {
+  id                    String   @id @default(cuid())
+  createdAt             DateTime @default(now())
+  domain                String   @default("other") // rules, ux, tech, lore, social
+  status                String   @default("open") // open, hunting, resolved
+  conflictingDocNodeIds String   @default("[]") // JSON array of uuid
+  conflictingClaimsJson String?
+  evidenceBundleJson    String?
+  resolutionDocNodeId   String?
+
+  @@map("schisms")
 }
 

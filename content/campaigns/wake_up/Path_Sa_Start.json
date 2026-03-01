@@ -1,6 +1,6 @@
 {
   "id": "Path_Sa_Start",
-  "text": "(Entering Sage Path)\n<<set $active_face = \"sage\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "text": "Enter through the whole: the residency as one expression of emergence, Wendell's technology as part of the flow. Your journey begins in integration.\n\n<<set $active_face = \"sage\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
   "choices": [
     {
       "text": "Continue",

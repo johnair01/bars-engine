@@ -1,5 +1,7 @@
 'use server'
 
+import fs from 'fs'
+import path from 'path'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
@@ -549,6 +551,89 @@ export async function getAdminWorldData() {
         db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
         db.playbook.findMany({ orderBy: { name: 'asc' } })
     ])
+}
+
+// ===================================
+// SPRITE ASSET MANAGEMENT
+// ===================================
+
+const BASE_KEYS = ['male', 'female', 'neutral', 'default'] as const
+const LAYERS = ['base', 'nation_body', 'nation_accent', 'playbook_outfit', 'playbook_accent'] as const
+
+function slugifyName(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/^the\s+/i, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') || 'unknown'
+}
+
+export async function getAdminSpriteAssets() {
+    await checkAdmin()
+
+    const [nations, playbooks] = await Promise.all([
+        db.nation.findMany({ where: { archived: false }, select: { name: true } }),
+        db.playbook.findMany({ select: { name: true } })
+    ])
+
+    const nationKeys = nations.map((n) => slugifyName(n.name))
+    const playbookKeys = playbooks.map((p) => slugifyName(p.name))
+
+    const spritesDir = path.join(process.cwd(), 'public', 'sprites', 'parts')
+    const byLayer: Record<string, { expected: string[]; existing: string[] }> = {}
+
+    for (const layer of LAYERS) {
+        const layerDir = path.join(spritesDir, layer)
+        let existing: string[] = []
+        if (fs.existsSync(layerDir)) {
+            existing = fs
+                .readdirSync(layerDir)
+                .filter((f) => f.endsWith('.png'))
+                .map((f) => f.replace(/\.png$/, ''))
+        }
+
+        let expected: string[] = []
+        if (layer === 'base') expected = [...BASE_KEYS]
+        else if (layer === 'nation_body' || layer === 'nation_accent') expected = nationKeys
+        else if (layer === 'playbook_outfit' || layer === 'playbook_accent') expected = playbookKeys
+
+        byLayer[layer] = { expected: [...new Set(expected)], existing }
+    }
+
+    return { byLayer, nations, playbooks }
+}
+
+export async function uploadSpriteAsset(formData: FormData) {
+    await checkAdmin()
+
+    const layer = formData.get('layer') as string
+    const key = formData.get('key') as string
+    const file = formData.get('file') as File
+
+    if (!layer || !key || !file) {
+        throw new Error('Missing layer, key, or file')
+    }
+    if (!LAYERS.includes(layer as (typeof LAYERS)[number])) {
+        throw new Error('Invalid layer')
+    }
+    const safeKey = key.replace(/[^a-z0-9-]/g, '').toLowerCase() || 'unknown'
+    if (file.type !== 'image/png') {
+        throw new Error('Only PNG files are allowed')
+    }
+
+    const spritesDir = path.join(process.cwd(), 'public', 'sprites', 'parts')
+    const layerDir = path.join(spritesDir, layer)
+    if (!fs.existsSync(layerDir)) {
+        fs.mkdirSync(layerDir, { recursive: true })
+    }
+
+    const destPath = path.join(layerDir, `${safeKey}.png`)
+    const buffer = Buffer.from(await file.arrayBuffer())
+    fs.writeFileSync(destPath, buffer)
+
+    revalidatePath('/admin/avatars/assets')
 }
 
 export async function getAdminNation(id: string) {

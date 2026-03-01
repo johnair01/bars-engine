@@ -137,6 +137,8 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const targetDescription = (formData.get('targetDescription') as string | null)?.trim() || null
     const wakeUpContent = (formData.get('wakeUpContent') as string | null)?.trim() || null
     const showUpContent = (formData.get('showUpContent') as string | null)?.trim() || null
+    const storyBridgeCopy = (formData.get('storyBridgeCopy') as string | null)?.trim() || null
+    const campaignRef = (formData.get('campaignRef') as string | null)?.trim() || null
     const stripeOneTimeUrl = (formData.get('stripeOneTimeUrl') as string | null)?.trim() || null
     const patreonUrl = (formData.get('patreonUrl') as string | null)?.trim() || null
     const venmoUrl = (formData.get('venmoUrl') as string | null)?.trim() || null
@@ -185,6 +187,8 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           targetDescription,
           wakeUpContent,
           showUpContent,
+          storyBridgeCopy,
+          campaignRef,
           stripeOneTimeUrl,
           patreonUrl,
           venmoUrl,
@@ -203,6 +207,8 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           targetDescription,
           wakeUpContent,
           showUpContent,
+          storyBridgeCopy,
+          campaignRef,
           stripeOneTimeUrl,
           patreonUrl,
           venmoUrl,
@@ -272,6 +278,7 @@ export async function updateInstanceCampaignCopy(
   data: {
     wakeUpContent?: string | null
     showUpContent?: string | null
+    storyBridgeCopy?: string | null
     theme?: string | null
     targetDescription?: string | null
   }
@@ -285,6 +292,7 @@ export async function updateInstanceCampaignCopy(
       data: {
         ...(data.wakeUpContent !== undefined && { wakeUpContent: data.wakeUpContent?.trim() || null }),
         ...(data.showUpContent !== undefined && { showUpContent: data.showUpContent?.trim() || null }),
+        ...(data.storyBridgeCopy !== undefined && { storyBridgeCopy: data.storyBridgeCopy?.trim() || null }),
         ...(data.theme !== undefined && { theme: data.theme?.trim() || null }),
         ...(data.targetDescription !== undefined && { targetDescription: data.targetDescription?.trim() || null }),
       },

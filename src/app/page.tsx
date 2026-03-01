@@ -5,7 +5,7 @@ import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { DashboardCaster } from '@/components/DashboardCaster'
 import { QuestThread } from '@/components/QuestThread'
 import { QuestPack } from '@/components/QuestPack'
-import { ensureWallet } from '@/actions/economy'
+import { ensureWallet, getMovementFeed } from '@/actions/economy'
 import { getGlobalState } from '@/actions/world'
 import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
@@ -20,6 +20,9 @@ import { getActiveInstance } from '@/actions/instance'
 import { AttuneButton } from '@/components/AttuneButton'
 import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
 import { IntentionDisplay } from '@/components/IntentionDisplay'
+import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
+import { LibraryRequestButton } from '@/components/LibraryRequestButton'
+import { MovementFeed } from '@/components/MovementFeed'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -62,30 +65,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
         </div>
 
-        {/* 4 moves (safe to go live per T spec) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-2xl">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
-            <div className="text-2xl mb-2">👁</div>
-            <div className="text-sm font-bold text-white">Wake Up</div>
-            <div className="text-xs text-zinc-500 mt-1">See more of what&apos;s available</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
-            <div className="text-2xl mb-2">🧹</div>
-            <div className="text-sm font-bold text-white">Clean Up</div>
-            <div className="text-xs text-zinc-500 mt-1">Unblock emotional energy</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
-            <div className="text-2xl mb-2">🌱</div>
-            <div className="text-sm font-bold text-white">Grow Up</div>
-            <div className="text-xs text-zinc-500 mt-1">Increase skill capacity</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
-            <div className="text-2xl mb-2">🎯</div>
-            <div className="text-sm font-bold text-white">Show Up</div>
-            <div className="text-xs text-zinc-500 mt-1">Complete quests</div>
-          </div>
-        </div>
-
         {activeInstance?.isEventMode && (
           <Link
             href="/event"
@@ -115,36 +94,29 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
-            href={`/conclave/guided${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+            href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
-            Join
+            Support the Residency
           </Link>
 
           <Link
-            href="/campaign"
+            href={`/campaign${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
-            Begin the Journey
+            Play the game
           </Link>
 
-          <a
+          <Link
             href="/login"
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Log In
-          </a>
-
-          <Link
-            href="/event"
-            className="w-full py-2 px-4 text-sm text-zinc-500 hover:text-green-400 transition-colors text-center"
-          >
-            Support the Residency →
           </Link>
         </div>
 
         <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          Sign up for your interest. Choose your path: Wake Up, Clean Up, Grow Up, Show Up. Existing players can log in to continue.
+          Learn the story and contribute at the event. Existing players can log in to continue.
         </div>
       </div>
     )
@@ -279,6 +251,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   await ensureWallet(playerId)
   const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
+  const movementFeedItems = await getMovementFeed(15)
 
   const isRitualComplete = hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
 
@@ -386,9 +359,12 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">{player.name}</h1>
-            <div className="text-zinc-400 text-sm font-mono">{player.contactValue}</div>
+          <div className="flex items-center gap-3 space-y-0">
+            <DashboardAvatarWithModal player={{ name: player.name, avatarConfig: player.avatarConfig, pronouns: player.pronouns }} />
+            <div className="space-y-1">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">{player.name}</h1>
+              <div className="text-zinc-400 text-sm font-mono">{player.contactValue}</div>
+            </div>
           </div>
 
           <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
@@ -443,6 +419,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
             <div className="text-emerald-100 font-bold">Begin the Journey</div>
           </Link>
+          <LibraryRequestButton />
         </div>
 
         {/* Player Intention */}
@@ -452,6 +429,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
           />
         )}
+
+        {/* Movement Feed: who earned what, for what */}
+        <MovementFeed items={movementFeedItems} maxHeight="10rem" />
       </header >
 
       {/* RITUAL SUCCESS BANNER */}

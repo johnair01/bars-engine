@@ -35,6 +35,7 @@
     "seed:cert:cyoa": "tsx scripts/seed-cyoa-certification-quests.ts",
     "seed:cert:donation-honor": "tsx scripts/seed-event-donation-honor-cert.ts",
     "seed:wake-up": "tsx scripts/seed-wake-up-adventure.ts",
+    "seed:bruised-banana": "tsx scripts/seed-bruised-banana-adventure.ts",
     "env:pull": "vercel env pull .env.local",
     "postinstall": "prisma generate"
   },

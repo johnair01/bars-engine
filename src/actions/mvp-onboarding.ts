@@ -1,5 +1,7 @@
 'use server'
 
+import { deriveAvatarConfig } from '@/lib/avatar-utils'
+
 /**
  * @deprecated This module implements a simple form-based onboarding for nation/archetype selection.
  * The new system uses QuestThread (threadType: 'orientation') with completionEffects.
@@ -53,19 +55,25 @@ export async function saveMvpProfileSetup(formData: FormData) {
 
     try {
         const [nation, playbook] = await Promise.all([
-            db.nation.findUnique({ where: { id: nationId }, select: { id: true } }),
-            db.playbook.findUnique({ where: { id: playbookId }, select: { id: true } }),
+            db.nation.findUnique({ where: { id: nationId }, select: { id: true, name: true } }),
+            db.playbook.findUnique({ where: { id: playbookId }, select: { id: true, name: true } }),
         ])
 
         if (!nation || !playbook) {
             redirect('/onboarding/profile?error=invalid')
         }
 
+        const avatarConfig = deriveAvatarConfig(nationId, playbookId, player.campaignDomainPreference, {
+            nationName: nation.name,
+            playbookName: playbook.name,
+            pronouns: player.pronouns
+        })
         await db.player.update({
             where: { id: player.id },
             data: {
                 nationId,
                 playbookId,
+                ...(avatarConfig && { avatarConfig })
             }
         })
 

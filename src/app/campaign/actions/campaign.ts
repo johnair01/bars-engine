@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
+import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { z } from 'zod'
 import { hashPassword } from '@/lib/auth-utils'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
@@ -100,11 +101,11 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             return newPlayer
         })
 
-        // Assign orientation threads
+        // Assign orientation threads (reads personalization from storyProgress when available)
         const { assignOrientationThreads } = await import('@/actions/quest-thread')
         await assignOrientationThreads(player.id)
 
-        // Apply campaign state: prefill nation/playbook when the campaign collected them
+        // Apply campaign state: prefill nation/playbook/domain when the campaign collected them
         const state = campaignState as Record<string, unknown>
         let nationId: string | null = null
         let playbookId: string | null = null
@@ -124,12 +125,53 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             const byName = await db.playbook.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
             if (byName) playbookId = byName.id
         }
-        if (nationId !== null || playbookId !== null) {
+        // Apply campaignDomainPreference from campaignState (AC2.4)
+        const validDomainKeys = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING']
+        let campaignDomainPreference: string | null = null
+        const rawPref = state?.campaignDomainPreference
+        if (typeof rawPref === 'string' && rawPref.trim()) {
+            try {
+                const parsed = JSON.parse(rawPref) as unknown
+                if (Array.isArray(parsed)) {
+                    const filtered = (parsed as string[]).filter((k) => validDomainKeys.includes(k))
+                    if (filtered.length > 0) campaignDomainPreference = JSON.stringify(filtered)
+                } else if (typeof parsed === 'string' && validDomainKeys.includes(parsed)) {
+                    campaignDomainPreference = JSON.stringify([parsed])
+                }
+            } catch {
+                // Single key stored by BB flow (no JSON)
+                const key = rawPref.trim()
+                if (validDomainKeys.includes(key)) {
+                    campaignDomainPreference = JSON.stringify([key])
+                }
+            }
+        }
+
+        // Fetch Nation/Playbook names for stable avatar part keys
+        let nationName: string | null = null
+        let playbookName: string | null = null
+        if (nationId) {
+            const n = await db.nation.findUnique({ where: { id: nationId }, select: { name: true } })
+            if (n) nationName = n.name
+        }
+        if (playbookId) {
+            const p = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
+            if (p) playbookName = p.name
+        }
+        const avatarConfig = deriveAvatarConfig(
+            nationId,
+            playbookId,
+            campaignDomainPreference,
+            { nationName, playbookName }
+        )
+        if (nationId !== null || playbookId !== null || campaignDomainPreference !== null || avatarConfig !== null) {
             await db.player.update({
                 where: { id: player.id },
                 data: {
                     ...(nationId !== null && { nationId }),
-                    ...(playbookId !== null && { playbookId })
+                    ...(playbookId !== null && { playbookId }),
+                    ...(campaignDomainPreference !== null && { campaignDomainPreference }),
+                    ...(avatarConfig !== null && { avatarConfig })
                 }
             })
             const { assignGatedThreads } = await import('@/actions/onboarding')

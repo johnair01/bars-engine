@@ -19,9 +19,10 @@ Improve certification quest UX so testers can open referenced URLs in new tabs (
 
 - **FR1**: Passage content MUST be rendered with ReactMarkdown; all `<a>` elements MUST have `target="_blank"` and `rel="noopener noreferrer"`.
 - **FR2**: Certification quest passages that reference URLs MUST include markdown links (e.g. `[Open /campaign](/campaign)`) so they are clickable.
-- **FR3**: A FEEDBACK passage (name `FEEDBACK` or tag `feedback`) MUST render a feedback form: textarea + Submit button. On submit, call `logCertificationFeedback(questId, passageName, feedback)`.
+- **FR3**: A FEEDBACK passage (name `FEEDBACK` or tag `feedback`) MUST render a feedback form: textarea + Submit button. On submit, call `logCertificationFeedback(questId, passageName, feedback)`. The `passageName` in the log MUST be the **source step** (the step the user came from when navigating to FEEDBACK), not "FEEDBACK".
 - **FR4**: `logCertificationFeedback` MUST append to `.feedback/cert_feedback.jsonl` with `{ timestamp, playerId, playerName, questId, passageName, feedback }`. No admin required.
 - **FR5**: Each certification quest step MUST have a "Report Issue" link to FEEDBACK. FEEDBACK passage MUST exist in the story.
+- **FR6**: When rendering the FEEDBACK passage, the play page MUST pass the source step (from `run.visited[visited.length - 2]`) to PassageRenderer as `feedbackSourceStep`, so feedback can be associated with the correct step.
 
 ## Non-functional requirements
 

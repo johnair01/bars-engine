@@ -1,10 +1,12 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { getWallet } from '@/actions/economy'
+import { getWallet, getMovementFeed } from '@/actions/economy'
+import { Avatar } from '@/components/Avatar'
 import { redirect } from 'next/navigation'
 import { VibulonTransfer } from '@/components/VibulonTransfer'
 import { RedemptionPacksSection } from '@/components/RedemptionPacksSection'
+import { MovementFeed } from '@/components/MovementFeed'
 
 export default async function WalletPage() {
     const cookieStore = await cookies()
@@ -16,11 +18,12 @@ export default async function WalletPage() {
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { name: true }
+        select: { name: true, avatarConfig: true }
     })
 
     const wallet = await getWallet(playerId)
     const total = wallet.length
+    const movementFeedItems = await getMovementFeed(20)
 
     // Fetch potential recipients
     const others = await db.player.findMany({
@@ -59,10 +62,13 @@ export default async function WalletPage() {
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <div>
-                    <Link href="/" className="text-sm text-zinc-500 hover:text-white transition">← Back to Dashboard</Link>
-                    <h1 className="text-3xl font-bold text-white mt-2">Wallet</h1>
-                    <div className="text-zinc-500 text-sm font-mono">{player?.name}</div>
+                <div className="flex items-center gap-3">
+                    <Avatar player={{ name: player?.name ?? '', avatarConfig: player?.avatarConfig }} size="lg" />
+                    <div>
+                        <Link href="/" className="text-sm text-zinc-500 hover:text-white transition">← Back to Dashboard</Link>
+                        <h1 className="text-3xl font-bold text-white mt-2">Wallet</h1>
+                        <div className="text-zinc-500 text-sm font-mono">{player?.name}</div>
+                    </div>
                 </div>
                 <div className="bg-zinc-900/50 px-6 py-4 rounded-xl border border-zinc-800 text-center">
                     <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Total Balance</div>
@@ -89,6 +95,9 @@ export default async function WalletPage() {
                     ))}
                 </section>
             )}
+
+            {/* Movement Feed */}
+            <MovementFeed items={movementFeedItems} title="Recent Vibeulon Activity" maxHeight="14rem" />
 
             {/* Transfer Section */}
             <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">

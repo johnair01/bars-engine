@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { advanceRun, revertRun } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
@@ -8,6 +8,8 @@ import type { ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from '@/components/onboarding/OnboardingRecommendation'
 import { QuestInputs } from '@/components/QuestInputs'
 import { logCertificationFeedback } from '@/actions/certification-feedback'
+import { chunkIntoSlides } from '@/lib/slide-chunker'
+import { Avatar } from '@/components/Avatar'
 
 interface Props {
     storyId: string
@@ -20,6 +22,9 @@ interface Props {
     quest?: any
     threadId?: string
     isRitual?: boolean
+    feedbackSourceStep?: string
+    player?: { name: string; avatarConfig?: string | null; pronouns?: string | null }
+    avatarPreviewConfig?: string | null
 }
 
 export function PassageRenderer({
@@ -32,7 +37,10 @@ export function PassageRenderer({
     questId,
     quest,
     threadId,
-    isRitual
+    isRitual,
+    feedbackSourceStep,
+    player,
+    avatarPreviewConfig
 }: Props) {
     const [isPending, startTransition] = useTransition()
     const [emitted, setEmitted] = useState<string[]>([])
@@ -42,9 +50,47 @@ export function PassageRenderer({
     const [feedbackText, setFeedbackText] = useState('')
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
     const [feedbackPending, setFeedbackPending] = useState(false)
+    const [slideIndex, setSlideIndex] = useState(0)
     const router = useRouter()
 
     const isFeedbackPassage = passage.name === 'FEEDBACK' || (passage.tags && passage.tags.includes('feedback'))
+    const prevPassageRef = useRef<string | null>(null)
+    const feedbackStorageKey = questId ? `cert-feedback-${questId}` : null
+
+    // Persist feedback text to sessionStorage so it survives unexpected navigations
+    useEffect(() => {
+        if (!feedbackStorageKey || !isFeedbackPassage) return
+        try {
+            if (feedbackText) {
+                sessionStorage.setItem(feedbackStorageKey, feedbackText)
+            } else {
+                sessionStorage.removeItem(feedbackStorageKey)
+            }
+        } catch {
+            /* ignore */
+        }
+    }, [feedbackStorageKey, isFeedbackPassage, feedbackText])
+
+    // Reset feedback form when navigating TO FEEDBACK from another passage (multi-report flow)
+    // Restore feedbackText from sessionStorage if user was kicked mid-typing
+    useEffect(() => {
+        if (isFeedbackPassage && prevPassageRef.current !== 'FEEDBACK') {
+            setFeedbackSubmitted(false)
+            setError(null)
+            try {
+                const saved = feedbackStorageKey ? sessionStorage.getItem(feedbackStorageKey) : null
+                setFeedbackText(saved ?? '')
+            } catch {
+                setFeedbackText('')
+            }
+        }
+        prevPassageRef.current = passage.name
+    }, [passage.name, isFeedbackPassage, feedbackStorageKey])
+
+    // Reset slide index when passage changes
+    useEffect(() => {
+        setSlideIndex(0)
+    }, [passage.name])
 
     // Parse inputs safely
     let parsedInputs: any[] = []
@@ -118,7 +164,7 @@ export function PassageRenderer({
         setError(null)
         setEmitted([])
         startTransition(async () => {
-            const result = await advanceRun(storyId, targetPassageName, questId)
+            const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId)
             if (result.error) {
                 setError(result.error)
             } else {
@@ -168,16 +214,28 @@ export function PassageRenderer({
 
     const recommendationPayload = recommendationBinding ? JSON.parse(recommendationBinding.payload) : null
 
+    const rawContent = (passage as { text?: string }).text ?? passage.cleanText
+    const slides = chunkIntoSlides(rawContent)
+    const useSlideMode = slides.length > 1
+    const displayContent = useSlideMode ? slides[slideIndex] : rawContent
+    const primaryLink = passage.links?.find((l) => l.target !== 'FEEDBACK')
+    const secondaryLinks = useSlideMode && primaryLink ? passage.links?.filter((l) => l.target === 'FEEDBACK') ?? [] : passage.links ?? []
+
     async function handleFeedbackSubmit() {
         if (!questId || !feedbackText.trim()) return
         setError(null)
         setFeedbackPending(true)
-        const result = await logCertificationFeedback(questId, passage.name, feedbackText.trim())
+        const result = await logCertificationFeedback(questId, feedbackSourceStep ?? passage.name, feedbackText.trim())
         setFeedbackPending(false)
         if (result.error) {
             setError(result.error)
         } else {
             setFeedbackSubmitted(true)
+            try {
+                if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
+            } catch {
+                /* ignore */
+            }
         }
     }
 
@@ -199,7 +257,7 @@ export function PassageRenderer({
                                 )
                             }}
                         >
-                            {passage.cleanText}
+                            {(passage as { text?: string }).text ?? passage.cleanText}
                         </ReactMarkdown>
                     </div>
                     {feedbackSubmitted ? (
@@ -208,13 +266,25 @@ export function PassageRenderer({
                                 <p className="text-green-400 font-bold">Thank you. Your feedback has been logged.</p>
                                 <p className="text-zinc-400 text-sm mt-1">The team will triage this as a bug to fix.</p>
                             </div>
-                            <button
-                                onClick={handleBack}
-                                disabled={isPending}
-                                className="w-full py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
-                            >
-                                ← Back to Previous Step
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setFeedbackSubmitted(false)
+                                        setFeedbackText('')
+                                        setError(null)
+                                    }}
+                                    className="flex-1 py-3 bg-purple-600/80 hover:bg-purple-500 text-white text-sm font-medium rounded-xl transition-colors"
+                                >
+                                    Report another issue
+                                </button>
+                                <button
+                                    onClick={handleBack}
+                                    disabled={isPending}
+                                    className="flex-1 py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
+                                >
+                                    ← Back to Previous Step
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -253,6 +323,60 @@ export function PassageRenderer({
                         </div>
                     )}
                 </div>
+            ) : questId === 'build-character-quest' && player && (avatarPreviewConfig || player.avatarConfig) ? (
+                <>
+                    {/* Avatar preview for Build Your Character */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4 p-6 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                            <Avatar
+                                player={{
+                                    name: player.name,
+                                    avatarConfig: avatarPreviewConfig ?? player.avatarConfig ?? undefined,
+                                    pronouns: player.pronouns
+                                }}
+                                size="lg"
+                            />
+                            <div>
+                                <p className="text-zinc-300 font-medium">Your character</p>
+                                <p className="text-zinc-500 text-sm">Derived from your nation and archetype</p>
+                            </div>
+                        </div>
+                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+                            <ReactMarkdown
+                                components={{
+                                    a: ({ href, children }) => (
+                                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                            {children}
+                                        </a>
+                                    )
+                                }}
+                            >
+                                {(passage as { text?: string }).text ?? passage.cleanText}
+                            </ReactMarkdown>
+                        </div>
+                        <div className="space-y-3">
+                            {passage.links?.map((link, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleChoice(link.target)}
+                                    disabled={isPending}
+                                    className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
+                                >
+                                    <span className="text-white group-hover:text-purple-400 transition-colors">
+                                        {link.label}
+                                    </span>
+                                </button>
+                            ))}
+                            <button
+                                onClick={handleBack}
+                                disabled={isPending}
+                                className="w-full py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors"
+                            >
+                                ← Back to Previous Step
+                            </button>
+                        </div>
+                    </div>
+                </>
             ) : recommendationBinding ? (
                 <OnboardingRecommendation
                     type={recommendationBinding.actionType === 'SET_NATION' ? 'nation' : 'archetype'}
@@ -268,19 +392,47 @@ export function PassageRenderer({
                 />
             ) : (
                 <>
-                    {/* Passage content */}
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
-                        <ReactMarkdown
-                            components={{
-                                a: ({ href, children }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                                        {children}
-                                    </a>
-                                )
-                            }}
-                        >
-                            {passage.cleanText}
-                        </ReactMarkdown>
+                    {/* Passage content — use text for markdown links, fallback to cleanText; slide mode for long text */}
+                    <div className="space-y-4">
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+                                    <ReactMarkdown
+                                        components={{
+                                            a: ({ href, children }) => (
+                                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                                    {children}
+                                                </a>
+                                            )
+                                        }}
+                                    >
+                                        {displayContent}
+                                    </ReactMarkdown>
+                                </div>
+                                {useSlideMode && (
+                                    <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => {
+                                                if (slideIndex < slides.length - 1) {
+                                                    setSlideIndex((i) => i + 1)
+                                                } else {
+                                                    const primaryLink = passage.links.find((l) => l.target !== 'FEEDBACK')
+                                                    if (primaryLink) handleChoice(primaryLink.target)
+                                                }
+                                            }}
+                                            disabled={isPending}
+                                            className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 transition-colors"
+                                        >
+                                            Continue
+                                        </button>
+                                        {slideIndex > 0 && (
+                                            <button
+                                                onClick={() => setSlideIndex((i) => i - 1)}
+                                                className="py-2 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors"
+                                            >
+                                                ← Back
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                     </div>
 
                     {/* Emitted items notification (Filtered for polish) */}
@@ -369,7 +521,7 @@ export function PassageRenderer({
                     ) : (
                         <div className="space-y-4">
                             <div className="space-y-3">
-                                {passage.links.map((link, i) => (
+                                {secondaryLinks.map((link, i) => (
                                     <button
                                         key={i}
                                         onClick={() => handleChoice(link.target)}

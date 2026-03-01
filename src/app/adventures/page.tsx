@@ -1,4 +1,5 @@
 import { getCurrentPlayer } from '@/lib/auth'
+import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 import { redirect } from 'next/navigation'
 import { listPublishedStories } from '@/actions/twine'
 import { db } from '@/lib/db'
@@ -9,6 +10,8 @@ export default async function AdventuresPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
 
+    const { isAdmin } = await getCurrentPlayerSafe({ includeRoles: true })
+
     const stories = await listPublishedStories()
 
     // Fetch associated quests for these stories to see if they are "Certification Quests"
@@ -16,6 +19,12 @@ export default async function AdventuresPage() {
         where: { twineStoryId: { in: stories.map(s => s.id) } },
         include: { assignments: { where: { playerId: player.id } } }
     })
+
+    // Certification quests (isSystem) are only visible to admins
+    const certStoryIds = new Set(
+        storyQuests.filter((q: CustomBar) => q.isSystem).map((q: CustomBar) => q.twineStoryId)
+    )
+    const visibleStories = isAdmin ? stories : stories.filter(s => !certStoryIds.has(s.id))
 
     return (
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -26,7 +35,7 @@ export default async function AdventuresPage() {
                     <p className="text-zinc-500 text-sm">Interactive stories that may unlock quests and BARs.</p>
                 </div>
 
-                {stories.length === 0 ? (
+                {visibleStories.length === 0 ? (
                     <div className="text-center py-16 border border-dashed border-zinc-800 rounded-xl">
                         <div className="text-4xl mb-3">📖</div>
                         <p className="text-zinc-500">No adventures available yet.</p>
@@ -34,7 +43,7 @@ export default async function AdventuresPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {stories.map(story => {
+                        {visibleStories.map(story => {
                             const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)
                             const assignment = quest?.assignments?.[0] as PlayerQuest | undefined
                             const isCompleted = assignment?.status === 'completed'

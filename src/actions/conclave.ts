@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
+import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { z } from 'zod'
 
 import { hashPassword } from '@/lib/auth-utils'
@@ -138,6 +139,29 @@ export async function createCharacter(prevState: any, formData: FormData) {
 
         // 6. Assign orientation threads (outside transaction for simplicity)
         await assignOrientationThreads(player.id)
+
+        // 7. Derive and store avatar config from nation/playbook (use names for stable keys)
+        let nationName: string | null = null
+        let playbookName: string | null = null
+        if (nationId) {
+            const n = await db.nation.findUnique({ where: { id: nationId }, select: { name: true } })
+            if (n) nationName = n.name
+        }
+        if (playbookId) {
+            const p = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
+            if (p) playbookName = p.name
+        }
+        const avatarConfig = deriveAvatarConfig(nationId, playbookId, null, {
+            nationName,
+            playbookName,
+            pronouns: identity.pronouns
+        })
+        if (avatarConfig) {
+            await db.player.update({
+                where: { id: player.id },
+                data: { avatarConfig }
+            })
+        }
 
         // MVP: Seed starter vibeulons so new users can create quests immediately
         const seedAmount = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10)

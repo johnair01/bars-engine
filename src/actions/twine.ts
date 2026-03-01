@@ -312,7 +312,7 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
 // PLAYER: Advance to a passage (choose a link)
 // ---------------------------------------------------------------------------
 
-export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null, playerIdOverride?: string) {
+export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null, playerIdOverride?: string, threadId?: string | null) {
     const playerId = playerIdOverride || await requirePlayer()
 
     // Find the run (quest-scoped or standalone)
@@ -372,7 +372,7 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
     let questCompleted = false
     const isEndPassage = targetPassageName.startsWith('END_') || targetPassage.links.length === 0
     if (questId && isEndPassage) {
-        questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId)
+        questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId, threadId)
     }
 
     try {
@@ -432,7 +432,7 @@ export async function revertRun(storyId: string, questId?: string | null, player
 // INTERNAL: Auto-complete quest when player reaches an END_ passage
 // ---------------------------------------------------------------------------
 
-export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string): Promise<boolean> {
+export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string, threadId?: string | null): Promise<boolean> {
     try {
         // Fetch quest to check for inputs
         const quest = await db.customBar.findUnique({ where: { id: questId } })
@@ -498,6 +498,16 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
                 runId,
                 source: 'twine_completion'
             })
+        }
+
+        // Run completion effects (e.g. deriveAvatarFromExisting)
+        const { runCompletionEffectsForQuest } = await import('@/actions/quest-engine')
+        await runCompletionEffectsForQuest(playerId, questId, { completedViaTwine: true, runId })
+
+        // Advance thread if quest is in a thread
+        if (threadId) {
+            const { advanceThreadForPlayer } = await import('@/actions/quest-thread')
+            await advanceThreadForPlayer(playerId, threadId, questId)
         }
 
         console.log(`[TWINE] Quest auto-completed: ${questId} for player ${playerId}`)

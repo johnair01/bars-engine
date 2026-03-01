@@ -1,8 +1,29 @@
 import './require-db-env'
 import { db } from '../src/lib/db'
 
+const CERT_QUEST_IDS = [
+    'cert-cyoa-onboarding-v1',
+    'cert-cyoa-editing-v1',
+    'cert-allyship-domains-v1',
+    'cert-domain-intentions-v1',
+    'cert-event-campaign-editor-v1',
+    'cert-lore-cyoa-onboarding-v1',
+    'cert-avatar-from-cyoa-v1',
+    'cert-two-minute-ride-v1',
+    'cert-k-space-librarian-v1',
+    'cert-composable-sprite-v1',
+    'cert-existing-players-character-v1'
+]
+
 async function seed() {
     console.log('--- Seeding CYOA Certification Quests ---')
+
+    // Reset completion for certification quests so admins can complete them again after reseed
+    const deletedQuests = await db.playerQuest.deleteMany({ where: { questId: { in: CERT_QUEST_IDS } } })
+    const deletedRuns = await db.twineRun.deleteMany({ where: { questId: { in: CERT_QUEST_IDS } } })
+    if (deletedQuests.count > 0 || deletedRuns.count > 0) {
+        console.log(`🔄 Reset ${deletedQuests.count} PlayerQuest(s) and ${deletedRuns.count} TwineRun(s) for certification quests`)
+    }
 
     const creator = await db.player.findFirst()
     if (!creator) throw new Error('No player found for createdById')
@@ -539,6 +560,654 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${editorStory.title} (${editorStory.id})`)
     console.log(`✅ Quest seeded: ${editorQuest.title} (${editorQuest.id})`)
+
+    // --- Certification: Lore Index + Event-Driven CYOA Onboarding (AG) ---
+    const loreTitle = 'Certification: Lore CYOA Onboarding V1'
+    const loreSlug = 'cert-lore-cyoa-onboarding-v1'
+
+    const lorePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the full Lore Index + CYOA onboarding flow: wiki, event page, Bruised Banana CYOA, and character creation.',
+            cleanText: 'This certification quest verifies the full Lore Index + CYOA onboarding flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Visit the wiki\n\n[Open /wiki](/wiki) in a new tab. Confirm the index shows links to Bruised Banana campaign, moves, domains, and glossary.',
+            cleanText: '### Step 1: Visit the wiki\n\nOpen /wiki and confirm the index.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Event page\n\n[Open /event](/event) in a new tab. Confirm the Wake Up section has a **Learn more** link to the wiki.',
+            cleanText: '### Step 2: Event page\n\nOpen /event and confirm the Learn more link.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Play through BB CYOA\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) in a new tab. Play through the Bruised Banana flow: intro, show up, developmental lens (Understanding/Connecting/Acting), choose nation (read about each), playbook (read about each), domain, four moves. Confirm you reach the sign-up node.',
+            cleanText: '### Step 3: Play through BB CYOA\n\nOpen /campaign?ref=bruised-banana and play through to sign-up.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Character creation\n\nAfter signing up (or if already signed up), confirm your nation, playbook, and campaign path were applied from the CYOA choices.',
+            cleanText: '### Step 4: Character creation\n\nConfirm nation, playbook, and campaign path from CYOA.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have confirmed the Lore Index + CYOA onboarding flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete. Complete this quest to receive your reward.',
+            links: []
+        }
+    ]
+
+    const loreParsedJson = JSON.stringify({
+        title: loreTitle,
+        startPassage: 'START',
+        passages: lorePassages
+    })
+
+    const loreStory = await db.twineStory.upsert({
+        where: { slug: loreSlug },
+        update: {
+            title: loreTitle,
+            parsedJson: loreParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: loreTitle,
+            slug: loreSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Lore CYOA onboarding certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: loreParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const loreQuest = await db.customBar.upsert({
+        where: { id: loreSlug },
+        update: {
+            title: loreTitle,
+            description: 'Step-by-step verification of Lore Index + CYOA onboarding: wiki, event page Learn more link, Bruised Banana flow, character creation.',
+            reward: 1,
+            twineStoryId: loreStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: loreSlug,
+            title: loreTitle,
+            description: 'Step-by-step verification of Lore Index + CYOA onboarding: wiki, event page Learn more link, Bruised Banana flow, character creation.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: loreStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${loreStory.title} (${loreStory.id})`)
+    console.log(`✅ Quest seeded: ${loreQuest.title} (${loreQuest.id})`)
+
+    // --- Certification: 2D Sprite Avatar from CYOA Choices (AD) ---
+    const avatarTitle = 'Certification: Avatar from CYOA V1'
+    const avatarSlug = 'cert-avatar-from-cyoa-v1'
+
+    const avatarPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies that your CYOA choices (nation, playbook, domain) generate a visual avatar on the dashboard. Prepares the Bruised Banana Fundraiser party.',
+            cleanText: 'Verify avatar derivation from CYOA choices.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Play BB CYOA\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) in a new tab. Choose nation, playbook, and domain. Reach the sign-up node.',
+            cleanText: '### Step 1: Play BB CYOA\n\nChoose nation, playbook, domain.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Sign up\n\nCreate your account from the CYOA sign-up node (or use an existing account that completed the CYOA flow).',
+            cleanText: '### Step 2: Sign up\n\nCreate account from CYOA.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Confirm avatar\n\n[Open dashboard](/). Confirm your avatar (colored circle with initials) appears next to your name in the header. The avatar is derived from your nation and playbook choices.',
+            cleanText: '### Step 3: Confirm avatar\n\nAvatar appears next to name in dashboard header.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Verification complete. Your avatar is derived from CYOA choices and displayed on the dashboard. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const avatarParsedJson = JSON.stringify({
+        title: avatarTitle,
+        startPassage: 'START',
+        passages: avatarPassages
+    })
+
+    const avatarStory = await db.twineStory.upsert({
+        where: { slug: avatarSlug },
+        update: {
+            title: avatarTitle,
+            parsedJson: avatarParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: avatarTitle,
+            slug: avatarSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Avatar from CYOA certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: avatarParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const avatarQuest = await db.customBar.upsert({
+        where: { id: avatarSlug },
+        update: {
+            title: avatarTitle,
+            description: 'Verify avatar derivation from CYOA choices: play BB flow, sign up, confirm avatar in dashboard.',
+            reward: 1,
+            twineStoryId: avatarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: avatarSlug,
+            title: avatarTitle,
+            description: 'Verify avatar derivation from CYOA choices: play BB flow, sign up, confirm avatar in dashboard.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: avatarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${avatarStory.title} (${avatarStory.id})`)
+    console.log(`✅ Quest seeded: ${avatarQuest.title} (${avatarQuest.id})`)
+
+    // --- Certification: 2-Minute Ride Story Bridge + UX (AH) ---
+    const rideTitle = 'Certification: 2-Minute Ride V1'
+    const rideSlug = 'cert-two-minute-ride-v1'
+
+    const ridePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the full 2-minute ride: story bridge copy, Dashboard → BB flow, progress indicator, vibeulon preview, donation link, and error recovery.',
+            cleanText: 'Verify 2-minute ride flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Story bridge copy + Continue flow\n\n[Open /event](/event) in a new tab. If you\'re an admin, click Edit campaign and add story bridge copy (game↔real world). [Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana). Confirm BB_Intro or BB_ShowUp shows the connection (Conclave = residency, heist = fundraiser). When content is long, confirm one **Continue** button advances through the content and then the story (no separate Prev/Next slide controls).',
+            cleanText: '### Step 1: Story bridge + Continue flow\n\nConfirm story bridge and one Continue advances story.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Dashboard → BB flow\n\n[Open dashboard](/) (logged in). Click "Begin the Journey". Confirm you land on the Bruised Banana flow (BB_Intro), not Center_Witness.',
+            cleanText: '### Step 2: Dashboard → BB flow\n\nBegin the Journey shows BB flow.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Progress indicator\n\n[Open /campaign](/campaign) in a new tab. Play through a few steps. Confirm "Step X of 11" appears in the top-right.',
+            cleanText: '### Step 3: Progress indicator\n\nStep X of 11 visible.',
+            links: [{ label: 'Next', target: 'STEP_3a' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3a',
+            pid: '4a',
+            text: '### Step 3a: Developmental lens + Nation/archetype info\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana). After ShowUp, confirm the **developmental lens** (Understanding / Connecting / Acting) appears before nation selection. At nation and archetype selection, confirm you can **read about** each nation and archetype before choosing (Read about [Name] → info view → Choose or Back).',
+            cleanText: '### Step 3a: Developmental lens + Nation/archetype info\n\nConfirm developmental lens before nation; read about nations/archetypes before choosing.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Vibeulon preview\n\nReach the BB_Moves_ShowUp node (last step before sign-up). Confirm copy mentions earning starter vibeulons.',
+            cleanText: '### Step 4: Vibeulon preview\n\nVibeulon payoff visible before sign-up.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Donation link\n\nWhen instance has donate URLs configured, BB_ShowUp should include a link to /event/donate. (If no donate URLs, skip this step.)',
+            cleanText: '### Step 5: Donation link\n\nDonate link when configured.',
+            links: [{ label: 'Next', target: 'STEP_6' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_6',
+            pid: '7',
+            text: '### Step 6: Error recovery\n\nIf the CYOA fetch ever fails, confirm Retry and "Continue later" buttons appear. (You may need to simulate by blocking network.)',
+            cleanText: '### Step 6: Error recovery\n\nRetry + Continue later on fetch failure.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '9',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '8',
+            text: 'Verification complete. You have confirmed the 2-minute ride flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const rideParsedJson = JSON.stringify({
+        title: rideTitle,
+        startPassage: 'START',
+        passages: ridePassages
+    })
+
+    const rideStory = await db.twineStory.upsert({
+        where: { slug: rideSlug },
+        update: {
+            title: rideTitle,
+            parsedJson: rideParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: rideTitle,
+            slug: rideSlug,
+            sourceType: 'manual_seed',
+            sourceText: '2-Minute Ride certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: rideParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const rideQuest = await db.customBar.upsert({
+        where: { id: rideSlug },
+        update: {
+            title: rideTitle,
+            description: 'Verify story bridge, Dashboard→BB flow, progress indicator, vibeulon preview, donation link, error recovery.',
+            reward: 1,
+            twineStoryId: rideStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: rideSlug,
+            title: rideTitle,
+            description: 'Verify story bridge, Dashboard→BB flow, progress indicator, vibeulon preview, donation link, error recovery.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: rideStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${rideStory.title} (${rideStory.id})`)
+    console.log(`✅ Quest seeded: ${rideQuest.title} (${rideQuest.id})`)
+
+    // --- Certification: K-Space Librarian (AI) ---
+    const librarianTitle = 'Certification: K-Space Librarian V1'
+    const librarianSlug = 'cert-k-space-librarian-v1'
+
+    const librarianPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the K-Space Librarian flow: Request from Library, admin Library and Docs pages.',
+            cleanText: 'Verify K-Space Librarian flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Request from Library\n\n[Open dashboard](/). Click **Request from Library**. Submit a test request (e.g. "How do I earn vibeulons?"). Confirm you receive either a link to a doc or a spawned DocQuest.',
+            cleanText: '### Step 1: Request from Library\n\nSubmit a test request via Request from Library.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Admin Library\n\n[Open /admin/library](/admin/library) (admin only). Confirm Library Requests are listed with status (new, resolved, spawned).',
+            cleanText: '### Step 2: Admin Library\n\nConfirm /admin/library lists requests.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Admin Docs\n\n[Open /admin/docs](/admin/docs) (admin only). Confirm Doc Nodes are listed. Validated nodes show Promote button.',
+            cleanText: '### Step 3: Admin Docs\n\nConfirm /admin/docs lists doc nodes.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Verification complete. You have confirmed the K-Space Librarian flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const librarianParsedJson = JSON.stringify({
+        title: librarianTitle,
+        startPassage: 'START',
+        passages: librarianPassages
+    })
+
+    const librarianStory = await db.twineStory.upsert({
+        where: { slug: librarianSlug },
+        update: {
+            title: librarianTitle,
+            parsedJson: librarianParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: librarianTitle,
+            slug: librarianSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'K-Space Librarian certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: librarianParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const librarianQuest = await db.customBar.upsert({
+        where: { id: librarianSlug },
+        update: {
+            title: librarianTitle,
+            description: 'Verify Request from Library, admin Library, admin Docs.',
+            reward: 1,
+            twineStoryId: librarianStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: librarianSlug,
+            title: librarianTitle,
+            description: 'Verify Request from Library, admin Library, admin Docs.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: librarianStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${librarianStory.title} (${librarianStory.id})`)
+    console.log(`✅ Quest seeded: ${librarianQuest.title} (${librarianQuest.id})`)
+
+    // --- Certification: Composable Sprite Avatar (AT) ---
+    const composableSlug = 'cert-composable-sprite-v1'
+    const composableTitle = 'Certification: Composable Sprite Avatar V1'
+
+    const composablePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the JRPG composable sprite avatar: build-a-bear during Bruised Banana flow, layered rendering on dashboard.',
+            cleanText: 'Verify composable sprite avatar flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Play BB CYOA\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) in a new tab. Confirm the **"Your character"** avatar preview appears and updates as you choose nation, playbook, and domain.',
+            cleanText: '### Step 1: Play BB CYOA\n\nConfirm avatar preview builds step-by-step during BB flow.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Sign up\n\nComplete the BB flow to sign-up (or use an existing account).',
+            cleanText: '### Step 2: Sign up\n\nComplete sign-up from BB flow.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Dashboard avatar\n\n[Open dashboard](/). Confirm your avatar appears in the header (colored circle with initials, or layered sprites when assets exist). Avatar is derived from nation and playbook choices.',
+            cleanText: '### Step 3: Dashboard avatar\n\nConfirm avatar in dashboard header.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Verification complete. You have confirmed the composable sprite avatar flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const composableParsedJson = JSON.stringify({
+        title: composableTitle,
+        startPassage: 'START',
+        passages: composablePassages
+    })
+
+    const composableStory = await db.twineStory.upsert({
+        where: { slug: composableSlug },
+        update: {
+            title: composableTitle,
+            parsedJson: composableParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: composableTitle,
+            slug: composableSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Composable sprite avatar certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: composableParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const composableQuest = await db.customBar.upsert({
+        where: { id: composableSlug },
+        update: {
+            title: composableTitle,
+            description: 'Verify avatar preview during BB flow, sign-up, and dashboard avatar.',
+            reward: 1,
+            twineStoryId: composableStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: composableSlug,
+            title: composableTitle,
+            description: 'Verify avatar preview during BB flow, sign-up, and dashboard avatar.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: composableStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${composableStory.title} (${composableStory.id})`)
+    console.log(`✅ Quest seeded: ${composableQuest.title} (${composableQuest.id})`)
+
+    // --- Certification: Existing Players Character Generation (AV) ---
+    const existingCharTitle = 'Certification: Existing Players Character V1'
+    const existingCharSlug = 'cert-existing-players-character-v1'
+
+    const existingCharPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies that existing players with nation and archetype can generate their avatar via the "Build Your Character" orientation quest.',
+            cleanText: 'Verify existing players can generate avatar from nation/archetype.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Prepare test player\n\nUse an existing player with nationId and playbookId set but avatarConfig = null. (Admin: clear avatarConfig if needed, or use a player who completed onboarding before avatarConfig was added.)',
+            cleanText: '### Step 1: Prepare test player\n\nPlayer has nationId, playbookId, no avatarConfig.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Visit dashboard\n\n[Open dashboard](/). Confirm the "Build Your Character" orientation thread appears (if you have no other active orientation thread).',
+            cleanText: '### Step 2: Visit dashboard\n\nBuild Your Character thread visible.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Complete Build Your Character\n\nStart the thread and complete the quest (Confirm your character).',
+            cleanText: '### Step 3: Complete Build Your Character\n\nComplete the quest.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Confirm avatar\n\n[Open dashboard](/). Confirm your avatar appears next to your name in the header. The avatar is derived from your nation and playbook.',
+            cleanText: '### Step 4: Confirm avatar\n\nAvatar appears in dashboard header.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. Existing players can generate their avatar via the Build Your Character orientation quest. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const existingCharParsedJson = JSON.stringify({
+        title: existingCharTitle,
+        startPassage: 'START',
+        passages: existingCharPassages
+    })
+
+    const existingCharStory = await db.twineStory.upsert({
+        where: { slug: existingCharSlug },
+        update: {
+            title: existingCharTitle,
+            parsedJson: existingCharParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: existingCharTitle,
+            slug: existingCharSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Existing players character generation certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: existingCharParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const existingCharQuest = await db.customBar.upsert({
+        where: { id: existingCharSlug },
+        update: {
+            title: existingCharTitle,
+            description: 'Verify existing players with nation/archetype can generate avatar via Build Your Character orientation quest.',
+            reward: 1,
+            twineStoryId: existingCharStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: existingCharSlug,
+            title: existingCharTitle,
+            description: 'Verify existing players with nation/archetype can generate avatar via Build Your Character orientation quest.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: existingCharStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${existingCharStory.title} (${existingCharStory.id})`)
+    console.log(`✅ Quest seeded: ${existingCharQuest.title} (${existingCharQuest.id})`)
     console.log('✅ CYOA Certification Quests seeded.')
 }
 

@@ -64,6 +64,7 @@ export default async function EventPage() {
                 instanceId={instance.id}
                 initialWakeUp={wakeUpContent}
                 initialShowUp={showUpContent}
+                initialStoryBridge={instance.storyBridgeCopy ?? ''}
                 initialTheme={instance.theme ?? ''}
                 initialTargetDescription={instance.targetDescription ?? ''}
               />
@@ -91,6 +92,12 @@ export default async function EventPage() {
           <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
             {wakeUpContent}
           </p>
+          <Link
+            href="/wiki"
+            className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+          >
+            Learn more →
+          </Link>
           {(instance.theme || instance.targetDescription) && (
             <details className="mt-3">
               <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
@@ -152,8 +159,8 @@ export default async function EventPage() {
               </Link>
             ) : (
               <>
-                <Link href="/conclave/guided?ref=bruised-banana" className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">
-                  Play the game — Sign Up
+                <Link href="/campaign?ref=bruised-banana" className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">
+                  Play the game
                 </Link>
                 <Link href="/login" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-bold">
                   Log In

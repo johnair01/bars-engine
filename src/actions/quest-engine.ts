@@ -7,6 +7,7 @@ import { advanceThread } from '@/actions/quest-thread'
 import { getOnboardingStatus, completeOnboardingStep, assignGatedThreads } from '@/actions/onboarding'
 import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
+import { deriveAvatarConfig } from '@/lib/avatar-utils'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -293,7 +294,7 @@ function parseStoryQuestMeta(raw: string | null) {
 // ============================================================
 
 interface CompletionEffect {
-    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName'
+    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting'
     value?: string   // nationId, playbookId, etc.
     amount?: number  // for grantVibeulons
     fromInput?: string // key in quest inputs to read the value from
@@ -411,6 +412,31 @@ async function processCompletionEffects(
                     }
                     break
                 }
+                case 'deriveAvatarFromExisting': {
+                    const player = await tx.player.findUnique({
+                        where: { id: playerId },
+                        select: { nationId: true, playbookId: true, campaignDomainPreference: true, pronouns: true }
+                    })
+                    if (!player?.nationId || !player?.playbookId) break
+                    const [nation, playbook] = await Promise.all([
+                        tx.nation.findUnique({ where: { id: player.nationId }, select: { name: true } }),
+                        tx.playbook.findUnique({ where: { id: player.playbookId }, select: { name: true } })
+                    ])
+                    const avatarConfig = deriveAvatarConfig(
+                        player.nationId,
+                        player.playbookId,
+                        player.campaignDomainPreference,
+                        { nationName: nation?.name, playbookName: playbook?.name, pronouns: player.pronouns }
+                    )
+                    if (avatarConfig) {
+                        await tx.player.update({
+                            where: { id: playerId },
+                            data: { avatarConfig }
+                        })
+                        console.log(`[CompletionEffects] Derived avatarConfig for player ${playerId}`)
+                    }
+                    break
+                }
                 default:
                     console.warn(`[CompletionEffects] Unknown effect type: ${(effect as any).type}`)
             }
@@ -420,6 +446,24 @@ async function processCompletionEffects(
         }
     }
 }
+
+/**
+ * Run completion effects for a quest (used when completing via Twine auto-complete).
+ * Fetches the quest, parses completionEffects, and runs processCompletionEffects with db.
+ */
+export async function runCompletionEffectsForQuest(
+    playerId: string,
+    questId: string,
+    inputs: Record<string, any>
+) {
+    const quest = await db.customBar.findUnique({
+        where: { id: questId },
+        select: { id: true, completionEffects: true, title: true }
+    })
+    if (!quest?.completionEffects) return
+    await processCompletionEffects(db as any, playerId, quest, inputs)
+}
+
 /**
  * Fire a trigger to auto-complete matching quests.
  */

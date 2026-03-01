@@ -11,10 +11,13 @@ Your awareness and participation help the collective thrive.`
 const DEFAULT_SHOW_UP = `Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
 This instance runs on quests, BARs, vibeulons, and story clock.`
 
+const DEFAULT_STORY_BRIDGE = `This residency is your Conclave; the fundraiser is the heist; your contribution powers the construct; vibeulons are the emotional energy that moves through this space.`
+
 type Props = {
   instanceId: string
   initialWakeUp: string
   initialShowUp: string
+  initialStoryBridge?: string
   initialTheme: string
   initialTargetDescription: string
 }
@@ -23,6 +26,7 @@ export function EventCampaignEditor({
   instanceId,
   initialWakeUp,
   initialShowUp,
+  initialStoryBridge = '',
   initialTheme,
   initialTargetDescription,
 }: Props) {
@@ -32,6 +36,7 @@ export function EventCampaignEditor({
   const [error, setError] = useState<string | null>(null)
   const [wakeUpContent, setWakeUpContent] = useState(initialWakeUp)
   const [showUpContent, setShowUpContent] = useState(initialShowUp)
+  const [storyBridgeCopy, setStoryBridgeCopy] = useState(initialStoryBridge)
   const [theme, setTheme] = useState(initialTheme)
   const [targetDescription, setTargetDescription] = useState(initialTargetDescription)
 
@@ -42,6 +47,7 @@ export function EventCampaignEditor({
     const result = await updateInstanceCampaignCopy(instanceId, {
       wakeUpContent: wakeUpContent || null,
       showUpContent: showUpContent || null,
+      storyBridgeCopy: storyBridgeCopy || null,
       theme: theme || null,
       targetDescription: targetDescription || null,
     })
@@ -90,6 +96,20 @@ export function EventCampaignEditor({
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">
+                    Story bridge (game ↔ real world)
+                  </label>
+                  <textarea
+                    value={storyBridgeCopy}
+                    onChange={(e) => setStoryBridgeCopy(e.target.value)}
+                    rows={2}
+                    className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    placeholder={DEFAULT_STORY_BRIDGE}
+                  />
+                  <p className="text-[10px] text-zinc-600 mt-0.5">Shown in CYOA intro. Connects Conclave/heist to residency/fundraiser.</p>
+                </div>
+
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">
                     Wake Up: Learn the story

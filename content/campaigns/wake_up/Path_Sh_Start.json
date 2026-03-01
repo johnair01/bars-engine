@@ -1,6 +1,6 @@
 {
   "id": "Path_Sh_Start",
-  "text": "(Entering Shaman Path)\n<<set $active_face = \"shaman\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "text": "Enter through the mythic threshold: the residency as ritual space, Wendell's technology as a bridge between worlds. Your journey begins in belonging.\n\n<<set $active_face = \"shaman\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
   "choices": [
     {
       "text": "Continue",

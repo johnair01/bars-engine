@@ -6,6 +6,7 @@ Feedback submitted via "Report Issue" during verification quests is logged for t
 
 - **`.feedback/cert_feedback.jsonl`** — One JSON object per line (gitignored)
 - Each entry: `timestamp`, `playerId`, `playerName`, `questId`, `passageName`, `feedback`
+- **`passageName`** is the **step where the issue was reported** (e.g. STEP_1, STEP_2), not "FEEDBACK"
 
 ## Verifying feedback was logged
 

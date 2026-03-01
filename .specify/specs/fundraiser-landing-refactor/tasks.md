@@ -22,6 +22,6 @@
 
 ## Verification
 
-- [ ] Landing: no moves grid
-- [ ] Event: Wake Up + Show Up sections
-- [ ] Invite copies /event?ref=bruised-banana
+- [x] Landing: no moves grid
+- [x] Event: Wake Up + Show Up sections
+- [x] Invite copies /event?ref=bruised-banana

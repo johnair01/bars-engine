@@ -1,6 +1,6 @@
 {
   "id": "Path_Di_Start",
-  "text": "(Entering Diplomat Path)\n<<set $active_face = \"diplomat\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "text": "Enter through the weave: the residency as a relational field, Wendell's technology as a connector. Your journey begins in care.\n\n<<set $active_face = \"diplomat\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
   "choices": [
     {
       "text": "Continue",

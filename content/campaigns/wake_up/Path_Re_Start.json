@@ -1,6 +1,6 @@
 {
   "id": "Path_Re_Start",
-  "text": "(Entering Regent Path)\n<<set $active_face = \"regent\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
+  "text": "Enter through the order: the residency as a house with roles and rules, Wendell's technology as a tool for the collective. Your journey begins in structure.\n\n<<set $active_face = \"regent\">>\n<<set $step1_done = false>>\n<<set $step2_done = false>>",
   "choices": [
     {
       "text": "Continue",

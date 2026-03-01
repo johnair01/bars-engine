@@ -244,7 +244,116 @@ async function main() {
     })
     console.log(`  Linked ${questIds.length} quests at positions 1-${questIds.length}`)
 
-    // 5. Summary
+    // 5. Build Your Character orientation thread (existing players with nation/archetype but no avatar)
+    console.log('\nCreating Build Your Character thread...')
+
+    const buildCharPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Your nation and archetype define your avatar. Confirm your character to see your sprite in the Conclave.',
+            cleanText: 'Your nation and archetype define your avatar. Confirm your character.',
+            links: [
+                { label: 'Confirm', target: 'END_SUCCESS' },
+                { label: 'Report Issue', target: 'FEEDBACK' }
+            ]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '3',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '2',
+            text: 'Character confirmed. Your avatar is now derived from your nation and archetype.',
+            cleanText: 'Character confirmed.',
+            links: []
+        }
+    ]
+    const buildCharParsedJson = JSON.stringify({
+        title: 'Build Your Character',
+        startPassage: 'START',
+        passages: buildCharPassages
+    })
+
+    const buildCharStory = await db.twineStory.upsert({
+        where: { slug: 'build-character' },
+        update: {
+            title: 'Build Your Character',
+            parsedJson: buildCharParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: 'Build Your Character',
+            slug: 'build-character',
+            sourceType: 'manual_seed',
+            sourceText: 'Build Your Character orientation quest (seed-onboarding-thread.ts)',
+            parsedJson: buildCharParsedJson,
+            isPublished: true,
+            createdById: creator.id
+        }
+    })
+
+    const buildCharQuest = await db.customBar.upsert({
+        where: { id: 'build-character-quest' },
+        update: {
+            title: 'Build Your Character',
+            description: 'Your nation and archetype define your avatar. Confirm your character to see your sprite in the Conclave.',
+            type: 'onboarding',
+            reward: 1,
+            twineStoryId: buildCharStory.id,
+            completionEffects: JSON.stringify({ effects: [{ type: 'deriveAvatarFromExisting' }] })
+        },
+        create: {
+            id: 'build-character-quest',
+            title: 'Build Your Character',
+            description: 'Your nation and archetype define your avatar. Confirm your character to see your sprite in the Conclave.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            twineStoryId: buildCharStory.id,
+            visibility: 'private',
+            isSystem: true,
+            completionEffects: JSON.stringify({ effects: [{ type: 'deriveAvatarFromExisting' }] })
+        }
+    })
+
+    let buildCharThread = await db.questThread.findUnique({
+        where: { id: 'build-character-thread' }
+    })
+    const buildCharThreadData = {
+        title: 'Build Your Character',
+        description: 'Derive your avatar from your nation and archetype. For existing players who have chosen but not yet generated their character.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 1,
+        status: 'active'
+    }
+    if (buildCharThread) {
+        buildCharThread = await db.questThread.update({ where: { id: buildCharThread.id }, data: buildCharThreadData })
+        console.log(`  ↻ Build Your Character thread updated: ${buildCharThread.id}`)
+    } else {
+        buildCharThread = await db.questThread.create({
+            data: { id: 'build-character-thread', ...buildCharThreadData }
+        })
+        console.log(`  ✦ Build Your Character thread created: ${buildCharThread.id}`)
+    }
+
+    await db.threadQuest.upsert({
+        where: {
+            threadId_questId: { threadId: buildCharThread.id, questId: buildCharQuest.id }
+        },
+        update: { position: 1 },
+        create: { threadId: buildCharThread.id, questId: buildCharQuest.id, position: 1 }
+    })
+    console.log(`  Linked Build Your Character quest to thread`)
+
+    // 6. Summary
     console.log('\n=== ONBOARDING THREAD READY ===')
     console.log(`Thread: "${thread.title}" (${thread.id})`)
     console.log(`Type: ${thread.threadType}`)
@@ -254,6 +363,8 @@ async function main() {
     console.log(`  3. ${q3.title} (${q3.id})`)
     console.log(`  4. ${q4.title} (${q4.id})`)
     console.log(`Completion Reward: ${thread.completionReward} vibeulons`)
+    console.log(`\nBuild Your Character thread: "${buildCharThread.title}" (${buildCharThread.id})`)
+    console.log(`  Quest: ${buildCharQuest.title} (${buildCharQuest.id})`)
     console.log(`\nNew players will be auto-assigned via assignOrientationThreads()`)
 }
 

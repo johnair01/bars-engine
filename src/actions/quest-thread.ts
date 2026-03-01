@@ -209,11 +209,65 @@ export async function advanceThreadForPlayer(
     }
 }
 
+export type OrientationPersonalization = {
+    nationId?: string | null
+    playbookId?: string | null
+    allyshipDomains?: string[]
+    developmentalHint?: string | null
+}
+
 /**
- * Auto-assign orientation threads to a new player
- * Called during character creation
+ * Auto-assign orientation threads to a new player.
+ * Called during character creation.
+ * Accepts optional personalization params (from campaignState); when not provided, reads from player.storyProgress.
  */
-export async function assignOrientationThreads(playerId: string) {
+export async function assignOrientationThreads(
+    playerId: string,
+    personalization?: OrientationPersonalization
+) {
+    let params = personalization
+    if (!params) {
+        const player = await db.player.findUnique({
+            where: { id: playerId },
+            select: { storyProgress: true, nationId: true, playbookId: true, campaignDomainPreference: true }
+        })
+        if (player?.storyProgress) {
+            try {
+                const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
+                const state = parsed?.state as Record<string, unknown> | undefined
+                if (state) {
+                    const allyshipDomains: string[] = []
+                    const rawPref = state.campaignDomainPreference
+                    if (typeof rawPref === 'string') {
+                        try {
+                            const arr = JSON.parse(rawPref) as unknown
+                            if (Array.isArray(arr)) allyshipDomains.push(...arr.filter((x): x is string => typeof x === 'string'))
+                            else if (typeof arr === 'string') allyshipDomains.push(arr)
+                        } catch {
+                            allyshipDomains.push(rawPref)
+                        }
+                    }
+                    params = {
+                        nationId: (state.nationId as string) ?? player.nationId,
+                        playbookId: (state.playbookId as string) ?? player.playbookId,
+                        allyshipDomains: allyshipDomains.length > 0 ? allyshipDomains : undefined,
+                        developmentalHint: state.developmentalHint as string | undefined
+                    }
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        }
+        if (!params) {
+            params = {
+                nationId: undefined,
+                playbookId: undefined,
+                allyshipDomains: undefined,
+                developmentalHint: undefined
+            }
+        }
+    }
+
     const orientationThreads = await db.questThread.findMany({
         where: { threadType: 'orientation', status: 'active' }
     })
