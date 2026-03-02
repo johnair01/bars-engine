@@ -1,6 +1,6 @@
 # ARCHITECTURE — Mapping Foundations to Mechanics
 
-This document maps BARs Engine’s ontology to implementable mechanics and schema patterns.
+This document maps BARs Engine's ontology to implementable mechanics and schema patterns.
 
 ## Conceptual Model
 
@@ -97,7 +97,7 @@ Design stance:
 ## Visibility and Affordances
 
 ### Visibility Levels
-Visibility is not purely “public/private.” It is domain-shaped.
+Visibility is not purely "public/private." It is domain-shaped.
 
 Suggested levels:
 - PUBLIC
@@ -131,11 +131,13 @@ Fork operation:
 
 Weight is descriptive. It should:
 - be deterministically computed from artifacts + maturity
-- increase as a BAR becomes more “loaded”
+- increase as a BAR becomes more "loaded"
 - support vibeulon minting rules tied to real work
 
 Avoid:
-- predictive “momentum multipliers”
+- predictive "momentum multipliers"
+- increase as a BAR becomes more “loaded”
+- support vibeulon minting rules tied to real work
 - engineered acceleration mechanics
 
 Prefer:
