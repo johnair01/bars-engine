@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
-import { getInstanceDbReadiness, listInstances, setActiveInstance, updateInstanceKotterStage, upsertInstance } from '@/actions/instance'
+import { getInstanceDbReadiness, listInstances, upsertInstance } from '@/actions/instance'
 import { KOTTER_STAGES } from '@/lib/kotter'
+import { InstanceListWithEdit } from '@/components/admin/InstanceListWithEdit'
 
 export default async function AdminInstancesPage({
   searchParams,
@@ -122,7 +123,7 @@ export default async function AdminInstancesPage({
 
           <div className="space-y-1 md:col-span-2">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Show Up: Contribute to the campaign</label>
-            <textarea name="showUpContent" rows={4} placeholder="Contribute money (Sponsor above) or play the game by signing up and choosing your domains. This instance runs on quests, BARs, vibeulons, and story clock." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+            <textarea name="showUpContent" rows={4} placeholder="Contribute money (Donate above) or play the game by signing up and choosing your domains. This instance runs on quests, BARs, vibeulons, and story clock." className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
           <div className="space-y-1 md:col-span-2">
@@ -200,67 +201,7 @@ export default async function AdminInstancesPage({
           <div className="h-px bg-zinc-800 flex-1" />
         </div>
 
-        {instances.length === 0 ? (
-          <div className="text-zinc-500 italic border border-dashed border-zinc-800 rounded-xl p-6">
-            No instances found. If you just deployed, run <span className="font-mono">prisma db push</span> and refresh.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {instances.map((inst) => (
-              <div key={inst.id} className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="font-bold text-white">{inst.name}</div>
-                    {inst.isEventMode && (
-                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-green-900/30 text-green-300">
-                        Event Mode
-                      </span>
-                    )}
-                    {activeInstanceId === inst.id && (
-                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-purple-900/30 text-purple-300">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-zinc-500 font-mono mt-1 truncate">
-                    {inst.slug} • {inst.domainType} • {inst.id}
-                  </div>
-                  <div className="text-xs text-teal-400 mt-1">
-                    Stage {(inst as { kotterStage?: number }).kotterStage ?? 1}: {KOTTER_STAGES[((inst as { kotterStage?: number }).kotterStage ?? 1) as keyof typeof KOTTER_STAGES]?.name ?? 'Urgency'}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 items-center">
-                  <form action={updateInstanceKotterStage} className="flex items-center gap-2">
-                    <input type="hidden" name="instanceId" value={inst.id} />
-                    <select name="kotterStage" className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200" defaultValue={(inst as { kotterStage?: number }).kotterStage ?? 1}>
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                        <option key={n} value={n}>
-                          {n}. {KOTTER_STAGES[n as keyof typeof KOTTER_STAGES].name}
-                        </option>
-                      ))}
-                    </select>
-                    <button type="submit" className="px-2 py-1 rounded bg-teal-900/50 hover:bg-teal-800/50 text-teal-300 text-xs font-bold border border-teal-700">
-                      Set Stage
-                    </button>
-                  </form>
-                  <form action={setActiveInstance}>
-                    <input type="hidden" name="instanceId" value={inst.id} />
-                    <button className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold">
-                      Set Active
-                    </button>
-                  </form>
-                  <form action={setActiveInstance}>
-                    <input type="hidden" name="instanceId" value="" />
-                    <button className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-bold">
-                      Clear
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <InstanceListWithEdit instances={instances} activeInstanceId={activeInstanceId} />
       </section>
     </div>
   )

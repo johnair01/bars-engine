@@ -228,13 +228,15 @@ export default function EditThreadPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-zinc-400">Reward (ⓥ)</label>
+                                <label className="text-sm font-bold text-zinc-400">Thread Completion Reward (ⓥ)</label>
                                 <input
                                     type="number"
+                                    min={0}
                                     value={completionReward}
-                                    onChange={e => setCompletionReward(parseInt(e.target.value))}
+                                    onChange={e => setCompletionReward(parseInt(e.target.value) || 0)}
                                     className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white"
                                 />
+                                <p className="text-xs text-zinc-500">Vibeulons awarded when the player completes all quests in this thread.</p>
                             </div>
                         </div>
 

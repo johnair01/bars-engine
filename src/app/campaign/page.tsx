@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CampaignReader } from './components/CampaignReader'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
+import { getCurrentPlayer } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 
@@ -10,6 +11,8 @@ const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 export default async function CampaignPage(props: { searchParams: Promise<{ ref?: string }> }) {
     const { ref: urlRef } = await props.searchParams
+    const player = await getCurrentPlayer()
+    const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
     // P2: When no ref in URL, use instance.campaignRef (default bruised-banana)
     let campaignRef = urlRef
     if (!campaignRef) {
@@ -71,6 +74,7 @@ export default async function CampaignPage(props: { searchParams: Promise<{ ref?
                     initialNode={{ id: startNodeId, text: '', choices: [] }}
                     campaignRef={campaignRef}
                     adventureSlug={campaignRef === 'bruised-banana' ? 'bruised-banana' : undefined}
+                    isAdmin={isAdmin}
                 />
             </div>
         </div>

@@ -167,6 +167,8 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           targetDescription,
           wakeUpContent,
           showUpContent,
+          storyBridgeCopy,
+          campaignRef,
           stripeOneTimeUrl,
           patreonUrl,
           venmoUrl,
@@ -174,6 +176,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           paypalUrl,
           isEventMode,
           goalAmountCents,
+          kotterStage,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         }
       })
@@ -235,6 +238,40 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     redirectWithMessage('/admin/instances', { error: errorMessage })
   } else if (successParams) {
     redirectWithMessage('/admin/instances', successParams)
+  }
+}
+
+/**
+ * Update fundraiser progress (currentAmount, goalAmount). Admin only.
+ * Used by event page and instances list for quick progress updates.
+ */
+export async function updateInstanceFundraise(formData: FormData): Promise<{ error?: string }> {
+  try {
+    await ensureAdmin()
+
+    const instanceId = (formData.get('instanceId') as string | null)?.trim() || null
+    const currentAmountCents = toCents(formData.get('currentAmount'))
+    const goalAmountCents = toCents(formData.get('goalAmount'))
+
+    if (!instanceId) return { error: 'Instance ID is required' }
+
+    const data: { currentAmountCents?: number; goalAmountCents?: number } = {}
+    if (currentAmountCents != null) data.currentAmountCents = currentAmountCents
+    if (goalAmountCents != null) data.goalAmountCents = goalAmountCents
+    if (Object.keys(data).length === 0) return { error: 'Provide at least currentAmount or goalAmount' }
+
+    await db.instance.update({
+      where: { id: instanceId },
+      data,
+    })
+
+    revalidatePath('/admin/instances')
+    revalidatePath('/event')
+    revalidatePath('/')
+    return {}
+  } catch (e) {
+    console.error('[instance] updateInstanceFundraise failed:', e)
+    return { error: toUserSafeErrorMessage(e) }
   }
 }
 

@@ -47,31 +47,41 @@ export default async function AdventuresPage() {
                             const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)
                             const assignment = quest?.assignments?.[0] as PlayerQuest | undefined
                             const isCompleted = assignment?.status === 'completed'
+                            const isCertCompleted = quest?.isSystem && isCompleted
+
+                            const cardContent = (
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors h-full flex flex-col">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-3xl">📖</div>
+                                        {quest?.isSystem && (
+                                            <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded font-mono uppercase">Certification</span>
+                                        )}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{story.title}</h3>
+                                    <div className="mt-auto pt-4 flex items-center justify-between">
+                                        <p className="text-xs text-zinc-500">
+                                            Added {new Date(story.createdAt).toLocaleDateString()}
+                                        </p>
+                                        {isCompleted && (
+                                            <span className="text-[10px] font-bold text-green-500 uppercase">Completed</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )
 
                             return (
-                                <Link
-                                    key={story.id}
-                                    href={quest ? `/adventures/${story.id}/play?questId=${quest.id}` : `/adventures/${story.id}/play`}
-                                    className={`group block ${isCompleted ? 'opacity-50' : ''}`}
-                                >
-                                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors h-full flex flex-col">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="text-3xl">📖</div>
-                                            {quest?.isSystem && (
-                                                <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded font-mono uppercase">Certification</span>
-                                            )}
-                                        </div>
-                                        <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{story.title}</h3>
-                                        <div className="mt-auto pt-4 flex items-center justify-between">
-                                            <p className="text-xs text-zinc-500">
-                                                Added {new Date(story.createdAt).toLocaleDateString()}
-                                            </p>
-                                            {isCompleted && (
-                                                <span className="text-[10px] font-bold text-green-500 uppercase">Completed</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Link>
+                                <div key={story.id} className={`group block ${isCompleted ? 'opacity-50' : ''}`}>
+                                    {isCertCompleted ? (
+                                        <Link href="/bars/available" className="block">
+                                            {cardContent}
+                                            <p className="text-[10px] text-zinc-500 mt-2">Restore in Market to re-run</p>
+                                        </Link>
+                                    ) : (
+                                        <Link href={quest ? `/adventures/${story.id}/play?questId=${quest.id}` : `/adventures/${story.id}/play`}>
+                                            {cardContent}
+                                        </Link>
+                                    )}
+                                </div>
                             )
                         })}
                     </div>

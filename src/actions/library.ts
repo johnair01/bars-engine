@@ -198,6 +198,8 @@ export async function submitLibraryRequest(
             status: 'active',
             visibility: 'public',
             isSystem: true,
+            moveType: 'wakeUp',
+            kotterStage: 1,
             docQuestMetadata: JSON.stringify({
                 docIntent: 'answer_request',
                 targetDocNodeId: docNode.id,
@@ -222,7 +224,17 @@ export async function submitLibraryRequest(
         }
     })
 
+    // Auto-assign spawned DocQuest to requestor so it appears in Active Quests
+    await db.playerQuest.create({
+        data: {
+            playerId: player.id,
+            questId: docQuest.id,
+            status: 'assigned'
+        }
+    })
+
     revalidatePath('/admin/library')
+    revalidatePath('/')
     return {
         requestId: request.id,
         result: {

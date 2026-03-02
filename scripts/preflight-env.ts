@@ -37,6 +37,16 @@ async function checkEnv() {
         console.warn('\n  ! Some critical config is missing. The app may run in Guest Mode.')
     }
 
+    // Optional: OPENAI_API_KEY for AI features (Book analysis, I Ching quest gen)
+    const optional = ['OPENAI_API_KEY']
+    for (const v of optional) {
+        if (!process.env[v]) {
+            console.warn(`  ⚠️  Optional: ${v} missing — AI features (Book analysis, I Ching quest gen) will fail`)
+        } else {
+            console.log(`  ✓ ${v} is present`)
+        }
+    }
+
     // Attempt DB connection
     console.log('\n📡 Checking DB Connectivity...')
     const prisma = new PrismaClient()

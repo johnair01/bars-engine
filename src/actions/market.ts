@@ -46,7 +46,7 @@ export async function getMarketContent() {
             where: {
                 visibility: 'public',
                 status: 'active',
-                isSystem: isAdmin ? undefined : false,
+                isSystem: false,
             },
             include: {
                 microTwine: true,
@@ -99,7 +99,13 @@ export async function getMarketContent() {
         filteredQuests = filteredQuests.filter(q => q.kotterStage === instanceStage)
     }
 
-    // 3. Nation & Playbook Gating
+    // 3. Exclude completed system quests from available (they appear in Graveyard only)
+    if (isAdmin && player && graveyardQuests.length > 0) {
+        const graveyardIds = new Set(graveyardQuests.map(g => g.id))
+        filteredQuests = filteredQuests.filter(q => !(q.isSystem && graveyardIds.has(q.id)))
+    }
+
+    // 4. Nation & Playbook Gating
     if (player) {
         filteredQuests = filteredQuests.filter(q => {
             // Nation gating
@@ -210,14 +216,19 @@ export async function pickupMarketQuest(questId: string) {
         return { error: 'Quest not available' }
     }
 
-    // Check if already assigned
+    // Check if already assigned or completed
     const existing = await db.playerQuest.findUnique({
         where: {
             playerId_questId: { playerId: player.id, questId }
         }
     })
 
-    if (existing) return { error: 'Already accepted this quest' }
+    if (existing) {
+        if (existing.status === 'completed' && quest.isSystem) {
+            return { error: 'Quest completed. Restore from Graveyard to re-run.' }
+        }
+        return { error: 'Already accepted this quest' }
+    }
 
     await db.playerQuest.create({
         data: {

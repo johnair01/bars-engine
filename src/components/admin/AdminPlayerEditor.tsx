@@ -18,12 +18,13 @@ import {
 
 interface AdminPlayerEditorProps {
     player: any
+    players?: { id: string; name: string }[]
     worldData: { nations: any[], archetypes: any[] }
     onClose: () => void
     onUpdate: () => void
 }
 
-export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: AdminPlayerEditorProps) {
+export function AdminPlayerEditor({ player, players = [], worldData, onClose, onUpdate }: AdminPlayerEditorProps) {
     const [isPending, startTransition] = useTransition()
     const isAdmin = player.roles.some((r: any) => r.role.key === 'admin')
     const [quests, setQuests] = useState<any[]>([])
@@ -33,6 +34,9 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
     const [selectedThreadId, setSelectedThreadId] = useState('')
     const [selectedPackId, setSelectedPackId] = useState('')
     const [onboardingProgress, setOnboardingProgress] = useState<any[]>([])
+    const [mintAmount, setMintAmount] = useState('1')
+    const [transferTargetId, setTransferTargetId] = useState('')
+    const [transferAmount, setTransferAmount] = useState('1')
 
     const fetchData = async () => {
         const [allQuests, journeys, obProgress] = await Promise.all([
@@ -107,14 +111,15 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
     }
 
     const handleMint = async () => {
-        const amountStr = prompt(`Mint Vibeulons for ${player.name}. Enter amount:`, '1')
-        if (!amountStr) return
-        const amount = parseInt(amountStr)
-        if (isNaN(amount) || amount <= 0) return
-
+        const amount = parseInt(mintAmount, 10)
+        if (isNaN(amount) || amount <= 0) {
+            alert('Enter a valid amount (1 or more)')
+            return
+        }
         startTransition(async () => {
             try {
                 await adminMintVibulons(player.id, amount)
+                setMintAmount('1')
                 onUpdate()
             } catch (e: any) {
                 alert(e.message)
@@ -123,17 +128,20 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
     }
 
     const handleTransfer = async () => {
-        const targetId = prompt(`Transfer Vibeulons FROM ${player.name}. Enter TARGET Player ID:`)
-        if (!targetId) return
-
-        const amountStr = prompt(`Enter amount to transfer:`, '1')
-        if (!amountStr) return
-        const amount = parseInt(amountStr)
-        if (isNaN(amount) || amount <= 0) return
-
+        if (!transferTargetId) {
+            alert('Select a target player')
+            return
+        }
+        const amount = parseInt(transferAmount, 10)
+        if (isNaN(amount) || amount <= 0) {
+            alert('Enter a valid amount (1 or more)')
+            return
+        }
         startTransition(async () => {
             try {
-                await adminTransferVibulons(player.id, targetId, amount)
+                await adminTransferVibulons(player.id, transferTargetId, amount)
+                setTransferTargetId('')
+                setTransferAmount('1')
                 onUpdate()
             } catch (e: any) {
                 alert(e.message)
@@ -296,29 +304,66 @@ export function AdminPlayerEditor({ player, worldData, onClose, onUpdate }: Admi
                     {/* Vibeulon Section */}
                     <section className="space-y-4">
                         <h3 className="text-[10px] uppercase text-zinc-500 font-bold tracking-[0.2em]">Vibeulon Economy</h3>
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                             <div className="text-center sm:text-left">
                                 <div className="text-xs text-zinc-500 uppercase mb-1">Current Balance</div>
                                 <div className="text-4xl font-mono text-green-400 font-bold">{player._count?.vibulons || 0} ♦</div>
                             </div>
-                            <div className="flex gap-2 w-full sm:w-auto">
+                            <div className="flex flex-wrap gap-2 items-end">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase text-zinc-500 block">Mint amount</label>
+                                    <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min={1}
+                                        value={mintAmount}
+                                        onChange={(e) => setMintAmount(e.target.value)}
+                                        className="w-20 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm"
+                                    />
+                                </div>
                                 <button
                                     onClick={handleMint}
                                     disabled={isPending}
-                                    className="flex-1 sm:flex-none bg-green-900/20 text-green-400 border border-green-800/50 hover:bg-green-900/40 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+                                    className="bg-green-900/20 text-green-400 border border-green-800/50 hover:bg-green-900/40 px-4 py-2.5 rounded-xl font-bold text-sm transition-all min-h-[44px]"
                                 >
                                     Mint
                                 </button>
-                                {(player._count?.vibulons || 0) > 0 && (
+                            </div>
+                            {(player._count?.vibulons || 0) > 0 && (
+                                <div className="flex flex-wrap gap-2 items-end pt-2 border-t border-zinc-800">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-zinc-500 block">Transfer to</label>
+                                        <select
+                                            value={transferTargetId}
+                                            onChange={(e) => setTransferTargetId(e.target.value)}
+                                            className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm min-w-[140px]"
+                                        >
+                                            <option value="">Select player...</option>
+                                            {players.filter((p) => p.id !== player.id).map((p) => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-zinc-500 block">Amount</label>
+                                        <input
+                                            type="number"
+                                            inputMode="numeric"
+                                            min={1}
+                                            value={transferAmount}
+                                            onChange={(e) => setTransferAmount(e.target.value)}
+                                            className="w-20 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm"
+                                        />
+                                    </div>
                                     <button
                                         onClick={handleTransfer}
                                         disabled={isPending}
-                                        className="flex-1 sm:flex-none bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+                                        className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-all min-h-[44px]"
                                     >
                                         Transfer
                                     </button>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </section>
 

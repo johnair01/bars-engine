@@ -39,7 +39,18 @@ No secrets or real URLs belong in the repo; only this doc and `.env.example` (wi
 
 ## Troubleshooting
 
+### DATABASE_URL
+
 If `DATABASE_URL` errors appear in build or Prisma commands (e.g. `npm run build`, `npm run db:push`), ensure you've run `npm run env:pull` (or have `.env` with `DATABASE_URL`). The app loads `.env.local` first; all scripts now do the same.
+
+### OPENAI_API_KEY / "Incorrect API key provided"
+
+AI features (Book analysis, I Ching quest generation) require `OPENAI_API_KEY`. If you see "Incorrect API key provided" or "OPENAI_API_KEY is not set":
+
+1. **Local**: Add `OPENAI_API_KEY=sk-...` to `.env.local` (or `.env`). Get the key from [OpenAI API keys](https://platform.openai.com/account/api-keys).
+2. **Vercel**: Add `OPENAI_API_KEY` in Vercel Dashboard → Settings → Environment Variables. Set for Production, Preview, and Development as needed. Redeploy after adding.
+3. **Verify**: Run `npm run smoke` — it checks for `OPENAI_API_KEY` presence.
+4. **Key format**: Valid keys start with `sk-` or `sk-proj-`. If rotated or expired, create a new key and update env.
 
 ## GitHub Codespaces
 

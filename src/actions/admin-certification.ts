@@ -52,6 +52,7 @@ export async function restoreCertificationQuest(questId: string) {
         })
 
         revalidatePath('/bars/available')
+        revalidatePath('/adventures')
         revalidatePath('/')
 
         return { success: true }

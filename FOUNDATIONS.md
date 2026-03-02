@@ -125,6 +125,16 @@ Local liquidity is intentionally scarce. It creates meaningful choices and preve
 
 Local liquidity does not automatically return to the global reserve. Cross-context carry is possible only through a rare, recorded governance move (transmutation), where a circle ratifies that local value should matter beyond its originating world.
 
+## Metabolism of Roadblocks
+
+In the BARS Engine, an **Emergent Roadblock** is not just a bug; it is a manifestation of misaligned intention—a knot in the pipeline of inspiration. When the system (the codebase) fails to metabolize a BAR (a user request or signal), it produces a Roadblock Error.
+
+The ritual for metabolizing roadblocks:
+
+- **Pre-commit Scan**: Before code reaches the shared branch, a type-check and validation run. Commits that introduce build errors, export mismatches, or missing directives are rejected.
+- **Agent Reflection**: The AI agent is taught to verify imports against exports, ensure `"use client"` or `"use server"` where required, and treat build errors as Roadblock Quests—to be completed before any commit.
+- **Principle**: Roadblocks must be metabolized before they manifest in the shared field. Stagnation in the pipeline is allowed privately; the committed branch stays clean.
+
 ## What This Project Is
 BARs Engine is an ecology:
 - kernels (BARs)

@@ -31,7 +31,8 @@ export function Avatar({ player, size = 'md', className = '' }: AvatarProps) {
     const [failedLayers, setFailedLayers] = useState<Set<string>>(new Set())
     const specs = config ? getAvatarPartSpecs(config) : []
     const visibleSpecs = specs.filter((s) => !failedLayers.has(s.layer))
-    const showFallback = specs.length === 0 || visibleSpecs.length === 0
+    const showFallback =
+        specs.length === 0 || visibleSpecs.length === 0 || failedLayers.has('base')
 
     const handleLayerError = (layer: string) => {
         setFailedLayers((prev) => new Set(prev).add(layer))
@@ -56,7 +57,7 @@ export function Avatar({ player, size = 'md', className = '' }: AvatarProps) {
 
     return (
         <div
-            className={`relative overflow-hidden rounded-full shrink-0 ${sizeClass} ${className}`}
+            className={`relative overflow-hidden rounded-full shrink-0 bg-zinc-900 ${sizeClass} ${className}`}
             style={{ border: '2px solid hsl(var(--border) / 0.3)' }}
             title={player.name}
         >

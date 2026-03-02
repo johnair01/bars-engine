@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getAppConfig, updateFeatures, updateHeroText, updateOrientationQuest, getRecentAuditLogs } from '@/actions/config'
+import { getAppConfig, updateHeroText, updateOrientationQuest, getRecentAuditLogs } from '@/actions/config'
 import Link from 'next/link'
+import { FeatureFlagsForm } from './FeatureFlagsForm'
 
 export default async function AdminConfigPage() {
     const cookieStore = await cookies()
@@ -49,40 +50,7 @@ export default async function AdminConfigPage() {
                 {/* FEATURE FLAGS */}
                 <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
                     <h2 className="text-lg font-bold text-white">Feature Flags</h2>
-                    <form action={async (formData) => { 'use server'; await updateFeatures(formData) }} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-2">
-                            {['wallet', 'iching', 'quests', 'story', 'customBars'].map(feature => (
-                                <label key={feature} className="flex items-center gap-3 p-2 hover:bg-zinc-800 rounded cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name={`feature_${feature}`}
-                                        defaultChecked={features[feature] !== false}
-                                        className="w-4 h-4"
-                                    />
-                                    <span className="text-zinc-300 capitalize text-sm">{feature}</span>
-                                </label>
-                            ))}
-                        </div>
-                        <input type="hidden" name="features" id="featuresJson" />
-                        <button
-                            type="submit"
-                            className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded"
-                            onClick={(e) => {
-                                // Collect checkboxes into JSON
-                                const form = (e.target as HTMLButtonElement).closest('form')!
-                                const checkboxes = form.querySelectorAll('input[type=checkbox]')
-                                const features: Record<string, boolean> = {}
-                                checkboxes.forEach(cb => {
-                                    const input = cb as HTMLInputElement
-                                    const name = input.name.replace('feature_', '')
-                                    features[name] = input.checked
-                                })
-                                form.querySelector<HTMLInputElement>('#featuresJson')!.value = JSON.stringify(features)
-                            }}
-                        >
-                            Save Features
-                        </button>
-                    </form>
+                    <FeatureFlagsForm features={features} />
                 </section>
 
                 {/* ORIENTATION QUEST CONFIG */}

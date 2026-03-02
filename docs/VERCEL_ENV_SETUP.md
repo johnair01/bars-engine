@@ -26,7 +26,7 @@ You need to add the `OPENAI_API_KEY` environment variable to your Vercel project
 
 3. **Add the OpenAI API Key**
    - **Key**: `OPENAI_API_KEY`
-   - **Value**: `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`
+   - **Value**: Your OpenAI API key (from https://platform.openai.com/account/api-keys)
    - **Environments**: Select all environments (Production, Preview, Development)
    - Click "Save"
 
@@ -42,3 +42,12 @@ After redeployment, the I Ching hexagram generation should work without errors.
 - Environment variables in `.env` files are only available locally
 - Vercel runs in a different environment and needs variables configured in the dashboard
 - The OpenAI SDK automatically looks for `OPENAI_API_KEY` environment variable
+
+## "Incorrect API key provided" troubleshooting
+
+If you see this error after adding the key:
+
+1. **Verify the key in Vercel**: Dashboard → Settings → Environment Variables. Confirm `OPENAI_API_KEY` exists and the value is correct (no extra spaces, full key).
+2. **Check environment scope**: Ensure the key is set for the environment you're using (Production, Preview, or Development).
+3. **Redeploy**: Changes to env vars require a new deployment. Push a commit or use Redeploy from the Deployments tab.
+4. **Key validity**: If the key was rotated or revoked, create a new one at [OpenAI API keys](https://platform.openai.com/account/api-keys) and update Vercel.

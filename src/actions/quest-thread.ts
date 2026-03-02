@@ -37,7 +37,11 @@ export async function getPlayerThreads() {
         }
     })
 
-    return threads.map(thread => ({
+    // Hide Build Your Character from non-admin players (admin onboarding keeps it)
+    const isAdmin = player.roles?.some((r: { role: { key: string } }) => r.role?.key === 'admin') ?? false
+    const visibleThreads = threads.filter(t => t.id !== 'build-character-thread' || isAdmin)
+
+    return visibleThreads.map(thread => ({
         ...thread,
         playerProgress: thread.progress[0] || null,
         totalQuests: thread.quests.length,

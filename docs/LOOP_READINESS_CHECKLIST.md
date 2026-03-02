@@ -6,6 +6,21 @@ Goal: keep the loop reliable while minimizing compute.
 
 ---
 
+## Pre-Launch Seeds
+
+Before first launch (or after adding new content), run these seeds in order:
+
+| Order | Script | Purpose |
+|-------|--------|---------|
+| 1 | `npm run seed:party` | Creates Bruised Banana instance and campaigns |
+| 2 | `npm run seed:quest-map` | Creates 8 Kotter-stage quests (Q-MAP-1 … Q-MAP-8) |
+| 3 | `npm run seed:onboarding` | Creates orientation threads and first quest |
+| 4 | `npm run seed:cert:cyoa` | Creates certification quests (including go-live, admin mobile) |
+
+Re-run `npm run seed:cert:cyoa` after adding new certification quests to the seed script.
+
+---
+
 ## Loop Definition (What must work)
 
 1. Player can **sign in**
@@ -20,20 +35,12 @@ Goal: keep the loop reliable while minimizing compute.
 
 - [ ] On correct branch and latest code is pushed
 - [ ] Preview URL printed for this branch (`npm run preview:link`)
-- [ ] `npm run build` passes
 - [ ] `DATABASE_URL` is set for any DB scripts you run
 - [ ] No planned destructive reset during this release window
 
-```bash
-git branch --show-current
-git status --short
-npm run preview:link
-npm run build
-```
+### Automated checks (loop:ready)
 
-### One-command runner (recommended)
-
-Run full readiness:
+`npm run loop:ready` runs the automated portion: build, db:reset-history, core quest config verification, test:feedback-cap, db:feedback-cap-history. Use this as the primary gate.
 
 ```bash
 DATABASE_URL="postgres://..." npm run loop:ready
@@ -43,6 +50,14 @@ Run quick mode (skip build):
 
 ```bash
 DATABASE_URL="postgres://..." npm run loop:ready:quick
+```
+
+### Manual pre-flight
+
+```bash
+git branch --show-current
+git status --short
+npm run preview:link
 ```
 
 ---
@@ -117,15 +132,12 @@ Expected:
 ## 5) Go / No-Go Gate
 
 ### GO if all true:
-- [ ] Build passes
-- [ ] Feedback cap script passes
-- [ ] Audit scripts return expected output
-- [ ] Manual smoke shows no loop-breaking UI defects
+- [ ] `npm run loop:ready` passes (automated: build, reset-history, core quest config, feedback-cap test)
+- [ ] Manual smoke (Section 3) shows no loop-breaking UI defects
 
 ### NO-GO if any true:
+- [ ] loop:ready exits with FAIL
 - [ ] Quest completion fails or does not mint correctly
-- [ ] Audit history scripts fail
-- [ ] Unexpected reset event appears
 - [ ] Sign-in or core quest modal is broken
 
 ---

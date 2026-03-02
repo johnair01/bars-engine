@@ -1,19 +1,25 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
+import { AssignAvatarForm } from '@/components/admin/AssignAvatarForm'
+import { getAdminWorldData } from '@/actions/admin'
 
 export default async function AdminAvatarsPage() {
-    const players = await db.player.findMany({
-        orderBy: { createdAt: 'desc' },
-        select: {
-            id: true,
-            name: true,
-            avatarConfig: true,
-            pronouns: true,
-            nation: { select: { name: true } },
-            playbook: { select: { name: true } },
-        },
-    })
+    const [players, [nations, playbooks]] = await Promise.all([
+        db.player.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                contactValue: true,
+                avatarConfig: true,
+                pronouns: true,
+                nation: { select: { name: true } },
+                playbook: { select: { name: true } },
+            },
+        }),
+        getAdminWorldData(),
+    ])
 
     return (
         <div className="space-y-6 sm:space-y-8">
@@ -29,6 +35,12 @@ export default async function AdminAvatarsPage() {
                     Sprite Assets
                 </Link>
             </header>
+
+            <AssignAvatarForm
+                players={players}
+                nations={nations}
+                playbooks={playbooks}
+            />
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {players.map((player) => (

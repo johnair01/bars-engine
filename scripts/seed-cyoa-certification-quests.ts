@@ -12,7 +12,13 @@ const CERT_QUEST_IDS = [
     'cert-two-minute-ride-v1',
     'cert-k-space-librarian-v1',
     'cert-composable-sprite-v1',
-    'cert-existing-players-character-v1'
+    'cert-existing-players-character-v1',
+    'cert-book-to-quest-library-v1',
+    'cert-book-quest-twine-export-v1',
+    'cert-admin-manual-avatar-v1',
+    'cert-admin-mobile-readiness-v1',
+    'cert-go-live-v1',
+    'cert-market-redesign-v1'
 ]
 
 async function seed() {
@@ -1208,6 +1214,647 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${existingCharStory.title} (${existingCharStory.id})`)
     console.log(`✅ Quest seeded: ${existingCharQuest.title} (${existingCharQuest.id})`)
+
+    // --- Certification: Book-to-Quest Library Phase 2 (AZ) ---
+    const bookLibTitle = 'Certification: Book-to-Quest Library V1'
+    const bookLibSlug = 'cert-book-to-quest-library-v1'
+
+    const bookLibPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Book-to-Quest Library Phase 2 flow: upload PDF, extract text, trigger AI analysis, and confirm quests are created.',
+            cleanText: 'Verify Book-to-Quest Library: upload, extract, analyze.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Books admin\n\n[Open /admin/books](/admin/books) (admin only). Confirm the Books page shows the upload form and book list.',
+            cleanText: '### Step 1: Open Books admin\n\nConfirm /admin/books loads.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Upload PDF\n\nUpload a text-based PDF (e.g. a short personal development article or chapter). Use any PDF you have—the content will be extracted for analysis. Confirm the book appears in the list with status **draft**.',
+            cleanText: '### Step 2: Upload PDF\n\nUpload a PDF; confirm book appears with status draft.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Extract text\n\nClick **Extract Text** on the book. Wait for extraction to complete. Confirm the book status changes to **extracted** and page/word count appears.',
+            cleanText: '### Step 3: Extract text\n\nClick Extract Text; confirm status = extracted.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Trigger analysis\n\nClick **Trigger Analysis** on the book. Wait for AI analysis to complete (may take 30–60 seconds for longer books). Confirm the book status changes to **analyzed** and quest count appears (e.g. "12 quests").',
+            cleanText: '### Step 4: Trigger analysis\n\nClick Trigger Analysis; confirm status = analyzed, quest count shown.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Verify quests created\n\n[Open /admin/quests](/admin/quests) or the Market. Confirm quests from the book appear—they should have moveType (Wake Up, Clean Up, Grow Up, Show Up) and optionally allyship domain. At least one quest should be visible.',
+            cleanText: '### Step 5: Verify quests created\n\nConfirm book-derived quests appear in admin or Market.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Verification complete. You have confirmed the Book-to-Quest Library Phase 2 flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const bookLibParsedJson = JSON.stringify({
+        title: bookLibTitle,
+        startPassage: 'START',
+        passages: bookLibPassages
+    })
+
+    const bookLibStory = await db.twineStory.upsert({
+        where: { slug: bookLibSlug },
+        update: {
+            title: bookLibTitle,
+            parsedJson: bookLibParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: bookLibTitle,
+            slug: bookLibSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Book-to-Quest Library certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: bookLibParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const bookLibQuest = await db.customBar.upsert({
+        where: { id: bookLibSlug },
+        update: {
+            title: bookLibTitle,
+            description: 'Verify Book-to-Quest Library: upload PDF, extract text, trigger analysis, confirm quests created.',
+            reward: 1,
+            twineStoryId: bookLibStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: bookLibSlug,
+            title: bookLibTitle,
+            description: 'Verify Book-to-Quest Library: upload PDF, extract text, trigger analysis, confirm quests created.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: bookLibStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${bookLibStory.title} (${bookLibStory.id})`)
+    console.log(`✅ Quest seeded: ${bookLibQuest.title} (${bookLibQuest.id})`)
+
+    // --- Certification: Book Quest Twine Export (BP) ---
+    const twineExportTitle = 'Certification: Book Quest Twine Export V1'
+    const twineExportSlug = 'cert-book-quest-twine-export-v1'
+
+    const twineExportPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Book Quest Twine Export flow. Prepare the Quest Library for Twine adventures by confirming you can export book quests as JSON for adventure building.',
+            cleanText: 'Verify Book Quest Twine Export: export quests as JSON for Twine adventures.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Books admin\n\n[Open /admin/books](/admin/books) (admin only). Confirm the Books page loads. You need a book with status **analyzed** or **published** (from cert-book-to-quest-library-v1 or a previous run).',
+            cleanText: '### Step 1: Open Books admin\n\nConfirm /admin/books loads; have a book with analyzed/published status.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Review quests\n\nClick **Review quests** on a book that has quests. Open the quest review page at `/admin/books/[id]/quests`. If the book has no approved quests, approve at least one draft first.',
+            cleanText: '### Step 2: Review quests\n\nClick Review quests; approve at least one quest if needed.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Export for Twine\n\nConfirm the **Export for Twine** button is visible (it appears when the book has at least one approved quest). Click it. A JSON file should download (e.g. `{book-slug}-quests.json`).',
+            cleanText: '### Step 3: Export for Twine\n\nClick Export for Twine; confirm JSON file downloads.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Verify export structure\n\nOpen the downloaded JSON file. Confirm it has a `book` object (id, title, author) and a `quests` array. Each quest should have id, title, description, moveType, allyshipDomain, gameMasterFace, reward, and position. This metadata enables Twine adventure stringing for the Bruised Banana party.',
+            cleanText: '### Step 4: Verify export structure\n\nConfirm JSON has book + quests with full metadata.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have confirmed the Book Quest Twine Export flow. Content authors can now export quest metadata to build Twine adventures from the Quest Library. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const twineExportParsedJson = JSON.stringify({
+        title: twineExportTitle,
+        startPassage: 'START',
+        passages: twineExportPassages
+    })
+
+    const twineExportStory = await db.twineStory.upsert({
+        where: { slug: twineExportSlug },
+        update: {
+            title: twineExportTitle,
+            parsedJson: twineExportParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: twineExportTitle,
+            slug: twineExportSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Book Quest Twine Export certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: twineExportParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const twineExportQuest = await db.customBar.upsert({
+        where: { id: twineExportSlug },
+        update: {
+            title: twineExportTitle,
+            description: 'Verify Book Quest Twine Export: review quests, click Export for Twine, confirm JSON downloads with book + quests metadata.',
+            reward: 1,
+            twineStoryId: twineExportStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: twineExportSlug,
+            title: twineExportTitle,
+            description: 'Verify Book Quest Twine Export: review quests, click Export for Twine, confirm JSON downloads with book + quests metadata.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: twineExportStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${twineExportStory.title} (${twineExportStory.id})`)
+    console.log(`✅ Quest seeded: ${twineExportQuest.title} (${twineExportQuest.id})`)
+
+    // --- Certification: Admin Manual Avatar Assignment ---
+    const adminAvatarTitle = 'Certification: Admin Manual Avatar Assignment V1'
+    const adminAvatarSlug = 'cert-admin-manual-avatar-v1'
+
+    const adminAvatarPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the admin manual avatar assignment flow. Admins can assign avatars to players for testing sprite stacking without going through the character-generation quest.',
+            cleanText: 'Verify admin manual avatar assignment for sprite testing.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Avatar Gallery\n\n[Open /admin/avatars](/admin/avatars) (admin only). Confirm the Avatar Gallery page loads with the "Assign Avatar" form and player grid.',
+            cleanText: '### Step 1: Open Avatar Gallery\n\nConfirm /admin/avatars loads with Assign Avatar form.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Assign avatar to a player\n\nUse the Assign Avatar form: select a player, a nation, and an archetype (playbook). Optionally select a base variant (default, male, female, neutral). Click **Assign Avatar**. Confirm you see a success message.',
+            cleanText: '### Step 2: Assign avatar\n\nUse form: player, nation, archetype; click Assign Avatar.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Verify avatar in grid\n\nConfirm the assigned player\'s avatar appears in the grid below the form. The composed sprite (base + nation + playbook layers) should be visible. This verifies sprite stacking works for the party.',
+            cleanText: '### Step 3: Verify avatar in grid\n\nConfirm avatar appears in grid.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Verification complete. You have confirmed the admin manual avatar assignment flow. Admins can now test sprite stacking for the Bruised Banana party. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const adminAvatarParsedJson = JSON.stringify({
+        title: adminAvatarTitle,
+        startPassage: 'START',
+        passages: adminAvatarPassages
+    })
+
+    const adminAvatarStory = await db.twineStory.upsert({
+        where: { slug: adminAvatarSlug },
+        update: {
+            title: adminAvatarTitle,
+            parsedJson: adminAvatarParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: adminAvatarTitle,
+            slug: adminAvatarSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Admin manual avatar assignment certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: adminAvatarParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const adminAvatarQuest = await db.customBar.upsert({
+        where: { id: adminAvatarSlug },
+        update: {
+            title: adminAvatarTitle,
+            description: 'Verify admin manual avatar assignment: assign avatar to player, confirm sprite appears in Avatar Gallery.',
+            reward: 1,
+            twineStoryId: adminAvatarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: adminAvatarSlug,
+            title: adminAvatarTitle,
+            description: 'Verify admin manual avatar assignment: assign avatar to player, confirm sprite appears in Avatar Gallery.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: adminAvatarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${adminAvatarStory.title} (${adminAvatarStory.id})`)
+    console.log(`✅ Quest seeded: ${adminAvatarQuest.title} (${adminAvatarQuest.id})`)
+
+    // --- Certification: Admin Mobile Readiness (BR) ---
+    const mobileTitle = 'Certification: Admin Mobile Readiness V1'
+    const mobileSlug = 'cert-admin-mobile-readiness-v1'
+
+    const mobilePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the admin console works on mobile. The residency team will manage the Bruised Banana Fundraiser from anywhere—confirm you can edit instances, update progress, and mint vibeulons without terminal access.',
+            cleanText: 'This certification quest verifies the admin console works on mobile.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Edit instance with prefill\n\nLog in as admin. [Open Admin → Instances](/admin/instances). Click **Edit** on an instance. Confirm the form opens with all fields pre-filled. Save (or cancel).',
+            cleanText: '### Step 1: Edit instance with prefill\n\nLog in as admin. Open Admin → Instances. Click Edit on an instance. Confirm the form opens with all fields pre-filled.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Update donation progress\n\n[Open /event](/event). Find the **Update progress** button near the fundraiser progress bar. Click it, change the current amount, and save. Confirm the progress bar updates.',
+            cleanText: '### Step 2: Update donation progress\n\nOpen /event. Find Update progress near the progress bar. Change current amount and save.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Mint via inline input\n\n[Open Admin → Players](/admin/players). Click a player to open the editor. In the Vibeulon Economy section, use the **amount input** and **Mint** button (no prompt dialog). Mint 1 vibeulon and confirm the balance updates.',
+            cleanText: '### Step 3: Mint via inline input\n\nOpen Admin → Players. Open a player. Use the amount input and Mint button (no prompt). Mint 1 vibeulon.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have confirmed the admin console works on mobile. The residency team can manage the Bruised Banana Fundraiser from anywhere. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const mobileParsedJson = JSON.stringify({
+        title: mobileTitle,
+        startPassage: 'START',
+        passages: mobilePassages
+    })
+
+    const mobileStory = await db.twineStory.upsert({
+        where: { slug: mobileSlug },
+        update: {
+            title: mobileTitle,
+            parsedJson: mobileParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: mobileTitle,
+            slug: mobileSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Admin mobile readiness certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: mobileParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const mobileQuest = await db.customBar.upsert({
+        where: { id: mobileSlug },
+        update: {
+            title: mobileTitle,
+            description: 'Verify admin mobile readiness: edit instance (prefill), update progress, mint via inline input.',
+            reward: 1,
+            twineStoryId: mobileStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: mobileSlug,
+            title: mobileTitle,
+            description: 'Verify admin mobile readiness: edit instance (prefill), update progress, mint via inline input.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: mobileStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${mobileStory.title} (${mobileStory.id})`)
+    console.log(`✅ Quest seeded: ${mobileQuest.title} (${mobileQuest.id})`)
+
+    // --- Certification: Go-Live Integration (BS) ---
+    const goLiveTitle = 'Certification: Go-Live V1'
+    const goLiveSlug = 'cert-go-live-v1'
+
+    const goLivePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the go-live checklist. Prepare the Bruised Banana Fundraiser for launch by confirming the core loop works before sending invitations.',
+            cleanText: 'This certification quest verifies the go-live checklist.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Run loop readiness\n\nIn your terminal, run `npm run loop:ready` (or `npm run loop:ready:quick` to skip build). Confirm all checks pass. See docs/LOOP_READINESS_CHECKLIST.md in the repo for details.',
+            cleanText: '### Step 1: Run loop readiness\n\nRun npm run loop:ready. Confirm all checks pass.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Sign in as admin\n\n[Open the app](/). Sign in with an admin account. Confirm you reach the dashboard.',
+            cleanText: '### Step 2: Sign in as admin\n\nSign in. Confirm you reach the dashboard.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Complete a quest and confirm mint\n\n[Open Market](/bars/available) or [Adventures](/adventures). Pick up and complete a quest. Confirm vibeulons mint on completion.',
+            cleanText: '### Step 3: Complete a quest\n\nComplete a quest. Confirm vibeulons mint.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Confirm wallet\n\n[Open Wallet](/wallet). Confirm your balance reflects the vibeulons you just earned.',
+            cleanText: '### Step 4: Confirm wallet\n\nOpen Wallet. Confirm balance reflects earned vibeulons.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. The core loop is ready for launch. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const goLiveParsedJson = JSON.stringify({
+        title: goLiveTitle,
+        startPassage: 'START',
+        passages: goLivePassages
+    })
+
+    const goLiveStory = await db.twineStory.upsert({
+        where: { slug: goLiveSlug },
+        update: {
+            title: goLiveTitle,
+            parsedJson: goLiveParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: goLiveTitle,
+            slug: goLiveSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Go-live certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: goLiveParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const goLiveQuest = await db.customBar.upsert({
+        where: { id: goLiveSlug },
+        update: {
+            title: goLiveTitle,
+            description: 'Verify go-live checklist: loop:ready, sign in, complete quest, confirm wallet.',
+            reward: 1,
+            twineStoryId: goLiveStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: goLiveSlug,
+            title: goLiveTitle,
+            description: 'Verify go-live checklist: loop:ready, sign in, complete quest, confirm wallet.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: goLiveStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${goLiveStory.title} (${goLiveStory.id})`)
+    console.log(`✅ Quest seeded: ${goLiveQuest.title} (${goLiveQuest.id})`)
+
+    // --- Certification: Market Redesign for Launch (BT) ---
+    const marketRedesignTitle = 'Certification: Market Redesign V1'
+    const marketRedesignSlug = 'cert-market-redesign-v1'
+
+    const marketRedesignPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify the Market redesign for the Bruised Banana launch. The Market shows player-created quests; Adventures hold campaign content. Complete each step to validate the redesign.',
+            cleanText: 'Verify the Market redesign for the Bruised Banana launch.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Market\n\n[Open the Market](/bars/available). Confirm you see only player-created quests (no system quests). If no quests exist, confirm the empty state says "No commissions yet. Create one to get started."',
+            cleanText: '### Step 1: Open Market\n\nOpen Market. Confirm player-created quests only.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Use filters\n\nUse the search box and filter pills (domain, nation, archetype). Confirm filtering works. Click "Clear all filters" and confirm results return.',
+            cleanText: '### Step 2: Use filters\n\nUse search and filters. Confirm Clear all filters works.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Accept a quest\n\nOpen a quest and click "Details & Accept" (or equivalent). Confirm you can pick up a quest from the Market.',
+            cleanText: '### Step 3: Accept a quest\n\nAccept a quest from Market.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Check the nav\n\nLook at the navigation bar. Confirm the Play link shows "PLAY" on both mobile and desktop (resize the window if needed).',
+            cleanText: '### Step 4: Check the nav\n\nConfirm Play link shows PLAY on all breakpoints.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Market redesign verified. Player quests are easy to find and explore. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Market redesign verified.',
+            links: []
+        }
+    ]
+
+    const marketRedesignParsedJson = JSON.stringify({
+        title: marketRedesignTitle,
+        startPassage: 'START',
+        passages: marketRedesignPassages
+    })
+
+    const marketRedesignStory = await db.twineStory.upsert({
+        where: { slug: marketRedesignSlug },
+        update: {
+            title: marketRedesignTitle,
+            parsedJson: marketRedesignParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: marketRedesignTitle,
+            slug: marketRedesignSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Market redesign certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: marketRedesignParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const marketRedesignQuest = await db.customBar.upsert({
+        where: { id: marketRedesignSlug },
+        update: {
+            title: marketRedesignTitle,
+            description: 'Verify Market redesign: player-created quests only, filters, empty states, Play on nav.',
+            reward: 1,
+            twineStoryId: marketRedesignStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: marketRedesignSlug,
+            title: marketRedesignTitle,
+            description: 'Verify Market redesign: player-created quests only, filters, empty states, Play on nav.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: marketRedesignStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    console.log(`✅ Story seeded: ${marketRedesignStory.title} (${marketRedesignStory.id})`)
+    console.log(`✅ Quest seeded: ${marketRedesignQuest.title} (${marketRedesignQuest.id})`)
     console.log('✅ CYOA Certification Quests seeded.')
 }
 

@@ -49,16 +49,17 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<ThreadQuest | null>(null)
+    const [expanded, setExpanded] = useState(false)
 
-    // AUTO-OPEN: If focusQuest matches a quest in this thread, open it
+    // AUTO-OPEN: If focusQuest matches a quest in this thread, expand and open modal
     useEffect(() => {
         if (focusQuest) {
             const match = thread.quests.find(tq => tq.questId === focusQuest)
             if (match) {
                 const progress = thread.playerProgress
                 const currentPos = progress?.currentPosition || 0
-                // Only auto-open if it's the current or a previous quest (not locked)
                 if (match.position <= currentPos) {
+                    setExpanded(true)
                     setSelectedQuest(match)
                 }
             }
@@ -93,7 +94,47 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
     return (
         <>
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
-                {/* Celebration Overlay */}
+                {/* Collapsed header - click to expand */}
+                <button
+                    type="button"
+                    onClick={() => setExpanded(!expanded)}
+                    className="w-full text-left flex flex-col gap-2"
+                >
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                {thread.threadType === 'orientation' && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-purple-900 text-purple-400 border border-purple-800 rounded-full font-bold uppercase tracking-widest">
+                                        Ritual
+                                    </span>
+                                )}
+                                <h3 className="font-bold text-white">{thread.title}</h3>
+                            </div>
+                            {thread.description && !expanded && (
+                                <p className="text-sm text-zinc-400 line-clamp-1">{thread.description}</p>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {thread.completionReward > 0 && (
+                                <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full">
+                                    +{thread.completionReward} ⓥ
+                                </span>
+                            )}
+                            <span className="text-zinc-500 text-sm">{expanded ? '▼' : '▶'}</span>
+                        </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-zinc-500">
+                        <span>{isComplete ? 'Complete!' : `${currentPos}/${thread.totalQuests}`}</span>
+                        <span>{progressPercent}%</span>
+                    </div>
+                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                </button>
+
                 {/* Celebration Overlay */}
                 {isComplete && !progress?.isArchived && (
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 animate-in zoom-in-95 fade-in duration-500">
@@ -115,49 +156,20 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                     </div>
                 )}
 
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            {thread.threadType === 'orientation' && (
-                                <span className="text-[10px] px-2 py-0.5 bg-purple-900 text-purple-400 border border-purple-800 rounded-full font-bold uppercase tracking-widest">
-                                    Ritual
-                                </span>
-                            )}
-                            <h3 className="font-bold text-white">{thread.title}</h3>
-                        </div>
-                        {thread.description && (
-                            <p className="text-sm text-zinc-400">{thread.description}</p>
-                        )}
-                        {isSetupIncomplete && thread.threadType === 'orientation' && (
-                            <Link
-                                href="/conclave/onboarding?ritual=true"
-                                className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/20 px-2 py-0.5 rounded border border-yellow-900/50"
-                            >
-                                ⚡ Enter Ritual to Unlock →
-                            </Link>
-                        )}
-                    </div>
-                    {thread.completionReward > 0 && (
-                        <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full">
-                            +{thread.completionReward} ⓥ
-                        </span>
-                    )}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-zinc-500">
-                        <span>{isComplete ? 'Complete!' : `${currentPos}/${thread.totalQuests}`}</span>
-                        <span>{progressPercent}%</span>
-                    </div>
-                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
+                {/* Expanded content */}
+                {expanded && (
+                <>
+                {thread.description && (
+                    <p className="text-sm text-zinc-400 pt-2 border-t border-zinc-800">{thread.description}</p>
+                )}
+                {isSetupIncomplete && thread.threadType === 'orientation' && (
+                    <Link
+                        href="/conclave/onboarding?ritual=true"
+                        className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/20 px-2 py-0.5 rounded border border-yellow-900/50"
+                    >
+                        ⚡ Enter Ritual to Unlock →
+                    </Link>
+                )}
 
                 {/* Quest Steps */}
                 <div className="space-y-2">
@@ -234,6 +246,8 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                     <div className="text-center text-green-400 text-sm font-medium py-2">
                         ✓ Journey Archivied
                     </div>
+                )}
+                </>
                 )}
             </div>
 

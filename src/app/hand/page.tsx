@@ -54,8 +54,8 @@ export default async function HandPage() {
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <header>
                 <Link href="/" className="text-zinc-500 hover:text-white text-sm">← Back to Dashboard</Link>
-                <h1 className="text-3xl font-bold text-white mt-2">Your Hand</h1>
-                <p className="text-zinc-400">Manage your private quests and active commitments.</p>
+                <h1 className="text-3xl font-bold text-white mt-2">Quest Wallet</h1>
+                <p className="text-zinc-400">Organize your active quests and private drafts.</p>
             </header>
 
             <section className="space-y-6">

@@ -12,6 +12,8 @@ export default async function AdminSpriteAssetsPage() {
                     <h1 className="text-3xl font-bold text-white mb-2">Sprite Assets</h1>
                     <p className="text-zinc-400 text-sm">
                         Browse sprite files by layer. Upload or replace PNGs for avatar composition.
+                        Layers stack in order: base → nation_body → playbook_outfit → nation_accent → playbook_accent.
+                        Verify stacking at the <Link href="/admin/avatars" className="text-purple-400 hover:text-purple-300">Avatar Gallery</Link>.
                     </p>
                 </div>
                 <Link

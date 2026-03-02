@@ -32,13 +32,14 @@ export default function AvailableBarsPage() {
     const [activeStage, setActiveStage] = useState<number | null>(null)
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>([])
+    const [selectedDomains, setSelectedDomains] = useState<string[]>([])
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [showCampaignPath, setShowCampaignPath] = useState(false)
 
     const refreshContent = () => getMarketContent().then(data => setContent(data as any))
 
     const hasDomainFilter = parseCampaignDomainPreference(content?.campaignDomainPreference ?? null).length > 0
-    const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0
+    const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0 || selectedDomains.length > 0
     const hasAnyFilter = hasDomainFilter || hasClientFilters
 
     const handleClearAllFilters = async () => {
@@ -46,6 +47,7 @@ export default function AvailableBarsPage() {
         setActiveStage(null)
         setSelectedNations([])
         setSelectedArchetypes([])
+        setSelectedDomains([])
         await updateCampaignDomainPreference([])
         await refreshContent()
     }
@@ -68,8 +70,9 @@ export default function AvailableBarsPage() {
 
         const matchesNation = selectedNations.length === 0 || (creatorNation && selectedNations.includes(creatorNation))
         const matchesArchetype = selectedArchetypes.length === 0 || (creatorArchetype && selectedArchetypes.includes(creatorArchetype))
+        const matchesDomain = selectedDomains.length === 0 || (q.allyshipDomain && selectedDomains.includes(q.allyshipDomain))
 
-        return matchesSearch && matchesStage && matchesNation && matchesArchetype
+        return matchesSearch && matchesStage && matchesNation && matchesArchetype && matchesDomain
     })
 
     // Get active filter options (nations/archetypes that have quests)
@@ -159,6 +162,18 @@ export default function AvailableBarsPage() {
                         />
                     </div>
 
+                    <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                        <div className="text-xs text-zinc-500 w-full md:w-auto mb-1 md:mb-0 px-1">Filter by domain</div>
+                        {ALLYSHIP_DOMAINS.map(d => (
+                            <button
+                                key={d.key}
+                                onClick={() => toggleFilter(selectedDomains, setSelectedDomains, d.key)}
+                                className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${selectedDomains.includes(d.key) ? 'bg-teal-600 border-teal-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'}`}
+                            >
+                                {d.short}
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
                         <div className="text-xs text-zinc-500 w-full mb-1 px-1">Filter by Nation</div>
                         {worldData.nations.filter(n => activeNations.includes(n.name)).map(nation => (
@@ -215,10 +230,21 @@ export default function AvailableBarsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {others.length === 0 ? (
                         <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
-                            <p className="text-zinc-500">No matching commissions found.</p>
-                            <button onClick={handleClearAllFilters} className="text-purple-400 hover:text-purple-300 font-bold mt-2">
-                                Clear all filters
-                            </button>
+                            {(content?.quests || []).length === 0 ? (
+                                <>
+                                    <p className="text-zinc-500">No commissions yet. Create one to get started.</p>
+                                    <Link href="/bars" className="text-purple-400 hover:text-purple-300 font-bold mt-2 inline-block">
+                                        Create BAR
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-zinc-500">No quests found.</p>
+                                    <button onClick={handleClearAllFilters} className="text-purple-400 hover:text-purple-300 font-bold mt-2">
+                                        Clear all filters
+                                    </button>
+                                </>
+                            )}
                         </div>
                     ) : (
                         others.map(bar => (
@@ -305,9 +331,6 @@ function QuestCard({
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                             <h3 className={`font-bold ${isGraveyard ? 'text-zinc-500' : 'text-white'} text-lg`}>{bar.title}</h3>
-                            {bar.isSystem && (
-                                <span className="text-[8px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.5 rounded font-mono uppercase tracking-tighter">System</span>
-                            )}
                         </div>
                         <span className={`text-xs font-mono ${isGraveyard ? 'text-zinc-700 bg-zinc-900/50' : 'text-yellow-500 bg-yellow-900/20'} px-2 py-1 rounded`}>
                             {bar.reward}ⓥ

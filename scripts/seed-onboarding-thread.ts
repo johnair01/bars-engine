@@ -223,6 +223,7 @@ async function main() {
         creatorType: 'system' as const,
         creatorId: creator.id,
         completionReward: 5,
+        status: 'deprecated',
     }
 
     if (thread) {
@@ -353,7 +354,290 @@ async function main() {
     })
     console.log(`  Linked Build Your Character quest to thread`)
 
-    // 6. Summary
+    // 6. Request from Library orientation thread (basic quest after onboarding)
+    console.log('\nCreating Request from Library thread...')
+
+    const kSpacePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Librarians in the Conclave are interested in making sure the information people need is readily available. Use Request from Library to ask for help. If we have an answer, you\'ll get a link. Otherwise, a DocQuest is created for the community.',
+            cleanText: 'Librarians want info readily available. Use Request from Library.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Request from Library\n\nOpen the [dashboard](/). Click **Request from Library** in the header.',
+            cleanText: 'Open the dashboard. Click Request from Library in the header.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Submit a request\n\nSubmit a request (e.g. "How do I earn vibeulons?").',
+            cleanText: 'Submit a request (e.g. How do I earn vibeulons?).',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Confirm result\n\nIf resolved: confirm you got a link to a doc. If spawned: a DocQuest was created and added to your Active Quests.',
+            cleanText: 'If resolved: confirm you got a doc link. If spawned: DocQuest added to Active Quests.',
+            links: [{ label: 'Complete', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Verification complete. You\'ve helped the knowledge base.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+    const kSpaceParsedJson = JSON.stringify({
+        title: 'Help the Knowledge Base',
+        startPassage: 'START',
+        passages: kSpacePassages
+    })
+
+    const kSpaceStory = await db.twineStory.upsert({
+        where: { slug: 'k-space-librarian-basic' },
+        update: {
+            title: 'Request from Library',
+            parsedJson: kSpaceParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: 'Request from Library',
+            slug: 'k-space-librarian-basic',
+            sourceType: 'manual_seed',
+            sourceText: 'K-Space Librarian post-onboarding quest (seed-onboarding-thread.ts)',
+            parsedJson: kSpaceParsedJson,
+            isPublished: true,
+            createdById: creator.id
+        }
+    })
+
+    const kSpaceQuest = await db.customBar.upsert({
+        where: { id: 'k-space-librarian-quest' },
+        update: {
+            title: 'Request from Library',
+            description: 'Librarians in the Conclave make sure the information people need is readily available. Submit a request—get a doc link or spawn a DocQuest for the community.',
+            type: 'onboarding',
+            reward: 1,
+            twineStoryId: kSpaceStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: 'k-space-librarian-quest',
+            title: 'Help the Knowledge Base',
+            description: 'Submit a Library Request to improve the app and knowledge base. Get a doc link or spawn a DocQuest.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            twineStoryId: kSpaceStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+
+    let kSpaceThread = await db.questThread.findUnique({
+        where: { id: 'k-space-librarian-thread' }
+    })
+    const kSpaceThreadData = {
+        title: 'Request from Library',
+        description: 'Librarians make info readily available. Submit a request to get answers or spawn DocQuests for the community.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 1,
+        status: 'active'
+    }
+    if (kSpaceThread) {
+        kSpaceThread = await db.questThread.update({ where: { id: kSpaceThread.id }, data: kSpaceThreadData })
+        console.log(`  ↻ Help the Knowledge Base thread updated: ${kSpaceThread.id}`)
+    } else {
+        kSpaceThread = await db.questThread.create({
+            data: { id: 'k-space-librarian-thread', ...kSpaceThreadData }
+        })
+        console.log(`  ✦ Help the Knowledge Base thread created: ${kSpaceThread.id}`)
+    }
+
+    await db.threadQuest.upsert({
+        where: {
+            threadId_questId: { threadId: kSpaceThread.id, questId: kSpaceQuest.id }
+        },
+        update: { position: 1 },
+        create: { threadId: kSpaceThread.id, questId: kSpaceQuest.id, position: 1 }
+    })
+    console.log(`  Linked Request from Library quest to thread`)
+
+    // 7. BARs Wallet Guide orientation thread (dashboard-ui-vibe-cleanup Phase 4)
+    console.log('\nCreating BARs Wallet Guide thread...')
+    const barsWalletQuest = await db.customBar.upsert({
+        where: { id: 'bars-wallet-guide-quest' },
+        update: {
+            title: 'BARs Wallet Guide',
+            description: 'Your BARs wallet is where you create, manage, and share BARs. [Visit the BARs page](/bars) to create your first BAR or browse what you\'ve made.',
+            type: 'onboarding',
+            reward: 1,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'visited', label: 'I\'ve visited the BARs page', type: 'text', placeholder: 'Optional note', required: false }])
+        },
+        create: {
+            id: 'bars-wallet-guide-quest',
+            title: 'BARs Wallet Guide',
+            description: 'Your BARs wallet is where you create, manage, and share BARs. [Visit the BARs page](/bars) to create your first BAR or browse what you\'ve made.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'visited', label: 'I\'ve visited the BARs page', type: 'text', placeholder: 'Optional note', required: false }])
+        }
+    })
+    let barsWalletThread = await db.questThread.findUnique({ where: { id: 'bars-wallet-guide-thread' } })
+    const barsWalletThreadData = {
+        title: 'BARs Wallet Guide',
+        description: 'Learn where to create and manage your BARs.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 1,
+        status: 'active'
+    }
+    if (barsWalletThread) {
+        barsWalletThread = await db.questThread.update({ where: { id: barsWalletThread.id }, data: barsWalletThreadData })
+    } else {
+        barsWalletThread = await db.questThread.create({ data: { id: 'bars-wallet-guide-thread', ...barsWalletThreadData } })
+    }
+    await db.threadQuest.upsert({
+        where: { threadId_questId: { threadId: barsWalletThread.id, questId: barsWalletQuest.id } },
+        update: { position: 1 },
+        create: { threadId: barsWalletThread.id, questId: barsWalletQuest.id, position: 1 }
+    })
+    console.log(`  Linked BARs Wallet Guide quest to thread`)
+
+    // 8. Emotional First Aid orientation thread (dashboard-ui-vibe-cleanup Phase 4)
+    console.log('\nCreating Emotional First Aid thread...')
+    const efaQuest = await db.customBar.upsert({
+        where: { id: 'emotional-first-aid-guide-quest' },
+        update: {
+            title: 'Emotional First Aid Kit',
+            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. Learn how to use the Emotional First Aid Kit to unblock and return to flow.',
+            type: 'onboarding',
+            reward: 1,
+            moveType: 'cleanUp',
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'acknowledged', label: 'I\'ve tried the Emotional First Aid Kit', type: 'text', placeholder: 'Optional', required: false }])
+        },
+        create: {
+            id: 'emotional-first-aid-guide-quest',
+            title: 'Emotional First Aid Kit',
+            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. Learn how to use the Emotional First Aid Kit to unblock and return to flow.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            moveType: 'cleanUp',
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'acknowledged', label: 'I\'ve tried the Emotional First Aid Kit', type: 'text', placeholder: 'Optional', required: false }])
+        }
+    })
+    let efaThread = await db.questThread.findUnique({ where: { id: 'emotional-first-aid-guide-thread' } })
+    const efaThreadData = {
+        title: 'Emotional First Aid',
+        description: 'Learn to use the Medbay when blocked emotionally.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 1,
+        status: 'active'
+    }
+    if (efaThread) {
+        efaThread = await db.questThread.update({ where: { id: efaThread.id }, data: efaThreadData })
+    } else {
+        efaThread = await db.questThread.create({ data: { id: 'emotional-first-aid-guide-thread', ...efaThreadData } })
+    }
+    await db.threadQuest.upsert({
+        where: { threadId_questId: { threadId: efaThread.id, questId: efaQuest.id } },
+        update: { position: 1 },
+        create: { threadId: efaThread.id, questId: efaQuest.id, position: 1 }
+    })
+    console.log(`  Linked Emotional First Aid quest to thread`)
+
+    // 9. Four Moves orientation thread (dashboard-ui-vibe-cleanup Phase 4)
+    console.log('\nCreating Four Moves orientation thread...')
+    const fourMovesQuests: { id: string; title: string; moveType: string; description: string }[] = [
+        { id: 'four-moves-wake-up-quest', title: 'Wake Up', moveType: 'wakeUp', description: 'Wake Up is about awareness and insight. See what\'s available: who can help, what resources exist, where the work happens. Quests tagged Wake Up help you see more clearly before acting.' },
+        { id: 'four-moves-clean-up-quest', title: 'Clean Up', moveType: 'cleanUp', description: 'Clean Up is about unblocking emotional energy. When something is blocking you, Clean Up quests help you clear the way so you can move forward.' },
+        { id: 'four-moves-grow-up-quest', title: 'Grow Up', moveType: 'growUp', description: 'Grow Up is about building skill and capacity. These quests help you develop new abilities and expand what you can do.' },
+        { id: 'four-moves-show-up-quest', title: 'Show Up', moveType: 'showUp', description: 'Show Up is about doing the work. When you\'re ready to act, Show Up quests help you contribute directly to the collective.' }
+    ]
+    const fourMovesCreated: { id: string; quest: any }[] = []
+    for (const q of fourMovesQuests) {
+        const quest = await db.customBar.upsert({
+            where: { id: q.id },
+            update: { title: q.title, description: q.description, moveType: q.moveType, type: 'onboarding', reward: 1 },
+            create: {
+                id: q.id,
+                title: q.title,
+                description: q.description,
+                moveType: q.moveType,
+                type: 'onboarding',
+                creatorId: creator.id,
+                reward: 1,
+                status: 'active',
+                visibility: 'public',
+                isSystem: true,
+                inputs: JSON.stringify([])
+            }
+        })
+        fourMovesCreated.push({ id: q.id, quest })
+    }
+    let fourMovesThread = await db.questThread.findUnique({ where: { id: 'four-moves-orientation-thread' } })
+    const fourMovesThreadData = {
+        title: 'The Four Moves',
+        description: 'Wake Up, Clean Up, Grow Up, Show Up—how quests interface with your journey.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 2,
+        status: 'active'
+    }
+    if (fourMovesThread) {
+        fourMovesThread = await db.questThread.update({ where: { id: fourMovesThread.id }, data: fourMovesThreadData })
+    } else {
+        fourMovesThread = await db.questThread.create({ data: { id: 'four-moves-orientation-thread', ...fourMovesThreadData } })
+    }
+    await db.threadQuest.deleteMany({ where: { threadId: fourMovesThread.id } })
+    await db.threadQuest.createMany({
+        data: fourMovesQuests.map((q, i) => ({
+            threadId: fourMovesThread.id,
+            questId: q.id,
+            position: i + 1
+        }))
+    })
+    console.log(`  Linked ${fourMovesQuests.length} Four Moves quests to thread`)
+
+    // 10. Summary
     console.log('\n=== ONBOARDING THREAD READY ===')
     console.log(`Thread: "${thread.title}" (${thread.id})`)
     console.log(`Type: ${thread.threadType}`)
@@ -365,6 +649,11 @@ async function main() {
     console.log(`Completion Reward: ${thread.completionReward} vibeulons`)
     console.log(`\nBuild Your Character thread: "${buildCharThread.title}" (${buildCharThread.id})`)
     console.log(`  Quest: ${buildCharQuest.title} (${buildCharQuest.id})`)
+    console.log(`\nRequest from Library thread: "${kSpaceThread.title}" (${kSpaceThread.id})`)
+    console.log(`  Quest: ${kSpaceQuest.title} (${kSpaceQuest.id})`)
+    console.log(`\nBARs Wallet Guide thread: "${barsWalletThread.title}" (${barsWalletThread.id})`)
+    console.log(`Emotional First Aid thread: "${efaThread.title}" (${efaThread.id})`)
+    console.log(`Four Moves thread: "${fourMovesThread.title}" (${fourMovesThread.id})`)
     console.log(`\nNew players will be auto-assigned via assignOrientationThreads()`)
 }
 

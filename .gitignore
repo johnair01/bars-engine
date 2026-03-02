@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# embedded repos (avoid accidental add)
+LibreSprite/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -51,5 +54,9 @@ next-env.d.ts
 
 # Database backups (local cold storage)
 /backups/
+
+# Uploaded files (books, etc.)
+/uploads/
+/public/uploads/
 .prisma_hash
 .env*.local

@@ -34,20 +34,22 @@ export async function getPlayerPacks() {
         }
     })
 
-    return packs.map(pack => {
-        const completed = pack.progress[0]
-            ? JSON.parse(pack.progress[0].completed) as string[]
-            : []
+    return packs
+        .filter(pack => pack.title !== 'Rookie Essentials')
+        .map(pack => {
+            const completed = pack.progress[0]
+                ? JSON.parse(pack.progress[0].completed) as string[]
+                : []
 
-        return {
-            ...pack,
-            playerProgress: pack.progress[0] || null,
-            totalQuests: pack.quests.length,
-            completedCount: completed.length,
-            completedQuestIds: completed,
-            isCreator: pack.creatorId === player.id
-        }
-    })
+            return {
+                ...pack,
+                playerProgress: pack.progress[0] || null,
+                totalQuests: pack.quests.length,
+                completedCount: completed.length,
+                completedQuestIds: completed,
+                isCreator: pack.creatorId === player.id
+            }
+        })
 }
 
 /**

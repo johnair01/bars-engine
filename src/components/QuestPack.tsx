@@ -47,6 +47,7 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<PackQuest | null>(null)
+    const [expanded, setExpanded] = useState(false)
 
     const isComplete = pack.playerProgress?.completedAt !== null && pack.playerProgress?.completedAt !== undefined
     const isStarted = pack.playerProgress !== null
@@ -70,6 +71,38 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
 
     return (
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
+            {/* Collapsed header - click to expand */}
+            <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className="w-full text-left flex flex-col gap-2"
+            >
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h3 className="font-bold text-white">{pack.title}</h3>
+                        {pack.description && !expanded && (
+                            <p className="text-sm text-zinc-400 line-clamp-1">{pack.description}</p>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full">
+                            Pack
+                        </span>
+                        <span className="text-zinc-500 text-sm">{expanded ? '▼' : '▶'}</span>
+                    </div>
+                </div>
+                <div className="flex justify-between text-xs text-zinc-500">
+                    <span>{isComplete ? 'Complete!' : `${pack.completedCount}/${pack.totalQuests}`}</span>
+                    <span>{progressPercent}%</span>
+                </div>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-blue-500'}`}
+                        style={{ width: `${progressPercent}%` }}
+                    />
+                </div>
+            </button>
+
             {/* Celebration Overlay */}
             {isComplete && !pack.playerProgress?.isArchived && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 animate-in zoom-in-95 fade-in duration-500">
@@ -91,32 +124,12 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                 </div>
             )}
 
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div>
-                    <h3 className="font-bold text-white">{pack.title}</h3>
-                    {pack.description && (
-                        <p className="text-sm text-zinc-400">{pack.description}</p>
-                    )}
-                </div>
-                <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full">
-                    Pack
-                </span>
-            </div>
-
-            {/* Progress */}
-            <div className="space-y-1">
-                <div className="flex justify-between text-xs text-zinc-500">
-                    <span>{isComplete ? 'Complete!' : `${pack.completedCount}/${pack.totalQuests}`}</span>
-                    <span>{progressPercent}%</span>
-                </div>
-                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-blue-500'}`}
-                        style={{ width: `${progressPercent}%` }}
-                    />
-                </div>
-            </div>
+            {/* Expanded content */}
+            {expanded && (
+            <>
+            {pack.description && (
+                <p className="text-sm text-zinc-400 pt-2 border-t border-zinc-800">{pack.description}</p>
+            )}
 
             {/* Quest Grid */}
             <div className="grid grid-cols-1 gap-2">
@@ -169,7 +182,7 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                 </button>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2">
                 {/* @ts-ignore */}
                 {pack.isCreator && (
                     <button
@@ -193,6 +206,8 @@ export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, c
                     </button>
                 )}
             </div>
+            </>
+            )}
 
             {selectedQuest?.quest && (
                 <QuestDetailModal

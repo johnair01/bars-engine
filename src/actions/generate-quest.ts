@@ -2,12 +2,22 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
-import { generateObject } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { completeQuest } from '@/actions/quest-engine'
 import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-aid'
+import { generateObjectWithCache } from '@/lib/ai-with-cache'
+
+const questGenSchema = z.object({
+  title: z.string().describe("The poetic title of the quest"),
+  description: z.string().describe("The quest instructions/narrative"),
+  selectedMove: z.string().describe("The name of the move selected"),
+})
+
+function getQuestGenModel(): string {
+  return process.env.QUEST_GEN_MODEL || 'gpt-4o'
+}
 
 export async function generateQuestFromReading(hexagramId: number, useFirstAidLens: boolean = false) {
     const cookieStore = await cookies()
@@ -51,6 +61,10 @@ export async function generateQuestFromReading(hexagramId: number, useFirstAidLe
 
 export async function generateQuestCore(playerId: string, hexagramId: number, useFirstAidLens: boolean = false) {
     try {
+        if (process.env.QUEST_GEN_AI_ENABLED === 'false') {
+            return { error: 'Quest generation AI is disabled. Set QUEST_GEN_AI_ENABLED=true to enable.' }
+        }
+
         // 1. Fetch Player and Playbook
         const player = await db.player.findUnique({
             where: { id: playerId },
@@ -98,16 +112,19 @@ export async function generateQuestCore(playerId: string, hexagramId: number, us
         ` : ''}
         `
 
-        // 4. Call AI
-        const { object } = await generateObject({
-            model: openai('gpt-4o'),
-            schema: z.object({
-                title: z.string().describe("The poetic title of the quest"),
-                description: z.string().describe("The quest instructions/narrative"),
-                selectedMove: z.string().describe("The name of the move selected"),
-            }),
+        const modelId = getQuestGenModel()
+        const lensKey = firstAidLens ? firstAidLens.prompt : 'none'
+        const inputKey = `${hexagramId}:${player.playbookId}:${lensKey}`
+
+        // 4. Call AI (with cache)
+        const { object } = await generateObjectWithCache<z.infer<typeof questGenSchema>>({
+            feature: 'quest_gen',
+            inputKey,
+            model: modelId,
+            schema: questGenSchema,
             system: systemPrompt,
-            prompt: "Generate a Collective Quest."
+            prompt: "Generate a Collective Quest.",
+            getModel: () => getOpenAI()(modelId),
         })
 
         // 5. Create CustomBar (Inspiration)

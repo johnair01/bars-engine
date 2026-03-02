@@ -1,0 +1,2 @@
+#!/bin/sh
+npm run build:type-check && npm run validate-manifest

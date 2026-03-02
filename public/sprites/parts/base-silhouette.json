@@ -1,0 +1,42 @@
+{
+  "basePath": "base/default.png",
+  "analyzedAt": "2026-03-01T18:23:26.269Z",
+  "dimensions": {
+    "width": 64,
+    "height": 64
+  },
+  "bounds": {
+    "minX": 19,
+    "minY": 7,
+    "maxX": 43,
+    "maxY": 55
+  },
+  "nationBody": {
+    "x": 17,
+    "y": 24,
+    "width": 28,
+    "height": 33,
+    "description": "Torso/vest overlay; transparent where face/neck show through"
+  },
+  "nationAccent": {
+    "x": 27,
+    "y": 32,
+    "width": 8,
+    "height": 8,
+    "description": "Small badge/emblem centered on torso"
+  },
+  "playbookOutfit": {
+    "x": 17,
+    "y": 24,
+    "width": 28,
+    "height": 33,
+    "description": "Archetype clothing overlay"
+  },
+  "playbookAccent": {
+    "x": 25,
+    "y": 36,
+    "width": 12,
+    "height": 8,
+    "description": "Archetype flourish (badge, motif)"
+  }
+}

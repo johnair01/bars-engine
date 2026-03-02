@@ -71,9 +71,17 @@ export default async function AdminOnboardingPage() {
                                         <h3 className="text-xl font-bold text-white">{thread.title}</h3>
                                         <p className="text-zinc-400 text-sm mt-1">{thread.description}</p>
                                     </div>
-                                    <span className="px-3 py-1 bg-indigo-900/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase rounded-full">
-                                        Orientation
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            href={`/admin/journeys/thread/${thread.id}`}
+                                            className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs font-bold rounded-lg transition"
+                                        >
+                                            Edit Thread (ⓥ)
+                                        </Link>
+                                        <span className="px-3 py-1 bg-indigo-900/30 text-indigo-400 text-[10px] font-bold tracking-widest uppercase rounded-full">
+                                            Orientation
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="p-6">
                                     <div className="relative">
@@ -154,7 +162,7 @@ export default async function AdminOnboardingPage() {
                             return (
                                 <Link
                                     key={thread.id}
-                                    href={`/admin/threads/${thread.id}`}
+                                    href={`/admin/journeys/thread/${thread.id}`}
                                     className="group bg-zinc-900/50 border border-zinc-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all"
                                 >
                                     <div className="flex justify-between items-start mb-4">

@@ -34,7 +34,7 @@ function VibeBarCard({
     isCreator?: boolean
     isAdmin?: boolean
 }) {
-    const [open, setOpen] = useState(isActive)  // Auto-open if active
+    const [open, setOpen] = useState(false)  // Active quests default closed; opening reveals completion UI
     const [inputs, setInputs] = useState<Record<string, any>>({})
 
     const handleSubmit = () => {

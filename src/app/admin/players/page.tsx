@@ -186,6 +186,7 @@ export default function AdminPlayersPage() {
             {selectedPlayer && (
                 <AdminPlayerEditor
                     player={selectedPlayer}
+                    players={players}
                     worldData={worldData}
                     onClose={() => setSelectedPlayer(null)}
                     onUpdate={() => {

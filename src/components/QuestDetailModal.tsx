@@ -236,6 +236,12 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         ? [...DEFAULT_INTENTION_INPUTS] as unknown as BarInput[]
         : parsedInputs
 
+    // Hide vision, approach, kotterStage for active quests (dashboard-ui-vibe-cleanup Phase 3)
+    const HIDDEN_ACTIVE_QUEST_KEYS = ['vision', 'approach', 'kotterStage']
+    const displayInputs = !isCompleted
+        ? effectiveInputs.filter(input => !HIDDEN_ACTIVE_QUEST_KEYS.includes(input.key))
+        : effectiveInputs
+
     const parsedTwineLogic = parseTwineLogic(quest.twineLogic)
     const effectiveTwineLogic: TwineLogic | null = isIntentionQuest
         ? parsedTwineLogic || INTENTION_GUIDED_TWINE_LOGIC
@@ -686,7 +692,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 </div>
                             ) : (
                                 <QuestInputs
-                                    inputs={effectiveInputs}
+                                    inputs={displayInputs}
                                     values={responses}
                                     onChange={(key, value) => setResponses(prev => ({ ...prev, [key]: value }))}
                                 />
@@ -732,7 +738,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 hidden={effectiveInputs.some(input => input.trigger === 'ICHING_CAST') ||
                                     quest.id === 'orientation-quest-3'}
                                 disabled={isPending || (isArchetypeQuest && !hasScrolledToBottom) || (!isArchetypeQuest && isCompleted !== undefined && (() => {
-                                    const requiredMissing = effectiveInputs.some(input => input.required && !responses[input.key])
+                                    const requiredMissing = displayInputs.some(input => input.required && !responses[input.key])
                                     return requiredMissing
                                 })())}
                                 className={`px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${isArchetypeQuest

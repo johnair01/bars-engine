@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { CampaignAuthForm } from './CampaignAuthForm'
 import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
-import { chunkIntoSlides } from '@/lib/slide-chunker'
+import { CampaignPassageEditModal } from './CampaignPassageEditModal'
+import { chunkIntoSlides, getBaseNodeId } from '@/lib/slide-chunker'
 
 interface CampaignChoice {
     text: string
@@ -23,6 +24,7 @@ interface CampaignReaderProps {
     initialNode: CampaignNode
     adventureSlug?: string
     campaignRef?: string
+    isAdmin?: boolean
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -144,7 +146,7 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef }: CampaignReaderProps) {
+export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false }: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
@@ -171,6 +173,7 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
     const [renderedText, setRenderedText] = useState(initialNode.text)
     const [availableChoices, setAvailableChoices] = useState(initialNode.choices)
     const [slideIndex, setSlideIndex] = useState(0)
+    const [editModalOpen, setEditModalOpen] = useState(false)
 
     useEffect(() => {
         // Load the initial map to ensure we have it cached (in a real app)
@@ -264,8 +267,21 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
     const useSlideMode = slides.length > 1
     const displayText = useSlideMode ? slides[slideIndex] : renderedText
 
+    const baseNodeId = getBaseNodeId(currentNode.id)
+    const showEdit = isAdmin && !!adventureSlug
+
     return (
         <div className="w-full max-w-2xl mx-auto space-y-8 animate-in fade-in relative min-h-[60vh] flex flex-col items-center justify-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl shadow-2xl">
+            {showEdit && (
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => setEditModalOpen(true)}
+                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-300 hover:text-white text-xs font-medium rounded-lg transition"
+                    >
+                        Edit
+                    </button>
+                </div>
+            )}
             {campaignRef === 'bruised-banana' && (
                 <OnboardingAvatarPreview
                     campaignState={campaignState}
@@ -344,8 +360,19 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
                         <span className="relative z-10">{choice.text}</span>
                         <span className="text-purple-500/0 group-hover:text-purple-500 transition-colors relative z-10">→</span>
                     </button>
-                ))}
+                    ))}
                 </div>
+            )}
+            {showEdit && (
+                <CampaignPassageEditModal
+                    isOpen={editModalOpen}
+                    onClose={() => setEditModalOpen(false)}
+                    nodeId={baseNodeId}
+                    adventureSlug={adventureSlug!}
+                    initialText={renderedText}
+                    initialChoices={availableChoices}
+                    onSaved={() => fetchNode(currentNode.id)}
+                />
             )}
         </div>
     )

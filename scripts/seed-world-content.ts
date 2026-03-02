@@ -1,3 +1,4 @@
+import './require-db-env'
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
@@ -35,7 +36,7 @@ async function main() {
     const q1 = await upsertQuest('The First Spark', {
         description: 'Before you begin your journey, pause and reflect. What is your intention for joining the Conclave? Write it down to manifest it used the "Note" feature or simply hold it in your mind.',
         type: 'vibe',
-        reward: 50,
+        reward: 1,
         creatorId: creator.id,
         inputs: JSON.stringify([{ key: 'intention', label: 'My Intention', type: 'textarea' }])
     })
@@ -43,7 +44,7 @@ async function main() {
     const q2 = await upsertQuest('Digital Footprint', {
         description: 'Update your profile with a signature and a bio. Let others know who you are (or who you want to be).',
         type: 'standard',
-        reward: 50,
+        reward: 1,
         creatorId: creator.id,
         inputs: '[]'
     })
@@ -51,7 +52,7 @@ async function main() {
     const q3 = await upsertQuest('The Signal', {
         description: 'Check in with the Conclave. Send a "Hello" signal to the global feed to verify your connection.',
         type: 'standard',
-        reward: 100,
+        reward: 1,
         creatorId: creator.id,
         inputs: JSON.stringify([{ key: 'signal', label: 'Signal Message', type: 'text' }])
     })
@@ -60,12 +61,12 @@ async function main() {
     // ===============================================
     console.log('Upserting "Welcome Aboard" Thread...')
 
-    let thread = await db.questThread.findFirst({ where: { threadType: 'orientation' } })
+    let thread = await db.questThread.findFirst({ where: { title: 'Welcome Aboard' } })
     const threadData = {
         title: 'Welcome Aboard',
         description: 'Your official orientation to the Conclave. Complete these steps to unlock full access.',
         threadType: 'orientation',
-        completionReward: 500
+        completionReward: 1
     }
 
     if (thread) {
@@ -103,28 +104,7 @@ async function main() {
         inputs: '[]'
     })
 
-    console.log('Upserting "Rookie Essentials" Pack...')
-    let pack = await db.questPack.findFirst({ where: { title: 'Rookie Essentials' } })
-    const packData = {
-        title: 'Rookie Essentials',
-        description: 'Basic survival tasks for the modern digital wanderer.',
-        creatorType: 'system'
-    }
-
-    if (pack) {
-        pack = await db.questPack.update({ where: { id: pack.id }, data: packData })
-    } else {
-        pack = await db.questPack.create({ data: packData })
-    }
-
-    await db.packQuest.deleteMany({ where: { packId: pack.id } })
-    await db.packQuest.createMany({
-        data: [
-            { packId: pack.id, questId: p1.id },
-            { packId: pack.id, questId: p2.id }
-        ]
-    })
-    console.log(`Linked 2 quests to pack "${pack.title}"`)
+    // Rookie Essentials pack removed per dashboard-ui-vibe-cleanup Phase 2
 
     console.log('🌱 Seeding Complete!')
 }

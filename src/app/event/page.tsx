@@ -4,11 +4,12 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
 import { EventCampaignEditor } from './EventCampaignEditor'
+import { EventProgressUpdater } from './EventProgressUpdater'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
 
-const DEFAULT_SHOW_UP = `Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
+const DEFAULT_SHOW_UP = `Contribute money (Donate above) or play the game by signing up and choosing your domains.
 This instance runs on quests, BARs, vibeulons, and story clock.`
 
 function formatUsdCents(cents: number) {
@@ -120,8 +121,17 @@ export default async function EventPage() {
                   {formatUsdCents(current)} <span className="text-zinc-500 font-mono">/</span> {formatUsdCents(goal)}
                 </div>
               </div>
-              <div className="text-xs text-zinc-500 font-mono">
-                {Math.round(pct * 100)}%
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-zinc-500 font-mono">
+                  {Math.round(pct * 100)}%
+                </div>
+                {isAdmin && (
+                  <EventProgressUpdater
+                    instanceId={instance.id}
+                    initialCurrentCents={current}
+                    initialGoalCents={goal}
+                  />
+                )}
               </div>
             </div>
 

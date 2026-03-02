@@ -5,24 +5,21 @@ import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { DashboardCaster } from '@/components/DashboardCaster'
 import { QuestThread } from '@/components/QuestThread'
 import { QuestPack } from '@/components/QuestPack'
-import { ensureWallet, getMovementFeed } from '@/actions/economy'
+import { ensureWallet } from '@/actions/economy'
 import { getGlobalState } from '@/actions/world'
 import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
-import { AlchemyCaster } from '@/components/AlchemyCaster'
 import { KotterGauge } from '@/components/KotterGauge'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
-import { AttuneButton } from '@/components/AttuneButton'
 import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
 import { IntentionDisplay } from '@/components/IntentionDisplay'
 import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
-import { MovementFeed } from '@/components/MovementFeed'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -251,8 +248,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   await ensureWallet(playerId)
   const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
-  const movementFeedItems = await getMovementFeed(15)
-
   const isRitualComplete = hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
 
   const potentialDelegates = await db.player.findMany({
@@ -430,8 +425,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           />
         )}
 
-        {/* Movement Feed: who earned what, for what */}
-        <MovementFeed items={movementFeedItems} maxHeight="10rem" />
       </header >
 
       {/* RITUAL SUCCESS BANNER */}
@@ -499,10 +492,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   rel="noreferrer"
                   className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-bold"
                 >
-                  Sponsor
+                  Donate
                 </a>
               )}
-              <AttuneButton instanceId={activeInstance.id} maxAmount={vibulons} />
             </div>
           </div>
 
@@ -606,8 +598,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
             <StarterQuestBoard
               completedBars={completedBars}
-              activeBars={activeBars}
-              // Filter out 'inspiration' type for the main list
+              activeBars={activeBars.length > 5 ? activeBars.slice(0, 5) : activeBars}
+              // Filter out 'inspiration' type for the main list; when >5 active, only pass bars for first 5
               customBars={visibleCustomBars.filter(b => b.type !== 'inspiration')}
               ichingBars={ichingReadings}
               potentialDelegates={potentialDelegates}
@@ -615,30 +607,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
               userRoles={player.roles.map(r => r.role.key)}
               view="active"
             />
+            {activeBars.length > 5 && (
+              <div className="mt-4">
+                <Link
+                  href="/hand"
+                  className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 font-medium"
+                >
+                  View Quest Wallet →
+                </Link>
+                <p className="text-xs text-zinc-500 mt-1">Organize and manage your active quests</p>
+              </div>
+            )}
           </section>
-
-          {/* 3. BARS WALLET (Inspiration) */}
-          {visibleCustomBars.some(b => b.type === 'inspiration') && (
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px bg-zinc-800 flex-1"></div>
-                <h2 className="text-pink-500/70 uppercase tracking-widest text-sm font-bold">Bars Wallet</h2>
-                <div className="h-px bg-zinc-800 flex-1"></div>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-zinc-500 text-sm italic text-center">Inspirations collected. Forge them into quests for the collective.</p>
-                <StarterQuestBoard
-                  completedBars={completedBars}
-                  activeBars={activeBars}
-                  customBars={visibleCustomBars.filter(b => b.type === 'inspiration')}
-                  ichingBars={ichingReadings}
-                  potentialDelegates={potentialDelegates}
-                  view="active"
-                />
-              </div>
-            </section>
-          )}
 
           {/* 3. AVAILABLE BARS LINK */}
           <section>
@@ -674,38 +654,14 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             </div>
 
             {/* CREATE ACTIONS */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-8">
               <Link
                 href="/bars/create"
-                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-green-500/50 hover:bg-zinc-900/30 transition-all text-center"
+                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-green-500/50 hover:bg-zinc-900/30 transition-all text-center max-w-xs"
               >
                 <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📜</div>
                 <div className="font-bold text-white mb-1">Create BAR</div>
                 <div className="text-sm text-zinc-500">Share an insight or story</div>
-              </Link>
-              <Link
-                href="/quest/create"
-                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-purple-500/50 hover:bg-zinc-900/30 transition-all text-center"
-              >
-                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">✨</div>
-                <div className="font-bold text-white mb-1">Create Quest</div>
-                <div className="text-sm text-zinc-500">Use a template</div>
-              </Link>
-              <Link
-                href="/create-bar"
-                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-zinc-500/50 hover:bg-zinc-900/30 transition-all text-center"
-              >
-                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">+</div>
-                <div className="font-bold text-white mb-1">Quick Quest</div>
-                <div className="text-sm text-zinc-500">Simple form</div>
-              </Link>
-
-              <Link
-                href="/create-bar"
-                className="mt-4 w-full group relative block p-4 border border-dashed border-zinc-800 rounded-xl hover:border-cyan-500/50 hover:bg-zinc-900/30 transition-all text-center"
-              >
-                <div className="font-bold text-white mb-1">Create a BAR</div>
-                <div className="text-xs text-zinc-500">Optional: link it to an existing quest</div>
               </Link>
             </div>
 
@@ -715,90 +671,19 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         </div>
 
         <div className="space-y-10">
-          {/* 4. CHARACTER MOVES */}
-          {(player.playbook || player.nation) && (
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px bg-zinc-800 flex-1"></div>
-                <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-bold">Your Moves</h2>
-                <div className="h-px bg-zinc-800 flex-1"></div>
+          {/* 4. EMOTIONAL FIRST AID */}
+          <section>
+            <Link
+              href="/emotional-first-aid"
+              className="block rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 hover:border-cyan-500/60 hover:bg-cyan-900/20 transition-colors"
+            >
+              <div className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Medbay Access</div>
+              <div className="text-white font-semibold">Emotional First Aid Kit</div>
+              <div className="text-xs text-cyan-100/70 mt-1">
+                Feeling stuck? Run a quick vibes emergency protocol.
               </div>
-
-              <Link
-                href="/emotional-first-aid"
-                className="mb-4 block rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 hover:border-cyan-500/60 hover:bg-cyan-900/20 transition-colors"
-              >
-                <div className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Medbay Access</div>
-                <div className="text-white font-semibold">Emotional First Aid Kit</div>
-                <div className="text-xs text-cyan-100/70 mt-1">
-                  Feeling stuck? Run a quick vibes emergency protocol.
-                </div>
-              </Link>
-
-              {/* Basic Moves Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <AlchemyCaster
-                  moveName="Wake Up"
-                  icon="👁"
-                  description={player.playbook?.wakeUp?.split(':')[0] || player.nation?.wakeUp?.split(':')[0]}
-                />
-                <AlchemyCaster
-                  moveName="Clean Up"
-                  icon="🧹"
-                  description={player.playbook?.cleanUp?.split(':')[0] || player.nation?.cleanUp?.split(':')[0]}
-                />
-                <AlchemyCaster
-                  moveName="Grow Up"
-                  icon="🌱"
-                  description={player.playbook?.growUp?.split(':')[0] || player.nation?.growUp?.split(':')[0]}
-                />
-                <AlchemyCaster
-                  moveName="Show Up"
-                  icon="🎯"
-                  description={player.playbook?.showUp?.split(':')[0] || player.nation?.showUp?.split(':')[0]}
-                />
-              </div>
-
-              {/* Special Moves */}
-              {player.playbook && (
-                <div className="bg-zinc-900/20 border border-zinc-800 p-3 rounded-lg mb-4">
-                  <div className="text-xs uppercase text-zinc-500 font-bold mb-2">Special Moves ({player.playbook.name.split(' ')[0]})</div>
-                  <div className="flex flex-wrap gap-2">
-                    {JSON.parse(player.playbook.moves).map((move: string, i: number) => (
-                      <AlchemyCaster key={i} moveName={move} isSpecial={true} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Elemental Moves (Nation Affinity) */}
-              {player.nation && (() => {
-                const { ELEMENTAL_MOVES, hasAffinity, NATION_AFFINITIES } = require('@/lib/elemental-moves')
-                const nationAffinities = NATION_AFFINITIES[player.nation.name] || []
-                const availableElementalMoves = Object.entries(ELEMENTAL_MOVES)
-                  .filter(([_, move]: [any, any]) => nationAffinities.includes(move.affinity))
-
-                if (availableElementalMoves.length === 0) return null
-
-                return (
-                  <div className="bg-cyan-900/10 border border-cyan-900/40 p-3 rounded-lg">
-                    <div className="text-xs uppercase text-cyan-500 font-bold mb-2">Elemental Moves ({player.nation.name})</div>
-                    <div className="flex flex-wrap gap-2">
-                      {availableElementalMoves.map(([name, move]: [any, any]) => (
-                        <AlchemyCaster
-                          key={name}
-                          moveName={name}
-                          isSpecial={true}
-                          description={move.description}
-                          icon={move.icon}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })()}
-            </section>
-          )}
+            </Link>
+          </section>
 
           {/* 5. GRAVEYARD (Completed Bars & Journeys) */}
           <section className="opacity-60 hover:opacity-100 transition duration-500">

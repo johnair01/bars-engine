@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { mintVibulon } from '@/actions/economy'
 import { hashPassword } from '@/lib/auth-utils'
+import { deriveAvatarConfig } from '@/lib/avatar-utils'
 
 // ===================================
 // ADMIN STATS
@@ -346,14 +347,81 @@ export async function toggleAdminRole(playerId: string, makeAdmin: boolean) {
 export async function updatePlayerProfile(playerId: string, data: { nationId?: string, playbookId?: string }) {
     await checkAdmin()
 
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { nation: true, playbook: true }
+    })
+    if (!player) throw new Error('Player not found')
+
+    // Effective values: use data when provided, else keep existing
+    const nationId = data.nationId !== undefined ? (data.nationId || null) : player.nationId
+    const playbookId = data.playbookId !== undefined ? (data.playbookId || null) : player.playbookId
+
+    let avatarConfig: string | null = null
+    if (nationId || playbookId) {
+        const nation = nationId ? await db.nation.findUnique({ where: { id: nationId } }) : player.nation
+        const playbook = playbookId ? await db.playbook.findUnique({ where: { id: playbookId } }) : player.playbook
+        avatarConfig = deriveAvatarConfig(nationId, playbookId, player.campaignDomainPreference, {
+            nationName: nation?.name,
+            playbookName: playbook?.name,
+            pronouns: player.pronouns
+        })
+    }
+    // When both cleared, explicitly set avatarConfig to null
+    const avatarConfigUpdate = nationId || playbookId ? avatarConfig : null
+
     await db.player.update({
         where: { id: playerId },
         data: {
-            nationId: data.nationId || undefined,
-            playbookId: data.playbookId || undefined
+            nationId,
+            playbookId,
+            avatarConfig: avatarConfigUpdate
         }
     })
 
+    revalidatePath('/admin/players')
+    revalidatePath('/admin/avatars')
+    return { success: true }
+}
+
+export async function assignAvatarToPlayer(
+    playerId: string,
+    data: { nationId?: string; playbookId?: string; genderKey?: 'male' | 'female' | 'neutral' | 'default' }
+) {
+    await checkAdmin()
+
+    const { nationId, playbookId, genderKey } = data
+    if (!nationId && !playbookId) {
+        return { error: 'Select at least one nation or playbook' }
+    }
+
+    const player = await db.player.findUnique({
+        where: { id: playerId },
+        include: { nation: true, playbook: true }
+    })
+    if (!player) return { error: 'Player not found' }
+
+    const nation = nationId ? await db.nation.findUnique({ where: { id: nationId } }) : player.nation
+    const playbook = playbookId ? await db.playbook.findUnique({ where: { id: playbookId } }) : player.playbook
+
+    const avatarConfig = deriveAvatarConfig(nationId ?? null, playbookId ?? null, player.campaignDomainPreference, {
+        nationName: nation?.name,
+        playbookName: playbook?.name,
+        pronouns: player.pronouns,
+        genderKey
+    })
+    if (!avatarConfig) return { error: 'Could not derive avatar config' }
+
+    await db.player.update({
+        where: { id: playerId },
+        data: {
+            nationId: nationId ?? player.nationId,
+            playbookId: playbookId ?? player.playbookId,
+            avatarConfig
+        }
+    })
+
+    revalidatePath('/admin/avatars')
     revalidatePath('/admin/players')
     return { success: true }
 }

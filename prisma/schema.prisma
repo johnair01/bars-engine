@@ -72,6 +72,7 @@ model Player {
   adventureProgress      PlayerAdventureProgress[]
   redemptionPacks        RedemptionPack[]
   libraryRequests        LibraryRequest[]
+  bookAnalysisResumeLogs BookAnalysisResumeLog[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -154,6 +155,7 @@ model CustomBar {
   rootId               String?
   allowedNations       String?
   allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  gameMasterFace       String?      // shaman | challenger | regent | architect | diplomat | sage (dojo alignment for growUp)
   twineStoryId         String?
   docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
   evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
@@ -233,6 +235,35 @@ model PlayerQuest {
   @@map("player_quests")
 }
 
+model Book {
+  id                   String                 @id @default(cuid())
+  title                String
+  author               String?
+  slug                 String                 @unique
+  sourcePdfUrl         String?
+  extractedText        String?                @db.Text
+  status               String                 @default("draft") // draft | extracted | analyzed | published
+  metadataJson         String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  thread               QuestThread?
+  bookAnalysisResumeLogs BookAnalysisResumeLog[]
+
+  @@map("books")
+}
+
+model BookAnalysisResumeLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  bookId    String
+  createdAt DateTime @default(now())
+  admin     Player   @relation(fields: [adminId], references: [id])
+  book      Book     @relation(fields: [bookId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@map("book_analysis_resume_logs")
+}
+
 model QuestThread {
   id               String           @id @default(cuid())
   title            String
@@ -247,6 +278,8 @@ model QuestThread {
   gatePlaybookId   String?
   status           String           @default("active")
   createdAt        DateTime         @default(now())
+  bookId           String?          @unique
+  book             Book?            @relation(fields: [bookId], references: [id])
   progress         ThreadProgress[]
   quests           ThreadQuest[]
 
@@ -902,5 +935,19 @@ model Schism {
   resolutionDocNodeId   String?
 
   @@map("schisms")
+}
+
+model AiResponseCache {
+  id         String   @id @default(cuid())
+  inputHash  String   // SHA-256 of normalized input
+  feature    String   // book_analysis | quest_gen
+  model      String
+  outputJson String   @db.Text
+  createdAt  DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([inputHash, feature])
+  @@index([expiresAt])
+  @@map("ai_response_cache")
 }
 

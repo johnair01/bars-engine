@@ -15,6 +15,8 @@ export type DeriveAvatarConfigOptions = {
     nationName?: string | null
     playbookName?: string | null
     pronouns?: string | null
+    /** Override base variant; when set, used instead of deriveGenderFromPronouns */
+    genderKey?: AvatarConfig['genderKey']
 }
 
 /**
@@ -79,11 +81,11 @@ export function deriveAvatarConfig(
     }
 
     const config: AvatarConfig = {
-        nationKey: nationKey || 'unknown',
-        playbookKey: playbookKey || 'unknown',
+        nationKey: nationKey || '',
+        playbookKey: playbookKey || '',
         domainKey: domainKey || undefined,
         variant: 'default',
-        genderKey: deriveGenderFromPronouns(options?.pronouns)
+        genderKey: options?.genderKey ?? deriveGenderFromPronouns(options?.pronouns)
     }
     return JSON.stringify(config)
 }
@@ -101,7 +103,8 @@ export function parseAvatarConfig(avatarConfig: string | null): AvatarConfig | n
     if (!avatarConfig?.trim()) return null
     try {
         const parsed = JSON.parse(avatarConfig) as AvatarConfig
-        if (parsed?.nationKey || parsed?.playbookKey) return parsed
+        if (parsed && typeof parsed === 'object' && ('nationKey' in parsed || 'playbookKey' in parsed))
+            return parsed
     } catch {
         // ignore
     }

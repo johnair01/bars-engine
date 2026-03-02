@@ -16,12 +16,14 @@ Canonical ontology for the BARs Engine. Use this language in specs, plans, and i
 
 Where the work happens. Mastering the Game of Allyship:
 
-- **Gathering Resources**
-- **Direct Action**
-- **Raise Awareness**
-- **Skillful Organizing**
+- **Gathering Resources** — additive; accessing emotional energy; inner/outer resources
+- **Direct Action** — action needs doing; removing obstacles
+- **Raise Awareness** — helping people SEE there is a higher level to operate at
+- **Skillful Organizing** — coordinating efforts; creating structures (external + internal)
 
 Schema: `CustomBar.allyshipDomain`, `Player.campaignDomainPreference`
+
+**Parser context**: For AI classification (book analysis), see `src/lib/allyship-domains-parser-context.ts`.
 
 ## The 4 Moves (Personal Throughput)
 

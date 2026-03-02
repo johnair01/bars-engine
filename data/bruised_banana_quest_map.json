@@ -1,0 +1,160 @@
+{
+  "instance": {
+    "id": "BB-BDAY-001",
+    "slug": "bb-bday-001",
+    "name": "Bruised Banana Birthday Residency",
+    "targetDescription": "Tonight is not just a party. It is a residency launch, a birthday ritual, a fundraiser, and a live Bars Engine experiment.",
+    "goalAmountCents": 300000,
+    "domainType": "GATHERING_RESOURCES",
+    "isEventMode": true,
+    "timelineDays": 30,
+    "_note": "startDate and endDate are computed at seed time (now, now+30 days) unless overridden"
+  },
+  "_archetypeFeature": "Archetypes aligned to a Kotter stage (e.g. Heaven/Vision) can create quests for that stage even when the game clock is elsewhere. Visionaries can shape the vision while urgency is still being rallied.",
+  "quests": [
+    {
+      "id": "Q-MAP-1",
+      "kotterStage": 1,
+      "title": "Rally the Urgency",
+      "emoji": "⚡",
+      "archetype": "Thunder",
+      "description": "**We need resources.** Create urgency for the Bruised Banana fundraiser. Help others feel why this matters now — the residency, the space, the community. What makes this moment critical?\n\n**By move:** Wake Up — see who needs to hear the urgency; map the stakes. Clean Up — clear what blocks you from naming what's at stake. Grow Up — develop your ability to name stakes and spark action. Show Up — complete quests that create urgency.",
+      "moveApplications": {
+        "wakeUp": "See who needs to hear the urgency; map the stakes and stakeholders.",
+        "cleanUp": "Clear what blocks you from naming what's at stake.",
+        "growUp": "Develop your ability to name stakes and spark action.",
+        "showUp": "Complete quests that create urgency."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-2",
+      "kotterStage": 2,
+      "title": "Build the Coalition",
+      "emoji": "🤝",
+      "archetype": "Earth",
+      "description": "**Who will contribute?** Gather the people who can support the residency — donors, volunteers, allies. Grow the coalition.\n\n**By move:** Wake Up — see who's already aligned; who's on the fence. Clean Up — clear what blocks connection; repair strained ties. Grow Up — develop your ability to invite and nurture allies. Show Up — complete quests that grow the coalition.",
+      "moveApplications": {
+        "wakeUp": "See who's already aligned; who's on the fence.",
+        "cleanUp": "Clear what blocks connection; repair strained ties.",
+        "growUp": "Develop your ability to invite and nurture allies.",
+        "showUp": "Complete quests that grow the coalition."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-3",
+      "kotterStage": 3,
+      "title": "Shape the Vision",
+      "emoji": "👁",
+      "archetype": "Heaven",
+      "description": "**Fully resourced looks like…** Paint the picture. What does the Bruised Banana Residency look like when we hit the goal? Visionaries (Heaven archetype) can create quests here even when the game clock is elsewhere.\n\n**By move:** Wake Up — see what the end state could be; gather inspiration. Clean Up — clear fuzzy thinking; sharpen the vision. Grow Up — develop your ability to articulate and hold vision. Show Up — complete quests that articulate the vision.",
+      "moveApplications": {
+        "wakeUp": "See what the end state could be; gather inspiration.",
+        "cleanUp": "Clear fuzzy thinking; sharpen the vision.",
+        "growUp": "Develop your ability to articulate and hold vision.",
+        "showUp": "Complete quests that articulate the vision."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-4",
+      "kotterStage": 4,
+      "title": "Spread the Word",
+      "emoji": "🎭",
+      "archetype": "Lake",
+      "description": "**Share the need.** Tell people about the fundraiser, the goal, and how to contribute. Make it land.\n\n**By move:** Wake Up — see who needs to hear; what channels reach them. Clean Up — clear noise; find the clearest message. Grow Up — develop your ability to express and persuade. Show Up — complete quests that spread the word.",
+      "moveApplications": {
+        "wakeUp": "See who needs to hear; what channels reach them.",
+        "cleanUp": "Clear noise; find the clearest message.",
+        "growUp": "Develop your ability to express and persuade.",
+        "showUp": "Complete quests that spread the word."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-5",
+      "kotterStage": 5,
+      "title": "Clear the Obstacles",
+      "emoji": "💧",
+      "archetype": "Water",
+      "description": "**What blocks donations?** Identify and remove barriers. What's stopping people from giving or participating?\n\n**By move:** Wake Up — see the obstacles; map the friction. Clean Up — clear what blocks the flow; unblock yourself and others. Grow Up — develop your ability to infiltrate and dissolve obstacles. Show Up — complete quests that remove barriers.",
+      "moveApplications": {
+        "wakeUp": "See the obstacles; map the friction.",
+        "cleanUp": "Clear what blocks the flow; unblock yourself and others.",
+        "growUp": "Develop your ability to infiltrate and dissolve obstacles.",
+        "showUp": "Complete quests that remove barriers."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-6",
+      "kotterStage": 6,
+      "title": "Claim the First Win",
+      "emoji": "🔥",
+      "archetype": "Fire",
+      "description": "**First milestone reached.** Celebrate progress. We hit 25%, 50%, 75%? Light the fire.\n\n**By move:** Wake Up — see what we've achieved; who made it happen. Clean Up — clear any doubt; let the win land. Grow Up — develop your ability to complete and celebrate. Show Up — complete quests that recognize wins.",
+      "moveApplications": {
+        "wakeUp": "See what we've achieved; who made it happen.",
+        "cleanUp": "Clear any doubt; let the win land.",
+        "growUp": "Develop your ability to complete and celebrate.",
+        "showUp": "Complete quests that recognize wins."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-7",
+      "kotterStage": 7,
+      "title": "Scale the Giving",
+      "emoji": "🌬",
+      "archetype": "Wind",
+      "description": "**Scale giving.** We're close. How do we push to the finish? Multiply the momentum.\n\n**By move:** Wake Up — see where the momentum is; what's ready to spread. Clean Up — clear what slows the push. Grow Up — develop your ability to permeate and extend. Show Up — complete quests that build momentum.",
+      "moveApplications": {
+        "wakeUp": "See where the momentum is; what's ready to spread.",
+        "cleanUp": "Clear what slows the push.",
+        "growUp": "Develop your ability to permeate and extend.",
+        "showUp": "Complete quests that build momentum."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "Q-MAP-8",
+      "kotterStage": 8,
+      "title": "Anchor the Change",
+      "emoji": "⛰",
+      "archetype": "Mountain",
+      "description": "**Sustainable funding.** We made it. The goal is reached. Now anchor it: thank everyone, document what worked, set up for ongoing support.\n\n**By move:** Wake Up — see what's been built; what needs stewarding. Clean Up — clear loose ends; create closure. Grow Up — develop your ability to stabilize and institutionalize. Show Up — complete quests that anchor the win.",
+      "moveApplications": {
+        "wakeUp": "See what's been built; what needs stewarding.",
+        "cleanUp": "Clear loose ends; create closure.",
+        "growUp": "Develop your ability to stabilize and institutionalize.",
+        "showUp": "Complete quests that anchor the win."
+      },
+      "allyshipDomain": "GATHERING_RESOURCES",
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    }
+  ]
+}

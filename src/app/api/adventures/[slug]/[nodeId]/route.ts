@@ -9,7 +9,7 @@ import { resolveTemplates } from '@/lib/template-resolver'
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
 
-const DEFAULT_SHOW_UP = `Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
+const DEFAULT_SHOW_UP = `Contribute money (Donate above) or play the game by signing up and choosing your domains.
 This instance runs on quests, BARs, vibeulons, and story clock.`
 
 const MVP_SEED_VIBEULONS = parseInt(process.env.MVP_SEED_VIBEULONS || '3', 10)

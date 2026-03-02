@@ -8,7 +8,7 @@ import { updateInstanceCampaignCopy } from '@/actions/instance'
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
 
-const DEFAULT_SHOW_UP = `Contribute money (Sponsor above) or play the game by signing up and choosing your domains.
+const DEFAULT_SHOW_UP = `Contribute money (Donate above) or play the game by signing up and choosing your domains.
 This instance runs on quests, BARs, vibeulons, and story clock.`
 
 const DEFAULT_STORY_BRIDGE = `This residency is your Conclave; the fundraiser is the heist; your contribution powers the construct; vibeulons are the emotional energy that moves through this space.`

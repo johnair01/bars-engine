@@ -16,6 +16,11 @@ export default async function OnboardingController(props: { searchParams: Promis
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
 
+    // Admins with nation+archetype skip onboarding
+    if (player.nationId && player.playbookId) {
+        redirect('/?ritualComplete=true')
+    }
+
     // Find orientation threads for this player (including completed ones for re-entry)
     let progress = await db.threadProgress.findFirst({
         where: {

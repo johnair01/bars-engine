@@ -73,7 +73,7 @@ export function LibraryRequestModal({
                         </button>
                     </div>
                     <p className="text-sm text-zinc-400">
-                        Ask for help. If we have an answer, you&apos;ll get a link. Otherwise, we&apos;ll create a quest for the community to help document it.
+                        Librarians in the Conclave are interested in making sure the information you need is readily available. If we have an answer, you&apos;ll get a link. Otherwise, we&apos;ll create a DocQuest for the community.
                     </p>
 
                     {result ? (
@@ -90,12 +90,12 @@ export function LibraryRequestModal({
                                 </div>
                             ) : (
                                 <div className="bg-purple-950/30 border border-purple-900/50 rounded-lg p-4">
-                                    <p className="text-purple-200 font-medium">No match yet. A DocQuest was created.</p>
+                                    <p className="text-purple-200 font-medium">No match yet. A DocQuest was created and added to your Active Quests.</p>
                                     <Link
-                                        href={`/adventures?quest=${result.docQuestId}`}
+                                        href="/"
                                         className="mt-2 inline-block text-purple-400 hover:text-purple-300 font-bold"
                                     >
-                                        View quest →
+                                        Go to dashboard →
                                     </Link>
                                 </div>
                             )}

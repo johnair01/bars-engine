@@ -101,8 +101,20 @@ You are a Spec Kit agent responsible for [Objective].
 - **BACKLOG.md:** Ledger of Spec Kit items; status, dependencies, campaign alignment.
 - **Spec Kit specs:** `.specify/specs/` — bruised-banana-*, lore-conceptual-model, etc. Use game language (WHO, WHAT, WHERE, Energy, moves) in all specs.
 
+## Build / Infra Blocker Protocol
+
+**When build errors or infra blockers pop up during implementation** (e.g. "module not found", "Cannot find module pdf-child.js", bundling failures, package incompatibility with Next.js):
+
+1. **Create a spec kit immediately** — do not leave the error unresolved.
+2. **Add to backlog for immediate resolution** — Priority 0 (Urgent), mark as emergent.
+3. **Artifacts**: `.specify/specs/[kebab-name]/spec.md`, `plan.md`, `tasks.md`, `.specify/backlog/prompts/[kebab-name].md`
+4. **Backlog entry**: Assign next ID; link to spec; dependencies = blocked feature (e.g. AZ for Book-to-Quest).
+
+Example: pdf-parse-new build failure → [pdf-parse-new-build-fix](.specify/specs/pdf-parse-new-build-fix/spec.md).
+
 ## Usage
 1. Read the user's natural language request.
 2. If ambiguous, initiate the **Interview Protocol**.
 3. Generate the **Spec Kit Prompt** as an artifact or code block.
 4. (Optional) Run `specify` CLI using the generated prompt.
+5. **If a build/infra error blocks progress**: Execute the Build/Infra Blocker Protocol above.
