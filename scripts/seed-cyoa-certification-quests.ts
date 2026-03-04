@@ -18,7 +18,9 @@ const CERT_QUEST_IDS = [
     'cert-admin-manual-avatar-v1',
     'cert-admin-mobile-readiness-v1',
     'cert-go-live-v1',
-    'cert-market-redesign-v1'
+    'cert-market-redesign-v1',
+    'cert-campaign-onboarding-twine-v2-v1',
+    'cert-quest-grammar-v1'
 ]
 
 async function seed() {
@@ -124,7 +126,8 @@ async function seed() {
             twineStoryId: story.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-onboarding-feature-merge/spec.md'
         },
         create: {
             id: slug,
@@ -135,7 +138,8 @@ async function seed() {
             twineStoryId: story.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-onboarding-feature-merge/spec.md'
         }
     })
 
@@ -232,7 +236,8 @@ async function seed() {
             twineStoryId: editStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/cyoa-in-app-editing/spec.md'
         },
         create: {
             id: editSlug,
@@ -243,7 +248,8 @@ async function seed() {
             twineStoryId: editStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/cyoa-in-app-editing/spec.md'
         }
     })
 
@@ -333,7 +339,8 @@ async function seed() {
             twineStoryId: domainStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/bruised-banana-allyship-domains/spec.md'
         },
         create: {
             id: domainSlug,
@@ -344,7 +351,8 @@ async function seed() {
             twineStoryId: domainStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/bruised-banana-allyship-domains/spec.md'
         }
     })
 
@@ -441,7 +449,8 @@ async function seed() {
             twineStoryId: intentionsStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/domain-aligned-intentions/spec.md'
         },
         create: {
             id: intentionsSlug,
@@ -452,7 +461,8 @@ async function seed() {
             twineStoryId: intentionsStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/domain-aligned-intentions/spec.md'
         }
     })
 
@@ -549,7 +559,8 @@ async function seed() {
             twineStoryId: editorStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/event-page-campaign-editor/spec.md'
         },
         create: {
             id: editorSlug,
@@ -560,7 +571,8 @@ async function seed() {
             twineStoryId: editorStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/event-page-campaign-editor/spec.md'
         }
     })
 
@@ -657,7 +669,8 @@ async function seed() {
             twineStoryId: loreStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/lore-cyoa-onboarding/spec.md'
         },
         create: {
             id: loreSlug,
@@ -668,7 +681,8 @@ async function seed() {
             twineStoryId: loreStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/lore-cyoa-onboarding/spec.md'
         }
     })
 
@@ -758,7 +772,8 @@ async function seed() {
             twineStoryId: avatarStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/avatar-from-cyoa-choices/spec.md'
         },
         create: {
             id: avatarSlug,
@@ -769,7 +784,8 @@ async function seed() {
             twineStoryId: avatarStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/avatar-from-cyoa-choices/spec.md'
         }
     })
 
@@ -887,7 +903,8 @@ async function seed() {
             twineStoryId: rideStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/two-minute-ride-story-bridge/spec.md'
         },
         create: {
             id: rideSlug,
@@ -898,7 +915,8 @@ async function seed() {
             twineStoryId: rideStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/two-minute-ride-story-bridge/spec.md'
         }
     })
 
@@ -988,7 +1006,8 @@ async function seed() {
             twineStoryId: librarianStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/k-space-librarian/spec.md'
         },
         create: {
             id: librarianSlug,
@@ -999,7 +1018,8 @@ async function seed() {
             twineStoryId: librarianStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/k-space-librarian/spec.md'
         }
     })
 
@@ -1089,7 +1109,8 @@ async function seed() {
             twineStoryId: composableStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/jrpg-composable-sprite-avatar/spec.md'
         },
         create: {
             id: composableSlug,
@@ -1100,7 +1121,8 @@ async function seed() {
             twineStoryId: composableStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/jrpg-composable-sprite-avatar/spec.md'
         }
     })
 
@@ -1197,7 +1219,8 @@ async function seed() {
             twineStoryId: existingCharStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/existing-players-character-generation/spec.md'
         },
         create: {
             id: existingCharSlug,
@@ -1208,7 +1231,8 @@ async function seed() {
             twineStoryId: existingCharStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/existing-players-character-generation/spec.md'
         }
     })
 
@@ -1312,7 +1336,8 @@ async function seed() {
             twineStoryId: bookLibStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-to-quest-library/spec.md'
         },
         create: {
             id: bookLibSlug,
@@ -1323,7 +1348,8 @@ async function seed() {
             twineStoryId: bookLibStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-to-quest-library/spec.md'
         }
     })
 
@@ -1420,7 +1446,8 @@ async function seed() {
             twineStoryId: twineExportStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-quest-twine-export/spec.md'
         },
         create: {
             id: twineExportSlug,
@@ -1431,7 +1458,8 @@ async function seed() {
             twineStoryId: twineExportStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-quest-twine-export/spec.md'
         }
     })
 
@@ -1521,7 +1549,8 @@ async function seed() {
             twineStoryId: adminAvatarStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-manual-avatar-assignment/spec.md'
         },
         create: {
             id: adminAvatarSlug,
@@ -1532,7 +1561,8 @@ async function seed() {
             twineStoryId: adminAvatarStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-manual-avatar-assignment/spec.md'
         }
     })
 
@@ -1622,7 +1652,8 @@ async function seed() {
             twineStoryId: mobileStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-mobile-readiness/spec.md'
         },
         create: {
             id: mobileSlug,
@@ -1633,7 +1664,8 @@ async function seed() {
             twineStoryId: mobileStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-mobile-readiness/spec.md'
         }
     })
 
@@ -1730,7 +1762,8 @@ async function seed() {
             twineStoryId: goLiveStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/go-live-integration/spec.md'
         },
         create: {
             id: goLiveSlug,
@@ -1741,7 +1774,8 @@ async function seed() {
             twineStoryId: goLiveStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/go-live-integration/spec.md'
         }
     })
 
@@ -1838,7 +1872,8 @@ async function seed() {
             twineStoryId: marketRedesignStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/market-redesign-launch/spec.md'
         },
         create: {
             id: marketRedesignSlug,
@@ -1849,12 +1884,255 @@ async function seed() {
             twineStoryId: marketRedesignStory.id,
             status: 'active',
             visibility: 'public',
-            isSystem: true
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/market-redesign-launch/spec.md'
         }
     })
 
     console.log(`✅ Story seeded: ${marketRedesignStory.title} (${marketRedesignStory.id})`)
     console.log(`✅ Quest seeded: ${marketRedesignQuest.title} (${marketRedesignQuest.id})`)
+
+    // --- Certification: Campaign Onboarding Twine v2 (BX) ---
+    const onboardingV2Title = 'Certification: Campaign Onboarding Twine v2 V1'
+    const onboardingV2Slug = 'cert-campaign-onboarding-twine-v2-v1'
+
+    const onboardingV2Passages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Prepare the party for the Bruised Banana Fundraiser. Verify the initiation flow: lens selection, signal capture, BAR creation, micro-quest attach, vibeulon mint, Game Master selection, and commitment gate.',
+            cleanText: 'Verify Bruised Banana initiation flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Initiation flow\n\n[Open /campaign/twine](/campaign/twine) (or /campaign?ref=bruised-banana). Play through: choose a lens (community/creative/strategic/allyship), enter raw signal, refine to one sentence, choose quadrant, then **Publish it** at Claim.',
+            cleanText: '### Step 1: Initiation flow\n\nPlay through lens → signal → refine → quadrant → Publish it.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: BAR and micro-quest\n\nConfirm at Structure that the BAR was created and attached to the onboarding micro-quest. At Mint, confirm the vibeulon mint (demo or real) is shown.',
+            cleanText: '### Step 2: BAR and micro-quest\n\nConfirm BAR created, attached, vibeulon minted.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Game Master and commitment gate\n\nChoose a Game Master (Shaman, Challenger, Regent, Architect, Diplomat, Sage). Reach the Commit passage. Optionally click Donate and confirm the external URL opens with telemetry. Optionally click Join the Beta Instance to sign up.',
+            cleanText: '### Step 3: GM and commitment gate\n\nChoose GM, reach Commit, optionally donate or sign up.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: KB passages\n\nClick a "Learn more" link (e.g. KB_WhatIsThisPlace, KB_EmotionalFuel). Confirm the KB passage loads and you can return to the ritual spine.',
+            cleanText: '### Step 4: KB passages\n\nVerify Learn more links and return navigation.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Campaign Onboarding Twine v2 verified. The initiation flow guides visitors through signal capture, BAR creation, vibeulon mint, and commitment. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const onboardingV2ParsedJson = JSON.stringify({
+        title: onboardingV2Title,
+        startPassage: 'START',
+        passages: onboardingV2Passages
+    })
+
+    const onboardingV2Story = await db.twineStory.upsert({
+        where: { slug: onboardingV2Slug },
+        update: {
+            title: onboardingV2Title,
+            parsedJson: onboardingV2ParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: onboardingV2Title,
+            slug: onboardingV2Slug,
+            sourceType: 'manual_seed',
+            sourceText: 'Campaign Onboarding Twine v2 certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: onboardingV2ParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const onboardingV2Quest = await db.customBar.upsert({
+        where: { id: onboardingV2Slug },
+        update: {
+            title: onboardingV2Title,
+            description: 'Verify Bruised Banana initiation: lens, signal, BAR, micro-quest, vibeulon, GM, commitment gate, KB passages.',
+            reward: 1,
+            twineStoryId: onboardingV2Story.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-onboarding-twine-v2/spec.md'
+        },
+        create: {
+            id: onboardingV2Slug,
+            title: onboardingV2Title,
+            description: 'Verify Bruised Banana initiation: lens, signal, BAR, micro-quest, vibeulon, GM, commitment gate, KB passages.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: onboardingV2Story.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-onboarding-twine-v2/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${onboardingV2Story.title} (${onboardingV2Story.id})`)
+    console.log(`✅ Quest seeded: ${onboardingV2Quest.title} (${onboardingV2Quest.id})`)
+
+    // --- Certification: Quest Grammar Compiler (BY) ---
+    const questGrammarTitle = 'Certification: Quest Grammar V1'
+    const questGrammarSlug = 'cert-quest-grammar-v1'
+
+    const questGrammarPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Quest Grammar UX Flow. Covers: CYOA generation (one question per passage), AI generation, Import from .twee, Campaign orientation, and passage-to-quest completion. Admin only.',
+            cleanText: 'Verify Quest Grammar UX: CYOA, AI, Import .twee, campaignRef, passage completion.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Quest Grammar admin\n\n[Open /admin/quest-grammar](/admin/quest-grammar) (admin only). Confirm three tabs: **Form**, **CYOA**, **Import .twee**. Switch to **CYOA** tab.',
+            cleanText: '### Step 1: Open Quest Grammar\n\nConfirm Form / CYOA / Import .twee tabs; use CYOA.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Play through CYOA flow\n\nClick through the CYOA steps (one question per passage). Fill Q1–Q7, Model, Segment, Archetype, Lens. Reach the **Generate** step.',
+            cleanText: '### Step 2: CYOA flow\n\nPlay through steps; fill answers; reach Generate.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Generate with AI\n\nOn the Generate step, click **Generate with AI** (requires QUEST_GRAMMAR_AI_ENABLED). Confirm the preview shows signature + 6 nodes with coherent text. Then click **Export .twee** and confirm a .twee file downloads.',
+            cleanText: '### Step 3: Generate with AI\n\nClick Generate with AI; confirm preview; Export .twee.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Generate overview (AI skeleton)\n\nFrom the same Generate step, click **Generate overview (AI skeleton)**. Confirm objectives and Download .twee work. This tests buildQuestPromptContext + AI output { quests, tweeSource }.',
+            cleanText: '### Step 4: Generate overview\n\nClick Generate overview; confirm objectives + .twee.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Import from .twee\n\nSwitch to **Import .twee** tab. Paste minimal Twee 3:\n\n```\n:: StoryTitle\nTest Import\n\n:: StoryData\n{"start":"Start"}\n\n:: Start\nFirst passage.\n[[Next->Next]]\n\n:: Next\nEnd.\n```\n\nClick **Import from .twee**. Confirm redirect to Adventures; the new Adventure and its passages exist. [Open /admin/adventures](/admin/adventures) to verify.',
+            cleanText: '### Step 5: Import .twee\n\nPaste minimal .twee; import; confirm Adventure created.',
+            links: [{ label: 'Next', target: 'STEP_6' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_6',
+            pid: '9',
+            text: '### Step 6: Campaign orientation\n\n[Open /admin/adventures](/admin/adventures). Click **Edit Graph** on any Adventure. In Settings, find **Campaign Ref**. Set it (e.g. `test-campaign`) and click Save. Confirm it saves.',
+            cleanText: '### Step 6: Campaign Ref\n\nEdit Adventure; set campaignRef; confirm save.',
+            links: [{ label: 'Next', target: 'STEP_7' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_7',
+            pid: '10',
+            text: '### Step 7: Publish & initiation flow\n\nReturn to Quest Grammar CYOA. Generate (Compile & Preview or Generate with AI). Click **Publish to Campaign**. [Open /campaign/initiation?segment=player](/campaign/initiation?segment=player). Confirm the flow renders.',
+            cleanText: '### Step 7: Publish & initiation\n\nPublish; confirm /campaign/initiation renders.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Quest Grammar verified. Campaign Owners can oneshot the Bruised Banana campaign via unpacking input. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const questGrammarParsedJson = JSON.stringify({
+        title: questGrammarTitle,
+        startPassage: 'START',
+        passages: questGrammarPassages
+    })
+
+    const questGrammarStory = await db.twineStory.upsert({
+        where: { slug: questGrammarSlug },
+        update: {
+            title: questGrammarTitle,
+            parsedJson: questGrammarParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: questGrammarTitle,
+            slug: questGrammarSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Quest Grammar certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: questGrammarParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const questGrammarQuest = await db.customBar.upsert({
+        where: { id: questGrammarSlug },
+        update: {
+            title: questGrammarTitle,
+            description: 'Verify Quest Grammar UX: CYOA flow, Generate with AI, Generate overview, Import .twee, campaignRef, passage completion.',
+            reward: 1,
+            twineStoryId: questGrammarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-grammar-compiler/spec.md'
+        },
+        create: {
+            id: questGrammarSlug,
+            title: questGrammarTitle,
+            description: 'Verify Quest Grammar UX: CYOA flow, Generate with AI, Import .twee, campaignRef.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: questGrammarStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-grammar-compiler/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${questGrammarStory.title} (${questGrammarStory.id})`)
+    console.log(`✅ Quest seeded: ${questGrammarQuest.title} (${questGrammarQuest.id})`)
+
     console.log('✅ CYOA Certification Quests seeded.')
 }
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { LibraryRequestModal } from './LibraryRequestModal'
 
-export function LibraryRequestButton() {
+export function LibraryRequestButton({ context }: { context?: Record<string, unknown> } = {}) {
     const [open, setOpen] = useState(false)
 
     return (
@@ -14,7 +14,7 @@ export function LibraryRequestButton() {
             >
                 Request from Library
             </button>
-            <LibraryRequestModal isOpen={open} onClose={() => setOpen(false)} />
+            <LibraryRequestModal isOpen={open} onClose={() => setOpen(false)} context={context} />
         </>
     )
 }

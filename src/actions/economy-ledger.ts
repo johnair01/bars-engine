@@ -22,7 +22,7 @@ export async function transmuteAction(params: {
     sourceInstanceId: string,
     amount: number,
     targetInstanceId?: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
 }) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }

@@ -46,7 +46,7 @@ export async function saveMicroTwineModule(questId: string, config: MicroTwineCo
 
         const canonicalJson = JSON.stringify(config)
 
-        const module = await db.microTwineModule.upsert({
+        const microTwineModule = await db.microTwineModule.upsert({
             where: { questId },
             update: {
                 canonicalJson,
@@ -61,10 +61,10 @@ export async function saveMicroTwineModule(questId: string, config: MicroTwineCo
         })
 
         revalidatePath(`/admin/world/quest/${questId}`)
-        return { success: true, moduleId: module.id }
-    } catch (err: any) {
+        return { success: true, moduleId: microTwineModule.id }
+    } catch (err: unknown) {
         console.error('[MicroTwine] Save failed:', err)
-        return { error: err.message || 'Failed to save narrative' }
+        return { error: err instanceof Error ? err.message : 'Failed to save narrative' }
     }
 }
 
@@ -72,16 +72,16 @@ export async function saveMicroTwineModule(questId: string, config: MicroTwineCo
  * Fetch the Micro-Twine configuration for a quest.
  */
 export async function getMicroTwineConfig(questId: string): Promise<{ config: MicroTwineConfig, isCompiled: boolean } | null> {
-    const module = await db.microTwineModule.findUnique({
+    const microTwineModule = await db.microTwineModule.findUnique({
         where: { questId }
     })
 
-    if (!module) return null
+    if (!microTwineModule) return null
 
     try {
         return {
-            config: JSON.parse(module.canonicalJson) as MicroTwineConfig,
-            isCompiled: !!module.htmlArtifact
+            config: JSON.parse(microTwineModule.canonicalJson) as MicroTwineConfig,
+            isCompiled: !!microTwineModule.htmlArtifact
         }
     } catch {
         return null
@@ -207,8 +207,8 @@ ${passages.map(p => `  <tw-passagedata pid="${p.id}" name="${p.name}" tags="" x=
 
         revalidatePath(`/admin/world/quest/${questId}`)
         return { success: true }
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('[MicroTwine] Compilation failed:', err)
-        return { error: err.message || 'Failed to compile ritual' }
+        return { error: err instanceof Error ? err.message : 'Failed to compile ritual' }
     }
 }

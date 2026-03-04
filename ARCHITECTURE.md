@@ -20,6 +20,8 @@ The five dimensions (WHO, WHAT, WHERE, Energy, Personal throughput) map to schem
 
 **Domain × Kotter**: The same 8 Kotter stages manifest differently per allyship domain. See [.agent/context/kotter-by-domain.md](.agent/context/kotter-by-domain.md).
 
+**Emotional alchemy** (narrative movement): 5 elements, WAVE, 15 canonical moves. Energy economy: Transcend +2, Generative +1, Control -1. Binary `translate` | `transcend` per node via `deriveMovementPerNode()` in `src/lib/quest-grammar/emotional-alchemy.ts`. Move engine: `src/lib/quest-grammar/move-engine.ts`; elements: `src/lib/quest-grammar/elements.ts`. Schema: `EmotionalAlchemySignature.movementPerNode`, `moveType`; `NodeEmotional.movement`. **Mastery**: Wake Up = choice-based completion; Show Up = action-based (required attestation on end passage). See [.agent/context/emotional-alchemy-ontology.md](.agent/context/emotional-alchemy-ontology.md).
+
 ## Core Objects
 
 ### BAR (Kernel)

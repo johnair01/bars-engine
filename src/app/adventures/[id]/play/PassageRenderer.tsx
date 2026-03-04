@@ -164,7 +164,8 @@ export function PassageRenderer({
         setError(null)
         setEmitted([])
         startTransition(async () => {
-            const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId)
+            const skipRevalidate = targetPassageName === 'FEEDBACK'
+            const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId, skipRevalidate)
             if (result.error) {
                 setError(result.error)
             } else {
@@ -194,7 +195,8 @@ export function PassageRenderer({
     function handleBack() {
         setError(null)
         startTransition(async () => {
-            const result = await revertRun(storyId, questId)
+            const skipRevalidate = passage.name === 'FEEDBACK'
+            const result = await revertRun(storyId, questId, undefined, skipRevalidate)
             if (result.error) {
                 setError(result.error)
             } else {

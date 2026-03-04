@@ -199,6 +199,14 @@ function VibeBarCard({
                         </div>
                     )}
 
+                    {/* Phase 5d: Feeling stuck? → EFAK */}
+                    <Link
+                        href={`/emotional-first-aid?questId=${encodeURIComponent(bar.id)}&returnTo=%2F`}
+                        className="block text-[10px] uppercase tracking-widest text-cyan-500 hover:text-cyan-400 font-mono mb-2"
+                    >
+                        Feeling stuck? Open Emotional First Aid →
+                    </Link>
+
                     {/* DELEGATION UI */}
                     {onDelegate && (
                         <div className="bg-black/40 p-2 rounded flex gap-2 items-center mb-2">

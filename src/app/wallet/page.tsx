@@ -18,12 +18,19 @@ export default async function WalletPage() {
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { name: true, avatarConfig: true }
+        select: {
+            name: true,
+            avatarConfig: true,
+            roles: { include: { role: true } }
+        }
     })
+    const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-    const wallet = await getWallet(playerId)
+    const [wallet, movementFeedItems] = await Promise.all([
+        getWallet(playerId),
+        isAdmin ? getMovementFeed(20) : Promise.resolve([])
+    ])
     const total = wallet.length
-    const movementFeedItems = await getMovementFeed(20)
 
     // Fetch potential recipients
     const others = await db.player.findMany({
@@ -96,8 +103,10 @@ export default async function WalletPage() {
                 </section>
             )}
 
-            {/* Movement Feed */}
-            <MovementFeed items={movementFeedItems} title="Recent Vibeulon Activity" maxHeight="14rem" />
+            {/* Movement Feed (admin-only per dashboard-ui-vibe-cleanup FR2b) */}
+            {isAdmin && (
+                <MovementFeed items={movementFeedItems} title="Recent Vibeulon Activity" maxHeight="14rem" />
+            )}
 
             {/* Transfer Section */}
             <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">

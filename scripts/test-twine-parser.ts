@@ -34,14 +34,15 @@ const malformed = {
     passages: { "1": { name: "Start" } }
 }
 
-function testSchema(name: string, data: any) {
+function testSchema(name: string, data: unknown) {
     const result = ParsedTwineSchema.safeParse(data)
     if (result.success) {
         try {
-            const startId = getStartPassageId(result.data as any)
+            const startId = getStartPassageId(result.data)
             console.log(`✅ [${name}] Validated. Start Passage: ${startId}`)
-        } catch (e: any) {
-            console.log(`❌ [${name}] Validated, but getStartPassageId failed: ${e.message}`)
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e)
+            console.log(`❌ [${name}] Validated, but getStartPassageId failed: ${msg}`)
         }
     } else {
         console.log(`❌ [${name}] Validation Failed:`, result.error.message)

@@ -136,7 +136,7 @@ export async function completeQuestForPlayer(
         const isRepeat = existingCompletion?.status === 'completed'
         const isOnboarding = quest.type === 'onboarding'
 
-        await tx.playerQuest.upsert({
+        const playerQuest = await tx.playerQuest.upsert({
             where: {
                 playerId_questId: {
                     playerId,
@@ -217,6 +217,31 @@ export async function completeQuestForPlayer(
 
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
         await processCompletionEffects(tx, playerId, quest, inputs)
+
+        // K-Space Librarian: DocQuest completion → DocEvidenceLink
+        if (quest.type === 'doc' && quest.docQuestMetadata) {
+            try {
+                const meta = JSON.parse(quest.docQuestMetadata) as { targetDocNodeId?: string }
+                const docNodeId = meta.targetDocNodeId
+                const evidenceKind = (inputs?.evidenceKind as string) || 'observation'
+                const validKinds = ['observation', 'instruction', 'canon_statement']
+                const kind = validKinds.includes(evidenceKind) ? evidenceKind : 'observation'
+                if (docNodeId) {
+                    await tx.docEvidenceLink.create({
+                        data: {
+                            docNodeId,
+                            questId: questId,
+                            playerQuestId: playerQuest.id,
+                            kind,
+                            weight: 1.0,
+                            confidence: 0.8
+                        }
+                    })
+                }
+            } catch (e) {
+                console.warn('[QuestEngine] DocQuest DocEvidenceLink creation failed:', e)
+            }
+        }
 
         // Handle Pack/Thread progression - PASSING TX for atomicity
         if (context?.packId) {

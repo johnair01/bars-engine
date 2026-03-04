@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { updateInstanceCampaignCopy } from '@/actions/instance'
+import { improveCopyWithAI, type CopyTarget } from '@/actions/copy-improvement'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -12,6 +13,48 @@ const DEFAULT_SHOW_UP = `Contribute money (Donate above) or play the game by sig
 This instance runs on quests, BARs, vibeulons, and story clock.`
 
 const DEFAULT_STORY_BRIDGE = `This residency is your Conclave; the fundraiser is the heist; your contribution powers the construct; vibeulons are the emotional energy that moves through this space.`
+
+function ImproveWithAIButton({
+  target,
+  currentCopy,
+  onImproved,
+  disabled,
+}: {
+  target: CopyTarget
+  currentCopy: string
+  onImproved: (copy: string) => void
+  disabled?: boolean
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleClick() {
+    if (!currentCopy.trim()) return
+    setLoading(true)
+    setError(null)
+    const result = await improveCopyWithAI(target, currentCopy)
+    setLoading(false)
+    if ('error' in result) {
+      setError(result.error)
+      return
+    }
+    onImproved(result.improvedCopy)
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled || loading || !currentCopy.trim()}
+        className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Improving…' : 'Improve with AI'}
+      </button>
+      {error && <span className="text-xs text-red-400">{error}</span>}
+    </div>
+  )
+}
 
 type Props = {
   instanceId: string
@@ -108,6 +151,12 @@ export function EventCampaignEditor({
                     placeholder={DEFAULT_STORY_BRIDGE}
                   />
                   <p className="text-[10px] text-zinc-600 mt-0.5">Shown in CYOA intro. Connects Conclave/heist to residency/fundraiser.</p>
+                  <ImproveWithAIButton
+                    target="instance_storyBridgeCopy"
+                    currentCopy={storyBridgeCopy}
+                    onImproved={setStoryBridgeCopy}
+                    disabled={loading}
+                  />
                 </div>
 
                 <div>
@@ -120,6 +169,12 @@ export function EventCampaignEditor({
                     rows={4}
                     className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder={DEFAULT_WAKE_UP}
+                  />
+                  <ImproveWithAIButton
+                    target="instance_wakeUpContent"
+                    currentCopy={wakeUpContent}
+                    onImproved={setWakeUpContent}
+                    disabled={loading}
                   />
                 </div>
 
@@ -134,6 +189,12 @@ export function EventCampaignEditor({
                     className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder={DEFAULT_SHOW_UP}
                   />
+                  <ImproveWithAIButton
+                    target="instance_showUpContent"
+                    currentCopy={showUpContent}
+                    onImproved={setShowUpContent}
+                    disabled={loading}
+                  />
                 </div>
 
                 <div>
@@ -147,6 +208,12 @@ export function EventCampaignEditor({
                     className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder="e.g. Heist at Construct Conclave"
                   />
+                  <ImproveWithAIButton
+                    target="instance_theme"
+                    currentCopy={theme}
+                    onImproved={setTheme}
+                    disabled={loading}
+                  />
                 </div>
 
                 <div>
@@ -159,6 +226,12 @@ export function EventCampaignEditor({
                     onChange={(e) => setTargetDescription(e.target.value)}
                     className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder="e.g. Raise $3000 for Bruised Banana Residency Fund"
+                  />
+                  <ImproveWithAIButton
+                    target="instance_targetDescription"
+                    currentCopy={targetDescription}
+                    onImproved={setTargetDescription}
+                    disabled={loading}
                   />
                 </div>
 

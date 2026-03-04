@@ -59,6 +59,16 @@ Canonical index of proper nouns used in the Event Page, CYOA onboarding, and kno
 | Grow Up | grow-up | /wiki/moves |
 | Show Up | show-up | /wiki/moves |
 
+## Emotional Alchemy (Quest Design)
+
+| Term | Slug | Wiki Path |
+|------|------|-----------|
+| Emotional Alchemy | emotional-alchemy | /wiki/emotional-alchemy |
+| 5 Elements | elements | /wiki/emotional-alchemy#elements |
+| 15 Canonical Moves | canonical-moves | /wiki/emotional-alchemy#moves |
+| Nation Element | nation-element | /wiki/emotional-alchemy#nations |
+| Choice Privileging | choice-privileging | /wiki/emotional-alchemy#choice-privileging |
+
 ## Economy
 
 | Term | Slug | Wiki Path |

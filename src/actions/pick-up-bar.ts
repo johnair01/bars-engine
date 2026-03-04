@@ -80,8 +80,8 @@ export async function pickUpBar(formData: FormData) {
         revalidatePath('/')
         return { success: true, barId }
 
-    } catch (e: any) {
-        console.error("Pick up bar failed:", e?.message)
+    } catch (e: unknown) {
+        console.error("Pick up bar failed:", e instanceof Error ? e.message : String(e))
         return { error: 'Failed to pick up bar' }
     }
 }

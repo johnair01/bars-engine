@@ -1,15 +1,5 @@
 import './require-db-env'
 import { db } from '../src/lib/db'
-import { createCustomBar } from '../src/actions/create-bar'
-import { releaseBarToSaladBowl } from '../src/actions/release-bar'
-import { mintVibulon } from '../src/actions/economy'
-
-// Mock FormData helper
-function createFormData(data: Record<string, string>) {
-    const formData = new FormData()
-    Object.entries(data).forEach(([key, value]) => formData.append(key, value))
-    return formData
-}
 
 async function runTest() {
     console.log('🧪 Testing Assignment & Release Logic...\n')

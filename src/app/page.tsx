@@ -580,7 +580,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
               />
             ))}
             {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} />
+              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} />
             ))}
           </div>
         </section>
@@ -706,7 +706,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   {packs
                     .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
                     .map(pack => (
-                      <QuestPack key={pack.id} pack={pack as any} />
+                      <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} />
                     ))}
                 </div>
               </div>

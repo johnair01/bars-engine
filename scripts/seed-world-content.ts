@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
 
-async function upsertQuest(title: string, data: any) {
+async function upsertQuest(title: string, data: Record<string, unknown>) {
     const existing = await db.customBar.findFirst({ where: { title } })
     if (existing) {
         console.log(`Quest "${title}" exists. Updating...`)
@@ -88,7 +88,7 @@ async function main() {
 
     // 3. Upsert Starter Pack
     // ===============================================
-    const p1 = await upsertQuest('Hydration Check', {
+    await upsertQuest('Hydration Check', {
         description: 'Drink a glass of water. Seriously. Do it now.',
         type: 'vibe',
         reward: 10,
@@ -96,7 +96,7 @@ async function main() {
         inputs: '[]'
     })
 
-    const p2 = await upsertQuest('Touch Grass', {
+    await upsertQuest('Touch Grass', {
         description: 'Go outside for at least 5 minutes. Look at the sky.',
         type: 'location',
         reward: 200,

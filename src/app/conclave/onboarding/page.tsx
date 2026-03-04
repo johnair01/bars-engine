@@ -22,7 +22,7 @@ export default async function OnboardingController(props: { searchParams: Promis
     }
 
     // Find orientation threads for this player (including completed ones for re-entry)
-    let progress = await db.threadProgress.findFirst({
+    const progress = await db.threadProgress.findFirst({
         where: {
             playerId: player.id,
             thread: { threadType: 'orientation' }
@@ -90,7 +90,12 @@ export default async function OnboardingController(props: { searchParams: Promis
         redirect(`/adventures/${quest.twineStoryId}/play?questId=${quest.id}&threadId=${progress.threadId}${ritualParam}`)
     }
 
+    // If thread has an Adventure (e.g. from .twee import), play via Passage-based flow
+    if (progress.thread.adventureId) {
+        const ritualParam = isRitual ? '&ritual=true' : ''
+        redirect(`/adventure/${progress.thread.adventureId}/play?questId=${quest.id}&threadId=${progress.threadId}${ritualParam}`)
+    }
+
     // Otherwise, redirect to the dashboard where the quest will show up in their list
-    // (though in the future we might want a dedicated 'Focus' view for onboarding quests)
     redirect('/?focusQuest=' + quest.id)
 }

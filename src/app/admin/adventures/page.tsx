@@ -18,12 +18,20 @@ export default async function AdventuresAdminPage() {
                 title="Adventures"
                 description="Manage Twine-compatible narratives for onboarding and quests."
                 action={
-                    <Link
-                        href="/admin/adventures/create"
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                        Create Adventure
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link
+                            href="/admin/adventures/merge"
+                            className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Merge Adventures
+                        </Link>
+                        <Link
+                            href="/admin/adventures/create"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Create Adventure
+                        </Link>
+                    </div>
                 }
             />
 

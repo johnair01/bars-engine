@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { CampaignReader } from './components/CampaignReader'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
@@ -9,8 +10,10 @@ import path from 'path'
 const FALLBACK_START = 'Center_Witness'
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
-export default async function CampaignPage(props: { searchParams: Promise<{ ref?: string }> }) {
-    const { ref: urlRef } = await props.searchParams
+export default async function CampaignPage(props: {
+    searchParams: Promise<{ ref?: string; ritual?: string; segment?: string }>
+}) {
+    const { ref: urlRef, ritual, segment } = await props.searchParams
     const player = await getCurrentPlayer()
     const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
     // P2: When no ref in URL, use instance.campaignRef (default bruised-banana)
@@ -20,33 +23,52 @@ export default async function CampaignPage(props: { searchParams: Promise<{ ref?
         campaignRef = instance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
     }
 
-    let startNodeId = FALLBACK_START
-    let hasActiveAdventure = false
-
-    // Bruised Banana flow: use BB_Intro when ref=bruised-banana
+    // Bruised Banana: QuestPacket initiation when ritual=initiation; else Twine flow
     if (campaignRef === 'bruised-banana') {
-        startNodeId = 'BB_Intro'
+        if (ritual === 'initiation' && (segment === 'player' || segment === 'sponsor')) {
+            redirect(`/campaign/initiation?segment=${segment}`)
+        }
+        redirect('/campaign/twine?ref=bruised-banana')
     }
 
-    // Prefer DB when Adventure wake-up exists and is ACTIVE (unless BB flow)
-    if (startNodeId === FALLBACK_START) {
+    // Resolve Adventure by campaignRef for orientation (e.g. ref=wake-up → Adventure with campaignRef=wake-up)
+    let startNodeId = FALLBACK_START
+    let adventureSlug: string | undefined
+    try {
+        const adventure = await db.adventure.findFirst({
+            where: {
+                status: 'ACTIVE',
+                OR: [
+                    { campaignRef },
+                    { slug: campaignRef },
+                ],
+            },
+        })
+        if (adventure) {
+            startNodeId = adventure.startNodeId ?? FALLBACK_START
+            adventureSlug = adventure.slug
+        }
+    } catch {
+        // DB unreachable; fall through to file
+    }
+
+    // Fallback to wake-up when no Adventure found by campaignRef
+    if (!adventureSlug) {
         try {
-            const adventure = await db.adventure.findFirst({
-                where: { slug: 'wake-up', status: 'ACTIVE' }
+            const wakeUp = await db.adventure.findFirst({
+                where: { slug: 'wake-up', status: 'ACTIVE' },
             })
-            if (adventure) {
-                hasActiveAdventure = true
-                startNodeId = adventure.startNodeId ?? FALLBACK_START
+            if (wakeUp) {
+                startNodeId = wakeUp.startNodeId ?? FALLBACK_START
+                adventureSlug = 'wake-up'
             }
         } catch {
-            // DB unreachable; fall through to file
+            /* ignore */
         }
-    } else {
-        hasActiveAdventure = true // BB_Intro is served by API
     }
 
     // Fallback to file-based map when DB has no active Adventure
-    if (!hasActiveAdventure) {
+    if (!adventureSlug) {
         const mapPath = path.join(process.cwd(), 'content', 'campaigns', 'wake_up', 'map.json')
         try {
             if (fs.existsSync(mapPath)) {
@@ -73,7 +95,7 @@ export default async function CampaignPage(props: { searchParams: Promise<{ ref?
                 <CampaignReader
                     initialNode={{ id: startNodeId, text: '', choices: [] }}
                     campaignRef={campaignRef}
-                    adventureSlug={campaignRef === 'bruised-banana' ? 'bruised-banana' : undefined}
+                    adventureSlug={adventureSlug}
                     isAdmin={isAdmin}
                 />
             </div>

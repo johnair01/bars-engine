@@ -52,7 +52,7 @@ async function verifyE2E() {
     console.log(`✅ Found Story: ${story.title}`)
 
     // 3. Start the run
-    const { run } = await getOrCreateRun(story.id, null, playerId) as any
+    const { run } = await getOrCreateRun(story.id, null, playerId) as { run: { id: string; currentPassageId: string } }
     if (!run) throw new Error('Failed to create run')
     console.log(`✅ Started Run: ${run.id} at ${run.currentPassageId}`)
 
@@ -86,7 +86,7 @@ async function verifyE2E() {
     // 6. Finish (DASHBOARD)
     console.log('⏩ Advancing to Conclusion and Dashboard...')
     await advanceRun(story.id, 'Conclusion', null, playerId)
-    const result = await advanceRun(story.id, 'DASHBOARD', null, playerId) as any
+    const result = await advanceRun(story.id, 'DASHBOARD', null, playerId) as { redirect?: string }
     console.log(`📊 Final Redirect: ${result.redirect}`)
 
     // Verify Onboarding Complete
@@ -110,7 +110,7 @@ async function verifyE2E() {
     })
 
     console.log('⏩ Verifying Transactional Quest Completion...')
-    const completion = await completeQuestForPlayer(playerId, quest.id, { test: true }) as any
+    const completion = await completeQuestForPlayer(playerId, quest.id, { test: true }) as { reward?: number }
     console.log(`📊 Completion Reward: ${completion.reward}`)
 
     const vibulonCount = await db.vibulon.count({ where: { ownerId: playerId, originId: quest.id } })

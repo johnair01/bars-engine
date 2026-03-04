@@ -127,8 +127,8 @@ export async function delegateBar(formData: FormData) {
         revalidatePath('/hand')
         revalidatePath('/bars/available')
         return result
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Delegate failed:', e)
-        return { error: e?.message || 'Failed to delegate' }
+        return { error: e instanceof Error ? e.message : 'Failed to delegate' }
     }
 }

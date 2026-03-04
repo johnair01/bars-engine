@@ -1,9 +1,10 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import { updatePassage } from "./actions"
 import { useFormStatus } from "react-dom"
 import Link from "next/link"
+import { BridgeGapModal } from "./BridgeGapModal"
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -18,6 +19,8 @@ function SubmitButton() {
     )
 }
 
+type Choice = { text: string; targetId: string }
+
 export function EditPassageForm({
     adventureId,
     passage
@@ -26,6 +29,15 @@ export function EditPassageForm({
     passage: { id: string; nodeId: string; text: string; choices: string }
 }) {
     const [state, formAction] = useActionState(updatePassage, { success: false, message: "" })
+    const [bridgeTarget, setBridgeTarget] = useState<{ toNodeId: string; choiceLabel: string } | null>(null)
+
+    let choices: Choice[] = []
+    try {
+        const parsed = JSON.parse(passage.choices || "[]")
+        choices = Array.isArray(parsed) ? parsed.filter((c: unknown) => c && typeof c === "object" && "text" in c && "targetId" in c) : []
+    } catch {
+        /* ignore */
+    }
 
     return (
         <form action={formAction} className="space-y-6">
@@ -93,8 +105,38 @@ export function EditPassageForm({
                     {state?.errors?.choicesJson && (
                         <p className="text-red-400 text-sm mt-1">{state.errors.choicesJson[0]}</p>
                     )}
+                    {choices.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-zinc-800">
+                            <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Bridge this gap</p>
+                            <div className="space-y-2">
+                                {choices.map((c, i) => (
+                                    <div key={i} className="flex items-center justify-between gap-3 py-2 px-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                                        <span className="text-sm text-zinc-300 truncate">
+                                            {c.text} → <span className="font-mono text-indigo-400">{c.targetId}</span>
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBridgeTarget({ toNodeId: c.targetId, choiceLabel: c.text })}
+                                            className="shrink-0 px-3 py-1.5 text-xs font-medium text-purple-300 hover:text-purple-100 border border-purple-700/50 hover:border-purple-500 rounded-lg transition-colors"
+                                        >
+                                            Bridge
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+            {bridgeTarget && (
+                <BridgeGapModal
+                    adventureId={adventureId}
+                    fromNodeId={passage.nodeId}
+                    toNodeId={bridgeTarget.toNodeId}
+                    choiceLabel={bridgeTarget.choiceLabel}
+                    onClose={() => setBridgeTarget(null)}
+                />
+            )}
 
             <div className="pt-2 border-t border-zinc-800 flex items-center gap-4">
                 <SubmitButton />

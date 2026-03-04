@@ -102,6 +102,7 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
         })
 
         // Assign orientation threads (reads personalization from storyProgress when available)
+        // When lens present (Bruised Banana signup), assignOrientationThreads also assigns bruised-banana-orientation-thread
         const { assignOrientationThreads } = await import('@/actions/quest-thread')
         await assignOrientationThreads(player.id)
 
@@ -126,6 +127,7 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             if (byName) playbookId = byName.id
         }
         // Apply campaignDomainPreference from campaignState (AC2.4)
+        // Bruised Banana Twine: map lens to domain when no explicit preference
         const validDomainKeys = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING']
         let campaignDomainPreference: string | null = null
         const rawPref = state?.campaignDomainPreference
@@ -144,6 +146,19 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
                 if (validDomainKeys.includes(key)) {
                     campaignDomainPreference = JSON.stringify([key])
                 }
+            }
+        }
+        // Bruised Banana Twine: derive domain from lens when no preference set
+        if (!campaignDomainPreference && typeof state?.lens === 'string') {
+            const lensToDomain: Record<string, string> = {
+                allyship: 'RAISE_AWARENESS',
+                creative: 'GATHERING_RESOURCES',
+                strategic: 'SKILLFUL_ORGANIZING',
+                community: 'DIRECT_ACTION',
+            }
+            const mapped = lensToDomain[state.lens.toLowerCase()]
+            if (mapped && validDomainKeys.includes(mapped)) {
+                campaignDomainPreference = JSON.stringify([mapped])
             }
         }
 
@@ -176,6 +191,24 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             })
             const { assignGatedThreads } = await import('@/actions/onboarding')
             await assignGatedThreads(player.id)
+        }
+
+        // Finalize pending BAR from Twine onboarding (Bruised Banana initiation)
+        const pendingBar = state?.pendingBar as { refinedSignal?: string; rawSignal?: string; lens?: string; quadrant?: string; campaignId?: string } | undefined
+        if (pendingBar?.refinedSignal) {
+            const { finalizePendingBar } = await import('@/actions/onboarding-bar')
+            const payload = {
+                title: (pendingBar.refinedSignal as string).slice(0, 40),
+                content: pendingBar.refinedSignal as string,
+                rawSignal: (pendingBar.rawSignal ?? pendingBar.refinedSignal) as string,
+                lens: (pendingBar.lens as string) ?? '',
+                quadrant: (pendingBar.quadrant as string) ?? '',
+                campaignId: (pendingBar.campaignId as string) ?? 'bruised-banana'
+            }
+            const result = await finalizePendingBar(player.id, payload)
+            if (result && 'barId' in result) {
+                console.log(`[MVP] Finalized onboarding BAR ${result.barId} for campaign player ${player.id}`)
+            }
         }
 
         // Seed Vibeulons (Give 5 instead of 3 for Campaign heroes as a reward for completing Act 5)

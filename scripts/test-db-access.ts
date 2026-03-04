@@ -11,9 +11,9 @@ async function main() {
         const bindingCount = await db.twineBinding.count()
         console.log(`TwineBinding count: ${bindingCount}`)
         console.log('--- SUCCESS ---')
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('--- FAILURE ---')
-        console.error(e.message)
+        console.error(e instanceof Error ? e.message : String(e))
     }
 }
 

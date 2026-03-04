@@ -34,7 +34,7 @@ function runCommand(check: string, command: string) {
     }
 }
 
-function parseJsonArray(value: string | null): any[] {
+function parseJsonArray(value: string | null): unknown[] {
     if (!value) return []
     try {
         const parsed = JSON.parse(value)
@@ -86,7 +86,7 @@ async function verifyCoreQuestConfig() {
         // Runtime fallback in QuestDetailModal provides guided Twine logic if DB lacks it.
         notes.push('Guided twine missing in DB, covered by runtime fallback')
     } else {
-        const twine = JSON.parse(intentionQuest.twineLogic) as { passages?: any[]; startPassageId?: string }
+        const twine = JSON.parse(intentionQuest.twineLogic) as { passages?: unknown[]; startPassageId?: string }
         if (!twine.startPassageId || !Array.isArray(twine.passages) || twine.passages.length === 0) {
             throw new Error('Intention quest twine logic is malformed.')
         }

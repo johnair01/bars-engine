@@ -31,7 +31,7 @@ async function main() {
                 stdio: 'inherit',
                 cwd: process.cwd()
             })
-        } catch (e) {
+        } catch {
             allPassed = false
             console.log(`\n❌ ${test.name} failed`)
         }

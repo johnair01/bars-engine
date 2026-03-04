@@ -54,8 +54,9 @@ async function checkEnv() {
         await prisma.$connect()
         await prisma.$queryRaw`SELECT 1`
         console.log('  ✓ Database is reachable')
-    } catch (err: any) {
-        console.warn(`  ❌ Database unreachable: ${err.message}`)
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.warn(`  ❌ Database unreachable: ${msg}`)
         console.warn('  ! App will fallback to Guest Mode.')
     } finally {
         await prisma.$disconnect()

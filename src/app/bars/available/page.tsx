@@ -3,10 +3,10 @@
 import { getMarketContent } from '@/actions/market'
 import { updateCampaignDomainPreference } from '@/actions/campaign-domain-preference'
 import { getWorldData } from '@/actions/onboarding'
+import { filterMarketQuests, type MarketQuest } from '@/lib/market-api'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuestDetailModal } from '@/components/QuestDetailModal'
-import { StageIndicator } from '@/components/StageIndicator'
 import { Avatar } from '@/components/Avatar'
 import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
 import { CampaignPathForm } from '@/components/CampaignPathForm'
@@ -14,9 +14,9 @@ import { ALLYSHIP_DOMAINS, parseCampaignDomainPreference } from '@/lib/allyship-
 import Link from 'next/link'
 
 type MarketContent = {
-    packs: any[]
-    quests: any[]
-    graveyardQuests?: any[]
+    packs: unknown[]
+    quests: MarketQuest[]
+    graveyardQuests?: MarketQuest[]
     campaignDomainPreference?: string | null
     activeInstanceKotterStage?: number | null
     activeInstanceName?: string | null
@@ -25,9 +25,9 @@ type MarketContent = {
 export default function AvailableBarsPage() {
     const router = useRouter()
     const [content, setContent] = useState<MarketContent | null>(null)
-    const [worldData, setWorldData] = useState<{ nations: any[], playbooks: any[] }>({ nations: [], playbooks: [] })
+    const [worldData, setWorldData] = useState<{ nations: { id: string; name: string }[]; playbooks: { id: string; name: string }[] }>({ nations: [], playbooks: [] })
     const [isPending, startTransition] = useTransition()
-    const [selectedQuest, setSelectedQuest] = useState<any | null>(null)
+    const [selectedQuest, setSelectedQuest] = useState<MarketQuest | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [activeStage, setActiveStage] = useState<number | null>(null)
     const [selectedNations, setSelectedNations] = useState<string[]>([])
@@ -36,7 +36,7 @@ export default function AvailableBarsPage() {
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [showCampaignPath, setShowCampaignPath] = useState(false)
 
-    const refreshContent = () => getMarketContent().then(data => setContent(data as any))
+    const refreshContent = () => getMarketContent().then((data) => setContent(data as MarketContent))
 
     const hasDomainFilter = parseCampaignDomainPreference(content?.campaignDomainPreference ?? null).length > 0
     const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0 || selectedDomains.length > 0
@@ -59,20 +59,12 @@ export default function AvailableBarsPage() {
         })
     }, [])
 
-    const others = (content?.quests || []).filter(q => {
-        const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            q.description.toLowerCase().includes(searchQuery.toLowerCase())
-
-        const matchesStage = activeStage === null || q.kotterStage === activeStage
-
-        const creatorNation = q.creator?.nation?.name
-        const creatorArchetype = q.creator?.playbook?.name
-
-        const matchesNation = selectedNations.length === 0 || (creatorNation && selectedNations.includes(creatorNation))
-        const matchesArchetype = selectedArchetypes.length === 0 || (creatorArchetype && selectedArchetypes.includes(creatorArchetype))
-        const matchesDomain = selectedDomains.length === 0 || (q.allyshipDomain && selectedDomains.includes(q.allyshipDomain))
-
-        return matchesSearch && matchesStage && matchesNation && matchesArchetype && matchesDomain
+    const filteredQuests = filterMarketQuests((content?.quests ?? []) as MarketQuest[], {
+        search: searchQuery || undefined,
+        domain: selectedDomains.length ? selectedDomains : undefined,
+        nation: selectedNations.length ? selectedNations : undefined,
+        archetype: selectedArchetypes.length ? selectedArchetypes : undefined,
+        kotterStage: activeStage ?? undefined,
     })
 
     // Get active filter options (nations/archetypes that have quests)
@@ -228,7 +220,7 @@ export default function AvailableBarsPage() {
             {/* All Quests */}
             <section>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {others.length === 0 ? (
+                    {filteredQuests.length === 0 ? (
                         <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
                             {(content?.quests || []).length === 0 ? (
                                 <>
@@ -247,7 +239,7 @@ export default function AvailableBarsPage() {
                             )}
                         </div>
                     ) : (
-                        others.map(bar => (
+                        filteredQuests.map((bar) => (
                             <QuestCard
                                 key={bar.id}
                                 bar={bar}

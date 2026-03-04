@@ -34,6 +34,19 @@ description: Canonical spelling and terminology for the project
 
 ---
 
+## Emotional Alchemy (Narrative Movement)
+
+Energy economy. 5 elements, WAVE, 15 canonical moves. Binary: translate | transcend.
+
+| Move | Meaning |
+|------|--------|
+| translate | Work within current frame; integrate without shifting level |
+| transcend | Cross threshold; include lower in higher frame; structural shift |
+
+**Mastery**: Wake Up = choice-based; Show Up = action-based (required attestation). Schema: `movementPerNode`, `moveType`, `NodeEmotional.movement`.
+
+---
+
 ## Allyship Domains (WHERE)
 
 | Key | Label |

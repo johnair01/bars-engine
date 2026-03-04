@@ -33,7 +33,10 @@ export async function searchDocNodes(params: {
     const nodes = await db.docNode.findMany({
         where: {
             canonicalStatus: { in: ['canonical', 'validated', 'draft'] },
-            scope: scope ? scope : { not: 'deprecated' }
+            scope: scope ? scope : { not: 'deprecated' },
+            // Exclude request_record stubs from resolution — they contain request text in title,
+            // causing false matches (e.g. "how do I" matches any prior request). Only resolve to real docs.
+            nodeType: { not: 'request_record' }
         },
         take: limit * 2, // fetch extra for ranking
         orderBy: { updatedAt: 'desc' }
@@ -79,7 +82,7 @@ function parseTags(tags: string): string[] {
     }
 }
 
-const MATCH_THRESHOLD = 2
+const MATCH_THRESHOLD = 5 // Require meaningful overlap; avoid single-word false matches
 
 /**
  * Submit a Library Request. Resolves to existing DocNode or spawns BacklogItem + DocNode + DocQuest.
@@ -188,6 +191,14 @@ export async function submitLibraryRequest(
     })
     const creatorId = systemPlayer?.id ?? player.id
 
+    const docQuestInputs = JSON.stringify([
+        { key: 'evidenceKind', label: 'Evidence type', type: 'select', required: true, options: ['observation', 'instruction', 'canon_statement'] },
+        { key: 'evidenceText', label: 'Your evidence', type: 'textarea', required: true, placeholder: 'Share what you observed, a step-by-step instruction, or a canon statement.' }
+    ])
+    const isBruisedBanana =
+        input.contextJson?.campaignRef === 'bruised-banana' ||
+        instance?.campaignRef === 'bruised-banana' ||
+        instance?.domainType === 'GATHERING_RESOURCES'
     const docQuest = await db.customBar.create({
         data: {
             creatorId,
@@ -200,6 +211,8 @@ export async function submitLibraryRequest(
             isSystem: true,
             moveType: 'wakeUp',
             kotterStage: 1,
+            inputs: docQuestInputs,
+            allyshipDomain: isBruisedBanana ? 'GATHERING_RESOURCES' : undefined,
             docQuestMetadata: JSON.stringify({
                 docIntent: 'answer_request',
                 targetDocNodeId: docNode.id,

@@ -26,11 +26,12 @@ async function main() {
         })
         console.log(`✅ Success! Invite created: ${invite.id}`)
         console.log(`Link: /invite/${token}`)
-    } catch (e: any) {
-        if (e.code === 'P2002') {
+    } catch (e: unknown) {
+        const err = e as { code?: string; message?: string }
+        if (err.code === 'P2002') {
             console.error('❌ Error: Token already exists.')
         } else {
-            console.error('❌ Error:', e.message)
+            console.error('❌ Error:', err.message)
         }
         process.exit(1)
     }

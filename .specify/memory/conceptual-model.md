@@ -45,6 +45,16 @@ Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
 - A quest in "Direct Action" (WHERE) might require Show Up (move)
 - A quest in "Raise Awareness" might benefit from Wake Up
 
+## Emotional Alchemy (Narrative Movement)
+
+Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). WAVE: Wake → Clean → Grow → Show. 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative.
+
+**Mastery**: Wake Up quests = choice-based (orientation, teaching). Show Up quests = action-based (required attestation on end passage). Quest threads end with action; Wake Up is the exception.
+
+**Onboarding scaffolding**: Emotional alchemy informs onboarding arc. Confusion → Metal; expectation violation → Fire. Story progresses with emotional beats.
+
+Derived from unpacking data. See [.agent/context/emotional-alchemy-ontology.md](../../.agent/context/emotional-alchemy-ontology.md).
+
 ## Integral Emergence / AI Agents (Vision)
 
 AI agents act as NPCs in the game. They can create and resolve quests, make I Ching draws, and (future) create quests that call in archetypes from hexagrams for players to create next. Agents are Kotter-stage-context-aware (quest thread or campaign). To other users they appear as regular players. Design goal: real users outpace AI via collaboration and ability to mint vibeulons from real lives. AI agents can only mint vibeulons by completing story quests — not from capital injections or real-world actions.

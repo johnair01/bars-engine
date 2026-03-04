@@ -21,8 +21,8 @@ async function main() {
         // Clean up
         await db.questPack.delete({ where: { id: testPack.id } })
         console.log('✅ Cleaned up test pack')
-    } catch (e: any) {
-        console.error('❌ Schema verification failed:', e.message)
+    } catch (e: unknown) {
+        console.error('❌ Schema verification failed:', e instanceof Error ? e.message : String(e))
     }
 
     // 2. Verify Admin Stats Action
@@ -39,8 +39,8 @@ async function main() {
         console.log(`   - Threads: ${stats[1]}`)
         console.log(`   - Packs: ${stats[2]}`)
         console.log(`   - Quests: ${stats[3]}`)
-    } catch (e: any) {
-        console.error('❌ Admin stats check failed:', e.message)
+    } catch (e: unknown) {
+        console.error('❌ Admin stats check failed:', e instanceof Error ? e.message : String(e))
     }
 
     // 3. Verify Admin Access Logic
@@ -102,8 +102,8 @@ async function main() {
             console.log(`✅ Non-Admin Check: User '${nonAdmin.name}' is NOT admin.`)
         }
 
-    } catch (e: any) {
-        console.error('❌ Access control verification failed:', e.message)
+    } catch (e: unknown) {
+        console.error('❌ Access control verification failed:', e instanceof Error ? e.message : String(e))
     }
 }
 

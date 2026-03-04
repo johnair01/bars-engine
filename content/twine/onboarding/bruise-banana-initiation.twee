@@ -1,0 +1,612 @@
+:: StoryTitle
+Bruised Banana Initiation
+
+:: StoryData
+{
+  "ifid": "B0E6C8B9-5E2A-4ED8-9F2C-4A58D31F4E1A",
+  "format": "SugarCube",
+  "format-version": "2.36.1",
+  "start": "Start"
+}
+
+:: Start
+The door isn't locked.
+
+It never was.
+
+Still—
+you hesitated.
+
+Something has been softening lately.
+Almost sweet.
+Almost wasted.
+
+Let's not waste this one.
+
+[[Step inside->LensSelection]]
+
+:: LensSelection
+Before we go any further—
+
+What kind of bruise are you here for?
+
+[[A community that stalled->SetLensCommunity]]
+[[A creative dream that faded->SetLensCreative]]
+[[A strategy that never launched->SetLensStrategic]]
+[[An allyship effort that lost its heart->SetLensAllyship]]
+
+[[Learn more: What is this place?->KB_WhatIsThisPlace]]
+
+:: SetLensCommunity
+[TOKEN] SET lens=community
+
+Communities don't fracture all at once.
+They drift.
+And then one day, no one shows up.
+
+Let's catch it before it does.
+
+[[Continue->Signal]]
+
+:: SetLensCreative
+[TOKEN] SET lens=creative
+
+Creative work rarely dies loudly.
+It fades.
+Quietly.
+Like paint drying in the dark.
+
+Let's see if there's still heat in it.
+
+[[Continue->Signal]]
+
+:: SetLensStrategic
+[TOKEN] SET lens=strategic
+
+Momentum doesn't vanish.
+It dissipates.
+Because no one claimed it.
+
+Good.
+
+We can work with that.
+
+[[Continue->Signal]]
+
+:: SetLensAllyship
+[TOKEN] SET lens=allyship
+
+Allyship loses heart long before it loses language.
+
+You can feel the difference.
+
+Let's name it.
+
+[[Continue->Signal]]
+
+:: Signal
+<<if $lens is "creative">>
+(If your Twine runtime supports macros, this block is optional. App may ignore.)
+<</if>>
+
+There it is.
+
+That low hum under everything.
+That thought you keep circling.
+That irritation.
+That hope.
+
+You don't have to make it impressive.
+Just honest.
+
+What's alive right now?
+
+{{INPUT:rawSignal|placeholder=Type what's actually here…}}
+
+[[Continue->Refine]]
+[[Learn more: Emotional fuel->KB_EmotionalFuel]]
+
+:: Refine
+Good.
+
+Now—
+trim it.
+
+Cut the extra words.
+Keep the nerve.
+
+One sentence.
+Clean.
+
+Bestie.
+Don't overthink this.
+
+{{INPUT:refinedSignal|placeholder=Sharpen it to one sentence.}}
+
+When you read it back,
+where does it land?
+
+[[In me->QuadrantMe]]
+[[In something happening->QuadrantIt]]
+[[Between us->QuadrantWe]]
+[[In the system itself->QuadrantIts]]
+
+[[Learn more: Why brevity matters->KB_Brevity]]
+
+:: QuadrantMe
+[TOKEN] SET quadrant=me
+[[Continue->Claim]]
+
+:: QuadrantIt
+[TOKEN] SET quadrant=it
+[[Continue->Claim]]
+
+:: QuadrantWe
+[TOKEN] SET quadrant=we
+[[Continue->Claim]]
+
+:: QuadrantIts
+[TOKEN] SET quadrant=its
+[[Continue->Claim]]
+
+:: Claim
+If it matters,
+it deserves to stand up straight.
+
+No more circling.
+
+Place it in the hall.
+
+[[Publish it->Structure]]
+[[Learn more: Public signal->KB_PublicSignal]]
+
+:: Structure
+A bruise can rot.
+
+Or it can be used.
+
+Let's see if this one has legs.
+
+[[Continue->Weave]]
+[[Learn more: How BARs become action->KB_BarToAction]]
+
+:: Weave
+You're not the only one holding something like this.
+
+Signals tend to find each other.
+
+Watch.
+
+[[Continue->Mint]]
+[[Learn more: Coordination & the weave->KB_CoordinationWeave]]
+
+:: Mint
+There.
+
+Feel that shift?
+
+That's what it feels like when something fragile
+becomes usable.
+
+You just minted a vibeulon.
+
+Not metaphorically.
+
+[[Choose your Game Master->ChooseGM]]
+[[Learn more: What is a vibeulon?->KB_Vibeulon]]
+
+:: ChooseGM
+Every operation needs a Game Master.
+
+Not a boss.
+A lens.
+
+Who do you want walking with you?
+
+[[Shaman->GM_Shaman]]
+[[Challenger->GM_Challenger]]
+[[Regent->GM_Regent]]
+[[Architect->GM_Architect]]
+[[Diplomat->GM_Diplomat]]
+[[Sage->GM_Sage]]
+
+[[Learn more: The Six Faces->KB_SixFaces]]
+
+:: GM_Shaman
+[TOKEN] SET gm=shaman
+Ah. I thought so.
+[[Continue->Commit]]
+
+:: GM_Challenger
+[TOKEN] SET gm=challenger
+Good. You like sharp edges.
+[[Continue->Commit]]
+
+:: GM_Regent
+[TOKEN] SET gm=regent
+You protect what matters.
+[[Continue->Commit]]
+
+:: GM_Architect
+[TOKEN] SET gm=architect
+Let's build it properly.
+[[Continue->Commit]]
+
+:: GM_Diplomat
+[TOKEN] SET gm=diplomat
+You care about the weave.
+[[Continue->Commit]]
+
+:: GM_Sage
+[TOKEN] SET gm=sage
+You see the long arc.
+[[Continue->Commit]]
+
+:: Commit
+The bruise doesn't have to rot.
+
+You can keep building.
+
+[[Donate->Donate_Index]]
+[[Join the Beta Instance->Signup]]
+[[Look around first->Preview]]
+
+:: Donate_Index
+Pick what you want to strengthen.
+
+[[Emotional Alchemy (emotional fuel)->Donate_EmotionalFuel]]
+[[Seed Library (BAR mechanics)->Donate_SeedLibrary]]
+[[Circulation (vibeulon economy)->Donate_VibeulonEconomy]]
+[[Coordination (the weave)->Donate_Coordination]]
+[[The Six Faces (GM training)->Donate_SixFaces]]
+
+[[Return->Commit]]
+
+:: Signup
+(Trigger signup flow in app UI.)
+
+[[Return->Commit]]
+
+:: Preview
+(Load preview dashboard / campaign overview.)
+
+[[Return->Commit]]
+
+:: ExternalDonate
+You're stepping briefly outside the stacks.
+
+We'll be here when you return.
+
+[[Proceed to secure portal->EXTERNAL_DONATE_URL?source={{donationSource}}&tier={{donationTier}}&lens={{lens}}&gm={{gm}}]]
+
+[[Return->Commit]]
+
+:: DonateSmall
+[TOKEN] SET donationTier=spark
+
+A spark.
+
+Small heat.
+Real impact.
+
+Every system begins here.
+
+[[Enter the treasury->ExternalDonate]]
+
+:: DonateMedium
+[TOKEN] SET donationTier=flame
+
+Steady flame.
+
+Not flashy.
+Sustained.
+
+This is how engines stabilize.
+
+[[Enter the treasury->ExternalDonate]]
+
+:: DonateLarge
+[TOKEN] SET donationTier=heat
+
+Sustained heat.
+
+The kind that changes the shape of things.
+
+You're not dabbling.
+
+Good.
+
+[[Enter the treasury->ExternalDonate]]
+
+:: Donate_EmotionalFuel
+[TOKEN] SET donationSource=EmotionalFuel
+
+Ah.
+
+You noticed this layer.
+
+Most people nod at emotional dynamics
+and keep drifting.
+
+You saw the leverage.
+
+This part of the engine turns charge into usable motion.
+
+So—what kind of fuel are you adding?
+
+[[A spark — keep it alive->DonateSmall]]
+[[A steady flame — strengthen this layer->DonateMedium]]
+[[Sustained heat — build it properly->DonateLarge]]
+
+[[Back to the fragment->KB_EmotionalFuel]]
+[[Return to the hall->Signal]]
+
+:: Donate_SeedLibrary
+[TOKEN] SET donationSource=SeedLibrary
+
+Oh, you're a gardener.
+
+The seed library is how ideas avoid the slow death of "someday."
+We keep the good ones alive long enough to become real.
+
+Want to strengthen that layer?
+
+[[A spark — keep it alive->DonateSmall]]
+[[A steady flame — improve the tools->DonateMedium]]
+[[Sustained heat — expand the library->DonateLarge]]
+
+[[Back to the fragment->KB_SeedLibrary]]
+[[Return to the hall->Signal]]
+
+:: Donate_VibeulonEconomy
+[TOKEN] SET donationSource=VibeulonEconomy
+
+You're looking at circulation.
+
+Most systems die from invisible energy.
+This one lives by making contribution legible.
+
+Want to strengthen the circulation engine?
+
+[[A spark — keep it alive->DonateSmall]]
+[[A steady flame — stabilize it->DonateMedium]]
+[[Sustained heat — scale it->DonateLarge]]
+
+[[Back to the fragment->KB_Vibeulon]]
+[[Return to the hall->Mint]]
+
+:: Donate_Coordination
+[TOKEN] SET donationSource=Coordination
+
+You care about the weave.
+
+Coordination isn't a meeting.
+It's a field condition.
+This layer makes momentum shareable.
+
+Want to strengthen it?
+
+[[A spark — keep it alive->DonateSmall]]
+[[A steady flame — improve the weave->DonateMedium]]
+[[Sustained heat — grow the field->DonateLarge]]
+
+[[Back to the fragment->KB_CoordinationWeave]]
+[[Return to the hall->Weave]]
+
+:: Donate_SixFaces
+[TOKEN] SET donationSource=SixFaces
+
+Ah, you're funding imagination.
+
+The Six Faces train future Game Masters without making it a sermon.
+People learn by playing.
+
+Want to strengthen that layer?
+
+[[A spark — keep it alive->DonateSmall]]
+[[A steady flame — deepen the training->DonateMedium]]
+[[Sustained heat — expand the doctrine->DonateLarge]]
+
+[[Back to the fragment->KB_SixFaces]]
+[[Return to the hall->ChooseGM]]
+
+:: KB_WhatIsThisPlace
+The stacks are older than the app.
+
+Someone tried to explain that once.
+It didn't help.
+
+Here's the usable version:
+
+This is a place where signal becomes seed,
+seed becomes action,
+action becomes capacity.
+
+If you're here,
+something in you wants to move.
+
+[[Return->LensSelection]]
+
+:: KB_EmotionalFuel
+The stacks smell faintly of citrus and old paper.
+
+You pull a thin volume from the shelf.
+
+The marginalia is dense.
+
+---
+
+Collaborative systems rarely fail because of logistics.
+
+They fail because emotional energy has nowhere to go.
+
+Frustration collapses inward.
+Guilt diffuses responsibility.
+Shame isolates.
+Confusion creates fog.
+
+Emotional Alchemy treats these states as convertible fuel.
+
+When frustration becomes clarity,
+capacity increases.
+
+When guilt becomes clean responsibility,
+coherence strengthens.
+
+When insight becomes action,
+usable value crystallizes.
+
+That's the forge.
+
+---
+
+[[Strengthen this layer (Donate)->Donate_EmotionalFuel]]
+[[Return->Signal]]
+
+:: KB_Brevity
+You find a torn page, folded twice.
+
+---
+
+Brevity is not aesthetic.
+
+Brevity is respect for attention.
+
+A long signal often contains multiple signals.
+That creates confusion.
+Confusion creates drift.
+
+One clean sentence can be carried.
+Shared.
+Acted on.
+
+That's why we cut.
+
+---
+
+[[Strengthen the seed discipline (Donate)->Donate_SeedLibrary]]
+[[Return->Refine]]
+
+:: KB_PublicSignal
+A stamped note is clipped to the inside cover.
+
+---
+
+Private signal is safe.
+
+Public signal is usable.
+
+The moment a signal enters the hall,
+it becomes available for:
+collaboration,
+refinement,
+action.
+
+Public does not mean performative.
+
+Public means shareable.
+
+---
+
+[[Strengthen the hall (Donate)->Donate_SeedLibrary]]
+[[Return->Claim]]
+
+:: KB_BarToAction
+A diagram has been drawn and erased a dozen times.
+
+---
+
+A BAR is a seed packet.
+
+A quest is a field.
+
+Attaching a BAR to a quest is planting it.
+
+If the quest completes,
+capacity is minted with provenance back to the seed.
+
+This is how the system stays honest:
+signal must touch reality.
+
+---
+
+[[Strengthen the engine (Donate)->Donate_SeedLibrary]]
+[[Return->Structure]]
+
+:: KB_CoordinationWeave
+A page has a single line underlined three times:
+
+"Momentum is social."
+
+---
+
+People think coordination is logistics.
+
+It's not.
+
+Coordination is shared attention + clean roles + emotional coherence.
+
+When signals connect,
+work becomes lighter.
+Not easier—lighter.
+
+This layer trains that.
+
+---
+
+[[Strengthen coordination (Donate)->Donate_Coordination]]
+[[Return->Weave]]
+
+:: KB_Vibeulon
+You find a small coin taped to a page.
+It's warm.
+
+---
+
+A vibeulon is minted capacity.
+
+It marks a transformation:
+signal → action → result.
+
+It's a ledger entry you can feel.
+
+Over time, vibeulons make energy visible,
+so it can be directed instead of dissipated.
+
+---
+
+[[Strengthen circulation (Donate)->Donate_VibeulonEconomy]]
+[[Return->Mint]]
+
+:: KB_SixFaces
+A librarian's note, written with a steady hand:
+
+---
+
+The Six Faces are lenses of Game Mastery.
+
+Not personality types.
+Not ranks.
+
+Ways of shaping imagination into outcomes.
+
+You'll pick one to walk with you.
+Later, you may notice you're learning the others.
+
+That's intentional.
+
+---
+
+[[Strengthen this training (Donate)->Donate_SixFaces]]
+[[Return->ChooseGM]]
+
+:: KB_SeedLibrary
+The seed library holds ideas that haven't found their field yet.
+
+Someday is a slow death.
+The library keeps them alive until they're ready.
+
+---
+
+[[Strengthen the seed library (Donate)->Donate_SeedLibrary]]
+[[Return->Refine]]

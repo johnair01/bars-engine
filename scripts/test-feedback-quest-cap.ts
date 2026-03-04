@@ -36,7 +36,7 @@ async function main() {
     }
 
     const timestamp = Date.now()
-    let invite = await db.invite.create({
+    const invite = await db.invite.create({
         data: {
             token: `TEST-FEEDBACK-${timestamp}`,
             status: 'active',
@@ -45,7 +45,7 @@ async function main() {
         }
     })
 
-    let player = await db.player.create({
+    const player = await db.player.create({
         data: {
             name: 'Feedback Cap Tester',
             contactType: 'email',

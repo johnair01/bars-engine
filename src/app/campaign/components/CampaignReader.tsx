@@ -175,12 +175,6 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
     const [slideIndex, setSlideIndex] = useState(0)
     const [editModalOpen, setEditModalOpen] = useState(false)
 
-    useEffect(() => {
-        // Load the initial map to ensure we have it cached (in a real app)
-        // For now, we fetch the start node
-        fetchNode(initialNode.id)
-    }, [])
-
     const fetchNode = async (nodeId: string) => {
         setLoading(true)
         setFetchError(null)
@@ -219,6 +213,12 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
         }
         setLoading(false)
     }
+
+    useEffect(() => {
+        // Load the initial map to ensure we have it cached (in a real app)
+        // For now, we fetch the start node
+        fetchNode(initialNode.id)
+    }, [])
 
     const handleChoice = (choice: CampaignChoice) => {
         if (choice.targetId === 'Game_Login' || choice.targetId === 'signup') {

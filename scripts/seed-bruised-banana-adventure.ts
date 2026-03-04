@@ -12,7 +12,6 @@ import { db } from '../src/lib/db'
 
 const SLUG = 'bruised-banana'
 const TITLE = 'Bruised Banana Campaign'
-const BB_TOTAL_STEPS = 11
 
 const PASSAGES: { nodeId: string; text: string; choices: { text: string; targetId: string }[] }[] = [
     {

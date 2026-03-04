@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { getCurrentPlayer } from '@/lib/auth'
+import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 const SECTIONS = [
   {
@@ -12,6 +14,7 @@ const SECTIONS = [
     links: [
       { href: '/wiki/moves', label: 'The 4 Moves (Personal Throughput)' },
       { href: '/wiki/domains', label: 'Allyship Domains (WHERE)' },
+      { href: '/wiki/emotional-alchemy', label: 'Emotional Alchemy (Quest Design)' },
       { href: '/wiki/glossary', label: 'Glossary (Vibeulons, BAR, Kotter)' },
     ],
   },
@@ -19,6 +22,7 @@ const SECTIONS = [
     title: 'Reference',
     links: [
       { href: '/wiki/iching', label: 'I Ching Guidebook' },
+      { href: '/wiki/voice-style-guide', label: 'Librarian Campaign Voice Style Guide' },
     ],
   },
   {
@@ -29,7 +33,9 @@ const SECTIONS = [
   },
 ] as const
 
-export default function WikiIndexPage() {
+export default async function WikiIndexPage() {
+  const player = await getCurrentPlayer()
+
   return (
     <div className="space-y-8">
       <header className="space-y-2">
@@ -59,10 +65,25 @@ export default function WikiIndexPage() {
         ))}
       </div>
 
-      <div className="text-xs text-zinc-500 pt-4">
-        <Link href="/event" className="hover:text-zinc-300 transition">Event page</Link>
-        {' '}•{' '}
-        <Link href="/campaign?ref=bruised-banana" className="hover:text-zinc-300 transition">Play the game</Link>
+      <div className="space-y-3 pt-4">
+        <div className="text-xs text-zinc-500">
+          <Link href="/event" className="hover:text-zinc-300 transition">Event page</Link>
+          {' '}•{' '}
+          <Link href="/campaign?ref=bruised-banana" className="hover:text-zinc-300 transition">Play the game</Link>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-zinc-500">Can&apos;t find what you need?</span>
+          {player ? (
+            <LibraryRequestButton />
+          ) : (
+            <Link
+              href="/login?redirect=/wiki"
+              className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium"
+            >
+              Log in to ask
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )

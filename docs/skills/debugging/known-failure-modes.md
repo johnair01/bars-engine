@@ -145,7 +145,29 @@ Bugs caused by missing data, broken foreign keys, or incomplete records.
 
 ---
 
-## 6. Deployment / Environment Mismatches
+## 6. Toolchain / New Machine Setup
+
+Bugs when setting up on a new computer or when npm/Node are not in PATH.
+
+### Symptoms
+- `command not found: npm` or `command not found: node`
+- `tsx: command not found` or `./node_modules/.bin/tsx` not found
+- Build/test commands fail in CI or Cursor sandbox but work locally
+
+### Diagnostic Steps
+1. Run `node --version` and `npm --version` — are they in PATH?
+2. If using nvm/fnm: is the version manager loaded in your shell (e.g. `source ~/.nvm/nvm.sh`)?
+3. Run `npm install` — is `node_modules` complete? Check `./node_modules/.bin/tsx` exists.
+
+### Typical Fixes
+- Install Node.js v18+ (Homebrew, nvm, or nodejs.org)
+- Ensure nvm/fnm is sourced in `.zshrc`/`.bashrc` and restart terminal
+- Run `npm install` to ensure `tsx` and other dev deps are present
+- See [docs/DEVELOPER_ONBOARDING.md](../../DEVELOPER_ONBOARDING.md) for full setup
+
+---
+
+## 7. Deployment / Environment Mismatches
 
 Bugs that only appear in specific environments.
 
@@ -170,7 +192,7 @@ Bugs that only appear in specific environments.
 
 ---
 
-## 7. Agent Analysis Loops (Meta)
+## 8. Agent Analysis Loops (Meta)
 
 Bugs in the AI agent process itself — getting stuck in infinite planning without acting.
 

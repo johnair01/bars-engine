@@ -8,6 +8,9 @@ import { getCurrentPlayer } from '@/lib/auth'
  * Logs certification quest feedback from any logged-in player.
  * Used when testers report issues during verification quests.
  * Writes to .feedback/cert_feedback.jsonl for agents/developers to triage.
+ *
+ * FR1 (quest-grammar-cert-feedback): MUST NOT call revalidatePath or router.refresh.
+ * Callers (TwineQuestModal, PassageRenderer) use skipRevalidate when on FEEDBACK.
  */
 export async function logCertificationFeedback(
     questId: string,

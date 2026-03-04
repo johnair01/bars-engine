@@ -23,12 +23,13 @@ export function LibraryRequestModal({
     onClose: () => void
     context?: Record<string, unknown>
 }) {
-    if (!isOpen) return null
     const [requestText, setRequestText] = useState('')
     const [requestType, setRequestType] = useState('other')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [result, setResult] = useState<Result | null>(null)
+
+    if (!isOpen) return null
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -55,7 +56,7 @@ export function LibraryRequestModal({
             if (data.result) {
                 setResult(data.result)
             }
-        } catch (err) {
+        } catch {
             setError('Something went wrong')
         } finally {
             setLoading(false)
@@ -89,14 +90,23 @@ export function LibraryRequestModal({
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="bg-purple-950/30 border border-purple-900/50 rounded-lg p-4">
-                                    <p className="text-purple-200 font-medium">No match yet. A DocQuest was created and added to your Active Quests.</p>
-                                    <Link
-                                        href="/"
-                                        className="mt-2 inline-block text-purple-400 hover:text-purple-300 font-bold"
-                                    >
-                                        Go to dashboard →
-                                    </Link>
+                                <div className="bg-purple-950/30 border border-purple-900/50 rounded-lg p-4 space-y-3">
+                                    <p className="text-purple-200 font-medium">No match yet. A new doc page and DocQuest were created.</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <Link
+                                            href={`/docs/${result.docSlug}`}
+                                            className="inline-block px-3 py-1.5 bg-purple-600/50 hover:bg-purple-600 text-purple-200 font-bold text-sm rounded"
+                                        >
+                                            View doc page →
+                                        </Link>
+                                        <Link
+                                            href={`/#active-quests`}
+                                            className="inline-block px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded"
+                                        >
+                                            Open DocQuest →
+                                        </Link>
+                                    </div>
+                                    <p className="text-xs text-zinc-400">The DocQuest is in your Active Quests. Complete it to submit evidence and build the answer.</p>
                                 </div>
                             )}
                             <button

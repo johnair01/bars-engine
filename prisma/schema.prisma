@@ -73,6 +73,7 @@ model Player {
   redemptionPacks        RedemptionPack[]
   libraryRequests        LibraryRequest[]
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
+  verificationCompletionLogs VerificationCompletionLog[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -158,6 +159,7 @@ model CustomBar {
   gameMasterFace       String?      // shaman | challenger | regent | architect | diplomat | sage (dojo alignment for growUp)
   twineStoryId         String?
   docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
+  backlogPromptPath    String?   // e.g. .specify/specs/lore-cyoa-onboarding/spec.md (verification quest → backlog update)
   evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
   shares               BarShare[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
@@ -170,6 +172,8 @@ model CustomBar {
   moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
   questMoveLogs        QuestMoveLog[] @relation("QuestMoveQuest")
   threadQuests         ThreadQuest[]
+  linkedPassages       Passage[]      @relation("PassageLinkedQuest")
+  upgradedThreads      QuestThread[]  @relation("QuestUpgradeProvenance")
   microTwine           MicroTwineModule?
   libraryRequestsSpawned LibraryRequest[] @relation("LibraryRequestSpawnedQuest")
 
@@ -264,6 +268,19 @@ model BookAnalysisResumeLog {
   @@map("book_analysis_resume_logs")
 }
 
+model VerificationCompletionLog {
+  id                String    @id @default(cuid())
+  questId           String
+  playerId          String
+  backlogPromptPath String
+  completedAt       DateTime  @default(now())
+  syncedAt          DateTime?
+  player            Player    @relation(fields: [playerId], references: [id])
+
+  @@index([syncedAt])
+  @@map("verification_completion_logs")
+}
+
 model QuestThread {
   id               String           @id @default(cuid())
   title            String
@@ -279,7 +296,11 @@ model QuestThread {
   status           String           @default("active")
   createdAt        DateTime         @default(now())
   bookId           String?          @unique
+  adventureId      String?          @unique
+  sourceQuestId    String?          // Provenance: upgraded from this CustomBar (quest)
   book             Book?            @relation(fields: [bookId], references: [id])
+  adventure        Adventure?       @relation(fields: [adventureId], references: [id], onDelete: SetNull)
+  sourceQuest      CustomBar?       @relation("QuestUpgradeProvenance", fields: [sourceQuestId], references: [id])
   progress         ThreadProgress[]
   quests           ThreadQuest[]
 
@@ -386,6 +407,7 @@ model Nation {
   id          String       @id @default(cuid())
   name        String       @unique
   description String
+  element     String       @default("earth") // metal, water, wood, fire, earth — for choice privileging
   imgUrl      String?
   archived    Boolean      @default(false)
   wakeUp      String?
@@ -483,6 +505,7 @@ model Playbook {
   cleanUp           String?
   growUp            String?
   showUp            String?
+  primaryWaveStage  String?   // wakeUp | cleanUp | growUp | showUp — signature WAVE for choice privileging
   createdAt         DateTime @default(now())
   emotionalFirstAid String?
   players           Player[]
@@ -805,20 +828,23 @@ model Adventure {
 
   passages     Passage[]
   progress     PlayerAdventureProgress[]
+  questThread  QuestThread?
 
   @@map("adventures")
 }
 
 model Passage {
-  id          String    @id @default(cuid())
-  adventureId String
-  nodeId      String
-  text        String    // Markdown + macros
-  choices     String    @default("[]") // JSON array
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  adventureId   String
+  nodeId        String
+  text          String    // Markdown + macros
+  choices       String    @default("[]") // JSON array
+  linkedQuestId String?   // When set, Passage.text syncs with CustomBar.description (edit sync)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   
-  adventure   Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+  adventure     Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+  linkedQuest   CustomBar? @relation("PassageLinkedQuest", fields: [linkedQuestId], references: [id], onDelete: SetNull)
 
   @@unique([adventureId, nodeId])
   @@map("passages")

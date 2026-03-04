@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition, useEffect, useCallback } from 'react'
-import { advanceRun, getOrCreateRun, getTwineStoryForQuest, completeTwineRunForQuest } from '@/actions/twine'
+import { useState, useTransition, useEffect, useCallback, useRef } from 'react'
+import { advanceRun, revertRun, getOrCreateRun, getTwineStoryForQuest, completeTwineRunForQuest } from '@/actions/twine'
+import { logCertificationFeedback } from '@/actions/certification-feedback'
 import { getWorldData } from '@/actions/onboarding'
 import { useRouter } from 'next/navigation'
 import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
@@ -32,6 +33,42 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
     const [error, setError] = useState<string | null>(null)
     const [completed, setCompleted] = useState(isCompleted || false)
     const [loading, setLoading] = useState(true)
+    const [feedbackText, setFeedbackText] = useState('')
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+    const [feedbackPending, setFeedbackPending] = useState(false)
+
+    const feedbackStorageKey = questId ? `cert-feedback-${questId}` : null
+    const prevPassageRef = useRef<string | null>(null)
+    const isFeedbackPassage = currentPassageName === 'FEEDBACK'
+
+    // Persist feedback text to sessionStorage so it survives unexpected navigations
+    useEffect(() => {
+        if (!feedbackStorageKey || !isFeedbackPassage) return
+        try {
+            if (feedbackText) {
+                sessionStorage.setItem(feedbackStorageKey, feedbackText)
+            } else {
+                sessionStorage.removeItem(feedbackStorageKey)
+            }
+        } catch {
+            /* ignore */
+        }
+    }, [feedbackStorageKey, isFeedbackPassage, feedbackText])
+
+    // Restore feedbackText from sessionStorage when navigating TO FEEDBACK (user was kicked mid-typing)
+    useEffect(() => {
+        if (isFeedbackPassage && currentPassageName && prevPassageRef.current !== 'FEEDBACK') {
+            setFeedbackSubmitted(false)
+            setError(null)
+            try {
+                const saved = feedbackStorageKey ? sessionStorage.getItem(feedbackStorageKey) : null
+                setFeedbackText(saved ?? '')
+            } catch {
+                setFeedbackText('')
+            }
+        }
+        prevPassageRef.current = currentPassageName
+    }, [currentPassageName, isFeedbackPassage, feedbackStorageKey])
 
     // Load story + run on open
     const loadRun = useCallback(async () => {
@@ -104,7 +141,7 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         setError(null)
         setEmitted([])
         startTransition(async () => {
-            const result = await advanceRun(twineStoryId, targetPassageName, questId)
+            const result = await advanceRun(twineStoryId, targetPassageName, questId, undefined, threadId, true)
             if (result.error) {
                 setError(result.error)
             } else {
@@ -142,9 +179,38 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         newVisited.pop() // Remove current
         const prevPassage = newVisited[newVisited.length - 1]
 
-        setVisited(newVisited)
-        setCurrentPassageName(prevPassage)
         setError(null)
+        setFeedbackSubmitted(false)
+        setFeedbackText('')
+
+        startTransition(async () => {
+            const result = await revertRun(twineStoryId, questId, undefined, true)
+            if (result.error) {
+                setError(result.error)
+            } else {
+                setVisited(newVisited)
+                setCurrentPassageName(prevPassage)
+            }
+        })
+    }
+
+    async function handleFeedbackSubmit() {
+        if (!questId || !feedbackText.trim()) return
+        setError(null)
+        setFeedbackPending(true)
+        const feedbackSourceStep = visited.length >= 2 ? visited[visited.length - 2] : currentPassageName ?? 'FEEDBACK'
+        const result = await logCertificationFeedback(questId, feedbackSourceStep, feedbackText.trim())
+        setFeedbackPending(false)
+        if (result.error) {
+            setError(result.error)
+        } else {
+            setFeedbackSubmitted(true)
+            try {
+                if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
+            } catch {
+                /* ignore */
+            }
+        }
     }
 
     return (
@@ -152,8 +218,8 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
-            {/* Modal */}
-            <div className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            {/* Modal — stopPropagation prevents backdrop click from closing when clicking inside */}
+            <div className="relative w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="p-5 border-b border-zinc-800 bg-zinc-900/50 flex-shrink-0">
                     <div className="flex justify-between items-center gap-4">
@@ -206,6 +272,85 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
 
                     {/* Active passage */}
                     {currentPassage && !loading && !completed && (() => {
+                        const isFeedbackPassage = currentPassage.name === 'FEEDBACK' || (currentPassage.tags && (currentPassage.tags as string[]).includes('feedback'))
+
+                        if (isFeedbackPassage && questId) {
+                            return (
+                                <div className="space-y-6 animate-in fade-in duration-500">
+                                    <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">
+                                        {currentPassage.name}
+                                    </div>
+                                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+                                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap text-base mb-4">
+                                            {(currentPassage as { text?: string }).text ?? currentPassage.cleanText}
+                                        </p>
+                                    </div>
+                                    {feedbackSubmitted ? (
+                                        <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+                                            <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
+                                                <p className="text-green-400 font-bold">Thank you. Your feedback has been logged.</p>
+                                                <p className="text-zinc-400 text-sm mt-1">The team will triage this as a bug to fix.</p>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={() => {
+                                                        setFeedbackSubmitted(false)
+                                                        setFeedbackText('')
+                                                        setError(null)
+                                                    }}
+                                                    className="flex-1 py-3 bg-purple-600/80 hover:bg-purple-500 text-white text-sm font-medium rounded-xl transition-colors"
+                                                >
+                                                    Report another issue
+                                                </button>
+                                                <button
+                                                    onClick={handleBack}
+                                                    disabled={isPending}
+                                                    className="flex-1 py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
+                                                >
+                                                    ← Back to Previous Step
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label htmlFor="cert-feedback-modal" className="block text-sm font-medium text-zinc-400 mb-2">
+                                                    Describe what isn&apos;t working
+                                                </label>
+                                                <textarea
+                                                    id="cert-feedback-modal"
+                                                    value={feedbackText}
+                                                    onChange={(e) => setFeedbackText(e.target.value)}
+                                                    placeholder="e.g. The avatar didn't build when I clicked create character..."
+                                                    rows={4}
+                                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                                                />
+                                            </div>
+                                            {error && (
+                                                <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg">{error}</div>
+                                            )}
+                                            <div className="flex gap-3">
+                                                <button
+                                                    onClick={handleFeedbackSubmit}
+                                                    disabled={feedbackPending || !feedbackText.trim()}
+                                                    className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    {feedbackPending ? 'Submitting...' : 'Submit Feedback'}
+                                                </button>
+                                                <button
+                                                    onClick={handleBack}
+                                                    disabled={feedbackPending}
+                                                    className="py-3 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        }
+
                         const recommendationBinding = isEnd ? bindings.find(b =>
                             (b.actionType === 'SET_NATION' || b.actionType === 'SET_ARCHETYPE') &&
                             b.scopeId === currentPassage.name

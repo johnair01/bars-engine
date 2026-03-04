@@ -40,6 +40,10 @@ export async function updatePassage(prevState: any, formData: FormData) {
     }
 
     try {
+        const passage = await db.passage.findUnique({
+            where: { id: result.data.passageId },
+            select: { linkedQuestId: true },
+        })
         await db.passage.update({
             where: { id: result.data.passageId },
             data: {
@@ -48,6 +52,12 @@ export async function updatePassage(prevState: any, formData: FormData) {
                 choices: result.data.choicesJson,
             }
         })
+        if (passage?.linkedQuestId) {
+            await db.customBar.update({
+                where: { id: passage.linkedQuestId },
+                data: { description: result.data.text },
+            })
+        }
     } catch (error: any) {
         if (error.code === 'P2002') {
             return {
@@ -62,5 +72,6 @@ export async function updatePassage(prevState: any, formData: FormData) {
     }
 
     revalidatePath(`/admin/adventures/${result.data.adventureId}`)
+    revalidatePath(`/admin/journeys`)
     redirect(`/admin/adventures/${result.data.adventureId}`)
 }

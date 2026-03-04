@@ -9,10 +9,10 @@ async function migrateUsers() {
 
     for (const pack of packs) {
         console.log(`Processing Player: ${pack.player.name} (${pack.playerId})`)
-        let data: any = {}
+        let data: Record<string, unknown> = {}
         try {
-            data = JSON.parse(pack.data)
-        } catch (e) {
+            data = JSON.parse(pack.data) as Record<string, unknown>
+        } catch {
             console.error(`❌ Failed to parse data for ${pack.playerId}`)
             continue
         }

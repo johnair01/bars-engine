@@ -36,7 +36,7 @@ function parseLinks(text: string): ParsedLink[] {
     const re = /\[{2,}([\s\S]*?)\]{2,}/g
     let m: RegExpExecArray | null
     while ((m = re.exec(text)) !== null) {
-        let inner = m[1].trim()
+        const inner = m[1].trim()
 
         // Handle Harlowe-style label->target or pipe
         if (inner.includes('->')) {

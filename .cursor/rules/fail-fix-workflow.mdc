@@ -1,0 +1,17 @@
+---
+description: Stop and fix npm/command failures before proceeding
+alwaysApply: true
+---
+
+# Fail-Fix Workflow
+
+When implementing features, refactors, or migrations:
+
+1. **Verify before moving on** — After adding or modifying code, tests, or scripts, run the relevant commands:
+   - `npm run build` — Ensures the app builds
+   - `npm run check` — Lint + type-check
+   - Any new test scripts (e.g., `npm run test:quest-grammar`)
+
+2. **Stop and fix on failure** — If any command fails, fix the failure before proceeding to the next task or phase. Do not continue implementation until the failure is resolved.
+
+3. **Why** — New developers on different machines may have different Node versions, PATH, or dependencies. Verifying commands succeed prevents broken states and improves onboarding.

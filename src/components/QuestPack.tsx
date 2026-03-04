@@ -2,7 +2,7 @@
 
 import { startPack, archivePack } from '@/actions/quest-pack'
 import { useRouter } from 'next/navigation'
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
 
 type PackQuest = {
@@ -43,11 +43,22 @@ type QuestPackData = {
     completedQuestIds: string[]
 }
 
-export function QuestPack({ pack, completedMoveTypes }: { pack: QuestPackData, completedMoveTypes?: string[] }) {
+export function QuestPack({ pack, completedMoveTypes, focusQuest }: { pack: QuestPackData, completedMoveTypes?: string[], focusQuest?: string }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedQuest, setSelectedQuest] = useState<PackQuest | null>(null)
     const [expanded, setExpanded] = useState(false)
+
+    // AUTO-OPEN: If focusQuest matches a quest in this pack, expand and open modal (defense in depth for refresh)
+    useEffect(() => {
+        if (focusQuest) {
+            const match = pack.quests.find(pq => pq.questId === focusQuest)
+            if (match) {
+                setExpanded(true)
+                setSelectedQuest(match)
+            }
+        }
+    }, [focusQuest, pack.quests])
 
     const isComplete = pack.playerProgress?.completedAt !== null && pack.playerProgress?.completedAt !== undefined
     const isStarted = pack.playerProgress !== null

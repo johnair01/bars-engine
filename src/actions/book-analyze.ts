@@ -7,6 +7,7 @@ import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
 import { chunkBookText, type TextChunk } from '@/lib/book-chunker'
 import { chunkIsActionable } from '@/lib/chunk-filter'
+import { suggestDomain, CONFIDENCE_THRESHOLD } from '@/lib/quest-classifier'
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
 
@@ -88,24 +89,31 @@ Return 1-5 quests per chunk. Skip chunks with no actionable content.`
 async function runChunkAnalysis(
   bookId: string,
   chunksToProcess: TextChunk[],
-): Promise<{ quests: QuestResult[]; cacheHits: number; cacheMisses: number }> {
+): Promise<{ quests: QuestResult[]; cacheHits: number; cacheMisses: number; heuristicHits: number }> {
   const allQuests: QuestResult[] = []
   let cacheHits = 0
   let cacheMisses = 0
+  let heuristicHits = 0
   const modelId = getBookAnalysisModel()
 
   for (let i = 0; i < chunksToProcess.length; i += PARALLEL_BATCH) {
     const batch = chunksToProcess.slice(i, i + PARALLEL_BATCH)
     const results = await Promise.all(
       batch.map((chunk) => {
-        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}`
+        const { domain: domainHint, confidence } = suggestDomain(chunk.text)
+        const hintLine =
+          domainHint && confidence >= CONFIDENCE_THRESHOLD
+            ? `Domain hint (high confidence): ${domainHint}. Prioritize this domain when clear.\n\n`
+            : ''
+        if (domainHint && confidence >= CONFIDENCE_THRESHOLD) heuristicHits++
+        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}`
         return generateObjectWithCache<z.infer<typeof analysisSchema>>({
           feature: 'book_analysis',
           inputKey,
           model: modelId,
           schema: analysisSchema,
           system: SYSTEM_PROMPT,
-          prompt: `Analyze this book chunk and extract quests:\n\n---\n${chunk.text}\n---`,
+          prompt: `Analyze this book chunk and extract quests:\n\n${hintLine}---\n${chunk.text}\n---`,
           getModel: () => getOpenAI()(modelId),
         })
       })
@@ -130,7 +138,7 @@ async function runChunkAnalysis(
     return true
   })
 
-  return { quests: uniqueQuests, cacheHits, cacheMisses }
+  return { quests: uniqueQuests, cacheHits, cacheMisses, heuristicHits }
 }
 
 /** Create CustomBar records from quests and return created IDs. */
@@ -196,7 +204,7 @@ export async function analyzeBook(bookId: string) {
     const chunksTotal = chunks.length
 
     const creatorId = await getSystemCreatorId()
-    const { quests, cacheHits, cacheMisses } = await runChunkAnalysis(bookId, chunksToProcess)
+    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(bookId, chunksToProcess)
     const createdIds = await createQuestsFromAnalysis(bookId, quests, creatorId)
 
     const analysisMeta = {
@@ -205,6 +213,7 @@ export async function analyzeBook(bookId: string) {
       chunksSkipped,
       cacheHits,
       cacheMisses,
+      heuristicHits,
       questsExtracted: quests.length,
       questsCreated: createdIds.length,
       analyzedChunkIndices: chunksToProcess.map((c) => c.index),
@@ -291,7 +300,7 @@ export async function analyzeBookMore(bookId: string) {
     const chunksTotal = chunks.length
 
     const creatorId = await getSystemCreatorId()
-    const { quests, cacheHits, cacheMisses } = await runChunkAnalysis(bookId, chunksToProcess)
+    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(bookId, chunksToProcess)
     const createdIds = await createQuestsFromAnalysis(bookId, quests, creatorId)
 
     const newIndices = chunksToProcess.map((c) => c.index)
@@ -301,6 +310,7 @@ export async function analyzeBookMore(bookId: string) {
       chunksTotal,
       cacheHits: (analysis.cacheHits ?? 0) + cacheHits,
       cacheMisses: (analysis.cacheMisses ?? 0) + cacheMisses,
+      heuristicHits: (analysis.heuristicHits ?? 0) + heuristicHits,
       questsExtracted: (analysis.questsExtracted ?? 0) + quests.length,
       questsCreated: (analysis.questsCreated ?? 0) + createdIds.length,
       analyzedChunkIndices: [...analyzedChunkIndices, ...newIndices],

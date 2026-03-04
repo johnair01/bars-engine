@@ -4,6 +4,7 @@ import { getAdminQuest, upsertQuest, deleteQuest } from '@/actions/admin'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { MicroTwineWizard } from '@/components/admin/MicroTwineWizard'
+import { UpgradeQuestToCYOAFlow } from '@/components/admin/UpgradeQuestToCYOAFlow'
 
 export default function EditQuestPage() {
     const params = useParams<{ id: string }>()
@@ -12,6 +13,7 @@ export default function EditQuestPage() {
 
     // State
     const [loading, setLoading] = useState(true)
+    const [questData, setQuestData] = useState<Awaited<ReturnType<typeof getAdminQuest>>>(null)
 
     // Form State
     const [title, setTitle] = useState('')
@@ -37,6 +39,7 @@ export default function EditQuestPage() {
 
         startTransition(async () => {
             const data = await getAdminQuest(id)
+            setQuestData(data)
             if (data) {
                 setTitle(data.title)
                 setDescription(data.description || '')
@@ -230,9 +233,18 @@ export default function EditQuestPage() {
                     <p className="text-zinc-600 text-xs">Save this quest first to establish its identity in the void before weaving its narrative.</p>
                 </div>
             ) : (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <MicroTwineWizard questId={id} />
-                </div>
+                <>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <UpgradeQuestToCYOAFlow
+                            questId={id}
+                            quest={{ id, title: questData?.title ?? title, description: questData?.description ?? description, moveType: questData?.moveType, storyContent: questData?.storyContent }}
+                            existingAdventureId={questData?.upgradedThreads?.[0]?.adventureId}
+                        />
+                    </div>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <MicroTwineWizard questId={id} />
+                    </div>
+                </>
             )}
         </div>
     )

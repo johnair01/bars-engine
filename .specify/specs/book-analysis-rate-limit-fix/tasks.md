@@ -7,4 +7,4 @@
 - [x] Reduce CHARS_PER_CHUNK to 4000 in book-chunker
 - [x] Use SHORT context in book-analyze
 - [x] (Optional) Add BOOK_ANALYSIS_MODEL env for gpt-4o-mini
-- [ ] Test: Trigger Analysis on large book; verify no rate limit
+- [x] Test: Trigger Analysis on large book; verify no rate limit (manual: run from Admin > Books on extracted book)

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
 import { StartNodeForm } from "./StartNodeForm"
+import { CampaignRefForm } from "./CampaignRefForm"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -37,6 +38,12 @@ export default async function AdventureDetailPage({
                             &larr; Back
                         </Link>
                         <Link
+                            href={`/admin/quest-grammar?appendTo=${adventure.id}`}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Generate another quest
+                        </Link>
+                        <Link
                             href={`/admin/adventures/${adventure.id}/passages/create`}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
@@ -65,6 +72,13 @@ export default async function AdventureDetailPage({
                                     adventureId={adventure.id}
                                     passages={adventure.passages}
                                     currentStartNodeId={adventure.startNodeId}
+                                />
+                            </div>
+                            <div>
+                                <div className="text-zinc-500 mb-1">Campaign Ref</div>
+                                <CampaignRefForm
+                                    adventureId={adventure.id}
+                                    currentCampaignRef={adventure.campaignRef}
                                 />
                             </div>
                             {adventure.description && (

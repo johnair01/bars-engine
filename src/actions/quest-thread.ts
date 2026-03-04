@@ -218,6 +218,8 @@ export type OrientationPersonalization = {
     playbookId?: string | null
     allyshipDomains?: string[]
     developmentalHint?: string | null
+    /** Bruised Banana: lens from onboarding (community/creative/strategic/allyship). When set, assign bruised-banana-orientation-thread. */
+    lens?: string | null
 }
 
 /**
@@ -251,11 +253,26 @@ export async function assignOrientationThreads(
                             allyshipDomains.push(rawPref)
                         }
                     }
+                    // Bruised Banana Twine: map lens to allyship domain when no domain prefs
+                    const validDomainKeys = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING']
+                    if (allyshipDomains.length === 0 && typeof state.lens === 'string') {
+                        const lensToDomain: Record<string, string> = {
+                            allyship: 'RAISE_AWARENESS',
+                            creative: 'GATHERING_RESOURCES',
+                            strategic: 'SKILLFUL_ORGANIZING',
+                            community: 'DIRECT_ACTION',
+                        }
+                        const mapped = lensToDomain[state.lens.toLowerCase()]
+                        if (mapped && validDomainKeys.includes(mapped)) {
+                            allyshipDomains.push(mapped)
+                        }
+                    }
                     params = {
                         nationId: (state.nationId as string) ?? player.nationId,
                         playbookId: (state.playbookId as string) ?? player.playbookId,
                         allyshipDomains: allyshipDomains.length > 0 ? allyshipDomains : undefined,
-                        developmentalHint: state.developmentalHint as string | undefined
+                        developmentalHint: state.developmentalHint as string | undefined,
+                        lens: typeof state.lens === 'string' && state.lens.trim() ? state.lens.trim() : undefined
                     }
                 }
             } catch {
@@ -301,6 +318,27 @@ export async function assignOrientationThreads(
             } else {
                 console.error(`[QuestThread] Failed to assign orientation thread ${thread.id}:`, error)
                 throw error
+            }
+        }
+    }
+
+    // Bruised Banana: when lens present (campaign signup), assign short-wins thread for immediate work
+    if (params?.lens && params.lens.trim()) {
+        const bbThreadId = 'bruised-banana-orientation-thread'
+        try {
+            await db.threadProgress.upsert({
+                where: {
+                    threadId_playerId: { threadId: bbThreadId, playerId }
+                },
+                update: {},
+                create: { threadId: bbThreadId, playerId, currentPosition: 1 }
+            })
+        } catch (error: any) {
+            if (error.code === 'P2002') {
+                console.info(`[QuestThread] Bruised Banana thread already assigned to ${playerId}`)
+            } else {
+                console.error(`[QuestThread] Failed to assign Bruised Banana thread:`, error)
+                // Non-fatal: player still has standard orientation threads
             }
         }
     }

@@ -1,3 +1,5 @@
+import { config } from 'dotenv'
+config({ path: '.env.local' })
 
 import { PrismaClient } from '@prisma/client'
 
@@ -14,6 +16,7 @@ async function main() {
         {
             name: 'Argyra',
             description: 'The Silver City. Architects of precision. Logic, reflection, and clarity shape every interaction.',
+            element: 'metal',
             imgUrl: '/nations/argyra.jpg', // Placeholder
             wakeUp: 'Analyze the situation logically.',
             cleanUp: 'Refine a system to be more efficient.',
@@ -23,6 +26,7 @@ async function main() {
         {
             name: 'Pyrakanth',
             description: 'The Burning Garden. Gardeners of fire. Passion, intensity, and transformation are sacred.',
+            element: 'fire',
             imgUrl: '/nations/pyrakanth.jpg',
             wakeUp: 'Feel the intensity of the moment.',
             cleanUp: 'Burn away what no longer serves you.',
@@ -32,6 +36,7 @@ async function main() {
         {
             name: 'Virelune',
             description: 'The Green Moon. Joyful growers. Life expands playfully toward light with unstoppable energy.',
+            element: 'wood',
             imgUrl: '/nations/virelune.jpg',
             wakeUp: 'Reach toward a new possibility joyfully.',
             cleanUp: 'Grow around an obstacle instead of fighting it.',
@@ -41,6 +46,7 @@ async function main() {
         {
             name: 'Meridia',
             description: 'The Golden Noon. Voice of balance. Fairness, trade, and clear sight reveal the win-win.',
+            element: 'earth',
             imgUrl: '/nations/meridia.jpg',
             wakeUp: 'See all sides of the conflict clearly.',
             cleanUp: 'Restore balance to a chaotic situation.',
@@ -50,6 +56,7 @@ async function main() {
         {
             name: 'Lamenth',
             description: 'The Weeping Stone. Keepers of meaning. Poignance, beauty, and deep connection matter most.',
+            element: 'water',
             imgUrl: '/nations/lamenth.jpg',
             wakeUp: 'Feel the deep meaning of the situation.',
             cleanUp: 'Honor what was lost to build a foundation.',
@@ -78,6 +85,7 @@ async function main() {
             cleanUp: 'Break a stalemate through sheer will.',
             growUp: 'Realize not everything needs your spark.',
             showUp: 'Transform "stuck" into "already happening".',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['The First Mover', 'Creative Force', 'Unstoppable Spark'])
         },
         {
@@ -87,6 +95,7 @@ async function main() {
             cleanUp: 'Absorb a blow meant for someone else.',
             growUp: 'Demand care for yourself.',
             showUp: 'Empower an ally to do the impossible.',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['Grounding Force', 'Unshakeable Support', 'Devoted Shield'])
         },
         {
@@ -96,6 +105,7 @@ async function main() {
             cleanUp: 'Disrupt a stagnant situation instantly.',
             growUp: 'Wait for the PERFECT moment.',
             showUp: 'Seize the initiative with shocking force.',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['Storm Strike', 'Breaking Point', 'Shock & Awe'])
         },
         {
@@ -105,6 +115,7 @@ async function main() {
             cleanUp: 'Gently push a conversation until it changes.',
             growUp: 'Step into the spotlight and be seen.',
             showUp: ' Reveal you changed the outcome ten minutes ago.',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['Unseen Hand', 'Gentle Pressure', 'Infiltration'])
         },
         {
@@ -114,6 +125,7 @@ async function main() {
             cleanUp: 'Adapt your plan completely mid-stream.',
             growUp: 'Find a moment of safety and accept it.',
             showUp: 'Turn a disaster into a flowing victory.',
+            primaryWaveStage: 'cleanUp',
             moves: JSON.stringify(['Flow State', 'Danger Sense', 'Adaptive Form'])
         },
         {
@@ -123,6 +135,7 @@ async function main() {
             cleanUp: 'Illuminate a hidden truth.',
             growUp: 'Soften your truth with compassion.',
             showUp: 'Reveal the solution everyone was avoiding.',
+            primaryWaveStage: 'wakeUp',
             moves: JSON.stringify(['Radiant Gaze', 'Illumination', 'Burning Truth'])
         },
         {
@@ -132,6 +145,7 @@ async function main() {
             cleanUp: 'Create a sanctuary in chaos.',
             growUp: 'Move before you feel completely safe.',
             showUp: 'Become an immovable object.',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['Immovable object', 'Sanctuary', 'Perfect Stillness'])
         },
         {
@@ -141,6 +155,7 @@ async function main() {
             cleanUp: 'Turn a tense moment into a playful one.',
             growUp: 'Set a boundary to protect your joy.',
             showUp: 'Network everyone into a cooperative force.',
+            primaryWaveStage: 'showUp',
             moves: JSON.stringify(['Contagious Joy', 'Open Heart', 'Network Effect'])
         }
     ]

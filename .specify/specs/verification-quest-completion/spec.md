@@ -29,21 +29,21 @@ In `getOrCreateRun`, when a quest-scoped run exists (questId present), upsert a 
 
 ---
 
-## Part 2: Backlog Update on Completion (Future)
+## Part 2: Backlog Update on Completion (Implemented)
 
 ### Vision
-When a tester completes a verification quest, the system could update the codebase backlog (e.g. `.specify/backlog/BACKLOG.md`) to mark the corresponding prompt/spec as verified or to append completion metadata. This creates a feedback loop: verification quests validate features, and completion events drive backlog hygiene.
+When a tester completes a verification quest, the system records the completion and can sync it to the codebase backlog. Vercel's read-only filesystem requires a DB-first approach: completions are stored in `VerificationCompletionLog`, and a local sync script appends "Verified by {player} on {date}" to the corresponding spec file.
 
-### Open questions
-- How to map a verification quest (CustomBar id or TwineStory id) to a backlog prompt or spec?
-- Metadata on CustomBar/TwineStory: `backlogPromptPath`, `specPath`?
-- What exactly to write: status change, completion timestamp, tester id?
-- Who can trigger this: any completer, or admin-only?
+### Implementation
 
-### Placeholder requirements (to be refined)
+- **FR4**: A verification quest declares `backlogPromptPath` on CustomBar (e.g. `.specify/specs/lore-cyoa-onboarding/spec.md`). Seeded in `scripts/seed-cyoa-certification-quests.ts`.
+- **FR5**: On completion, `autoCompleteQuestFromTwine` calls `recordVerificationCompletion`, which inserts into `VerificationCompletionLog`. Run `npm run sync:verification-backlog` locally to append verification lines to spec files.
 
-- **FR4**: A verification quest MAY declare a `backlogPromptPath` or `specPath` (e.g. in completionEffects or a new field).
-- **FR5**: On completion, if such a path is set, the system MAY append or update the corresponding backlog entry (format TBD).
+### Reference
+
+- `recordVerificationCompletion`: `src/actions/verification-backlog.ts`
+- `autoCompleteQuestFromTwine`: `src/actions/twine.ts`
+- Sync script: `scripts/sync-verification-backlog.ts`
 
 ---
 

@@ -36,8 +36,8 @@ export async function castIChing() {
             }
         }
 
-    } catch (e: any) {
-        console.error("Cast I Ching failed:", e?.message)
+    } catch (e: unknown) {
+        console.error("Cast I Ching failed:", e instanceof Error ? e.message : String(e))
         return { error: 'Failed to cast' }
     }
 }
@@ -105,8 +105,8 @@ export async function acceptReading(hexagramId: number) {
             message: `${hexagram.name} has been added to your active quests.`
         }
 
-    } catch (e: any) {
-        console.error("Accept reading failed:", e?.message)
+    } catch (e: unknown) {
+        console.error("Accept reading failed:", e instanceof Error ? e.message : String(e))
         return { error: 'Failed to accept reading' }
     }
 }

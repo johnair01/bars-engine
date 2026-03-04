@@ -153,7 +153,7 @@ export async function createBinding(
         }
 
         // Build payload object
-        let payloadObj: Record<string, any> = {
+        const payloadObj: Record<string, any> = {
             title: payloadTitle,
             description: payloadDescription,
             tags: payloadTags,
@@ -312,7 +312,14 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
 // PLAYER: Advance to a passage (choose a link)
 // ---------------------------------------------------------------------------
 
-export async function advanceRun(storyId: string, targetPassageName: string, questId?: string | null, playerIdOverride?: string, threadId?: string | null) {
+export async function advanceRun(
+    storyId: string,
+    targetPassageName: string,
+    questId?: string | null,
+    playerIdOverride?: string,
+    threadId?: string | null,
+    skipRevalidate?: boolean
+) {
     const playerId = playerIdOverride || await requirePlayer()
 
     // Find the run (quest-scoped or standalone)
@@ -375,10 +382,15 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
         questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId, threadId)
     }
 
-    try {
-        revalidatePath(`/adventures/${storyId}/play`)
-        revalidatePath('/')
-    } catch (e) { }
+    if (!skipRevalidate) {
+        try {
+            revalidatePath(`/adventures/${storyId}/play`)
+            // Skip revalidating home when navigating to FEEDBACK — reduces unnecessary re-fetches that can cause navigate-away (cert-feedback-stability)
+            if (targetPassageName !== 'FEEDBACK') {
+                revalidatePath('/')
+            }
+        } catch (e) { }
+    }
     return { success: true, emitted: bindingResult, questCompleted, redirect: null as string | null }
 }
 
@@ -386,7 +398,7 @@ export async function advanceRun(storyId: string, targetPassageName: string, que
 // PLAYER: Revert to previous passage (Back button)
 // ---------------------------------------------------------------------------
 
-export async function revertRun(storyId: string, questId?: string | null, playerIdOverride?: string) {
+export async function revertRun(storyId: string, questId?: string | null, playerIdOverride?: string, skipRevalidate?: boolean) {
     const playerId = playerIdOverride || await requirePlayer()
 
     const run = await db.twineRun.findFirst({
@@ -402,7 +414,7 @@ export async function revertRun(storyId: string, questId?: string | null, player
     const visited = JSON.parse(run.visited) as string[]
     if (visited.length <= 1) return { error: 'At the beginning of the story' }
 
-    // Remove current passage
+    const currentBeforeRevert = visited[visited.length - 1]
     visited.pop()
     const prevPassageName = visited[visited.length - 1]
 
@@ -420,10 +432,15 @@ export async function revertRun(storyId: string, questId?: string | null, player
     // If the quest is already marked complete in PlayerQuest, the UI might still show 'Completed'
     // but the Twine traversal will be unlocked.
 
-    try {
-        revalidatePath(`/adventures/${storyId}/play`)
-        revalidatePath('/')
-    } catch (e) { }
+    if (!skipRevalidate) {
+        try {
+            revalidatePath(`/adventures/${storyId}/play`)
+            // Skip revalidating home when reverting from FEEDBACK — same rationale as advanceRun
+            if (currentBeforeRevert !== 'FEEDBACK') {
+                revalidatePath('/')
+            }
+        } catch (e) { }
+    }
 
     return { success: true, currentPassageId: prevPassageName }
 }
@@ -503,6 +520,16 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
         // Run completion effects (e.g. deriveAvatarFromExisting)
         const { runCompletionEffectsForQuest } = await import('@/actions/quest-engine')
         await runCompletionEffectsForQuest(playerId, questId, { completedViaTwine: true, runId })
+
+        // Record verification completion for backlog sync (O)
+        if (quest.backlogPromptPath) {
+            try {
+                const { recordVerificationCompletion } = await import('@/actions/verification-backlog')
+                await recordVerificationCompletion(questId, playerId, quest.backlogPromptPath)
+            } catch (e) {
+                console.error('[TWINE] Backlog recording failed:', e)
+            }
+        }
 
         // Advance thread if quest is in a thread
         if (threadId) {

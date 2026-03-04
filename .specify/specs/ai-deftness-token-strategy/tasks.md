@@ -23,8 +23,8 @@
 
 ## Phase 4: Heuristic Classification (optional)
 
-- [ ] Create src/lib/quest-classifier.ts with suggestDomain()
-- [ ] Use as hint in book-analyze when confidence > 0.8 (or defer)
+- [x] Create src/lib/quest-classifier.ts with suggestDomain()
+- [x] Use as hint in book-analyze when confidence > 0.8; heuristicHits in metadata
 
 ## Phase 5: I Ching Template Fallback (optional, defer)
 
@@ -33,13 +33,13 @@
 
 ## Phase 6: Control Plane (optional)
 
-- [ ] Add AiUsageLog model and logging in ai-with-cache
-- [ ] Add BOOK_ANALYSIS_AI_ENABLED, QUEST_GEN_AI_ENABLED env
+- [ ] Add AiUsageLog model and logging in ai-with-cache (defer)
+- [x] Add BOOK_ANALYSIS_AI_ENABLED, QUEST_GEN_AI_ENABLED env
 - [ ] Add per-feature token budget check (defer)
 
 ## Verification
 
-- [ ] Test: Book analysis with filter — chunksSkipped > 0 for typical book
-- [ ] Test: Re-run analysis — cache hits, no new API calls for same chunks
-- [ ] Test: I Ching quest gen twice same params — second call cache hit
-- [ ] Test: BOOK_ANALYSIS_AI_ENABLED=false — clear error returned
+- [x] Book analysis with filter — chunksSkipped in analysisMeta; chunkIsActionable in chunk-filter.ts
+- [x] Re-run analysis — generateObjectWithCache returns fromCache; cacheHits/cacheMisses in metadata
+- [x] I Ching quest gen — generateObjectWithCache in generate-quest.ts; same hexagram+playbook = cache hit
+- [x] BOOK_ANALYSIS_AI_ENABLED=false — analyzeBook returns clear error

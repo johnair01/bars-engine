@@ -130,6 +130,8 @@ Both use `generateObjectWithCache` from `src/lib/ai-with-cache.ts`, which wraps 
 | `QUEST_GEN_MODEL` | gpt-4o | Model for I Ching quest generation |
 | `BOOK_ANALYSIS_AI_ENABLED` | (unset = enabled) | Set to `false` to disable book analysis AI |
 | `QUEST_GEN_AI_ENABLED` | (unset = enabled) | Set to `false` to disable quest gen AI |
+| `QUEST_GRAMMAR_AI_ENABLED` | (unset = enabled) | Set to `false` to disable quest grammar AI (admin unpacking form) |
+| `QUEST_GRAMMAR_AI_MODEL` | gpt-4o | Model for quest grammar node text generation |
 
 **Caching**: Responses are cached in `AiResponseCache` (7-day TTL). Re-running analysis on the same book or generating a quest with the same hexagram+playbook+lens returns cached results.
 
@@ -154,4 +156,4 @@ Both use `generateObjectWithCache` from `src/lib/ai-with-cache.ts`, which wraps 
 - **Story Clock** (`world.ts`) — Generates quests deterministically from hexagrams; no API call.
 - **Book upload / Extract text** — Uses `pdf-parse-new`; no OpenAI.
 
-Only `analyzeBook` and `generateQuestFromReading` → `generateQuestCore` hit the OpenAI API.
+`analyzeBook`, `generateQuestFromReading` → `generateQuestCore`, and `compileQuestWithAI` (admin quest grammar) hit the OpenAI API.

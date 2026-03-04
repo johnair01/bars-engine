@@ -12,7 +12,9 @@ export async function createSubQuest(parentId: string, data: {
     title: string,
     description: string,
     inputLabel?: string,
-    inputType?: string
+    inputType?: string,
+    /** Optional: wakeUp | cleanUp | growUp | showUp for unblock subquests */
+    moveType?: string
 }) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
@@ -74,7 +76,8 @@ export async function createSubQuest(parentId: string, data: {
                     claimedById: player.id, // Assigned to self
                     parentId: parent.id,
                     rootId: parent.rootId || parent.id,
-                    status: 'active'
+                    status: 'active',
+                    moveType: data.moveType ?? undefined
                 }
             })
 

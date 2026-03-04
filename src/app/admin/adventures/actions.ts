@@ -69,3 +69,15 @@ export async function updateAdventureStartNode(formData: FormData) {
     })
     revalidatePath(`/admin/adventures/${adventureId}`)
 }
+
+export async function updateAdventureCampaignRef(formData: FormData) {
+    const adventureId = formData.get('adventureId') as string
+    const raw = formData.get('campaignRef') as string
+    const campaignRef = raw?.trim() || null
+    if (!adventureId) return
+    await db.adventure.update({
+        where: { id: adventureId },
+        data: { campaignRef }
+    })
+    revalidatePath(`/admin/adventures/${adventureId}`)
+}

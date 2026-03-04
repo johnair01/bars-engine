@@ -5,6 +5,7 @@ import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
+import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -93,12 +94,21 @@ export default async function EventPage() {
           <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
             {wakeUpContent}
           </p>
-          <Link
-            href="/wiki"
-            className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
-          >
-            Learn more →
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/wiki"
+              className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+            >
+              Learn more →
+            </Link>
+            {player && (
+              <>
+                <span className="text-zinc-500 text-sm">•</span>
+                <span className="text-zinc-500 text-sm">Have a question?</span>
+                <LibraryRequestButton context={{ campaignRef: 'bruised-banana' }} />
+              </>
+            )}
+          </div>
           {(instance.theme || instance.targetDescription) && (
             <details className="mt-3">
               <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">

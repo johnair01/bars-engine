@@ -230,7 +230,12 @@ export async function deletePack(id: string) {
 
 export async function getAdminQuest(id: string) {
     await checkAdmin()
-    return db.customBar.findUnique({ where: { id } })
+    return db.customBar.findUnique({
+        where: { id },
+        include: {
+            upgradedThreads: { select: { adventureId: true } },
+        },
+    })
 }
 
 export async function upsertQuest(data: {
@@ -248,7 +253,7 @@ export async function upsertQuest(data: {
     // Validate inputs JSON
     try {
         if (data.inputs) JSON.parse(data.inputs)
-    } catch (e) {
+    } catch {
         throw new Error('Invalid JSON for inputs')
     }
 
@@ -269,6 +274,12 @@ export async function upsertQuest(data: {
             where: { id: data.id },
             data: payload
         })
+        if (data.description !== undefined) {
+            await db.passage.updateMany({
+                where: { linkedQuestId: data.id },
+                data: { text: data.description },
+            })
+        }
     } else {
         const admin = await getCurrentPlayer()
         if (!admin) throw new Error('No user')
@@ -709,7 +720,7 @@ export async function getAdminNation(id: string) {
     return db.nation.findUnique({ where: { id } })
 }
 
-export async function updateNation(id: string, data: any) {
+export async function updateNation(id: string, data: { description?: string; imgUrl?: string; wakeUp?: string; cleanUp?: string; growUp?: string; showUp?: string }) {
     await checkAdmin()
     await db.nation.update({
         where: { id },
@@ -731,7 +742,7 @@ export async function getAdminArchetype(id: string) {
     return db.playbook.findUnique({ where: { id } })
 }
 
-export async function updateArchetype(id: string, data: any) {
+export async function updateArchetype(id: string, data: { description?: string; content?: string; centralConflict?: string; vibe?: string; energy?: string; primaryQuestion?: string; examples?: string; shadowSignposts?: string; lightSignposts?: string; wakeUp?: string; cleanUp?: string; growUp?: string; showUp?: string; emotionalFirstAid?: string }) {
     await checkAdmin()
     await db.playbook.update({
         where: { id },

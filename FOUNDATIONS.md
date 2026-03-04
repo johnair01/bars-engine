@@ -40,6 +40,18 @@ The game is structured around five dimensions. Use this ontology when writing sp
 
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
 
+## Emotional Alchemy (Narrative Movement)
+
+Quest narratives move through **emotional alchemy**—an **energy economy**, not a morality wheel. Control moves are high-cost precision moves (stabilizing, defensive, protective, catalytic), not bad moves.
+
+**5 elements + WAVE**: Metal (Fear), Water (Sadness), Wood (Joy), Fire (Anger), Earth (Neutrality). Each element supports Wake → Clean → Grow → Show. Translation only after Show.
+
+**15 canonical moves**: 5 Transcend (+2 energy), 5 Generative translate (+1), 5 Control translate (-1). Binary translate/transcend remains for Epiphany Bridge.
+
+**Mastery**: Wake Up quests pass by choice (orientation, teaching). Show Up quests pass by action—end passage requires attestation input. Quest threads end with action; Wake Up is the exception.
+
+The system derives movement from unpacking data (satisfaction, dissatisfaction, self-sabotage). See [.agent/context/emotional-alchemy-ontology.md](.agent/context/emotional-alchemy-ontology.md).
+
 ## Framework Influences
 
 The following frameworks inform the app's design:

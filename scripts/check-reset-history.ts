@@ -32,7 +32,7 @@ async function main() {
     }
 
     const formatted = rows.map((row) => {
-        let payload: any = null
+        let payload: Record<string, unknown> | null = null
         try {
             payload = row.payloadJson ? JSON.parse(row.payloadJson) : null
         } catch {

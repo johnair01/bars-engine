@@ -3,8 +3,9 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, readFile } from 'fs/promises'
 import path from 'path'
+import { put } from '@vercel/blob'
 import { extractTextFromPdf } from '@/lib/pdf-extract'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'books')
@@ -30,7 +31,7 @@ function slugFromTitle(title: string): string {
 
 /**
  * Upload a PDF and create a Book record.
- * Saves file to uploads/books/{id}.pdf
+ * Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set; otherwise saves to public/uploads/books/{id}.pdf
  */
 export async function uploadBook(
   _prev: { error?: string; success?: boolean; bookId?: string } | null,
@@ -61,16 +62,27 @@ export async function uploadBook(
       },
     })
 
-    await mkdir(UPLOAD_DIR, { recursive: true })
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const filePath = path.join(UPLOAD_DIR, `${book.id}.pdf`)
-    await writeFile(filePath, buffer)
 
-    await db.book.update({
-      where: { id: book.id },
-      data: { sourcePdfUrl: `/uploads/books/${book.id}.pdf` }, // Served from public/
-    })
+    const token = process.env.BLOB_READ_WRITE_TOKEN
+    if (token) {
+      const blob = await put(`books/${book.id}.pdf`, buffer, {
+        access: 'public',
+        contentType: 'application/pdf',
+      })
+      await db.book.update({
+        where: { id: book.id },
+        data: { sourcePdfUrl: blob.url },
+      })
+    } else {
+      await mkdir(UPLOAD_DIR, { recursive: true })
+      await writeFile(path.join(UPLOAD_DIR, `${book.id}.pdf`), buffer)
+      await db.book.update({
+        where: { id: book.id },
+        data: { sourcePdfUrl: `/uploads/books/${book.id}.pdf` },
+      })
+    }
 
     revalidatePath('/admin/books')
     return { success: true, bookId: book.id }
@@ -94,9 +106,18 @@ export async function extractBookText(bookId: string) {
       return { error: 'Book must be in draft status to extract' }
     }
 
-    const filePath = path.join(UPLOAD_DIR, `${bookId}.pdf`)
-    const { readFile } = await import('fs/promises')
-    const buffer = await readFile(filePath)
+    let buffer: Buffer
+    if (book.sourcePdfUrl?.startsWith('http')) {
+      const res = await fetch(book.sourcePdfUrl)
+      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status}`)
+      const ab = await res.arrayBuffer()
+      buffer = Buffer.from(ab)
+    } else if (book.sourcePdfUrl) {
+      const filePath = path.join(process.cwd(), book.sourcePdfUrl)
+      buffer = await readFile(filePath)
+    } else {
+      return { error: 'No PDF URL' }
+    }
 
     const { text, pageCount } = await extractTextFromPdf(buffer)
 

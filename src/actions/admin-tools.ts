@@ -173,7 +173,7 @@ export async function adminMintVibeulons(targetPlayerId: string, amount: number)
 export async function getAllPlayersAdminPulse() {
     try {
         await ensureAdmin()
-    } catch (e) {
+    } catch {
         return []
     }
 

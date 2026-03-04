@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
-import path from 'path'
 
 const prisma = new PrismaClient()
 const LOG_PATH = '/Users/test/.gemini/antigravity/brain/3501faa0-1a49-41a7-ab02-2bc53c0ef272/dev_issue_log.md'
@@ -29,7 +28,7 @@ async function syncFeedback() {
         }
 
         // Read the current log
-        let content = fs.readFileSync(LOG_PATH, 'utf8')
+        const content = fs.readFileSync(LOG_PATH, 'utf8')
 
         // Prepare new feedback entries
         let feedbackEntries = ''

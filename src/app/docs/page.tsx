@@ -1,14 +1,19 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
+import { getCurrentPlayer } from '@/lib/auth'
+import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 export default async function DocsIndexPage() {
-    const nodes = await db.docNode.findMany({
+    const [nodes, player] = await Promise.all([
+        db.docNode.findMany({
         where: {
-            canonicalStatus: { in: ['canonical', 'validated'] },
+            canonicalStatus: { in: ['canonical', 'validated', 'draft'] },
             scope: { not: 'deprecated' }
         },
         orderBy: { title: 'asc' }
-    })
+        }),
+        getCurrentPlayer()
+    ])
 
     const byType = nodes.reduce<Record<string, typeof nodes>>((acc, n) => {
         const t = n.nodeType || 'other'
@@ -63,6 +68,20 @@ export default async function DocsIndexPage() {
                         })}
                     </div>
                 )}
+
+                <div className="flex flex-wrap items-center gap-2 pt-6 border-t border-zinc-800">
+                    <span className="text-sm text-zinc-500">Can&apos;t find what you need?</span>
+                    {player ? (
+                        <LibraryRequestButton />
+                    ) : (
+                        <Link
+                            href="/login?redirect=/docs"
+                            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium"
+                        >
+                            Log in to ask
+                        </Link>
+                    )}
+                </div>
             </div>
         </div>
     )

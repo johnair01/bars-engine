@@ -5,6 +5,7 @@ import { listPublishedStories } from '@/actions/twine'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { CustomBar, PlayerQuest } from '@prisma/client'
+import { AdventureRestartButton } from '@/components/AdventureRestartButton'
 
 export default async function AdventuresPage() {
     const player = await getCurrentPlayer()
@@ -71,7 +72,11 @@ export default async function AdventuresPage() {
 
                             return (
                                 <div key={story.id} className={`group block ${isCompleted ? 'opacity-50' : ''}`}>
-                                    {isCertCompleted ? (
+                                    {isCertCompleted && isAdmin ? (
+                                        <AdventureRestartButton questId={quest!.id} storyId={story.id} className="block">
+                                            {cardContent}
+                                        </AdventureRestartButton>
+                                    ) : isCertCompleted ? (
                                         <Link href="/bars/available" className="block">
                                             {cardContent}
                                             <p className="text-[10px] text-zinc-500 mt-2">Restore in Market to re-run</p>

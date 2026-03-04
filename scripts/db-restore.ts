@@ -34,7 +34,7 @@ async function restore() {
                         update: nation,
                         create: nation
                     })
-                } catch (e) { }
+                } catch { }
             }
         }
 
@@ -48,7 +48,7 @@ async function restore() {
                         update: invite,
                         create: invite
                     })
-                } catch (e) { }
+                } catch { }
             }
         }
 
@@ -62,7 +62,7 @@ async function restore() {
                         update: playbook,
                         create: playbook
                     })
-                } catch (e) { }
+                } catch { }
             }
         }
 
@@ -76,7 +76,7 @@ async function restore() {
                         update: account,
                         create: account
                     })
-                } catch (e) { }
+                } catch { }
             }
         }
 
@@ -90,7 +90,7 @@ async function restore() {
                         update: player,
                         create: player
                     })
-                } catch (err) { }
+                } catch { }
             }
         }
 
@@ -104,7 +104,7 @@ async function restore() {
                         update: quest,
                         create: quest
                     })
-                } catch (err) { }
+                } catch { }
             }
         }
 
@@ -118,7 +118,7 @@ async function restore() {
                         update: instance,
                         create: instance
                     })
-                } catch (err) { }
+                } catch { }
             }
         }
 

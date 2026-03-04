@@ -38,8 +38,8 @@ async function main() {
     try {
         const count = await db.player.count()
         pass('DB Connection', `${count} players in DB`)
-    } catch (e: any) {
-        fail('DB Connection', e.message)
+    } catch (e: unknown) {
+        fail('DB Connection', e instanceof Error ? e.message : String(e))
         console.log('\nCannot continue without DB. Exiting.')
         process.exit(1)
     }
@@ -67,8 +67,8 @@ async function main() {
     // 5. Create test user A
     const testEmailA = `smoke-test-a-${Date.now()}@test.local`
     const testEmailB = `smoke-test-b-${Date.now()}@test.local`
-    let playerA: any = null
-    let playerB: any = null
+    let playerA: Awaited<ReturnType<typeof db.player.create>> | null = null
+    let playerB: Awaited<ReturnType<typeof db.player.create>> | null = null
 
     try {
         // Create auto-invite for tests
@@ -113,8 +113,8 @@ async function main() {
             }
         })
         pass('Create User B', playerB.id)
-    } catch (e: any) {
-        fail('Create Test Users', e.message)
+    } catch (e: unknown) {
+        fail('Create Test Users', e instanceof Error ? e.message : String(e))
     }
 
     if (!playerA || !playerB) {
@@ -154,8 +154,8 @@ async function main() {
         })
         questId = quest.id
         pass('Create Quest', quest.id)
-    } catch (e: any) {
-        fail('Create Quest', e.message)
+    } catch (e: unknown) {
+        fail('Create Quest', e instanceof Error ? e.message : String(e))
     }
 
     // 8. Verify quest in list
@@ -180,8 +180,8 @@ async function main() {
         })
         const walletA = await db.vibulon.count({ where: { ownerId: playerA.id } })
         pass('Seed Vibeulons for A', `${walletA} vibeulons`)
-    } catch (e: any) {
-        fail('Seed Vibeulons', e.message)
+    } catch (e: unknown) {
+        fail('Seed Vibeulons', e instanceof Error ? e.message : String(e))
     }
 
     // 10. Transfer vibeulon from A to B
@@ -223,8 +223,8 @@ async function main() {
 
             pass('Transfer Vibeulon A→B')
         }
-    } catch (e: any) {
-        fail('Transfer Vibeulon', e.message)
+    } catch (e: unknown) {
+        fail('Transfer Vibeulon', e instanceof Error ? e.message : String(e))
     }
 
     // 11. Verify balances after transfer
@@ -274,8 +274,8 @@ async function main() {
                 await db.account.deleteMany({ where: { email: testEmailB } })
             }
             console.log('  Cleanup complete.')
-        } catch (e: any) {
-            console.log(`  Cleanup warning: ${e.message}`)
+        } catch (e: unknown) {
+            console.log(`  Cleanup warning: ${e instanceof Error ? e.message : String(e)}`)
         }
     }
 }

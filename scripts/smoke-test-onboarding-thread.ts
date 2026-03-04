@@ -19,7 +19,7 @@ const db = new PrismaClient()
 const TEST_PREFIX = '__smoke_ob_test__'
 const TEST_EMAIL = `${TEST_PREFIX}@test.local`
 
-async function assert(label: string, value: any, expected?: any) {
+async function assert(label: string, value: unknown, expected?: unknown) {
     if (expected !== undefined) {
         if (value !== expected) {
             throw new Error(`FAIL: ${label} — expected ${JSON.stringify(expected)}, got ${JSON.stringify(value)}`)

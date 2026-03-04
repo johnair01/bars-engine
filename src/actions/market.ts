@@ -5,159 +5,169 @@ import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
 import { getActiveInstance } from '@/actions/instance'
+import type { MarketQuest } from '@/lib/market-api'
 
 // ===================================
 // TOWN SQUARE (MARKET) ACTIONS
 // ===================================
 
 /**
- * Get all content available in the Town Square
+ * Get player-created quests only (isSystem: false).
+ * API-first: returns typed MarketQuest[]. Used by Market page.
+ * Spec: .specify/specs/market-redesign-launch/spec.md FR1
+ */
+export async function getMarketQuests(): Promise<MarketQuest[]> {
+  const player = await getCurrentPlayer()
+  const playerWithRoles = player
+    ? await db.player.findUnique({
+        where: { id: player.id },
+        include: { roles: { include: { role: true } } },
+      })
+    : null
+  const [globalState, activeInstance, publicQuests] = await Promise.all([
+    db.globalState.findUnique({ where: { id: 'singleton' } }),
+    getActiveInstance(),
+    db.customBar.findMany({
+      where: { visibility: 'public', status: 'active', isSystem: false },
+      include: {
+        creator: {
+          include: { nation: true, playbook: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    }),
+  ])
+  let filtered = publicQuests
+  if (globalState?.isPaused) {
+    filtered = filtered.filter((q) => q.kotterStage === 1)
+  }
+  if (activeInstance) {
+    const stage = activeInstance.kotterStage ?? 1
+    filtered = filtered.filter((q) => q.kotterStage === stage)
+  }
+  if (player && playerWithRoles) {
+    filtered = filtered.filter((q) => {
+      if (q.allowedNations) {
+        try {
+          const allowed = JSON.parse(q.allowedNations) as string[]
+          if (allowed.length > 0 && player.nation && !allowed.includes(player.nation.name)) {
+            return false
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      if (q.allowedTrigrams) {
+        try {
+          const allowed = JSON.parse(q.allowedTrigrams) as string[]
+          if (allowed.length > 0 && player.playbook) {
+            const trigram = player.playbook.name.split(' ')[0]
+            if (!allowed.includes(trigram)) return false
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      const pref = playerWithRoles.campaignDomainPreference
+        ? parseCampaignDomainPreference(playerWithRoles.campaignDomainPreference)
+        : []
+      if (pref.length > 0) {
+        if (!q.allyshipDomain || !pref.includes(q.allyshipDomain)) return false
+      }
+      return true
+    })
+  }
+  return filtered.map((q) => ({
+    id: q.id,
+    title: q.title,
+    description: q.description,
+    reward: q.reward,
+    allyshipDomain: q.allyshipDomain,
+    kotterStage: q.kotterStage,
+    visibility: q.visibility,
+    creator: q.creator
+      ? {
+          id: q.creator.id,
+          name: q.creator.name,
+          avatarConfig: q.creator.avatarConfig,
+          nation: q.creator.nation ? { name: q.creator.nation.name } : null,
+          playbook: q.creator.playbook ? { name: q.creator.playbook.name } : null,
+        }
+      : null,
+  }))
+}
+
+/**
+ * Get all content available in the Town Square.
+ * Uses getMarketQuests for player-created quests (API-first).
  */
 export async function getMarketContent() {
     const player = await getCurrentPlayer()
-    const playerWithRoles = player ? await db.player.findUnique({
-        where: { id: player.id },
-        include: { roles: { include: { role: true } } }
-    }) : null
-    const isAdmin = !!playerWithRoles?.roles.some(r => r.role.key === 'admin')
+    const playerWithRoles = player
+        ? await db.player.findUnique({
+              where: { id: player.id },
+              include: { roles: { include: { role: true } } },
+          })
+        : null
+    const isAdmin = !!playerWithRoles?.roles.some((r) => r.role.key === 'admin')
 
-    const [globalState, activeInstance, publicPacks, publicQuests, graveyardQuests] = await Promise.all([
-        db.globalState.findUnique({ where: { id: 'singleton' } }),
-        getActiveInstance(),
-        // 1. Feature: Public Packs (Recycled Community Packs)
+    const [publicPacks, graveyardQuests, quests] = await Promise.all([
         db.questPack.findMany({
-            where: {
-                visibility: 'public',
-                status: 'active'
-            },
+            where: { visibility: 'public', status: 'active' },
             include: {
-                quests: {
-                    include: { quest: true }
-                },
-                progress: player ? {
-                    where: { playerId: player.id }
-                } : undefined
-            },
-            orderBy: { createdAt: 'desc' }
-        }),
-
-        // 2. Feature: Public Quests (Salad Bowl / Commissioned)
-        db.customBar.findMany({
-            where: {
-                visibility: 'public',
-                status: 'active',
-                isSystem: false,
-            },
-            include: {
-                microTwine: true,
-                creator: {
-                    include: {
-                        nation: true,
-                        playbook: true
-                    }
-                }
+                quests: { include: { quest: true } },
+                progress: player ? { where: { playerId: player.id } } : undefined,
             },
             orderBy: { createdAt: 'desc' },
-            take: 50 // Limit for now
         }),
-
-        // 3. Admin: Graveyard (Completed System Quests)
-        isAdmin ? db.customBar.findMany({
-            where: {
-                isSystem: true,
-                assignments: {
-                    some: {
-                        playerId: player!.id,
-                        status: 'completed'
-                    }
-                }
-            },
-            include: {
-                microTwine: true,
-                creator: {
-                    include: {
-                        nation: true,
-                        playbook: true
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        }) : Promise.resolve([])
+        isAdmin && player
+            ? db.customBar.findMany({
+                  where: {
+                      isSystem: true,
+                      assignments: {
+                          some: { playerId: player.id, status: 'completed' },
+                      },
+                  },
+                  include: {
+                      microTwine: true,
+                      creator: { include: { nation: true, playbook: true } },
+                  },
+                  orderBy: { createdAt: 'desc' },
+              })
+            : [],
+        getMarketQuests(),
     ])
 
-    // Filter quests
-    let filteredQuests = publicQuests
+    const graveyardTyped = graveyardQuests.map((q) => ({
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        reward: q.reward,
+        allyshipDomain: q.allyshipDomain,
+        kotterStage: q.kotterStage,
+        creator: q.creator
+            ? {
+                  id: q.creator.id,
+                  name: q.creator.name,
+                  avatarConfig: q.creator.avatarConfig,
+                  nation: q.creator.nation ? { name: q.creator.nation.name } : null,
+                  playbook: q.creator.playbook ? { name: q.creator.playbook.name } : null,
+              }
+            : null,
+    }))
 
-    // 1. Filter story-clock quests if paused
-    if (globalState?.isPaused) {
-        filteredQuests = publicQuests.filter(q => q.kotterStage === 1)
-    }
-
-    // 2. Filter by active instance Kotter stage (when instance exists)
-    if (activeInstance) {
-        const instanceStage = activeInstance.kotterStage ?? 1
-        filteredQuests = filteredQuests.filter(q => q.kotterStage === instanceStage)
-    }
-
-    // 3. Exclude completed system quests from available (they appear in Graveyard only)
-    if (isAdmin && player && graveyardQuests.length > 0) {
-        const graveyardIds = new Set(graveyardQuests.map(g => g.id))
-        filteredQuests = filteredQuests.filter(q => !(q.isSystem && graveyardIds.has(q.id)))
-    }
-
-    // 4. Nation & Playbook Gating
-    if (player) {
-        filteredQuests = filteredQuests.filter(q => {
-            // Nation gating
-            if (q.allowedNations) {
-                try {
-                    const allowedNations = JSON.parse(q.allowedNations) as string[]
-                    if (allowedNations.length > 0 && player.nation && !allowedNations.includes(player.nation.name)) {
-                        return false
-                    }
-                } catch (e) {
-                    // Fallback to showing if parse error, but log it
-                    console.error('Error parsing allowedNations:', e)
-                }
-            }
-
-            // Playbook (Trigram) gating
-            if (q.allowedTrigrams) {
-                try {
-                    const allowedTrigrams = JSON.parse(q.allowedTrigrams) as string[]
-                    if (allowedTrigrams.length > 0 && player.playbook) {
-                        const playerTrigram = player.playbook.name.split(' ')[0]
-                        if (!allowedTrigrams.includes(playerTrigram)) {
-                            return false
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing allowedTrigrams:', e)
-                }
-            }
-
-            // Campaign domain preference (allyship domain filter)
-            const pref = playerWithRoles?.campaignDomainPreference
-                ? parseCampaignDomainPreference(playerWithRoles.campaignDomainPreference)
-                : []
-            if (pref.length > 0) {
-                if (!q.allyshipDomain) return false
-                if (!pref.includes(q.allyshipDomain)) return false
-            }
-
-            return true
-        })
-    }
+    const activeInstance = await getActiveInstance()
     return {
-        packs: publicPacks.map(p => ({
+        packs: publicPacks.map((p) => ({
             ...p,
-            isOwned: p.progress && p.progress.length > 0
+            isOwned: p.progress && p.progress.length > 0,
         })),
-        quests: filteredQuests,
-        graveyardQuests: graveyardQuests || [],
+        quests,
+        graveyardQuests: graveyardTyped,
         campaignDomainPreference: playerWithRoles?.campaignDomainPreference ?? null,
         activeInstanceKotterStage: activeInstance?.kotterStage ?? null,
-        activeInstanceName: activeInstance?.name ?? null
+        activeInstanceName: activeInstance?.name ?? null,
     }
 }
 

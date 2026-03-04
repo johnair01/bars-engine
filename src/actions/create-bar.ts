@@ -16,7 +16,7 @@ function parseTags(raw: string | null) {
         .slice(0, 10)
 }
 
-export async function createCustomBar(prevState: any, formData: FormData) {
+export async function createCustomBar(prevState: unknown, formData: FormData) {
     const requestId = createRequestId()
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
@@ -211,7 +211,7 @@ export async function createCustomBar(prevState: any, formData: FormData) {
         revalidatePath('/bars/available')
         return { success: true, barId: result.id, visibility: effectiveVisibility, warning }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         logActionError(
             { action: 'createCustomBar', requestId, userId: playerId, extra: { linkedQuestId, requestedVisibility } },
             error
@@ -263,6 +263,7 @@ export async function getLinkableQuests() {
     return deduped.map((quest) => ({ id: quest.id, title: quest.title }))
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- wizard form data shape varies
 export async function createQuestFromWizard(data: any) {
     const requestId = createRequestId()
     const cookieStore = await cookies()
@@ -376,7 +377,7 @@ export async function createQuestFromWizard(data: any) {
                     completionEffects,
                     allowedNations: allowedNations ? JSON.stringify(allowedNations) : null,
                     allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null,
-                    allyshipDomain: allyshipDomain || null
+                    allyshipDomain: (allyshipDomain as string) || null
                 }
             })
 
@@ -417,7 +418,7 @@ export async function createQuestFromWizard(data: any) {
         revalidatePath('/bars/available')
         return { success: true, questId: newBar.id, visibility: effectiveVisibility, warning }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         logActionError(
             { action: 'createQuestFromWizard', requestId, userId: playerId },
             error

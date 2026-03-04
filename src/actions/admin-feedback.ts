@@ -8,7 +8,7 @@ import { db } from '@/lib/db'
 /**
  * Appends admin feedback to a local file for the agent to pull later.
  */
-export async function logAdminFeedback(feedback: string, context?: any) {
+export async function logAdminFeedback(feedback: string, context?: Record<string, unknown>) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
 

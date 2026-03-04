@@ -33,20 +33,20 @@
 
 ## Phase 2: DocQuest + Evidence
 
-- [ ] DocQuest creation in resolveOrSpawn (CustomBar type doc)
-- [ ] DocQuest completion flow: evidence submission
-- [ ] DocEvidenceLink creation on evidence submit
-- [ ] Create src/lib/doc-assembly.ts (deterministic draft generation)
+- [x] DocQuest creation in resolveOrSpawn (CustomBar type doc)
+- [x] DocQuest completion flow: evidence submission
+- [x] DocEvidenceLink creation on evidence submit
+- [x] Create src/lib/doc-assembly.ts (deterministic draft generation)
 
 ## Phase 3: RST/Sphinx Build
 
-- [ ] Create scripts/export-docs-to-rst.ts
-- [ ] Add Sphinx config (docs/source, conf.py)
-- [ ] Add npm run docs:build script
+- [x] Create scripts/export-docs-to-rst.ts
+- [x] Add Sphinx config (docs/source, conf.py)
+- [x] Add npm run docs:build script
 
 ## Verification Quest
 
-- [ ] Add cert-k-space-librarian-v1 to seed script
+- [x] Add cert-k-space-librarian-v1 to seed script
 
 ## Backlog
 

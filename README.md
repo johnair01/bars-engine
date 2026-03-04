@@ -73,6 +73,7 @@ We have several utility scripts to help manage the game state.
   - **Story Clock**: A global state tracker for the narrative phase.
 
 ## 📚 Documentation
+- [docs/DEVELOPER_ONBOARDING.md](./docs/DEVELOPER_ONBOARDING.md) - New machine setup, verification steps, and common fixes.
 - [RUNBOOK.md](./RUNBOOK.md) - Detailed deployment and operations guide.
 
 ---

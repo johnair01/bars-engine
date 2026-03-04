@@ -15,6 +15,7 @@ export async function getAppConfig() {
         heroSubtitle: true,
         updatedAt: true,
         updatedBy: true,
+        orientationQuestId: true,
     } as const
 
     const selectWithInstance = {
@@ -28,7 +29,7 @@ export async function getAppConfig() {
             where: { id: 'singleton' },
             select: selectWithInstance,
         })
-        if (config) return config as any
+        if (config) return config
     } catch {
         // If the DB hasn't been pushed yet, selecting new columns will throw.
     }
@@ -57,7 +58,7 @@ export async function getAppConfig() {
     return {
         ...fallback,
         activeInstanceId: null,
-    } as any
+    }
 }
 
 // Update feature flags

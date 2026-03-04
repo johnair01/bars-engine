@@ -16,7 +16,7 @@ const db = new PrismaClient()
 
 const THREAD_TITLE = 'Welcome to the Conclave'
 
-async function upsertQuestByTitle(title: string, data: any) {
+async function upsertQuestByTitle(title: string, data: Record<string, unknown>) {
     const existing = await db.customBar.findFirst({ where: { title } })
     if (existing) {
         console.log(`  ↻ Quest "${title}" exists — updating`)
@@ -36,7 +36,7 @@ async function main() {
     const creator = admin || await db.player.findFirst()
     if (!creator) {
         console.error('❌ No players found. Create at least one player first.')
-        // @ts-ignore
+        // @ts-expect-error process.exit never returns
         process.exit(1)
         return // for TS
     }
@@ -591,7 +591,7 @@ async function main() {
         { id: 'four-moves-grow-up-quest', title: 'Grow Up', moveType: 'growUp', description: 'Grow Up is about building skill and capacity. These quests help you develop new abilities and expand what you can do.' },
         { id: 'four-moves-show-up-quest', title: 'Show Up', moveType: 'showUp', description: 'Show Up is about doing the work. When you\'re ready to act, Show Up quests help you contribute directly to the collective.' }
     ]
-    const fourMovesCreated: { id: string; quest: any }[] = []
+    const fourMovesCreated: { id: string; quest: Awaited<ReturnType<typeof db.customBar.upsert>> }[] = []
     for (const q of fourMovesQuests) {
         const quest = await db.customBar.upsert({
             where: { id: q.id },
@@ -637,7 +637,79 @@ async function main() {
     })
     console.log(`  Linked ${fourMovesQuests.length} Four Moves quests to thread`)
 
-    // 10. Summary
+    // 10. Bruised Banana post-onboarding short wins (lens-based preload)
+    console.log('\nCreating Bruised Banana short wins thread...')
+    const bbExplorePassages = [
+        { name: 'START', pid: '1', text: 'You\'ve received the vision. Now—explore.\n\nVisit the [dashboard](/). See your quests. The Market shows work that matches how you want to help.', cleanText: 'Visit the dashboard. See your quests.', links: [{ label: 'Next', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Explore the Market\n\nYou\'ve landed. The Market filters quests by your lens. Find something that calls to you.', cleanText: 'Explore the Market.', links: [{ label: 'Complete', target: 'END' }] },
+        { name: 'END', pid: '3', text: 'Short win. You\'re in.', cleanText: 'Done.', links: [] }
+    ]
+    const bbExploreStory = await db.twineStory.upsert({
+        where: { slug: 'bb-explore-market' },
+        update: { parsedJson: JSON.stringify({ startPassage: 'START', passages: bbExplorePassages }), isPublished: true },
+        create: {
+            title: 'Explore the Market',
+            slug: 'bb-explore-market',
+            sourceType: 'manual_seed',
+            sourceText: 'Bruised Banana short win: explore the Market (seed-onboarding-thread.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: bbExplorePassages }),
+            isPublished: true,
+            createdById: creator.id
+        }
+    })
+    const bbExploreQuest = await db.customBar.upsert({
+        where: { id: 'bb-explore-market-quest' },
+        update: {
+            title: 'Explore the Market',
+            description: 'Visit the dashboard. See your quests and the Market—filtered by how you want to help.',
+            type: 'onboarding',
+            reward: 1,
+            twineStoryId: bbExploreStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        },
+        create: {
+            id: 'bb-explore-market-quest',
+            title: 'Explore the Market',
+            description: 'Visit the dashboard. See your quests and the Market—filtered by how you want to help.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            twineStoryId: bbExploreStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true
+        }
+    })
+    let bbThread = await db.questThread.findUnique({ where: { id: 'bruised-banana-orientation-thread' } })
+    const bbThreadData = {
+        title: 'Help the Bruised Banana',
+        description: 'Short wins after initiation. Explore the Market and help the knowledge base.',
+        threadType: 'orientation' as const,
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 2,
+        status: 'active' as const
+    }
+    if (bbThread) {
+        bbThread = await db.questThread.update({ where: { id: bbThread.id }, data: bbThreadData })
+    } else {
+        bbThread = await db.questThread.create({ data: { id: 'bruised-banana-orientation-thread', ...bbThreadData } })
+    }
+    await db.threadQuest.upsert({
+        where: { threadId_questId: { threadId: bbThread.id, questId: bbExploreQuest.id } },
+        update: { position: 1 },
+        create: { threadId: bbThread.id, questId: bbExploreQuest.id, position: 1 }
+    })
+    await db.threadQuest.upsert({
+        where: { threadId_questId: { threadId: bbThread.id, questId: kSpaceQuest.id } },
+        update: { position: 2 },
+        create: { threadId: bbThread.id, questId: kSpaceQuest.id, position: 2 }
+    })
+    console.log(`  Bruised Banana thread: ${bbThread.id} with Explore Market + Request from Library`)
+
+    // 11. Summary
     console.log('\n=== ONBOARDING THREAD READY ===')
     console.log(`Thread: "${thread.title}" (${thread.id})`)
     console.log(`Type: ${thread.threadType}`)
@@ -654,13 +726,14 @@ async function main() {
     console.log(`\nBARs Wallet Guide thread: "${barsWalletThread.title}" (${barsWalletThread.id})`)
     console.log(`Emotional First Aid thread: "${efaThread.title}" (${efaThread.id})`)
     console.log(`Four Moves thread: "${fourMovesThread.title}" (${fourMovesThread.id})`)
+    console.log(`Bruised Banana short wins thread: "${bbThread.title}" (${bbThread.id}) — assigned when lens present`)
     console.log(`\nNew players will be auto-assigned via assignOrientationThreads()`)
 }
 
 main()
     .catch((e) => {
         console.error('Seed failed:', e)
-        // @ts-ignore
+        // @ts-expect-error process.exit never returns
         process.exit(1)
     })
     .finally(async () => {

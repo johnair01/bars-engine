@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useRef, useActionState } from 'reac
 import { completeQuest, getArchetypeHandbookData } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { pickupMarketQuest } from '@/actions/market'
 import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
@@ -19,6 +19,8 @@ import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/in
 import { getIntentionOptionsForPreference } from '@/lib/intention-options'
 import Link from 'next/link'
 import { applyNationMoveWithState, getNationMovePanelData, moveQuestToGraveyard, type NationMovePanelData, type ApplyNationMoveState } from '@/actions/nation-moves'
+import { QuestNestingActions } from './QuestNestingActions'
+import { createSubQuest } from '@/actions/quest-nesting'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -70,6 +72,7 @@ function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
 
 export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [] }: QuestDetailModalProps) {
     const router = useRouter()
+    const pathname = usePathname()
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
     const [responses, setResponses] = useState<Record<string, any>>({})
@@ -91,6 +94,9 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
     // Transfer Quest State
     const [transferContext, setTransferContext] = useState<any>(null)
+
+    // Phase 5d: Stuckness — player indicates stuck to surface EFAK + subquest options
+    const [stuckExpanded, setStuckExpanded] = useState(false)
 
     // Handle initial data for specialized quests
     useEffect(() => {
@@ -134,6 +140,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
             setTransferContext(null)
             setMovePanel(null)
             setSelectedMoveKey('')
+            setStuckExpanded(false)
         }
     }, [isOpen, quest.id, isCompleted])
 
@@ -336,18 +343,94 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         return null
                     })()}
 
+                    {/* Phase 5d: Surface EFAK + subquests when player indicates stuckness */}
                     {!isCompleted && !isLocked && (
-                        <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 flex items-center justify-between gap-3">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Vibes Emergency</p>
-                                <p className="text-xs text-cyan-100/80">Blocked emotionally? Run a first-aid protocol and come back.</p>
-                            </div>
-                            <Link
-                                href={`/emotional-first-aid?questId=${encodeURIComponent(quest.id)}&returnTo=%2F`}
-                                className="shrink-0 rounded-lg border border-cyan-700/60 bg-cyan-900/30 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-800/40 transition-colors"
-                            >
-                                Open Kit →
-                            </Link>
+                        <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 overflow-hidden">
+                            {!stuckExpanded ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setStuckExpanded(true)}
+                                    className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-cyan-900/20 transition-colors"
+                                >
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Feeling stuck?</p>
+                                        <p className="text-xs text-cyan-100/80">Emotional First Aid or add a subquest to unblock.</p>
+                                    </div>
+                                    <span className="shrink-0 text-cyan-400 text-sm font-semibold">Unblock options →</span>
+                                </button>
+                            ) : (
+                                <div className="p-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold">Unblock yourself</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStuckExpanded(false)}
+                                            className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-widest"
+                                        >
+                                            Collapse
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <Link
+                                            href={`/emotional-first-aid?questId=${encodeURIComponent(quest.id)}&returnTo=${encodeURIComponent(pathname || '/')}`}
+                                            className="rounded-lg border border-cyan-700/60 bg-cyan-900/30 px-4 py-3 text-left hover:bg-cyan-800/40 transition-colors group"
+                                        >
+                                            <div className="text-lg mb-1">🩹</div>
+                                            <div className="font-semibold text-cyan-100 text-sm">Emotional First Aid</div>
+                                            <div className="text-[11px] text-cyan-200/70 mt-0.5">Work through emotional blocks (Clean Up)</div>
+                                        </Link>
+                                        <div className="rounded-lg border border-amber-800/50 bg-amber-950/20 px-4 py-3 space-y-2">
+                                            <div className="text-lg mb-1">🧬</div>
+                                            <div className="font-semibold text-amber-100 text-sm">Add subquest to unblock</div>
+                                            <div className="text-[11px] text-amber-200/70">Quick create (costs 1 ♦ each):</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    disabled={isPending}
+                                                    onClick={() => startTransition(async () => {
+                                                        const res = await createSubQuest(quest.id, {
+                                                            title: 'Learn more about this quest',
+                                                            description: 'Wake Up — Orient before acting. Gather context, read, or explore.',
+                                                            moveType: 'wakeUp',
+                                                        })
+                                                        if ('error' in res) setFeedback(`❌ ${res.error}`)
+                                                        else {
+                                                            setFeedback('✨ Wake Up subquest created!')
+                                                            setTimeout(() => { setFeedback(null); router.refresh() }, 1500)
+                                                        }
+                                                    })}
+                                                    className="text-[11px] px-2 py-1.5 rounded border border-amber-700/50 bg-amber-900/30 text-amber-200 hover:bg-amber-800/40 disabled:opacity-50"
+                                                >
+                                                    Wake Up — Learn more
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={isPending}
+                                                    onClick={() => startTransition(async () => {
+                                                        const res = await createSubQuest(quest.id, {
+                                                            title: 'Build capacity for this quest',
+                                                            description: 'Grow Up — Increase skill, clarity, or energy before the main action.',
+                                                            moveType: 'growUp',
+                                                        })
+                                                        if ('error' in res) setFeedback(`❌ ${res.error}`)
+                                                        else {
+                                                            setFeedback('✨ Grow Up subquest created!')
+                                                            setTimeout(() => { setFeedback(null); router.refresh() }, 1500)
+                                                        }
+                                                    })}
+                                                    className="text-[11px] px-2 py-1.5 rounded border border-amber-700/50 bg-amber-900/30 text-amber-200 hover:bg-amber-800/40 disabled:opacity-50"
+                                                >
+                                                    Grow Up — Build capacity
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <QuestNestingActions
+                                        parentQuestId={quest.id}
+                                        onNestingComplete={() => router.refresh()}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 

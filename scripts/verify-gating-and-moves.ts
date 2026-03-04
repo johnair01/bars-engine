@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { getMarketContent } from '../src/actions/market'
 import { completeQuestForPlayer } from '../src/actions/quest-engine'
 import { hasAffinity, ELEMENTAL_MOVES } from '../src/lib/elemental-moves'
 
@@ -34,7 +33,7 @@ async function testGating() {
 
     // 2. Create a restricted quest
     const restrictedQuestId = 'gated-quest-test'
-    await (prisma.customBar as any).upsert({
+    await prisma.customBar.upsert({
         where: { id: restrictedQuestId },
         update: {},
         create: {
@@ -50,7 +49,7 @@ async function testGating() {
     })
 
     // 3. Verify Gating via query logic
-    const quest = await (prisma.customBar as any).findUnique({ where: { id: restrictedQuestId } })
+    const quest = await prisma.customBar.findUnique({ where: { id: restrictedQuestId } })
     if (quest && quest.allowedNations) {
         const allowed = JSON.parse(quest.allowedNations)
         const playerNation = player.nation?.name

@@ -56,6 +56,7 @@ export async function runSeed(prisma: PrismaClient) {
         {
             name: 'Argyra',
             description: 'The Silver City. Logic, reflection, and mirrors.',
+            element: 'metal',
             imgUrl: '/nations/argyra.png',
             wakeUp: 'Mirror Meditation: See yourself clearly by examining your reflections in others.',
             cleanUp: 'Silver Purge: Dissolve illusions and false beliefs through logical analysis.',
@@ -65,6 +66,7 @@ export async function runSeed(prisma: PrismaClient) {
         {
             name: 'Pyrakanth',
             description: 'The Burning Garden. Passion, consumption, and growth.',
+            element: 'fire',
             imgUrl: '/nations/pyrakanth.png',
             wakeUp: 'Ember Vision: Let passion illuminate what truly matters to you.',
             cleanUp: 'Burn Offering: Transform old wounds into fuel for new growth.',
@@ -74,6 +76,7 @@ export async function runSeed(prisma: PrismaClient) {
         {
             name: 'Virelune',
             description: 'The Green Moon. Mystery, tides, and secrets.',
+            element: 'wood',
             imgUrl: '/nations/virelune.png',
             wakeUp: 'Lunar Insight: Attune to hidden patterns by observing what others miss.',
             cleanUp: 'Tide Washing: Let emotional currents carry away what no longer serves.',
@@ -83,6 +86,7 @@ export async function runSeed(prisma: PrismaClient) {
         {
             name: 'Meridia',
             description: 'The Golden Noon. Clarity, trade, and exchange.',
+            element: 'earth',
             imgUrl: '/nations/meridia.png',
             wakeUp: 'Noon Clarity: Stand in the full light and see all things as they are.',
             cleanUp: 'Fair Exchange: Release attachments by trading old for new.',
@@ -92,6 +96,7 @@ export async function runSeed(prisma: PrismaClient) {
         {
             name: 'Lamenth',
             description: 'The Weeping Stone. Memory, history, and foundations.',
+            element: 'water',
             imgUrl: '/nations/lamenth.png',
             wakeUp: 'Ancestral Sight: Remember the wisdom embedded in your lineage.',
             cleanUp: 'Stone Grief: Honor old pain by allowing it to fully pass through.',

@@ -33,7 +33,7 @@ function sync() {
     console.log('✨ Generating Prisma Client...')
     try {
         execSync('npx prisma generate', { stdio: 'inherit' })
-    } catch (e) {
+    } catch {
         console.error('❌ Prisma Generate failed')
         process.exit(1)
     }
@@ -55,7 +55,7 @@ function sync() {
                 execSync('npx prisma db push', { stdio: 'inherit' })
                 if (currentHash) writeFileSync(HASH_FILE, currentHash)
                 console.log('✅ Database synchronized.')
-            } catch (e) {
+            } catch {
                 console.error('❌ Prisma DB Push failed. Check your DATABASE_URL.')
                 if (isProd) process.exit(1)
             }

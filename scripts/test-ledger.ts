@@ -6,7 +6,7 @@ async function test() {
     console.log('--- Testing LedgerService ---')
 
     // 1. Find or create a test player
-    let player = await db.player.findFirst()
+    const player = await db.player.findFirst()
     if (!player) {
         console.log('No player found, creating dummy')
         // In a real env, we'd need more fields, but for a dev script we assume one exists.

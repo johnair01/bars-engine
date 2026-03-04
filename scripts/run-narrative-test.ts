@@ -54,13 +54,6 @@ function loadQuest(name: string): Quest {
     return JSON.parse(fs.readFileSync(file, 'utf-8'))
 }
 
-function interpolate(value: string, hero: Character): string {
-    return value
-        .replace('${hero.email}', hero.email)
-        .replace('${hero.password}', hero.password)
-        .replace('${hero.name}', hero.name)
-}
-
 async function runQuest(questName: string) {
     console.log('\n🎮 ═══════════════════════════════════════════')
     console.log('   N A R R A T I V E   T E S T   R U N N E R')
@@ -143,12 +136,13 @@ async function runQuest(questName: string) {
         await prisma.invite.delete({ where: { id: invite.id } })
         console.log('  ✓ Test data removed.\n')
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error)
         console.log('\n❌ ═══════════════════════════════════════════')
         console.log('   D E F E A T')
         console.log('═══════════════════════════════════════════════')
         console.log(`\n  💀 ${quest.defeat.check}`)
-        console.log(`  🐛 Error: ${error.message}\n`)
+        console.log(`  🐛 Error: ${msg}\n`)
         process.exit(1)
     }
 }

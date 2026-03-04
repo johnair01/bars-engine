@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { getAllPlayersAdminPulse, switchIdentityAdminPulse } from '@/actions/admin-tools'
-import { useRouter } from 'next/navigation'
 
 export function AdminIdentitySwitcher() {
     const [players, setPlayers] = useState<{ id: string, name: string }[]>([])
     const [isOpen, setIsOpen] = useState(false)
-    const router = useRouter()
 
     useEffect(() => {
         // Only fetch on client mount
@@ -21,7 +19,7 @@ export function AdminIdentitySwitcher() {
         if (result.success) {
             setIsOpen(false)
             // Hard refresh to ensure all state is cleared and re-fetched as new user
-            window.location.href = '/'
+            window.location.assign('/')
         }
     }
 

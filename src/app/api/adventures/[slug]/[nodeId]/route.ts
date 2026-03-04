@@ -518,10 +518,15 @@ export async function GET(
             return NextResponse.json({ error: 'Node not found' }, { status: 404 })
         }
 
+        const choices = JSON.parse(passage.choices) as { text: string; targetId: string }[]
+        const isCompletionPassage = !!passage.linkedQuestId && (!choices || choices.length === 0)
+
         return NextResponse.json({
             id: passage.nodeId,
             text: passage.text,
-            choices: JSON.parse(passage.choices)
+            choices,
+            linkedQuestId: passage.linkedQuestId ?? undefined,
+            isCompletionPassage: isCompletionPassage || undefined,
         })
     } catch (e) {
         return NextResponse.json({ error: 'Failed to load node' }, { status: 500 })

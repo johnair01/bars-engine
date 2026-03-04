@@ -33,6 +33,17 @@ export default function BruisedBananaCampaignPage() {
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Voice & Copy</h2>
+        <p className="text-zinc-300 text-sm leading-relaxed">
+          Campaign and onboarding copy follow the{' '}
+          <Link href="/wiki/voice-style-guide" className="text-emerald-400 hover:text-emerald-300 transition">
+            Librarian Campaign Voice Style Guide
+          </Link>
+          {' '}— presence first, mechanics second. Initiation rituals, not explanations.
+        </p>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-400">House & People</h2>
         <p className="text-zinc-300 text-sm leading-relaxed">
           The house state is an emotional and coordination focus. Wendell, Eddy, and JJ are house admins and players.
