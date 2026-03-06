@@ -30,8 +30,42 @@ function slugFromTitle(title: string): string {
 }
 
 /**
+ * Create a draft Book record for client-side Blob upload.
+ * Returns bookId for use with upload() from @vercel/blob/client.
+ * Bypasses Vercel's 4.5 MB request limit by not receiving file bytes.
+ */
+export async function createBookForUpload(title: string, author: string | null) {
+  try {
+    await requireAdmin()
+
+    const trimmedTitle = title?.trim() || 'Untitled'
+    let slug = slugFromTitle(trimmedTitle)
+
+    const existing = await db.book.findUnique({ where: { slug } })
+    if (existing) slug = `${slug}-${Date.now()}`
+
+    const book = await db.book.create({
+      data: {
+        title: trimmedTitle,
+        author: author?.trim() || null,
+        slug,
+        status: 'draft',
+      },
+    })
+
+    revalidatePath('/admin/books')
+    return { success: true, bookId: book.id }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Failed to create book'
+    console.error('[BOOKS] Create book error:', msg)
+    return { error: msg }
+  }
+}
+
+/**
  * Upload a PDF and create a Book record.
  * Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set; otherwise saves to public/uploads/books/{id}.pdf
+ * Note: For files > 4.5 MB on Vercel, use createBookForUpload + client upload instead.
  */
 export async function uploadBook(
   _prev: { error?: string; success?: boolean; bookId?: string } | null,
