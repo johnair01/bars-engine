@@ -16,6 +16,14 @@ import {
     confirmSelection,
 } from '@/lib/game/diagnostic-engine'
 import { normalizeTwineStory } from '@/lib/schemas'
+import { isCampaignQuest } from '@/lib/quest-scope'
+import {
+    irToTwee,
+    validateIrStory,
+    type IRNode,
+    type IRStory,
+} from '@/lib/twine-authoring-ir'
+import { parseTwee } from '@/lib/twee-parser'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -102,6 +110,168 @@ export async function togglePublishStory(storyId: string) {
         return { success: true, isPublished: !story.isPublished }
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Failed'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: Publish IR draft to TwineStory
+// ---------------------------------------------------------------------------
+
+function parseIrDraft(irDraft: string): { nodes: IRNode[]; title?: string; startNode?: string } {
+    const raw = JSON.parse(irDraft) as IRStory | IRNode[]
+    if (Array.isArray(raw)) {
+        return { nodes: raw }
+    }
+    const story = raw as IRStory
+    const nodes = story.story_nodes ?? []
+    const meta = story.story_metadata
+    return {
+        nodes,
+        title: meta?.title,
+        startNode: meta?.start_node,
+    }
+}
+
+export async function publishIrToTwineStory(
+    storyId: string,
+    irDraft?: string
+): Promise<{ success?: boolean; error?: string; passageCount?: number }> {
+    try {
+        const adminId = await requireAdmin()
+        const story = await db.twineStory.findUnique({ where: { id: storyId } })
+        if (!story) return { error: 'Story not found' }
+
+        const draft = irDraft ?? story.irDraft
+        if (!draft || draft.trim() === '') {
+            return { error: 'No irDraft provided and story has no saved irDraft' }
+        }
+
+        let nodes: IRNode[]
+        let title: string | undefined
+        let startNode: string | undefined
+        try {
+            const parsed = parseIrDraft(draft)
+            nodes = parsed.nodes
+            title = parsed.title
+            startNode = parsed.startNode
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : 'Invalid irDraft JSON'
+            return { error: `Invalid irDraft: ${msg}` }
+        }
+
+        const validation = validateIrStory(nodes)
+        if (!validation.valid) {
+            return { error: `Validation failed: ${validation.errors.join('; ')}` }
+        }
+
+        const tweeSource = irToTwee(nodes, {
+            title: title ?? story.title,
+            startNode: startNode ?? nodes[0]?.node_id ?? 'Start',
+        })
+
+        const parsed = parseTwee(tweeSource)
+
+        await db.$transaction([
+            db.twineStory.update({
+                where: { id: storyId },
+                data: {
+                    sourceText: tweeSource,
+                    parsedJson: JSON.stringify(parsed),
+                    sourceType: 'twee',
+                    ...(irDraft ? { irDraft } : {}),
+                },
+            }),
+            db.compiledTweeVersion.create({
+                data: {
+                    storyId,
+                    tweeContent: tweeSource,
+                    createdById: adminId,
+                },
+            }),
+        ])
+
+        revalidatePath('/admin/twine')
+        revalidatePath('/adventures')
+        return { success: true, passageCount: parsed.passages.length }
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Publish failed'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: Save IR draft (no publish)
+// ---------------------------------------------------------------------------
+
+export async function saveIrDraft(
+    storyId: string,
+    irDraft: string
+): Promise<{ success?: boolean; error?: string }> {
+    try {
+        await requireAdmin()
+        const story = await db.twineStory.findUnique({ where: { id: storyId } })
+        if (!story) return { error: 'Story not found' }
+
+        await db.twineStory.update({
+            where: { id: storyId },
+            data: { irDraft },
+        })
+
+        revalidatePath('/admin/twine')
+        revalidatePath(`/admin/twine/${storyId}`)
+        revalidatePath(`/admin/twine/${storyId}/ir`)
+        return { success: true }
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Save failed'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: List compiled versions for rollback
+// ---------------------------------------------------------------------------
+
+export async function getCompiledVersionsForStory(storyId: string) {
+  await requireAdmin()
+  return db.compiledTweeVersion.findMany({
+    where: { storyId },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: Rollback to compiled version
+// ---------------------------------------------------------------------------
+
+export async function rollbackToVersion(
+    storyId: string,
+    versionId: string
+): Promise<{ success?: boolean; error?: string }> {
+    try {
+        await requireAdmin()
+        const version = await db.compiledTweeVersion.findFirst({
+            where: { id: versionId, storyId },
+        })
+        if (!version) return { error: 'Version not found' }
+
+        const parsed = parseTwee(version.tweeContent)
+        await db.twineStory.update({
+            where: { id: storyId },
+            data: {
+                sourceText: version.tweeContent,
+                parsedJson: JSON.stringify(parsed),
+                sourceType: 'twee',
+            },
+        })
+
+        revalidatePath('/admin/twine')
+        revalidatePath(`/admin/twine/${storyId}`)
+        revalidatePath(`/admin/twine/${storyId}/ir`)
+        return { success: true }
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Rollback failed'
         return { error: msg }
     }
 }
@@ -376,10 +546,14 @@ export async function advanceRun(
     const bindingResult = await executeBindingsForPassage(storyId, targetPassageName, run.id, playerId)
 
     // Check for end state: explicit END_ prefix OR passage has no outgoing links (dead end)
+    // Campaign quests cannot be completed via Twine end passages; they must be completed on the gameboard
     let questCompleted = false
     const isEndPassage = targetPassageName.startsWith('END_') || targetPassage.links.length === 0
     if (questId && isEndPassage) {
-        questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId, threadId)
+        const isCampaign = await isCampaignQuest(questId)
+        if (!isCampaign) {
+            questCompleted = await autoCompleteQuestFromTwine(questId, run.id, playerId, threadId, targetPassageName)
+        }
     }
 
     if (!skipRevalidate) {
@@ -449,7 +623,7 @@ export async function revertRun(storyId: string, questId?: string | null, player
 // INTERNAL: Auto-complete quest when player reaches an END_ passage
 // ---------------------------------------------------------------------------
 
-export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string, threadId?: string | null): Promise<boolean> {
+export async function autoCompleteQuestFromTwine(questId: string, runId: string, playerId: string, threadId?: string | null, endPassageName?: string): Promise<boolean> {
     try {
         // Fetch quest to check for inputs
         const quest = await db.customBar.findUnique({ where: { id: questId } })
@@ -478,12 +652,20 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
             return false
         }
 
+        // Derive completionType from end passage for Strengthen the Residency (END_DONATE -> donate, etc.)
+        let completionType: string | undefined
+        if (questId === 'starter-strengthen-residency' && endPassageName?.startsWith('END_')) {
+            completionType = endPassageName.slice(4).toLowerCase() // END_DONATE -> donate
+        }
+
+        const completionInputs = { completedViaTwine: true, runId, ...(completionType && { completionType }) }
+
         // Mark quest complete
         await db.playerQuest.update({
             where: { id: assignment.id },
             data: {
                 status: 'completed',
-                inputs: JSON.stringify({ completedViaTwine: true, runId }),
+                inputs: JSON.stringify(completionInputs),
                 completedAt: new Date(),
             }
         })
@@ -517,9 +699,9 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
             })
         }
 
-        // Run completion effects (e.g. deriveAvatarFromExisting)
+        // Run completion effects (e.g. deriveAvatarFromExisting, strengthenResidency by completionType)
         const { runCompletionEffectsForQuest } = await import('@/actions/quest-engine')
-        await runCompletionEffectsForQuest(playerId, questId, { completedViaTwine: true, runId })
+        await runCompletionEffectsForQuest(playerId, questId, completionInputs)
 
         // Record verification completion for backlog sync (O)
         if (quest.backlogPromptPath) {

@@ -45,7 +45,7 @@ export function OnboardingRecommendation({ type, recommendedId, options, onCompl
                         await completeQuest(questId, {
                             [inputKey]: selectedId,
                             recommendationMatched: selectedId === recommendedId
-                        }, { threadId })
+                        }, { threadId, source: 'dashboard' })
                     }
 
                     if (onComplete) onComplete()

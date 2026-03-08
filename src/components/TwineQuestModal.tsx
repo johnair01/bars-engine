@@ -5,6 +5,7 @@ import { advanceRun, revertRun, getOrCreateRun, getTwineStoryForQuest, completeT
 import { logCertificationFeedback } from '@/actions/certification-feedback'
 import { getWorldData } from '@/actions/onboarding'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from './onboarding/OnboardingRecommendation'
 import { AdminFeedbackInput } from './AdminFeedbackInput'
@@ -18,9 +19,10 @@ interface TwineQuestModalProps {
     isCompleted?: boolean
     threadId?: string
     isRitual?: boolean
+    isAdmin?: boolean
 }
 
-export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineStoryId, isCompleted, threadId, isRitual }: TwineQuestModalProps) {
+export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineStoryId, isCompleted, threadId, isRitual, isAdmin }: TwineQuestModalProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [story, setStory] = useState<ParsedTwineStory | null>(null)
@@ -232,7 +234,18 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                                 )}
                             </div>
                         </div>
-                        <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors text-lg">✕</button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {isAdmin && (
+                                <Link
+                                    href={`/admin/quests/${questId}`}
+                                    className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg border border-emerald-800/60 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-300 transition-colors"
+                                    title="Edit quest config"
+                                >
+                                    Edit
+                                </Link>
+                            )}
+                            <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors text-lg">✕</button>
+                        </div>
                     </div>
                     {/* Progress bar */}
                     <div className="h-1 bg-zinc-800 rounded-full overflow-hidden mt-3">

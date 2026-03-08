@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { logNarrativeQualityFeedback } from "@/actions/narrative-quality-feedback"
 
 const updatePassageSchema = z.object({
     passageId: z.string(),
@@ -17,7 +18,11 @@ const updatePassageSchema = z.object({
         } catch {
             return false
         }
-    }, "Choices must be a valid JSON array")
+    }, "Choices must be a valid JSON array"),
+    logAsFeedback: z
+        .string()
+        .optional()
+        .transform((v) => v === "true" || v === "on" || v === "1")
 })
 
 export async function updatePassage(prevState: any, formData: FormData) {
@@ -27,6 +32,7 @@ export async function updatePassage(prevState: any, formData: FormData) {
         nodeId: formData.get("nodeId"),
         text: formData.get("text"),
         choicesJson: formData.get("choices") || "[]",
+        logAsFeedback: formData.get("logAsFeedback"),
     }
 
     const result = updatePassageSchema.safeParse(data)
@@ -42,8 +48,10 @@ export async function updatePassage(prevState: any, formData: FormData) {
     try {
         const passage = await db.passage.findUnique({
             where: { id: result.data.passageId },
-            select: { linkedQuestId: true },
+            select: { linkedQuestId: true, text: true },
         })
+        const beforeText = passage?.text ?? ""
+
         await db.passage.update({
             where: { id: result.data.passageId },
             data: {
@@ -56,6 +64,17 @@ export async function updatePassage(prevState: any, formData: FormData) {
             await db.customBar.update({
                 where: { id: passage.linkedQuestId },
                 data: { description: result.data.text },
+            })
+        }
+
+        if (result.data.logAsFeedback && beforeText !== result.data.text) {
+            await logNarrativeQualityFeedback({
+                type: "edit",
+                passageId: result.data.passageId,
+                adventureId: result.data.adventureId,
+                nodeId: result.data.nodeId,
+                before: beforeText,
+                after: result.data.text,
             })
         }
     } catch (error: any) {

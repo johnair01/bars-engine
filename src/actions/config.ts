@@ -176,3 +176,51 @@ export async function getRecentAuditLogs(limit = 10) {
         take: limit
     })
 }
+
+/**
+ * Get post-signup redirect target. Configurable per instance.
+ * Default 'dashboard' for new campaign model; 'conclave' for legacy Party flow.
+ */
+export async function getPostSignupRedirect(): Promise<'conclave' | 'dashboard'> {
+    try {
+        const config = await db.appConfig.findUnique({
+            where: { id: 'singleton' },
+            select: { postSignupRedirect: true }
+        })
+        const val = config?.postSignupRedirect
+        if (val === 'conclave' || val === 'dashboard') return val
+        return 'dashboard'
+    } catch {
+        return 'dashboard'
+    }
+}
+
+/**
+ * Compute dashboard redirect URL for a player with orientation progress.
+ * Returns /?focusQuest={questId} when there is a current orientation quest, else /.
+ */
+export async function getDashboardRedirectForPlayer(playerId: string): Promise<string> {
+    const progress = await db.threadProgress.findFirst({
+        where: {
+            playerId,
+            completedAt: null,
+            thread: { threadType: 'orientation' }
+        },
+        include: {
+            thread: {
+                include: {
+                    quests: {
+                        orderBy: { position: 'asc' },
+                        include: { quest: true }
+                    }
+                }
+            }
+        }
+    })
+    if (!progress) return '/'
+    const currentThreadQuest = progress.thread.quests.find(
+        q => q.position === progress.currentPosition
+    )
+    if (!currentThreadQuest) return '/'
+    return `/?focusQuest=${currentThreadQuest.questId}`
+}

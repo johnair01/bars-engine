@@ -4,6 +4,41 @@
 
 Add a Bounty Board (user-created offers with staking for multiple completions and bigger payouts), distinguish system vs bounty quests in the Market, and introduce Donation Packs (Pokemon booster-style BARs redeemable for vibeulons) so donation-to-vibeulon conversion is configurable and has an arcade/raffle feel ahead of the residency launch.
 
+## API Contracts (API-First)
+
+> Define before implementation. Route Handler for external consumers; Server Action for forms/React.
+
+### createBountyAction
+
+**Input**: `{ barId: string; stakeAmount: number; maxCompletions: number; rewardPerCompletion: number }`  
+**Output**: `Promise<{ success: true; barId: string } | { error: string }>`
+
+- **Server Action** — QuestWizard form submission.
+- Constraint: `stakeAmount >= maxCompletions * rewardPerCompletion`. Moves vibeulons to escrow (BountyStake); sets CustomBar `questSource: 'bounty'`, `stakedPool`.
+
+### redeemPackAction
+
+**Input**: `{ packId: string }`  
+**Output**: `Promise<{ success: true; vibeulonsMinted: number } | { error: string }>`
+
+- **Server Action** — "Open Pack" button on /event or /wallet.
+- Mints vibeulons from pack; marks RedemptionPack `status: 'redeemed'`.
+
+### createPackForPlayerAction
+
+**Input**: `{ playerId: string; packType: string; instanceId?: string }`  
+**Output**: `Promise<{ success: true; packId: string } | { error: string }>`
+
+- **Server Action** — Admin manual pack creation (e.g. after offline donation).
+- Creates RedemptionPack with `status: 'unredeemed'`.
+
+### POST /api/donation/webhook (optional, Phase 6)
+
+**Input**: Stripe webhook payload  
+**Output**: `NextResponse.json({ received: true })`
+
+- **Route Handler** — External consumer (Stripe). Creates Donation + RedemptionPack(s) on payment success.
+
 ## Conceptual Model (Game Language)
 
 - **Energy** (vibeulons) flows when players complete bounties (from escrow) or redeem packs (from donation).

@@ -9,25 +9,27 @@ export function DashboardCaster() {
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [generatedQuest, setGeneratedQuest] = useState<{ title: string, description: string } | null>(null)
-    const [useFirstAidLens, setUseFirstAidLens] = useState(false)
 
     const handleComplete = async (hexagramId: number) => {
-        // Trigger AI Quest Generation
-        const result = await generateQuestFromReading(hexagramId, useFirstAidLens)
+        const result = await generateQuestFromReading(hexagramId)
 
-        if (result.error) {
-            throw new Error(result.error) // Bubble up to CastingRitual's error handler
+        if ('error' in result) {
+            throw new Error(result.error)
         }
 
-        if (result.quest) {
-            setGeneratedQuest(result.quest)
-            router.refresh()
-
-            // Close after showing success
-            setTimeout(() => {
+        if (result.success && result.quest) {
+            if (result.adventureId && result.questId && result.threadId) {
                 setIsOpen(false)
-                setGeneratedQuest(null)
-            }, 3000)
+                router.refresh()
+                router.push(`/adventure/${result.adventureId}/play?questId=${result.questId}&threadId=${result.threadId}`)
+            } else {
+                setGeneratedQuest({ title: result.quest.title, description: result.quest.description ?? '' })
+                router.refresh()
+                setTimeout(() => {
+                    setIsOpen(false)
+                    setGeneratedQuest(null)
+                }, 3000)
+            }
         }
     }
 
@@ -55,17 +57,6 @@ export function DashboardCaster() {
 
                 {!generatedQuest ? (
                     <div className="space-y-4">
-                        <label className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-                            <input
-                                type="checkbox"
-                                checked={useFirstAidLens}
-                                onChange={(e) => setUseFirstAidLens(e.target.checked)}
-                                className="mt-1 h-4 w-4"
-                            />
-                            <span className="text-xs text-zinc-300">
-                                Use latest Emotional First Aid lens for this generated quest.
-                            </span>
-                        </label>
                         <CastingRitual
                             mode="modal"
                             onComplete={handleComplete}
@@ -80,7 +71,7 @@ export function DashboardCaster() {
                             <h3 className="text-xl font-bold text-white mb-2">{generatedQuest.title}</h3>
                             <p className="text-zinc-400 italic">{generatedQuest.description}</p>
                         </div>
-                        <p className="text-zinc-500 text-sm">This quest has been added to the Collecture Board.</p>
+                        <p className="text-zinc-500 text-sm">Play your grammatic quest to begin.</p>
                     </div>
                 )}
             </div>

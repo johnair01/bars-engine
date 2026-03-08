@@ -3,9 +3,21 @@ import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-export default async function CreateQuestPage() {
+export default async function CreateQuestPage(props: {
+  searchParams: Promise<{ from?: string; questId?: string; slotId?: string; campaignRef?: string }>
+}) {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
+
+    const searchParams = await props.searchParams
+    const gameboardContext =
+      searchParams.from === 'gameboard' && searchParams.questId && searchParams.slotId && searchParams.campaignRef
+        ? {
+            questId: searchParams.questId,
+            slotId: searchParams.slotId,
+            campaignRef: searchParams.campaignRef,
+          }
+        : undefined
 
     const isSetupIncomplete = !player.nationId || !player.playbookId
 
@@ -47,7 +59,7 @@ export default async function CreateQuestPage() {
 
             {/* Main Content */}
             <main className="p-4 sm:p-6 max-w-4xl mx-auto pb-20">
-                <QuestWizard />
+                <QuestWizard gameboardContext={gameboardContext} />
             </main>
         </div>
     )

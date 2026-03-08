@@ -34,6 +34,7 @@ model Player {
   onboardingComplete     Boolean                    @default(false)
   storyProgress          String?
   hasSeenWelcome         Boolean                    @default(false)
+  hasSeenCampaignEntry   Boolean                    @default(false)
   hasCompletedFirstQuest Boolean                    @default(false)
   hasCreatedFirstQuest   Boolean                    @default(false)
   onboardingCompletedAt  DateTime?
@@ -74,6 +75,10 @@ model Player {
   libraryRequests        LibraryRequest[]
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
   verificationCompletionLogs VerificationCompletionLog[]
+  stewardedSlots         GameboardSlot[] @relation("GameboardSteward")
+  gameboardBids         GameboardBid[]
+  gameboardAidOffersMade GameboardAidOffer[] @relation("GameboardAidOfferer")
+  gameboardAidOffersReceived GameboardAidOffer[] @relation("GameboardAidSteward")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -156,6 +161,10 @@ model CustomBar {
   rootId               String?
   allowedNations       String?
   allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  campaignRef          String?      // e.g. bruised-banana; when set, quest is campaign-linked
+  campaignGoal         String?      // e.g. throw a party; the goal this quest fulfills
+  emotionalAlchemyTag  String?      // aligned | curious | skeptical; when set, quest preferred for that onboarding branch
+  forkedFromId         String?      // when set, this quest is a private fork of another
   gameMasterFace       String?      // shaman | challenger | regent | architect | diplomat | sage (dojo alignment for growUp)
   twineStoryId         String?
   docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
@@ -166,6 +175,8 @@ model CustomBar {
   creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
   parent               CustomBar?     @relation("CustomBarTree", fields: [parentId], references: [id])
   children             CustomBar[]    @relation("CustomBarTree")
+  forkedFrom           CustomBar?     @relation("QuestFork", fields: [forkedFromId], references: [id], onDelete: SetNull)
+  forks                CustomBar[]   @relation("QuestFork")
   twineStory           TwineStory?    @relation(fields: [twineStoryId], references: [id])
   packQuests           PackQuest[]
   assignments          PlayerQuest[]
@@ -176,6 +187,8 @@ model CustomBar {
   upgradedThreads      QuestThread[]  @relation("QuestUpgradeProvenance")
   microTwine           MicroTwineModule?
   libraryRequestsSpawned LibraryRequest[] @relation("LibraryRequestSpawnedQuest")
+  gameboardSlots       GameboardSlot[]
+  aidOffersLinked     GameboardAidOffer[] @relation("AidOfferLinkedQuest")
 
   @@map("custom_bars")
 }
@@ -190,6 +203,7 @@ model PlayerBar {
   bar        Bar      @relation(fields: [barId], references: [id])
   player     Player   @relation(fields: [playerId], references: [id])
 
+  @@index([playerId, source])
   @@map("player_bars")
 }
 
@@ -609,6 +623,7 @@ model TwineStory {
   sourceType  String         @default("twine_html")
   sourceText  String
   parsedJson  String         @default("{}")
+  irDraft     String?        // JSON: IR story nodes for authoring; compile to .twee on publish
   isPublished Boolean        @default(false)
   createdById String
   createdAt   DateTime       @default(now())
@@ -616,10 +631,23 @@ model TwineStory {
   quests      CustomBar[]
   bindings    TwineBinding[]
   runs        TwineRun[]
+  compiledVersions CompiledTweeVersion[]
   createdBy   Player         @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById, createdAt])
   @@map("twine_stories")
+}
+
+model CompiledTweeVersion {
+  id          String     @id @default(cuid())
+  storyId     String
+  tweeContent String     // Compiled .twee source
+  createdAt   DateTime   @default(now())
+  createdById String?
+  story       TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([storyId, createdAt])
+  @@map("compiled_twee_versions")
 }
 
 model TwineRun {
@@ -690,7 +718,73 @@ model Instance {
   redemptionPacks    RedemptionPack[]
   libraryRequests    LibraryRequest[]
 
+  gameboardSlots GameboardSlot[]
+
   @@map("instances")
+}
+
+model GameboardSlot {
+  id               String    @id @default(cuid())
+  instanceId       String
+  campaignRef      String
+  period           Int       // instance.kotterStage or GlobalState.currentPeriod
+  slotIndex        Int       // 0–7
+  questId          String?
+  drawnAt          DateTime?
+  stewardId        String?   // player who has taken but not completed
+  wakeUpAt         DateTime? // step 1: acknowledged read
+  cleanUpAt        DateTime? // step 2: reflected on obstacles
+  cleanUpReflection String?  // step 2: obstacle reflection text
+  createdAt        DateTime  @default(now())
+
+  instance         Instance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  quest            CustomBar? @relation(fields: [questId], references: [id], onDelete: SetNull)
+  steward          Player?   @relation("GameboardSteward", fields: [stewardId], references: [id], onDelete: SetNull)
+  bids             GameboardBid[]
+  aidOffers        GameboardAidOffer[]
+
+  @@unique([instanceId, campaignRef, period, slotIndex])
+  @@index([instanceId, campaignRef, period])
+  @@map("gameboard_slots")
+}
+
+model GameboardBid {
+  id        String   @id @default(cuid())
+  slotId    String
+  bidderId  String
+  amount    Int      // vibeulons (each Vibulon token = 1)
+  status    String   @default("active") // active | won | withdrawn
+  createdAt DateTime @default(now())
+
+  slot   GameboardSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  bidder Player         @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+
+  @@index([slotId, status])
+  @@index([bidderId])
+  @@map("gameboard_bids")
+}
+
+model GameboardAidOffer {
+  id             String    @id @default(cuid())
+  slotId         String
+  stewardId      String
+  offererId      String
+  message        String    @db.Text
+  type           String    @default("direct") // direct (EFA, support) | quest (quest to unblock)
+  linkedQuestId  String?   // for type=quest: quest created to help steward
+  status         String    @default("pending") // pending | accepted | declined
+  expiresAt      DateTime? // steward must respond by this time; configurable TTL from createdAt
+  forkedAt       DateTime? // when offerer forked the linked quest after decline
+  createdAt      DateTime  @default(now())
+
+  slot        GameboardSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  steward     Player        @relation("GameboardAidSteward", fields: [stewardId], references: [id], onDelete: Cascade)
+  offerer     Player        @relation("GameboardAidOfferer", fields: [offererId], references: [id], onDelete: Cascade)
+  linkedQuest CustomBar?    @relation("AidOfferLinkedQuest", fields: [linkedQuestId], references: [id], onDelete: SetNull)
+
+  @@index([slotId])
+  @@index([stewardId, status])
+  @@map("gameboard_aid_offers")
 }
 
 model RedemptionPack {
@@ -747,16 +841,17 @@ model InstanceMembership {
 }
 
 model AppConfig {
-  id                 String    @id @default("singleton")
-  features           String    @default("{}")
-  theme              String    @default("{}")
-  heroTitle          String?
-  heroSubtitle       String?
-  updatedAt          DateTime  @updatedAt
-  updatedBy          String?
-  activeInstanceId   String?
-  orientationQuestId String?
-  activeInstance     Instance? @relation(fields: [activeInstanceId], references: [id])
+  id                   String    @id @default("singleton")
+  features             String    @default("{}")
+  theme                String    @default("{}")
+  heroTitle            String?
+  heroSubtitle         String?
+  updatedAt            DateTime  @updatedAt
+  updatedBy            String?
+  activeInstanceId     String?
+  orientationQuestId   String?
+  postSignupRedirect   String?   // 'conclave' | 'dashboard'; default 'dashboard' for new campaign model
+  activeInstance       Instance? @relation(fields: [activeInstanceId], references: [id])
 
   @@map("app_config")
 }
@@ -840,6 +935,7 @@ model Passage {
   text          String    // Markdown + macros
   choices       String    @default("[]") // JSON array
   linkedQuestId String?   // When set, Passage.text syncs with CustomBar.description (edit sync)
+  metadata      Json?     // actionType, castIChingTargetId, etc. for branching quest
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

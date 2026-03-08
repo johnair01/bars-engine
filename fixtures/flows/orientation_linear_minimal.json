@@ -1,0 +1,65 @@
+{
+  "flow_id": "orientation_linear_minimal_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "intro_1",
+  "nodes": [
+    {
+      "id": "intro_1",
+      "type": "introduction",
+      "copy": "The Conclave has convened. Five nations. A heist at the Robot Oscars. You're joining the crew.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["orientation_viewed"],
+          "next_node_id": "prompt_1"
+        }
+      ]
+    },
+    {
+      "id": "prompt_1",
+      "type": "prompt",
+      "copy": "What draws you most right now? Understanding, connecting, or acting?",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["prompt_viewed"],
+          "next_node_id": "action_1"
+        }
+      ]
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "copy": "Choose your lens.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["observe"],
+          "emits": ["choice_selected"],
+          "next_node_id": "completion_1"
+        }
+      ]
+    },
+    {
+      "id": "completion_1",
+      "type": "completion",
+      "copy": "You've chosen your path. Welcome to the Conclave.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "completion_1"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "prompt_viewed",
+    "choice_selected",
+    "quest_completed"
+  ]
+}

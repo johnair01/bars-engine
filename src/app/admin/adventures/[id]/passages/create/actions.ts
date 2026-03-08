@@ -16,8 +16,11 @@ const createPassageSchema = z.object({
         } catch {
             return false
         }
-    }, "Choices must be a valid JSON array")
+    }, "Choices must be a valid JSON array"),
+    linkFromJson: z.string().optional(),
 })
+
+type LinkFrom = { mode: 'after'; passageId: string; nodeId: string } | { mode: 'branch'; passageId: string; nodeId: string; choiceIndex?: number }
 
 export async function createPassage(prevState: any, formData: FormData) {
     const data = {
@@ -25,6 +28,7 @@ export async function createPassage(prevState: any, formData: FormData) {
         nodeId: formData.get("nodeId"),
         text: formData.get("text"),
         choicesJson: formData.get("choices") || "[]",
+        linkFromJson: formData.get("linkFrom") || "",
     }
 
     const result = createPassageSchema.safeParse(data)
@@ -37,7 +41,17 @@ export async function createPassage(prevState: any, formData: FormData) {
         }
     }
 
-    let passage;
+    let linkFrom: LinkFrom | null = null
+    if (result.data.linkFromJson?.trim()) {
+        try {
+            linkFrom = JSON.parse(result.data.linkFromJson) as LinkFrom
+            if (!linkFrom || !linkFrom.passageId || !linkFrom.nodeId) linkFrom = null
+        } catch {
+            linkFrom = null
+        }
+    }
+
+    let passage
     try {
         passage = await db.passage.create({
             data: {
@@ -48,7 +62,7 @@ export async function createPassage(prevState: any, formData: FormData) {
             }
         })
     } catch (error: any) {
-        if (error.code === 'P2002') { // Unique constraint on adventureId + nodeId
+        if (error.code === 'P2002') {
             return {
                 success: false,
                 message: "A passage with this Node ID already exists in this adventure."
@@ -57,6 +71,40 @@ export async function createPassage(prevState: any, formData: FormData) {
         return {
             success: false,
             message: "Failed to create passage. Please try again."
+        }
+    }
+
+    const newNodeId = passage.nodeId
+
+    if (linkFrom) {
+        const fromPassage = await db.passage.findUnique({
+            where: { id: linkFrom.passageId, adventureId: result.data.adventureId }
+        })
+        if (fromPassage) {
+            let choices: { text: string; targetId: string }[] = []
+            try {
+                choices = JSON.parse(fromPassage.choices || '[]')
+            } catch {
+                /* ignore */
+            }
+            if (linkFrom.mode === 'after') {
+                const hasLink = choices.some((c) => c.targetId === newNodeId)
+                if (!hasLink) {
+                    choices.push({ text: 'Continue', targetId: newNodeId })
+                    await db.passage.update({
+                        where: { id: fromPassage.id },
+                        data: { choices: JSON.stringify(choices) }
+                    })
+                }
+            } else if (linkFrom.mode === 'branch' && typeof linkFrom.choiceIndex === 'number') {
+                if (linkFrom.choiceIndex >= 0 && linkFrom.choiceIndex < choices.length) {
+                    choices[linkFrom.choiceIndex] = { ...choices[linkFrom.choiceIndex], targetId: newNodeId }
+                    await db.passage.update({
+                        where: { id: fromPassage.id },
+                        data: { choices: JSON.stringify(choices) }
+                    })
+                }
+            }
         }
     }
 

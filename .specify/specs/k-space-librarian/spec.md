@@ -10,6 +10,32 @@ Implement a deterministic, quest-driven documentation system that turns **Librar
 
 Canon is **earned** (draft → validated → canonical → deprecated). "Doc-schisms" (conflicts between sources) become a structured quest type: **Schism Hunt**.
 
+## API Contracts (API-First)
+
+> Define before implementation. Route Handler for external/search; Server Action for modal form.
+
+### submitLibraryRequestAction
+
+**Input**: `{ requestText: string; requestType?: string; contextJson?: Record<string, unknown> }`  
+**Output**: `Promise<{ success: true; requestId: string; resolved?: { docNodeId: string; slug: string }; spawned?: { docQuestId: string } } | { error: string }>`
+
+- **Server Action** — "Request from Library" modal form.
+- Calls `resolveOrSpawn`: search DocNodes; if match → return resolved; else create BacklogItem + DocNode + DocQuest, return spawned.
+
+### resolveOrSpawn
+
+**Input**: `{ requestText: string; createdById: string; instanceId: string; contextJson?: Record<string, unknown> }`  
+**Output**: `Promise<{ resolved: DocNode } | { spawned: { backlogItemId: string; docNodeId: string; docQuestId: string } }>`
+
+- **Internal** — Used by submitLibraryRequestAction. Search DocNodes; if match → resolved; else create BacklogItem, DocNode, DocQuest.
+
+### GET /api/library/search
+
+**Query**: `q: string; type?: string; scope?: string`  
+**Output**: `NextResponse.json({ nodes: DocNodeSummary[] })`
+
+- **Route Handler** — Search DocNodes by query, type, scope. Returns slug, title, scope, canonicalStatus.
+
 ## Conceptual Model (Game Language)
 
 - **WHO**: Player (requestor, completer)

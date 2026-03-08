@@ -13,6 +13,8 @@ const SECTIONS = [
     title: 'Game Concepts',
     links: [
       { href: '/wiki/moves', label: 'The 4 Moves (Personal Throughput)' },
+      { href: '/wiki/nations', label: 'Nations (4 moves per nation)' },
+      { href: '/wiki/archetypes', label: 'Archetypes (Playbooks)' },
       { href: '/wiki/domains', label: 'Allyship Domains (WHERE)' },
       { href: '/wiki/emotional-alchemy', label: 'Emotional Alchemy (Quest Design)' },
       { href: '/wiki/glossary', label: 'Glossary (Vibeulons, BAR, Kotter)' },

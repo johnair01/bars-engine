@@ -1,0 +1,50 @@
+{
+  "pass_id": "pass-02",
+  "scored_at": "2025-03-07T12:00:00Z",
+  "corpus_metrics": {
+    "total_quests": 12,
+    "pass_count": 6,
+    "warn_count": 4,
+    "fail_count": 2,
+    "average_score": 20.5,
+    "pass_rate_pct": 83.3
+  },
+  "scores": [
+    {
+      "quest_id": "orientation_welcome_v2",
+      "source_book": "handbook_intro",
+      "scores": {
+        "structural_validity": 5,
+        "bar_lifecycle": 5,
+        "state_compatibility": 4,
+        "language_clarity": 5,
+        "onboarding_suitability": 4,
+        "simulation_readiness": 5
+      },
+      "total_score": 28,
+      "status": "ready",
+      "issues": [],
+      "warnings": [],
+      "requires_human_review": false
+    },
+    {
+      "quest_id": "bar_capture_flow_v1",
+      "source_book": "handbook_intro",
+      "scores": {
+        "structural_validity": 4,
+        "bar_lifecycle": 4,
+        "state_compatibility": 4,
+        "language_clarity": 4,
+        "onboarding_suitability": 3,
+        "simulation_readiness": 4
+      },
+      "total_score": 23,
+      "status": "usable",
+      "issues": [],
+      "warnings": [
+        { "code": "first_action_late", "message": "First action at node 5", "severity": "warning" }
+      ],
+      "requires_human_review": false
+    }
+  ]
+}

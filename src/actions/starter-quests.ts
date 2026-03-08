@@ -29,7 +29,7 @@ export async function completeStarterQuest(formData: FormData) {
         // 2. Vibuon Grants (+ bonuses)
         // 3. Thread/Pack progression (if context provided - though here we are standalone)
         // 4. Onboarding checks
-        const result = await completeQuest(barId, inputs)
+        const result = await completeQuest(barId, inputs, { source: 'quest_wallet' })
 
         if ('success' in result && result.success) {
             revalidatePath('/')

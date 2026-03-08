@@ -77,7 +77,14 @@ export function parseTwee(tweeSource: string): ParsedTwineStory {
                 }
                 continue
             }
-            // Regular passage
+            // Regular passage: parse "Name" and optional "[tag1 tag2 key:value]"
+            let passageName = name
+            let tags: string[] = []
+            const bracketMatch = name.match(/^(.+?)\s+\[([^\]]*)\]$/)
+            if (bracketMatch) {
+                passageName = bracketMatch[1].trim()
+                tags = bracketMatch[2].split(/\s+/).filter(Boolean)
+            }
             i++
             const contentLines: string[] = []
             while (i < lines.length && !lines[i].match(/^::\s+/)) {
@@ -90,14 +97,14 @@ export function parseTwee(tweeSource: string): ParsedTwineStory {
             const pid = String(passages.length + 1)
             const passage: ParsedPassage = {
                 pid,
-                name,
+                name: passageName,
                 text: rawText,
                 cleanText,
                 links,
-                tags: []
+                tags,
             }
             passages.push(passage)
-            passageMap.set(name, passage)
+            passageMap.set(passageName, passage)
             continue
         }
         i++

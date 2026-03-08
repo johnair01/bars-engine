@@ -1,0 +1,372 @@
+:: StoryTitle
+Bruised Banana Onboarding Draft
+
+:: StoryData
+{
+  "ifid": "A1B2C3D4-E5F6-47A8-9B10-C11D12E13F14",
+  "format": "SugarCube",
+  "format-version": "2.36.1",
+  "start": "Arrival"
+}
+
+:: Arrival [cluster1 passage]
+You arrive at the Bruised Banana.
+
+A quiet house in Portland where something unusual is underway. Laptops open on tables. Whiteboards filled with fragments of strategy. Someone left a mug of tea beside a stack of notes.
+
+You've stepped into the early days of a three-month build experiment.
+
+[[Continue|The Work]]
+
+:: The Work [cluster1 passage]
+The work happening here began as a book called ''Mastering the Game of Allyship''.
+
+Over time the idea outgrew the page.
+
+The framework started behaving like a game — something people could step into together. Conversations became quests. Emotional shifts turned into visible moves. Coordination became part of the story.
+
+[[Continue|The Turning Point]]
+
+:: The Turning Point [cluster1 passage]
+Over the past year small groups have tested this system.
+
+The largest run happened on February 21 during a birthday gathering. Dozens of players entered the story at once.
+
+The system held.
+
+Two weeks later the circumstances of my life shifted in a way that created space to focus on building this work fully.
+
+The Bruised Banana Residency is the container for the next phase.
+
+[[Continue|The Invitation]]
+
+:: The Invitation [cluster1 passage]
+You've arrived while this next chapter is beginning.
+
+Some people will help build the system.
+Some will test it by playing.
+Some will support the residency so the work can continue.
+
+Before you step further into the campaign, there's a simple question.
+
+How does this land for you?
+
+[[This sounds exciting. I want to see what's possible here.|Aligned Response]]
+[[I'm curious, though I'm still figuring out where I fit.|Curious Response]]
+[[I'm skeptical. Systems like this rarely work the way people hope.|Skeptical Response]]
+
+:: Aligned Response [cluster1 choice aligned emotional-alchemy]
+[TOKEN] SET emotional_alchemy=aligned
+
+Something in this already feels alive.
+
+Good. You don't need the whole map in advance. You only need a direction worth stepping toward.
+
+Let's make your role in the story visible.
+
+[[Continue|Why Identity Matters]]
+
+:: Curious Response [cluster1 choice neutral emotional-alchemy]
+[TOKEN] SET emotional_alchemy=curious
+
+Curiosity is enough.
+
+You don't need certainty to begin. The campaign can meet you before you know exactly what part you want to play.
+
+Let's make your role in the story visible.
+
+[[Continue|Why Identity Matters]]
+
+:: Skeptical Response [cluster1 choice divergent emotional-alchemy]
+[TOKEN] SET emotional_alchemy=skeptical
+
+Skepticism has its uses.
+
+A system like this should earn belief through experience. The next steps are simple enough to test whether the structure holds.
+
+Let's make your role in the story visible.
+
+[[Continue|Why Identity Matters]]
+
+:: Why Identity Matters [cluster2 passage]
+Every story becomes more interesting when characters are distinct.
+
+Some people naturally connect allies who would otherwise never meet. Some see structural patterns others miss. Some stabilize tension when situations become charged.
+
+The game works best when it understands how players move through situations.
+
+Nations and archetypes give the system that map. The clearer your starting point, the more interesting the quests it can generate for you.
+
+[[Choose your Nation|Choose Nation]]
+
+:: Choose Nation [cluster2 template choose-one]
+The world of the campaign is shaped by different cultural environments.
+
+Each nation represents a different approach to collaboration, strategy, and risk.
+
+Choose the one that feels closest to how you tend to operate right now.
+
+[[Argyra — elegant coordination, precision, and social patterning|Nation_Argyra]]
+[[Pyrakanth — momentum, courage, heat, and decisive action|Nation_Pyrakanth]]
+[[Lamenth — depth, grief, memory, and emotional truth|Nation_Lamenth]]
+[[Meridia — coherence, stewardship, and grounded flourishing|Nation_Meridia]]
+[[Virelune — mystery, emergence, intuition, and hidden pathways|Nation_Virelune]]
+
+:: Nation_Argyra [cluster2 result emits:nation_selected]
+[TOKEN] SET nation=argyra
+
+Your nation is now part of the campaign record.
+
+[[Choose your Archetype|Choose Archetype]]
+
+:: Nation_Pyrakanth [cluster2 result emits:nation_selected]
+[TOKEN] SET nation=pyrakanth
+
+Your nation is now part of the campaign record.
+
+[[Choose your Archetype|Choose Archetype]]
+
+:: Nation_Lamenth [cluster2 result emits:nation_selected]
+[TOKEN] SET nation=lamenth
+
+Your nation is now part of the campaign record.
+
+[[Choose your Archetype|Choose Archetype]]
+
+:: Nation_Meridia [cluster2 result emits:nation_selected]
+[TOKEN] SET nation=meridia
+
+Your nation is now part of the campaign record.
+
+[[Choose your Archetype|Choose Archetype]]
+
+:: Nation_Virelune [cluster2 result emits:nation_selected]
+[TOKEN] SET nation=virelune
+
+Your nation is now part of the campaign record.
+
+[[Choose your Archetype|Choose Archetype]]
+
+:: Choose Archetype [cluster2 template choose-one]
+When something important is unfolding, people fall into recognizable roles.
+
+The eight archetypes map to how you tend to move through situations. Each has a distinct approach to obstacles, collaboration, and growth.
+
+Archetypes help the system generate quests that match your instincts.
+
+Choose the role that feels most alive in you today.
+
+[[The Bold Heart|Archetype_BoldHeart]]
+[[The Devoted Guardian|Archetype_DevotedGuardian]]
+[[The Decisive Storm|Archetype_DecisiveStorm]]
+[[The Danger Walker|Archetype_DangerWalker]]
+[[The Still Point|Archetype_StillPoint]]
+[[The Subtle Influence|Archetype_SubtleInfluence]]
+[[The Truth Seer|Archetype_TruthSeer]]
+[[The Joyful Connector|Archetype_JoyfulConnector]]
+
+:: Archetype_BoldHeart [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Bold Heart
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_DevotedGuardian [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Devoted Guardian
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_DecisiveStorm [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Decisive Storm
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_DangerWalker [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Danger Walker
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_StillPoint [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Still Point
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_SubtleInfluence [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Subtle Influence
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_TruthSeer [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Truth Seer
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Archetype_JoyfulConnector [cluster2 result emits:archetype_selected]
+[TOKEN] SET playbook=The Joyful Connector
+
+Your archetype is now part of the campaign record.
+
+[[Continue|Developmental Lens Node]]
+
+:: Developmental Lens Node [cluster2 hidden-tagging]
+A conversation opens in front of you.
+
+Six responses present themselves. Each one reflects a different way of understanding growth and change.
+
+Choose the response that feels most natural.
+
+[[I want the clearest path to practical results.|Developmental Lens_Practical]]
+[[I want a structure that helps people collaborate fairly.|Developmental Lens_Collaborate]]
+[[I want to understand the larger system at work.|Developmental Lens_System]]
+[[I want to protect what matters and reduce harm.|Developmental Lens_Protect]]
+[[I want to explore what becomes possible through emergence.|Developmental Lens_Emergence]]
+[[I want to strengthen capacity without losing soul.|Developmental Lens_Capacity]]
+
+:: Developmental Lens_Practical [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=practical
+[TOKEN] SET gm=architect
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Developmental Lens_Collaborate [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=collaborate
+[TOKEN] SET gm=diplomat
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Developmental Lens_System [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=system
+[TOKEN] SET gm=sage
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Developmental Lens_Protect [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=protect
+[TOKEN] SET gm=regent
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Developmental Lens_Emergence [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=emergence
+[TOKEN] SET gm=shaman
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Developmental Lens_Capacity [cluster2 result emits:developmental_lens_selected identity_profile_initialized]
+[TOKEN] SET developmental_lens=capacity
+[TOKEN] SET gm=challenger
+
+The system recognizes you now.
+
+[[Continue|Declare Your Vector]]
+
+:: Declare Your Vector [cluster3 passage]
+You're now visible inside the campaign.
+
+Different players are already moving.
+
+Some are helping secure the resources that keep the residency running.
+Some are organizing collaborators into coordinated action.
+Some are helping the story travel further.
+Some are stepping directly into active quests.
+
+Every player chooses where their energy enters the system.
+
+[[Choose your Intended Impact|Choose Intended Impact]]
+
+:: Choose Intended Impact [cluster3 choose-one]
+Where does your attention want to move?
+
+[[Gather Resources|Impact_GatherResources]]
+[[Skillful Organizing|Impact_SkillfulOrganizing]]
+[[Raise Awareness|Impact_RaiseAwareness]]
+[[Direct Action|Impact_DirectAction]]
+
+:: Impact_GatherResources [cluster3 result emits:intended_impact_selected]
+[TOKEN] SET intended_impact=gather_resources
+
+Your intended impact is now part of the campaign.
+
+[[Create a BAR|Create a BAR]]
+
+:: Impact_SkillfulOrganizing [cluster3 result emits:intended_impact_selected]
+[TOKEN] SET intended_impact=skillful_organizing
+
+Your intended impact is now part of the campaign.
+
+[[Create a BAR|Create a BAR]]
+
+:: Impact_RaiseAwareness [cluster3 result emits:intended_impact_selected]
+[TOKEN] SET intended_impact=raise_awareness
+
+Your intended impact is now part of the campaign.
+
+[[Create a BAR|Create a BAR]]
+
+:: Impact_DirectAction [cluster3 result emits:intended_impact_selected]
+[TOKEN] SET intended_impact=direct_action
+
+Your intended impact is now part of the campaign.
+
+[[Create a BAR|Create a BAR]]
+
+:: Create a BAR [cluster3 action]
+A BAR captures a moment of intention so it can become actionable.
+
+{{emotional_alchemy_framing}}
+
+What would you like to see become possible through your participation here?
+
+{{INPUT:barContent|placeholder=Type what you'd like to see become possible through your participation here…}}
+
+[[I'm ready to place this marker in the campaign.|Onboarding Complete]]
+
+:: Onboarding Complete [cluster3 result emits:bar_created intended_impact_bar_attached onboarding_completed]
+Your presence is now part of the system.
+
+The campaign knows who you are, how you tend to move, and where your energy wants to go.
+
+From here, the next quests can connect your intention with real opportunities inside the residency.
+
+[[Begin play|First Quest Stub]]
+
+:: First Quest Stub [post-onboarding stub]
+TODO: Replace this with the first live quest surfaced after onboarding.
+
+Possible first-quest directions:
+• Strengthen the Residency
+• Invite one aligned person
+• Offer a skill or resource
+• Share the residency page
+• Contribute financially
+• Submit structured feedback
+
+[[Begin play|BeginPlay]]
+
+:: BeginPlay [post-onboarding redirect]
+[TOKEN] SET begin_play=1
+
+Redirect to sign-in, then dashboard. App intercepts this passage.

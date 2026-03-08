@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCurrentPlayer } from '@/lib/auth'
 import { getActiveInstance } from '@/actions/instance'
 import { slugifyName } from '@/lib/avatar-utils'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
@@ -345,11 +346,11 @@ function buildTemplateContext(instance: Awaited<ReturnType<typeof getActiveInsta
 }
 
 /** When slug=bruised-banana, serve from Passages (with templates) or fall back to dynamic nodes */
-async function getBruisedBananaFromPassages(nodeId: string): Promise<{ id: string; text: string; choices: { text: string; targetId: string }[]; stepIndex?: number; totalSteps?: number } | null> {
+async function getBruisedBananaFromPassages(nodeId: string, allowDraft?: boolean): Promise<{ id: string; text: string; choices: { text: string; targetId: string }[]; stepIndex?: number; totalSteps?: number } | null> {
     const adventure = await db.adventure.findUnique({
         where: { slug: 'bruised-banana' }
     })
-    if (!adventure || adventure.status !== 'ACTIVE') return null
+    if (!adventure || (!allowDraft && adventure.status !== 'ACTIVE')) return null
 
     const instance = await getActiveInstance()
     const ctx = buildTemplateContext(instance)
@@ -482,11 +483,18 @@ export async function GET(
     const { slug, nodeId } = p
     const { searchParams } = new URL(request.url)
     const ref = searchParams.get('ref')
+    const preview = searchParams.get('preview')
+    let allowDraft = false
+    if (preview === '1') {
+      const player = await getCurrentPlayer()
+      const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
+      allowDraft = isAdmin
+    }
 
     try {
         // Bruised Banana: prefer Passages (editable) when slug=bruised-banana
         if (slug === 'bruised-banana') {
-            const bbNode = await getBruisedBananaFromPassages(nodeId)
+            const bbNode = await getBruisedBananaFromPassages(nodeId, allowDraft)
             if (bbNode) return NextResponse.json(bbNode)
             return NextResponse.json({ error: 'Node not found' }, { status: 404 })
         }
@@ -501,7 +509,7 @@ export async function GET(
             where: { slug }
         })
 
-        if (!adventure || adventure.status !== 'ACTIVE') {
+        if (!adventure || (!allowDraft && adventure.status !== 'ACTIVE')) {
             return NextResponse.json({ error: 'Adventure not found or inactive' }, { status: 404 })
         }
 
@@ -521,12 +529,106 @@ export async function GET(
         const choices = JSON.parse(passage.choices) as { text: string; targetId: string }[]
         const isCompletionPassage = !!passage.linkedQuestId && (!choices || choices.length === 0)
 
+        const depthMatch = nodeId.match(/^depth_\d+_(shaman|challenger|regent|architect|diplomat|sage)$/)
+        if (depthMatch) {
+            const face = depthMatch[1]!
+            const player = await getCurrentPlayer()
+            if (player?.storyProgress) {
+                try {
+                    const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
+                    const state = parsed?.state ?? {}
+                    const updates = { ...state, active_face: face, [`completed_${face}`]: true }
+                    const faceKeys = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']
+                    const altitudeCount = faceKeys.filter((f) => updates[`completed_${f}`]).length
+                    updates.altitude_count = altitudeCount
+                    await db.player.update({
+                        where: { id: player.id },
+                        data: { storyProgress: JSON.stringify({ ...parsed, state: updates }) },
+                    })
+                } catch {
+                    // Ignore parse/update errors
+                }
+            }
+        }
+
+        // Character creation state persistence (char_set_* from chained initiation)
+        const charSetSuffix = nodeId.includes('char_set_') ? nodeId.split('char_set_')[1] : null
+        if (charSetSuffix) {
+            const player = await getCurrentPlayer()
+            if (player) {
+                try {
+                    const parsed = (player.storyProgress ? JSON.parse(player.storyProgress) : {}) as { state?: Record<string, unknown> }
+                    const state = parsed?.state ?? {}
+                    const updates = { ...state }
+                    let updatePlayer = false
+                    const playerData: { nationId?: string; playbookId?: string; campaignDomainPreference?: string; storyProgress: string } = {
+                        storyProgress: JSON.stringify({ ...parsed, state: updates }),
+                    }
+                    if (charSetSuffix === 'cognitive' || charSetSuffix === 'emotional' || charSetSuffix === 'action') {
+                        updates.developmentalHint = charSetSuffix
+                        updatePlayer = true
+                    } else if (charSetSuffix.startsWith('nation_')) {
+                        const nationId = charSetSuffix.slice(7)
+                        if (nationId) {
+                            updates.nationId = nationId
+                            playerData.nationId = nationId
+                            updatePlayer = true
+                        }
+                    } else if (charSetSuffix.startsWith('playbook_')) {
+                        const playbookId = charSetSuffix.slice(9)
+                        if (playbookId) {
+                            updates.playbookId = playbookId
+                            playerData.playbookId = playbookId
+                            updatePlayer = true
+                        }
+                    } else if (charSetSuffix.startsWith('domain_')) {
+                        const domainKey = charSetSuffix.slice(7)
+                        if (domainKey) {
+                            updates.campaignDomainPreference = JSON.stringify([domainKey])
+                            playerData.campaignDomainPreference = JSON.stringify([domainKey])
+                            updatePlayer = true
+                        }
+                    }
+                    if (updatePlayer) {
+                        await db.player.update({
+                            where: { id: player.id },
+                            data: playerData,
+                        })
+                    }
+                } catch {
+                    // Ignore parse/update errors
+                }
+            }
+        }
+
+        // GM face from moves packet (gm_set_*)
+        const gmSetMatch = nodeId.match(/(?:^|_)gm_set_(shaman|challenger|regent|architect|diplomat|sage)$/)
+        if (gmSetMatch) {
+            const face = gmSetMatch[1]!
+            const player = await getCurrentPlayer()
+            if (player?.storyProgress) {
+                try {
+                    const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
+                    const state = parsed?.state ?? {}
+                    const updates = { ...state, active_face: face }
+                    await db.player.update({
+                        where: { id: player.id },
+                        data: { storyProgress: JSON.stringify({ ...parsed, state: updates }) },
+                    })
+                } catch {
+                    // Ignore parse/update errors
+                }
+            }
+        }
+
+        const metadata = passage.metadata as { actionType?: string; castIChingTargetId?: string } | null
         return NextResponse.json({
             id: passage.nodeId,
             text: passage.text,
             choices,
             linkedQuestId: passage.linkedQuestId ?? undefined,
             isCompletionPassage: isCompletionPassage || undefined,
+            metadata: metadata ?? undefined,
         })
     } catch (e) {
         return NextResponse.json({ error: 'Failed to load node' }, { status: 500 })

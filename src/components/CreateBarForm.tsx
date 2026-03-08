@@ -8,9 +8,11 @@ import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
 
-export function CreateBarForm({ setup }: { setup?: boolean }) {
+export type CreateBarPrefill = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
+
+export function CreateBarForm({ setup, prefill }: { setup?: boolean; prefill?: CreateBarPrefill }) {
     const router = useRouter()
-    const [isOpen, setIsOpen] = useState(setup || false)
+    const [isOpen, setIsOpen] = useState(setup || !!prefill || false)
     const [players, setPlayers] = useState<Player[]>([])
     const [linkableQuests, setLinkableQuests] = useState<LinkableQuest[]>([])
     const [visibility, setVisibility] = useState<'public' | 'private'>('private')
@@ -21,6 +23,8 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
     const [allyshipDomain, setAllyshipDomain] = useState<string | null>(null)
+    const [campaignRef, setCampaignRef] = useState<string | null>(null)
+    const [campaignGoal, setCampaignGoal] = useState('')
     const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
     const [state, formAction, isPending] = useActionState<any, FormData>(createCustomBar, null)
 
@@ -75,6 +79,9 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
             </div>
 
             <form action={formAction} className="space-y-4">
+                {prefill && (
+                    <input type="hidden" name="metadata321" value={JSON.stringify(prefill)} />
+                )}
                 <div className="space-y-2">
                     <label className="text-xs uppercase text-zinc-500">Title</label>
                     <input
@@ -82,6 +89,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         type="text"
                         placeholder="e.g. Share a Secret"
                         required
+                        defaultValue={prefill?.title}
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
                 </div>
@@ -93,6 +101,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         placeholder="What should the player do?"
                         required
                         rows={2}
+                        defaultValue={prefill?.description}
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
                 </div>
@@ -208,6 +217,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                     <label className="text-xs uppercase text-zinc-500">Link to Quest (Optional)</label>
                     <select
                         name="linkedQuestId"
+                        defaultValue={prefill?.linkedQuestId ?? ''}
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     >
                         <option value="">No quest link</option>
@@ -228,6 +238,7 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         name="tags"
                         type="text"
                         placeholder="ritual, onboarding, logistics"
+                        defaultValue={prefill?.tags?.join(', ')}
                         className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
                     />
                 </div>
@@ -279,6 +290,31 @@ export function CreateBarForm({ setup }: { setup?: boolean }) {
                         ))}
                     </div>
                     <input type="hidden" name="allyshipDomain" value={allyshipDomain || ''} />
+                </div>
+
+                {/* Link to Campaign (Optional) */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500 block">Link to Campaign (Optional)</label>
+                    <p className="text-xs text-zinc-600">Tag this quest with a campaign goal so it can be folded into the campaign and added as a subquest on the gameboard.</p>
+                    <div className="space-y-2">
+                        <select
+                            name="campaignRef"
+                            value={campaignRef ?? ''}
+                            onChange={(e) => setCampaignRef(e.target.value || null)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                        >
+                            <option value="">No campaign</option>
+                            <option value="bruised-banana">Bruised Banana</option>
+                        </select>
+                        <input
+                            name="campaignGoal"
+                            type="text"
+                            value={campaignGoal}
+                            onChange={(e) => setCampaignGoal(e.target.value)}
+                            placeholder="e.g. throw a party, raise funds"
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                        />
+                    </div>
                 </div>
 
                 {/* Nation & Trigram Gating */}

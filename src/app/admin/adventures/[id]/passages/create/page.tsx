@@ -11,7 +11,8 @@ export default async function CreatePassagePage({
 }) {
     const p = await params
     const adventure = await db.adventure.findUnique({
-        where: { id: p.id }
+        where: { id: p.id },
+        include: { passages: { orderBy: { createdAt: 'asc' } } }
     })
 
     if (!adventure) {
@@ -34,7 +35,7 @@ export default async function CreatePassagePage({
             />
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <CreatePassageForm adventureId={adventure.id} />
+                <CreatePassageForm adventureId={adventure.id} passages={adventure.passages} />
             </div>
         </div>
     )

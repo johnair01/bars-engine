@@ -24,7 +24,7 @@ export const VIBES_EMERGENCY_OPTIONS: VibesEmergencyOption[] = [
         label: 'Overwhelm Cascade',
         icon: '🌊',
         prompt: 'Too many signals at once. System saturation.',
-        suggestedToolKeys: ['grounding-sequence', 'three-two-one-placeholder']
+        suggestedToolKeys: ['grounding-sequence', 'shadow-321']
     },
     {
         key: 'boundary-leak',
@@ -52,7 +52,7 @@ export const VIBES_EMERGENCY_OPTIONS: VibesEmergencyOption[] = [
         label: 'Frozen / Can’t Start',
         icon: '🧊',
         prompt: 'No movement. No ignition.',
-        suggestedToolKeys: ['three-two-one-placeholder', 'grounding-sequence']
+        suggestedToolKeys: ['shadow-321', 'grounding-sequence']
     },
     {
         key: 'numb',
@@ -373,9 +373,9 @@ export const DEFAULT_FIRST_AID_TOOLS: FirstAidToolSeed[] = [
         }
     },
     {
-        key: 'three-two-one-placeholder',
-        name: '3-2-1 Practice (Placeholder)',
-        description: 'Reserved protocol slot for your custom 3-2-1 process.',
+        key: 'shadow-321',
+        name: '321 Shadow Process',
+        description: 'Face It (taxonomic) → Talk to It (6 unpacking questions) → Be It (identification). Gold star vibeulon on completion.',
         icon: '3️⃣',
         moveType: 'cleanUp',
         tags: ['frozen', 'overwhelm', 'head-spin', 'other'],
@@ -385,18 +385,18 @@ export const DEFAULT_FIRST_AID_TOOLS: FirstAidToolSeed[] = [
             passages: [
                 {
                     id: 'start',
-                    text: 'EMH: 3-2-1 protocol placeholder engaged. Awaiting your full 3-2-1 script.',
+                    text: 'EMH: 321 Shadow Process. Rendered by Shadow321Form (not Twine).',
                     choices: [
                         {
-                            text: 'Acknowledge placeholder and continue',
+                            text: 'Continue to 321 form',
                             targetId: 'final',
-                            effects: { placeholderProtocol: '3-2-1' }
+                            effects: { protocol: 'shadow-321' }
                         }
                     ]
                 },
                 {
                     id: 'final',
-                    text: 'Placeholder complete. 3-2-1 details to be authored in admin console.',
+                    text: '321 form handles the flow. This passage is not shown.',
                     choices: [],
                     isFinal: true
                 }

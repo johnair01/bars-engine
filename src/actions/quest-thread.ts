@@ -322,16 +322,50 @@ export async function assignOrientationThreads(
         }
     }
 
-    // Bruised Banana: when lens present (campaign signup), assign short-wins thread for immediate work
+    // Bruised Banana: when lens present (campaign signup), assign domain-biased starter quest thread
     if (params?.lens && params.lens.trim()) {
-        const bbThreadId = 'bruised-banana-orientation-thread'
         try {
+            const { getStarterQuestsForPlayer } = await import('@/lib/starter-quests')
+            const { primary, optional } = await getStarterQuestsForPlayer(playerId, 'bruised-banana')
+            const questIds: string[] = []
+            if (primary?.id) questIds.push(primary.id)
+            optional.forEach((q) => q.id && questIds.push(q.id))
+            questIds.push('bb-explore-market-quest', 'k-space-librarian-quest')
+
+            const perPlayerThreadId = `bruised-banana-orientation-${playerId}`
+            const creator = await db.player.findFirst({ where: { roles: { some: { role: { key: 'admin' } } } } }) ?? await db.player.findFirst()
+            if (!creator) throw new Error('No creator for Bruised Banana thread')
+
+            await db.questThread.upsert({
+                where: { id: perPlayerThreadId },
+                update: {},
+                create: {
+                    id: perPlayerThreadId,
+                    title: 'Help the Bruised Banana',
+                    description: 'Short wins after initiation. Domain-biased starter quests, then Explore the Market and Request from Library.',
+                    threadType: 'orientation',
+                    creatorType: 'system',
+                    creatorId: creator.id,
+                    completionReward: 2,
+                    status: 'active',
+                },
+            })
+
+            await db.threadQuest.deleteMany({ where: { threadId: perPlayerThreadId } })
+            await db.threadQuest.createMany({
+                data: questIds.map((questId, i) => ({
+                    threadId: perPlayerThreadId,
+                    questId,
+                    position: i + 1,
+                })),
+            })
+
             await db.threadProgress.upsert({
                 where: {
-                    threadId_playerId: { threadId: bbThreadId, playerId }
+                    threadId_playerId: { threadId: perPlayerThreadId, playerId },
                 },
                 update: {},
-                create: { threadId: bbThreadId, playerId, currentPosition: 1 }
+                create: { threadId: perPlayerThreadId, playerId, currentPosition: 1 },
             })
         } catch (error: any) {
             if (error.code === 'P2002') {

@@ -14,16 +14,20 @@ export default async function AdventurePlayPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string }>
+  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string }>
 }) {
   const { id: adventureId } = await params
-  const { questId, threadId, ritual } = await searchParams
+  const { questId, threadId, ritual, preview } = await searchParams
   const isRitual = ritual === 'true'
+  const isPreview = preview === '1'
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
+  const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
+  const allowDraft = isPreview && isAdmin
+
   const adventure = await db.adventure.findUnique({
-    where: { id: adventureId, status: 'ACTIVE' },
+    where: allowDraft ? { id: adventureId } : { id: adventureId, status: 'ACTIVE' },
     include: { passages: true },
   })
 
@@ -71,6 +75,7 @@ export default async function AdventurePlayPage({
           questId={questId ?? undefined}
           threadId={threadId ?? undefined}
           isRitual={isRitual}
+          isPreview={isPreview}
         />
       </div>
     </div>

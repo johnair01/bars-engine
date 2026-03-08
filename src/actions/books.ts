@@ -184,11 +184,22 @@ export async function extractBookText(bookId: string) {
 
 /**
  * List all books for admin.
+ * Excludes extractedText to avoid P6009 (response size > 5MB) with Prisma Accelerate.
  */
 export async function listBooks() {
   await requireAdmin()
   return db.book.findMany({
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      slug: true,
+      sourcePdfUrl: true,
+      status: true,
+      metadataJson: true,
+      createdAt: true,
+      thread: { select: { id: true } },
+    },
     orderBy: { createdAt: 'desc' },
-    include: { thread: true },
   })
 }

@@ -1,10 +1,11 @@
 import { CreateBarForm } from "@/components/CreateBarForm"
+import { CreateBarPageClient } from "@/components/CreateBarPageClient"
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function CreateBarPage({ searchParams }: { searchParams: Promise<{ setup?: string }> }) {
-    const { setup } = await searchParams
+export default async function CreateBarPage({ searchParams }: { searchParams: Promise<{ setup?: string; from321?: string }> }) {
+    const { setup, from321 } = await searchParams
     const isSetup = setup === 'true'
     const player = await getCurrentPlayer()
 
@@ -37,9 +38,8 @@ export default async function CreateBarPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="min-h-screen bg-black">
-
             <main className="max-w-2xl mx-auto px-4 py-8 pt-24">
-                <CreateBarForm setup={isSetup} />
+                <CreateBarPageClient setup={isSetup} from321={from321 === '1'} />
             </main>
         </div>
     )

@@ -3,15 +3,41 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { compileQuest, buildQuestPromptContext } from '@/lib/quest-grammar'
-import type { BuildQuestPromptContextInput } from '@/lib/quest-grammar'
+import { compileQuest, buildQuestPromptContext, toSkeletonPacket } from '@/lib/quest-grammar'
+import { compileQuestWithPrivileging } from '@/lib/quest-grammar/compileQuest'
+import { getHexagramStructure } from '@/lib/iching-struct'
+import type { BuildQuestPromptContextInput, QuestCompileInput, IChingContext } from '@/lib/quest-grammar'
 import { getOpenAI } from '@/lib/openai'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
 import { parseTwee } from '@/lib/twee-parser'
 import { z } from 'zod'
 import { getMoveById, type SerializableQuestPacket } from '@/lib/quest-grammar'
+import { compileCharacterCreationPacket } from '@/lib/quest-grammar/characterCreationPacket'
+import { compileMovesGMPacket } from '@/lib/quest-grammar/movesGMPacket'
+import { FACE_META } from '@/lib/quest-grammar/types'
+import { getMovesForLens } from '@/lib/quest-grammar/lens-moves'
+import { getFaceSentence } from '@/lib/face-sentences'
 
 const INITIATION_SLUG_PREFIX = 'bruised-banana-initiation'
+
+/** Build IChingContext from hexagramId for quest generation. */
+async function buildIChingContextFromHexagram(hexagramId: number): Promise<IChingContext> {
+  const [hexagram, structure] = await Promise.all([
+    db.bar.findUnique({ where: { id: hexagramId } }),
+    Promise.resolve(getHexagramStructure(hexagramId)),
+  ])
+  return {
+    hexagramId,
+    hexagramName: hexagram?.name ?? `Hexagram ${hexagramId}`,
+    hexagramTone: hexagram?.tone ?? '',
+    hexagramText: hexagram?.text ?? '',
+    upperTrigram: structure.upper,
+    lowerTrigram: structure.lower,
+  }
+}
+
+/** Extended input for compile actions — hexagramId builds ichingContext server-side. */
+type CompileActionInput = QuestCompileInput & { hexagramId?: number }
 
 async function checkAdmin() {
   const player = await getCurrentPlayer()
@@ -28,28 +54,75 @@ async function checkAdmin() {
   return player
 }
 
+/**
+ * Server action: compile quest skeleton (structure only, placeholder text).
+ * Admin reviews structure before generating flavor. Uses compileQuestWithPrivileging for structure.
+ */
+export async function compileQuestSkeletonAction(
+  input: CompileActionInput
+): Promise<SerializableQuestPacket | { error: string }> {
+  try {
+    const { hexagramId, ...rest } = input
+    const ichingContext =
+      input.ichingContext ?? (hexagramId ? await buildIChingContextFromHexagram(hexagramId) : undefined)
+    const packet = await compileQuestWithPrivileging({ ...rest, ichingContext })
+    const { telemetryHooks: _, ...serializable } = packet
+    return toSkeletonPacket(serializable)
+  } catch (e) {
+    console.error('[compileQuestSkeletonAction]', e)
+    return { error: e instanceof Error ? e.message : 'Skeleton compilation failed' }
+  }
+}
+
+/**
+ * Server action: compile quest with nation/playbook choice privileging.
+ * Use from client components instead of compileQuestWithPrivileging (which uses Prisma).
+ * When hexagramId is provided, builds ichingContext server-side for AI prompt context.
+ */
+export async function compileQuestWithPrivilegingAction(
+  input: CompileActionInput
+): Promise<SerializableQuestPacket | { error: string }> {
+  try {
+    const { hexagramId, ...rest } = input
+    const ichingContext =
+      input.ichingContext ?? (hexagramId ? await buildIChingContextFromHexagram(hexagramId) : undefined)
+    const packet = await compileQuestWithPrivileging({ ...rest, ichingContext })
+    const { telemetryHooks: _, ...serializable } = packet
+    return serializable
+  } catch (e) {
+    console.error('[compileQuestWithPrivilegingAction]', e)
+    return { error: e instanceof Error ? e.message : 'Compilation failed' }
+  }
+}
+
 const questGrammarNodeTextSchema = z.object({
   nodeTexts: z
     .array(z.string())
-    .length(4)
-    .describe('Grammatical, coherent story text for nodes 0–3 (orientation, rising_engagement, tension, integration). Preserve markdown and structure.'),
+    .min(6)
+    .max(10)
+    .describe('Grammatical, coherent story text for every spine node. Personal: 6 beats (or 7 with lens choice). Communal: 8 (or 9 with lens choice).'),
 })
 
 /**
- * Compile quest with AI-enhanced node text for the first 4 beats.
- * Transcendence and consequence nodes keep heuristic output (fixed structure).
+ * Compile quest with AI-enhanced node text for ALL beats.
+ * AI transforms unpacking answers into narrative prose (never verbatim).
  */
 export async function compileQuestWithAI(
-  input: BuildQuestPromptContextInput
+  input: BuildQuestPromptContextInput & { hexagramId?: number }
 ): Promise<{ packet: SerializableQuestPacket } | { error: string }> {
   try {
     if (process.env.QUEST_GRAMMAR_AI_ENABLED === 'false') {
       return { error: 'Quest Grammar AI is disabled. Set QUEST_GRAMMAR_AI_ENABLED=true to enable.' }
     }
 
-    const packet = compileQuest(input)
-    const promptContext = await buildQuestPromptContext(input, packet)
-    const isCommunal = input.questModel === 'communal'
+    const { hexagramId, ...rest } = input
+    const ichingContext =
+      input.ichingContext ?? (hexagramId ? await buildIChingContextFromHexagram(hexagramId) : undefined)
+    const effectiveInput = { ...rest, ichingContext }
+
+    const packet = compileQuest(effectiveInput)
+    const promptContext = await buildQuestPromptContext(effectiveInput, packet)
+    const isCommunal = effectiveInput.questModel === 'communal'
 
     const systemPrompt = isCommunal
       ? `You are a narrative designer for a choose-your-own-adventure quest. Your task is to turn the prompt context into grammatical, emotionally coherent story text for each Kotter stage.
@@ -57,53 +130,83 @@ export async function compileQuestWithAI(
 Rules:
 - Output clear, second-person prose. No fragments or placeholder text.
 - Preserve any **bold** headers and structure.
-- Keep the communal change arc: urgency → coalition → vision → communicate.
+- Keep the communal change arc: urgency → coalition → vision → communicate → obstacles → wins → build on → anchor.
 - Each node should feel like part of one continuous story.
-- Follow the Voice Style Guide: presence first, confident tone, economical with words.`
+- Follow the Voice Style Guide: presence first, confident tone, economical with words.
+- CRITICAL: Transform the creator unpacking answers into narrative. NEVER reproduce Q1–Q6 answers verbatim — weave them into story. The unpacking answers are raw material, not copy.
+- For action nodes (wins, build_on, anchor): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.`
       : `You are a narrative designer for a choose-your-own-adventure quest. Your task is to turn the prompt context into grammatical, emotionally coherent story text for each beat.
 
 Rules:
 - Output clear, second-person prose. No fragments or placeholder text.
 - Preserve any **bold** headers and structure.
-- Keep the emotional arc: orientation → rising engagement → tension → integration.
+- Keep the emotional arc: orientation → rising engagement → tension → integration → transcendence → consequence.
 - Each node should feel like part of one continuous story.
-- Follow the Voice Style Guide: presence first, confident tone, economical with words.`
+- Follow the Voice Style Guide: presence first, confident tone, economical with words.
+- CRITICAL: Transform the creator unpacking answers into narrative. NEVER reproduce Q1–Q6 answers verbatim — weave them into story. The unpacking answers are raw material, not copy.
+- For action nodes (transcendence, consequence): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.
 
-    const userPrompt = isCommunal
+Grammatical example (generate structure like this — 6 beats, each 2–4 sentences):
+- Orientation: Scene-setting from unpacking. "You are entering a living world mid-formation. Your participation matters."
+- Rising engagement: Dissatisfied state creates energy. "What would have to be true?"
+- Tension: Gap between from-state and to-state. Shadow voices surface.
+- Integration: Aligned action translates channel into movement. Threshold is near.
+- Transcendence: Moment of commitment. Include [Contribute to the campaign](/event/donate) wrapped in narrative.
+- Consequence: "You are now an Early Believer." Structural consequence.`
+
+    const framing = effectiveInput.segment === 'player'
+      ? 'You are entering a living world mid-formation. Your participation matters.'
+      : 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'
+
+    const hasLensChoice = ichingContext && packet.nodes.some((n) => n.id === 'lens_choice')
+
+    let userPrompt = isCommunal
       ? `${promptContext}
 
 ---
 
-Draft node texts to refine (make grammatical and coherent; preserve structure):
-0. Urgency — include experience, current life, framing, create urgency (${input.segment === 'player' ? 'You are entering a living world mid-formation. Your participation matters.' : 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'})
-1. Coalition — who will contribute? shadow voices, build the coalition
-2. Vision — what does success look like? satisfied state, "What would have to be true?"
-3. Communicate — share the need, aligned action, spread the message
+Write narrative text for ALL ${hasLensChoice ? 9 : 8} spine nodes. Transform unpacking answers into story — never reproduce them verbatim.
+${hasLensChoice ? '0. Lens choice — Invite the player to choose their developmental lens. Brief, evocative.\n' : ''}${hasLensChoice ? '1' : '0'}. Urgency — weave in the experience, current life context, and framing (${framing}). Create urgency.
+${hasLensChoice ? '2' : '1'}. Coalition — who will contribute? Use shadow voices as tension, build the coalition.
+${hasLensChoice ? '3' : '2'}. Vision — what does success look like? Satisfied state, "What would have to be true?"
+${hasLensChoice ? '4' : '3'}. Communicate — share the need, aligned action, spread the message.
+${hasLensChoice ? '5' : '4'}. Obstacles — what blocks progress? Dissatisfied state, shadow voices as real obstacles.
+${hasLensChoice ? '6' : '5'}. Wins — first milestone reached. Include the action link: [Contribute to the campaign](/event/donate). Wrap it in narrative.
+${hasLensChoice ? '7' : '6'}. Build On — scale the wins. Iterate and amplify. Include action link if relevant.
+${hasLensChoice ? '8' : '7'}. Anchor — sustainable change. Contribution logged. Identity transformation: "You are now an Early Believer."
 
-Return 4 refined node texts (nodeTexts array), one per stage. Preserve markdown and structure.`
+Return ${hasLensChoice ? 9 : 8} refined node texts (nodeTexts array), one per stage.`
       : `${promptContext}
 
 ---
 
-Draft node texts to refine (make grammatical and coherent; preserve structure):
-0. Orientation — include experience, current life, and framing (${input.segment === 'player' ? 'You are entering a living world mid-formation. Your participation matters.' : 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'})
-1. Rising engagement — include dissatisfied state, "What would have to be true?", rising energy
-2. Tension — include gap between from-state and to-state, shadow voices
-3. Integration — include aligned action, translating primary channel into movement, threshold is near
+Write narrative text for ALL ${hasLensChoice ? 7 : 6} spine nodes. Transform unpacking answers into story — never reproduce them verbatim.
+${hasLensChoice ? '0. Lens choice — Invite the player to choose their developmental lens. Brief, evocative.\n' : ''}${hasLensChoice ? '1' : '0'}. Orientation — weave in the experience, current life context, and framing (${framing}). Set the scene.
+${hasLensChoice ? '2' : '1'}. Rising engagement — the dissatisfied state creates rising energy. "What would have to be true?"
+${hasLensChoice ? '3' : '2'}. Tension — the gap between from-state and to-state is real. Shadow voices surface.
+${hasLensChoice ? '4' : '3'}. Integration — aligned action translates the primary channel into movement. The threshold is near.
+${hasLensChoice ? '5' : '4'}. Transcendence — cross the threshold. Moment of commitment. Include action link: [Contribute to the campaign](/event/donate). Wrap in narrative.
+${hasLensChoice ? '6' : '5'}. Consequence — structural consequence. Identity transformation: "You are now an Early Believer." Unlock: founders thread, patron updates.
 
-Return 4 refined node texts (nodeTexts array), one per beat. Preserve markdown and structure.`
+Return ${hasLensChoice ? 7 : 6} refined node texts (nodeTexts array), one per node.`
+
+    if (effectiveInput.adminFeedback) {
+      userPrompt += `\n\n---\n\nAdmin feedback on previous generation (incorporate this into the regeneration):\n${effectiveInput.adminFeedback}`
+    }
 
     const inputKey = JSON.stringify({
-      unpackingAnswers: input.unpackingAnswers,
-      alignedAction: input.alignedAction,
-      segment: input.segment,
-      questModel: input.questModel ?? 'personal',
-      targetNationId: input.targetNationId ?? null,
-      targetPlaybookId: input.targetPlaybookId ?? null,
-      targetArchetypeIds: input.targetArchetypeIds ?? [],
-      developmentalLens: input.developmentalLens ?? null,
-      playerPOV: input.playerPOV ?? null,
-      expectedMoves: input.expectedMoves ?? [],
+      unpackingAnswers: effectiveInput.unpackingAnswers,
+      alignedAction: effectiveInput.alignedAction,
+      segment: effectiveInput.segment,
+      questModel: effectiveInput.questModel ?? 'personal',
+      targetNationId: effectiveInput.targetNationId ?? null,
+      targetPlaybookId: effectiveInput.targetPlaybookId ?? null,
+      targetArchetypeIds: effectiveInput.targetArchetypeIds ?? [],
+      developmentalLens: effectiveInput.developmentalLens ?? null,
+      playerPOV: effectiveInput.playerPOV ?? null,
+      expectedMoves: effectiveInput.expectedMoves ?? [],
+      ichingContext: effectiveInput.ichingContext ?? null,
+      adminFeedback: effectiveInput.adminFeedback ?? null,
       feature: 'quest_grammar_ai',
     })
     const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
@@ -118,9 +221,45 @@ Return 4 refined node texts (nodeTexts array), one per beat. Preserve markdown a
       getModel: () => getOpenAI()(modelId),
     })
 
-    for (let i = 0; i < 4; i++) {
+    const spineCount = Math.min(object.nodeTexts.length, packet.nodes.filter((n) => !n.depth).length)
+    for (let i = 0; i < spineCount; i++) {
       packet.nodes[i].text = object.nodeTexts[i]
       packet.nodes[i].wordCountEstimate = packet.nodes[i].text.trim().split(/\s+/).filter(Boolean).length
+    }
+
+    const depthNodes = packet.nodes.filter((n) => n.depth === 1)
+    if (depthNodes.length > 0) {
+      const depthSchema = z.object({
+        depthTexts: z.array(z.string()).length(depthNodes.length).describe('Action-oriented prose for each depth passage'),
+      })
+      const depthPromptParts = depthNodes.map((node, i) => {
+        const face = node.gameMasterFace
+        const meta = face ? FACE_META[face] : null
+        const moves = face ? getMovesForLens(face) : []
+        const move = moves[0]
+        const faceSentence = face ? getFaceSentence(face) : ''
+        return `${i}. Face: ${meta?.label ?? face}. Role: ${meta?.role ?? ''}. Mission: ${meta?.mission ?? ''}. Move: ${move?.name ?? '—'}. Converges to next spine beat. Entry: "${faceSentence}"`
+      })
+      const depthUserPrompt = `Write action-oriented depth passages. Each is a moment where the player descends from narrative understanding into direct engagement. The shadow gives permission to act. Be specific, concrete, and kinetic.
+
+For each depth node:
+${depthPromptParts.join('\n')}
+
+Return ${depthNodes.length} refined depth texts (depthTexts array), one per node. Preserve any **bold** headers. Second-person prose.`
+      const depthInputKey = inputKey + '_depth_' + depthNodes.map((n) => n.id).join(',')
+      const depthResult = await generateObjectWithCache<z.infer<typeof depthSchema>>({
+        feature: 'quest_grammar_ai',
+        inputKey: depthInputKey,
+        model: modelId,
+        schema: depthSchema,
+        system: `You are writing action-oriented depth passages guided by Game Master faces. Each face is a Taoist sect head who teaches a specific approach. The player descends from narrative understanding into direct engagement through the face's lens. The shadow gives permission to act. Be specific, concrete, and kinetic. Second-person prose.`,
+        prompt: depthUserPrompt,
+        getModel: () => getOpenAI()(modelId),
+      })
+      for (let i = 0; i < depthNodes.length; i++) {
+        depthNodes[i].text = depthResult.object.depthTexts[i]
+        depthNodes[i].wordCountEstimate = depthNodes[i].text.trim().split(/\s+/).filter(Boolean).length
+      }
     }
 
     // Strip telemetryHooks (functions) so packet is serializable for client components
@@ -147,13 +286,12 @@ const questOverviewSchema = z.object({
           z.object({
             text: z.string(),
             targetId: z.string(),
-            moveId: z.string().optional().describe('Canonical move ID for choice privileging'),
           })
         ),
       })
     )
     .min(4)
-    .describe('Passages for the CYOA flow. 2–3 choices per passage.'),
+    .describe('Passages for the CYOA flow. 2–4 choices per passage.'),
   startPassage: z.string().describe('ID of the starting passage'),
 })
 
@@ -197,6 +335,7 @@ Generate a quest skeleton. Return:
       ...input,
       targetNationId: input.targetNationId ?? null,
       targetPlaybookId: input.targetPlaybookId ?? null,
+      ichingContext: input.ichingContext ?? null,
       feature: 'quest_overview_ai',
     })
     const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
@@ -288,6 +427,10 @@ export async function publishQuestPacketToPassages(
 
     for (const node of packet.nodes) {
       const choicesJson = JSON.stringify(node.choices)
+      const metadata =
+        node.actionType === 'cast_iching' && node.castIChingTargetId
+          ? { actionType: 'cast_iching', castIChingTargetId: node.castIChingTargetId }
+          : undefined
       await db.passage.upsert({
         where: {
           adventureId_nodeId: {
@@ -295,18 +438,20 @@ export async function publishQuestPacketToPassages(
             nodeId: node.id,
           },
         },
-        update: { text: node.text, choices: choicesJson },
+        update: { text: node.text, choices: choicesJson, ...(metadata && { metadata }) },
         create: {
           adventureId: adventure.id,
           nodeId: node.id,
           text: node.text,
           choices: choicesJson,
+          ...(metadata && { metadata }),
         },
       })
     }
 
     revalidatePath('/admin/quest-grammar')
     revalidatePath('/admin/adventures')
+    revalidatePath('/campaign/initiation')
     return { success: true }
   } catch (e) {
     console.error('[publishQuestPacketToPassages]', e)
@@ -348,7 +493,7 @@ export async function publishQuestPacketToPassagesWithSourceQuest(
       data: {
         slug,
         title,
-        status: 'ACTIVE',
+        status: 'DRAFT',
         startNodeId: packet.startNodeId,
         description: `Quest upgrade: ${questTitle}. From unpacking flow.`,
         visibility: 'PUBLIC_ONBOARDING',
@@ -401,6 +546,214 @@ export async function publishQuestPacketToPassagesWithSourceQuest(
     return {
       success: false,
       error: e instanceof Error ? e.message : 'Failed to publish',
+    }
+  }
+}
+
+/**
+ * Publish I Ching grammatic quest to a player.
+ * Creates Adventure + Passages + QuestThread + CustomBar; assigns thread to player.
+ * No admin required — called from generateQuestFromReading.
+ */
+export async function publishIChingQuestToPlayer(
+  packet: SerializableQuestPacket,
+  playerId: string,
+  questTitle: string,
+  hexagramId: number
+): Promise<
+  | { success: true; adventureId: string; threadId: string; questId: string }
+  | { success: false; error: string }
+> {
+  try {
+    const slug = `iching-${hexagramId}-${playerId.slice(0, 8)}-${Date.now().toString(36)}`
+    const title = `${questTitle} (I Ching)`
+
+    const quest = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title,
+        description: packet.signature.satisfiedLabels[0]
+          ? `From ${packet.signature.satisfiedLabels[0]} to ${packet.signature.dissatisfiedLabels[0] ?? 'clarity'}.`
+          : 'An I Ching–guided quest.',
+        type: 'vibe',
+        reward: 1,
+        status: 'active',
+        visibility: 'private',
+        storyPath: 'personal',
+        hexagramId,
+        isSystem: true,
+        inputs: JSON.stringify([]),
+      },
+    })
+    await db.customBar.update({ where: { id: quest.id }, data: { rootId: quest.id } })
+
+    const adventure = await db.adventure.create({
+      data: {
+        slug,
+        title,
+        status: 'DRAFT',
+        startNodeId: packet.startNodeId,
+        description: `I Ching grammatic quest: ${questTitle}.`,
+        visibility: 'PRIVATE_QUEST',
+      },
+    })
+
+    for (const node of packet.nodes) {
+      const choicesJson = JSON.stringify(node.choices)
+      await db.passage.create({
+        data: {
+          adventureId: adventure.id,
+          nodeId: node.id,
+          text: node.text,
+          choices: choicesJson,
+        },
+      })
+    }
+
+    const thread = await db.questThread.create({
+      data: {
+        title,
+        description: `I Ching reading: ${questTitle}.`,
+        creatorType: 'system',
+        creatorId: playerId,
+        adventureId: adventure.id,
+        status: 'active',
+      },
+    })
+
+    await db.threadQuest.create({
+      data: {
+        threadId: thread.id,
+        questId: quest.id,
+        position: 1,
+      },
+    })
+
+    await db.threadProgress.create({
+      data: {
+        threadId: thread.id,
+        playerId,
+      },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/adventures')
+    return { success: true, adventureId: adventure.id, threadId: thread.id, questId: quest.id }
+  } catch (e) {
+    console.error('[publishIChingQuestToPlayer]', e)
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Failed to publish I Ching quest',
+    }
+  }
+}
+
+/**
+ * Publish gameboard-aligned grammatic quest to a player.
+ * Creates Adventure + Passages + QuestThread + CustomBar; assigns to player.
+ * Quest is nested under parentQuestId with campaignRef.
+ */
+export async function publishGameboardAlignedQuestToPlayer(
+  packet: SerializableQuestPacket,
+  playerId: string,
+  parentQuestId: string,
+  campaignRef: string,
+  parentTitle: string
+): Promise<
+  | { success: true; adventureId: string; threadId: string; questId: string }
+  | { success: false; error: string }
+> {
+  try {
+    const slug = `gameboard-${parentQuestId}-${playerId.slice(0, 8)}-${Date.now().toString(36)}`
+    const title = `${packet.signature.satisfiedLabels[0] ?? 'Quest'} — ${parentTitle}`
+
+    const quest = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title,
+        description: packet.signature.satisfiedLabels[0]
+          ? `From ${packet.signature.dissatisfiedLabels[0] ?? 'stuck'} to ${packet.signature.satisfiedLabels[0]}.`
+          : `Aligned with ${parentTitle}.`,
+        type: 'vibe',
+        reward: 1,
+        status: 'active',
+        visibility: 'private',
+        storyPath: 'personal',
+        parentId: parentQuestId,
+        rootId: parentQuestId,
+        campaignRef,
+        allyshipDomain: 'GATHERING_RESOURCES',
+        moveType: packet.signature.moveType ?? undefined,
+        isSystem: true,
+        inputs: JSON.stringify([]),
+      },
+    })
+
+    const adventure = await db.adventure.create({
+      data: {
+        slug,
+        title,
+        status: 'DRAFT',
+        startNodeId: packet.startNodeId,
+        description: `Gameboard-aligned quest under ${parentTitle}.`,
+        visibility: 'PRIVATE_QUEST',
+      },
+    })
+
+    for (const node of packet.nodes) {
+      const choicesJson = JSON.stringify(node.choices)
+      await db.passage.create({
+        data: {
+          adventureId: adventure.id,
+          nodeId: node.id,
+          text: node.text,
+          choices: choicesJson,
+        },
+      })
+    }
+
+    const thread = await db.questThread.create({
+      data: {
+        title,
+        description: `Gameboard quest under ${parentTitle}.`,
+        creatorType: 'system',
+        creatorId: playerId,
+        adventureId: adventure.id,
+        status: 'active',
+      },
+    })
+
+    await db.threadQuest.create({
+      data: {
+        threadId: thread.id,
+        questId: quest.id,
+        position: 1,
+      },
+    })
+
+    await db.threadProgress.create({
+      data: {
+        threadId: thread.id,
+        playerId,
+      },
+    })
+
+    await db.playerQuest.create({
+      data: {
+        playerId,
+        questId: quest.id,
+        status: 'assigned',
+      },
+    })
+
+    revalidatePath('/')
+    revalidatePath('/campaign/board')
+    return { success: true, adventureId: adventure.id, threadId: thread.id, questId: quest.id }
+  } catch (e) {
+    console.error('[publishGameboardAlignedQuestToPlayer]', e)
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Failed to publish gameboard quest',
     }
   }
 }
@@ -469,7 +822,7 @@ export async function createAdventureAndThreadFromTwee(
       data: {
         slug: effectiveSlug,
         title: effectiveTitle,
-        status: 'ACTIVE',
+        status: 'DRAFT',
         startNodeId: startPassage,
         description: sourceQuestId
           ? `Quest upgrade from .twee. ${ordered.length} passages.`
@@ -597,16 +950,26 @@ export async function createAdventureAndThreadFromTwee(
  */
 export async function appendQuestToAdventure(
   packet: SerializableQuestPacket,
-  adventureId: string
+  adventureId: string,
+  opts?: { skipAdminCheck?: boolean }
 ): Promise<
   | { success: true; adventureId: string; passageCount: number }
   | { success: false; error: string }
 > {
   let player
-  try {
-    player = await checkAdmin()
-  } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Not authorized' }
+  if (opts?.skipAdminCheck) {
+    const admin = await db.player.findFirst({
+      where: { roles: { some: { role: { key: 'admin' } } } },
+      select: { id: true },
+    })
+    player = admin ?? (await db.player.findFirst({ select: { id: true } }))
+    if (!player) return { success: false, error: 'No player found for creatorId' }
+  } else {
+    try {
+      player = await checkAdmin()
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : 'Not authorized' }
+    }
   }
 
   try {
@@ -655,6 +1018,16 @@ export async function appendQuestToAdventure(
       await db.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
       questIds.push(bar.id)
 
+      const metadata =
+        node.actionType === 'cast_iching' && node.castIChingTargetId
+          ? {
+              actionType: 'cast_iching',
+              castIChingTargetId: nodeIdMap.has(node.castIChingTargetId)
+                ? nodeIdMap.get(node.castIChingTargetId)!
+                : node.castIChingTargetId,
+            }
+          : undefined
+
       await db.passage.create({
         data: {
           adventureId: adventure.id,
@@ -662,6 +1035,7 @@ export async function appendQuestToAdventure(
           text: node.text,
           choices: JSON.stringify(choices),
           linkedQuestId: bar.id,
+          ...(metadata && { metadata }),
         },
       })
     }
@@ -748,9 +1122,16 @@ export async function appendQuestToAdventure(
       }
     }
 
-    revalidatePath('/admin/adventures')
-    revalidatePath(`/admin/adventures/${adventureId}`)
-    revalidatePath('/admin/journeys')
+    await db.adventure.update({
+      where: { id: adventureId },
+      data: { status: 'DRAFT' },
+    })
+
+    if (!opts?.skipAdminCheck) {
+      revalidatePath('/admin/adventures')
+      revalidatePath(`/admin/adventures/${adventureId}`)
+      revalidatePath('/admin/journeys')
+    }
     return {
       success: true,
       adventureId,
@@ -761,6 +1142,144 @@ export async function appendQuestToAdventure(
     return {
       success: false,
       error: e instanceof Error ? e.message : 'Failed to append quest',
+    }
+  }
+}
+
+/**
+ * Server action: get character creation packet with nations/playbooks from DB.
+ * Pure compileCharacterCreationPacket cannot call Prisma.
+ */
+export async function getCharacterCreationPacket(segment: 'player' | 'sponsor' = 'player'): Promise<
+  | { packet: SerializableQuestPacket }
+  | { error: string }
+> {
+  try {
+    await checkAdmin()
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Not authorized' }
+  }
+
+  try {
+    const [nations, playbooks] = await Promise.all([
+      db.nation.findMany({
+        where: { archived: false },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
+      }),
+      db.playbook.findMany({
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
+      }),
+    ])
+
+    const packet = compileCharacterCreationPacket({
+      segment,
+      nations: nations.map((n) => ({ id: n.id, name: n.name })),
+      playbooks: playbooks.map((p) => ({ id: p.id, name: p.name })),
+    })
+    return { packet }
+  } catch (e) {
+    console.error('[getCharacterCreationPacket]', e)
+    return { error: e instanceof Error ? e.message : 'Failed to get packet' }
+  }
+}
+
+/**
+ * Publish chained initiation adventure: intro + character creation + moves/GM.
+ * Creates Adventure, publishes intro passages, appends char and moves packets.
+ * @see .specify/specs/auto-flow-chained-initiation/spec.md
+ */
+export async function publishChainedInitiationAdventure(
+  introPacket: SerializableQuestPacket,
+  charPacket: SerializableQuestPacket,
+  movesGMPacket: SerializableQuestPacket,
+  slug: string,
+  opts?: { campaignRef?: string; sourceQuestId?: string | null; skipAdminCheck?: boolean }
+): Promise<
+  | { success: true; adventureId: string; passageCount: number }
+  | { error: string }
+> {
+  if (!opts?.skipAdminCheck) {
+    try {
+      await checkAdmin()
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Not authorized' }
+    }
+  }
+
+  try {
+    const adventure = await db.adventure.upsert({
+      where: { slug },
+      update: {
+        title: `Chained Initiation (${slug})`,
+        status: 'ACTIVE',
+        startNodeId: introPacket.startNodeId,
+        description: `Chained initiation: intro + character creation + moves/GM.`,
+      },
+      create: {
+        slug,
+        title: `Chained Initiation (${slug})`,
+        status: 'ACTIVE',
+        startNodeId: introPacket.startNodeId,
+        description: `Chained initiation: intro + character creation + moves/GM.`,
+        visibility: 'PUBLIC_ONBOARDING',
+      },
+    })
+
+    for (const node of introPacket.nodes) {
+      const choicesJson = JSON.stringify(node.choices)
+      await db.passage.upsert({
+        where: {
+          adventureId_nodeId: {
+            adventureId: adventure.id,
+            nodeId: node.id,
+          },
+        },
+        update: { text: node.text, choices: choicesJson },
+        create: {
+          adventureId: adventure.id,
+          nodeId: node.id,
+          text: node.text,
+          choices: choicesJson,
+        },
+      })
+    }
+
+    const appendOpts = opts?.skipAdminCheck ? { skipAdminCheck: true } : undefined
+    const append1 = await appendQuestToAdventure(charPacket, adventure.id, appendOpts)
+    if (!append1.success) return append1
+
+    const append2 = await appendQuestToAdventure(movesGMPacket, adventure.id, appendOpts)
+    if (!append2.success) return append2
+
+    if (opts?.sourceQuestId) {
+      const passages = await db.passage.findMany({
+        where: { adventureId: adventure.id },
+      })
+      const signupPassage = passages.find((p) => p.nodeId.endsWith('moves_signup'))
+      if (signupPassage) {
+        await db.passage.update({
+          where: { id: signupPassage.id },
+          data: { linkedQuestId: opts.sourceQuestId },
+        })
+      }
+    }
+
+    const passageCount = await db.passage.count({ where: { adventureId: adventure.id } })
+    if (!opts?.skipAdminCheck) {
+      revalidatePath('/admin/adventures')
+      revalidatePath('/campaign/board')
+    }
+    return {
+      success: true,
+      adventureId: adventure.id,
+      passageCount,
+    }
+  } catch (e) {
+    console.error('[publishChainedInitiationAdventure]', e)
+    return {
+      error: e instanceof Error ? e.message : 'Failed to publish chained initiation',
     }
   }
 }
@@ -872,6 +1391,11 @@ Return passageTexts: array of 6 strings (one per Epiphany Bridge beat). No choic
     data: { choices: JSON.stringify(choices) },
   })
 
+  await db.adventure.update({
+    where: { id: adventureId },
+    data: { status: 'DRAFT' },
+  })
+
   revalidatePath('/admin/adventures')
   revalidatePath(`/admin/adventures/${adventureId}`)
   return { success: true, passageCount: 6 }
@@ -942,7 +1466,7 @@ export async function expandEdgeWithQuest(
 
 Rules:
 - Structure: orientation → rising engagement → tension → integration → consequence.
-- Each passage: 2–3 choices that flavor tone/approach but lead to same next passage (linear).
+- Each passage: 2–4 choices that flavor tone/approach but lead to same next passage (linear).
 - Move: "${move.name}" — ${move.narrative}. The transformation is this move.
 - Voice: presence first, confident, economical. Second-person prose.`
 
@@ -996,6 +1520,11 @@ Start passage: first id.`
   await db.passage.update({
     where: { id: fromPassage.id },
     data: { choices: JSON.stringify(choices) },
+  })
+
+  await db.adventure.update({
+    where: { id: adventureId },
+    data: { status: 'DRAFT' },
   })
 
   revalidatePath('/admin/adventures')
@@ -1069,7 +1598,7 @@ export async function upgradeQuestToCYOA(
         data: {
           slug,
           title: `${questTitle} (CYOA)`,
-          status: 'ACTIVE',
+          status: 'DRAFT',
           startNodeId: 'node_0',
           description: `Quest upgrade: ${questTitle}. Wrapper mode.`,
           visibility: 'PUBLIC_ONBOARDING',
@@ -1132,7 +1661,7 @@ export async function upgradeQuestToCYOA(
       data: {
         slug,
         title: `${questTitle} (CYOA)`,
-        status: 'ACTIVE',
+        status: 'DRAFT',
         startNodeId: passageIds[0],
         description: `Quest upgrade: ${questTitle}. Replacement mode.`,
         visibility: 'PUBLIC_ONBOARDING',
@@ -1239,7 +1768,7 @@ export async function mergeAdventures(
       data: {
         slug: effectiveSlug,
         title: effectiveTitle,
-        status: 'ACTIVE',
+        status: 'DRAFT',
         description: `Merged from ${adventures.length} adventures.`,
         visibility: 'PUBLIC_ONBOARDING',
       },

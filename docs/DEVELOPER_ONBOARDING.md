@@ -212,6 +212,46 @@ This is critical for onboarding: developers on different machines need a working
 
 ---
 
+## 8. App configuration
+
+### postSignupRedirect
+
+Controls where new players land after signup (campaign or guided flow).
+
+| Value | Behavior |
+|-------|----------|
+| `'dashboard'` (default) | Redirect to `/` or `/?focusQuest={id}`. Dashboard-first flow for new campaigns. |
+| `'conclave'` | Redirect to `/conclave/onboarding`. Legacy Party flow. |
+
+**Where**: `AppConfig.postSignupRedirect` (nullable string). When null or unset, defaults to `'dashboard'`.
+
+**To change**: Update via admin config UI (when available) or directly in the database:
+```sql
+UPDATE app_config SET "postSignupRedirect" = 'conclave' WHERE id = 'singleton';
+```
+
+See [.specify/specs/dashboard-orientation-flow/spec.md](../.specify/specs/dashboard-orientation-flow/spec.md).
+
+---
+
+## 9. Prisma: Large-field queries (P6009)
+
+**Prisma Accelerate** enforces a 5MB response size limit. Queries that fetch large text/binary fields (e.g. `Book.extractedText`, `CustomBar.storyContent`) can exceed this and trigger **P6009 (ResponseSizeLimitExceeded)**.
+
+**Rule:** For list/catalog queries, use `select` to exclude large fields. Only fetch full content when loading a single record for detail/edit.
+
+**Example:** `listBooks()` must not fetch `extractedText`. Use:
+```ts
+db.book.findMany({
+  select: { id: true, title: true, author: true, slug: true, sourcePdfUrl: true, status: true, metadataJson: true, createdAt: true, thread: { select: { id: true } } },
+  orderBy: { createdAt: 'desc' },
+})
+```
+
+See [.specify/specs/prisma-p6009-response-size-fix/spec.md](../.specify/specs/prisma-p6009-response-size-fix/spec.md) and `src/lib/prisma-errors.ts` for `isPrismaP6009()`.
+
+---
+
 ## Agent skills (AI-assisted development)
 
 When using Cursor or other AI agents, project skills in `.agents/skills/` guide implementation:
@@ -221,6 +261,7 @@ When using Cursor or other AI agents, project skills in `.agents/skills/` guide 
 | [Deftness Development](../.agents/skills/deftness-development/SKILL.md) | Spec kit discipline, API-first design, scaling robustness; reduces rework and token cost |
 | [Spec Kit Translator](../.agents/skills/spec-kit-translator/SKILL.md) | Natural language → spec/plan/tasks |
 | [Roadblock Metabolism](../.agents/skills/roadblock-metabolism/SKILL.md) | Verify imports, directives; fix build errors before commit |
+| [Narrative Quality](../.agents/skills/narrative-quality/SKILL.md) | Learn from admin feedback; improve quest prose via .feedback/narrative_quality.jsonl |
 
 ---
 
@@ -230,5 +271,7 @@ When using Cursor or other AI agents, project skills in `.agents/skills/` guide 
 |-----|---------|
 | [README.md](../README.md) | Getting started, architecture |
 | [ENV_AND_VERCEL.md](ENV_AND_VERCEL.md) | Environment variables, Vercel |
+| §8 above | App config (postSignupRedirect) |
 | [dev-notes.md](dev-notes.md) | Crash prevention, recommended workflow |
 | [skills/debugging/known-failure-modes.md](skills/debugging/known-failure-modes.md) | Bug patterns and fixes |
+| [NARRATIVE_QUALITY_FEEDBACK.md](NARRATIVE_QUALITY_FEEDBACK.md) | Narrative quality feedback flow, schema, skill usage |

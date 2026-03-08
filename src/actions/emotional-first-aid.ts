@@ -160,12 +160,20 @@ async function requireAdmin() {
 }
 
 async function ensureDefaultFirstAidTools() {
-    const count = await db.emotionalFirstAidTool.count()
-    if (count > 0) return
-
     for (const seed of DEFAULT_FIRST_AID_TOOLS) {
-        await db.emotionalFirstAidTool.create({
-            data: {
+        await db.emotionalFirstAidTool.upsert({
+            where: { key: seed.key },
+            update: {
+                name: seed.name,
+                description: seed.description,
+                icon: seed.icon,
+                moveType: seed.moveType,
+                tags: JSON.stringify(seed.tags),
+                twineLogic: JSON.stringify(seed.twineLogic),
+                sortOrder: seed.sortOrder,
+                isActive: true,
+            },
+            create: {
                 key: seed.key,
                 name: seed.name,
                 description: seed.description,
@@ -307,6 +315,11 @@ export async function completeEmotionalFirstAidSession(input: {
             return { error: 'Session already completed' }
         }
 
+        const toolUsed = await db.emotionalFirstAidTool.findUnique({
+            where: { id: input.toolId }
+        })
+        const is321Completion = toolUsed?.key === 'shadow-321'
+
         const stuckAfter = clampStuckness(input.stuckAfter)
         const delta = session.stuckBefore - stuckAfter
         const mintedAmount = delta >= FIRST_AID_MINT_THRESHOLD ? FIRST_AID_MINT_AMOUNT : 0
@@ -334,7 +347,7 @@ export async function completeEmotionalFirstAidSession(input: {
                         playerId: player.id,
                         source: 'emotional_first_aid',
                         amount: mintedAmount,
-                        notes: `Emotional First Aid success (${session.tool?.name || 'protocol'}) Δ${delta}`,
+                        notes: `Emotional First Aid success (${toolUsed?.name || session.tool?.name || 'protocol'}) Δ${delta}`,
                         archetypeMove: 'CLEAN_UP_PROTOCOL',
                         questId: session.contextQuestId || null,
                     }
@@ -345,8 +358,30 @@ export async function completeEmotionalFirstAidSession(input: {
                         ownerId: player.id,
                         originSource: 'emotional_first_aid',
                         originId: session.id,
-                        originTitle: `Emotional First Aid: ${session.tool?.name || 'Protocol'}`,
+                        originTitle: `Emotional First Aid: ${toolUsed?.name || session.tool?.name || 'Protocol'}`,
                     }))
+                })
+            }
+
+            // Gold star: 321 Shadow Process always mints 1 vibeulon for completing the process
+            if (is321Completion) {
+                await tx.vibulonEvent.create({
+                    data: {
+                        playerId: player.id,
+                        source: 'shadow_321_completion',
+                        amount: 1,
+                        notes: '321 Shadow Process completed (gold star)',
+                        archetypeMove: 'CLEAN_UP_PROTOCOL',
+                        questId: session.contextQuestId || null,
+                    }
+                })
+                await tx.vibulon.create({
+                    data: {
+                        ownerId: player.id,
+                        originSource: 'shadow_321_completion',
+                        originId: session.id,
+                        originTitle: '321 Shadow Process (gold star)',
+                    }
                 })
             }
         })
@@ -355,11 +390,14 @@ export async function completeEmotionalFirstAidSession(input: {
         revalidatePath('/wallet')
         revalidatePath('/emotional-first-aid')
 
+        const goldStarAmount = is321Completion ? 1 : 0
+        const totalMinted = mintedAmount + goldStarAmount
+
         return {
             success: true,
             delta,
-            mintedAmount,
-            qualifiesForMint: mintedAmount > 0,
+            mintedAmount: totalMinted,
+            qualifiesForMint: totalMinted > 0,
             threshold: FIRST_AID_MINT_THRESHOLD,
         }
     } catch (error: unknown) {

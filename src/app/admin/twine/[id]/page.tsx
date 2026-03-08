@@ -20,10 +20,16 @@ export default async function AdminTwineDetailPage({ params }: { params: Promise
         <div className="space-y-8">
             <div className="flex items-center gap-4">
                 <Link href="/admin/twine" className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors text-sm">←</Link>
-                <div>
+                <div className="flex-1 min-w-0">
                     <h1 className="text-2xl font-bold text-white">{story.title}</h1>
                     <p className="text-zinc-500 text-sm">{parsed.passages.length} passages &middot; {story.bindings.length} bindings</p>
                 </div>
+                <Link
+                    href={`/admin/twine/${story.id}/ir`}
+                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs rounded-lg transition shrink-0"
+                >
+                    Edit IR
+                </Link>
             </div>
 
             {/* Passages overview */}

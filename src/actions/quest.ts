@@ -23,7 +23,7 @@ export async function submitQuestReturn(prevState: any, formData: FormData) {
     // DELEGATE TO QUEST ENGINE
     // This handles rewards, onboarding, thread advancement, etc.
     try {
-        await completeQuestForPlayer(player.id, questId, responses)
+        await completeQuestForPlayer(player.id, questId, responses, { source: 'quest_wallet' })
     } catch (e) {
         console.error("[submitQuestReturn] Failed to complete quest via engine:", e)
         return { error: e instanceof Error ? e.message : 'Failed to complete quest' }

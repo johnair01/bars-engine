@@ -16,8 +16,9 @@ import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
-import { parseCampaignDomainPreference } from '@/lib/allyship-domains'
+import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { IntentionDisplay } from '@/components/IntentionDisplay'
+import { CampaignEntryBanner } from '@/components/campaign/CampaignEntryBanner'
 import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
@@ -245,6 +246,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   const ritualComplete = searchParams.ritualComplete === 'true'
   const focusQuest = searchParams.focusQuest
+  const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
   await ensureWallet(playerId)
   const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
@@ -348,6 +350,34 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   const isSetupIncomplete = !player.nationId || !player.playbookId
 
+  // Campaign Entry: show when player has bruised-banana thread and hasn't dismissed
+  const bbThread = threads.find(
+    (t: { id: string }) =>
+      t.id === 'bruised-banana-orientation-thread' || t.id.startsWith('bruised-banana-orientation-')
+  )
+  const showCampaignEntry = bbThread && !(player as { hasSeenCampaignEntry?: boolean }).hasSeenCampaignEntry
+  let intendedImpactLabels: string[] = []
+  if (showCampaignEntry) {
+    const LENS_LABELS: Record<string, string> = { allyship: 'Allyship', creative: 'Creative', strategic: 'Strategic', community: 'Community' }
+    let state: { lens?: string; campaignDomainPreference?: unknown } | undefined
+    if (player.storyProgress) {
+      try {
+        const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
+        state = parsed?.state
+      } catch { /* ignore */ }
+    }
+    if (state?.lens && typeof state.lens === 'string') {
+      const label = LENS_LABELS[state.lens.toLowerCase()]
+      if (label) intendedImpactLabels = [label]
+    }
+    if (intendedImpactLabels.length === 0) {
+      const domains = parseCampaignDomainPreference(player.campaignDomainPreference)
+      intendedImpactLabels = domains
+        .map((key) => ALLYSHIP_DOMAINS.find((d) => d.key === key)?.label ?? '')
+        .filter((s) => s.length > 0)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
@@ -414,6 +444,10 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
             <div className="text-emerald-100 font-bold">Begin the Journey</div>
           </Link>
+          <Link href="/campaign/board?ref=bruised-banana" className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Campaign</div>
+            <div className="text-zinc-200 font-bold">Gameboard</div>
+          </Link>
           <LibraryRequestButton />
         </div>
 
@@ -462,6 +496,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             Continue Ritual →
           </Link>
         </section>
+      )}
+
+      {/* CAMPAIGN ENTRY (Bruised Banana first visit) */}
+      {showCampaignEntry && bbThread && (
+        <CampaignEntryBanner
+          nation={player.nation ? { id: player.nation.id, name: player.nation.name } : null}
+          playbook={player.playbook ? { id: player.playbook.id, name: player.playbook.name } : null}
+          intendedImpact={intendedImpactLabels}
+          starterQuests={(bbThread as { quests?: { quest: { id: string; title: string } }[] }).quests?.map((tq) => ({ id: tq.quest.id, title: tq.quest.title })) ?? []}
+        />
       )}
 
       {/* EVENT MODE BANNER (Active Instance) */}
@@ -577,10 +621,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                 isSetupIncomplete={isSetupIncomplete}
                 focusQuest={focusQuest}
                 campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
+                isAdmin={isAdmin}
               />
             ))}
             {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} />
+              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} isAdmin={isAdmin} />
             ))}
           </div>
         </section>
@@ -701,12 +746,12 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   {threads
                     .filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
                     .map(thread => (
-                      <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} />
+                      <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} isAdmin={isAdmin} />
                     ))}
                   {packs
                     .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
                     .map(pack => (
-                      <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} />
+                      <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} isAdmin={isAdmin} />
                     ))}
                 </div>
               </div>

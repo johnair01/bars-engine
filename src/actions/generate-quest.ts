@@ -2,24 +2,20 @@
 
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
-import { getOpenAI } from '@/lib/openai'
-import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { completeQuest } from '@/actions/quest-engine'
-import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-aid'
-import { generateObjectWithCache } from '@/lib/ai-with-cache'
+import { fireTrigger } from '@/actions/quest-engine'
+import { getAlignmentContext } from '@/lib/iching-alignment'
+import { KOTTER_STAGES } from '@/lib/kotter'
+import { getHexagramStructure } from '@/lib/iching-struct'
+import { generateRandomUnpacking, getPlaybookPrimaryWave } from '@/lib/quest-grammar'
+import { compileQuestWithAI, publishIChingQuestToPlayer } from '@/actions/quest-grammar'
+import type { IChingContext } from '@/lib/quest-grammar'
+import type { ElementKey } from '@/lib/quest-grammar/elements'
 
-const questGenSchema = z.object({
-  title: z.string().describe("The poetic title of the quest"),
-  description: z.string().describe("The quest instructions/narrative"),
-  selectedMove: z.string().describe("The name of the move selected"),
-})
+const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
-function getQuestGenModel(): string {
-  return process.env.QUEST_GEN_MODEL || 'gpt-4o'
-}
-
-export async function generateQuestFromReading(hexagramId: number, useFirstAidLens: boolean = false) {
+export async function generateQuestFromReading(hexagramId: number) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -27,10 +23,9 @@ export async function generateQuestFromReading(hexagramId: number, useFirstAidLe
         return { error: 'Not logged in' }
     }
 
-    const result = await generateQuestCore(playerId, hexagramId, useFirstAidLens)
+    const result = await generateGrammaticQuestFromReading(playerId, hexagramId)
 
-    // Complete orientation-quest-3 regardless of AI result
-    // The hexagram reading is the core value; AI quest generation is bonus
+    // Complete orientation-quest-3 regardless of result
     const threadQuest = await db.threadQuest.findFirst({
         where: { questId: 'orientation-quest-3' }
     })
@@ -46,11 +41,12 @@ export async function generateQuestFromReading(hexagramId: number, useFirstAidLe
         })
 
         if (progress) {
+            const success = !('error' in result)
             await completeQuest(threadQuest.questId, {
                 hexagramId,
-                generatedQuestId: result.quest?.title || null,
-                aiGenerated: result.success || false
-            }, { threadId: threadQuest.threadId })
+                generatedQuestId: success && result.quest ? result.quest.title : null,
+                aiGenerated: success
+            }, { threadId: threadQuest.threadId, source: 'dashboard' })
         }
     }
 
@@ -59,23 +55,32 @@ export async function generateQuestFromReading(hexagramId: number, useFirstAidLe
     return result
 }
 
-export async function generateQuestCore(playerId: string, hexagramId: number, useFirstAidLens: boolean = false) {
+/**
+ * Generate grammatic quest from I Ching: random unpacking + hexagram context → compileQuestWithAI → publish.
+ */
+export async function generateGrammaticQuestFromReading(playerId: string, hexagramId: number): Promise<
+    | { success: true; quest: { title: string; description?: string }; adventureId?: string; questId?: string; threadId?: string }
+    | { error: string }
+> {
     try {
-        if (process.env.QUEST_GEN_AI_ENABLED === 'false') {
-            return { error: 'Quest generation AI is disabled. Set QUEST_GEN_AI_ENABLED=true to enable.' }
+        if (process.env.QUEST_GRAMMAR_AI_ENABLED === 'false') {
+            return { error: 'Quest Grammar AI is disabled. Set QUEST_GRAMMAR_AI_ENABLED=true to enable.' }
         }
 
-        // 1. Fetch Player and Playbook
         const player = await db.player.findUnique({
             where: { id: playerId },
-            include: { playbook: true }
+            include: { playbook: true, nation: true }
         })
 
         if (!player || !player.playbook) {
             return { error: 'Player or playbook not found' }
         }
 
-        // 2. Fetch Hexagram
+        const nationElement: ElementKey | undefined = player.nation?.element && ELEMENT_KEYS.includes(player.nation.element as ElementKey)
+            ? (player.nation.element as ElementKey)
+            : undefined
+        const playbookPrimaryWave = await getPlaybookPrimaryWave(player.playbookId ?? '')
+
         const hexagram = await db.bar.findUnique({
             where: { id: hexagramId }
         })
@@ -84,95 +89,78 @@ export async function generateQuestCore(playerId: string, hexagramId: number, us
             return { error: 'Hexagram not found' }
         }
 
-        // 3. Prepare AI Prompt
-        const moves = JSON.parse(player.playbook.moves || '[]')
-        const firstAidLens = useFirstAidLens
-            ? await getLatestFirstAidQuestLensForPlayer(playerId)
+        const alignmentContext = await getAlignmentContext(playerId)
+        const stageInfo = alignmentContext.kotterStage != null
+            ? KOTTER_STAGES[alignmentContext.kotterStage as keyof typeof KOTTER_STAGES]
             : null
+        const structure = getHexagramStructure(hexagramId)
 
-        const systemPrompt = `You are the Oracle of the Conclave. 
-        You interpret the I Ching Hexagrams to guide the Collective.
-        Your goal is to create a "Bar" (a quest/task) for the community based on the hexagram and the player's playbook moves.
-        
-        The Hexagram is: #${hexagram.id} ${hexagram.name} - ${hexagram.tone}
-        Meaning: ${hexagram.text}
-        
-        The Player's Playbook is: ${player.playbook.name}
-        Available Moves: ${JSON.stringify(moves)}
-        
-        Task:
-        Select ONE relevant move from the playbook that aligns with the Hexagram's meaning.
-        Create a quest title and description.
-        The description should feel like a call to action for the collective, incorporating the vibe of the hexagram and the mechanics of the chosen move.
-        The Tone should be: ${hexagram.tone}.
-        ${firstAidLens ? `
-        Additional emotional first-aid context (player opted in):
-        ${firstAidLens.prompt}
-        Prefer clean-up style framing when it remains aligned to the hexagram.
-        ` : ''}
-        `
+        const ichingContext: IChingContext = {
+            hexagramId,
+            hexagramName: hexagram.name,
+            hexagramTone: hexagram.tone,
+            hexagramText: hexagram.text,
+            upperTrigram: structure.upper,
+            lowerTrigram: structure.lower,
+            kotterStage: alignmentContext.kotterStage ?? undefined,
+            kotterStageName: stageInfo?.name ?? undefined,
+            nationName: alignmentContext.nationName ?? undefined,
+            activeFace: alignmentContext.activeFace ?? undefined,
+            playbookTrigram: alignmentContext.playbookTrigram ?? undefined,
+        }
 
-        const modelId = getQuestGenModel()
-        const lensKey = firstAidLens ? firstAidLens.prompt : 'none'
-        const inputKey = `${hexagramId}:${player.playbookId}:${lensKey}`
-
-        // 4. Call AI (with cache)
-        const { object } = await generateObjectWithCache<z.infer<typeof questGenSchema>>({
-            feature: 'quest_gen',
-            inputKey,
-            model: modelId,
-            schema: questGenSchema,
-            system: systemPrompt,
-            prompt: "Generate a Collective Quest.",
-            getModel: () => getOpenAI()(modelId),
+        const { unpackingAnswers, alignedAction, moveType } = generateRandomUnpacking({
+            nationElement,
+            playbookPrimaryWave,
         })
 
-        // 5. Create CustomBar (Inspiration)
-        const newBar = await db.customBar.create({
+        const compileResult = await compileQuestWithAI({
+            unpackingAnswers,
+            alignedAction,
+            segment: 'player',
+            ichingContext,
+            targetPlaybookId: player.playbookId ?? undefined,
+            developmentalLens: alignmentContext.activeFace ?? undefined,
+            moveType,
+        })
+
+        if ('error' in compileResult) {
+            return { error: compileResult.error }
+        }
+
+        const publishResult = await publishIChingQuestToPlayer(
+            compileResult.packet,
+            playerId,
+            hexagram.name,
+            hexagramId
+        )
+
+        if (!publishResult.success) {
+            return { error: publishResult.error }
+        }
+
+        // Record hexagram as played (for unplayed-preference)
+        await db.playerBar.create({
             data: {
-                creatorId: playerId,
-                title: object.title,
-                description: firstAidLens
-                    ? `${object.description}\n\nFirst Aid Lens: ${firstAidLens.publicHint}`
-                    : object.description,
-                type: 'inspiration', // MARK AS INSPIRATION (Raw Bar)
-                reward: 1,
-                status: 'active',
-                storyPath: 'personal',
-                moveType: firstAidLens?.preferredMoveType || null,
-                visibility: 'public',
-                completionEffects: JSON.stringify({
-                    questSource: 'personal_iching',
-                    originatorId: playerId
-                }),
-                inputs: JSON.stringify([
-                    {
-                        key: 'reflection',
-                        label: 'Response',
-                        type: 'textarea',
-                        placeholder: firstAidLens
-                            ? `Use the move: ${object.selectedMove}. Lens: ${firstAidLens.publicHint}`
-                            : `Use the move: ${object.selectedMove}`
-                    }
-                ])
+                playerId,
+                barId: hexagramId,
+                source: 'iching',
+                notes: `Grammatic quest on ${new Date().toLocaleDateString()}`
             }
         })
 
-        // Initialize rootId to self for new root quests
-        await db.customBar.update({
-            where: { id: newBar.id },
-            data: { rootId: newBar.id }
-        })
+        await fireTrigger('ICHING_CAST')
 
-        // revalidatePath('/') // Moved to wrapper
-
-        return { success: true, quest: object }
-
-    } catch (e: any) {
-        console.error("Generate quest failed:", e?.message)
-        // Log stack for deep debugging
-        if (e.stack) console.error(e.stack)
-
-        return { error: e?.message || 'Failed to generate quest' }
+        return {
+            success: true,
+            quest: { title: hexagram.name, description: hexagram.tone },
+            adventureId: publishResult.adventureId,
+            questId: publishResult.questId,
+            threadId: publishResult.threadId,
+        }
+    } catch (e: unknown) {
+        console.error('Generate grammatic quest failed:', e instanceof Error ? e.message : String(e))
+        if (e instanceof Error && e.stack) console.error(e.stack)
+        return { error: e instanceof Error ? e.message : 'Failed to generate quest' }
     }
 }

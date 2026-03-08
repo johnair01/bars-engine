@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import fs from 'fs'
 import path from 'path'
+import { getCurrentPlayer } from '@/lib/auth'
 import { BruisedBananaTwinePlayer } from '@/components/campaign/BruisedBananaTwinePlayer'
 
-const TWEE_PATH = path.join(process.cwd(), 'content', 'twine', 'onboarding', 'bruise-banana-initiation.twee')
+const TWEE_PATH = path.join(process.cwd(), 'content', 'twine', 'onboarding', 'bruised-banana-onboarding-draft.twee')
 
 export default async function CampaignTwinePage() {
+    const player = await getCurrentPlayer()
     let tweeSource = ''
     try {
         tweeSource = fs.readFileSync(TWEE_PATH, 'utf-8')
@@ -35,7 +37,7 @@ export default async function CampaignTwinePage() {
                 </Link>
             </div>
             <div className="flex-1 w-full max-w-2xl flex items-center justify-center">
-                <BruisedBananaTwinePlayer tweeSource={tweeSource} />
+                <BruisedBananaTwinePlayer tweeSource={tweeSource} hasPlayer={!!player} />
             </div>
         </div>
     )

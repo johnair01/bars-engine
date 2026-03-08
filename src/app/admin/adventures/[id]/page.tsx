@@ -30,25 +30,37 @@ export default async function AdventureDetailPage({
                 title={adventure.title}
                 description={`Manage passages for /campaign/${adventure.slug}`}
                 action={
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href="/admin/adventures"
-                            className="text-zinc-400 hover:text-white transition-colors text-sm font-medium mr-2"
-                        >
-                            &larr; Back
-                        </Link>
-                        <Link
-                            href={`/admin/quest-grammar?appendTo=${adventure.id}`}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            Generate another quest
-                        </Link>
-                        <Link
-                            href={`/admin/adventures/${adventure.id}/passages/create`}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            New Passage
-                        </Link>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/admin/adventures"
+                                className="text-zinc-400 hover:text-white transition-colors text-sm font-medium mr-2"
+                            >
+                                &larr; Back
+                            </Link>
+                            <Link
+                                href={`/admin/quest-grammar?appendTo=${adventure.id}`}
+                                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Generate another quest
+                            </Link>
+                            <Link
+                                href={`/admin/adventures/${adventure.id}/passages/create`}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                New Passage
+                            </Link>
+                        </div>
+                        {adventure.passages.length > 0 && (
+                            <Link
+                                href={`/adventure/${adventure.id}/play?preview=1`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
+                            >
+                                Preview
+                            </Link>
+                        )}
                     </div>
                 }
             />

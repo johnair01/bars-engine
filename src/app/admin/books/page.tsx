@@ -1,4 +1,5 @@
 import { listBooks } from '@/actions/books'
+import { isPrismaP6009 } from '@/lib/prisma-errors'
 import { BookUploadForm } from './BookUploadForm'
 import { BookList } from './BookList'
 import Link from 'next/link'
@@ -6,7 +7,17 @@ import Link from 'next/link'
 export const maxDuration = 120 // 2 min for book analysis (large books)
 
 export default async function AdminBooksPage() {
-  const books = await listBooks()
+  let books: Awaited<ReturnType<typeof listBooks>> = []
+  let listError: string | null = null
+
+  try {
+    books = await listBooks()
+  } catch (e) {
+    listError = e instanceof Error ? e.message : 'Unable to load books'
+    if (isPrismaP6009(e)) {
+      console.error('[BOOKS] P6009 response size exceeded:', listError)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -24,7 +35,12 @@ export default async function AdminBooksPage() {
 
       <section>
         <h2 className="text-lg font-semibold text-white mb-4">Books ({books.length})</h2>
-        {books.length === 0 ? (
+        {listError ? (
+          <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
+            <p className="text-red-300 text-sm">Unable to load books. {listError}</p>
+            <p className="text-zinc-500 text-xs mt-2">Refresh the page to try again.</p>
+          </div>
+        ) : books.length === 0 ? (
           <p className="text-zinc-500 text-sm">No books yet. Upload a PDF above.</p>
         ) : (
           <BookList books={books} />

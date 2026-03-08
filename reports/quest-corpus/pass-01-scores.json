@@ -1,0 +1,92 @@
+{
+  "pass_id": "pass-01",
+  "scored_at": "2025-03-06T12:00:00Z",
+  "corpus_metrics": {
+    "total_quests": 12,
+    "pass_count": 5,
+    "warn_count": 4,
+    "fail_count": 3,
+    "average_score": 19.2,
+    "pass_rate_pct": 75
+  },
+  "scores": [
+    {
+      "quest_id": "orientation_welcome_v2",
+      "source_book": "handbook_intro",
+      "scores": {
+        "structural_validity": 4,
+        "bar_lifecycle": 5,
+        "state_compatibility": 4,
+        "language_clarity": 5,
+        "onboarding_suitability": 3,
+        "simulation_readiness": 4
+      },
+      "total_score": 25,
+      "status": "ready",
+      "issues": [],
+      "warnings": [
+        { "code": "optional_node_unreachable", "message": "Node intro_sidebar has no incoming transition", "severity": "warning" }
+      ],
+      "requires_human_review": false
+    },
+    {
+      "quest_id": "campaign_join_v1",
+      "source_book": "bruised_banana",
+      "scores": {
+        "structural_validity": 5,
+        "bar_lifecycle": 4,
+        "state_compatibility": 4,
+        "language_clarity": 4,
+        "onboarding_suitability": 3,
+        "simulation_readiness": 5
+      },
+      "total_score": 25,
+      "status": "ready",
+      "issues": [],
+      "warnings": [],
+      "requires_human_review": false
+    },
+    {
+      "quest_id": "bar_capture_flow_v1",
+      "source_book": "handbook_intro",
+      "scores": {
+        "structural_validity": 3,
+        "bar_lifecycle": 2,
+        "state_compatibility": 4,
+        "language_clarity": 4,
+        "onboarding_suitability": 2,
+        "simulation_readiness": 3
+      },
+      "total_score": 18,
+      "status": "usable",
+      "issues": [
+        { "code": "invalid_bar_lifecycle", "message": "BAR_validation before BAR_capture in flow", "severity": "error" }
+      ],
+      "warnings": [
+        { "code": "first_action_late", "message": "First action at node 6", "severity": "warning" }
+      ],
+      "requires_human_review": false
+    },
+    {
+      "quest_id": "broken_flow_v1",
+      "source_book": "extraction_test",
+      "scores": {
+        "structural_validity": 1,
+        "bar_lifecycle": 2,
+        "state_compatibility": 2,
+        "language_clarity": 3,
+        "onboarding_suitability": 1,
+        "simulation_readiness": 0
+      },
+      "total_score": 9,
+      "status": "broken",
+      "issues": [
+        { "code": "unreachable_completion", "message": "No path from start to completion", "severity": "error" },
+        { "code": "invalid_bar_lifecycle", "message": "BAR_validation without prior BAR_capture", "severity": "error" },
+        { "code": "orphan_nodes", "message": "3 nodes not reachable from start", "severity": "error" }
+      ],
+      "warnings": [],
+      "requires_human_review": true
+    }
+  ]
+}

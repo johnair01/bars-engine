@@ -27,7 +27,7 @@ export const LIFE_STATE_OPTIONS = ['Flowing', 'Stalled', 'Neutral'] as const
 
 export const Q3_SEP = ' | '
 
-/** FR2: Single source of truth for unpacking questions. UnpackingForm and GenerationFlow render from this. */
+/** FR2: Single source of truth for unpacking questions. UnpackingForm, GenerationFlow, and 321 form render from this. */
 export const UNPACKING_QUESTIONS = [
   { key: 'q1' as const, semantic: '1. Desired outcome', label: 'What experience do you want to create?', type: 'experience' as const, options: EXPERIENCE_OPTIONS },
   { key: 'q2' as const, semantic: '2. Emotional Satisfaction Payoff', label: 'How will you feel when you get this?', type: 'multiselect' as const, options: SATISFACTION_OPTIONS },
@@ -46,6 +46,7 @@ export const STEPS = [
   { id: 'q5', title: '5. Insight about emotional truth', text: "What would have to be true for someone to feel this way?", type: 'short' as const },
   { id: 'q6', title: '6. Self Sabotaging beliefs', text: 'What reservations do you have about your creation?', type: 'multiselect' as const, options: SHADOW_VOICE_OPTIONS },
   { id: 'q7', title: '7. Starting move', text: 'What aligned action will you take?', type: 'move' as const },
+  { id: 'iching', title: 'I Ching', text: 'Cast or select a hexagram to align the quest with the oracle.', type: 'iching' as const },
   { id: 'model', title: 'Model', text: 'Personal (Epiphany Bridge, 6 beats) or Communal (Kotter, 8 stages)?', type: 'model' as const },
   { id: 'segment', title: 'Segment', text: 'Who is this quest for?', type: 'segment' as const },
   { id: 'nation', title: 'Target nation', text: 'Which nation is this quest for? (Optional — privileges nation-element moves.)', type: 'nation' as const },

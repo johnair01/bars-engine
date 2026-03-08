@@ -1,0 +1,89 @@
+{
+  "flow_id": "orientation_bar_create_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "intro_1",
+  "nodes": [
+    {
+      "id": "intro_1",
+      "type": "introduction",
+      "copy": "The crew is assembling. The heist needs your input.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["orientation_viewed"],
+          "next_node_id": "prompt_1"
+        }
+      ]
+    },
+    {
+      "id": "prompt_1",
+      "type": "prompt",
+      "copy": "What's one thing you want to contribute to this campaign? Write a short note.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["prompt_viewed"],
+          "next_node_id": "bar_capture_1"
+        }
+      ]
+    },
+    {
+      "id": "bar_capture_1",
+      "type": "BAR_capture",
+      "copy": "Share your contribution.",
+      "actions": [
+        {
+          "type": "create_BAR",
+          "requires": ["create"],
+          "emits": ["bar_created"],
+          "next_node_id": "bar_validation_1"
+        }
+      ]
+    },
+    {
+      "id": "bar_validation_1",
+      "type": "BAR_validation",
+      "copy": "Your contribution is recorded. The Conclave hears you.",
+      "conditions": [
+        {
+          "type": "BAR_exists",
+          "source": "current_actor"
+        }
+      ],
+      "actions": [
+        {
+          "type": "confirm",
+          "requires": ["observe"],
+          "emits": ["bar_validated", "quest_progressed"],
+          "next_node_id": "completion_1"
+        }
+      ]
+    },
+    {
+      "id": "completion_1",
+      "type": "completion",
+      "copy": "You've crossed the first threshold. Welcome.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "completion_1"
+    },
+    {
+      "type": "BAR_created_before_validation"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "prompt_viewed",
+    "bar_created",
+    "bar_validated",
+    "quest_progressed",
+    "quest_completed"
+  ]
+}

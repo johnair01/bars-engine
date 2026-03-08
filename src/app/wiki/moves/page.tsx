@@ -52,8 +52,11 @@ export default function MovesPage() {
         ))}
       </section>
 
-      <div className="text-xs text-zinc-500">
+      <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
         <Link href="/wiki" className="hover:text-zinc-300">← Back to index</Link>
+        <Link href="/wiki/emotional-alchemy" className="hover:text-zinc-300">Emotional Alchemy</Link>
+        <Link href="/wiki/nations" className="hover:text-zinc-300">Nations</Link>
+        <Link href="/wiki/archetypes" className="hover:text-zinc-300">Archetypes</Link>
       </div>
     </div>
   )

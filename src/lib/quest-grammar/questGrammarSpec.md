@@ -39,13 +39,13 @@ The Quest Grammar compiles 6 Unpacking Questions + one Aligned Action into a Que
 2. **Rising engagement** — Draw the player in
 3. **Moment of tension** — Peak of conflict
 4. **Integration** (translation) — Begin resolution
-5. **Transcendence** (completion) — Full resolution; may contain donation
+5. **Transcendence** (action node) — Full resolution; commitment moment (donation, signup, complete, etc.)
 6. **Structural consequence** — System event, identity flag, unlock suggestion
 
 ## Constraints
 
 - Node word count: 75–200 words (target)
-- Choices per node: 2–3
+- Choices per node: 2–4 (4 when move spread is primary)
 - Lore gates per node: 0–2, each ≤ 120 words
 - Anchors: each node has ≥1 of goal, identityCue, consequenceCue
 - Primary channel locked across nodes 1–5
@@ -56,8 +56,12 @@ The Quest Grammar compiles 6 Unpacking Questions + one Aligned Action into a Que
 - **Sponsor**: stewardship, catalysis, "protecting emergence"
 - Spine (channel, beat sequence) unchanged; only framing differs
 
-## Donation Node
+## Action Node
 
+The transcendence (Epiphany) or wins (Kotter) beat is the **action node** — the moment where the player commits to a concrete next step. The action is configurable per campaign:
+
+- **actionType**: `donation` | `signup` | `complete` | `generic`
+- **campaignId** → actionType: bruised-banana/fundraiser → donation; onboarding → signup; default → donation
 - Frames as threshold/ritual crossing
 - Includes practical transaction language (what happens, what it supports)
 - Consequence node: system event, identity flag (Early Believer / Catalyst), unlock suggestion

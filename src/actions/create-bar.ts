@@ -25,8 +25,23 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         return { error: 'Not logged in' }
     }
 
-    const title = (formData.get('title') as string || '').trim()
+    // Optional 321 metadata import (pre-fill when "Import from 321" chosen)
+    type Metadata321 = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
+    let metadata321: Metadata321 | null = null
+    const metadata321Raw = formData.get('metadata321') as string | null
+    if (metadata321Raw) {
+        try {
+            const parsed = JSON.parse(metadata321Raw) as unknown
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) metadata321 = parsed as Metadata321
+        } catch {
+            /* ignore invalid JSON */
+        }
+    }
+
+    let title = (formData.get('title') as string || '').trim()
+    if (!title && metadata321?.title) title = metadata321.title
     let description = (formData.get('description') as string || '').trim()
+    if (!description && metadata321?.description) description = metadata321.description
     const inputType = formData.get('inputType') as string || 'text'
     const inputLabel = formData.get('inputLabel') as string || 'Response'
     const requestedVisibility = formData.get('visibility') as string || 'private'
@@ -36,11 +51,15 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     let storyContent = formData.get('storyContent') as string || null
     const storyMood = formData.get('storyMood') as string || null
     const applyFirstAidLens = (formData.get('applyFirstAidLens') as string) === 'true'
-    const linkedQuestId = ((formData.get('linkedQuestId') as string) || '').trim() || null
-    const tags = parseTags((formData.get('tags') as string) || '')
+    let linkedQuestId = ((formData.get('linkedQuestId') as string) || '').trim() || null
+    if (!linkedQuestId && metadata321?.linkedQuestId) linkedQuestId = metadata321.linkedQuestId.trim() || null
+    let tags = parseTags((formData.get('tags') as string) || '')
+    if (metadata321?.tags?.length) tags = [...new Set([...tags, ...metadata321.tags])].slice(0, 10)
     const allowedNations = formData.get('allowedNations') as string || null
     const allowedTrigrams = formData.get('allowedTrigrams') as string || null
     const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
+    const campaignRef = (formData.get('campaignRef') as string)?.trim() || null
+    const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
 
     if (!title) {
         return { error: 'Title is required' }
@@ -139,13 +158,14 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                 }
             }
 
-            // Create the Bar
+            // Create the Bar (InsightBAR when from 321 flow)
+            const barType = metadata321 ? 'insight' : 'vibe'
             const newBar = await tx.customBar.create({
                 data: {
                     creatorId: playerId,
                     title,
                     description,
-                    type: 'vibe',
+                    type: barType,
                     reward: 1, // Pay it forward
                     inputs,
                     visibility: effectiveVisibility,
@@ -159,7 +179,9 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                     rootId: rootIdSeed,
                     allowedNations,
                     allowedTrigrams,
-                    allyshipDomain
+                    allyshipDomain,
+                    campaignRef: campaignRef || null,
+                    campaignGoal: campaignGoal || null
                 }
             })
 
@@ -275,9 +297,11 @@ export async function createQuestFromWizard(data: any) {
 
     try {
         const {
-            title, description, category, visibility,
-            reward, inputs, lifecycleFraming, approach, applyFirstAidLens,
-            allowedNations, allowedTrigrams, allyshipDomain
+            title, description, successCriteria, category, visibility,
+            reward, inputs, lifecycleFraming, moveType, approach, applyFirstAidLens,
+            allowedNations, allowedTrigrams, allyshipDomain,
+            campaignRef: dataCampaignRef, campaignGoal: dataCampaignGoal,
+            barTypeOnCompletion
         } = data
 
         const creator = await db.player.findUnique({
@@ -297,6 +321,15 @@ export async function createQuestFromWizard(data: any) {
             return { error: 'Please choose both nation and archetype before creating quests.' }
         }
 
+        const isGameboard = !!dataCampaignRef
+        let finalMoveType = moveType || lifecycleFraming || null
+        const finalAllyshipDomain = (allyshipDomain as string) || null
+
+        if (!isGameboard) {
+            if (!finalMoveType) return { error: 'Move type (Wake Up, Clean Up, Grow Up, Show Up) is required.' }
+            if (!finalAllyshipDomain) return { error: 'Allyship domain is required.' }
+        }
+
         const generatorMode = getQuestGeneratorMode()
         const requestedVisibility = visibility === 'public' ? 'public' : 'private'
         let effectiveVisibility: 'public' | 'private' = requestedVisibility
@@ -305,6 +338,11 @@ export async function createQuestFromWizard(data: any) {
         const finalTitle = (title as string || '').trim() || placeholderTitle
 
         let finalDescription = (description as string || '').trim()
+        if (successCriteria && (successCriteria as string).trim()) {
+            finalDescription = finalDescription
+                ? `${finalDescription}\n\n**Success looks like:** ${(successCriteria as string).trim()}`
+                : `**Success looks like:** ${(successCriteria as string).trim()}`
+        }
         if (!finalDescription || generatorMode === 'placeholder') {
             finalDescription = [
                 finalDescription,
@@ -313,8 +351,6 @@ export async function createQuestFromWizard(data: any) {
                 `Timestamp: ${timestamp}.`
             ].filter(Boolean).join('\n\n')
         }
-
-        let finalMoveType = lifecycleFraming || null
         let finalStoryContent = approach ? `Approach: ${approach}` : null
 
         if (applyFirstAidLens) {
@@ -329,11 +365,15 @@ export async function createQuestFromWizard(data: any) {
         }
 
         let warning: string | null = null
-        const completionEffects = JSON.stringify({
+        const completionEffectsObj: Record<string, unknown> = {
             questGeneratorMode: generatorMode,
             requestId,
             createdAt: new Date().toISOString()
-        })
+        }
+        if (barTypeOnCompletion && (barTypeOnCompletion === 'insight' || barTypeOnCompletion === 'vibe')) {
+            completionEffectsObj.barTypeOnCompletion = barTypeOnCompletion
+        }
+        const completionEffects = JSON.stringify(completionEffectsObj)
 
         const newBar = await db.$transaction(async (tx) => {
             if (effectiveVisibility === 'public') {
@@ -366,7 +406,7 @@ export async function createQuestFromWizard(data: any) {
                     title: finalTitle,
                     description: finalDescription,
                     type: category || 'custom',
-                    reward: Number(reward) || 1,
+                    reward: Math.min(5, Math.max(1, Number(reward) || 1)),
                     inputs: JSON.stringify(inputs || []),
                     visibility: effectiveVisibility,
                     status: 'active',
@@ -377,7 +417,9 @@ export async function createQuestFromWizard(data: any) {
                     completionEffects,
                     allowedNations: allowedNations ? JSON.stringify(allowedNations) : null,
                     allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null,
-                    allyshipDomain: (allyshipDomain as string) || null
+                    allyshipDomain: finalAllyshipDomain,
+                    campaignRef: (dataCampaignRef as string) || null,
+                    campaignGoal: (dataCampaignGoal as string) || null
                 }
             })
 

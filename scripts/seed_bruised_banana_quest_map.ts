@@ -5,6 +5,13 @@ import * as path from 'path'
 
 const QUEST_MAP_IDS = ['Q-MAP-1', 'Q-MAP-2', 'Q-MAP-3', 'Q-MAP-4', 'Q-MAP-5', 'Q-MAP-6', 'Q-MAP-7', 'Q-MAP-8']
 
+const STAGE_1_STARTERS = [
+    { id: 'Q-MAP-1-WAKE', title: "Name What's at Stake", moveType: 'wakeUp', description: "See and name what makes this moment critical. Share one thing that's at stake for the Bruised Banana Residency." },
+    { id: 'Q-MAP-1-CLEAN', title: 'Clear What Blocks the Urgency', moveType: 'cleanUp', description: "What blocks you from naming or feeling the urgency? Name it. Do one thing to unblock." },
+    { id: 'Q-MAP-1-GROW', title: 'Practice Naming Stakes', moveType: 'growUp', description: "Develop your ability to name stakes. Tell one person why this matters, in one sentence." },
+    { id: 'Q-MAP-1-SHOW', title: 'Create Urgency for One Person', moveType: 'showUp', description: "Bring one person into the urgency. Share the story, the goal, or the ask." },
+]
+
 async function main() {
     const dataPath = path.join(process.cwd(), 'data', 'bruised_banana_quest_map.json')
     const seedData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
@@ -39,6 +46,7 @@ async function main() {
             domainType: 'fundraiser',
             isEventMode: true,
             kotterStage: 1,
+            campaignRef: 'bruised-banana',
         },
         create: {
             slug: instanceSlug,
@@ -50,6 +58,7 @@ async function main() {
             domainType: 'fundraiser',
             isEventMode: true,
             kotterStage: 1,
+            campaignRef: 'bruised-banana',
         }
     })
 
@@ -68,6 +77,7 @@ async function main() {
                 isSystem: true,
                 allyshipDomain: q.allyshipDomain ?? 'GATHERING_RESOURCES',
                 kotterStage: q.kotterStage,
+                campaignRef: 'bruised-banana',
             },
             create: {
                 id: q.id,
@@ -80,9 +90,44 @@ async function main() {
                 isSystem: true,
                 allyshipDomain: q.allyshipDomain ?? 'GATHERING_RESOURCES',
                 kotterStage: q.kotterStage,
+                campaignRef: 'bruised-banana',
             }
         })
         console.log(`  Quest: ${quest.title} (Stage ${quest.kotterStage})`)
+    }
+
+    for (const s of STAGE_1_STARTERS) {
+        const starter = await db.customBar.upsert({
+            where: { id: s.id },
+            update: {
+                title: s.title,
+                description: s.description,
+                moveType: s.moveType,
+                reward: 1,
+                visibility: 'public',
+                isSystem: true,
+                allyshipDomain: 'GATHERING_RESOURCES',
+                kotterStage: 1,
+                campaignRef: 'bruised-banana',
+                parentId: 'Q-MAP-1',
+            },
+            create: {
+                id: s.id,
+                title: s.title,
+                description: s.description,
+                moveType: s.moveType,
+                reward: 1,
+                creatorId: creator.id,
+                type: 'vibe',
+                visibility: 'public',
+                isSystem: true,
+                allyshipDomain: 'GATHERING_RESOURCES',
+                kotterStage: 1,
+                campaignRef: 'bruised-banana',
+                parentId: 'Q-MAP-1',
+            }
+        })
+        console.log(`  Starter: ${starter.title} (Stage 1, ${s.moveType})`)
     }
 
     console.log('Bruised Banana Quest Map seeded. Run npm run seed:party if instance not found.')

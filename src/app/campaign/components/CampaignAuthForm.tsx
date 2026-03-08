@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useEffect } from 'react'
-import { createCampaignPlayer } from '../actions/campaign'
+import { createCampaignPlayer, loginWithCampaignState } from '../actions/campaign'
 import { useRouter } from 'next/navigation'
 
 interface CampaignAuthFormProps {
@@ -11,14 +11,19 @@ interface CampaignAuthFormProps {
 export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [mode, setMode] = useState<'signup' | 'login'>('signup')
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
-    const [state, formAction, isPending] = useActionState(createCampaignPlayer, null)
+    const [signupState, signupAction, isSignupPending] = useActionState(createCampaignPlayer, null)
+    const [loginState, loginAction, isLoginPending] = useActionState(loginWithCampaignState, null)
+
+    const isPending = mode === 'signup' ? isSignupPending : isLoginPending
+    const state = mode === 'signup' ? signupState : loginState
 
     useEffect(() => {
         if (state?.success) {
-            router.push('/conclave/onboarding')
+            router.push('redirectTo' in state && state.redirectTo ? state.redirectTo : '/conclave/onboarding')
             router.refresh()
         }
         if (state?.error) {
@@ -30,14 +35,21 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
         <div className="w-full max-w-md mx-auto bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-8">
             <div className="text-center mb-8">
                 <div className="text-5xl mb-4">✨</div>
-                <h1 className="text-2xl font-bold text-white mb-2">Claim Your Destiny</h1>
-                <p className="text-zinc-400 text-sm">Create your resonance signature to lock in your path and enter the Conclave.</p>
+                <h1 className="text-2xl font-bold text-white mb-2">
+                    {mode === 'signup' ? 'Claim Your Destiny' : 'Welcome Back'}
+                </h1>
+                <p className="text-zinc-400 text-sm">
+                    {mode === 'signup'
+                        ? 'Create your resonance signature to lock in your path and enter the Conclave.'
+                        : 'Log in to apply your campaign choices and unlock quests.'}
+                </p>
             </div>
 
-            <form action={formAction} className="space-y-4">
+            <form action={mode === 'signup' ? signupAction : loginAction} className="space-y-4">
                 <div>
                     <label className="block text-xs uppercase text-zinc-500 mb-1">Email</label>
                     <input
+                        name="email"
                         type="email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
@@ -50,6 +62,7 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
                 <div>
                     <label className="block text-xs uppercase text-zinc-500 mb-1">Password</label>
                     <input
+                        name="password"
                         type="password"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
@@ -60,11 +73,13 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
                     />
                 </div>
 
-                <input
-                    type="hidden"
-                    name="identity"
-                    value={JSON.stringify({ contact: email, password })}
-                />
+                {mode === 'signup' && (
+                    <input
+                        type="hidden"
+                        name="identity"
+                        value={JSON.stringify({ contact: email, password })}
+                    />
+                )}
 
                 <input
                     type="hidden"
@@ -83,13 +98,26 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
                     disabled={isPending}
                     className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-purple-900/20 disabled:opacity-50"
                 >
-                    {isPending ? 'Forging Signature...' : 'Enter the Conclave →'}
+                    {isPending
+                        ? mode === 'signup'
+                            ? 'Forging Signature...'
+                            : 'Logging in...'
+                        : mode === 'signup'
+                            ? 'Enter the Conclave →'
+                            : 'Log In & Continue →'}
                 </button>
 
                 <div className="text-center pt-4">
-                    <a href="/login" className="text-xs text-zinc-500 hover:text-white transition">
-                        Already awake? Log In
-                    </a>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMode(mode === 'signup' ? 'login' : 'signup')
+                            setError(null)
+                        }}
+                        className="text-xs text-zinc-500 hover:text-white transition"
+                    >
+                        {mode === 'signup' ? 'Already awake? Log In' : 'New here? Sign Up'}
+                    </button>
                 </div>
             </form>
         </div>

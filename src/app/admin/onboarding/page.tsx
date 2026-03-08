@@ -1,6 +1,8 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { ArrowRight, Settings, Users, Sparkles, BookOpen } from 'lucide-react'
+import { ArrowRight, Settings, Users, Sparkles, BookOpen, FileText } from 'lucide-react'
+import { OnboardingFlowTemplate } from './OnboardingFlowTemplate'
+import { OnboardingDraftEditor } from './OnboardingDraftEditor'
 
 export default async function AdminOnboardingPage() {
     // Fetch orientation threads
@@ -50,6 +52,24 @@ export default async function AdminOnboardingPage() {
                     Manage the player's guided entry path, from initial orientation to specialized nation and archetype content.
                 </p>
             </header>
+
+            {/* Template Structure (Bruised Banana) */}
+            <section className="space-y-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-400" />
+                    Template Structure (Bruised Banana)
+                </h2>
+                <OnboardingFlowTemplate />
+            </section>
+
+            {/* Edit .twee Draft */}
+            <section className="space-y-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-400" />
+                    Edit .twee Draft
+                </h2>
+                <OnboardingDraftEditor />
+            </section>
 
             {/* Orientation Flow */}
             <section className="space-y-6">

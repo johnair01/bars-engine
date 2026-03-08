@@ -49,6 +49,7 @@ interface QuestDetailModalProps {
     isLocked?: boolean
     completedMoveTypes?: string[] // Optional: types already achieved by player
     campaignDomainPreference?: string[] // For domain-aligned intention options
+    isAdmin?: boolean // When true, show edit link to /admin/quests/[id]
 }
 
 function parseQuestInputs(inputs?: string): BarInput[] {
@@ -70,7 +71,7 @@ function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
     }
 }
 
-export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [] }: QuestDetailModalProps) {
+export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [], isAdmin }: QuestDetailModalProps) {
     const router = useRouter()
     const pathname = usePathname()
     const [isPending, startTransition] = useTransition()
@@ -191,6 +192,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 isCompleted={isCompleted}
                 threadId={context?.threadId}
                 isRitual={context?.threadType === 'orientation'}
+                isAdmin={isAdmin}
             />
         )
     }
@@ -198,7 +200,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const handleComplete = () => {
         if (isPending) return
         startTransition(async () => {
-            const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, context)
+            const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, { ...context, source: 'dashboard' })
             if ('success' in result && result.success) {
                 setFeedback('✨ Quest Complete!')
                 setTimeout(() => {
@@ -308,12 +310,23 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 </span>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="text-zinc-500 hover:text-white transition-colors"
-                        >
-                            ✕
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {isAdmin && (
+                                <Link
+                                    href={`/admin/quests/${quest.id}`}
+                                    className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg border border-emerald-800/60 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-300 transition-colors"
+                                    title="Edit quest config"
+                                >
+                                    Edit
+                                </Link>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="text-zinc-500 hover:text-white transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -674,7 +687,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
                                 setResponses(mergedResponses)
                                 startTransition(async () => {
-                                    const result = await completeQuest(quest.id, mergedResponses, context)
+                                    const result = await completeQuest(quest.id, mergedResponses, { ...context, source: 'dashboard' })
                                     if ('success' in result && result.success) {
                                         setFeedback('✨ Quest Complete!')
                                         setTimeout(() => {
@@ -762,14 +775,19 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         mode="modal"
                                         onComplete={async (hexagramId) => {
                                             const result = await generateQuestFromReading(hexagramId)
-                                            // Quest completes regardless; AI generation is bonus
-                                            setFeedback(result.success
-                                                ? '✨ Wisdom Received & Quest Generated!'
-                                                : '✨ Reading Accepted! (Quest generation unavailable)')
-                                            setTimeout(() => {
+                                            if ('adventureId' in result && result.adventureId && result.questId && result.threadId) {
                                                 onClose()
                                                 router.refresh()
-                                            }, 2000)
+                                                router.push(`/adventure/${result.adventureId}/play?questId=${result.questId}&threadId=${result.threadId}`)
+                                            } else {
+                                                setFeedback('error' in result
+                                                    ? result.error
+                                                    : '✨ Wisdom Received & Quest Generated!')
+                                                setTimeout(() => {
+                                                    onClose()
+                                                    router.refresh()
+                                                }, 2000)
+                                            }
                                         }}
                                     />
                                 </div>

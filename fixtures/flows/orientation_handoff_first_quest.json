@@ -1,0 +1,76 @@
+{
+  "flow_id": "orientation_handoff_first_quest_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "intro_1",
+  "nodes": [
+    {
+      "id": "intro_1",
+      "type": "introduction",
+      "copy": "The Conclave has convened. Cross the threshold to join.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["orientation_viewed"],
+          "next_node_id": "action_1"
+        }
+      ]
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "copy": "Create your account. You are now an Early Believer — a Catalyst who crossed before the crowd.",
+      "actions": [
+        {
+          "type": "signup",
+          "requires": [],
+          "emits": ["identity_created"],
+          "next_node_id": "progress_1"
+        }
+      ]
+    },
+    {
+      "id": "progress_1",
+      "type": "quest_progress",
+      "copy": "Account created. Orientation complete.",
+      "actions": [
+        {
+          "type": "confirm",
+          "requires": ["observe"],
+          "emits": ["quest_progressed"],
+          "next_node_id": "handoff_1"
+        }
+      ]
+    },
+    {
+      "id": "handoff_1",
+      "type": "handoff",
+      "copy": "Continue to your first quest.",
+      "actions": [
+        {
+          "type": "unlock_next_step",
+          "requires": [],
+          "emits": ["handoff_triggered", "step_unlocked"],
+          "next_node_id": null
+        }
+      ],
+      "target_ref": "dashboard"
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "handoff_1"
+    },
+    {
+      "type": "handoff_triggered"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "identity_created",
+    "quest_progressed",
+    "handoff_triggered",
+    "step_unlocked"
+  ]
+}

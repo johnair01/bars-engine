@@ -11,6 +11,7 @@ import {
     VibesEmergencyTag,
 } from '@/lib/emotional-first-aid'
 import { FirstAidTwinePlayer } from './FirstAidTwinePlayer'
+import { Shadow321Form } from '@/components/shadow/Shadow321Form'
 import { TwineLogic } from '@/lib/twine-engine'
 
 interface EmotionalFirstAidKitProps {
@@ -259,7 +260,16 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
                         ))}
                     </div>
 
-                    {selectedToolLogic ? (
+                    {selectedTool?.key === 'shadow-321' ? (
+                        <Shadow321Form
+                            embedded
+                            contextQuestId={contextQuestId ?? undefined}
+                            onComplete={(_metadata) => {
+                                setTwineVariables({ protocol: 'shadow-321' })
+                                setStage('resolution')
+                            }}
+                        />
+                    ) : selectedToolLogic ? (
                         <FirstAidTwinePlayer
                             logic={selectedToolLogic}
                             onComplete={(variables) => {
@@ -320,9 +330,10 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
 
                     {result.mintedAmount > 0 ? (
                         <div className="rounded-xl border border-green-800/40 bg-green-950/30 p-4 text-green-200">
-                            Nice shift. You reduced stuckness by at least {result.threshold} and minted{' '}
-                            {result.mintedAmount === FIRST_AID_MINT_AMOUNT ? 'a' : result.mintedAmount}{' '}
-                            Vibeulon.
+                            Nice shift. You minted{' '}
+                            {result.mintedAmount === 1 ? 'a' : result.mintedAmount}{' '}
+                            Vibeulon{result.mintedAmount > 1 ? 's' : ''}.
+                            {result.mintedAmount >= 2 && ' (Gold star + stuckness improvement)'}
                         </div>
                     ) : (
                         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-zinc-300">

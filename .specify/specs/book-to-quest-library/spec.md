@@ -8,6 +8,45 @@ Turn Personal Development books (PDFs) into quest content that players can pull 
 
 **Terminology**: Integral Emergence = the game; bars-engine = the program.
 
+## API Contracts (API-First)
+
+> Define before implementation. Server Actions for forms and data; Route Handler only if external consumers need library search.
+
+### getQuestLibraryContent
+
+**Input**: `{ playerId: string }` (or from session)  
+**Output**: `Promise<QuestThreadSummary[]>` — threads where `creatorType = 'library'`, filtered by player nation, playbook, developmental hint.
+
+- **Server Action** — /library page data fetch. Returns threads with gateNationId, gatePlaybookId applied.
+
+### pullFromLibraryAction
+
+**Input**: `{ threadId?: string; questId?: string }` — one required  
+**Output**: `Promise<{ success: true; threadProgressId?: string; playerQuestId?: string } | { error: string }>`
+
+- **Server Action** — "Pull" / "Start" button. `threadId` → create ThreadProgress; `questId` → assign standalone via PlayerQuest.
+
+### uploadBookAction
+
+**Input**: `FormData` (file: PDF)  
+**Output**: `Promise<{ success: true; bookId: string } | { error: string }>`
+
+- **Server Action** — Admin upload. Store to Blob/S3; create Book record with `status: 'draft'`.
+
+### triggerExtractionAction
+
+**Input**: `{ bookId: string }`  
+**Output**: `Promise<{ success: true } | { error: string }>`
+
+- **Server Action** — Admin trigger. Extract text; persist to Book.extractedText; `status` → extracted.
+
+### triggerAnalysisAction
+
+**Input**: `{ bookId: string }`  
+**Output**: `Promise<{ success: true } | { error: string }>`
+
+- **Server Action** — Admin trigger. Chunk + AI analysis; create CustomBar, QuestThread, ThreadQuest; `status` → analyzed.
+
 ## Conceptual Model (Game Language)
 
 - **WHO**: Player (browser, puller), Admin (uploader, analyzer)

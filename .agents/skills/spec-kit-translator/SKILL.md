@@ -37,7 +37,8 @@ When a user provides a high-level request, follow this interaction protocol:
 1. **Clarify Objects**: Ask what new models or fields are implied.
 2. **Clarify Surface Area**: Ask what UI points are affected.
 3. **Clarify Governance**: Ask how admins or systems control this feature.
-4. **Draft the Spec**: Compile these into a `.specify/specs/` structure.
+4. **Clarify API Surface**: Ask what actions or routes this feature exposes. Route Handler (external consumers, webhooks) or Server Action (forms, React)? Define signatures before implementation.
+5. **Draft the Spec**: Compile these into a `.specify/specs/` structure. Use the [Spec Template](.specify/spec-template.md).
 
 ## Verification Quests (UX Features) — Required
 
@@ -59,6 +60,17 @@ Verification quests:
 - [ ] Quest narrative ties to Bruised Banana Fundraiser where relevant (party prep, engine improvement, residency support).
 - [ ] Verification quest is implemented — do not mark a UI feature complete without its verification quest.
 
+## Spec Template
+
+When drafting specs, use [.specify/spec-template.md](.specify/spec-template.md). Required sections for features with persistence, UI, or external surface:
+
+| Section | When Required |
+|---------|---------------|
+| **Practice** | Persistence, UI, or API — add "Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI." |
+| **API Contracts** | Any action or route — define input/output shape before FRs |
+| **Route vs Action** | Document which surfaces use Route Handler vs Server Action |
+| **Scaling Checklist** | AI, upload, or filesystem — reference [deftness-development/reference.md](.agents/skills/deftness-development/reference.md) |
+
 ## Prompt Template: Natural Language to Spec
 When generating a Spec Kit prompt for the agent itself, use this structure:
 ```markdown
@@ -70,17 +82,29 @@ You are a Spec Kit agent responsible for [Objective].
 ## Objective
 [High-level summary of what to build and why.]
 
+## Prompt (API-First)
+> Implement [Feature] per [.specify/specs/[name]/spec.md](../specs/[name]/spec.md). **API-first**: define [action/route] signature and data shapes before UI. [List specific actions, e.g. `actionName(input): Promise<OutputType>`]. Spec: [path].
+
 ## Requirements
 - **Surfaces**: [List of pages/components]
 - **Mechanics**: [How it works]
 - **Persistence**: [Database changes]
+- **API**: [Actions or routes — define contract before UI]
 - **Verification**: [How to prove it works]
 
+## Checklist (API-First Order)
+- [ ] API contract (input/output) defined in spec or plan
+- [ ] Server Action or Route Handler implemented first
+- [ ] UI wired to action/route
+- [ ] Run `npm run build` and `npm run check` — fail-fix
+
 ## Deliverables
-- [ ] .specify/specs/[name]/spec.md
+- [ ] .specify/specs/[name]/spec.md (use spec-template.md; include API Contracts)
 - [ ] .specify/specs/[name]/plan.md
 - [ ] .specify/specs/[name]/tasks.md
 ```
+
+**When to include "Prompt (API-First)"**: For any feature with persistence, UI, or external API surface. Omit for pure docs, terminology renames, or build fixes with no new API surface.
 
 ## Example Translations
 | User Says | Spec Kit Prompt Translates to... |

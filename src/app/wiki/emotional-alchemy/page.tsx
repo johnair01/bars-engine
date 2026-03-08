@@ -47,6 +47,7 @@ export default function EmotionalAlchemyPage() {
         <p className="text-zinc-400 text-sm max-w-2xl">
           For admins creating CYOA quests. Use this reference when designing passages and choices manually (without AI).
           Energy economy, not morality. 5 elements, WAVE stages, 15 canonical moves.
+          The 15 canonical moves unlock for cross-national collaboration when onboarding completes.
         </p>
       </header>
 
@@ -68,6 +69,7 @@ export default function EmotionalAlchemyPage() {
         <h2 id="nations" className="text-lg font-bold text-white">Nation ↔ Element</h2>
         <p className="text-zinc-400 text-sm">
           When privileging choices for a target audience, offer at least one path that favors the nation&apos;s element.
+          See <Link href="/wiki/nations" className="text-indigo-400 hover:text-indigo-300">Nations</Link> for each nation&apos;s 4 moves.
         </p>
         <div className="grid gap-2 text-sm">
           {Object.entries(NATION_ELEMENT_MAP).map(([nation, element]) => (
@@ -118,19 +120,38 @@ export default function EmotionalAlchemyPage() {
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">
+        <h2 id="lens-moves" className="text-lg font-bold text-white">Developmental Lens → Moves</h2>
+        <p className="text-zinc-400 text-sm">
+          Each of the 6 Faces (Shaman, Challenger, Regent, Architect, Diplomat, Sage) has moves available.
+          When a developmental lens is set in quest generation, these moves are privileged in choices.
+        </p>
+        <div className="grid gap-2 text-sm">
+          <div><span className="w-24 text-zinc-400 inline-block">Shaman</span>Renew Vitality, Activate Hope, Reopen Sensitivity</div>
+          <div><span className="w-24 text-zinc-400 inline-block">Challenger</span>Achieve Breakthrough, Declare Intention, Mobilize Grief</div>
+          <div><span className="w-24 text-zinc-400 inline-block">Regent</span>Stabilize Coherence, Integrate Gains, Consolidate Energy</div>
+          <div><span className="w-24 text-zinc-400 inline-block">Architect</span>Reveal Stakes, Deepen Value, Integrate Gains</div>
+          <div><span className="w-24 text-zinc-400 inline-block">Diplomat</span>Reclaim Meaning, Deepen Value, Reopen Sensitivity</div>
+          <div><span className="w-24 text-zinc-400 inline-block">Sage</span>Stabilize Coherence, Commit to Growth, Renew Vitality</div>
+        </div>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">
         <h2 id="choice-privileging" className="text-lg font-bold text-white">Choice Privileging (Manual Design)</h2>
         <p className="text-zinc-400 text-sm">
-          When creating passages with 2–3 choices, privilege paths that resonate with the target player:
+          When creating passages with 2–4 choices, privilege paths that resonate with the target player:
         </p>
         <ul className="list-disc list-inside text-zinc-300 text-sm space-y-1">
           <li><strong>Nation element</strong> — At least one choice should favor a move involving the nation&apos;s element (e.g. Pyrakanth → fire moves: Achieve Breakthrough, Declare Intention, Temper Action)</li>
           <li><strong>Playbook WAVE</strong> — At least one choice should favor a move whose primary WAVE matches the playbook (e.g. Show Up playbook → Step Through, Achieve Breakthrough, Declare Intention)</li>
-          <li><strong>2–3 choices</strong> — Style guide limit. No more than 3 per passage.</li>
+          <li><strong>2–4 choices</strong> — Style guide limit. Up to 4 when move spread is primary (one per move).</li>
         </ul>
       </section>
 
-      <div className="text-xs text-zinc-500 flex gap-4">
+      <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
         <Link href="/wiki" className="hover:text-zinc-300">← Back to index</Link>
+        <Link href="/wiki/moves" className="hover:text-zinc-300">The 4 Moves</Link>
+        <Link href="/wiki/nations" className="hover:text-zinc-300">Nations</Link>
+        <Link href="/wiki/archetypes" className="hover:text-zinc-300">Archetypes</Link>
         <Link href="/admin/quest-grammar" className="hover:text-zinc-300">Quest Grammar (admin)</Link>
       </div>
     </div>

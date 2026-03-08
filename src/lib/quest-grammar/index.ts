@@ -5,7 +5,28 @@
  * Export public API.
  */
 
-export { compileQuest, compileQuestWithPrivileging } from './compileQuest'
+export {
+  UNPACKING_QUESTIONS,
+  STEPS,
+  EXPERIENCE_OPTIONS,
+  SATISFACTION_OPTIONS,
+  DISSATISFACTION_OPTIONS,
+  SHADOW_VOICE_OPTIONS,
+  MOVE_OPTIONS,
+  LIFE_STATE_OPTIONS,
+  Q3_SEP,
+  FACE_OPTIONS,
+  baseInputClass,
+} from './unpacking-constants'
+export { deriveMetadata321 } from './deriveMetadata321'
+export type { Metadata321, Phase3Taxonomic, Phase1Identification } from './deriveMetadata321'
+export { compileQuest } from './compileQuestCore'
+export { toSkeletonPacket } from './compileQuestSkeleton'
+export { compileCharacterCreationPacket } from './characterCreationPacket'
+export type { CharacterCreationPacketInput, NationChoice, PlaybookChoice } from './characterCreationPacket'
+export { compileStoryIntroPacket } from './storyIntroPacket'
+export type { StoryIntroPacketInput } from './storyIntroPacket'
+export { compileMovesGMPacket } from './movesGMPacket'
 export { questPacketToTwee } from './questPacketToTwee'
 export {
   buildQuestPromptContext,
@@ -22,6 +43,13 @@ export {
   getMoveById,
   getEnergyDelta,
 } from './move-engine'
+export { getMovesForLens } from './lens-moves'
+export type { LensKey } from './lens-moves'
+export { resolveMoveForContext } from './resolveMoveForContext'
+export type { ResolveMoveForContextParams } from './resolveMoveForContext'
+export { getPlaybookPrimaryWave } from './playbook-wave'
+export { generateRandomUnpacking } from './random-unpacking'
+export type { RandomUnpackingResult, RandomUnpackingPlayerContext } from './random-unpacking'
 export type {
   QuestCompileInput,
   QuestPacket,
@@ -36,4 +64,6 @@ export type {
   WaveStage,
   TranslateCategory,
   MoveMap,
+  ActionType,
+  IChingContext,
 } from './types'

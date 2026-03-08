@@ -55,6 +55,12 @@ Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, F
 
 Derived from unpacking data. See [.agent/context/emotional-alchemy-ontology.md](../../.agent/context/emotional-alchemy-ontology.md).
 
+## Version Management and Backlog Stewardship
+
+BARs Engine is a **lightweight version management system for quests**. Quests can be forked (`forkQuestPrivately`, `forkDeclinedAidQuest`); lineage via `forkedFromId`. AID offers have a decline clock (`expiresAt`); when steward declines or offer expires, offerer can fork the linked quest.
+
+**Backlog stewardship**: Campaign deck = backlog; periods = sprints; stewards hold quests. The **Architect Game Master** (Heaven trigram) teaches players to steward the collective backlog with honor and amusement. Vision: Jira + GitHub + CYOA — see [docs/JIRA_GITHUB_CYOA_METAPHOR.md](../../docs/JIRA_GITHUB_CYOA_METAPHOR.md).
+
 ## Integral Emergence / AI Agents (Vision)
 
 AI agents act as NPCs in the game. They can create and resolve quests, make I Ching draws, and (future) create quests that call in archetypes from hexagrams for players to create next. Agents are Kotter-stage-context-aware (quest thread or campaign). To other users they appear as regular players. Design goal: real users outpace AI via collaboration and ability to mint vibeulons from real lives. AI agents can only mint vibeulons by completing story quests — not from capital injections or real-world actions.

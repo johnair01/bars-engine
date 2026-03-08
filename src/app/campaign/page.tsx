@@ -23,10 +23,18 @@ export default async function CampaignPage(props: {
         campaignRef = instance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
     }
 
-    // Bruised Banana: QuestPacket initiation when ritual=initiation; else Twine flow
+    // Bruised Banana: prefer grammatical initiation when a published Adventure exists
     if (campaignRef === 'bruised-banana') {
-        if (ritual === 'initiation' && (segment === 'player' || segment === 'sponsor')) {
-            redirect(`/campaign/initiation?segment=${segment}`)
+        const seg = segment && ['player', 'sponsor'].includes(segment) ? segment : 'player'
+        const initAdventure = await db.adventure.findUnique({
+            where: { slug: `bruised-banana-initiation-${seg}`, status: 'ACTIVE' },
+            select: { id: true },
+        })
+        if (initAdventure) {
+            redirect(`/campaign/initiation?segment=${seg}`)
+        }
+        if (ritual === 'initiation') {
+            redirect(`/campaign/initiation?segment=${seg}`)
         }
         redirect('/campaign/twine?ref=bruised-banana')
     }

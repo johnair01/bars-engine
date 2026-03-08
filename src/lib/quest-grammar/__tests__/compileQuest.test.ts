@@ -4,7 +4,7 @@
  * Run with: npx tsx src/lib/quest-grammar/__tests__/compileQuest.test.ts
  */
 
-import { compileQuest } from '../compileQuest'
+import { compileQuest } from '../compileQuestCore'
 import type { QuestCompileInput, UnpackingAnswers } from '../types'
 
 const BRUISED_BANANA_ANSWERS: UnpackingAnswers = {
@@ -195,7 +195,8 @@ function testKotterCommunalModel() {
 
   const winsNode = result.nodes.find((n) => n.beatType === 'wins')
   if (!winsNode) throw new Error('Should have wins node')
-  assert(winsNode.isDonationNode === true, 'Wins (stage 6) should be donation node for Kotter')
+  assert(winsNode.isActionNode === true, 'Wins (stage 6) should be action node for Kotter')
+  assert(winsNode.actionType === 'donation', 'Wins should have actionType donation (default)')
 
   const anchorNode = result.nodes.find((n) => n.beatType === 'anchor')
   if (!anchorNode) throw new Error('Should have anchor node')
@@ -217,14 +218,15 @@ function testDonationNode() {
 
   const transcendenceNode = result.nodes.find((n) => n.beatType === 'transcendence')
   if (!transcendenceNode) throw new Error('Should have transcendence node')
-  assert(transcendenceNode.isDonationNode === true, 'Transcendence should be donation node')
+  assert(transcendenceNode.isActionNode === true, 'Transcendence should be action node')
+  assert(transcendenceNode.actionType === 'donation', 'Transcendence should have actionType donation (default)')
   assert(
     transcendenceNode.text.includes('threshold') || transcendenceNode.text.includes('Ritual'),
-    'Donation node should have ritual framing'
+    'Action node should have ritual framing'
   )
   assert(
     transcendenceNode.text.includes('Transaction') || transcendenceNode.text.includes('contribution'),
-    'Donation node should have transaction language'
+    'Action node should have transaction language'
   )
 
   const consequenceNode = result.nodes.find((n) => n.beatType === 'consequence')
@@ -238,7 +240,7 @@ function testDonationNode() {
     'Consequence should have system event'
   )
 
-  console.log('✅ donation node (ritual + transaction) and consequence')
+  console.log('✅ action node (ritual + transaction) and consequence')
 }
 
 function runTests() {

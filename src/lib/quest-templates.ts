@@ -9,7 +9,8 @@ export type QuestInputConfig = {
 
 export type QuestTemplate = {
     id: string
-    category: 'dreams' | 'logistics' | 'play' | 'social' | 'transformation' | 'custom'
+    category: 'dreams' | 'play' | 'custom'
+    categoryDisplay?: string
     title: string
     description: string
     examples: string[]
@@ -23,12 +24,13 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
     {
         id: 'dreams-and-schemes',
         category: 'dreams',
+        categoryDisplay: 'CAMPAIGN',
         title: 'Dreams & Schemes',
-        description: 'Launch a long-term vision or project',
+        description: 'Campaign-level quests: long-term vision, series of adventures, connected to Kotter Model Stages. Within a campaign, becomes a sub-campaign.',
         examples: [
-            'Pitch a collaborative project',
-            'Start planning next phase',
-            'Build a long-term vision'
+            'Launch a collaborative project',
+            'Build a multi-stage vision',
+            'Create urgency for change'
         ],
         approaches: ['Freeform', 'Kotter Framework'],
         inputs: [
@@ -43,65 +45,20 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
         ]
     },
     {
-        id: 'party-logistics',
-        category: 'logistics',
-        title: 'Party Preparation',
-        description: 'Help prepare for the Feb 21 event',
-        examples: [
-            'Bring supplies',
-            'Set up space',
-            'Coordinate transport'
-        ],
-        lifecycleFraming: true,
-        inputs: [
-            { key: 'task', label: 'What will you do?', type: 'text', placeholder: 'e.g. Bring extra chairs' },
-            { key: 'framing', label: 'Lifecycle Framing', type: 'select', options: ['Wake Up', 'Clean Up', 'Grow Up', 'Show Up'], optional: true }
-        ]
-    },
-    {
-        id: 'personal-play',
+        id: 'personal-development',
         category: 'play',
-        title: 'Personal Exploration',
-        description: 'Experiment, play, and discover',
+        categoryDisplay: 'GROW UP',
+        title: 'Personal Development',
+        description: 'Grow Up quests — increase skill capacity through developmental lines. Experiment, learn, and build capacity.',
         examples: [
             'Try something new',
-            'Create art',
-            'Explore a curiosity'
+            'Develop a skill',
+            'Build capacity in an area'
         ],
         lifecycleFraming: true,
         inputs: [
             { key: 'exploration', label: 'What will you explore?', type: 'textarea', placeholder: 'Describe your experiment...' },
             { key: 'framing', label: 'Lifecycle Framing', type: 'select', options: ['Wake Up', 'Clean Up', 'Grow Up', 'Show Up'], optional: true }
-        ]
-    },
-    {
-        id: 'connection',
-        category: 'social',
-        title: 'Connection Quest',
-        description: 'Build or deepen relationships',
-        examples: [
-            'Meet someone new',
-            'Have a deep conversation',
-            'Collaborate with another'
-        ],
-        inputs: [
-            { key: 'connection', label: 'How will you connect?', type: 'textarea', placeholder: 'Describe the interaction...' },
-            { key: 'withWhom', label: 'With whom? (Optional)', type: 'text', optional: true }
-        ]
-    },
-    {
-        id: 'inner-external',
-        category: 'transformation',
-        title: 'Inner ↔ External',
-        description: 'Transform between internal realization and external action',
-        directions: ['Inner → External', 'External → Inner'],
-        examples: [
-            'Share an insight (Inner → External)',
-            'Journal about event (External → Inner)'
-        ],
-        inputs: [
-            { key: 'direction', label: 'Direction', type: 'select', options: ['Inner → External', 'External → Inner'] },
-            { key: 'transformation', label: 'What are you transforming?', type: 'textarea', placeholder: 'Describe the shift...' }
         ]
     },
     {

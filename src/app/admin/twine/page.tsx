@@ -44,6 +44,12 @@ export default async function AdminTwinePage() {
                                 <div className="flex items-center gap-2 shrink-0">
                                     <PublishToggle storyId={story.id} isPublished={story.isPublished} />
                                     <Link
+                                        href={`/admin/twine/${story.id}/ir`}
+                                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs rounded-lg transition"
+                                    >
+                                        Edit IR
+                                    </Link>
+                                    <Link
                                         href={`/admin/twine/${story.id}`}
                                         className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs rounded-lg transition"
                                     >

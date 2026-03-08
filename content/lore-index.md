@@ -22,24 +22,25 @@ Canonical index of proper nouns used in the Event Page, CYOA onboarding, and kno
 
 | Term | Slug | Wiki Path |
 |------|------|-----------|
-| Argyra | argyra | — |
-| Pyrakanth | pyrakanth | — |
-| Virelune | virelune | — |
-| Meridia | meridia | — |
-| Lamenth | lamenth | — |
+| Argyra | argyra | /wiki/nations#argyra |
+| Pyrakanth | pyrakanth | /wiki/nations#pyrakanth |
+| Virelune | virelune | /wiki/nations#virelune |
+| Meridia | meridia | /wiki/nations#meridia |
+| Lamenth | lamenth | /wiki/nations#lamenth |
 
 ## Archetypes
 
 | Term | Slug | Wiki Path |
 |------|------|-----------|
-| Heaven | heaven | — |
-| Earth | earth | — |
-| Thunder | thunder | — |
-| Wind | wind | — |
-| Water | water | — |
-| Fire | fire | — |
-| Mountain | mountain | — |
-| Lake | lake | — |
+| Archetypes (Playbooks) | archetypes | /wiki/archetypes |
+| Heaven | heaven | /wiki/archetypes |
+| Earth | earth | /wiki/archetypes |
+| Thunder | thunder | /wiki/archetypes |
+| Wind | wind | /wiki/archetypes |
+| Water | water | /wiki/archetypes |
+| Fire | fire | /wiki/archetypes |
+| Mountain | mountain | /wiki/archetypes |
+| Lake | lake | /wiki/archetypes |
 
 ## Allyship Domains
 
@@ -80,6 +81,13 @@ Canonical index of proper nouns used in the Event Page, CYOA onboarding, and kno
 | Term | Slug | Wiki Path |
 |------|------|-----------|
 | BAR | bar | /wiki/glossary#bar |
+
+## Yellow Brick Road
+
+| Term | Slug | Wiki Path |
+|------|------|-----------|
+| Yellow Brick Road | yellow-brick-road | /wiki/glossary#yellow-brick-road |
+| Yellow Brick BAR | yellow-brick-bar | /wiki/glossary#yellow-brick-road |
 
 ## Kotter
 

@@ -483,6 +483,88 @@ async function main() {
     })
     console.log(`  Linked Request from Library quest to thread`)
 
+    // 6b. Starter Quest Pool (domain-biased; used by getStarterQuestsForPlayer)
+    console.log('\nCreating Starter Quest Pool (5 domain-biased quests)...')
+    const STARTER_QUESTS: { id: string; title: string; description: string; allyshipDomain: string; passages?: { name: string; pid: string; text: string; cleanText: string; links: { label: string; target: string }[] }[] }[] = [
+        {
+            id: 'starter-strengthen-residency',
+            title: 'Strengthen the Residency',
+            allyshipDomain: 'GATHERING_RESOURCES',
+            description: 'The Bruised Banana Residency is the container supporting this build phase. Choose one way to strengthen the campaign today.',
+            passages: [
+                { name: 'START', pid: '1', text: 'The Bruised Banana Residency is the container supporting this build phase.\n\nChoose one way to strengthen the campaign today.', cleanText: 'Choose one way to strengthen the campaign.', links: [{ label: 'Contribute Support', target: 'END_DONATE' }, { label: 'Invite an Ally', target: 'END_INVITE' }, { label: 'Share Feedback', target: 'END_FEEDBACK' }, { label: 'Share the Campaign', target: 'END_SHARE' }] },
+                { name: 'END_DONATE', pid: '2', text: 'You chose to contribute support. Visit [the donation page](/event/donate) to strengthen the residency. Your contribution helps the community grow.', cleanText: 'Contribute support.', links: [] },
+                { name: 'END_INVITE', pid: '3', text: 'You chose to invite an ally. Share the campaign with someone who might benefit. Your invitation expands the field.', cleanText: 'Invite an ally.', links: [] },
+                { name: 'END_FEEDBACK', pid: '4', text: 'You chose to share feedback. Your playtest feedback helps improve the engine. Thank you for contributing.', cleanText: 'Share feedback.', links: [] },
+                { name: 'END_SHARE', pid: '5', text: 'You chose to share the campaign. Spreading the word increases visibility and momentum. Thank you.', cleanText: 'Share the campaign.', links: [] },
+            ],
+        },
+        { id: 'starter-invite-ally', title: 'Invite an Ally', allyshipDomain: 'RAISE_AWARENESS', description: 'Invite someone into the Conclave. Share what you\'ve found. Raise awareness of the work and the vision.' },
+        { id: 'starter-declare-skill', title: 'Declare a Skill', allyshipDomain: 'SKILLFUL_ORGANIZING', description: 'Declare a skill you can offer. Organize your contribution. Make it clear what you bring and how it fits.' },
+        { id: 'starter-test-engine', title: 'Test the Engine', allyshipDomain: 'DIRECT_ACTION', description: 'Test the engine. Take direct action. Try a feature, report what works, and move things forward.' },
+        { id: 'starter-create-momentum', title: 'Create Momentum', allyshipDomain: 'RAISE_AWARENESS', description: 'Create momentum. Share an intention, a signal, or a call. Help the field feel alive.' },
+    ]
+    for (const q of STARTER_QUESTS) {
+        const passages = q.passages ?? [
+            { name: 'START', pid: '1', text: `${q.description}\n\nComplete this quest to earn vibeulons and contribute to the Conclave.`, cleanText: q.description, links: [{ label: 'Begin', target: 'STEP_1' }] },
+            { name: 'STEP_1', pid: '2', text: '### Step 1\n\nDo the thing. Report back when done.', cleanText: 'Do the thing.', links: [{ label: 'Complete', target: 'END' }] },
+            { name: 'END', pid: '3', text: 'Done. Short win.', cleanText: 'Done.', links: [] },
+        ]
+        const story = await db.twineStory.upsert({
+            where: { slug: `starter-${q.id}` },
+            update: { title: q.title, parsedJson: JSON.stringify({ startPassage: 'START', passages }), isPublished: true },
+            create: {
+                title: q.title,
+                slug: `starter-${q.id}`,
+                sourceType: 'manual_seed',
+                sourceText: `Starter quest: ${q.title} (seed-onboarding-thread.ts)`,
+                parsedJson: JSON.stringify({ startPassage: 'START', passages }),
+                isPublished: true,
+                createdById: creator.id,
+            },
+        })
+        const completionEffects = q.id === 'starter-strengthen-residency'
+            ? JSON.stringify({
+                questSource: 'onboarding',
+                completionTypeBranches: true,
+                effects: [{ type: 'strengthenResidency', fromInput: 'completionType' }],
+            })
+            : undefined
+
+        await db.customBar.upsert({
+            where: { id: q.id },
+            update: {
+                title: q.title,
+                description: q.description,
+                type: 'onboarding',
+                allyshipDomain: q.allyshipDomain,
+                campaignRef: 'bruised-banana',
+                twineStoryId: story.id,
+                status: 'active',
+                visibility: 'public',
+                isSystem: true,
+                ...(completionEffects && { completionEffects }),
+            },
+            create: {
+                id: q.id,
+                title: q.title,
+                description: q.description,
+                type: 'onboarding',
+                allyshipDomain: q.allyshipDomain,
+                campaignRef: 'bruised-banana',
+                creatorId: creator.id,
+                reward: 1,
+                twineStoryId: story.id,
+                status: 'active',
+                visibility: 'public',
+                isSystem: true,
+                ...(completionEffects && { completionEffects }),
+            },
+        })
+        console.log(`  ↻ ${q.title} (${q.allyshipDomain})`)
+    }
+    console.log(`  Seeded ${STARTER_QUESTS.length} starter quests`)
+
     // 7. BARs Wallet Guide orientation thread (dashboard-ui-vibe-cleanup Phase 4)
     console.log('\nCreating BARs Wallet Guide thread...')
     const barsWalletQuest = await db.customBar.upsert({
@@ -697,17 +779,22 @@ async function main() {
     } else {
         bbThread = await db.questThread.create({ data: { id: 'bruised-banana-orientation-thread', ...bbThreadData } })
     }
-    await db.threadQuest.upsert({
-        where: { threadId_questId: { threadId: bbThread.id, questId: bbExploreQuest.id } },
-        update: { position: 1 },
-        create: { threadId: bbThread.id, questId: bbExploreQuest.id, position: 1 }
+    // Link starter quests first (domain-biased pool), then Explore Market + Request from Library
+    const starterQuestIds = STARTER_QUESTS.map((q) => q.id)
+    const bbQuestPositions: { questId: string; position: number }[] = [
+        ...starterQuestIds.map((id, i) => ({ questId: id, position: i + 1 })),
+        { questId: bbExploreQuest.id, position: starterQuestIds.length + 1 },
+        { questId: kSpaceQuest.id, position: starterQuestIds.length + 2 },
+    ]
+    await db.threadQuest.deleteMany({ where: { threadId: bbThread.id } })
+    await db.threadQuest.createMany({
+        data: bbQuestPositions.map(({ questId, position }) => ({
+            threadId: bbThread.id,
+            questId,
+            position,
+        })),
     })
-    await db.threadQuest.upsert({
-        where: { threadId_questId: { threadId: bbThread.id, questId: kSpaceQuest.id } },
-        update: { position: 2 },
-        create: { threadId: bbThread.id, questId: kSpaceQuest.id, position: 2 }
-    })
-    console.log(`  Bruised Banana thread: ${bbThread.id} with Explore Market + Request from Library`)
+    console.log(`  Bruised Banana thread: ${bbThread.id} with ${starterQuestIds.length} starter quests + Explore Market + Request from Library`)
 
     // 11. Summary
     console.log('\n=== ONBOARDING THREAD READY ===')

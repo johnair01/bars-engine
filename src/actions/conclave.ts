@@ -9,6 +9,7 @@ import { hashPassword } from '@/lib/auth-utils'
 import { assignOrientationThreads } from './quest-thread'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { isAuthBypassEmailVerificationEnabled } from '@/lib/mvp-flags'
+import { getPostSignupRedirect, getDashboardRedirectForPlayer } from '@/actions/config'
 
 const IdentitySchema = z.object({
     name: z.string().min(2),
@@ -312,11 +313,17 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
         }
 
         const returnToPath = typeof rawData.returnTo === 'string' ? rawData.returnTo.trim() : null
-        const redirectTo = returnToPath && returnToPath.startsWith('/')
-            ? returnToPath
-            : campaignRef === 'bruised-banana'
-                ? '/event'
-                : undefined
+        let redirectTo: string | undefined
+        if (returnToPath && returnToPath.startsWith('/')) {
+            redirectTo = returnToPath
+        } else {
+            const postSignupRedirect = await getPostSignupRedirect()
+            if (postSignupRedirect === 'dashboard') {
+                redirectTo = await getDashboardRedirectForPlayer(player.id)
+            } else {
+                redirectTo = campaignRef === 'bruised-banana' ? '/event' : '/conclave/onboarding'
+            }
+        }
         return { success: true, redirectTo }
     } catch (e: any) {
         logActionError(

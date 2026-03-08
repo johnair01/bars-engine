@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { compileQuest } from '@/lib/quest-grammar'
 import {
+  compileQuestWithPrivilegingAction,
   compileQuestWithAI,
   generateQuestOverviewWithAI,
   publishQuestPacketToPassagesWithSourceQuest,
@@ -21,7 +21,7 @@ import {
   LIFE_STATE_OPTIONS,
   Q3_SEP,
   baseInputClass,
-} from '@/app/admin/quest-grammar/unpacking-constants'
+} from '@/lib/quest-grammar'
 import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket } from '@/lib/quest-grammar'
 import type { QuestModel } from '@/app/admin/quest-grammar/UnpackingForm'
 import Link from 'next/link'
@@ -52,6 +52,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const router = useRouter()
   const [expanded, setExpanded] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
+  const [nations, setNations] = useState<{ id: string; name: string }[]>([])
   const [playbooks, setPlaybooks] = useState<{ id: string; name: string }[]>([])
   const [answers, setAnswers] = useState<UnpackingAnswers>({
     q1: '',
@@ -64,10 +65,12 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const [alignedAction, setAlignedAction] = useState('')
   const [questModel, setQuestModel] = useState<QuestModel>('personal')
   const [segment, setSegment] = useState<SegmentVariant | 'both'>('player')
+  const [targetNationId, setTargetNationId] = useState<string | null>(null)
   const [targetArchetypeIds, setTargetArchetypeIds] = useState<string[]>([])
   const [developmentalLens, setDevelopmentalLens] = useState<string | null>(null)
   const [q6Context, setQ6Context] = useState('')
-  const [expectedMoves, setExpectedMoves] = useState('')
+  const [expectedMovesSelected, setExpectedMovesSelected] = useState<string[]>([])
+  const [expectedMovesCustom, setExpectedMovesCustom] = useState('')
   const [playerPOV, setPlayerPOV] = useState<{ p1?: string; p2?: string; p3?: string; p4?: string; p5?: string; p6?: string }>({})
   const [preview, setPreview] = useState<SerializableQuestPacket | null>(null)
   const [overviewResult, setOverviewResult] = useState<{ objectives: string[]; tweeSource: string } | null>(null)
@@ -78,8 +81,12 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const [result, setResult] = useState<{ adventureId: string; threadId: string } | null>(null)
 
   useEffect(() => {
-    getAdminWorldData().then(([, archetypes]) => {
-      setPlaybooks(archetypes.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+    getAdminWorldData().then(([nationList, archetypes]) => {
+      setNations((nationList as { id: string; name: string }[]).map((n) => ({ id: n.id, name: n.name })))
+      // Only canonical archetypes (The Bold Heart, etc.); exclude trigram-named (Earth (Kun), etc.)
+      setPlaybooks((archetypes as { id: string; name: string }[])
+        .filter((p) => p.name.startsWith('The '))
+        .map((p) => ({ id: p.id, name: p.name })))
     }).catch(() => {})
   }, [])
 
@@ -97,24 +104,25 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const step = STEPS[stepIndex]
   const isGenerateStep = step?.id === 'generate'
 
-  function handleContinue() {
+  async function handleContinue() {
     setError(null)
     if (isGenerateStep) {
-      try {
-        setOverviewResult(null)
-        const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
-        const packet = compileQuest({
-          unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
-          alignedAction,
-          segment: effectiveSegment,
-          campaignId: 'bruised-banana',
-          targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
-          developmentalLens: developmentalLens ?? undefined,
-        })
-        const { telemetryHooks: _, ...serializable } = packet
-        setPreview(serializable)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Compilation failed')
+      setOverviewResult(null)
+      const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
+      const result = await compileQuestWithPrivilegingAction({
+        unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
+        alignedAction,
+        segment: effectiveSegment,
+        campaignId: 'bruised-banana',
+        targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
+        developmentalLens: developmentalLens ?? undefined,
+        targetNationId: targetNationId ?? undefined,
+        targetPlaybookId: targetArchetypeIds[0],
+      })
+      if ('error' in result) {
+        setError(result.error)
+      } else {
+        setPreview(result)
       }
       return
     }
@@ -186,10 +194,31 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
               <option key={o} value={o}>{o}</option>
             ))}
           </select>
-          <input type="text" value={distance} onChange={(e) => {
-            const d = e.target.value
-            setAnswers((a) => ({ ...a, q3: sel ? `${sel}${d ? Q3_SEP + d : ''}` : (d ? Q3_SEP + d : '') }))
-          }} placeholder="How far from your creation?" className={`${baseInputClass} text-sm mt-2`} />
+          <textarea
+            value={distance}
+            onChange={(e) => {
+              const d = e.target.value
+              setAnswers((a) => ({ ...a, q3: sel ? `${sel}${d ? Q3_SEP + d : ''}` : (d ? Q3_SEP + d : '') }))
+            }}
+            onKeyDown={(e) => {
+              if (e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                const target = e.target as HTMLTextAreaElement
+                const start = target.selectionStart ?? 0
+                const end = target.selectionEnd ?? 0
+                const newDistance = distance.slice(0, start) + ' ' + distance.slice(end)
+                setAnswers((a) => ({ ...a, q3: sel ? `${sel}${newDistance ? Q3_SEP + newDistance : ''}` : (newDistance ? Q3_SEP + newDistance : '') }))
+                requestAnimationFrame(() => target.setSelectionRange(start + 1, start + 1))
+              }
+            }}
+            placeholder="How far from your creation? (e.g. not that far)"
+            rows={2}
+            className={`${baseInputClass} text-sm mt-2 resize-none touch-auto`}
+            spellCheck={false}
+            inputMode="text"
+            autoComplete="off"
+          />
         </div>
       )
     }
@@ -241,6 +270,23 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
         </div>
       )
     }
+    if (step.type === 'nation') {
+      return (
+        <div className="space-y-2">
+          <select
+            value={targetNationId ?? ''}
+            onChange={(e) => setTargetNationId(e.target.value || null)}
+            className={baseInputClass}
+          >
+            <option value="">None (generic)</option>
+            {nations.map((n) => (
+              <option key={n.id} value={n.id}>{n.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-zinc-500">Privileges nation-element moves in choices (2–4 per passage)</p>
+        </div>
+      )
+    }
     if (step.type === 'archetype') {
       return (
         <div className="flex flex-wrap gap-3">
@@ -268,7 +314,31 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
     }
     if (step.type === 'expectedMoves') {
       return (
-        <textarea value={expectedMoves} onChange={(e) => setExpectedMoves(e.target.value)} placeholder="Wake Up, Clean Up, Grow Up, Show Up…" rows={4} className={`${baseInputClass} min-h-[100px]`} />
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-3">
+            {MOVE_OPTIONS.map((m) => (
+              <label key={m} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={expectedMovesSelected.includes(m)}
+                  onChange={(e) => {
+                    const next = e.target.checked ? [...expectedMovesSelected, m] : expectedMovesSelected.filter((x) => x !== m)
+                    setExpectedMovesSelected(next)
+                  }}
+                  className="rounded border-zinc-600 text-purple-500"
+                />
+                <span className="text-sm text-zinc-300">{m}</span>
+              </label>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={expectedMovesCustom}
+            onChange={(e) => setExpectedMovesCustom(e.target.value)}
+            placeholder="Other moves (comma-separated)"
+            className={baseInputClass}
+          />
+        </div>
       )
     }
     if (step.type === 'playerPOV') {
@@ -329,7 +399,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
 
   if (preview) {
     const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
-    const parsedMoves = expectedMoves.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+    const parsedMoves = [...expectedMovesSelected, ...expectedMovesCustom.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)]
     const hasPlayerPOV = Object.values(playerPOV).some(Boolean)
     const input = {
       unpackingAnswers: { ...answers, q6Context: q6Context || undefined },

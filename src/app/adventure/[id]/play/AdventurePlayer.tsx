@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { completeQuest } from '@/actions/quest-engine'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
+import { CastIChingModal } from '@/components/CastIChingModal'
 
 interface Choice {
   text: string
@@ -17,6 +19,7 @@ interface Node {
   choices: Choice[]
   linkedQuestId?: string
   isCompletionPassage?: boolean
+  metadata?: { actionType?: string; castIChingTargetId?: string }
 }
 
 interface Props {
@@ -25,6 +28,7 @@ interface Props {
   questId?: string
   threadId?: string
   isRitual?: boolean
+  isPreview?: boolean
 }
 
 export function AdventurePlayer({
@@ -33,19 +37,26 @@ export function AdventurePlayer({
   questId,
   threadId,
   isRitual,
+  isPreview,
 }: Props) {
   const [currentNode, setCurrentNode] = useState<Node | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [slideIndex, setSlideIndex] = useState(0)
   const [completing, setCompleting] = useState(false)
+  const [castModalOpen, setCastModalOpen] = useState(false)
   const router = useRouter()
+
+  const isCastIChingNode =
+    currentNode?.metadata?.actionType === 'cast_iching' &&
+    currentNode?.metadata?.castIChingTargetId
 
   const fetchNode = async (nodeId: string) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/adventures/${adventureSlug}/${nodeId}`)
+      const url = `/api/adventures/${adventureSlug}/${nodeId}${isPreview ? '?preview=1' : ''}`
+      const res = await fetch(url)
       if (!res.ok) {
         setError('Could not load this step.')
         return
@@ -65,7 +76,7 @@ export function AdventurePlayer({
         const result = await completeQuest(
           questId,
           { passageReached: true },
-          { threadId }
+          { threadId, source: 'adventure_passage' }
         )
         setCompleting(false)
         if (result && 'error' in result) {
@@ -172,10 +183,40 @@ export function AdventurePlayer({
         </div>
       ) : (
         <div className="space-y-3">
-          {currentNode.choices.length === 0 ? (
+          {isCastIChingNode && (
+            <>
+              <button
+                onClick={() => setCastModalOpen(true)}
+                className="w-full py-4 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="text-xl">☰</span>
+                <span>Cast the I Ching</span>
+              </button>
+              <CastIChingModal
+                isOpen={castModalOpen}
+                onClose={() => setCastModalOpen(false)}
+                onComplete={(targetId) => {
+                  setCastModalOpen(false)
+                  fetchNode(targetId)
+                }}
+                targetNodeId={currentNode.metadata!.castIChingTargetId!}
+              />
+            </>
+          )}
+          {currentNode.choices.length === 0 && !isCastIChingNode ? (
             completing ? (
               <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
                 <p className="text-green-400 font-bold">Completing quest...</p>
+              </div>
+            ) : error && error.includes('gameboard') && questId && currentNode.linkedQuestId === questId ? (
+              <div className="p-4 bg-amber-900/20 border border-amber-800/50 rounded-xl text-center space-y-3">
+                <p className="text-amber-300 font-medium">This campaign quest must be completed on the gameboard.</p>
+                <Link
+                  href="/campaign/board?ref=bruised-banana"
+                  className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Go to gameboard →
+                </Link>
               </div>
             ) : questId && currentNode.linkedQuestId === questId ? (
               <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
@@ -207,9 +248,9 @@ export function AdventurePlayer({
         </div>
       )}
 
-      {error && (
-        <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg">
-          {error}
+      {error && !error.includes('gameboard') && (
+        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
     </div>

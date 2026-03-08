@@ -1,7 +1,8 @@
 /**
  * Move Assignment for Choice Privileging
  *
- * Selects 2–3 canonical moves per passage, privileging nation element and playbook WAVE.
+ * Selects 2–4 canonical moves per passage, privileging nation element and playbook WAVE.
+ * When move spread is primary (longitudinal branching), limit can be 4 (one per move).
  * Used by compileQuest and generateQuestOverviewWithAI.
  */
 
@@ -34,11 +35,11 @@ export interface SelectPrivilegedChoicesParams {
 }
 
 /**
- * Select 2–3 moves from validMoves, privileging at least one nation-element move
+ * Select 2–4 moves from validMoves, privileging at least one nation-element move
  * and one playbook-WAVE move when possible.
  */
 export function selectPrivilegedChoices(params: SelectPrivilegedChoicesParams): CanonicalMove[] {
-  const { validMoves, nationElement, playbookWave, limit = 3 } = params
+  const { validMoves, nationElement, playbookWave, limit = 4 } = params
   if (validMoves.length === 0) return []
   if (validMoves.length <= limit) return validMoves
 

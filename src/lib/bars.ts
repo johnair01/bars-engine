@@ -9,7 +9,7 @@ export type BarInput = {
     options?: string[]
 }
 
-export type BarType = 'vibe' | 'story'
+export type BarType = 'vibe' | 'story' | 'insight'
 export type BarStatus = 'available' | 'active' | 'completed'
 
 export type BarDef = {

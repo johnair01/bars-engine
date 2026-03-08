@@ -117,6 +117,14 @@ Affordances:
 - admins/role-holders can see deeper metadata (validation notes, weight breakdown, ratification logs)
 - domain roles can see domain-hidden BARs, incentivizing depth in nation/archetype
 
+## Quest Fork Lifecycle and AID Offer Lifecycle
+
+**Quest forking**: `forkQuestPrivately(questId)` creates a private copy for the player; `forkDeclinedAidQuest(offerId)` lets the offerer fork a declined/expired quest-type AID offer. Lineage: `forkedFromId` on CustomBar.
+
+**AID offer lifecycle**: `offerAid` creates offer with `expiresAt` (configurable TTL, default 24h). Steward can accept or decline. When declined or expired, offerer can fork via `forkDeclinedAidQuest`. Status: pending → accepted | declined; expired treated as declined at read time.
+
+**Architect Game Master**: Virtual sys-admin teacher for backlog stewardship; Heaven trigram. See [.agent/context/game-master-sects.md](.agent/context/game-master-sects.md) and [docs/JIRA_GITHUB_CYOA_METAPHOR.md](docs/JIRA_GITHUB_CYOA_METAPHOR.md).
+
 ## Evolution (Forking)
 
 Forking is first-class. It should:

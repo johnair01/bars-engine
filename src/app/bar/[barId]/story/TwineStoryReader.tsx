@@ -22,7 +22,7 @@ export default function TwineStoryReader({ questId, title, description, logic }:
             <QuestTwinePlayer
                 logic={logic}
                 onComplete={(variables) => startTransition(async () => {
-                    const result = await completeQuest(questId, variables)
+                    const result = await completeQuest(questId, variables, { source: 'twine_end' })
                     if ('success' in result && result.success) {
                         router.push('/')
                         router.refresh()

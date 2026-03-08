@@ -12,12 +12,14 @@ export default async function EditPassagePage({
     const p = await params
     const passage = await db.passage.findUnique({
         where: { id: p.passageId },
-        include: { adventure: true }
+        include: { adventure: { include: { passages: true } } }
     })
 
     if (!passage || passage.adventureId !== p.id) {
         notFound()
     }
+
+    const passages = passage.adventure?.passages ?? []
 
     return (
         <div className="space-y-6">
@@ -34,7 +36,7 @@ export default async function EditPassagePage({
                 }
             />
 
-            <EditPassageForm adventureId={p.id} passage={passage} />
+            <EditPassageForm adventureId={p.id} passage={passage} passages={passages} />
         </div>
     )
 }

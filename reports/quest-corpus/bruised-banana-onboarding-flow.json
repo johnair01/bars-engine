@@ -1,0 +1,983 @@
+{
+  "flow_id": "bruised-banana-onboarding-v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "Arrival",
+  "nodes": [
+    {
+      "id": "Arrival",
+      "type": "introduction",
+      "copy": "You arrive at the Bruised Banana. A quiet house in Portland where something unusual is underway. Laptops open on tables. Whiteboards filled with fragments of strategy. Someone left a mug of tea beside a stack of notes. You've stepped into the early days of a three-month build experiment.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "orientation_viewed"
+          ],
+          "next_node_id": "The Work",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "The Work",
+      "type": "prompt",
+      "copy": "The work happening here began as a book called ''Mastering the Game of Allyship''. Over time the idea outgrew the page. The framework started behaving like a game — something people could step into together. Conversations became quests. Emotional shifts turned into visible moves. Coordination bec...",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "The Turning Point",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "The Turning Point",
+      "type": "prompt",
+      "copy": "Over the past year small groups have tested this system. The largest run happened on February 21 during a birthday gathering. Dozens of players entered the story at once. The system held. Two weeks later the circumstances of my life shifted in a way that created space to focus on building this wo...",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "The Invitation",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "The Invitation",
+      "type": "prompt",
+      "copy": "You've arrived while this next chapter is beginning. Some people will help build the system. Some will test it by playing. Some will support the residency so the work can continue. Before you step further into the campaign, there's a simple question. How does this land for you?",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "Aligned Response",
+          "label": "This sounds exciting. I want to see what's possible here."
+        },
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "Curious Response",
+          "label": "I'm curious, though I'm still figuring out where I fit."
+        },
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "Skeptical Response",
+          "label": "I'm skeptical. Systems like this rarely work the way people hope."
+        }
+      ]
+    },
+    {
+      "id": "Aligned Response",
+      "type": "choice",
+      "copy": "Something in this already feels alive. Good. You don't need the whole map in advance. You only need a direction worth stepping toward. Let's make your role in the story visible.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Why Identity Matters",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Curious Response",
+      "type": "choice",
+      "copy": "Curiosity is enough. You don't need certainty to begin. The campaign can meet you before you know exactly what part you want to play. Let's make your role in the story visible.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Why Identity Matters",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Skeptical Response",
+      "type": "choice",
+      "copy": "Skepticism has its uses. A system like this should earn belief through experience. The next steps are simple enough to test whether the structure holds. Let's make your role in the story visible.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Why Identity Matters",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Why Identity Matters",
+      "type": "prompt",
+      "copy": "Every story becomes more interesting when characters are distinct. Some people naturally connect allies who would otherwise never meet. Some see structural patterns others miss. Some stabilize tension when situations become charged. The game works best when it understands how players move through...",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "Choose Nation",
+          "label": "Choose your Nation"
+        }
+      ]
+    },
+    {
+      "id": "Choose Nation",
+      "type": "choice",
+      "copy": "The world of the campaign is shaped by different cultural environments. Each nation represents a different approach to collaboration, strategy, and risk. Choose the one that feels closest to how you tend to operate right now.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Nation_Argyra",
+          "label": "Argyra — elegant coordination, precision, and social patterning"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Nation_Pyrakanth",
+          "label": "Pyrakanth — momentum, courage, heat, and decisive action"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Nation_Lamenth",
+          "label": "Lamenth — depth, grief, memory, and emotional truth"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Nation_Meridia",
+          "label": "Meridia — coherence, stewardship, and grounded flourishing"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Nation_Virelune",
+          "label": "Virelune — mystery, emergence, intuition, and hidden pathways"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Argyra",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "nation_selected"
+          ],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Pyrakanth",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "nation_selected"
+          ],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Lamenth",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "nation_selected"
+          ],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Meridia",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "nation_selected"
+          ],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Virelune",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "nation_selected"
+          ],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Choose Archetype",
+      "type": "choice",
+      "copy": "When something important is unfolding, people fall into recognizable roles. The eight archetypes map to how you tend to move through situations. Each has a distinct approach to obstacles, collaboration, and growth. Archetypes help the system generate quests that match your instincts. Choose the r...",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_BoldHeart",
+          "label": "The Bold Heart"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_DevotedGuardian",
+          "label": "The Devoted Guardian"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_DecisiveStorm",
+          "label": "The Decisive Storm"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_DangerWalker",
+          "label": "The Danger Walker"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_StillPoint",
+          "label": "The Still Point"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_SubtleInfluence",
+          "label": "The Subtle Influence"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_TruthSeer",
+          "label": "The Truth Seer"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Archetype_JoyfulConnector",
+          "label": "The Joyful Connector"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_BoldHeart",
+      "type": "prompt",
+      "copy": "Bold Heart Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_DevotedGuardian",
+      "type": "prompt",
+      "copy": "Devoted Guardian Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_DecisiveStorm",
+      "type": "prompt",
+      "copy": "Decisive Storm Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_DangerWalker",
+      "type": "prompt",
+      "copy": "Danger Walker Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_StillPoint",
+      "type": "prompt",
+      "copy": "Still Point Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_SubtleInfluence",
+      "type": "prompt",
+      "copy": "Subtle Influence Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_TruthSeer",
+      "type": "prompt",
+      "copy": "Truth Seer Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_JoyfulConnector",
+      "type": "prompt",
+      "copy": "Joyful Connector Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "archetype_selected"
+          ],
+          "next_node_id": "Developmental Lens Node",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens Node",
+      "type": "choice",
+      "copy": "A conversation opens in front of you. Six responses present themselves. Each one reflects a different way of understanding growth and change. Choose the response that feels most natural.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_Practical",
+          "label": "I want the clearest path to practical results."
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_Collaborate",
+          "label": "I want a structure that helps people collaborate fairly."
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_System",
+          "label": "I want to understand the larger system at work."
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_Protect",
+          "label": "I want to protect what matters and reduce harm."
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_Emergence",
+          "label": "I want to explore what becomes possible through emergence."
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Developmental Lens_Capacity",
+          "label": "I want to strengthen capacity without losing soul."
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_Practical",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_Collaborate",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_System",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_Protect",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_Emergence",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Developmental Lens_Capacity",
+      "type": "prompt",
+      "copy": "The system recognizes you now.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "developmental_lens_selected"
+          ],
+          "next_node_id": "Declare Your Vector",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Declare Your Vector",
+      "type": "prompt",
+      "copy": "You're now visible inside the campaign. Different players are already moving. Some are helping secure the resources that keep the residency running. Some are organizing collaborators into coordinated action. Some are helping the story travel further. Some are stepping directly into active quests....",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "Choose Intended Impact",
+          "label": "Choose your Intended Impact"
+        }
+      ]
+    },
+    {
+      "id": "Choose Intended Impact",
+      "type": "choice",
+      "copy": "Where does your attention want to move?",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Impact_GatherResources",
+          "label": "Gather Resources"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Impact_SkillfulOrganizing",
+          "label": "Skillful Organizing"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Impact_RaiseAwareness",
+          "label": "Raise Awareness"
+        },
+        {
+          "type": "choose",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "choice_selected"
+          ],
+          "next_node_id": "Impact_DirectAction",
+          "label": "Direct Action"
+        }
+      ]
+    },
+    {
+      "id": "Impact_GatherResources",
+      "type": "prompt",
+      "copy": "Your intended impact is now part of the campaign.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "intended_impact_selected"
+          ],
+          "next_node_id": "Create a BAR",
+          "label": "Create a BAR"
+        }
+      ]
+    },
+    {
+      "id": "Impact_SkillfulOrganizing",
+      "type": "prompt",
+      "copy": "Your intended impact is now part of the campaign.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "intended_impact_selected"
+          ],
+          "next_node_id": "Create a BAR",
+          "label": "Create a BAR"
+        }
+      ]
+    },
+    {
+      "id": "Impact_RaiseAwareness",
+      "type": "prompt",
+      "copy": "Your intended impact is now part of the campaign.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "intended_impact_selected"
+          ],
+          "next_node_id": "Create a BAR",
+          "label": "Create a BAR"
+        }
+      ]
+    },
+    {
+      "id": "Impact_DirectAction",
+      "type": "prompt",
+      "copy": "Your intended impact is now part of the campaign.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "intended_impact_selected"
+          ],
+          "next_node_id": "Create a BAR",
+          "label": "Create a BAR"
+        }
+      ]
+    },
+    {
+      "id": "Create a BAR",
+      "type": "BAR_capture",
+      "copy": "A BAR captures a moment of intention so it can become actionable. {{emotional_alchemy_framing}} What would you like to see become possible through your participation here?",
+      "actions": [
+        {
+          "type": "create_BAR",
+          "requires": [
+            "create"
+          ],
+          "emits": [
+            "bar_created"
+          ],
+          "next_node_id": "Onboarding Complete",
+          "label": "I'm ready to place this marker in the campaign."
+        }
+      ]
+    },
+    {
+      "id": "Onboarding Complete",
+      "type": "completion",
+      "copy": "Your presence is now part of the system. The campaign knows who you are, how you tend to move, and where your energy wants to go. From here, the next quests can connect your intention with real opportunities inside the residency.",
+      "actions": [
+        {
+          "type": "confirm",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "bar_created"
+          ],
+          "next_node_id": "First Quest Stub",
+          "label": "Begin play"
+        }
+      ],
+      "emits": [
+        "quest_completed"
+      ]
+    },
+    {
+      "id": "First Quest Stub",
+      "type": "prompt",
+      "copy": "TODO: Replace this with the first live quest surfaced after onboarding. Possible first-quest directions: • Strengthen the Residency • Invite one aligned person • Offer a skill or resource • Share the residency page • Contribute financially • Submit structured feedback",
+      "actions": [
+        {
+          "type": "read",
+          "requires": [
+            "observe"
+          ],
+          "emits": [
+            "prompt_viewed"
+          ],
+          "next_node_id": "BeginPlay",
+          "label": "Begin play"
+        }
+      ]
+    },
+    {
+      "id": "BeginPlay",
+      "type": "handoff",
+      "copy": "Redirect to sign-in, then dashboard. App intercepts this passage.",
+      "actions": [
+        {
+          "type": "unlock_next_step",
+          "requires": [],
+          "emits": [
+            "handoff_triggered",
+            "step_unlocked"
+          ],
+          "next_node_id": null
+        }
+      ],
+      "target_ref": "dashboard"
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "Onboarding Complete"
+    },
+    {
+      "type": "node_reached",
+      "node_id": "BeginPlay"
+    },
+    {
+      "type": "handoff_triggered"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "prompt_viewed",
+    "choice_selected",
+    "nation_selected",
+    "archetype_selected",
+    "developmental_lens_selected",
+    "intended_impact_selected",
+    "bar_created"
+  ]
+}

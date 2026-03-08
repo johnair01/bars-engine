@@ -20,7 +20,15 @@ const CERT_QUEST_IDS = [
     'cert-go-live-v1',
     'cert-market-redesign-v1',
     'cert-campaign-onboarding-twine-v2-v1',
-    'cert-quest-grammar-v1'
+    'cert-quest-grammar-v1',
+    'cert-quest-wizard-templates-v1',
+    'cert-gameboard-quest-generation-v1',
+    'cert-dashboard-orientation-flow-v1',
+    'cert-lore-immersive-onboarding-v1',
+    'cert-aid-decline-fork-v1',
+    'cert-starter-quest-generator-v1',
+    'cert-admin-onboarding-flow-api-v1',
+    'cert-onboarding-flow-completion-v1'
 ]
 
 async function seed() {
@@ -2132,6 +2140,770 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${questGrammarStory.title} (${questGrammarStory.id})`)
     console.log(`✅ Quest seeded: ${questGrammarQuest.title} (${questGrammarQuest.id})`)
+
+    // --- Certification: Quest Wizard Template Alignment (DA) ---
+    const wizardTemplatesTitle = 'Certification: Quest Wizard Templates V1'
+    const wizardTemplatesSlug = 'cert-quest-wizard-templates-v1'
+
+    const wizardTemplatesPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Quest Wizard template alignment. Confirm only three templates appear (Dreams & Schemes, Personal Development, Custom Quest) and that copy reflects campaign-level and Grow Up framing.',
+            cleanText: 'This certification quest verifies the Quest Wizard template alignment.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open the quest creation flow\n\n[Open the quest creation flow](/quest/create) or use the Create BAR / quest wizard from the dashboard. The Quest Wizard should appear with "Choose a Quest Template".',
+            cleanText: '### Step 1: Open the quest creation flow\n\nOpen the quest creation flow. The Quest Wizard should appear.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Confirm three templates\n\nVerify only **three** templates are shown: Dreams & Schemes (CAMPAIGN), Personal Development (GROW UP), and Custom Quest (CUSTOM). No Party Prep, Connection Quest, or Inner↔External.',
+            cleanText: '### Step 2: Confirm three templates\n\nVerify only three templates: Dreams & Schemes, Personal Development, Custom Quest.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Dreams & Schemes copy\n\nSelect **Dreams & Schemes**. Confirm the description mentions campaign-level, sub-campaign, Kotter Model Stages, and series of adventures.',
+            cleanText: '### Step 3: Dreams & Schemes copy\n\nSelect Dreams & Schemes. Confirm description mentions campaign, Kotter, sub-campaign.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Personal Development copy\n\nGo back and select **Personal Development**. Confirm the description mentions Grow Up, skill capacity, and developmental lines.',
+            cleanText: '### Step 4: Personal Development copy\n\nSelect Personal Development. Confirm description mentions Grow Up, skill capacity.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Complete quest creation\n\nCreate a quest using any template (e.g. Custom Quest). Fill in title and description, save. Confirm the quest is created successfully.',
+            cleanText: '### Step 5: Complete quest creation\n\nCreate a quest using any template. Confirm it saves.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Verification complete. You have confirmed the Quest Wizard template alignment. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete. Complete this quest to receive your reward.',
+            links: []
+        }
+    ]
+
+    const wizardTemplatesParsedJson = JSON.stringify({
+        title: wizardTemplatesTitle,
+        startPassage: 'START',
+        passages: wizardTemplatesPassages
+    })
+
+    const wizardTemplatesStory = await db.twineStory.upsert({
+        where: { slug: wizardTemplatesSlug },
+        update: {
+            title: wizardTemplatesTitle,
+            parsedJson: wizardTemplatesParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: wizardTemplatesTitle,
+            slug: wizardTemplatesSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Quest Wizard templates certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: wizardTemplatesParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const wizardTemplatesQuest = await db.customBar.upsert({
+        where: { id: wizardTemplatesSlug },
+        update: {
+            title: wizardTemplatesTitle,
+            description: 'Step-by-step verification of Quest Wizard templates: three templates only, Dreams & Schemes copy, Personal Development copy, quest creation.',
+            reward: 1,
+            twineStoryId: wizardTemplatesStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-wizard-template-alignment/spec.md'
+        },
+        create: {
+            id: wizardTemplatesSlug,
+            title: wizardTemplatesTitle,
+            description: 'Step-by-step verification of Quest Wizard templates: three templates only, Dreams & Schemes copy, Personal Development copy, quest creation.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: wizardTemplatesStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-wizard-template-alignment/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${wizardTemplatesStory.title} (${wizardTemplatesStory.id})`)
+    console.log(`✅ Quest seeded: ${wizardTemplatesQuest.title} (${wizardTemplatesQuest.id})`)
+
+    // --- Certification: Gameboard Quest Generation (CY) ---
+    const gameboardQuestGenTitle = 'Certification: Gameboard Quest Generation V1'
+    const gameboardQuestGenSlug = 'cert-gameboard-quest-generation-v1'
+
+    const gameboardQuestGenPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Gameboard Quest Generation: Kotter-stage-aligned deck, starter subquests, and Add subquest flow. Requires active instance with campaignRef bruised-banana at kotterStage 1.',
+            cleanText: 'Verify gameboard: period filter, starters, Add subquest.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open the gameboard\n\n[Open /campaign/board?ref=bruised-banana](/campaign/board?ref=bruised-banana). Ensure you are logged in and have an active instance (Bruised Banana). Confirm the gameboard loads with 8 slots.',
+            cleanText: '### Step 1: Open gameboard\n\nOpen /campaign/board?ref=bruised-banana. Confirm gameboard loads.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Confirm Stage 1 quests only\n\nWith instance at kotterStage 1, the deck should show only Stage 1 quests (e.g. Rally the Urgency, Name What\'s at Stake, Clear What Blocks the Urgency, Practice Naming Stakes, Create Urgency for One Person). No Stage 2–8 quests.',
+            cleanText: '### Step 2: Stage 1 only\n\nConfirm only Stage 1 quests appear on the board.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Add subquest under container\n\nOn a container quest (e.g. Rally the Urgency), click **Add quest (1v)**. In the modal, use "Quick subquest" to enter a title and description. Click **Create subquest**. Confirm the subquest is created (costs 1 vibeulon).',
+            cleanText: '### Step 3: Add subquest\n\nClick Add quest (1v) on a container; create subquest; confirm it appears.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Complete verification\n\nYou have verified the gameboard quest generation: Kotter-stage filtering, starter subquests, and Add subquest flow. Complete this quest to receive your vibeulon reward.',
+            cleanText: '### Step 4: Complete\n\nVerification complete. Complete this quest for your reward.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Gameboard Quest Generation verified. The Bruised Banana gameboard shows only Stage 1 quests and supports adding subquests under containers. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const gameboardQuestGenParsedJson = JSON.stringify({
+        title: gameboardQuestGenTitle,
+        startPassage: 'START',
+        passages: gameboardQuestGenPassages
+    })
+
+    const gameboardQuestGenStory = await db.twineStory.upsert({
+        where: { slug: gameboardQuestGenSlug },
+        update: {
+            title: gameboardQuestGenTitle,
+            parsedJson: gameboardQuestGenParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: gameboardQuestGenTitle,
+            slug: gameboardQuestGenSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Gameboard Quest Generation certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: gameboardQuestGenParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const gameboardQuestGenQuest = await db.customBar.upsert({
+        where: { id: gameboardQuestGenSlug },
+        update: {
+            title: gameboardQuestGenTitle,
+            description: 'Verify gameboard: period filter (kotterStage), starter subquests, Add quest (1v) flow.',
+            reward: 1,
+            twineStoryId: gameboardQuestGenStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/gameboard-quest-generation/spec.md'
+        },
+        create: {
+            id: gameboardQuestGenSlug,
+            title: gameboardQuestGenTitle,
+            description: 'Verify gameboard: period filter (kotterStage), starter subquests, Add quest (1v) flow.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: gameboardQuestGenStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/gameboard-quest-generation/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${gameboardQuestGenStory.title} (${gameboardQuestGenStory.id})`)
+    console.log(`✅ Quest seeded: ${gameboardQuestGenQuest.title} (${gameboardQuestGenQuest.id})`)
+
+    // --- Certification: Dashboard Orientation Flow (DG) ---
+    const dashboardFlowTitle = 'Certification: Dashboard Orientation Flow V1'
+    const dashboardFlowSlug = 'cert-dashboard-orientation-flow-v1'
+
+    const dashboardFlowPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify the dashboard-first orientation flow. Sign up via campaign CYOA, land on the dashboard (not conclave), see orientation quests, and complete the ritual.',
+            cleanText: 'Verify dashboard-first orientation flow.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Sign up via campaign CYOA\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) and play through until you reach the **sign-up node**. Create a new account.',
+            cleanText: '### Step 1: Sign up via campaign CYOA\n\nPlay through campaign and sign up.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Dashboard redirect\n\nAfter signing up, confirm you are redirected to the **dashboard** (/) — not /conclave/onboarding. The URL should be / or /?focusQuest=...',
+            cleanText: '### Step 2: Dashboard redirect\n\nConfirm redirect to dashboard, not conclave.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Orientation quests visible\n\nConfirm the **orientation thread** and **orientation quests** are visible (e.g. "Continue Ritual" banner, "Enter Ritual" / "Start Journey").',
+            cleanText: '### Step 3: Orientation quests visible\n\nConfirm orientation thread and quests visible.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Complete first orientation quest\n\nClick "Continue Ritual" or "Enter Ritual" and complete the first orientation quest.',
+            cleanText: '### Step 4: Complete first orientation quest\n\nComplete the first orientation quest.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Ritual completion state\n\nConfirm the ritual completion state (e.g. "The Ritual is Complete" banner or orientation thread marked complete).',
+            cleanText: '### Step 5: Ritual completion state\n\nConfirm ritual completion state.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Dashboard orientation flow verified. New players land on the dashboard with orientation quests. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const dashboardFlowParsedJson = JSON.stringify({
+        title: dashboardFlowTitle,
+        startPassage: 'START',
+        passages: dashboardFlowPassages
+    })
+
+    const dashboardFlowStory = await db.twineStory.upsert({
+        where: { slug: dashboardFlowSlug },
+        update: {
+            title: dashboardFlowTitle,
+            parsedJson: dashboardFlowParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: dashboardFlowTitle,
+            slug: dashboardFlowSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Dashboard Orientation Flow certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: dashboardFlowParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const dashboardFlowQuest = await db.customBar.upsert({
+        where: { id: dashboardFlowSlug },
+        update: {
+            title: dashboardFlowTitle,
+            description: 'Verify dashboard-first post-signup redirect, orientation quests visible, and ritual completion.',
+            reward: 1,
+            twineStoryId: dashboardFlowStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/dashboard-orientation-flow/spec.md'
+        },
+        create: {
+            id: dashboardFlowSlug,
+            title: dashboardFlowTitle,
+            description: 'Verify dashboard-first post-signup redirect, orientation quests visible, and ritual completion.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: dashboardFlowStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/dashboard-orientation-flow/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${dashboardFlowStory.title} (${dashboardFlowStory.id})`)
+    console.log(`✅ Quest seeded: ${dashboardFlowQuest.title} (${dashboardFlowQuest.id})`)
+
+    // --- Certification: Admin Onboarding Flow API + Graph View (DO) ---
+    const adminFlowApiTitle = 'Certification: Admin Onboarding Flow API + Graph View V1'
+    const adminFlowApiSlug = 'cert-admin-onboarding-flow-api-v1'
+
+    const adminFlowApiPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify the Admin Onboarding Flow API and Graph View. The onboarding page shows the Bruised Banana template structure with branching (The Invitation with 3 branches, etc.), Play draft and View API links, and the API returns valid FlowOutput JSON.',
+            cleanText: 'Verify admin onboarding flow API and graph view.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Visit Admin Onboarding\n\n[Open Admin → Onboarding](/admin/onboarding). Ensure you are logged in as admin.',
+            cleanText: '### Step 1: Visit Admin Onboarding\n\nOpen /admin/onboarding.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Template Structure + Branching visible\n\nConfirm the **"Template Structure (Bruised Banana)"** section is visible with nodes (Arrival, The Work, The Invitation, Why Identity Matters, etc.) in order. Confirm **The Invitation** shows 3 branches (Aligned, Curious, Skeptical) and a convergence node.',
+            cleanText: '### Step 2: Template Structure + Branching visible\n\nConfirm template section with nodes and branching.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: API returns JSON\n\n[Open /api/admin/onboarding/flow?campaign=bruised-banana](/api/admin/onboarding/flow?campaign=bruised-banana) in a new tab. Confirm the response is valid JSON with flow_id, nodes, start_node_id, etc.',
+            cleanText: '### Step 3: API returns JSON\n\nConfirm API returns valid FlowOutput.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Play draft and View API links\n\nIn the Template Structure section header, confirm **Play draft** opens [/campaign/twine](/campaign/twine) and **View API** opens the flow JSON in a new tab.',
+            cleanText: '### Step 4: Play draft and View API links\n\nConfirm actionable links work.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Admin Onboarding Flow API + Graph View verified. The template structure shows branching, Play draft and View API links work, and the API returns valid FlowOutput. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const adminFlowApiParsedJson = JSON.stringify({
+        title: adminFlowApiTitle,
+        startPassage: 'START',
+        passages: adminFlowApiPassages
+    })
+
+    const adminFlowApiStory = await db.twineStory.upsert({
+        where: { slug: adminFlowApiSlug },
+        update: {
+            title: adminFlowApiTitle,
+            parsedJson: adminFlowApiParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: adminFlowApiTitle,
+            slug: adminFlowApiSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Admin Onboarding Flow API certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: adminFlowApiParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const adminFlowApiQuest = await db.customBar.upsert({
+        where: { id: adminFlowApiSlug },
+        update: {
+            title: adminFlowApiTitle,
+            description: 'Verify Admin Onboarding Flow API + Graph View: template structure with branching, Play draft and View API links, API returns FlowOutput JSON.',
+            reward: 1,
+            twineStoryId: adminFlowApiStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-onboarding-flow-api/spec.md'
+        },
+        create: {
+            id: adminFlowApiSlug,
+            title: adminFlowApiTitle,
+            description: 'Verify Admin Onboarding Flow API + Graph View: template structure with branching, Play draft and View API links, API returns FlowOutput JSON.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: adminFlowApiStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-onboarding-flow-api/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${adminFlowApiStory.title} (${adminFlowApiStory.id})`)
+    console.log(`✅ Quest seeded: ${adminFlowApiQuest.title} (${adminFlowApiQuest.id})`)
+
+    // --- Certification: Lore-Immersive Onboarding (DI) ---
+    const loreImmersiveTitle = 'Certification: Lore-Immersive Onboarding V1'
+    const loreImmersiveSlug = 'cert-lore-immersive-onboarding-v1'
+
+    const loreImmersivePassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify lore-immersive onboarding: first passage drops you into story world (Conclave/heist), nation/archetype choices are story-framed, vibeulons introduced in-story, no long form block without narrative. Complete flow to dashboard.',
+            cleanText: 'Verify lore-immersive onboarding.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: First passage — story world\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) and play from the start. Confirm the **first passage** drops you into the story world (Conclave, heist, nations, constructs). No abstract "Choose your path" without context.',
+            cleanText: '### Step 1: First passage story world\n\nFirst passage uses Conclave/heist language.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Nation/archetype story framing\n\nContinue through character creation. Confirm **nation choice** is preceded by a story beat (e.g. "Each nation channels a different emotional energy"). Confirm **playbook/archetype choice** is story-framed (e.g. "How do you approach the heist?").',
+            cleanText: '### Step 2: Nation/archetype story framing\n\nNation and playbook choices have story beats.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Vibeulons in-story\n\nContinue to the moves section. Confirm **vibeulons** are introduced in-story before sign-up (e.g. "emotional energy that powers the construct").',
+            cleanText: '### Step 3: Vibeulons in-story\n\nVibeulons introduced before sign-up.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: No long form block\n\nConfirm there is **no long story block** followed by a long form block. Narrative and choices are interleaved.',
+            cleanText: '### Step 4: No long form block\n\nStory and choices interleaved.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Complete to dashboard\n\nSign up and complete the flow. Confirm you land on the **dashboard** with orientation quests visible.',
+            cleanText: '### Step 5: Complete to dashboard\n\nComplete flow, land on dashboard.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Lore-immersive onboarding verified. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const loreImmersiveParsedJson = JSON.stringify({
+        title: loreImmersiveTitle,
+        startPassage: 'START',
+        passages: loreImmersivePassages
+    })
+
+    const loreImmersiveStory = await db.twineStory.upsert({
+        where: { slug: loreImmersiveSlug },
+        update: {
+            title: loreImmersiveTitle,
+            parsedJson: loreImmersiveParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: loreImmersiveTitle,
+            slug: loreImmersiveSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Lore-Immersive Onboarding certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: loreImmersiveParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const loreImmersiveQuest = await db.customBar.upsert({
+        where: { id: loreImmersiveSlug },
+        update: {
+            title: loreImmersiveTitle,
+            description: 'Verify lore-immersive onboarding: story-first intro, nation/archetype story framing, vibeulons in-story, flow to dashboard.',
+            reward: 1,
+            twineStoryId: loreImmersiveStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/lore-immersive-onboarding/spec.md'
+        },
+        create: {
+            id: loreImmersiveSlug,
+            title: loreImmersiveTitle,
+            description: 'Verify lore-immersive onboarding: story-first intro, nation/archetype story framing, vibeulons in-story, flow to dashboard.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: loreImmersiveStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/lore-immersive-onboarding/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${loreImmersiveStory.title} (${loreImmersiveStory.id})`)
+    console.log(`✅ Quest seeded: ${loreImmersiveQuest.title} (${loreImmersiveQuest.id})`)
+
+    // --- Certification: AID Decline Fork (DH) ---
+    const aidDeclineForkTitle = 'Certification: AID Decline Fork V1'
+    const aidDeclineForkSlug = 'cert-aid-decline-fork-v1'
+
+    const aidDeclineForkPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify the AID decline fork flow: decline clock on offers, fork-on-decline when steward declines a quest-type AID offer. Requires two players (or two browser sessions).',
+            cleanText: 'Verify AID decline clock and fork-on-decline.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open the gameboard\n\n[Open /campaign/board?ref=bruised-banana](/campaign/board?ref=bruised-banana). Ensure you are logged in. Player A: take a quest (become steward). Player B: open gameboard in another session.',
+            cleanText: '### Step 1: Open gameboard\n\nPlayer A: take quest. Player B: open gameboard.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Offer quest-type AID\n\nAs Player B: click **Offer AID** on the slot where Player A is steward. Select type **Quest**. Create or link a quest. Submit the offer. As Player A: confirm the offer shows **Respond by** or **Expires in** (decline clock).',
+            cleanText: '### Step 2: Offer quest AID\n\nPlayer B offers quest AID. Player A sees decline clock.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Decline and fork\n\nAs Player A: click **Decline** on the AID offer. As Player B: confirm **Your declined AID** section appears with the quest title. Click **Fork and complete**. Confirm the fork appears in your hand.',
+            cleanText: '### Step 3: Decline and fork\n\nPlayer A declines. Player B sees Your declined AID, forks, fork in hand.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Complete verification\n\nYou have verified the AID decline fork: decline clock on offers, fork-on-decline when steward declines. Complete this quest to receive your vibeulon reward.',
+            cleanText: '### Step 4: Complete\n\nVerification complete. Complete for reward.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'AID decline fork verified. Stewards see a decline clock on offers; when they decline, offerers can fork the quest and complete it privately. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const aidDeclineForkParsedJson = JSON.stringify({
+        title: aidDeclineForkTitle,
+        startPassage: 'START',
+        passages: aidDeclineForkPassages
+    })
+
+    const aidDeclineForkStory = await db.twineStory.upsert({
+        where: { slug: aidDeclineForkSlug },
+        update: {
+            title: aidDeclineForkTitle,
+            parsedJson: aidDeclineForkParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: aidDeclineForkTitle,
+            slug: aidDeclineForkSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'AID Decline Fork certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: aidDeclineForkParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const aidDeclineForkQuest = await db.customBar.upsert({
+        where: { id: aidDeclineForkSlug },
+        update: {
+            title: aidDeclineForkTitle,
+            description: 'Verify AID decline clock and fork-on-decline: steward declines, offerer forks quest.',
+            reward: 1,
+            twineStoryId: aidDeclineForkStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/aid-decline-fork-clock-lore/spec.md'
+        },
+        create: {
+            id: aidDeclineForkSlug,
+            title: aidDeclineForkTitle,
+            description: 'Verify AID decline clock and fork-on-decline: steward declines, offerer forks quest.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: aidDeclineForkStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/aid-decline-fork-clock-lore/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${aidDeclineForkStory.title} (${aidDeclineForkStory.id})`)
+    console.log(`✅ Quest seeded: ${aidDeclineForkQuest.title} (${aidDeclineForkQuest.id})`)
+
+    // cert-starter-quest-generator-v1
+    const starterGenSlug = 'cert-starter-quest-generator-v1'
+    const starterGenPassages = [
+        { name: 'START', pid: '1', text: 'Verify the Starter Quest Generator: domain-biased starter quests after Bruised Banana signup. Complete each step in order.', cleanText: 'Verify Starter Quest Generator.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Complete Bruised Banana signup with lens\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) and play through until sign-up. Create a new account. Choose a developmental lens (community, creative, strategic, or allyship).', cleanText: 'Complete Bruised Banana signup with lens.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Confirm starter quests appear\n\nOn the dashboard, confirm the **Help the Bruised Banana** orientation thread shows starter quests (Strengthen the Residency, Invite an Ally, Declare a Skill, Test the Engine, Create Momentum).', cleanText: 'Confirm starter quests appear.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Domain-biased quests present\n\nConfirm starter quests matching your lens are in the thread: creative→Strengthen (GATHERING), allyship→Invite/Create Momentum (RAISE_AWARENESS), strategic→Declare (SKILLFUL_ORGANIZING), community→Test (DIRECT_ACTION).', cleanText: 'Domain-biased quests present.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Complete one quest\n\nComplete at least one starter quest from the thread.', cleanText: 'Complete one quest.', links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_5', pid: '6', text: '### Step 5: Verify move/copy when resolved\n\nIf the quest displays emotional move metadata (e.g. move name, wave stage), confirm it appears. Otherwise, note that the quest completed successfully.', cleanText: 'Verify move/copy when resolved.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '7', text: 'Starter Quest Generator verified. Domain-biased quests appear after signup. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] },
+    ]
+    const starterGenStory = await db.twineStory.upsert({
+        where: { slug: starterGenSlug },
+        update: { title: 'Certification: Starter Quest Generator V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: starterGenPassages }), isPublished: true },
+        create: {
+            title: 'Certification: Starter Quest Generator V1',
+            slug: starterGenSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Starter Quest Generator certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: starterGenPassages }),
+            isPublished: true,
+            createdById,
+        },
+    })
+    await db.customBar.upsert({
+        where: { id: starterGenSlug },
+        update: { title: 'Certification: Starter Quest Generator V1', description: 'Verify domain-biased starter quests after Bruised Banana signup.', twineStoryId: starterGenStory.id, status: 'active', visibility: 'public', isSystem: true },
+        create: {
+            id: starterGenSlug,
+            title: 'Certification: Starter Quest Generator V1',
+            description: 'Verify domain-biased starter quests after Bruised Banana signup.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: starterGenStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+        },
+    })
+    console.log(`✅ Quest seeded: cert-starter-quest-generator-v1`)
+
+    // cert-onboarding-flow-completion-v1
+    const onboardingFlowSlug = 'cert-onboarding-flow-completion-v1'
+    const onboardingFlowPassages = [
+        { name: 'START', pid: '1', text: 'Verify the Onboarding Flow Completion: Strengthen the Residency with 4 branches and visible effects. Complete each step in order.', cleanText: 'Verify Onboarding Flow Completion.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Complete Bruised Banana signup with lens\n\n[Open /campaign?ref=bruised-banana](/campaign?ref=bruised-banana) and play through until sign-up. Create a new account. Choose a developmental lens (community, creative, strategic, or allyship).', cleanText: 'Complete Bruised Banana signup with lens.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Confirm starter quests appear\n\nOn the dashboard, confirm the **Help the Bruised Banana** orientation thread shows starter quests including **Strengthen the Residency**.', cleanText: 'Confirm starter quests appear.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Complete Strengthen the Residency\n\nComplete **Strengthen the Residency** via one of the 4 options: Contribute Support (Donate), Invite an Ally, Share Feedback, or Share the Campaign. If the quest is on the gameboard, complete it there.', cleanText: 'Complete Strengthen via one of 4 options.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Observe visible effect\n\nConfirm a visible effect: your wallet shows +vibeulons. If you chose Contribute Support (Donate), Instance funding may also have incremented.', cleanText: 'Observe visible effect.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '7', text: 'Onboarding Flow Completion verified. Strengthen the Residency has 4 branches with visible effects. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] },
+    ]
+    const onboardingFlowStory = await db.twineStory.upsert({
+        where: { slug: onboardingFlowSlug },
+        update: { title: 'Certification: Onboarding Flow Completion V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: onboardingFlowPassages }), isPublished: true },
+        create: {
+            title: 'Certification: Onboarding Flow Completion V1',
+            slug: onboardingFlowSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Onboarding Flow Completion certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: onboardingFlowPassages }),
+            isPublished: true,
+            createdById,
+        },
+    })
+    await db.customBar.upsert({
+        where: { id: onboardingFlowSlug },
+        update: { title: 'Certification: Onboarding Flow Completion V1', description: 'Verify Strengthen the Residency 4 branches and visible effects.', twineStoryId: onboardingFlowStory.id, status: 'active', visibility: 'public', isSystem: true },
+        create: {
+            id: onboardingFlowSlug,
+            title: 'Certification: Onboarding Flow Completion V1',
+            description: 'Verify Strengthen the Residency 4 branches and visible effects.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: onboardingFlowStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+        },
+    })
+    console.log(`✅ Quest seeded: cert-onboarding-flow-completion-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

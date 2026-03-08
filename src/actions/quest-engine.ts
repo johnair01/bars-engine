@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { isCampaignQuest } from '@/lib/quest-scope'
 import { completePackQuest } from '@/actions/quest-pack'
 import { advanceThread } from '@/actions/quest-thread'
 import { getOnboardingStatus, completeOnboardingStep, assignGatedThreads } from '@/actions/onboarding'
@@ -52,8 +53,10 @@ export async function checkQuestStatus(questId: string, context?: { packId?: str
 /**
  * Complete a quest.
  * Handles both Pack context and Standalone context.
+ * Campaign quests can only be completed when source is 'gameboard'.
  */
-type QuestCompletionContext = { packId?: string, threadId?: string }
+export type QuestCompletionSource = 'dashboard' | 'quest_wallet' | 'twine_end' | 'adventure_passage' | 'gameboard'
+type QuestCompletionContext = { packId?: string, threadId?: string, source?: QuestCompletionSource }
 type QuestCompletionOptions = { skipRevalidate?: boolean }
 
 export async function completeQuest(questId: string, inputs: any, context?: QuestCompletionContext, options?: QuestCompletionOptions) {
@@ -98,6 +101,14 @@ export async function completeQuestForPlayer(
     if (isPersonalIChingQuest && quest.creatorId === playerId) {
         return {
             error: 'You cannot complete your own personal I Ching quest. Offer it to the collective.'
+        }
+    }
+
+    // Campaign quests can only be completed on the gameboard
+    const isCampaign = await isCampaignQuest(questId)
+    if (isCampaign && context?.source !== 'gameboard') {
+        return {
+            error: 'Campaign quests can only be completed on the gameboard.'
         }
     }
 
@@ -215,6 +226,36 @@ export async function completeQuestForPlayer(
             await tx.vibulon.createMany({ data: tokenData })
         }
 
+        // BAR CREATOR MINT: Public BARs appended to this quest (parentId = questId) get 1 vibeulon per creator
+        const appendedBars = await tx.customBar.findMany({
+            where: {
+                parentId: questId,
+                visibility: 'public',
+                creatorId: { not: playerId },
+            },
+            select: { id: true, creatorId: true, title: true },
+        })
+        for (const bar of appendedBars) {
+            await tx.vibulonEvent.create({
+                data: {
+                    playerId: bar.creatorId,
+                    source: 'bar_creator_quest_completion',
+                    amount: 1,
+                    notes: `BAR creator: ${bar.title} used in quest: ${quest.title}`,
+                    archetypeMove: 'IGNITE',
+                    questId: questId,
+                },
+            })
+            await tx.vibulon.create({
+                data: {
+                    ownerId: bar.creatorId,
+                    originSource: 'bar_creator_quest_completion',
+                    originId: questId,
+                    originTitle: quest.title,
+                },
+            })
+        }
+
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
         await processCompletionEffects(tx, playerId, quest, inputs)
 
@@ -319,7 +360,7 @@ function parseStoryQuestMeta(raw: string | null) {
 // ============================================================
 
 interface CompletionEffect {
-    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting'
+    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting' | 'strengthenResidency'
     value?: string   // nationId, playbookId, etc.
     amount?: number  // for grantVibeulons
     fromInput?: string // key in quest inputs to read the value from
@@ -350,11 +391,34 @@ async function processCompletionEffects(
 ) {
     if (!quest.completionEffects) return
 
-    let parsed: { effects?: CompletionEffect[] }
+    let parsed: { effects?: CompletionEffect[]; barTypeOnCompletion?: 'insight' | 'vibe' }
     try {
         parsed = JSON.parse(quest.completionEffects)
     } catch {
         return // Not valid JSON or legacy format — skip silently
+    }
+
+    // Handle barTypeOnCompletion: spawn BAR for completer when quest completes
+    const barType = parsed.barTypeOnCompletion
+    if (barType === 'insight' || barType === 'vibe') {
+        const reflection = typeof inputs.reflection === 'string' ? inputs.reflection : JSON.stringify(inputs)
+        const bar = await tx.customBar.create({
+            data: {
+                creatorId: playerId,
+                title: `${barType === 'insight' ? 'Insight' : 'Vibe'} from: ${quest.title}`,
+                description: reflection?.slice(0, 2000) || `${quest.title} completed.`,
+                type: barType,
+                reward: 0,
+                visibility: 'private',
+                status: 'active',
+                inputs: '[]',
+                rootId: 'temp',
+            }
+        })
+        await tx.customBar.update({
+            where: { id: bar.id },
+            data: { rootId: bar.id }
+        })
     }
 
     const effects = parsed.effects
@@ -462,6 +526,27 @@ async function processCompletionEffects(
                     }
                     break
                 }
+                case 'strengthenResidency': {
+                    const completionType = effect.fromInput ? inputs[effect.fromInput] : null
+                    if (!completionType || typeof completionType !== 'string') break
+                    const type = completionType.toLowerCase()
+                    // Log visible system effects (donation_received, invite_sent, feedback_submitted, campaign_shared)
+                    if (type === 'donate') {
+                        // Vibeulon already minted by Twine completion. Optionally increment Instance funding.
+                        const instance = await tx.instance.findFirst({ where: { isEventMode: true }, select: { id: true, currentAmountCents: true } })
+                        if (instance) {
+                            await tx.instance.update({
+                                where: { id: instance.id },
+                                data: { currentAmountCents: { increment: 100 } } // +$1.00 symbolic
+                            })
+                            console.log(`[CompletionEffects] Strengthen donate: incremented instance funding for player ${playerId}`)
+                        }
+                    } else if (type === 'invite' || type === 'feedback' || type === 'share') {
+                        // Log for observability; extend to DB/analytics as needed
+                        console.log(`[CompletionEffects] Strengthen ${type}: player ${playerId} completed via ${type}`)
+                    }
+                    break
+                }
                 default:
                     console.warn(`[CompletionEffects] Unknown effect type: ${(effect as any).type}`)
             }
@@ -557,7 +642,7 @@ export async function fireTrigger(trigger: string, options?: { skipRevalidate?: 
     const results = []
     for (const candidate of candidates) {
         console.log(`[QuestEngine] fireTrigger executing completion for quest ${candidate.questId} (thread: ${candidate.threadId || 'none'})`)
-        const result = await completeQuest(candidate.questId, { autoTriggered: true, trigger }, { threadId: candidate.threadId }, options)
+        const result = await completeQuest(candidate.questId, { autoTriggered: true, trigger }, { threadId: candidate.threadId, source: 'gameboard' }, options)
         console.log(`[QuestEngine] fireTrigger result for ${candidate.questId}:`, JSON.stringify(result))
         results.push(result)
     }

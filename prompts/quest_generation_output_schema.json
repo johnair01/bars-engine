@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quest Flow Output Schema",
+  "description": "Schema for AI-generated quest flows. Must parse, validate, and simulate.",
+  "type": "object",
+  "required": ["flow_id", "campaign_id", "start_node_id", "nodes", "completion_conditions", "expected_events"],
+  "properties": {
+    "flow_id": {
+      "type": "string",
+      "description": "Unique identifier for the flow",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign context"
+    },
+    "start_node_id": {
+      "type": "string",
+      "description": "Node id where flow begins; must exist in nodes"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "copy", "actions"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "introduction",
+              "prompt",
+              "choice",
+              "action",
+              "BAR_capture",
+              "BAR_validation",
+              "quest_join",
+              "quest_progress",
+              "reflection",
+              "completion",
+              "handoff"
+            ]
+          },
+          "copy": { "type": "string" },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "read",
+                    "choose",
+                    "submit",
+                    "create_BAR",
+                    "attach_BAR",
+                    "confirm",
+                    "join_quest",
+                    "reflect",
+                    "unlock_next_step",
+                    "signup",
+                    "donate"
+                  ]
+                },
+                "requires": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "emits": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "next_node_id": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "source": { "type": "string" }
+              }
+            }
+          },
+          "emits": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "target_ref": { "type": "string" }
+        }
+      }
+    },
+    "completion_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string" },
+          "node_id": { "type": "string" }
+        }
+      }
+    },
+    "expected_events": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

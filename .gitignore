@@ -55,6 +55,9 @@ next-env.d.ts
 # Database backups (local cold storage)
 /backups/
 
+# Bootstrap output (creation quest analysis)
+scripts/bootstrap-creation-quests-output.json
+
 # Uploaded files (books, etc.)
 /uploads/
 /public/uploads/

@@ -8,10 +8,11 @@
  */
 
 import { db } from '@/lib/db'
-import { compileQuest } from './compileQuest'
+import { compileQuest } from './compileQuestCore'
 import { channelToElement } from './elements'
 import { getPlaybookPrimaryWave } from './playbook-wave'
 import { buildChoicePrivilegingContext } from './choice-privileging-context'
+import { getMovesForLens } from './lens-moves'
 import type { ElementKey } from './elements'
 import type {
   QuestCompileInput,
@@ -29,6 +30,17 @@ export interface PlayerPOV {
   p6?: string
 }
 
+/** Gameboard context for campaign-aligned generation (DB: hexagram + campaign throughput) */
+export interface GameboardContext {
+  parentTitle: string
+  parentDescription: string
+  period: number
+  /** Campaign goal (e.g. "Bruised Banana Residency—people showing up") */
+  campaignGoal?: string
+  /** Stage action from Domain×Kotter (e.g. "We need resources") — not Kotter stage name */
+  stageAction?: string
+}
+
 /** Extended input for prompt context (optional fields) */
 export interface BuildQuestPromptContextInput extends QuestCompileInput {
   /** Player POV — what does the player want? (optional) */
@@ -39,6 +51,12 @@ export interface BuildQuestPromptContextInput extends QuestCompileInput {
   targetNationId?: string
   /** CE: Target playbook for choice privileging (primary WAVE) */
   targetPlaybookId?: string
+  /** Gameboard context — parent quest theme, period (for campaign-aligned generation) */
+  gameboardContext?: GameboardContext
+  /** Admin feedback from a previous generation — incorporated into regeneration prompts */
+  adminFeedback?: string
+  /** Include Bruised Banana onboarding draft structure as reference (corpus/template) */
+  includeOnboardingFlowReference?: boolean
 }
 
 /** Compact Voice Style Guide summary for AI prompts */
@@ -108,6 +126,22 @@ export async function buildQuestPromptContext(
 - P6: ${playerPOV.p6 ?? '—'}`)
   }
 
+  // I Ching context (optional) — oracle layer for tone, imagery, emotional arc
+  if (input.ichingContext) {
+    const ic = input.ichingContext
+    const campaignParts: string[] = []
+    if (ic.kotterStage != null && ic.kotterStageName) campaignParts.push(`Stage ${ic.kotterStage}: ${ic.kotterStageName}`)
+    if (ic.nationName) campaignParts.push(`Nation: ${ic.nationName}`)
+    if (ic.activeFace) campaignParts.push(`Lens: ${ic.activeFace}`)
+    sections.push(`## I Ching Context
+- Hexagram: #${ic.hexagramId} ${ic.hexagramName} — ${ic.hexagramTone}
+- Meaning: ${ic.hexagramText}
+- Structure: ${ic.upperTrigram} over ${ic.lowerTrigram}
+${campaignParts.length ? `- Campaign: ${campaignParts.join('. ')}` : ''}
+
+Use this I Ching reading to inform tone, imagery, and emotional arc. Align with campaign context when present.`)
+  }
+
   // Emotional signature
   sections.push(`## Emotional Signature
 - Primary channel: ${sig.primaryChannel}
@@ -121,9 +155,11 @@ export async function buildQuestPromptContext(
 
   // Tailoring
   if (targetArchetypeIds?.length || developmentalLens) {
+    const lensMoves = developmentalLens ? getMovesForLens(developmentalLens) : []
     sections.push(`## Tailoring
 ${targetArchetypeIds?.length ? `- Target archetype(s): [IDs: ${targetArchetypeIds.join(', ')}]` : ''}
-${developmentalLens ? `- Developmental lens: ${developmentalLens} — Shaman=mythic/ritual, Challenger=action/edge, Regent=structure/order, Architect=strategy/blueprint, Diplomat=care/relational, Sage=integration/whole` : ''}`)
+${developmentalLens ? `- Developmental lens: ${developmentalLens} — Shaman=mythic/ritual, Challenger=action/edge, Regent=structure/order, Architect=strategy/blueprint, Diplomat=care/relational, Sage=integration/whole` : ''}
+${lensMoves.length ? `- Lens moves to privilege: ${lensMoves.map((m) => m.name).join(', ')}` : ''}`)
   }
 
   // CE: Choice privileging (nation element + playbook WAVE)
@@ -149,6 +185,37 @@ ${developmentalLens ? `- Developmental lens: ${developmentalLens} — Shaman=myt
     sections.push(`## Expected Moves (completer milestones)
 ${expectedMoves.map((m) => `- ${m}`).join('\n')}`)
   }
+
+  // Gameboard context (campaign-aligned generation, DB: throughput-oriented)
+  if (input.gameboardContext) {
+    const gb = input.gameboardContext
+    const campaignGoal = gb.campaignGoal ?? 'people showing up in the campaign'
+    const stageAction = gb.stageAction ?? gb.parentTitle
+    sections.push(`## Gameboard Context (campaign throughput)
+- Parent quest: ${gb.parentTitle}
+- Parent description: ${gb.parentDescription}
+- Period: ${gb.period}
+- Stage action: ${stageAction}
+- Campaign goal: ${campaignGoal}
+
+**Generative question:** How does [${stageAction}] directly tie to people showing up in [${campaignGoal}]?
+
+Generate a concrete, actionable quest title and description. Use the hexagram for tone and imagery when present. **Do NOT use Kotter stage names in the title** (e.g. avoid "Rally the Urgency"; use derived actions like "Name what's at stake for one person who could show up").`)
+  }
+
+  // Onboarding flow reference (Bruised Banana draft — corpus/template)
+  if (input.includeOnboardingFlowReference) {
+    sections.push(`## Onboarding Flow Reference (Bruised Banana draft)
+Structure: introduction → emotional-alchemy choice (aligned/curious/skeptical) → identity (nation → archetype → developmental lens → intended impact) → BAR_capture → completion → handoff.
+- Emotional-alchemy branches affect downstream copy and quest conditioning.
+- Developmental lens maps to Game Master face (practical→architect, collaborate→diplomat, system→sage, protect→regent, emergence→shaman, capacity→challenger).
+- Nations: Argyra, Pyrakanth, Lamenth, Meridia, Virelune. Archetypes (allyship superpowers): connector, storyteller, strategist, alchemist, escape_artist, disruptor.
+- Intended impact: gather_resources, skillful_organizing, raise_awareness, direct_action.
+Use this structure to inform onboarding quest generation when applicable.`)
+  }
+
+  sections.push(`## Yellow Brick Road (narrative frame)
+The quest is a stretch of Yellow Brick Road between where the player is (${fromState}) and where they want to be (${toState}). Each blocker metabolized becomes a brick. The act of alchemy — converting dissatisfaction into movement — generates the fuel. The player can never go the wrong way; wherever the road leads is where they want to go. Speed comes from metabolizing blockers, not from skipping them.`)
 
   sections.push(`## Voice Style Guide
 ${VOICE_STYLE_GUIDE.trim()}`)

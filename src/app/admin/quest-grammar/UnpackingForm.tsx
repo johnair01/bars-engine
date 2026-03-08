@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { compileQuest, questPacketToTwee } from '@/lib/quest-grammar'
-import { publishQuestPacketToPassages, compileQuestWithAI } from '@/actions/quest-grammar'
+import { questPacketToTwee } from '@/lib/quest-grammar'
+import { publishQuestPacketToPassages, compileQuestWithAI, compileQuestWithPrivilegingAction } from '@/actions/quest-grammar'
+import { logPrePublishFeedback } from '@/actions/narrative-quality-feedback'
 import { getAdminWorldData } from '@/actions/admin'
+import { QuestOutlineReview } from '@/components/admin/QuestOutlineReview'
 import {
   UNPACKING_QUESTIONS,
   EXPERIENCE_OPTIONS,
@@ -12,15 +14,17 @@ import {
   FACE_OPTIONS,
   Q3_SEP,
   baseInputClass,
-} from './unpacking-constants'
-import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket, QuestPacket } from '@/lib/quest-grammar'
+} from '@/lib/quest-grammar'
+import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket } from '@/lib/quest-grammar'
 
 export type QuestModel = 'personal' | 'communal'
 
 type PlaybookItem = { id: string; name: string }
+type NationItem = { id: string; name: string }
 
 export function UnpackingForm() {
   const [playbooks, setPlaybooks] = useState<PlaybookItem[]>([])
+  const [nations, setNations] = useState<NationItem[]>([])
   const [answers, setAnswers] = useState<UnpackingAnswers>({
     q1: '',
     q2: [],
@@ -32,16 +36,24 @@ export function UnpackingForm() {
   const [alignedAction, setAlignedAction] = useState('')
   const [questModel, setQuestModel] = useState<QuestModel>('personal')
   const [segment, setSegment] = useState<SegmentVariant | 'both'>('player')
+  const [targetNationId, setTargetNationId] = useState<string | null>(null)
   const [targetArchetypeIds, setTargetArchetypeIds] = useState<string[]>([])
   const [developmentalLens, setDevelopmentalLens] = useState<string | null>(null)
   const [q6Context, setQ6Context] = useState('')
-  const [expectedMoves, setExpectedMoves] = useState('')
+  const [expectedMovesSelected, setExpectedMovesSelected] = useState<string[]>([])
+  const [expectedMovesCustom, setExpectedMovesCustom] = useState('')
   const [playerPOV, setPlayerPOV] = useState<{ p1?: string; p2?: string; p3?: string; p4?: string; p5?: string; p6?: string }>({})
   const [preview, setPreview] = useState<SerializableQuestPacket | null>(null)
+  const [accepted, setAccepted] = useState(false)
+  const [generationCount, setGenerationCount] = useState(0)
+  const [isRegenerating, setIsRegenerating] = useState(false)
 
   useEffect(() => {
-    getAdminWorldData().then(([, archetypes]) => {
-      setPlaybooks(archetypes.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+    getAdminWorldData().then(([nationList, archetypes]) => {
+      setNations((nationList as { id: string; name: string }[]).map((n) => ({ id: n.id, name: n.name })))
+      setPlaybooks((archetypes as { id: string; name: string }[])
+        .filter((p) => p.name.startsWith('The '))
+        .map((p) => ({ id: p.id, name: p.name })))
     }).catch(() => {})
   }, [])
   const [error, setError] = useState<string | null>(null)
@@ -50,21 +62,30 @@ export function UnpackingForm() {
   const [aiStatus, setAiStatus] = useState<'idle' | 'pending' | 'error'>('idle')
   const [aiError, setAiError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     try {
       const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
-      const raw = compileQuest({
+      const input = {
         unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
         alignedAction,
         segment: effectiveSegment,
         campaignId: 'bruised-banana',
+        questModel,
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
-      })
-      const { telemetryHooks: _, ...packet } = raw
-      setPreview(packet)
+        targetNationId: targetNationId ?? undefined,
+        targetPlaybookId: targetArchetypeIds[0],
+      }
+      const result = await compileQuestWithPrivilegingAction(input)
+      if ('error' in result) {
+        setError(result.error)
+        return
+      }
+      setPreview(result)
+      setAccepted(false)
+      setGenerationCount((c) => c + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Compilation failed')
     }
@@ -131,15 +152,30 @@ export function UnpackingForm() {
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>
-          <input
-            type="text"
+          <textarea
             value={distance}
             onChange={(e) => {
               const d = e.target.value
               setAnswers((a) => ({ ...a, [key]: sel ? `${sel}${d ? Q3_SEP + d : ''}` : (d ? Q3_SEP + d : '') }))
             }}
-            placeholder="How far do you feel from your creation?"
-            className={`${baseInputClass} text-sm mt-2`}
+            onKeyDown={(e) => {
+              if (e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                const target = e.target as HTMLTextAreaElement
+                const start = target.selectionStart ?? 0
+                const end = target.selectionEnd ?? 0
+                const newDistance = distance.slice(0, start) + ' ' + distance.slice(end)
+                setAnswers((a) => ({ ...a, [key]: sel ? `${sel}${newDistance ? Q3_SEP + newDistance : ''}` : (newDistance ? Q3_SEP + newDistance : '') }))
+                requestAnimationFrame(() => target.setSelectionRange(start + 1, start + 1))
+              }
+            }}
+            placeholder="How far do you feel from your creation? (e.g. not that far)"
+            rows={2}
+            className={`${baseInputClass} text-sm mt-2 resize-none touch-auto`}
+            spellCheck={false}
+            inputMode="text"
+            autoComplete="off"
           />
         </div>
       )
@@ -330,6 +366,21 @@ export function UnpackingForm() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-zinc-300 mb-2">Target nation</label>
+          <select
+            value={targetNationId ?? ''}
+            onChange={(e) => setTargetNationId(e.target.value || null)}
+            className={baseInputClass}
+          >
+            <option value="">None (generic)</option>
+            {nations.map((n) => (
+              <option key={n.id} value={n.id}>{n.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-zinc-500 mt-1">Privileges nation-element moves in choices</p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-zinc-300 mb-2">Target archetype(s)</label>
           <p className="text-xs text-zinc-500 mb-2">Select all that apply (optional)</p>
           <div className="flex flex-wrap gap-3">
@@ -371,16 +422,31 @@ export function UnpackingForm() {
         </div>
 
         <div>
-          <label htmlFor="expectedMoves" className="block text-sm font-medium text-zinc-300 mb-2">Expected moves (milestones)</label>
-          <textarea
-            id="expectedMoves"
-            value={expectedMoves}
-            onChange={(e) => setExpectedMoves(e.target.value)}
-            placeholder="Wake Up to learn, Clean Up to work through, Grow Up to build capacity, Show Up to act"
-            rows={3}
-            className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 min-h-[80px] resize-y"
+          <label className="block text-sm font-medium text-zinc-300 mb-2">Expected moves (milestones)</label>
+          <div className="flex flex-wrap gap-3 mb-2">
+            {MOVE_OPTIONS.map((m) => (
+              <label key={m} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={expectedMovesSelected.includes(m)}
+                  onChange={(e) => {
+                    const next = e.target.checked ? [...expectedMovesSelected, m] : expectedMovesSelected.filter((x) => x !== m)
+                    setExpectedMovesSelected(next)
+                  }}
+                  className="rounded border-zinc-600 text-purple-500"
+                />
+                <span className="text-sm text-zinc-300">{m}</span>
+              </label>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={expectedMovesCustom}
+            onChange={(e) => setExpectedMovesCustom(e.target.value)}
+            placeholder="Other moves (comma-separated)"
+            className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
           />
-          <p className="text-xs text-zinc-500 mt-1">One move per line or comma-separated. Optional.</p>
+          <p className="text-xs text-zinc-500 mt-1">Optional.</p>
         </div>
 
         <details className="group">
@@ -423,13 +489,16 @@ export function UnpackingForm() {
               setAiError(null)
               setError(null)
               const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
-              const parsedMoves = expectedMoves.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+              const parsedMoves = [...expectedMovesSelected, ...expectedMovesCustom.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)]
               const hasPlayerPOV = Object.values(playerPOV).some(Boolean)
               const result = await compileQuestWithAI({
                 unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
                 alignedAction,
                 segment: effectiveSegment,
                 campaignId: 'bruised-banana',
+                questModel,
+                targetNationId: targetNationId ?? undefined,
+                targetPlaybookId: targetArchetypeIds[0],
                 targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                 developmentalLens: developmentalLens ?? undefined,
                 expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -441,6 +510,8 @@ export function UnpackingForm() {
               } else {
                 setAiStatus('idle')
                 setPreview(result.packet)
+                setAccepted(false)
+                setGenerationCount((c) => c + 1)
               }
             }}
             className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-600 text-white font-medium rounded-lg transition-colors"
@@ -462,109 +533,148 @@ export function UnpackingForm() {
       </form>
 
       {preview && (
-        <div className="border border-zinc-700 rounded-xl p-6 space-y-6 bg-zinc-900/40">
-          <h3 className="text-lg font-bold text-white">Preview — QuestPacket</h3>
-          <div className="text-sm text-zinc-400">
-            <p><strong>Signature:</strong> {preview.signature.primaryChannel}</p>
-            <p><strong>Move type:</strong> {preview.signature.moveType ?? '—'} (Wake Up = choice-based; Show Up = action-based)</p>
-            <p>Dissatisfied: {preview.signature.dissatisfiedLabels.join(', ')}</p>
-            <p>Satisfied: {preview.signature.satisfiedLabels.join(', ')}</p>
-            <p>Shadow voices: {preview.signature.shadowVoices.join(', ')}</p>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-medium text-zinc-300">Nodes ({preview.nodes.length})</h4>
-            {preview.nodes.map((node) => (
-              <div key={node.id} className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-purple-400 font-mono text-sm">{node.id}</span>
-                  <span className="text-zinc-500 text-xs">{node.beatType}</span>
-                </div>
-                <p className="text-zinc-300 text-sm whitespace-pre-wrap">{node.text}</p>
-                {node.choices.length > 0 && (
-                  <div className="mt-2 text-xs text-zinc-500">
-                    Choices: {node.choices.map((c) => c.text).join(' → ')}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-zinc-500">
-              Publish to {preview.segmentVariant} variant. Visit{' '}
-              <a
-                href={`/campaign/initiation?segment=${preview.segmentVariant}`}
-                className="text-purple-400 hover:text-purple-300"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                /campaign/initiation?segment={preview.segmentVariant}
-              </a>{' '}
-              to play.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                if (!preview) return
-                const twee = questPacketToTwee(preview)
-                const blob = new Blob([twee], { type: 'text/plain' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `quest-grammar-${preview.segmentVariant}-${Date.now()}.twee`
-                a.click()
-                URL.revokeObjectURL(url)
-              }}
-              className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Export .twee
-            </button>
-            <button
-              type="button"
-              disabled={publishStatus === 'pending'}
-              onClick={async () => {
-                setPublishStatus('pending')
-                setPublishError(null)
-                const segmentsToPublish: SegmentVariant[] =
-                  segment === 'both' ? ['player', 'sponsor'] : [segment]
-                let lastError: string | null = null
-                for (const seg of segmentsToPublish) {
-                  const raw =
-                    seg === preview.segmentVariant
-                      ? preview
-                      : compileQuest({
-                          unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
-                          alignedAction,
-                          segment: seg,
-                          campaignId: 'bruised-banana',
-                          targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
-                          developmentalLens: developmentalLens ?? undefined,
-                        })
-                  const packet: SerializableQuestPacket =
-                    'telemetryHooks' in raw
-                      ? (() => { const { telemetryHooks: _, ...p } = raw as QuestPacket; return p })()
-                      : raw
-                  const result = await publishQuestPacketToPassages(packet)
-                  if (!result.success) lastError = result.error ?? 'Publish failed'
-                }
-                if (!lastError) {
-                  setPublishStatus('success')
+        <div className="border border-zinc-700 rounded-xl p-6 bg-zinc-900/40">
+          <QuestOutlineReview
+            packet={preview}
+            accepted={accepted}
+            generationCount={generationCount}
+            isRegenerating={isRegenerating}
+            onAccept={() => setAccepted(true)}
+            onReset={() => {
+              setPreview(null)
+              setAccepted(false)
+              setGenerationCount(0)
+              setPublishStatus('idle')
+              setPublishError(null)
+            }}
+            onRegenerate={async (feedback) => {
+              setIsRegenerating(true)
+              setError(null)
+              try {
+                const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
+                const parsedMoves = [...expectedMovesSelected, ...expectedMovesCustom.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)]
+                const hasPlayerPOV = Object.values(playerPOV).some(Boolean)
+                logPrePublishFeedback({
+                  feedback,
+                  generationCount,
+                  packetSignature: {
+                    primaryChannel: preview.signature.primaryChannel,
+                    moveType: preview.signature.moveType,
+                    segment: preview.segmentVariant,
+                  },
+                }).catch(() => {})
+                const result = await compileQuestWithAI({
+                  unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
+                  alignedAction,
+                  segment: effectiveSegment,
+                  campaignId: 'bruised-banana',
+                  questModel,
+                  targetNationId: targetNationId ?? undefined,
+                  targetPlaybookId: targetArchetypeIds[0],
+                  targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
+                  developmentalLens: developmentalLens ?? undefined,
+                  expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
+                  playerPOV: hasPlayerPOV ? playerPOV : undefined,
+                  adminFeedback: feedback,
+                })
+                if ('error' in result) {
+                  setError(result.error)
                 } else {
-                  setPublishStatus('error')
-                  setPublishError(lastError)
+                  setPreview(result.packet)
+                  setAccepted(false)
+                  setGenerationCount((c) => c + 1)
                 }
-              }}
-              className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {publishStatus === 'pending'
-                ? 'Publishing…'
-                : publishStatus === 'success'
-                  ? 'Published'
-                  : 'Publish to Campaign'}
-            </button>
-            {publishError && (
-              <p className="text-sm text-red-400">{publishError}</p>
-            )}
-          </div>
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Regeneration failed')
+              } finally {
+                setIsRegenerating(false)
+              }
+            }}
+          >
+            {/* Post-accept actions: export + publish */}
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-zinc-500">
+                Publish to {preview.segmentVariant} variant. Visit{' '}
+                <a
+                  href={`/campaign/initiation?segment=${preview.segmentVariant}`}
+                  className="text-purple-400 hover:text-purple-300"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  /campaign/initiation?segment={preview.segmentVariant}
+                </a>{' '}
+                to play.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const twee = questPacketToTwee(preview)
+                  const blob = new Blob([twee], { type: 'text/plain' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `quest-grammar-${preview.segmentVariant}-${Date.now()}.twee`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Export .twee
+              </button>
+              <button
+                type="button"
+                disabled={publishStatus === 'pending'}
+                onClick={async () => {
+                  setPublishStatus('pending')
+                  setPublishError(null)
+                  const segmentsToPublish: SegmentVariant[] =
+                    segment === 'both' ? ['player', 'sponsor'] : [segment]
+                  let lastError: string | null = null
+                  for (const seg of segmentsToPublish) {
+                    let packet: SerializableQuestPacket
+                    if (seg === preview.segmentVariant) {
+                      packet = preview
+                    } else {
+                      const compiled = await compileQuestWithPrivilegingAction({
+                        unpackingAnswers: { ...answers, q6Context: q6Context || undefined },
+                        alignedAction,
+                        segment: seg,
+                        campaignId: 'bruised-banana',
+                        questModel,
+                        targetNationId: targetNationId ?? undefined,
+                        targetPlaybookId: targetArchetypeIds[0],
+                        targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
+                        developmentalLens: developmentalLens ?? undefined,
+                      })
+                      if ('error' in compiled) {
+                        lastError = compiled.error
+                        continue
+                      }
+                      packet = compiled
+                    }
+                    const result = await publishQuestPacketToPassages(packet)
+                    if (!result.success) lastError = result.error ?? 'Publish failed'
+                  }
+                  if (!lastError) {
+                    setPublishStatus('success')
+                  } else {
+                    setPublishStatus('error')
+                    setPublishError(lastError)
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-zinc-600 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {publishStatus === 'pending'
+                  ? 'Publishing…'
+                  : publishStatus === 'success'
+                    ? 'Published'
+                    : 'Publish to Campaign'}
+              </button>
+              {publishError && (
+                <p className="text-sm text-red-400">{publishError}</p>
+              )}
+            </div>
+          </QuestOutlineReview>
         </div>
       )}
     </div>

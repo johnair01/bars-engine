@@ -75,13 +75,13 @@ export async function runSeed(prisma: PrismaClient) {
         },
         {
             name: 'Virelune',
-            description: 'The Green Moon. Mystery, tides, and secrets.',
+            description: 'The Green Moon. Joy, vitality, and unstoppable growth.',
             element: 'wood',
             imgUrl: '/nations/virelune.png',
-            wakeUp: 'Lunar Insight: Attune to hidden patterns by observing what others miss.',
-            cleanUp: 'Tide Washing: Let emotional currents carry away what no longer serves.',
-            growUp: 'Mystery School: Embrace not-knowing as the path to deeper wisdom.',
-            showUp: 'Shadow Walk: Act subtly, leaving no trace but lasting impact.',
+            wakeUp: 'Vitality Sense: Notice where life force is rising and what wants to grow.',
+            cleanUp: 'Growth Around: Let obstacles become compost; expand around what blocks you.',
+            growUp: 'Sustained Bloom: Build capacity for joy that outlasts the moment.',
+            showUp: 'Life Force Forward: Act with the energy of something coming alive.',
         },
         {
             name: 'Meridia',

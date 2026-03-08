@@ -4,10 +4,14 @@ import { redirect } from 'next/navigation'
 
 /**
  * Onboarding Controller
- * 
- * This page replaces the legacy /conclave/guided flow.
- * It finds the player's current orientation quest and launches it 
- * in the full-screen Twine player.
+ *
+ * Finds the player's current orientation quest and launches it in the full-screen
+ * Twine or Adventure player.
+ *
+ * @deprecated For new campaigns, use dashboard-first flow. Set AppConfig.postSignupRedirect
+ * to 'dashboard' so signups land on / instead. This page was the onboarding for "Party"
+ * (a specific campaign). Kept for backward compatibility when postSignupRedirect === 'conclave'.
+ * See .specify/specs/dashboard-orientation-flow/spec.md
  */
 export default async function OnboardingController(props: { searchParams: Promise<{ reset?: string, ritual?: string }> }) {
     const searchParams = await props.searchParams

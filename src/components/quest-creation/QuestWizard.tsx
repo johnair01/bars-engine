@@ -8,14 +8,25 @@ import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 
-export function QuestWizard() {
+export function QuestWizard({
+    gameboardContext,
+}: {
+    gameboardContext?: { questId: string; slotId: string; campaignRef: string }
+}) {
     const router = useRouter()
 
-    // State
-    const [step, setStep] = useState<number>(1) // 1: Template, 2: Details, 3: Settings, 4: Preview
+    const MOVE_OPTIONS = [
+        { key: 'wakeUp', label: 'Wake Up', desc: 'Awareness & Insight' },
+        { key: 'cleanUp', label: 'Clean Up', desc: 'Shadow Work & Clearing' },
+        { key: 'growUp', label: 'Grow Up', desc: 'Development & Skills' },
+        { key: 'showUp', label: 'Show Up', desc: 'Action & Impact' },
+    ] as const
+
+    // State: 1: Move+Domain+Template, 2: Details, 3: Settings, 4: Preview
+    const [step, setStep] = useState<number>(1)
     const [templates, setTemplates] = useState<QuestTemplate[]>([])
     const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
-    const [formData, setFormData] = useState<any>({})
+    const [formData, setFormData] = useState<any>({ scope: 'personal_self', visibility: 'private', reward: 1 })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [twineStories, setTwineStories] = useState<{ id: string; title: string }[]>([])
@@ -34,9 +45,13 @@ export function QuestWizard() {
     // Handlers
     const handleTemplateSelect = (template: QuestTemplate) => {
         setSelectedTemplate(template)
-        setFormData({ ...formData, templateId: template.id, category: template.category, visibility: 'private' })
+        setFormData({ ...formData, templateId: template.id, category: template.category })
         setStep(2)
     }
+
+    const canProceedFromStep1 = gameboardContext
+        ? !!selectedTemplate
+        : !!formData.moveType && !!allyshipDomain && !!selectedTemplate
 
     const handleInputChange = (key: string, value: any) => {
         setFormData({ ...formData, [key]: value })
@@ -69,23 +84,36 @@ export function QuestWizard() {
                 // If custom builder used
             }
 
+            const scope = formData.scope || 'personal_self'
+            const visibility = scope === 'collective' ? 'public' : 'private'
+
             const result = await createQuestFromWizard({
                 ...formData,
                 title: formData.title || selectedTemplate?.title,
                 description: formData.description || selectedTemplate?.description,
+                successCriteria: formData.successCriteria,
                 category: selectedTemplate?.category || 'custom',
-                visibility: formData.visibility || 'private',
+                visibility,
+                reward: formData.reward ?? 1,
                 inputs,
                 applyFirstAidLens: !!formData.applyFirstAidLens,
                 allowedNations: selectedNations,
                 allowedTrigrams: selectedTrigrams,
-                allyshipDomain
+                moveType: formData.moveType || formData.lifecycleFraming,
+                allyshipDomain,
+                barTypeOnCompletion: formData.barTypeOnCompletion || null,
+                ...(gameboardContext && {
+                    campaignRef: gameboardContext.campaignRef,
+                    campaignGoal: formData.campaignGoal || 'gameboard subquest',
+                }),
             })
 
             if (result?.error) {
                 setError(result.error)
             } else {
-                if (result?.visibility === 'private') {
+                if (gameboardContext) {
+                    router.push(`/campaign/board?ref=${encodeURIComponent(gameboardContext.campaignRef)}`)
+                } else if (result?.visibility === 'private') {
                     router.push('/hand')
                 } else {
                     router.push('/bars/available')
@@ -103,35 +131,102 @@ export function QuestWizard() {
     if (step === 1) {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                {gameboardContext && (
+                    <div className="p-4 rounded-xl bg-purple-900/20 border border-purple-800/50 text-purple-200 text-sm">
+                        Creating quest for gameboard. After creation you&apos;ll return to the campaign board.
+                    </div>
+                )}
                 <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold text-white">Choose a Quest Template</h2>
-                    <p className="text-zinc-400">What kind of quest do you want to create?</p>
+                    <h2 className="text-2xl font-bold text-white">Quest Type & Template</h2>
+                    <p className="text-zinc-400">Choose move, domain, and template. All required unless creating for gameboard.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {templates.map(t => (
-                        <button
-                            key={t.id}
-                            onClick={() => handleTemplateSelect(t)}
-                            className="text-left p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-purple-500/50 hover:bg-zinc-800/50 transition-all group"
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-xs uppercase tracking-widest text-zinc-500 group-hover:text-purple-400 transition-colors">
-                                    {t.category}
-                                </span>
-                                {t.lifecycleFraming && <span className="text-xs text-zinc-600">Lifecycle</span>}
-                            </div>
-                            <h3 className="text-lg font-bold text-white mb-2">{t.title}</h3>
-                            <p className="text-sm text-zinc-400 mb-4">{t.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                                {t.examples.slice(0, 2).map((ex, i) => (
-                                    <span key={i} className="text-xs bg-black px-2 py-1 rounded text-zinc-500">
-                                        "{ex}"
-                                    </span>
+                {!gameboardContext && (
+                    <>
+                        <div className="space-y-3">
+                            <label className="text-xs uppercase text-zinc-500">Move (Required)</label>
+                            <p className="text-[10px] text-zinc-600">How the player gets it done: Wake Up, Clean Up, Grow Up, Show Up.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {MOVE_OPTIONS.map((mt) => (
+                                    <button
+                                        key={mt.key}
+                                        type="button"
+                                        onClick={() => handleInputChange('moveType', formData.moveType === mt.key ? null : mt.key)}
+                                        className={`p-3 rounded-lg border text-left transition ${formData.moveType === mt.key
+                                            ? 'bg-amber-900/20 border-amber-500/50 text-amber-300'
+                                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        <div className="font-medium text-sm">{mt.label}</div>
+                                        <div className="text-[10px] text-zinc-500">{mt.desc}</div>
+                                    </button>
                                 ))}
                             </div>
-                        </button>
-                    ))}
+                        </div>
+
+                        <div className="space-y-3 pt-4 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Required)</label>
+                            <p className="text-[10px] text-zinc-600">WHERE the work happens.</p>
+                            <div className="flex flex-wrap gap-2">
+                                {ALLYSHIP_DOMAINS.map((d) => (
+                                    <button
+                                        key={d.key}
+                                        type="button"
+                                        onClick={() => setAllyshipDomain(allyshipDomain === d.key ? null : d.key)}
+                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                            ? 'bg-teal-900/20 border-teal-500/50 text-teal-300'
+                                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        {d.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500">Template</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {templates.map(t => (
+                            <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => { setSelectedTemplate(t); setFormData((prev: any) => ({ ...prev, templateId: t.id, category: t.category })) }}
+                                className={`text-left p-6 rounded-xl border transition-all group ${selectedTemplate?.id === t.id
+                                    ? 'bg-purple-900/20 border-purple-500/50'
+                                    : 'bg-zinc-900/50 border-zinc-800 hover:border-purple-500/50 hover:bg-zinc-800/50'
+                                    }`}
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-xs uppercase tracking-widest text-zinc-500 group-hover:text-purple-400 transition-colors">
+                                        {t.categoryDisplay ?? t.category}
+                                    </span>
+                                    {t.lifecycleFraming && <span className="text-xs text-zinc-600">Lifecycle</span>}
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">{t.title}</h3>
+                                <p className="text-sm text-zinc-400 mb-4">{t.description}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {t.examples.slice(0, 2).map((ex, i) => (
+                                        <span key={i} className="text-xs bg-black px-2 py-1 rounded text-zinc-500">
+                                            "{ex}"
+                                        </span>
+                                    ))}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                    <button
+                        onClick={() => canProceedFromStep1 && setStep(2)}
+                        disabled={!canProceedFromStep1}
+                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-zinc-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Next Step →
+                    </button>
                 </div>
             </div>
         )
@@ -159,13 +254,24 @@ export function QuestWizard() {
                     </div>
 
                     <div>
-                        <label className="block text-sm text-zinc-400 mb-1">Description / Instructions (Optional)</label>
+                        <label className="block text-sm text-zinc-400 mb-1">Description / Instructions</label>
                         <textarea
                             rows={4}
                             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
-                            placeholder={selectedTemplate?.description || "Give players some guidance, or leave blank if self-explanatory."}
+                            placeholder={selectedTemplate?.description || "Give players some guidance."}
                             value={formData.description || ''}
                             onChange={(e) => handleInputChange('description', e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-zinc-400 mb-1">What does success look like?</label>
+                        <textarea
+                            rows={2}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                            placeholder="Describe how a player knows they've completed this quest."
+                            value={formData.successCriteria || ''}
+                            onChange={(e) => handleInputChange('successCriteria', e.target.value)}
                         />
                     </div>
 
@@ -199,48 +305,121 @@ export function QuestWizard() {
 
                 <h2 className="text-2xl font-bold text-white">Quest Settings</h2>
 
-                {/* Visibility */}
+                {/* Scope */}
                 <div className="space-y-3">
-                    <label className="text-xs uppercase text-zinc-500">Visibility</label>
-                    <div className="flex gap-4">
+                    <label className="text-xs uppercase text-zinc-500">Scope</label>
+                    <p className="text-[10px] text-zinc-600">Who can complete this quest?</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button
-                            onClick={() => handleInputChange('visibility', 'public')}
-                            className={`flex-1 p-4 rounded-xl border text-left transition ${formData.visibility === 'public'
-                                ? 'bg-green-900/20 border-green-500/50 text-green-300'
-                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
+                            type="button"
+                            onClick={() => handleInputChange('scope', 'personal_self')}
+                            className={`p-4 rounded-xl border text-left transition ${formData.scope === 'personal_self'
+                                ? 'bg-purple-900/20 border-purple-500/50 text-purple-300'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                                 }`}
                         >
-                            <div className="font-bold mb-1">🌍 Public</div>
-                            <div className="text-xs opacity-70">Anyone can see and claim this quest. Costs 1 Vibeulon to stake.</div>
+                            <div className="font-bold mb-1">Personal (self)</div>
+                            <div className="text-xs opacity-70">For you to complete. Private.</div>
                         </button>
                         <button
-                            onClick={() => handleInputChange('visibility', 'private')}
-                            className={`flex-1 p-4 rounded-xl border text-left transition ${formData.visibility === 'private'
+                            type="button"
+                            onClick={() => handleInputChange('scope', 'personal_assign')}
+                            className={`p-4 rounded-xl border text-left transition ${formData.scope === 'personal_assign'
                                 ? 'bg-purple-900/20 border-purple-500/50 text-purple-300'
-                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                                 }`}
                         >
-                            <div className="font-bold mb-1">🔒 Private</div>
-                            <div className="text-xs opacity-70">Only visible to you (or assigned player). Free to create.</div>
+                            <div className="font-bold mb-1">Personal (assign)</div>
+                            <div className="text-xs opacity-70">Assign to another player. Private.</div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleInputChange('scope', 'collective')}
+                            className={`p-4 rounded-xl border text-left transition ${formData.scope === 'collective'
+                                ? 'bg-green-900/20 border-green-500/50 text-green-300'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                }`}
+                        >
+                            <div className="font-bold mb-1">Collective</div>
+                            <div className="text-xs opacity-70">Anyone can claim. Public. Costs 1 Vibeulon.</div>
                         </button>
                     </div>
                 </div>
 
-                {/* Lifecycle Framing (if enabled in template) */}
-                {(selectedTemplate?.lifecycleFraming || true) && (
+                {/* Reward */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <label className="text-xs uppercase text-zinc-500 block">Vibeulon Reward</label>
+                    <p className="text-[10px] text-zinc-600">How many vibeulons the completer receives.</p>
+                    <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                                key={n}
+                                type="button"
+                                onClick={() => handleInputChange('reward', n)}
+                                className={`w-12 h-12 rounded-lg border font-mono font-bold transition ${(formData.reward ?? 1) === n
+                                    ? 'bg-green-900/20 border-green-500/50 text-green-300'
+                                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                    }`}
+                            >
+                                {n}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Move + Domain for gameboard only (non-gameboard has from step 1) */}
+                {gameboardContext && (
+                    <>
+                        <div className="space-y-3 pt-4 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500">Move (Optional)</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                {MOVE_OPTIONS.map((mt) => (
+                                    <button
+                                        key={mt.key}
+                                        type="button"
+                                        onClick={() => handleInputChange('moveType', formData.moveType === mt.key ? null : mt.key)}
+                                        className={`p-3 rounded-lg border text-left transition ${formData.moveType === mt.key
+                                            ? 'bg-amber-900/20 border-amber-500/50 text-amber-300'
+                                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        <div className="font-medium text-sm">{mt.label}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-3 pt-4 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Optional)</label>
+                            <div className="flex flex-wrap gap-2">
+                                {ALLYSHIP_DOMAINS.map((d) => (
+                                    <button
+                                        key={d.key}
+                                        type="button"
+                                        onClick={() => setAllyshipDomain(allyshipDomain === d.key ? null : d.key)}
+                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                            ? 'bg-teal-900/20 border-teal-500/50 text-teal-300'
+                                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        {d.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Lifecycle Framing for non-gameboard when not yet set (backward compat) */}
+                {!gameboardContext && !formData.moveType && (selectedTemplate?.lifecycleFraming || true) && (
                     <div className="space-y-3 pt-4 border-t border-zinc-800">
-                        <label className="text-xs uppercase text-zinc-500">Lifecycle Framing (Optional)</label>
+                        <label className="text-xs uppercase text-zinc-500">Move (Required)</label>
                         <div className="grid grid-cols-2 gap-3">
-                            {[
-                                { key: 'wakeUp', label: '👁 Wake Up', desc: 'Awareness & Insight' },
-                                { key: 'cleanUp', label: '🧹 Clean Up', desc: 'Shadow Work & Clearing' },
-                                { key: 'growUp', label: '🌱 Grow Up', desc: 'Development & Skills' },
-                                { key: 'showUp', label: '🎯 Show Up', desc: 'Action & Impact' },
-                            ].map((mt) => (
+                            {MOVE_OPTIONS.map((mt) => (
                                 <button
                                     key={mt.key}
-                                    onClick={() => handleInputChange('lifecycleFraming', formData.lifecycleFraming === mt.key ? null : mt.key)}
-                                    className={`p-3 rounded-lg border text-left transition ${formData.lifecycleFraming === mt.key
+                                    type="button"
+                                    onClick={() => handleInputChange('moveType', mt.key)}
+                                    className={`p-3 rounded-lg border text-left transition ${formData.moveType === mt.key
                                         ? 'bg-amber-900/20 border-amber-500/50 text-amber-300'
                                         : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                                         }`}
@@ -314,23 +493,63 @@ export function QuestWizard() {
                     </div>
                 </div>
 
-                {/* Allyship Domain (WHERE) */}
+                {/* Allyship Domain for non-gameboard when not from step 1 */}
+                {!gameboardContext && !allyshipDomain && (
+                    <div className="space-y-3 pt-4 border-t border-zinc-800">
+                        <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Required)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {ALLYSHIP_DOMAINS.map((d) => (
+                                <button
+                                    key={d.key}
+                                    type="button"
+                                    onClick={() => setAllyshipDomain(d.key)}
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                        ? 'bg-teal-900/20 border-teal-500/50 text-teal-300'
+                                        : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                >
+                                    {d.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* BAR type on completion (optional) */}
                 <div className="space-y-3 pt-4 border-t border-zinc-800">
-                    <label className="text-xs uppercase text-zinc-500 block">Allyship Domain (Optional)</label>
-                    <p className="text-[10px] text-zinc-600">WHERE the work happens. Distinct from moves.</p>
+                    <label className="text-xs uppercase text-zinc-500 block">Generate BAR on completion (Optional)</label>
+                    <p className="text-[10px] text-zinc-600">What kind of BAR is created when the quest is completed?</p>
                     <div className="flex flex-wrap gap-2">
-                        {ALLYSHIP_DOMAINS.map((d) => (
-                            <button
-                                key={d.key}
-                                onClick={() => setAllyshipDomain(allyshipDomain === d.key ? null : d.key)}
-                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
-                                    ? 'bg-teal-900/20 border-teal-500/50 text-teal-300'
-                                    : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                    }`}
-                            >
-                                {d.label}
-                            </button>
-                        ))}
+                        <button
+                            type="button"
+                            onClick={() => handleInputChange('barTypeOnCompletion', null)}
+                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${!formData.barTypeOnCompletion
+                                ? 'bg-zinc-800 border-zinc-600 text-zinc-300'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                }`}
+                        >
+                            None
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleInputChange('barTypeOnCompletion', 'insight')}
+                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${formData.barTypeOnCompletion === 'insight'
+                                ? 'bg-amber-900/20 border-amber-500/50 text-amber-300'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                }`}
+                        >
+                            Insight BAR
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleInputChange('barTypeOnCompletion', 'vibe')}
+                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${formData.barTypeOnCompletion === 'vibe'
+                                ? 'bg-amber-900/20 border-amber-500/50 text-amber-300'
+                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                }`}
+                        >
+                            Vibe BAR
+                        </button>
                     </div>
                 </div>
 
@@ -375,7 +594,7 @@ export function QuestWizard() {
                 <div className="bg-black border border-zinc-800 p-6 rounded-xl shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-20 text-6xl">
                         {selectedTemplate?.category === 'dreams' ? '✨' :
-                            selectedTemplate?.category === 'logistics' ? '🛠' : '📜'}
+                            selectedTemplate?.category === 'play' ? '🌱' : '📜'}
                     </div>
 
                     <div className="space-y-4 relative z-10">
@@ -390,19 +609,22 @@ export function QuestWizard() {
                             <p className="whitespace-pre-wrap text-zinc-300">{formData.description}</p>
                         </div>
 
-                        <div className="flex gap-4 pt-4 border-t border-zinc-800 text-sm">
+                        <div className="flex flex-wrap gap-4 pt-4 border-t border-zinc-800 text-sm">
+                            <div className="text-zinc-500">
+                                <span className="block text-xs uppercase tracking-widest mb-1">Scope</span>
+                                <span className="text-white">
+                                    {(formData.scope || 'personal_self') === 'collective' ? 'Collective (public)' :
+                                        (formData.scope || 'personal_self') === 'personal_assign' ? 'Personal (assign)' : 'Personal (self)'}
+                                </span>
+                            </div>
                             <div className="text-zinc-500">
                                 <span className="block text-xs uppercase tracking-widest mb-1">Reward</span>
-                                <span className="text-green-400 font-mono">{formData.reward || 1} ♦</span>
+                                <span className="text-green-400 font-mono">{formData.reward ?? 1} ♦</span>
                             </div>
-                            <div className="text-zinc-500">
-                                <span className="block text-xs uppercase tracking-widest mb-1">Visibility</span>
-                                <span className="text-white capitalize">{formData.visibility || 'Private'}</span>
-                            </div>
-                            {formData.lifecycleFraming && (
+                            {(formData.moveType || formData.lifecycleFraming) && (
                                 <div className="text-zinc-500">
-                                    <span className="block text-xs uppercase tracking-widest mb-1">Framing</span>
-                                    <span className="text-amber-400 capitalize">{formData.lifecycleFraming}</span>
+                                    <span className="block text-xs uppercase tracking-widest mb-1">Move</span>
+                                    <span className="text-amber-400 capitalize">{formData.moveType || formData.lifecycleFraming}</span>
                                 </div>
                             )}
                             {formData.applyFirstAidLens && (
@@ -417,6 +639,12 @@ export function QuestWizard() {
                                     <span className="text-teal-400">{ALLYSHIP_DOMAINS.find(d => d.key === allyshipDomain)?.label || allyshipDomain}</span>
                                 </div>
                             )}
+                            {formData.barTypeOnCompletion && (
+                                <div className="text-zinc-500">
+                                    <span className="block text-xs uppercase tracking-widest mb-1">BAR on completion</span>
+                                    <span className="text-amber-400 capitalize">{formData.barTypeOnCompletion}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -429,7 +657,7 @@ export function QuestWizard() {
 
                 <div className="flex justify-between items-center pt-4">
                     <div className="text-sm text-zinc-500">
-                        {(formData.visibility || 'private') === 'public' && 'Creation Cost: 1 Vibeulon'}
+                        {(formData.scope || 'personal_self') === 'collective' && 'Creation Cost: 1 Vibeulon'}
                     </div>
                     <button
                         onClick={handlePublish}

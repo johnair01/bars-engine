@@ -2,6 +2,7 @@
 
 import { useTransition, useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import Link from 'next/link'
 import { advanceRun, revertRun } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
 import type { ParsedPassage } from '@/lib/twine-parser'
@@ -137,7 +138,7 @@ export function PassageRenderer({
             const result = await completeQuest(questId, {
                 twineCompleted: true,
                 ...inputValues
-            }, { threadId })
+            }, { threadId, source: 'twine_end' })
 
             if (result && 'error' in result) {
                 setError(result.error)
@@ -451,7 +452,17 @@ export function PassageRenderer({
 
                     {/* Error */}
                     {error && (
-                        <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg">{error}</div>
+                        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl space-y-3">
+                            <p className="text-red-400 text-sm">{error}</p>
+                            {error.includes('gameboard') && (
+                                <Link
+                                    href="/campaign/board?ref=bruised-banana"
+                                    className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    Complete on gameboard →
+                                </Link>
+                            )}
+                        </div>
                     )}
 
                     {/* Quest Inputs (Inline if tagged, or at end) */}
