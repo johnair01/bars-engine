@@ -1,0 +1,98 @@
+{
+  "flow_id": "bb_identity_selection_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "Why Identity Matters",
+  "nodes": [
+    {
+      "id": "Why Identity Matters",
+      "type": "prompt",
+      "copy": "Every story becomes more interesting when characters are distinct. Choose the nation that feels closest to how you tend to operate.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["prompt_viewed"],
+          "next_node_id": "Choose Nation",
+          "label": "Choose your Nation"
+        }
+      ]
+    },
+    {
+      "id": "Choose Nation",
+      "type": "choice",
+      "copy": "Choose the nation that feels closest to how you tend to operate right now.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["observe"],
+          "emits": ["choice_selected"],
+          "next_node_id": "Nation_Argyra",
+          "label": "Argyra"
+        }
+      ]
+    },
+    {
+      "id": "Nation_Argyra",
+      "type": "prompt",
+      "copy": "Your nation is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["nation_selected"],
+          "next_node_id": "Choose Archetype",
+          "label": "Choose your Archetype"
+        }
+      ]
+    },
+    {
+      "id": "Choose Archetype",
+      "type": "choice",
+      "copy": "Choose the archetype that maps to how you tend to move through situations.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["observe"],
+          "emits": ["choice_selected"],
+          "next_node_id": "Archetype_BoldHeart",
+          "label": "The Bold Heart"
+        }
+      ]
+    },
+    {
+      "id": "Archetype_BoldHeart",
+      "type": "prompt",
+      "copy": "Bold Heart. Your archetype is now part of the campaign record.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["archetype_selected"],
+          "next_node_id": "Identity Selection Complete",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "Identity Selection Complete",
+      "type": "completion",
+      "copy": "Your identity is now visible in the campaign.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "Identity Selection Complete"
+    }
+  ],
+  "expected_events": [
+    "prompt_viewed",
+    "choice_selected",
+    "nation_selected",
+    "choice_selected",
+    "archetype_selected",
+    "quest_completed"
+  ]
+}

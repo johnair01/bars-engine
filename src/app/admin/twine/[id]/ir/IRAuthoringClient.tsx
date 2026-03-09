@@ -4,6 +4,10 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveIrDraft, publishIrToTwineStory, rollbackToVersion } from '@/actions/twine'
 import { IRNodeEditor } from '@/components/admin/IRNodeEditor'
+import { TwinePreviewModal } from '@/components/admin/TwinePreviewModal'
+import { irToTwee, validateIrStory } from '@/lib/twine-authoring-ir'
+import { parseTwee } from '@/lib/twee-parser'
+import type { ParsedTwineStory } from '@/lib/twine-parser'
 import type { IRNode, IRStoryMetadata } from '@/lib/twine-authoring-ir'
 
 function parseIrDraft(irDraft: string | null): { nodes: IRNode[]; metadata: IRStoryMetadata } {
@@ -66,6 +70,8 @@ export function IRAuthoringClient({ story, versions }: IRAuthoringClientProps) {
   const [compiling, setCompiling] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [rollingBack, setRollingBack] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewStory, setPreviewStory] = useState<ParsedTwineStory | null>(null)
 
   const allNodeIds = nodes.map((n) => n.node_id)
   const selectedNode = nodes.find((n) => n.node_id === selectedNodeId)
@@ -123,6 +129,25 @@ export function IRAuthoringClient({ story, versions }: IRAuthoringClientProps) {
       setValidationErrors([])
       setTweePreview(null)
       router.refresh()
+    }
+  }
+
+  const handlePreview = () => {
+    try {
+      const validation = validateIrStory(nodes)
+      if (!validation.valid) {
+        setValidationErrors(validation.errors)
+        return
+      }
+      const title = metadata.title ?? story.title
+      const startNode = metadata.start_node ?? nodes[0]?.node_id ?? 'Start'
+      const twee = irToTwee(nodes, { title, startNode })
+      const parsed = parseTwee(twee)
+      setValidationErrors([])
+      setPreviewStory(parsed)
+      setPreviewOpen(true)
+    } catch (err) {
+      setValidationErrors([err instanceof Error ? err.message : 'Preview failed'])
     }
   }
 
@@ -280,6 +305,13 @@ export function IRAuthoringClient({ story, versions }: IRAuthoringClientProps) {
       <section className="flex flex-wrap gap-3">
         <button
           type="button"
+          onClick={handlePreview}
+          className="px-4 py-2 bg-purple-900/50 hover:bg-purple-800/50 text-purple-300 rounded-lg text-sm border border-purple-800"
+        >
+          Preview
+        </button>
+        <button
+          type="button"
           onClick={handleSaveDraft}
           disabled={saving}
           className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm disabled:opacity-50"
@@ -312,6 +344,17 @@ export function IRAuthoringClient({ story, versions }: IRAuthoringClientProps) {
             {tweePreview}
           </pre>
         </section>
+      )}
+
+      {previewStory && (
+        <TwinePreviewModal
+          story={previewStory}
+          isOpen={previewOpen}
+          onClose={() => {
+            setPreviewOpen(false)
+            setPreviewStory(null)
+          }}
+        />
       )}
 
       {/* Version history / Rollback */}

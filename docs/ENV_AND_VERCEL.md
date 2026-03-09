@@ -43,6 +43,8 @@ No secrets or real URLs belong in the repo; only this doc and `.env.example` (wi
 
 If `DATABASE_URL` errors appear in build or Prisma commands (e.g. `npm run build`, `npm run db:push`), ensure you've run `npm run env:pull` (or have `.env` with `DATABASE_URL`). The app loads `.env.local` first; all scripts now do the same.
 
+**Build auto-pull**: When you run `npm run build` and `DATABASE_URL` is not set, the build script will attempt `vercel env pull .env.local` automatically (if the project is linked with `vercel link`). If the pull succeeds, the build continues. If it fails (e.g. project not linked, or no Vercel access), the build exits with a clear message directing you to run `npm run env:pull` manually.
+
 ### OPENAI_API_KEY / "Incorrect API key provided"
 
 AI features (Book analysis, I Ching quest generation) require `OPENAI_API_KEY`. If you see "Incorrect API key provided" or "OPENAI_API_KEY is not set":

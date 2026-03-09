@@ -13,20 +13,20 @@
 
 ## Phase 2: Storage Bridge (Optional)
 
-- [ ] Add irDraft column to Adventure or TwineStory (if needed)
-- [ ] Implement publish flow: irDraft → compile → parseTwee → persist
+- [x] Add irDraft column to Adventure or TwineStory (if needed)
+- [x] Implement publish flow: irDraft → compile → parseTwee → persist
 
 ## Phase 3: Admin UI
 
-- [ ] Create /admin/twine/ir page (or IR tab on adventures)
-- [ ] Create IRNodeEditor component (type, body, choices, emits)
-- [ ] Add template insert (informational, choice_node)
-- [ ] Add Compile button (preview twee)
-- [ ] Add Publish button (compile + persist)
-- [ ] Responsive / mobile-friendly layout
+- [x] Create /admin/twine/ir page (or IR tab on adventures)
+- [x] Create IRNodeEditor component (type, body, choices, emits)
+- [x] Add template insert (informational, choice_node)
+- [x] Add Compile button (preview twee)
+- [x] Add Publish button (compile + persist)
+- [x] Responsive / mobile-friendly layout
 
 ## Phase 4: Versioning (Deferred)
 
-- [ ] Add compiled_twee_versions table
-- [ ] Insert version on publish
-- [ ] Rollback UI
+- [x] Add compiled_twee_versions table
+- [x] Insert version on publish
+- [x] Rollback UI

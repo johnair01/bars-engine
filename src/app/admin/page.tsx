@@ -63,6 +63,12 @@ export default async function AdminDashboard() {
                     color="text-cyan-400"
                     icon="🩺"
                 />
+                <DashboardCard
+                    title="Quest Proposals"
+                    value="BAR→Quest"
+                    href="/admin/quest-proposals"
+                    icon="📋"
+                />
             </div>
 
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">

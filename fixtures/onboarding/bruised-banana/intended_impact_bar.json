@@ -1,0 +1,107 @@
+{
+  "flow_id": "bb_intended_impact_bar_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "Declare Your Vector",
+  "nodes": [
+    {
+      "id": "Declare Your Vector",
+      "type": "prompt",
+      "copy": "You're now visible inside the campaign. Where does your attention want to move?",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["prompt_viewed"],
+          "next_node_id": "Choose Intended Impact",
+          "label": "Choose your Intended Impact"
+        }
+      ]
+    },
+    {
+      "id": "Choose Intended Impact",
+      "type": "choice",
+      "copy": "Where does your attention want to move?",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["observe"],
+          "emits": ["choice_selected"],
+          "next_node_id": "Impact_GatherResources",
+          "label": "Gather Resources"
+        }
+      ]
+    },
+    {
+      "id": "Impact_GatherResources",
+      "type": "prompt",
+      "copy": "Your intended impact is now part of the campaign.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["intended_impact_selected"],
+          "next_node_id": "Create a BAR",
+          "label": "Create a BAR"
+        }
+      ]
+    },
+    {
+      "id": "Create a BAR",
+      "type": "BAR_capture",
+      "copy": "What would you like to see become possible through your participation here?",
+      "actions": [
+        {
+          "type": "create_BAR",
+          "requires": ["create"],
+          "emits": ["bar_created"],
+          "next_node_id": "bar_validation_1",
+          "label": "I'm ready to place this marker."
+        }
+      ]
+    },
+    {
+      "id": "bar_validation_1",
+      "type": "BAR_validation",
+      "copy": "Your contribution is recorded.",
+      "conditions": [
+        {
+          "type": "BAR_exists",
+          "source": "current_actor"
+        }
+      ],
+      "actions": [
+        {
+          "type": "confirm",
+          "requires": ["observe"],
+          "emits": ["bar_validated", "quest_progressed"],
+          "next_node_id": "Onboarding Complete"
+        }
+      ]
+    },
+    {
+      "id": "Onboarding Complete",
+      "type": "completion",
+      "copy": "Your presence is now part of the system.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "Onboarding Complete"
+    },
+    {
+      "type": "BAR_created_before_validation"
+    }
+  ],
+  "expected_events": [
+    "prompt_viewed",
+    "choice_selected",
+    "intended_impact_selected",
+    "bar_created",
+    "bar_validated",
+    "quest_progressed",
+    "quest_completed"
+  ]
+}

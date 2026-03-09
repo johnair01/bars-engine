@@ -79,6 +79,7 @@ model Player {
   gameboardBids         GameboardBid[]
   gameboardAidOffersMade GameboardAidOffer[] @relation("GameboardAidOfferer")
   gameboardAidOffersReceived GameboardAidOffer[] @relation("GameboardAidSteward")
+  questProposals       QuestProposal[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -170,6 +171,7 @@ model CustomBar {
   docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
   backlogPromptPath    String?   // e.g. .specify/specs/lore-cyoa-onboarding/spec.md (verification quest → backlog update)
   evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
+  sourceBarId          String?   // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
   shares               BarShare[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
   creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
@@ -189,8 +191,36 @@ model CustomBar {
   libraryRequestsSpawned LibraryRequest[] @relation("LibraryRequestSpawnedQuest")
   gameboardSlots       GameboardSlot[]
   aidOffersLinked     GameboardAidOffer[] @relation("AidOfferLinkedQuest")
+  sourceBar           CustomBar?          @relation("BarConversion", fields: [sourceBarId], references: [id], onDelete: SetNull)
+  questsFromBar       CustomBar[]         @relation("BarConversion")
+  questProposals      QuestProposal[]
 
   @@map("custom_bars")
+}
+
+model QuestProposal {
+  id                    String   @id @default(cuid())
+  barId                 String
+  campaignRef           String?  // e.g. bruised-banana; from BAR or context
+  playerId              String
+  title                 String
+  description           String   @db.Text
+  domain                String?  // allyship domain: GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  questType             String?  // resource | coordination | awareness | action | reflection
+  completionConditions  String   @default("[]") // JSON array
+  emotionalAlchemy      String   @default("{}") // JSON: { status, moveId, moveName, prompt, completionReflection }
+  reviewStatus          String   @default("pending") // pending | approved | rejected | deferred
+  confidenceScore      Float    @default(0)
+  publishedQuestId      String?  // set when published; links to created CustomBar
+  createdAt             DateTime @default(now())
+
+  bar     CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  player  Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([barId])
+  @@index([reviewStatus])
+  @@index([campaignRef, reviewStatus])
+  @@map("quest_proposals")
 }
 
 model PlayerBar {
@@ -625,6 +655,7 @@ model TwineStory {
   parsedJson  String         @default("{}")
   irDraft     String?        // JSON: IR story nodes for authoring; compile to .twee on publish
   isPublished Boolean        @default(false)
+  isTemplate  Boolean        @default(false)  // Mark as template; can clone to create new story
   createdById String
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt

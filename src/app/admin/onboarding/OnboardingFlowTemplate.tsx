@@ -52,11 +52,14 @@ function NodeRow({
   node,
   indent = false,
   onClick,
+  displayLabel,
 }: {
   node: FlowNode
   indent?: boolean
   onClick?: () => void
+  displayLabel?: string
 }) {
+  const label = displayLabel ?? node.id
   return (
     <div
       className={`relative pl-10 ${indent ? 'pl-6' : ''} ${onClick ? 'cursor-pointer hover:bg-zinc-800/50 -mx-2 px-2 py-1 rounded-lg transition' : ''}`}
@@ -66,7 +69,7 @@ function NodeRow({
       <div className="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-indigo-500 border-4 border-zinc-950" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h4 className="text-white font-bold truncate">{node.id}</h4>
+          <h4 className="text-white font-bold truncate">{label}</h4>
           <span className="text-[10px] px-2 py-0.5 bg-emerald-900/30 text-emerald-400 font-bold rounded-md">
             {node.type.toUpperCase()}
           </span>
@@ -192,6 +195,7 @@ export function OnboardingFlowTemplate() {
                     <p className="text-zinc-600 text-[10px] mb-1">→ converges to</p>
                     <NodeRow
                       node={item.convergence}
+                      displayLabel="Convergence"
                       onClick={() => setEditPassageId(item.convergence.id)}
                     />
                   </div>

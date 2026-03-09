@@ -94,6 +94,15 @@ export interface QuestCompileInput {
   spineLength?: 'short' | 'full'
   /** Altitude Map order: gapIndex -> ordered depth node ids. Overrides default face order. */
   depthBranchOrder?: Record<number, string[]>
+  /** Per-node choice overrides (choiceType, enabledFaces, enabledHorizontal, obstacleActions). Merged into generated nodes. */
+  nodeOverrides?: Record<string, NodeChoiceOverride>
+}
+
+export interface NodeChoiceOverride {
+  choiceType?: 'altitudinal' | 'horizontal'
+  enabledFaces?: GameMasterFace[]
+  enabledHorizontal?: PersonalMoveType[]
+  obstacleActions?: Record<string, string>
 }
 
 export interface LoreGate {

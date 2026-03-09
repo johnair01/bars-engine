@@ -9,8 +9,9 @@ import { getCurrentPlayer } from '@/lib/auth'
  * Used when testers report issues during verification quests.
  * Writes to .feedback/cert_feedback.jsonl for agents/developers to triage.
  *
- * FR1 (quest-grammar-cert-feedback): MUST NOT call revalidatePath or router.refresh.
- * Callers (TwineQuestModal, PassageRenderer) use skipRevalidate when on FEEDBACK.
+ * @deprecated Prefer POST /api/feedback/cert (API-first, no server action revalidation).
+ * TwineQuestModal and PassageRenderer now use fetch() to avoid kick-to-dashboard.
+ * Kept for backward compatibility if other callers exist.
  */
 export async function logCertificationFeedback(
     questId: string,

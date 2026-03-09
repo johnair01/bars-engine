@@ -18,11 +18,37 @@ import {
   MOVE_OPTIONS,
   Q3_SEP,
 } from '@/lib/quest-grammar'
-import type { UnpackingAnswers, SegmentVariant, SerializableQuestPacket } from '@/lib/quest-grammar'
+import type {
+  UnpackingAnswers,
+  SegmentVariant,
+  SerializableQuestPacket,
+  NodeChoiceOverride,
+} from '@/lib/quest-grammar'
 import type { QuestModel } from './UnpackingForm'
 import { loadPersistedFlowState, savePersistedFlowState, clearPersistedFlowState } from './useGenerationFlowState'
 
 const FACE_OPTIONS = Object.keys(FACE_SENTENCES) as (keyof typeof FACE_SENTENCES)[]
+
+function extractNodeOverrides(packet: SerializableQuestPacket): Record<string, NodeChoiceOverride> | undefined {
+  const overrides: Record<string, NodeChoiceOverride> = {}
+  for (const n of packet.nodes) {
+    if (
+      n.choiceType ||
+      (n.enabledFaces?.length ?? 0) > 0 ||
+      (n.enabledHorizontal?.length ?? 0) > 0 ||
+      (n.obstacleActions && Object.keys(n.obstacleActions).length > 0)
+    ) {
+      overrides[n.id] = {}
+      if (n.choiceType) overrides[n.id].choiceType = n.choiceType
+      if (n.enabledFaces?.length) overrides[n.id].enabledFaces = n.enabledFaces
+      if (n.enabledHorizontal?.length) overrides[n.id].enabledHorizontal = n.enabledHorizontal
+      if (n.obstacleActions && Object.keys(n.obstacleActions).length > 0) {
+        overrides[n.id].obstacleActions = n.obstacleActions
+      }
+    }
+  }
+  return Object.keys(overrides).length ? overrides : undefined
+}
 
 type PlaybookItem = { id: string; name: string }
 type NationItem = { id: string; name: string }
@@ -727,6 +753,7 @@ export function GenerationFlow({
             accepted={accepted}
             generationCount={generationCount}
             isRegenerating={isRegenerating}
+            onPacketChange={(updated) => setPreview(updated)}
             onAccept={() => setAccepted(true)}
             onReset={() => {
               clearPersistedFlowState()
@@ -775,6 +802,8 @@ export function GenerationFlow({
                   expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
                   playerPOV: hasPlayerPOV ? playerPOV : undefined,
                   adminFeedback: feedback,
+                  nodeOverrides: extractNodeOverrides(preview),
+                  depthBranchOrder: preview.depthBranchOrder,
                 })
                 if ('error' in result) {
                   setError(result.error)

@@ -66,4 +66,5 @@ export type {
   MoveMap,
   ActionType,
   IChingContext,
+  NodeChoiceOverride,
 } from './types'

@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useEffect, useCallback, useRef } from 'react'
 import { advanceRun, revertRun, getOrCreateRun, getTwineStoryForQuest, completeTwineRunForQuest } from '@/actions/twine'
-import { logCertificationFeedback } from '@/actions/certification-feedback'
 import { getWorldData } from '@/actions/onboarding'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -144,8 +143,8 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         setEmitted([])
         startTransition(async () => {
             const result = await advanceRun(twineStoryId, targetPassageName, questId, undefined, threadId, true)
-            if (result.error) {
-                setError(result.error)
+            if ('error' in result) {
+                setError(result.error ?? null)
             } else {
                 setCurrentPassageName(targetPassageName)
                 setVisited(prev => [...prev, targetPassageName])
@@ -201,17 +200,27 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
         setError(null)
         setFeedbackPending(true)
         const feedbackSourceStep = visited.length >= 2 ? visited[visited.length - 2] : currentPassageName ?? 'FEEDBACK'
-        const result = await logCertificationFeedback(questId, feedbackSourceStep, feedbackText.trim())
-        setFeedbackPending(false)
-        if (result.error) {
-            setError(result.error)
-        } else {
-            setFeedbackSubmitted(true)
-            try {
-                if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
-            } catch {
-                /* ignore */
+        try {
+            const res = await fetch('/api/feedback/cert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questId, passageName: feedbackSourceStep, feedback: feedbackText.trim() })
+            })
+            const data = (await res.json()) as { success?: boolean; error?: string }
+            if (!res.ok) {
+                setError(data.error ?? 'Failed to submit feedback')
+            } else {
+                setFeedbackSubmitted(true)
+                try {
+                    if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
+                } catch {
+                    /* ignore */
+                }
             }
+        } catch {
+            setError('Failed to submit feedback')
+        } finally {
+            setFeedbackPending(false)
         }
     }
 

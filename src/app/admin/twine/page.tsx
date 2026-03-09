@@ -2,9 +2,27 @@ import { listAllStories } from '@/actions/twine'
 import Link from 'next/link'
 import { TwineUploadForm } from './TwineUploadForm'
 import { PublishToggle } from './PublishToggle'
+import { TemplateToggle } from './TemplateToggle'
+import { CreateFromTemplateForm } from './CreateFromTemplateForm'
+import { TwineStoryFilters } from './TwineStoryFilters'
+import { Suspense } from 'react'
 
-export default async function AdminTwinePage() {
-    const stories = await listAllStories()
+export default async function AdminTwinePage({
+    searchParams
+}: {
+    searchParams: Promise<{ status?: string; search?: string }>
+}) {
+    const params = await searchParams
+    const status = params.status ?? 'all'
+    const search = (params.search ?? '').trim().toLowerCase()
+
+    const allStories = await listAllStories()
+    const stories = allStories.filter((s) => {
+        if (status === 'published' && !s.isPublished) return false
+        if (status === 'draft' && s.isPublished) return false
+        if (search && !s.title.toLowerCase().includes(search)) return false
+        return true
+    })
 
     return (
         <div className="space-y-8">
@@ -19,11 +37,17 @@ export default async function AdminTwinePage() {
             <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
                 <h2 className="text-lg font-bold text-white mb-4">Upload New Story</h2>
                 <TwineUploadForm />
+                <CreateFromTemplateForm templates={allStories.filter((s) => s.isTemplate).map((s) => ({ id: s.id, title: s.title }))} />
             </section>
 
             {/* Stories List */}
             <section>
-                <h2 className="text-lg font-bold text-white mb-4">All Stories ({stories.length})</h2>
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <h2 className="text-lg font-bold text-white">Stories ({stories.length})</h2>
+                    <Suspense fallback={null}>
+                        <TwineStoryFilters />
+                    </Suspense>
+                </div>
                 {stories.length === 0 ? (
                     <p className="text-zinc-500 text-sm">No stories uploaded yet.</p>
                 ) : (
@@ -42,6 +66,7 @@ export default async function AdminTwinePage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
+                                    <TemplateToggle storyId={story.id} isTemplate={story.isTemplate} />
                                     <PublishToggle storyId={story.id} isPublished={story.isPublished} />
                                     <Link
                                         href={`/admin/twine/${story.id}/ir`}

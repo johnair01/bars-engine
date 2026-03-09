@@ -28,7 +28,8 @@ const CERT_QUEST_IDS = [
     'cert-aid-decline-fork-v1',
     'cert-starter-quest-generator-v1',
     'cert-admin-onboarding-flow-api-v1',
-    'cert-onboarding-flow-completion-v1'
+    'cert-onboarding-flow-completion-v1',
+    'cert-twine-authoring-ir-v1'
 ]
 
 async function seed() {
@@ -2904,6 +2905,48 @@ async function seed() {
         },
     })
     console.log(`✅ Quest seeded: cert-onboarding-flow-completion-v1`)
+
+    // cert-twine-authoring-ir-v1
+    const twineIrSlug = 'cert-twine-authoring-ir-v1'
+    const twineIrPassages = [
+        { name: 'START', pid: '1', text: 'Verify the Twine Authoring IR: create IR nodes, validate, compile to .twee, publish to TwineStory, and play the story. Complete each step in order.', cleanText: 'Verify Twine Authoring IR.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Open IR editor\n\n[Open Admin → Twine Stories](/admin/twine). Select any story and click **Edit IR**. Confirm the IR authoring page loads with story outline, node editor, and Compile/Publish buttons.', cleanText: 'Open IR editor.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Add or edit IR nodes\n\nAdd a node (+ Informational or + Choice Node). Edit node_id, body, choices (for choice_node), and emits. Save Draft.', cleanText: 'Add or edit IR nodes.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Validate and compile\n\nClick **Compile**. If there are errors (e.g. missing target), fix them. Confirm you receive valid .twee in the preview.', cleanText: 'Validate and compile.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Publish and play\n\nClick **Publish**. Then play the story (from Twine Stories list or campaign). Confirm the content matches what you authored in IR.', cleanText: 'Publish and play.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '6', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '7', text: 'Twine Authoring IR verified. IR nodes compile to .twee, publish to TwineStory, and play correctly. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] },
+    ]
+    const twineIrStory = await db.twineStory.upsert({
+        where: { slug: twineIrSlug },
+        update: { title: 'Certification: Twine Authoring IR V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: twineIrPassages }), isPublished: true },
+        create: {
+            title: 'Certification: Twine Authoring IR V1',
+            slug: twineIrSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Twine Authoring IR certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: twineIrPassages }),
+            isPublished: true,
+            createdById,
+        },
+    })
+    await db.customBar.upsert({
+        where: { id: twineIrSlug },
+        update: { title: 'Certification: Twine Authoring IR V1', description: 'Verify IR authoring: validate, compile, publish, play.', twineStoryId: twineIrStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/twine-authoring-ir/spec.md' },
+        create: {
+            id: twineIrSlug,
+            title: 'Certification: Twine Authoring IR V1',
+            description: 'Verify IR authoring: validate, compile, publish, play.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: twineIrStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/twine-authoring-ir/spec.md',
+        },
+    })
+    console.log(`✅ Quest seeded: cert-twine-authoring-ir-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

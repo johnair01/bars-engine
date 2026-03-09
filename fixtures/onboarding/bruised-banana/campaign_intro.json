@@ -1,0 +1,68 @@
+{
+  "flow_id": "bb_campaign_intro_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "Arrival",
+  "nodes": [
+    {
+      "id": "Arrival",
+      "type": "introduction",
+      "copy": "You arrive at the Bruised Banana. A quiet house in Portland where something unusual is underway.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["orientation_viewed"],
+          "next_node_id": "The Work",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "The Work",
+      "type": "prompt",
+      "copy": "The work happening here began as a book called ''Mastering the Game of Allyship''.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["prompt_viewed"],
+          "next_node_id": "The Invitation",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "The Invitation",
+      "type": "prompt",
+      "copy": "You've arrived while this next chapter is beginning. How does this land for you?",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["observe"],
+          "emits": ["choice_selected"],
+          "next_node_id": "Campaign Intro Complete",
+          "label": "This sounds exciting."
+        }
+      ]
+    },
+    {
+      "id": "Campaign Intro Complete",
+      "type": "completion",
+      "copy": "Welcome to the campaign.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "Campaign Intro Complete"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "prompt_viewed",
+    "choice_selected",
+    "quest_completed"
+  ]
+}

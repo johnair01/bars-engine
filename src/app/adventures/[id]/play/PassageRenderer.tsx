@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import type { ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from '@/components/onboarding/OnboardingRecommendation'
 import { QuestInputs } from '@/components/QuestInputs'
-import { logCertificationFeedback } from '@/actions/certification-feedback'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { Avatar } from '@/components/Avatar'
 
@@ -52,9 +51,16 @@ export function PassageRenderer({
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
     const [feedbackPending, setFeedbackPending] = useState(false)
     const [slideIndex, setSlideIndex] = useState(0)
+    const [overridePassage, setOverridePassage] = useState<ParsedPassage | null>(null)
+    const [overrideVisited, setOverrideVisited] = useState<string[] | null>(null)
     const router = useRouter()
 
-    const isFeedbackPassage = passage.name === 'FEEDBACK' || (passage.tags && passage.tags.includes('feedback'))
+    const displayPassage = overridePassage ?? passage
+    const isFeedbackPassage = displayPassage.name === 'FEEDBACK' || (displayPassage.tags && displayPassage.tags.includes('feedback'))
+    const effectiveFeedbackSourceStep =
+        isFeedbackPassage && overrideVisited && overrideVisited.length >= 2
+            ? overrideVisited[overrideVisited.length - 2]
+            : feedbackSourceStep
     const prevPassageRef = useRef<string | null>(null)
     const feedbackStorageKey = questId ? `cert-feedback-${questId}` : null
 
@@ -85,13 +91,13 @@ export function PassageRenderer({
                 setFeedbackText('')
             }
         }
-        prevPassageRef.current = passage.name
-    }, [passage.name, isFeedbackPassage, feedbackStorageKey])
+        prevPassageRef.current = displayPassage.name
+    }, [displayPassage.name, isFeedbackPassage, feedbackStorageKey])
 
     // Reset slide index when passage changes
     useEffect(() => {
         setSlideIndex(0)
-    }, [passage.name])
+    }, [displayPassage.name])
 
     // Parse inputs safely
     let parsedInputs: any[] = []
@@ -167,14 +173,15 @@ export function PassageRenderer({
         startTransition(async () => {
             const skipRevalidate = targetPassageName === 'FEEDBACK'
             const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId, skipRevalidate)
-            if (result.error) {
-                setError(result.error)
+            if ('error' in result) {
+                setError(result.error ?? null)
             } else {
                 if (result.emitted && result.emitted.length > 0) {
                     setEmitted(result.emitted)
                 }
                 if (result.questCompleted) {
-                    // Quest auto-completed! Redirect after brief pause
+                    setOverridePassage(null)
+                    setOverrideVisited(null)
                     setTimeout(() => {
                         if (result.redirect) {
                             router.push(result.redirect)
@@ -185,8 +192,15 @@ export function PassageRenderer({
                         }
                     }, 1500)
                 } else if (result.redirect) {
+                    setOverridePassage(null)
+                    setOverrideVisited(null)
                     router.push(result.redirect)
+                } else if (targetPassageName === 'FEEDBACK' && result.passage) {
+                    setOverridePassage(result.passage as ParsedPassage)
+                    if (result.visited) setOverrideVisited(result.visited)
+                    // Skip router.refresh() — prevents kick-to-dashboard (report-feedback-stability)
                 } else {
+                    setOverridePassage(null)
                     router.refresh()
                 }
             }
@@ -196,56 +210,76 @@ export function PassageRenderer({
     function handleBack() {
         setError(null)
         startTransition(async () => {
-            const skipRevalidate = passage.name === 'FEEDBACK'
+            const skipRevalidate = displayPassage.name === 'FEEDBACK'
             const result = await revertRun(storyId, questId, undefined, skipRevalidate)
-            if (result.error) {
-                setError(result.error)
+            if ('error' in result) {
+                setError(result.error ?? null)
+            } else if (skipRevalidate && result.passage) {
+                setOverridePassage(result.passage as ParsedPassage)
+                if (result.visited) setOverrideVisited(result.visited)
+                // Skip router.refresh() — prevents kick-to-dashboard (report-feedback-stability)
             } else {
+                setOverridePassage(null)
+                setOverrideVisited(null)
                 router.refresh()
             }
         })
     }
 
-    // Check for inputs tag
-    const showInputs = hasActualInputs && (isEnd || (passage.tags && passage.tags.includes('inputs')))
+    const displayIsEnd = !displayPassage.links || displayPassage.links.length === 0
+    const showInputs = hasActualInputs && (displayIsEnd || (displayPassage.tags && displayPassage.tags.includes('inputs')))
 
     // Check for onboarding recommendation bindings if we are at an END passage
-    const recommendationBinding = isEnd ? bindings.find(b =>
+    const recommendationBinding = displayIsEnd ? bindings.find(b =>
         (b.actionType === 'SET_NATION' || b.actionType === 'SET_ARCHETYPE') &&
-        b.scopeId === passage.name
+        b.scopeId === displayPassage.name
     ) : null
 
     const recommendationPayload = recommendationBinding ? JSON.parse(recommendationBinding.payload) : null
 
-    const rawContent = (passage as { text?: string }).text ?? passage.cleanText
+    const rawContent = (displayPassage as { text?: string }).text ?? displayPassage.cleanText
     const slides = chunkIntoSlides(rawContent)
     const useSlideMode = slides.length > 1
     const displayContent = useSlideMode ? slides[slideIndex] : rawContent
-    const primaryLink = passage.links?.find((l) => l.target !== 'FEEDBACK')
-    const secondaryLinks = useSlideMode && primaryLink ? passage.links?.filter((l) => l.target === 'FEEDBACK') ?? [] : passage.links ?? []
+    const primaryLink = displayPassage.links?.find((l) => l.target !== 'FEEDBACK')
+    const secondaryLinks = useSlideMode && primaryLink ? displayPassage.links?.filter((l) => l.target === 'FEEDBACK') ?? [] : displayPassage.links ?? []
 
     async function handleFeedbackSubmit() {
         if (!questId || !feedbackText.trim()) return
         setError(null)
         setFeedbackPending(true)
-        const result = await logCertificationFeedback(questId, feedbackSourceStep ?? passage.name, feedbackText.trim())
-        setFeedbackPending(false)
-        if (result.error) {
-            setError(result.error)
-        } else {
-            setFeedbackSubmitted(true)
-            try {
-                if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
-            } catch {
-                /* ignore */
+        try {
+            const res = await fetch('/api/feedback/cert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questId,
+                    passageName: effectiveFeedbackSourceStep ?? displayPassage.name,
+                    feedback: feedbackText.trim()
+                })
+            })
+            const data = (await res.json()) as { success?: boolean; error?: string }
+            if (!res.ok) {
+                setError(data.error ?? 'Failed to submit feedback')
+            } else {
+                setFeedbackSubmitted(true)
+                try {
+                    if (feedbackStorageKey) sessionStorage.removeItem(feedbackStorageKey)
+                } catch {
+                    /* ignore */
+                }
             }
+        } catch {
+            setError('Failed to submit feedback')
+        } finally {
+            setFeedbackPending(false)
         }
     }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Passage name */}
-            <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{passage.name}</div>
+            <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{displayPassage.name}</div>
 
             {/* Feedback passage (Report Issue branch) */}
             {isFeedbackPassage && questId ? (
@@ -260,7 +294,7 @@ export function PassageRenderer({
                                 )
                             }}
                         >
-                            {(passage as { text?: string }).text ?? passage.cleanText}
+                            {(displayPassage as { text?: string }).text ?? displayPassage.cleanText}
                         </ReactMarkdown>
                     </div>
                     {feedbackSubmitted ? (
@@ -354,11 +388,11 @@ export function PassageRenderer({
                                     )
                                 }}
                             >
-                                {(passage as { text?: string }).text ?? passage.cleanText}
+                                {(displayPassage as { text?: string }).text ?? displayPassage.cleanText}
                             </ReactMarkdown>
                         </div>
                         <div className="space-y-3">
-                            {passage.links?.map((link, i) => (
+                            {displayPassage.links?.map((link, i) => (
                                 <button
                                     key={i}
                                     onClick={() => handleChoice(link.target)}
@@ -417,7 +451,7 @@ export function PassageRenderer({
                                                 if (slideIndex < slides.length - 1) {
                                                     setSlideIndex((i) => i + 1)
                                                 } else {
-                                                    const primaryLink = passage.links.find((l) => l.target !== 'FEEDBACK')
+                                                    const primaryLink = displayPassage.links.find((l) => l.target !== 'FEEDBACK')
                                                     if (primaryLink) handleChoice(primaryLink.target)
                                                 }
                                             }}
@@ -474,7 +508,7 @@ export function PassageRenderer({
                                 values={inputValues}
                                 onChange={(key, val) => setInputValues(v => ({ ...v, [key]: val }))}
                             />
-                            {!isEnd && (
+                            {!displayIsEnd && (
                                 <button
                                     onClick={handleEnd}
                                     disabled={isPending}
@@ -487,7 +521,7 @@ export function PassageRenderer({
                     )}
 
                     {/* Choices or End View */}
-                    {isEnd ? (
+                    {displayIsEnd ? (
                         <div className="text-center space-y-6 pt-4 border-t border-zinc-800/50">
                             <div className="space-y-4">
                                 {isSuccess && (

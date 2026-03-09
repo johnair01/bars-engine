@@ -45,6 +45,29 @@ async function requireAdmin() {
     return playerId
 }
 
+/** Serialize passage for client (advanceRun/revertRun return). Canonical shape for PassageRenderer. */
+function serializePassageForClient(p: {
+    name?: string
+    pid?: string
+    text?: string
+    cleanText?: string
+    links?: { label?: string; target?: string; name?: string; link?: string }[]
+    tags?: string[]
+}) {
+    const links = (p.links ?? []).map((l) => ({
+        label: l.label ?? l.name ?? l.target ?? '',
+        target: l.target ?? l.link ?? '',
+    }))
+    return {
+        pid: p.pid ?? p.name ?? '',
+        name: p.name ?? '',
+        text: p.text ?? p.cleanText ?? '',
+        cleanText: p.cleanText ?? p.text ?? '',
+        links,
+        tags: p.tags ?? [],
+    }
+}
+
 // ---------------------------------------------------------------------------
 // ADMIN: Upload Twine Story
 // ---------------------------------------------------------------------------
@@ -108,6 +131,67 @@ export async function togglePublishStory(storyId: string) {
         revalidatePath('/admin/twine')
         revalidatePath('/adventures')
         return { success: true, isPublished: !story.isPublished }
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Failed'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: Toggle template flag
+// ---------------------------------------------------------------------------
+
+export async function toggleTemplateStory(storyId: string) {
+    try {
+        await requireAdmin()
+        const story = await db.twineStory.findUnique({ where: { id: storyId } })
+        if (!story) return { error: 'Story not found' }
+
+        await db.twineStory.update({
+            where: { id: storyId },
+            data: { isTemplate: !story.isTemplate }
+        })
+
+        revalidatePath('/admin/twine')
+        return { success: true, isTemplate: !story.isTemplate }
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Failed'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN: Create story from template (clone structure)
+// ---------------------------------------------------------------------------
+
+export async function createStoryFromTemplate(templateId: string, newTitle?: string): Promise<{ success?: boolean; storyId?: string; error?: string }> {
+    try {
+        const adminId = await requireAdmin()
+        const template = await db.twineStory.findUnique({ where: { id: templateId } })
+        if (!template) return { error: 'Template not found' }
+        if (!template.isTemplate) return { error: 'Story is not marked as template' }
+
+        const baseTitle = newTitle?.trim() || `${template.title} (copy)`
+        const slug = baseTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        const existing = slug ? await db.twineStory.findUnique({ where: { slug } }) : null
+        const finalSlug = existing ? `${slug}-${Date.now()}` : slug
+
+        const story = await db.twineStory.create({
+            data: {
+                title: baseTitle,
+                slug: finalSlug || null,
+                sourceType: template.sourceType,
+                sourceText: template.sourceText,
+                parsedJson: template.parsedJson,
+                irDraft: template.irDraft,
+                isPublished: false,
+                isTemplate: false,
+                createdById: adminId,
+            }
+        })
+
+        revalidatePath('/admin/twine')
+        return { success: true, storyId: story.id }
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Failed'
         return { error: msg }
@@ -542,8 +626,8 @@ export async function advanceRun(
         }
     })
 
-    // Execute bindings for this passage
-    const bindingResult = await executeBindingsForPassage(storyId, targetPassageName, run.id, playerId)
+    // Execute bindings for this passage (skip revalidate when advancing to FEEDBACK — prevents kick-to-dashboard)
+    const bindingResult = await executeBindingsForPassage(storyId, targetPassageName, run.id, playerId, skipRevalidate || targetPassageName === 'FEEDBACK')
 
     // Check for end state: explicit END_ prefix OR passage has no outgoing links (dead end)
     // Campaign quests cannot be completed via Twine end passages; they must be completed on the gameboard
@@ -565,7 +649,20 @@ export async function advanceRun(
             }
         } catch (e) { }
     }
-    return { success: true, emitted: bindingResult, questCompleted, redirect: null as string | null }
+
+    // API-first: return passage data when advancing to FEEDBACK so client can render without router.refresh()
+    const passage =
+        targetPassageName === 'FEEDBACK'
+            ? serializePassageForClient(targetPassage as { name?: string; pid?: string; text?: string; cleanText?: string; links?: { label?: string; target?: string; name?: string; link?: string }[]; tags?: string[] })
+            : undefined
+
+    return {
+        success: true,
+        emitted: bindingResult,
+        questCompleted,
+        redirect: null as string | null,
+        ...(passage && { currentPassageId: targetPassageName, visited, passage }),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -616,7 +713,25 @@ export async function revertRun(storyId: string, questId?: string | null, player
         } catch (e) { }
     }
 
-    return { success: true, currentPassageId: prevPassageName }
+    // API-first: return passage data when reverting from FEEDBACK so client can render without router.refresh()
+    let passage: ReturnType<typeof serializePassageForClient> | undefined
+    if (currentBeforeRevert === 'FEEDBACK') {
+        const story = await db.twineStory.findUnique({ where: { id: storyId } })
+        if (story) {
+            const parsed = JSON.parse(story.parsedJson) as { passages: { name?: string; pid?: string; text?: string; cleanText?: string; links?: { label?: string; target?: string; name?: string; link?: string }[]; tags?: string[] }[] }
+            const prevPassage = parsed.passages?.find((p) => p.name === prevPassageName || p.pid === prevPassageName)
+            if (prevPassage) {
+                passage = serializePassageForClient(prevPassage)
+            }
+        }
+    }
+
+    return {
+        success: true,
+        currentPassageId: prevPassageName,
+        visited,
+        ...(passage && { passage }),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -749,7 +864,8 @@ async function executeBindingsForPassage(
     storyId: string,
     passageName: string,
     runId: string,
-    playerId: string
+    playerId: string,
+    skipRevalidate?: boolean
 ): Promise<string[]> {
     const emitted: string[] = []
 
@@ -908,7 +1024,9 @@ async function executeBindingsForPassage(
                 ...(diagDirty ? { diagnosticState: serializeDiagnosticState(diagState) } : {}),
             }
         })
-        try { revalidatePath('/') } catch (e) { }
+        if (!skipRevalidate) {
+            try { revalidatePath('/') } catch (e) { }
+        }
     }
 
     return emitted

@@ -21,21 +21,21 @@
 
 ## Phase 3: Per-node choice type
 
-- [ ] Add `choiceType`, `enabledFaces`, `enabledHorizontal`, `obstacleActions` to QuestNode type
-- [ ] Update compileQuestCore to respect choiceType and enabled sets
-- [ ] Add per-node choice config UI in QuestOutlineReview (toggle, multi-select, per-choice text)
+- [x] Add `choiceType`, `enabledFaces`, `enabledHorizontal`, `obstacleActions` to QuestNode type
+- [x] Update compileQuestCore to respect choiceType and enabled sets
+- [x] Add per-node choice config UI in QuestOutlineReview (toggle, multi-select, per-choice text)
 
 ## Phase 4: Depth limit
 
 - [x] Add `branchDepth` to QuestNode (depth nodes get branchDepth: 1)
-- [ ] Enforce branchDepth <= 3 in compileQuestCore and admin editor
-- [ ] At depth 3, restrict choices to spine targets only
-- [ ] Admin UI: warn when adding branch from depth-2 node
+- [x] Enforce branchDepth <= 3 in compileQuestCore and admin editor
+- [x] At depth 3, restrict choices to spine targets only
+- [x] Admin UI: warn when adding branch from depth-2 node
 
 ## Verification
 
-- [ ] `npm run build` passes
-- [ ] `npm run check` passes
+- [x] `npm run build` passes
+- [x] `npm run check` passes
 - [ ] Manual: Create quest with cast_iching node; cast; verify hexagram influences next node
 - [ ] Manual: Reorder Altitude Map; verify order persists in packet
 - [ ] Manual: Set choice type per node; verify choices match

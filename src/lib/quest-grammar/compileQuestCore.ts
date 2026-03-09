@@ -26,8 +26,10 @@ import type {
   PersonalMoveType,
   ActionType,
   GameMasterFace,
+  NodeChoiceOverride,
 } from './types'
 import { GAME_MASTER_FACES, FACE_META } from './types'
+import { getMovesForWaveStage } from './move-assignment'
 import { getFacesForHexagram } from './iching-faces'
 
 /** Campaign → action type for the commitment moment. Default: donation (fundraiser). */
@@ -58,6 +60,15 @@ const KOTTER_BEATS: KotterBeatType[] = [
   'build_on',
   'anchor',
 ]
+
+const WAVE_LABELS: Record<PersonalMoveType, string> = {
+  wakeUp: 'Wake Up',
+  cleanUp: 'Clean Up',
+  growUp: 'Grow Up',
+  showUp: 'Show Up',
+}
+
+const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
 
 const CHANNEL_KEYWORDS: Record<EmotionalChannel, string[]> = {
   Fear: ['anxious', 'anxiety', 'scared', 'scary', 'worried', 'worry', 'afraid', 'fear', 'nervous'],
@@ -271,21 +282,60 @@ function generateChoices(
   index: number,
   nodeIds: string[],
   privilegeContext?: { nationElement: ElementKey; playbookWave: PersonalMoveType },
-  depthBranchIds?: string[]
+  depthBranchIds?: string[],
+  nodeConfig?: NodeChoiceOverride,
+  depthBranchOrder?: Record<number, string[]>
 ): Choice[] {
   const isFinal = beatType === 'consequence' || beatType === 'anchor'
   if (isFinal) {
     return [{ text: 'Create my account', targetId: 'signup' }]
   }
   if (index < nodeIds.length - 1) {
+    const choiceType = nodeConfig?.choiceType ?? 'altitudinal'
+
+    // Horizontal: 4 WAVE moves as choices, all targeting next spine (no depth branches)
+    if (choiceType === 'horizontal') {
+      const enabled = nodeConfig?.enabledHorizontal?.length
+        ? nodeConfig.enabledHorizontal
+        : ALL_WAVE_MOVES
+      const targetId = nodeIds[index + 1]!
+      return enabled.map((wave) => {
+        const moves = getMovesForWaveStage(wave)
+        const move = moves[0]
+        const label = WAVE_LABELS[wave]
+        const obstacleText = nodeConfig?.obstacleActions?.[wave]
+        return {
+          text: obstacleText ? `${label}: ${obstacleText}` : label,
+          targetId,
+          moveId: move?.id,
+        }
+      })
+    }
+
+    // Altitudinal: depth branches (6 faces) or privilegeContext or default
     if (depthBranchIds && depthBranchIds.length > 0) {
-      return depthBranchIds.map((targetId, i) => {
-        const face = pickFacesForGap(index)[i]
+      const faces = pickFacesForGap(index, depthBranchOrder)
+      const enabledFaces = nodeConfig?.enabledFaces?.length
+        ? nodeConfig.enabledFaces
+        : faces
+      const filteredIds = depthBranchIds.filter((targetId) => {
+        const m = targetId.match(/^depth_\d+_(shaman|challenger|regent|architect|diplomat|sage)$/)
+        const face = m ? (m[1] as GameMasterFace) : null
+        return face && enabledFaces.includes(face)
+      })
+      return filteredIds.map((targetId) => {
+        const m = targetId.match(/^depth_\d+_(shaman|challenger|regent|architect|diplomat|sage)$/)
+        const face = m ? (m[1] as GameMasterFace) : null
         const meta = face ? FACE_META[face] : null
         const moves = face ? getMovesForLens(face) : []
         const move = moves[0]
+        const obstacleText = nodeConfig?.obstacleActions?.[targetId]
         return {
-          text: meta ? `${meta.label}: ${meta.role}` : targetId,
+          text: obstacleText
+            ? `${meta?.label ?? face}: ${obstacleText}`
+            : meta
+              ? `${meta.label}: ${meta.role}`
+              : targetId,
           targetId,
           moveId: move?.id,
         }
@@ -382,6 +432,8 @@ const EPIPHANY_SHORT_BEATS: EpiphanyBeatType[] = [
   'integration',
 ]
 
+const MAX_BRANCH_DEPTH = 3
+
 export function compileQuest(input: QuestCompileInput): QuestPacket {
   const {
     unpackingAnswers,
@@ -394,6 +446,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     spineLength = 'full',
     depthBranchOrder,
     ichingContext,
+    nodeOverrides,
   } = input
   const fullBeatTypes = questModel === 'communal' ? KOTTER_BEATS : EPIPHANY_BEATS
   const beatTypes =
@@ -424,13 +477,27 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     : []
 
   const spineNodes: QuestNode[] = beatTypes.map((beatType, index) => {
-    const id = nodeIds[index]
+    const id = nodeIds[index]!
+    const nodeConfig = nodeOverrides?.[id]
     const text =
       questModel === 'communal'
         ? generateKotterNodeText(beatType as KotterBeatType, signature, unpackingAnswers, alignedAction, segment, q3Display)
         : generateEpiphanyNodeText(beatType as EpiphanyBeatType, signature, unpackingAnswers, alignedAction, segment, q3Display)
-    const depthIds = index < nodeIds.length - 2 ? depthBranchIdsPerGap[index] : undefined
-    const choices = generateChoices(beatType, index, nodeIds, privilegeContext, depthIds)
+    const depthIds =
+      nodeConfig?.choiceType === 'horizontal'
+        ? undefined
+        : index < nodeIds.length - 2
+          ? depthBranchIdsPerGap[index]
+          : undefined
+    const choices = generateChoices(
+      beatType,
+      index,
+      nodeIds,
+      privilegeContext,
+      depthIds,
+      nodeConfig,
+      depthBranchOrder
+    )
     const wordCountEstimate = wordCount(text)
     const isActionNode = beatType === 'transcendence' || beatType === 'wins'
 
@@ -449,12 +516,27 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
       anchors: buildAnchors(beatType, index),
       isActionNode,
       ...(isActionNode && { actionType }),
+      branchDepth: 0,
+      ...(nodeConfig?.choiceType && { choiceType: nodeConfig.choiceType }),
+      ...(nodeConfig?.enabledFaces?.length && { enabledFaces: nodeConfig.enabledFaces }),
+      ...(nodeConfig?.enabledHorizontal?.length && { enabledHorizontal: nodeConfig.enabledHorizontal }),
+      ...(nodeConfig?.obstacleActions && Object.keys(nodeConfig.obstacleActions).length > 0 && {
+        obstacleActions: nodeConfig.obstacleActions,
+      }),
     }
     return node
   })
 
   const depthNodes = useDepthBranches ? generateDepthBranches(nodeIds, signature, questModel, depthBranchOrder) : []
   let nodes = [...spineNodes, ...depthNodes]
+
+  // Enforce branch depth limit (max 3 layers)
+  for (const n of nodes) {
+    const d = n.branchDepth ?? (n.depth ? 1 : 0)
+    if (d > MAX_BRANCH_DEPTH) {
+      throw new Error(`Branch depth ${d} exceeds max ${MAX_BRANCH_DEPTH} at node ${n.id}`)
+    }
+  }
 
   // Phase 3: When ichingContext present, inject lens-choice as first node.
   if (ichingContext) {

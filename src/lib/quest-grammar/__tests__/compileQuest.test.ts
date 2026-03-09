@@ -69,7 +69,8 @@ function testNodeCountAndBeats() {
   }
   const result = compileQuest(input)
 
-  assert(result.nodes.length === 6, 'Should have exactly 6 nodes')
+  const spineNodes = result.nodes.filter((n) => !n.depth)
+  assert(spineNodes.length === 6, 'Should have exactly 6 spine nodes')
   const beatOrder = [
     'orientation',
     'rising_engagement',
@@ -78,9 +79,9 @@ function testNodeCountAndBeats() {
     'transcendence',
     'consequence',
   ]
-  result.nodes.forEach((node, i) => {
-    assert(node.beatType === beatOrder[i], `Node ${i} should be ${beatOrder[i]}`)
-    assert(node.id === `node_${i}`, `Node ${i} should have id node_${i}`)
+  spineNodes.forEach((node, i) => {
+    assert(node.beatType === beatOrder[i], `Spine node ${i} should be ${beatOrder[i]}`)
+    assert(node.id === `node_${i}`, `Spine node ${i} should have id node_${i}`)
   })
 
   console.log('✅ node count and beat ordering')
@@ -94,14 +95,15 @@ function testConstraints() {
   }
   const result = compileQuest(input)
 
-  result.nodes.forEach((node, i) => {
-    assert(node.wordCountEstimate >= 10, `Node ${i} should have reasonable word count`)
+  const spineNodes = result.nodes.filter((n) => !n.depth)
+  spineNodes.forEach((node, i) => {
+    assert(node.wordCountEstimate >= 10, `Spine node ${i} should have reasonable word count`)
     if (i < 5) {
-      assert(node.choices.length >= 1, `Node ${i} should have at least 1 choice`)
+      assert(node.choices.length >= 1, `Spine node ${i} should have at least 1 choice`)
     }
     assert(
       !!(node.anchors.goal || node.anchors.identityCue || node.anchors.consequenceCue),
-      `Node ${i} should have at least one anchor`
+      `Spine node ${i} should have at least one anchor`
     )
   })
 
@@ -120,11 +122,13 @@ function testSegmentInvariant() {
     playerResult.signature.primaryChannel === sponsorResult.signature.primaryChannel,
     'Spine: primary channel should be same'
   )
+  const playerSpine = playerResult.nodes.filter((n) => !n.depth)
+  const sponsorSpine = sponsorResult.nodes.filter((n) => !n.depth)
   assert(
-    playerResult.nodes.length === sponsorResult.nodes.length,
+    playerSpine.length === sponsorSpine.length,
     'Spine: node count should be same'
   )
-  playerResult.nodes.forEach((node, i) => {
+  playerSpine.forEach((node, i) => {
     assert(
       node.beatType === sponsorResult.nodes[i].beatType,
       `Spine: beat type should match at ${i}`
@@ -136,7 +140,7 @@ function testSegmentInvariant() {
   })
 
   const playerText = playerResult.nodes[0].text
-  const sponsorText = sponsorResult.nodes[0].text
+  const sponsorText = sponsorSpine[0].text
   assert(playerText !== sponsorText, 'Framing should differ between player and sponsor')
   assert(
     playerText.includes('living world') || playerText.includes('participation'),
@@ -177,7 +181,8 @@ function testKotterCommunalModel() {
   }
   const result = compileQuest(input)
 
-  assert(result.nodes.length === 8, 'Communal model should have exactly 8 nodes')
+  const spineNodes = result.nodes.filter((n) => !n.depth)
+  assert(spineNodes.length === 8, 'Communal model should have exactly 8 spine nodes')
   const kotterOrder = [
     'urgency',
     'coalition',
@@ -188,9 +193,9 @@ function testKotterCommunalModel() {
     'build_on',
     'anchor',
   ]
-  result.nodes.forEach((node, i) => {
-    assert(node.beatType === kotterOrder[i], `Node ${i} should be ${kotterOrder[i]}`)
-    assert(node.id === `node_${i}`, `Node ${i} should have id node_${i}`)
+  spineNodes.forEach((node, i) => {
+    assert(node.beatType === kotterOrder[i], `Spine node ${i} should be ${kotterOrder[i]}`)
+    assert(node.id === `node_${i}`, `Spine node ${i} should have id node_${i}`)
   })
 
   const winsNode = result.nodes.find((n) => n.beatType === 'wins')

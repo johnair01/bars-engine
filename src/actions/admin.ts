@@ -626,9 +626,13 @@ export async function resetPlayerThreadProgress(playerId: string, threadId: stri
 
 export async function getAdminWorldData() {
     await checkAdmin()
+    const { CANONICAL_ARCHETYPE_NAMES } = await import('@/lib/canonical-archetypes')
     return Promise.all([
         db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
-        db.playbook.findMany({ orderBy: { name: 'asc' } })
+        db.playbook.findMany({
+            where: { name: { in: [...CANONICAL_ARCHETYPE_NAMES] } },
+            orderBy: { name: 'asc' },
+        }),
     ])
 }
 

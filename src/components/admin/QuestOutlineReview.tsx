@@ -1,8 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import type { SerializableQuestPacket } from '@/lib/quest-grammar/types'
-import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
+import type {
+  SerializableQuestPacket,
+  QuestNode,
+  GameMasterFace,
+  PersonalMoveType,
+  NodeChoiceOverride,
+} from '@/lib/quest-grammar/types'
+import { FACE_META, GAME_MASTER_FACES } from '@/lib/quest-grammar/types'
+
+const WAVE_LABELS: Record<PersonalMoveType, string> = {
+  wakeUp: 'Wake Up',
+  cleanUp: 'Clean Up',
+  growUp: 'Grow Up',
+  showUp: 'Show Up',
+}
 
 const BEAT_LABELS: Record<string, string> = {
   lens_choice: 'Lens choice',
@@ -30,8 +43,29 @@ interface QuestOutlineReviewProps {
   isRegenerating: boolean
   accepted: boolean
   generationCount: number
+  /** When provided, enables per-node choice config editing. Updates are applied to packet and passed back. */
+  onPacketChange?: (updated: SerializableQuestPacket) => void
   /** Render slot for post-accept actions (publish, export, etc.) */
   children?: React.ReactNode
+}
+
+const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
+
+function applyNodeOverride(
+  packet: SerializableQuestPacket,
+  nodeId: string,
+  override: Partial<NodeChoiceOverride>
+): SerializableQuestPacket {
+  const nodes = packet.nodes.map((n) => {
+    if (n.id !== nodeId) return n
+    const next: QuestNode = { ...n }
+    if (override.choiceType !== undefined) next.choiceType = override.choiceType
+    if (override.enabledFaces !== undefined) next.enabledFaces = override.enabledFaces
+    if (override.enabledHorizontal !== undefined) next.enabledHorizontal = override.enabledHorizontal
+    if (override.obstacleActions !== undefined) next.obstacleActions = override.obstacleActions
+    return next
+  })
+  return { ...packet, nodes }
 }
 
 export function QuestOutlineReview({
@@ -42,6 +76,7 @@ export function QuestOutlineReview({
   isRegenerating,
   accepted,
   generationCount,
+  onPacketChange,
   children,
 }: QuestOutlineReviewProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
@@ -237,6 +272,132 @@ export function QuestOutlineReview({
                       ))}
                     </div>
                   )}
+                  {/* Per-node choice config (spine only, has choices, not final) */}
+                  {onPacketChange &&
+                    !node.depth &&
+                    node.id !== 'lens_choice' &&
+                    node.choices.length > 0 &&
+                    node.beatType !== 'consequence' &&
+                    node.beatType !== 'anchor' && (
+                      <div className="mt-4 pt-3 border-t border-zinc-800/50 space-y-3">
+                        <p className="text-xs font-medium text-zinc-400">Choice type</p>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`choice-${node.id}`}
+                              checked={(node.choiceType ?? 'altitudinal') === 'altitudinal'}
+                              onChange={() =>
+                                onPacketChange(
+                                  applyNodeOverride(packet, node.id, {
+                                    choiceType: 'altitudinal',
+                                    enabledHorizontal: undefined,
+                                  })
+                                )
+                              }
+                              className="text-purple-500"
+                            />
+                            <span className="text-xs text-zinc-300">Altitudinal (6 faces)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`choice-${node.id}`}
+                              checked={node.choiceType === 'horizontal'}
+                              onChange={() =>
+                                onPacketChange(
+                                  applyNodeOverride(packet, node.id, {
+                                    choiceType: 'horizontal',
+                                    enabledFaces: undefined,
+                                  })
+                                )
+                              }
+                              className="text-purple-500"
+                            />
+                            <span className="text-xs text-zinc-300">Horizontal (4 WAVE moves)</span>
+                          </label>
+                        </div>
+                        {(node.choiceType ?? 'altitudinal') === 'altitudinal' && (
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Enabled faces</p>
+                            <div className="flex flex-wrap gap-2">
+                              {GAME_MASTER_FACES.map((face) => {
+                                const enabled = node.enabledFaces?.length
+                                  ? node.enabledFaces.includes(face)
+                                  : true
+                                return (
+                                  <label
+                                    key={face}
+                                    className="flex items-center gap-1.5 cursor-pointer text-xs"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={enabled}
+                                      onChange={() => {
+                                        const current = node.enabledFaces ?? GAME_MASTER_FACES
+                                        const next = enabled
+                                          ? current.filter((f) => f !== face)
+                                          : [...current, face]
+                                        onPacketChange(
+                                          applyNodeOverride(packet, node.id, {
+                                            enabledFaces: next.length ? next : undefined,
+                                          })
+                                        )
+                                      }}
+                                      className="rounded border-zinc-600 text-purple-500"
+                                    />
+                                    <span className={FACE_META[face]?.color ?? 'text-zinc-400'}>
+                                      {FACE_META[face]?.label ?? face}
+                                    </span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {node.choiceType === 'horizontal' && (
+                          <div>
+                            <p className="text-xs text-zinc-500 mb-1">Enabled WAVE moves</p>
+                            <div className="flex flex-wrap gap-2">
+                              {ALL_WAVE_MOVES.map((wave) => {
+                                const enabled = node.enabledHorizontal?.length
+                                  ? node.enabledHorizontal.includes(wave)
+                                  : true
+                                return (
+                                  <label
+                                    key={wave}
+                                    className="flex items-center gap-1.5 cursor-pointer text-xs"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={enabled}
+                                      onChange={() => {
+                                        const current = node.enabledHorizontal ?? ALL_WAVE_MOVES
+                                        const next = enabled
+                                          ? current.filter((w) => w !== wave)
+                                          : [...current, wave]
+                                        onPacketChange(
+                                          applyNodeOverride(packet, node.id, {
+                                            enabledHorizontal: next.length ? next : undefined,
+                                          })
+                                        )
+                                      }}
+                                      className="rounded border-zinc-600 text-purple-500"
+                                    />
+                                    <span className="text-zinc-400">{WAVE_LABELS[wave]}</span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {node.branchDepth !== undefined && node.branchDepth >= 2 && (
+                          <p className="text-xs text-amber-400">
+                            At depth {node.branchDepth}. Adding more branches may exceed the 3-layer limit.
+                          </p>
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
             </div>

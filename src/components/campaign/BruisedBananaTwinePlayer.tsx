@@ -160,39 +160,44 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                     return
                 }
                 setIsPending(true)
-                const payload = {
-                    title: barContent.slice(0, 40),
-                    content: barContent,
-                    rawSignal: barContent,
-                    lens: state.developmental_lens ?? state.gm ?? '',
-                    quadrant: state.intended_impact ?? '',
-                    campaignId: CAMPAIGN_ID,
+                try {
+                    const payload = {
+                        title: barContent.slice(0, 40),
+                        content: barContent,
+                        rawSignal: barContent,
+                        lens: state.developmental_lens ?? state.gm ?? '',
+                        quadrant: state.intended_impact ?? '',
+                        campaignId: CAMPAIGN_ID,
+                    }
+                    const result = await createOnboardingBar(payload)
+                    if (result && 'error' in result) {
+                        setError(result.error)
+                        return
+                    }
+                    if (result && 'pending' in result && result.pending) {
+                        setState((s) => ({
+                            ...s,
+                            barPublished: 'true',
+                            pendingBar: JSON.stringify({
+                                barContent,
+                                nation: state.nation,
+                                archetype: state.archetype,
+                                developmental_lens: state.developmental_lens,
+                                gm: state.gm,
+                                intended_impact: state.intended_impact,
+                                campaignId: CAMPAIGN_ID,
+                            }),
+                        }))
+                    } else if (result && 'barId' in result) {
+                        setState((s) => ({ ...s, barPublished: 'true' }))
+                    }
+                    logOnboardingEvent('bar_created', {})
+                    logOnboardingEvent('intended_impact_bar_attached', {})
+                } catch (e) {
+                    setError(e instanceof Error ? e.message : 'Failed to place BAR. Please try again.')
+                } finally {
+                    setIsPending(false)
                 }
-                const result = await createOnboardingBar(payload)
-                setIsPending(false)
-                if (result && 'error' in result) {
-                    setError(result.error)
-                    return
-                }
-                if (result && 'pending' in result && result.pending) {
-                    setState((s) => ({
-                        ...s,
-                        barPublished: 'true',
-                        pendingBar: JSON.stringify({
-                            barContent,
-                            nation: state.nation,
-                            archetype: state.archetype,
-                            developmental_lens: state.developmental_lens,
-                            gm: state.gm,
-                            intended_impact: state.intended_impact,
-                            campaignId: CAMPAIGN_ID,
-                        }),
-                    }))
-                } else if (result && 'barId' in result) {
-                    setState((s) => ({ ...s, barPublished: 'true' }))
-                }
-                logOnboardingEvent('bar_created', {})
-                logOnboardingEvent('intended_impact_bar_attached', {})
             }
 
             // External donate: intercept link click (handled in render)
@@ -212,36 +217,41 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                     return
                 }
                 setIsPending(true)
-                const payload = {
-                    title: refinedSignal.slice(0, 40),
-                    content: refinedSignal,
-                    rawSignal: state.rawSignal ?? refinedSignal,
-                    lens,
-                    quadrant,
-                    campaignId: CAMPAIGN_ID,
+                try {
+                    const payload = {
+                        title: refinedSignal.slice(0, 40),
+                        content: refinedSignal,
+                        rawSignal: state.rawSignal ?? refinedSignal,
+                        lens,
+                        quadrant,
+                        campaignId: CAMPAIGN_ID,
+                    }
+                    const result = await createOnboardingBar(payload)
+                    if (result && 'error' in result) {
+                        setError(result.error)
+                        return
+                    }
+                    if (result && 'pending' in result && result.pending) {
+                        setState((s) => ({
+                            ...s,
+                            barPublished: 'true',
+                            pendingBar: JSON.stringify({
+                                refinedSignal,
+                                rawSignal: state.rawSignal ?? refinedSignal,
+                                lens,
+                                quadrant,
+                                campaignId: CAMPAIGN_ID,
+                            }),
+                        }))
+                    } else if (result && 'barId' in result) {
+                        setState((s) => ({ ...s, barPublished: 'true' }))
+                    }
+                    logOnboardingEvent('onboarding_bar_published', { lens, quadrant })
+                } catch (e) {
+                    setError(e instanceof Error ? e.message : 'Failed to publish BAR. Please try again.')
+                } finally {
+                    setIsPending(false)
                 }
-                const result = await createOnboardingBar(payload)
-                setIsPending(false)
-                if (result && 'error' in result) {
-                    setError(result.error)
-                    return
-                }
-                if (result && 'pending' in result && result.pending) {
-                    setState((s) => ({
-                        ...s,
-                        barPublished: 'true',
-                        pendingBar: JSON.stringify({
-                            refinedSignal,
-                            rawSignal: state.rawSignal ?? refinedSignal,
-                            lens,
-                            quadrant,
-                            campaignId: CAMPAIGN_ID,
-                        }),
-                    }))
-                } else if (result && 'barId' in result) {
-                    setState((s) => ({ ...s, barPublished: 'true' }))
-                }
-                logOnboardingEvent('onboarding_bar_published', { lens, quadrant })
             }
 
             const next = story.passages.find((p) => p.name === target)
@@ -351,7 +361,8 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
         return <div className="text-zinc-500 animate-pulse p-8 text-center">Loading...</div>
     }
 
-    const rawPassageText = (currentPassage as { text?: string }).text ?? currentPassage.cleanText
+    // Prefer cleanText (strips [[links]]) over raw text to avoid showing [[Continue|...]] artifacts
+    const rawPassageText = currentPassage.cleanText ?? (currentPassage as { text?: string }).text ?? ''
     const displayText = replaceInputPlaceholders(rawPassageText, (key) => `__INPUT_${key}__`)
 
     // Emotional-alchemy copy variation: {{key}} and {{emotional_alchemy_framing}} from state
@@ -462,22 +473,31 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                 )}
             </div>
 
-            {history.length > 0 && (
-                <button
-                    onClick={() => {
-                        const prev = history[history.length - 1]
-                        setHistory((h) => h.slice(0, -1))
-                        const p = story.passages.find((x) => x.name === prev)
-                        if (p) {
-                            const { displayText: dt } = extractTokenSets(p.text)
-                            setCurrentPassage({ ...p, text: dt, cleanText: dt })
-                        }
-                    }}
-                    className="py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors"
-                >
-                    ← Back
-                </button>
-            )}
+            <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                {isPending && (
+                    <span className="flex items-center gap-2 text-xs text-amber-400 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                        Placing…
+                    </span>
+                )}
+                {history.length > 0 && (
+                    <button
+                        onClick={() => {
+                            const prev = history[history.length - 1]
+                            setHistory((h) => h.slice(0, -1))
+                            const p = story.passages.find((x) => x.name === prev)
+                            if (p) {
+                                const { displayText: dt } = extractTokenSets(p.text)
+                                setCurrentPassage({ ...p, text: dt, cleanText: dt })
+                            }
+                        }}
+                        disabled={isPending}
+                        className="py-2 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        ← Back
+                    </button>
+                )}
+            </div>
         </div>
     )
 }

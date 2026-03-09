@@ -104,13 +104,63 @@ The world of the campaign is shaped by different cultural environments.
 
 Each nation represents a different approach to collaboration, strategy, and risk.
 
-Choose the one that feels closest to how you tend to operate right now.
+Read about each nation before choosing. You can always return to this list.
 
-[[Argyra — elegant coordination, precision, and social patterning|Nation_Argyra]]
-[[Pyrakanth — momentum, courage, heat, and decisive action|Nation_Pyrakanth]]
-[[Lamenth — depth, grief, memory, and emotional truth|Nation_Lamenth]]
-[[Meridia — coherence, stewardship, and grounded flourishing|Nation_Meridia]]
-[[Virelune — mystery, emergence, intuition, and hidden pathways|Nation_Virelune]]
+[[Read about Argyra|Nation_Argyra_Info]]
+[[Read about Pyrakanth|Nation_Pyrakanth_Info]]
+[[Read about Lamenth|Nation_Lamenth_Info]]
+[[Read about Meridia|Nation_Meridia_Info]]
+[[Read about Virelune|Nation_Virelune_Info]]
+
+:: Nation_Argyra_Info [cluster2 info]
+**Argyra — The Silver City**
+
+Elegant coordination, precision, and social patterning. The silver mirror: clarity, structure, and precision. When you channel Argyran energy, problems become solvable because you can see the structure underneath the chaos.
+
+[Learn more about Argyra](/wiki/nations)
+
+[[Choose this nation|Nation_Argyra]]
+[[Back to list|Choose Nation]]
+
+:: Nation_Pyrakanth_Info [cluster2 info]
+**Pyrakanth — The Burning Garden**
+
+Momentum, courage, heat, and decisive action. The blazing vanguard: passion, transformation, and fire. Pyrakanth gardens with fire—growth requires both wild passion and devoted tending.
+
+[Learn more about Pyrakanth](/wiki/nations)
+
+[[Choose this nation|Nation_Pyrakanth]]
+[[Back to list|Choose Nation]]
+
+:: Nation_Lamenth_Info [cluster2 info]
+**Lamenth — The Weeping Stone**
+
+Depth, grief, memory, and emotional truth. The deep current: emotion, intuition, and flow. Lamenth holds what others rush past—memory, grief, and the wisdom that comes from depth.
+
+[Learn more about Lamenth](/wiki/nations)
+
+[[Choose this nation|Nation_Lamenth]]
+[[Back to list|Choose Nation]]
+
+:: Nation_Meridia_Info [cluster2 info]
+**Meridia — The Golden Noon**
+
+Coherence, stewardship, and grounded flourishing. The grounded center: stability, nurture, and endurance. Meridia stands at high noon, where light eliminates shadows—clear sight, fair exchange, and win-win thinking.
+
+[Learn more about Meridia](/wiki/nations)
+
+[[Choose this nation|Nation_Meridia]]
+[[Back to list|Choose Nation]]
+
+:: Nation_Virelune_Info [cluster2 info]
+**Virelune — The Green Moon**
+
+Mystery, emergence, intuition, and hidden pathways. The living network: growth, connection, and creativity. Virelune prefers to grow around obstacles rather than smash them. Respect.
+
+[Learn more about Virelune](/wiki/nations)
+
+[[Choose this nation|Nation_Virelune]]
+[[Back to list|Choose Nation]]
 
 :: Nation_Argyra [cluster2 result emits:nation_selected]
 [TOKEN] SET nation=argyra
@@ -152,18 +202,64 @@ When something important is unfolding, people fall into recognizable roles.
 
 The eight archetypes map to how you tend to move through situations. Each has a distinct approach to obstacles, collaboration, and growth.
 
-Archetypes help the system generate quests that match your instincts.
+Read about each archetype before choosing. You can always return to this list.
 
-Choose the role that feels most alive in you today.
+[[Read about The Bold Heart|Archetype_BoldHeart_Info]]
+[[Read about The Devoted Guardian|Archetype_DevotedGuardian_Info]]
+[[Read about The Decisive Storm|Archetype_DecisiveStorm_Info]]
+[[Read about The Danger Walker|Archetype_DangerWalker_Info]]
+[[Read about The Still Point|Archetype_StillPoint_Info]]
+[[Read about The Subtle Influence|Archetype_SubtleInfluence_Info]]
+[[Read about The Truth Seer|Archetype_TruthSeer_Info]]
+[[Read about The Joyful Connector|Archetype_JoyfulConnector_Info]]
 
-[[The Bold Heart|Archetype_BoldHeart]]
-[[The Devoted Guardian|Archetype_DevotedGuardian]]
-[[The Decisive Storm|Archetype_DecisiveStorm]]
-[[The Danger Walker|Archetype_DangerWalker]]
-[[The Still Point|Archetype_StillPoint]]
-[[The Subtle Influence|Archetype_SubtleInfluence]]
-[[The Truth Seer|Archetype_TruthSeer]]
-[[The Joyful Connector|Archetype_JoyfulConnector]]
+:: Archetype_BoldHeart_Info [cluster2 info]
+**The Bold Heart** — Leads with courage and directness. Faces obstacles head-on. When something needs doing, the Bold Heart steps forward first.
+
+[[Choose this archetype|Archetype_BoldHeart]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_DevotedGuardian_Info [cluster2 info]
+**The Devoted Guardian** — Protects what matters. Steady presence in chaos. Holds the line so others can take risks.
+
+[[Choose this archetype|Archetype_DevotedGuardian]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_DecisiveStorm_Info [cluster2 info]
+**The Decisive Storm** — Acts with clarity when others hesitate. Cuts through ambiguity. Brings momentum when things stall.
+
+[[Choose this archetype|Archetype_DecisiveStorm]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_DangerWalker_Info [cluster2 info]
+**The Danger Walker** — Goes where others won't. Comfortable at the edge. Transforms risk into possibility.
+
+[[Choose this archetype|Archetype_DangerWalker]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_StillPoint_Info [cluster2 info]
+**The Still Point** — Creates calm in the storm. Centers others. The anchor when everything moves too fast.
+
+[[Choose this archetype|Archetype_StillPoint]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_SubtleInfluence_Info [cluster2 info]
+**The Subtle Influence** — Shifts situations through presence, not force. Reads the room. Opens doors others don't see.
+
+[[Choose this archetype|Archetype_SubtleInfluence]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_TruthSeer_Info [cluster2 info]
+**The Truth Seer** — Names what others avoid. Brings clarity through honest seeing. Illuminates the path with truth.
+
+[[Choose this archetype|Archetype_TruthSeer]]
+[[Back to list|Choose Archetype]]
+
+:: Archetype_JoyfulConnector_Info [cluster2 info]
+**The Joyful Connector** — Weaves people together. Finds the thread that links. Builds bridges through warmth and invitation.
+
+[[Choose this archetype|Archetype_JoyfulConnector]]
+[[Back to list|Choose Archetype]]
 
 :: Archetype_BoldHeart [cluster2 result emits:archetype_selected]
 [TOKEN] SET playbook=The Bold Heart
@@ -300,6 +396,16 @@ Every player chooses where their energy enters the system.
 :: Choose Intended Impact [cluster3 choose-one]
 Where does your attention want to move?
 
+Each domain shapes which quests you'll see. Read the summaries below, or [learn more about allyship domains](/wiki/domains).
+
+**Gathering Resources** — Additive; accessing emotional energy; inner and outer resources. *"I want to help people access what they need."*
+
+**Direct Action** — Action needs doing; removing obstacles. *"I want to get things done when something is blocking progress."*
+
+**Raise Awareness** — Helping people see there is a higher level to operate at. *"I want to help others see what's possible."*
+
+**Skillful Organizing** — Coordinating efforts; creating structures (external and internal). *"I want to bring people and systems into alignment."*
+
 [[Gather Resources|Impact_GatherResources]]
 [[Skillful Organizing|Impact_SkillfulOrganizing]]
 [[Raise Awareness|Impact_RaiseAwareness]]
@@ -354,15 +460,16 @@ From here, the next quests can connect your intention with real opportunities in
 [[Begin play|First Quest Stub]]
 
 :: First Quest Stub [post-onboarding stub]
-TODO: Replace this with the first live quest surfaced after onboarding.
+Your first quests await on the dashboard.
 
-Possible first-quest directions:
-• Strengthen the Residency
-• Invite one aligned person
-• Offer a skill or resource
-• Share the residency page
-• Contribute financially
-• Submit structured feedback
+After you sign in, you'll see **Strengthen the Residency** and other starter quests tailored to your path. Choose your first move:
+
+• **Strengthen the Residency** — Contribute support, invite an ally, share feedback, or share the campaign
+• **Invite an Ally** — Bring someone aligned into the story
+• **Offer a Skill or Resource** — Share what you have to give
+• **Share the Campaign** — Help the story travel further
+• **Contribute Financially** — Support the residency directly
+• **Submit Feedback** — Shape the system through your experience
 
 [[Begin play|BeginPlay]]
 

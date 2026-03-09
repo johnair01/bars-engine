@@ -5,7 +5,7 @@ Feedback submitted via "Report Issue" during verification quests is logged for t
 ## Flow
 
 1. **Report Issue** — Tester clicks "Report Issue" on any cert quest step → navigates to FEEDBACK passage
-2. **Submit** — `logCertificationFeedback(questId, passageName, feedback)` writes to `.feedback/cert_feedback.jsonl`
+2. **Submit** — `POST /api/feedback/cert` (JSON body: `questId`, `passageName`, `feedback`) writes to `.feedback/cert_feedback.jsonl`. API-first: no server action, no revalidation.
 3. **Triage** — Use the [cert-feedback-triage skill](../.agents/skills/cert-feedback-triage/SKILL.md) to create specs, backlog prompts, and BACKLOG.md entries
 
 ## Entry Points
@@ -53,6 +53,7 @@ Use the cert-feedback-triage skill to triage new feedback into specs and backlog
 
 ## Reference
 
-- Action: [src/actions/certification-feedback.ts](../src/actions/certification-feedback.ts)
+- API: [src/app/api/feedback/cert/route.ts](../src/app/api/feedback/cert/route.ts) — POST handler (preferred)
+- Legacy: [src/actions/certification-feedback.ts](../src/actions/certification-feedback.ts) — deprecated
 - Spec: [.specify/specs/certification-quest-ux/spec.md](../.specify/specs/certification-quest-ux/spec.md)
 - Triage skill: [.agents/skills/cert-feedback-triage/SKILL.md](../.agents/skills/cert-feedback-triage/SKILL.md)
