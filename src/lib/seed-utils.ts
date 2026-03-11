@@ -253,7 +253,7 @@ export async function runSeed(prisma: PrismaClient) {
             }
         }
 
-        await prisma.playbook.upsert({
+        await prisma.archetype.upsert({
             where: { name: p.name },
             update: { ...p, content, ...richData },
             create: { ...p, content, ...richData },
@@ -337,7 +337,7 @@ export async function runSeed(prisma: PrismaClient) {
     // 8. Create 40 Test Accounts
     console.log('Creating 40 test accounts...')
     const allNations = await prisma.nation.findMany()
-    const allPlaybooks = await prisma.playbook.findMany()
+    const allPlaybooks = await prisma.archetype.findMany()
 
     for (const nation of allNations) {
         for (const playbook of allPlaybooks) {
@@ -354,7 +354,7 @@ export async function runSeed(prisma: PrismaClient) {
 
             const player = await prisma.player.upsert({
                 where: { id: `test-${nationSlug}-${playbookSlug}` },
-                update: { nationId: nation.id, playbookId: playbook.id },
+                update: { nationId: nation.id, archetypeId: playbook.id },
                 create: {
                     id: `test-${nationSlug}-${playbookSlug}`,
                     name: `${nation.name} ${playbook.name}`,
@@ -363,7 +363,7 @@ export async function runSeed(prisma: PrismaClient) {
                     inviteId: publicInvite.id,
                     accountId: acc.id,
                     nationId: nation.id,
-                    playbookId: playbook.id,
+                    archetypeId: playbook.id,
                     onboardingComplete: true
                 }
             })

@@ -22,12 +22,20 @@ export default async function BarsPage() {
                         <Link href="/" className="text-sm text-zinc-500 hover:text-white transition">← Dashboard</Link>
                         <h1 className="text-3xl font-bold text-white mt-1">My BARs</h1>
                     </div>
-                    <Link
-                        href="/bars/create"
-                        className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition shadow-lg shadow-purple-900/20"
-                    >
-                        + Create BAR
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/bars/feed"
+                            className="px-4 py-2 border border-zinc-700 hover:border-amber-600/50 text-amber-400/90 hover:text-amber-300 font-medium rounded-lg transition"
+                        >
+                            BAR Feed
+                        </Link>
+                        <Link
+                            href="/bars/create"
+                            className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition shadow-lg shadow-purple-900/20"
+                        >
+                            + Create BAR
+                        </Link>
+                    </div>
                 </div>
 
                 {/* ---- INBOX (Received BARs) ---- */}

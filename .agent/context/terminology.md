@@ -14,7 +14,7 @@ description: Canonical spelling and terminology for the project
 |-----------|---------|---------|
 | **Vibeulon** | `vibulon`, `Vibulon` | The currency/token (prose uses Vibeulon, code uses vibulon) |
 | **Kotter Stage** | `kotterStage` | 8-step change model position |
-| **Archetype** | - | Enneagram type (1-9, excluding 5) |
+| **Archetype** | `Archetype`, `archetypeId`, `archetypeKey` | The 8 I Ching character types (The Bold Heart, The Devoted Guardian, etc.); formerly "playbook" |
 | **Trigram** | - | I Ching base element (☰☷☳☵☶☴☲☱) |
 | **Hexagram** | - | Pair of trigrams = quest reading |
 | **Quest** | `CustomBar` | User-created mission |
@@ -75,6 +75,8 @@ Energy economy. 5 elements, WAVE, 15 canonical moves. Binary: translate | transc
 
 ## Usage Guidelines
 
+- **Archetype vs Playbook**: Use "archetype" everywhere. `Playbook` is deprecated; schema and code use `Archetype`, `archetypeId`, `archetypeKey`. Campaign state may still use `playbookId`/`playbook` for backward compatibility.
+- **Intention-activated value**: Value flows with intention. Intentions map to allyship domains; see [docs/INTENTION_ACTIVATED_VALUE.md](../../docs/INTENTION_ACTIVATED_VALUE.md).
 - **Prose/docs**: Use "Vibeulon" (capitalized)
 - **Code/schema**: Use `vibulon` (lowercase, as per Prisma convention)
 - **Relation names**: Use `Vibeulon` prefix (e.g., `VibulonEvent`)

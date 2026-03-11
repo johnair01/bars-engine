@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 
 export default async function ArchetypesPage() {
-  const playbooks = await db.playbook.findMany({
+  const playbooks = await db.archetype.findMany({
     orderBy: { name: 'asc' },
     select: { id: true, name: true, description: true, primaryWaveStage: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true },
   })

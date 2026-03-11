@@ -9,8 +9,9 @@ type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
 
 export type CreateBarPrefill = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
+export type CreateBar321Session = { phase3Snapshot?: string; phase2Snapshot?: string }
 
-export function CreateBarForm({ setup, prefill }: { setup?: boolean; prefill?: CreateBarPrefill }) {
+export function CreateBarForm({ setup, prefill, session321 }: { setup?: boolean; prefill?: CreateBarPrefill; session321?: CreateBar321Session }) {
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(setup || !!prefill || false)
     const [players, setPlayers] = useState<Player[]>([])
@@ -81,6 +82,12 @@ export function CreateBarForm({ setup, prefill }: { setup?: boolean; prefill?: C
             <form action={formAction} className="space-y-4">
                 {prefill && (
                     <input type="hidden" name="metadata321" value={JSON.stringify(prefill)} />
+                )}
+                {session321?.phase3Snapshot && (
+                    <input type="hidden" name="phase3Snapshot" value={session321.phase3Snapshot} />
+                )}
+                {session321?.phase2Snapshot && (
+                    <input type="hidden" name="phase2Snapshot" value={session321.phase2Snapshot} />
                 )}
                 <div className="space-y-2">
                     <label className="text-xs uppercase text-zinc-500">Title</label>

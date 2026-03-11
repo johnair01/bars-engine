@@ -1,6 +1,6 @@
 # Avatar Sprite Assets
 
-PNG sprite assets for the JRPG composable avatar. Layers stack in order: base → nation_body → playbook_outfit → nation_accent → playbook_accent. All assets must be **64×64 pixels** with **transparent backgrounds**.
+PNG sprite assets for the JRPG composable avatar. Layers stack in order: base → nation_body → archetype_outfit → nation_accent → archetype_accent. All assets must be **64×64 pixels** with **transparent backgrounds**.
 
 **Style guide**: [.specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md](../.specify/specs/avatar-sprite-quality-process/STYLE_GUIDE.md) — Gathertown/Stardew vibe, palette, review gates.
 
@@ -12,8 +12,8 @@ public/sprites/parts/
   base-silhouette.json  overlay region config (from npm run sprites:analyze-base)
   nation_body/        argyra.png, pyrakanth.png, virelune.png, meridia.png, lamenth.png
   nation_accent/      (same keys as nation_body)
-  playbook_outfit/
-  playbook_accent/
+  archetype_outfit/
+  archetype_accent/
 ```
 
 Base variants (default, male, female, neutral) are derived from `canonical.png` via palette swap. Run `npm run sprites:derive-base` after editing canonical. Use `--init-from-default` to create canonical from an existing default.png.
@@ -69,7 +69,7 @@ Nation layers overlay the base. **nation_body**: clothing/torso; transparent whe
 
 ### Overlay-only requirement (critical)
 
-Nation and playbook sprites MUST be **partial overlays**, not full character portraits. If a sprite has opaque pixels in the face/neck/background, it will **overwrite** the base instead of layering. See [.specify/specs/avatar-overwrite-transparency-fix/CHATGPT_PROMPTS.md](../.specify/specs/avatar-overwrite-transparency-fix/CHATGPT_PROMPTS.md) for prompts that generate base-aligned overlays. Region dimensions: [base-silhouette.json](../public/sprites/parts/base-silhouette.json).
+Nation and archetype sprites MUST be **partial overlays**, not full character portraits. If a sprite has opaque pixels in the face/neck/background, it will **overwrite** the base instead of layering. See [.specify/specs/avatar-overwrite-transparency-fix/CHATGPT_PROMPTS.md](../.specify/specs/avatar-overwrite-transparency-fix/CHATGPT_PROMPTS.md) for prompts that generate base-aligned overlays. Region dimensions: [base-silhouette.json](../public/sprites/parts/base-silhouette.json).
 
 ### AI-generated nation sprites
 
@@ -98,7 +98,7 @@ When you change the base model, overlay layers must align to the new silhouette:
    Reads `base/default.png`, infers torso/badge regions, writes `public/sprites/parts/base-silhouette.json`.
 
 2. **Regenerate placeholders** — `npm run sprites:nation-placeholders`  
-   Uses `base-silhouette.json` to draw nation_body, nation_accent, playbook_outfit, and playbook_accent. Each layer gets a colored fill plus 1px black outline so they're visually distinct (not flat grey blocks).
+   Uses `base-silhouette.json` to draw nation_body, nation_accent, archetype_outfit, and archetype_accent. Each layer gets a colored fill plus 1px black outline so they're visually distinct (not flat grey blocks).
 
 3. **Verify** — Open `/admin/avatars` and confirm base + nation + playbook layers stack correctly.
 
@@ -108,51 +108,51 @@ You can edit `base-silhouette.json` manually to tune overlay positions (x, y, wi
 
 Use [LPC 4wall.ai](https://lpc.4wall.ai/) with nation-colored clothing (silver, flame, leaf-green, earth-brown, water-blue). Extract one frame, crop to 64×64. Ensure face/neck areas are transparent so base shows through.
 
-## Playbook Keys (playbookKey)
+## Archetype Keys (archetypeKey)
 
-| Playbook (name) | playbookKey | Path |
-|-----------------|-------------|------|
-| The Bold Heart | bold-heart | playbook_outfit/bold-heart.png, playbook_accent/bold-heart.png |
-| The Devoted Guardian | devoted-guardian | playbook_outfit/devoted-guardian.png, playbook_accent/devoted-guardian.png |
-| The Decisive Storm | decisive-storm | playbook_outfit/decisive-storm.png, playbook_accent/decisive-storm.png |
-| The Danger Walker | danger-walker | playbook_outfit/danger-walker.png, playbook_accent/danger-walker.png |
-| The Still Point | still-point | playbook_outfit/still-point.png, playbook_accent/still-point.png |
-| The Subtle Influence | subtle-influence | playbook_outfit/subtle-influence.png, playbook_accent/subtle-influence.png |
-| The Truth Seer | truth-seer | playbook_outfit/truth-seer.png, playbook_accent/truth-seer.png |
-| The Joyful Connector | joyful-connector | playbook_outfit/joyful-connector.png, playbook_accent/joyful-connector.png |
+| Archetype (name) | archetypeKey | Path |
+|------------------|--------------|------|
+| The Bold Heart | bold-heart | archetype_outfit/bold-heart.png, archetype_accent/bold-heart.png |
+| The Devoted Guardian | devoted-guardian | archetype_outfit/devoted-guardian.png, archetype_accent/devoted-guardian.png |
+| The Decisive Storm | decisive-storm | archetype_outfit/decisive-storm.png, archetype_accent/decisive-storm.png |
+| The Danger Walker | danger-walker | archetype_outfit/danger-walker.png, archetype_accent/danger-walker.png |
+| The Still Point | still-point | archetype_outfit/still-point.png, archetype_accent/still-point.png |
+| The Subtle Influence | subtle-influence | archetype_outfit/subtle-influence.png, archetype_accent/subtle-influence.png |
+| The Truth Seer | truth-seer | archetype_outfit/truth-seer.png, archetype_accent/truth-seer.png |
+| The Joyful Connector | joyful-connector | archetype_outfit/joyful-connector.png, archetype_accent/joyful-connector.png |
 
 Keys are derived by `slugifyName()` in [src/lib/avatar-utils.ts](../src/lib/avatar-utils.ts): lowercase, strip "The ", replace spaces with hyphens.
 
-## Playbook Layer (playbook_outfit + playbook_accent)
+## Archetype Layer (archetype_outfit + archetype_accent)
 
-Playbook layers overlay the nation layers. **playbook_outfit**: archetype clothing/torso; transparent where face/neck show through. **playbook_accent**: archetype signature flourish (badge, motif). Both must align to center-bottom registration. Themes align with I Ching elements and handbook archetype descriptions.
+Archetype layers overlay the nation layers. **archetype_outfit**: archetype clothing/torso; transparent where face/neck show through. **archetype_accent**: archetype signature flourish (badge, motif). Both must align to center-bottom registration. Themes align with I Ching elements and handbook archetype descriptions.
 
-### AI-generated playbook sprites
+### AI-generated archetype sprites
 
 Use these prompts for 64×64 pixel art. Stardew Valley style, transparent background, front-facing bust, 1px black outline.
 
 | File | Prompt |
 |------|--------|
-| playbook_outfit/bold-heart.png | 64x64 pixel art character clothing overlay, crimson red vest or heart-themed shoulders, bold creative energy, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/bold-heart.png | 64x64 pixel art small heart motif or crimson badge, Bold Heart archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/devoted-guardian.png | 64x64 pixel art character clothing overlay, soft blue vest or protective shoulders, nurturing guardian aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/devoted-guardian.png | 64x64 pixel art small shield or protective emblem, Devoted Guardian archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/decisive-storm.png | 64x64 pixel art character clothing overlay, purple vest with lightning or storm accents, decisive bold aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/decisive-storm.png | 64x64 pixel art small lightning bolt or storm motif, Decisive Storm archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/danger-walker.png | 64x64 pixel art character clothing overlay, earth-toned brown vest or wilderness-trimmed shoulders, fluid adventurer aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/danger-walker.png | 64x64 pixel art small wave or path motif, Danger Walker archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/still-point.png | 64x64 pixel art character clothing overlay, dark slate vest or mountain-inspired shoulders, calm centered aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/still-point.png | 64x64 pixel art small mountain or anchor motif, Still Point archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/subtle-influence.png | 64x64 pixel art character clothing overlay, lavender or soft purple vest, gentle wind-inspired aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/subtle-influence.png | 64x64 pixel art small feather or breeze motif, Subtle Influence archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/truth-seer.png | 64x64 pixel art character clothing overlay, golden-amber or forest-green vest, radiant clarity aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/truth-seer.png | 64x64 pixel art small eye or flame motif, Truth Seer archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
-| playbook_outfit/joyful-connector.png | 64x64 pixel art character clothing overlay, warm orange vest or sunlit shoulders, joyful connection aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
-| playbook_accent/joyful-connector.png | 64x64 pixel art small sun or link motif, Joyful Connector archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/bold-heart.png | 64x64 pixel art character clothing overlay, crimson red vest or heart-themed shoulders, bold creative energy, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/bold-heart.png | 64x64 pixel art small heart motif or crimson badge, Bold Heart archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/devoted-guardian.png | 64x64 pixel art character clothing overlay, soft blue vest or protective shoulders, nurturing guardian aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/devoted-guardian.png | 64x64 pixel art small shield or protective emblem, Devoted Guardian archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/decisive-storm.png | 64x64 pixel art character clothing overlay, purple vest with lightning or storm accents, decisive bold aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/decisive-storm.png | 64x64 pixel art small lightning bolt or storm motif, Decisive Storm archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/danger-walker.png | 64x64 pixel art character clothing overlay, earth-toned brown vest or wilderness-trimmed shoulders, fluid adventurer aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/danger-walker.png | 64x64 pixel art small wave or path motif, Danger Walker archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/still-point.png | 64x64 pixel art character clothing overlay, dark slate vest or mountain-inspired shoulders, calm centered aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/still-point.png | 64x64 pixel art small mountain or anchor motif, Still Point archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/subtle-influence.png | 64x64 pixel art character clothing overlay, lavender or soft purple vest, gentle wind-inspired aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/subtle-influence.png | 64x64 pixel art small feather or breeze motif, Subtle Influence archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/truth-seer.png | 64x64 pixel art character clothing overlay, golden-amber or forest-green vest, radiant clarity aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/truth-seer.png | 64x64 pixel art small eye or flame motif, Truth Seer archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
+| archetype_outfit/joyful-connector.png | 64x64 pixel art character clothing overlay, warm orange vest or sunlit shoulders, joyful connection aesthetic, Stardew Valley style, transparent background except clothing, front-facing bust, 1px black outline |
+| archetype_accent/joyful-connector.png | 64x64 pixel art small sun or link motif, Joyful Connector archetype, Stardew Valley style, transparent background, centered on chest, 1px black outline |
 
 Resize to 64×64 if needed: `sips -z 64 64 file.png` (macOS) or `convert input.png -resize 64x64 output.png` (ImageMagick). Upload via `/admin/avatars/assets`.
 
-### LPC for playbook layer
+### LPC for archetype layer
 
 Use [LPC 4wall.ai](https://lpc.4wall.ai/) with archetype-colored clothing. Match palette: Bold Heart (crimson), Devoted Guardian (blue), Decisive Storm (purple), Danger Walker (brown), Still Point (slate), Subtle Influence (lavender), Truth Seer (amber/green), Joyful Connector (orange). Extract one frame, crop to 64×64. Ensure face/neck areas are transparent so base and nation layers show through.
 

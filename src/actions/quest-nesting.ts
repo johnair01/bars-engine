@@ -14,7 +14,13 @@ export async function createSubQuest(parentId: string, data: {
     inputLabel?: string,
     inputType?: string,
     /** Optional: wakeUp | cleanUp | growUp | showUp for unblock subquests */
-    moveType?: string
+    moveType?: string,
+    /** Optional: friction encountered when attempting parent (charge from blockers) */
+    frictionNote?: string,
+    /** Optional: charge BAR this subquest was spawned from */
+    sourceChargeBarId?: string,
+    /** Optional: tetris key-unlock — completing this subquest unblocks root + siblings (Phase 3) */
+    isKeyUnblocker?: boolean
 }) {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
@@ -55,6 +61,9 @@ export async function createSubQuest(parentId: string, data: {
             })
 
             // 4. Create the child bar
+            const frictionSuffix = data.frictionNote ? `\n\nFriction: ${data.frictionNote}` : ''
+            const description = data.description + frictionSuffix
+
             const inputs = JSON.stringify([
                 {
                     key: 'response',
@@ -64,22 +73,43 @@ export async function createSubQuest(parentId: string, data: {
                 }
             ])
 
+            const rootId = parent.rootId || parent.id
+
             const subQuest = await tx.customBar.create({
                 data: {
                     creatorId: player.id,
                     title: data.title,
-                    description: data.description,
+                    description,
                     type: 'vibe',
                     reward: 1,
                     inputs,
                     visibility: 'private', // Subquests are private by default
                     claimedById: player.id, // Assigned to self
                     parentId: parent.id,
-                    rootId: parent.rootId || parent.id,
+                    rootId,
                     status: 'active',
-                    moveType: data.moveType ?? undefined
+                    moveType: data.moveType ?? undefined,
+                    sourceBarId: data.sourceChargeBarId ?? undefined,
+                    isKeyUnblocker: data.isKeyUnblocker ?? false,
                 }
             })
+
+            // Tetris: when isKeyUnblocker, set root + siblings to blocked; key stays active
+            if (data.isKeyUnblocker) {
+                const cluster = await tx.customBar.findMany({
+                    where: {
+                        OR: [{ id: rootId }, { rootId }],
+                        id: { not: subQuest.id },
+                    },
+                    select: { id: true },
+                })
+                for (const q of cluster) {
+                    await tx.customBar.update({
+                        where: { id: q.id },
+                        data: { status: 'blocked' },
+                    })
+                }
+            }
 
             // 5. Assign to player's hand
             await tx.playerQuest.create({

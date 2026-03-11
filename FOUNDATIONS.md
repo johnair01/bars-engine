@@ -40,6 +40,8 @@ The game is structured around five dimensions. Use this ontology when writing sp
 
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
 
+**Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
+
 ## Emotional Alchemy (Narrative Movement)
 
 Quest narratives move through **emotional alchemy**—an **energy economy**, not a morality wheel. Control moves are high-cost precision moves (stabilizing, defensive, protective, catalytic), not bad moves.

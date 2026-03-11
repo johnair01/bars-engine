@@ -21,20 +21,20 @@ async function main() {
         return
     }
 
-    // Get a random nation and playbook
+    // Get a random nation and archetype
     const nations = await db.nation.findMany()
-    const playbooks = await db.playbook.findMany()
+    const archetypes = await db.archetype.findMany()
 
-    if (nations.length === 0 || playbooks.length === 0) {
-        console.error('No nations or playbooks found. Run seed-world-content.ts first.')
+    if (nations.length === 0 || archetypes.length === 0) {
+        console.error('No nations or archetypes found. Run npm run db:seed first.')
         return
     }
 
     const randomNation = nations[Math.floor(Math.random() * nations.length)]
-    const randomPlaybook = playbooks[Math.floor(Math.random() * playbooks.length)]
+    const randomArchetype = archetypes[Math.floor(Math.random() * archetypes.length)]
 
     console.log(`Selected Nation: ${randomNation.name}`)
-    console.log(`Selected Playbook: ${randomPlaybook.name}`)
+    console.log(`Selected Archetype: ${randomArchetype.name}`)
 
     const passwordHash = await hashPassword(password)
 
@@ -66,7 +66,7 @@ async function main() {
                 contactType: 'email',
                 contactValue: email,
                 nationId: randomNation.id,
-                playbookId: randomPlaybook.id,
+                archetypeId: randomArchetype.id,
                 inviteId: invite.id,
             }
         })

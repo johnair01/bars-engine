@@ -83,15 +83,15 @@ export default async function TwinePlayPage({
     // Avatar preview for Build Your Character: derive on-the-fly when player has nation+playbook but no avatarConfig
     const isBuildCharQuest = questId === 'build-character-quest'
     let avatarPreviewConfig: string | null = null
-    if (isBuildCharQuest && player && !player.avatarConfig && player.nationId && player.playbookId) {
+    if (isBuildCharQuest && player && !player.avatarConfig && player.nationId && player.archetypeId) {
         const { deriveAvatarConfig } = await import('@/lib/avatar-utils')
         const nation = nations.find((n: { id: string }) => n.id === player.nationId)
-        const playbook = playbooks.find((p: { id: string }) => p.id === player.playbookId)
+        const playbook = playbooks.find((p: { id: string }) => p.id === player.archetypeId)
         avatarPreviewConfig = deriveAvatarConfig(
             player.nationId,
-            player.playbookId,
+            player.archetypeId,
             player.campaignDomainPreference,
-            { nationName: nation?.name, playbookName: playbook?.name, pronouns: player.pronouns }
+            { nationName: nation?.name, archetypeName: playbook?.name, pronouns: player.pronouns }
         )
     }
 

@@ -44,7 +44,7 @@ export async function createOnboardingBar(payload: OnboardingBarPayload): Promis
     try {
         const creator = await db.player.findUnique({
             where: { id: playerId },
-            select: { id: true, nationId: true, playbookId: true }
+            select: { id: true, nationId: true, archetypeId: true }
         })
         if (!creator) return { error: 'Player not found' }
         // Allow BAR creation without nation/playbook for onboarding (spec says create immediately when authenticated)

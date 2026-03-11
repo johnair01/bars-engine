@@ -29,6 +29,8 @@ When deploying to production for the first time or after schema changes:
 npx prisma db push
 ```
 
+**After first deploy or DB reset**: Run `npm run db:seed` then `npx tsx scripts/create-admin.ts` with production `DATABASE_URL`. See [docs/ENV_AND_VERCEL.md](ENV_AND_VERCEL.md#production-recovery-after-db-reset-or-first-deploy) for the full recovery runbook.
+
 ## 3. Creating the Public Invite Link
 Once deployed, you need to generate the "Golden Ticket" for your Partiful event.
 

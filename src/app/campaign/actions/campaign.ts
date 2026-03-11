@@ -122,11 +122,11 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
             if (byName) nationId = byName.id
         }
         if (state?.playbookId && typeof state.playbookId === 'string') {
-            const exists = await db.playbook.findUnique({ where: { id: state.playbookId }, select: { id: true } })
+            const exists = await db.archetype.findUnique({ where: { id: state.playbookId }, select: { id: true } })
             if (exists) playbookId = state.playbookId
         }
         if (!playbookId && state?.playbook && typeof state.playbook === 'string') {
-            const byName = await db.playbook.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
+            const byName = await db.archetype.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
             if (byName) playbookId = byName.id
         }
         // Note: draft "archetype" (connector, storyteller, strategist, etc.) = allyship superpower, not canonical archetype.
@@ -182,27 +182,27 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
 
         // Fetch Nation/Playbook names for stable avatar part keys
         let nationName: string | null = null
-        let playbookName: string | null = null
+        let archetypeName: string | null = null
         if (nationId) {
             const n = await db.nation.findUnique({ where: { id: nationId }, select: { name: true } })
             if (n) nationName = n.name
         }
         if (playbookId) {
-            const p = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
-            if (p) playbookName = p.name
+            const p = await db.archetype.findUnique({ where: { id: playbookId }, select: { name: true } })
+            if (p) archetypeName = p.name
         }
         const avatarConfig = deriveAvatarConfig(
             nationId,
             playbookId,
             campaignDomainPreference,
-            { nationName, playbookName }
+            { nationName, archetypeName }
         )
         if (nationId !== null || playbookId !== null || campaignDomainPreference !== null || avatarConfig !== null) {
             await db.player.update({
                 where: { id: player.id },
                 data: {
                     ...(nationId !== null && { nationId }),
-                    ...(playbookId !== null && { playbookId }),
+                    ...(playbookId !== null && { archetypeId: playbookId }),
                     ...(campaignDomainPreference !== null && { campaignDomainPreference }),
                     ...(avatarConfig !== null && { avatarConfig })
                 }
@@ -400,11 +400,11 @@ export async function applyCampaignStateToExistingPlayer(campaignState: Record<s
         if (byName) nationId = byName.id
     }
     if (state?.playbookId && typeof state.playbookId === 'string') {
-        const exists = await db.playbook.findUnique({ where: { id: state.playbookId }, select: { id: true } })
+        const exists = await db.archetype.findUnique({ where: { id: state.playbookId }, select: { id: true } })
         if (exists) playbookId = state.playbookId
     }
     if (!playbookId && state?.playbook && typeof state.playbook === 'string') {
-        const byName = await db.playbook.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
+        const byName = await db.archetype.findFirst({ where: { name: { equals: state.playbook, mode: 'insensitive' } }, select: { id: true } })
         if (byName) playbookId = byName.id
     }
     // Note: draft "archetype" = allyship superpower; only map explicit playbook (8 canonical archetypes)
@@ -450,27 +450,27 @@ export async function applyCampaignStateToExistingPlayer(campaignState: Record<s
     }
 
     let nationName: string | null = null
-    let playbookName: string | null = null
+    let archetypeName: string | null = null
     if (nationId) {
         const n = await db.nation.findUnique({ where: { id: nationId }, select: { name: true } })
         if (n) nationName = n.name
     }
     if (playbookId) {
-        const p = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
-        if (p) playbookName = p.name
+        const p = await db.archetype.findUnique({ where: { id: playbookId }, select: { name: true } })
+        if (p) archetypeName = p.name
     }
     const avatarConfig = deriveAvatarConfig(
         nationId,
         playbookId,
         campaignDomainPreference,
-        { nationName, playbookName }
+        { nationName, archetypeName }
     )
     if (nationId !== null || playbookId !== null || campaignDomainPreference !== null || avatarConfig !== null) {
         await db.player.update({
             where: { id: playerId },
             data: {
                 ...(nationId !== null && { nationId }),
-                ...(playbookId !== null && { playbookId }),
+                ...(playbookId !== null && { archetypeId: playbookId }),
                 ...(campaignDomainPreference !== null && { campaignDomainPreference }),
                 ...(avatarConfig !== null && { avatarConfig })
             }

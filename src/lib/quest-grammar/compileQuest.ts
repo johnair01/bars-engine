@@ -12,17 +12,17 @@ import type { ElementKey } from './elements'
 import type { QuestCompileInput, QuestPacket, PersonalMoveType } from './types'
 
 /**
- * Async variant that resolves nation/playbook for choice privileging.
- * Use when targetNationId or targetPlaybookId are provided.
+ * Async variant that resolves nation/archetype for choice privileging.
+ * Use when targetNationId or targetArchetypeId are provided.
  */
 export async function compileQuestWithPrivileging(input: QuestCompileInput): Promise<QuestPacket> {
-  const { targetNationId, targetPlaybookId } = input
-  if (!targetNationId && !targetPlaybookId) {
+  const { targetNationId, targetArchetypeId } = input
+  if (!targetNationId && !targetArchetypeId) {
     return compileQuest(input)
   }
 
   let nationElement: ElementKey = 'earth'
-  let playbookWave: PersonalMoveType = 'showUp'
+  let archetypeWave: PersonalMoveType = 'showUp'
 
   if (targetNationId) {
     const nation = await db.nation.findUnique({
@@ -34,13 +34,13 @@ export async function compileQuestWithPrivileging(input: QuestCompileInput): Pro
     }
   }
 
-  if (targetPlaybookId) {
-    const { getPlaybookPrimaryWave } = await import('./playbook-wave')
-    playbookWave = await getPlaybookPrimaryWave(targetPlaybookId)
+  if (targetArchetypeId) {
+    const { getArchetypePrimaryWave } = await import('./archetype-wave')
+    archetypeWave = await getArchetypePrimaryWave(targetArchetypeId)
   }
 
   return compileQuest({
     ...input,
-    privilegeContext: { nationElement, playbookWave },
+    privilegeContext: { nationElement, archetypeWave },
   })
 }

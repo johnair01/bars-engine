@@ -40,9 +40,9 @@ model Player {
   onboardingCompletedAt  DateTime?
   inviteId               String
   nationId               String?
-  playbookId             String?
+  archetypeId            String?
   campaignDomainPreference String?   // JSON array: ["GATHERING_RESOURCES","DIRECT_ACTION"]; null or [] = show all
-  avatarConfig            String?   // JSON: { nationKey, playbookKey, domainKey, variant } derived from CYOA choices
+  avatarConfig            String?   // JSON: { nationKey, archetypeKey, domainKey, variant } derived from CYOA choices
   pronouns               String?
   attendance             String?
   createdAt              DateTime                   @default(now())
@@ -55,12 +55,15 @@ model Player {
   instanceMemberships    InstanceMembership[]
   bars                   PlayerBar[]
   nationMoveUnlocks      PlayerNationMoveUnlock[]
+  moveEquips             PlayerMoveEquip[]
+  moveUses               MoveUse[]
+  barResponses           BarResponse[]
   quests                 PlayerQuest[]
   roles                  PlayerRole[]
   account                Account?                   @relation(fields: [accountId], references: [id])
   invite                 Invite                     @relation("InviteUsed", fields: [inviteId], references: [id])
   nation                 Nation?                    @relation(fields: [nationId], references: [id])
-  playbook               Playbook?                  @relation(fields: [playbookId], references: [id])
+  archetype              Archetype?                @relation(fields: [archetypeId], references: [id])
   questMoveLogs          QuestMoveLog[]
   starterPack            StarterPack?
   twineBindingsCreated   TwineBinding[]             @relation("TwineBindingsCreated")
@@ -68,6 +71,7 @@ model Player {
   twineStoriesCreated    TwineStory[]               @relation("TwineStoriesCreated")
   vibulonEvents          VibulonEvent[]
   vibulons               Vibulon[]
+  creatorVibulons        Vibulon[]                 @relation("VibulonCreator")
   vibeulonLedger         VibeulonLedger[]
   participations         InstanceParticipation[]
   adventureProgress      PlayerAdventureProgress[]
@@ -80,6 +84,12 @@ model Player {
   gameboardAidOffersMade GameboardAidOffer[] @relation("GameboardAidOfferer")
   gameboardAidOffersReceived GameboardAidOffer[] @relation("GameboardAidSteward")
   questProposals       QuestProposal[]
+  bountyStakes         BountyStake[]
+  shadow321Sessions    Shadow321Session[]
+  eventArtifactsCreated EventArtifact[]     @relation("EventArtifactCreator")
+  eventParticipations   EventParticipant[]  @relation("EventParticipantAsParticipant")
+  eventInvitesReceived  EventInvite[]       @relation("EventInviteReceived")
+  eventInvitesSent      EventInvite[]       @relation("EventInviteSent")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -162,6 +172,9 @@ model CustomBar {
   rootId               String?
   allowedNations       String?
   allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  nation               String?      // thematic nation (Argyra, Pyrakanth, etc.) from book analysis
+  archetype            String?      // thematic archetype (Bold Heart, Danger Walker, etc.) from book analysis
+  lockType             String?      // identity_lock | emotional_lock | action | possibility (transformation alignment)
   campaignRef          String?      // e.g. bruised-banana; when set, quest is campaign-linked
   campaignGoal         String?      // e.g. throw a party; the goal this quest fulfills
   emotionalAlchemyTag  String?      // aligned | curious | skeptical; when set, quest preferred for that onboarding branch
@@ -172,7 +185,13 @@ model CustomBar {
   backlogPromptPath    String?   // e.g. .specify/specs/lore-cyoa-onboarding/spec.md (verification quest → backlog update)
   evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
   sourceBarId          String?   // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
+  source321SessionId   String?   // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
+  isKeyUnblocker       Boolean   @default(false) // tetris: completing this subquest unblocks root + siblings
+  grantsMoveId         String?   // when set, completing this quest unlocks this NationMove
+  questSource          String?   // system | bounty; bounties have stakedPool > 0
+  stakedPool           Int       @default(0) // vibeulons in escrow for bounty payouts
   shares               BarShare[]
+  bountyStakes         BountyStake[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
   creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
   parent               CustomBar?     @relation("CustomBarTree", fields: [parentId], references: [id])
@@ -194,8 +213,28 @@ model CustomBar {
   sourceBar           CustomBar?          @relation("BarConversion", fields: [sourceBarId], references: [id], onDelete: SetNull)
   questsFromBar       CustomBar[]         @relation("BarConversion")
   questProposals      QuestProposal[]
+  responses           BarResponse[]
+  bindings            BarBinding[]
 
   @@map("custom_bars")
+}
+
+model Shadow321Session {
+  id               String    @id @default(cuid())
+  playerId         String
+  createdAt        DateTime  @default(now())
+  phase3Snapshot   String    // JSON: archetypeName, nationName, developmentalLens, genderOfCharge
+  phase2Snapshot   String    // JSON: q1, q5, alignedAction, moveType
+  outcome          String    // bar_created | quest_created | fueled_system | skipped
+  linkedBarId      String?
+  linkedQuestId    String?
+  questCompletedAt DateTime?
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([outcome])
+  @@map("shadow_321_sessions")
 }
 
 model QuestProposal {
@@ -252,6 +291,23 @@ model BarShare {
   @@index([toUserId, createdAt])
   @@index([barId, createdAt])
   @@map("bar_shares")
+}
+
+model BarResponse {
+  id           String   @id @default(cuid())
+  barId        String
+  responderId  String
+  responseType String   // join | curious | witness | offer_help | decline | cant_help | appreciate
+  message      String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  responder Player    @relation(fields: [responderId], references: [id], onDelete: Cascade)
+
+  @@unique([barId, responderId])
+  @@index([barId])
+  @@index([responderId])
+  @@map("bar_responses")
 }
 
 model Quest {
@@ -334,15 +390,17 @@ model QuestThread {
   creatorId        String?
   creationCost     Int              @default(0)
   completionReward Int              @default(0)
-  allowedPlaybooks String?
+  allowedArchetypes String?
   gateNationId     String?
-  gatePlaybookId   String?
+  gateArchetypeId  String?
   status           String           @default("active")
   createdAt        DateTime         @default(now())
   bookId           String?          @unique
   adventureId      String?          @unique
+  eventCampaignId  String?          @unique // Event production quest thread
   sourceQuestId    String?          // Provenance: upgraded from this CustomBar (quest)
   book             Book?            @relation(fields: [bookId], references: [id])
+  eventCampaign    EventCampaign?   @relation(fields: [eventCampaignId], references: [id], onDelete: SetNull)
   adventure        Adventure?       @relation(fields: [adventureId], references: [id], onDelete: SetNull)
   sourceQuest      CustomBar?       @relation("QuestUpgradeProvenance", fields: [sourceQuestId], references: [id])
   progress         ThreadProgress[]
@@ -384,7 +442,7 @@ model QuestPack {
   description      String?
   creatorType      String         @default("system")
   creatorId        String?
-  allowedPlaybooks String?
+  allowedArchetypes String?
   status           String         @default("active")
   visibility       String         @default("private")
   createdAt        DateTime       @default(now())
@@ -436,6 +494,7 @@ model VibulonEvent {
 model Vibulon {
   id            String   @id @default(cuid())
   ownerId       String?
+  creatorId     String?  // Signature: who "signed" this vibeulon (EFA=self, BAR=quest creator)
   originSource  String
   originId      String
   originTitle   String
@@ -443,6 +502,8 @@ model Vibulon {
   stakedOnBarId String?
   createdAt     DateTime @default(now())
   owner         Player?  @relation(fields: [ownerId], references: [id])
+  creator       Player?  @relation("VibulonCreator", fields: [creatorId], references: [id])
+  bountyStake   BountyStake?
 
   @@map("vibulons")
 }
@@ -481,10 +542,12 @@ model NationMove {
   id                 String                   @id @default(cuid())
   key                String                   @unique
   nationId           String
+  archetypeId        String?                  // when set, move is in archetype pool for this archetype
   polarityId         String?
   name               String
   description        String
   isStartingUnlocked Boolean                  @default(false)
+  usesPerPeriod      Int                      @default(2) // 0 = unlimited; max uses per period (daily)
   appliesToStatus    String                   @default("[]")
   requirementsSchema String                   @default("{}")
   effectsSchema      String                   @default("{}")
@@ -492,9 +555,12 @@ model NationMove {
   createdAt          DateTime                 @default(now())
   updatedAt          DateTime                 @updatedAt
   nation             Nation                   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+  archetype          Archetype?               @relation(fields: [archetypeId], references: [id], onDelete: SetNull)
   polarity           Polarity?                @relation(fields: [polarityId], references: [id])
   unlocks            PlayerNationMoveUnlock[]
   logs               QuestMoveLog[]
+  equipSlots         PlayerMoveEquip[]
+  uses               MoveUse[]
 
   @@index([nationId, sortOrder])
   @@map("nation_moves")
@@ -511,6 +577,35 @@ model PlayerNationMoveUnlock {
   @@unique([playerId, moveId])
   @@index([moveId, unlockedAt])
   @@map("player_nation_move_unlocks")
+}
+
+model PlayerMoveEquip {
+  id         String     @id @default(cuid())
+  playerId   String
+  slotIndex  Int        // 1-4
+  moveId     String
+  equippedAt DateTime   @default(now())
+  move       NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, slotIndex])
+  @@unique([playerId, moveId])
+  @@index([playerId])
+  @@map("player_move_equips")
+}
+
+model MoveUse {
+  id        String     @id @default(cuid())
+  playerId  String
+  moveId    String
+  periodKey String     // e.g. "2025-03-02" for daily
+  usedAt    DateTime   @default(now())
+  questId   String?
+  move      NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, moveId, periodKey])
+  @@map("move_uses")
 }
 
 model QuestMoveLog {
@@ -532,7 +627,7 @@ model QuestMoveLog {
   @@map("quest_move_logs")
 }
 
-model Playbook {
+model Archetype {
   id                String   @id @default(cuid())
   name              String   @unique
   description       String
@@ -553,8 +648,9 @@ model Playbook {
   createdAt         DateTime @default(now())
   emotionalFirstAid String?
   players           Player[]
+  nationMoves      NationMove[]
 
-  @@map("playbooks")
+  @@map("archetypes")
 }
 
 model EmotionalFirstAidTool {
@@ -738,6 +834,7 @@ model Instance {
   cashappUrl         String?
   paypalUrl          String?
   donationPackRateCents Int?   @default(100) // 100 = 1 pack per $1
+  packConfig          String?  // JSON: { packTypes: { [key]: { vibeulonAmount?: number, vibeulonMin?: number, vibeulonMax?: number } } }
   startDate          DateTime?
   endDate            DateTime?
   createdAt          DateTime             @default(now())
@@ -750,8 +847,221 @@ model Instance {
   libraryRequests    LibraryRequest[]
 
   gameboardSlots GameboardSlot[]
+  eventCampaigns EventCampaign[]
+  campaignPlaybook CampaignPlaybook?
+  campaignInvitations CampaignInvitation[]
+  barDeck BarDeck?
 
   @@map("instances")
+}
+
+model BarDeck {
+  id         String   @id @default(cuid())
+  instanceId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  instance Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  cards    BarDeckCard[]
+
+  @@map("bar_decks")
+}
+
+model BarDeckCard {
+  id           String   @id @default(cuid())
+  deckId       String
+  suit         String   // GATHERING_RESOURCES | RAISE_AWARENESS | DIRECT_ACTION | SKILLFUL_ORGANIZING
+  rank         Int      // 1-13
+  promptTitle  String
+  promptText   String   @db.Text
+  shufflePower Boolean  @default(false)
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deck    BarDeck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  bindings BarBinding[]
+
+  @@unique([deckId, suit, rank])
+  @@index([deckId])
+  @@map("bar_deck_cards")
+}
+
+model BarBinding {
+  id            String   @id @default(cuid())
+  cardId        String
+  barId         String
+  authorActorId String
+  instanceId    String?
+  status        String   @default("active") // active | removed | archived
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  card BarDeckCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  bar  CustomBar   @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@index([barId])
+  @@map("bar_bindings")
+}
+
+model ActorDeckState {
+  id             String    @id @default(cuid())
+  actorId        String
+  instanceId     String
+  deckCardIds    String    @default("[]") // JSON array: cards remaining in deck
+  handCardIds    String    @default("[]") // JSON array: 7 cards in hand
+  discardCardIds String    @default("[]") // JSON array: played cards
+  lastDrawAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([actorId, instanceId])
+  @@index([actorId])
+  @@index([instanceId])
+  @@map("actor_deck_states")
+}
+
+model CampaignInvitation {
+  id               String    @id @default(cuid())
+  instanceId       String
+  targetActorId    String
+  invitedRole      String
+  acceptedRole     String?
+  invitationType   String    // guiding_coalition | campaign_collaborator | domain_contributor | event_participant | observer
+  messageText      String    @db.Text
+  status           String    @default("draft") // draft | sent | accepted | declined | expired
+  createdByActorId String
+  sentAt           DateTime?
+  respondedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([targetActorId])
+  @@index([status])
+  @@map("campaign_invitations")
+}
+
+model CampaignPlaybook {
+  id               String   @id @default(cuid())
+  instanceId       String   @unique
+  origin           String   @default("")
+  vision           String   @default("")
+  people           String   @default("")
+  invitations      String   @default("")
+  timeline         String   @default("")
+  kotterStages     Json     @default("{}") // { "1": "...", "2": "...", ... }
+  domainStrategy   Json     @default("{}") // { "GATHERING_RESOURCES": "...", ... }
+  raciRoles        String   @default("")
+  recentUpdates    String   @default("")
+  generatedSummary String   @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_playbooks")
+}
+
+model EventCampaign {
+  id                String    @id @default(cuid())
+  campaignContext   String    // e.g. Bruised Banana Residency
+  topic             String    // e.g. Emotional First Aid, Friendcraft
+  primaryDomain     String    // GATHERING_RESOURCES | SKILLFUL_ORGANIZING | RAISE_AWARENESS | DIRECT_ACTION
+  productionGrammar String    // kotter | epiphany_bridge
+  campaignType      String    @default("event_production")
+  hostActorIds      String    @default("[]") // JSON array of Player ids
+  targetArchetypes  String    @default("[]") // JSON array
+  targetMoves       String    @default("[]") // JSON array: wakeUp, cleanUp, growUp, showUp
+  developmentalLens String?
+  status            String    @default("proposed") // proposed | planning | assembling | promotion | ready | event_live | post_event | archived
+  linkedEventIds    String    @default("[]") // JSON array of EventArtifact ids
+  instanceId        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  instance          Instance?        @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  productionThread  QuestThread?
+  events            EventArtifact[]
+
+  @@index([instanceId])
+  @@index([status])
+  @@map("event_campaigns")
+}
+
+model EventArtifact {
+  id                 String    @id @default(cuid())
+  linkedCampaignId   String
+  title              String
+  description        String    @db.Text
+  eventType          String    // workshop | meeting | fundraiser | dance | onboarding_session | discussion | training | ceremony | quest_action | gathering
+  topic              String    // inherited from campaign
+  campaignContext    String    // inherited from campaign
+  primaryDomain      String    // inherited from campaign
+  secondaryDomain    String?   // operational function of this event
+  targetArchetypes   String    @default("[]") // JSON array
+  targetMoves        String    @default("[]") // JSON array
+  developmentalLens String?
+  locationType       String    // in_person | virtual | hybrid | asynchronous_recording
+  locationDetails   String?
+  startTime          DateTime?
+  endTime            DateTime?
+  timezone           String?
+  visibility         String    @default("campaign_visible") // private | campaign_visible | public
+  status             String    @default("draft") // draft | scheduled | live | completed | recorded | archived
+  recordingUrl       String?
+  createdByActorId   String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  campaign           EventCampaign     @relation(fields: [linkedCampaignId], references: [id], onDelete: Cascade)
+  creator            Player            @relation("EventArtifactCreator", fields: [createdByActorId], references: [id])
+  invites            EventInvite[]
+  participants       EventParticipant[]
+
+  @@index([linkedCampaignId])
+  @@index([status])
+  @@index([startTime])
+  @@map("event_artifacts")
+}
+
+model EventParticipant {
+  id                String   @id @default(cuid())
+  eventId           String
+  participantId     String
+  participantState  String   // invited | interested | RSVP_yes | attending | attended | declined | no_show
+  functionalRole    String?  // host | co_host | facilitator | steward | participant | observer
+  raciRole          String?  // Responsible | Accountable | Consulted | Informed
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  event             EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  participant       Player        @relation("EventParticipantAsParticipant", fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, participantId])
+  @@index([participantId])
+  @@map("event_participants")
+}
+
+model EventInvite {
+  id               String   @id @default(cuid())
+  eventId          String
+  actorId          String
+  invitedByActorId String
+  inviteStatus     String   @default("pending") // pending | accepted | declined | expired
+  inviteSource     String?  // campaign_broadcast | direct_actor | quest_bar | public_discovery | organizer_admin
+  createdAt        DateTime @default(now())
+
+  event            EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  actor            Player        @relation("EventInviteReceived", fields: [actorId], references: [id], onDelete: Cascade)
+  invitedBy        Player        @relation("EventInviteSent", fields: [invitedByActorId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, actorId])
+  @@index([actorId])
+  @@map("event_invites")
 }
 
 model GameboardSlot {
@@ -816,6 +1126,21 @@ model GameboardAidOffer {
   @@index([slotId])
   @@index([stewardId, status])
   @@map("gameboard_aid_offers")
+}
+
+model BountyStake {
+  id        String   @id @default(cuid())
+  barId     String
+  vibulonId String
+  playerId  String
+  createdAt DateTime @default(now())
+  bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  vibulon   Vibulon   @relation(fields: [vibulonId], references: [id], onDelete: Cascade)
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([vibulonId])
+  @@index([barId])
+  @@map("bounty_stakes")
 }
 
 model RedemptionPack {

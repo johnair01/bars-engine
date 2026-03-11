@@ -8,7 +8,7 @@ import { fireTrigger } from '@/actions/quest-engine'
 import { getAlignmentContext } from '@/lib/iching-alignment'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { getHexagramStructure } from '@/lib/iching-struct'
-import { generateRandomUnpacking, getPlaybookPrimaryWave } from '@/lib/quest-grammar'
+import { generateRandomUnpacking, getArchetypePrimaryWave } from '@/lib/quest-grammar'
 import { compileQuestWithAI, publishIChingQuestToPlayer } from '@/actions/quest-grammar'
 import type { IChingContext } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
@@ -69,17 +69,17 @@ export async function generateGrammaticQuestFromReading(playerId: string, hexagr
 
         const player = await db.player.findUnique({
             where: { id: playerId },
-            include: { playbook: true, nation: true }
+            include: { archetype: true, nation: true }
         })
 
-        if (!player || !player.playbook) {
+        if (!player || !player.archetype) {
             return { error: 'Player or playbook not found' }
         }
 
         const nationElement: ElementKey | undefined = player.nation?.element && ELEMENT_KEYS.includes(player.nation.element as ElementKey)
             ? (player.nation.element as ElementKey)
             : undefined
-        const playbookPrimaryWave = await getPlaybookPrimaryWave(player.playbookId ?? '')
+        const archetypePrimaryWave = await getArchetypePrimaryWave(player.archetypeId ?? '')
 
         const hexagram = await db.bar.findUnique({
             where: { id: hexagramId }
@@ -111,7 +111,7 @@ export async function generateGrammaticQuestFromReading(playerId: string, hexagr
 
         const { unpackingAnswers, alignedAction, moveType } = generateRandomUnpacking({
             nationElement,
-            playbookPrimaryWave,
+            archetypePrimaryWave,
         })
 
         const compileResult = await compileQuestWithAI({
@@ -119,7 +119,7 @@ export async function generateGrammaticQuestFromReading(playerId: string, hexagr
             alignedAction,
             segment: 'player',
             ichingContext,
-            targetPlaybookId: player.playbookId ?? undefined,
+            targetArchetypeId: player.archetypeId ?? undefined,
             developmentalLens: alignmentContext.activeFace ?? undefined,
             moveType,
         })

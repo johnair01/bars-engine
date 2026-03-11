@@ -14,6 +14,7 @@ import { ALLYSHIP_DOMAINS, parseCampaignDomainPreference } from '@/lib/allyship-
 import Link from 'next/link'
 
 type MarketContent = {
+    currentPlayerId?: string | null
     packs: unknown[]
     quests: MarketQuest[]
     graveyardQuests?: MarketQuest[]
@@ -33,13 +34,14 @@ export default function AvailableBarsPage() {
     const [selectedNations, setSelectedNations] = useState<string[]>([])
     const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>([])
     const [selectedDomains, setSelectedDomains] = useState<string[]>([])
+    const [bountiesOnly, setBountiesOnly] = useState<boolean | null>(null)
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [showCampaignPath, setShowCampaignPath] = useState(false)
 
     const refreshContent = () => getMarketContent().then((data) => setContent(data as MarketContent))
 
     const hasDomainFilter = parseCampaignDomainPreference(content?.campaignDomainPreference ?? null).length > 0
-    const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0 || selectedDomains.length > 0
+    const hasClientFilters = searchQuery !== '' || activeStage !== null || selectedNations.length > 0 || selectedArchetypes.length > 0 || selectedDomains.length > 0 || bountiesOnly !== null
     const hasAnyFilter = hasDomainFilter || hasClientFilters
 
     const handleClearAllFilters = async () => {
@@ -65,11 +67,12 @@ export default function AvailableBarsPage() {
         nation: selectedNations.length ? selectedNations : undefined,
         archetype: selectedArchetypes.length ? selectedArchetypes : undefined,
         kotterStage: activeStage ?? undefined,
+        bountiesOnly: bountiesOnly ?? undefined,
     })
 
     // Get active filter options (nations/archetypes that have quests)
     const activeNations = Array.from(new Set((content?.quests || []).map(q => q.creator?.nation?.name).filter(Boolean)))
-    const activeArchetypes = Array.from(new Set((content?.quests || []).map(q => q.creator?.playbook?.name).filter(Boolean)))
+    const activeArchetypes = Array.from(new Set((content?.quests || []).map(q => q.creator?.archetype?.name).filter(Boolean)))
 
     if (!content) {
         return <div className="p-8 text-zinc-500">Loading commissions...</div>
@@ -155,6 +158,12 @@ export default function AvailableBarsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                        <button
+                            onClick={() => setBountiesOnly(bountiesOnly === true ? null : true)}
+                            className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${bountiesOnly === true ? 'bg-amber-600 border-amber-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'}`}
+                        >
+                            Bounties
+                        </button>
                         <div className="text-xs text-zinc-500 w-full md:w-auto mb-1 md:mb-0 px-1">Filter by domain</div>
                         {ALLYSHIP_DOMAINS.map(d => (
                             <button
@@ -256,7 +265,10 @@ export default function AvailableBarsPage() {
                 <QuestDetailModal
                     isOpen={!!selectedQuest}
                     onClose={() => setSelectedQuest(null)}
-                    quest={selectedQuest}
+                    quest={{
+                        ...selectedQuest,
+                        creatorId: selectedQuest.creator?.id,
+                    }}
                 />
             )}
 
@@ -311,7 +323,7 @@ function QuestCard({
     const stageInfo = KOTTER_STAGES[bar.kotterStage as KotterStage]
     const creator = bar.creator
     const nation = creator?.nation
-    const playbook = creator?.playbook
+    const archetype = creator?.archetype
     const isAnonymous = bar.isAnonymous || (bar.visibility === 'public' && !bar.showCreatorName) // Derived or explicit
 
     const [isRestoring, setIsRestoring] = useState(false)
@@ -331,14 +343,19 @@ function QuestCard({
 
                     {/* Creator Identity */}
                     <div className="flex flex-wrap gap-2 mt-2">
+                        {bar.isBounty && (
+                            <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-amber-900/30 text-amber-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-amber-700/50'} uppercase tracking-tighter`}>
+                                Bounty
+                            </span>
+                        )}
                         {nation && (
                             <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-blue-900/20 text-blue-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-blue-800/50'} uppercase tracking-tighter`}>
                                 {nation.name}
                             </span>
                         )}
-                        {playbook && (
+                        {archetype && (
                             <span className={`px-1.5 py-0.5 rounded ${isGraveyard ? 'bg-zinc-900/50 text-zinc-600' : 'bg-purple-900/20 text-purple-400'} text-[9px] font-bold border ${isGraveyard ? 'border-zinc-800' : 'border-purple-800/50'} uppercase tracking-tighter`}>
-                                {playbook.name}
+                                {archetype.name}
                             </span>
                         )}
                         {bar.allyshipDomain && (

@@ -215,7 +215,7 @@ export async function advanceThreadForPlayer(
 
 export type OrientationPersonalization = {
     nationId?: string | null
-    playbookId?: string | null
+    archetypeId?: string | null
     allyshipDomains?: string[]
     developmentalHint?: string | null
     /** Bruised Banana: lens from onboarding (community/creative/strategic/allyship). When set, assign bruised-banana-orientation-thread. */
@@ -235,7 +235,7 @@ export async function assignOrientationThreads(
     if (!params) {
         const player = await db.player.findUnique({
             where: { id: playerId },
-            select: { storyProgress: true, nationId: true, playbookId: true, campaignDomainPreference: true }
+            select: { storyProgress: true, nationId: true, archetypeId: true, campaignDomainPreference: true }
         })
         if (player?.storyProgress) {
             try {
@@ -269,7 +269,7 @@ export async function assignOrientationThreads(
                     }
                     params = {
                         nationId: (state.nationId as string) ?? player.nationId,
-                        playbookId: (state.playbookId as string) ?? player.playbookId,
+                        archetypeId: (typeof state.archetypeId === 'string' ? state.archetypeId : typeof state.playbookId === 'string' ? state.playbookId : null) ?? player.archetypeId,
                         allyshipDomains: allyshipDomains.length > 0 ? allyshipDomains : undefined,
                         developmentalHint: state.developmentalHint as string | undefined,
                         lens: typeof state.lens === 'string' && state.lens.trim() ? state.lens.trim() : undefined
@@ -282,7 +282,7 @@ export async function assignOrientationThreads(
         if (!params) {
             params = {
                 nationId: undefined,
-                playbookId: undefined,
+                archetypeId: undefined,
                 allyshipDomains: undefined,
                 developmentalHint: undefined
             }

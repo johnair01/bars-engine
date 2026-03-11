@@ -82,6 +82,52 @@ The Bruised Banana Residency is a creative space and community supporting artist
 `,
     },
     {
+        slug: 'bars-guide',
+        title: 'What Are BARs and How to Create Them',
+        tags: ['bar', 'bars', 'create', 'inspiration', 'quest', 'gameplay'],
+        bodyRst: `What Are BARs and How to Create Them
+====================================
+
+BARs are kernels of potential—seeds that fuel quests and add context to your journey.
+
+**What is a BAR?** A compressed unit of potential: an insight, story, or intention. BARs can become quests, rules, lore, or community norms. They have provenance—who created them, when, and why.
+
+**How to create**: Go to /bars/create or the BARs page. Give it a title and description. Share what you're noticing, what you want to contribute, or what you need. BARs can be private (drafts) or public (shared).
+
+**How BARs connect to gameplay**: BARs fuel quests—admins turn high-quality BARs into quests for the campaign. BARs add context to quests—you can attach a BAR to a quest for inspiration. BARs move the needle.
+`,
+    },
+    {
+        slug: 'quests-guide',
+        title: 'How to Make Quests and Add Subquests',
+        tags: ['quest', 'quests', 'create', 'subquest', 'gameboard', 'campaign'],
+        bodyRst: `How to Make Quests and Add Subquests
+====================================
+
+Quests are the work of the game.
+
+**How to make a quest**: Create from the Create BAR flow—BARs often become quests. Or browse the Market to accept quests. Campaign quests live on the Gameboard—complete them there and draw new ones.
+
+**Subquests**: Campaign quests can have subquests—smaller steps. When you pick up a campaign quest, you can add subquests to break it down. Personal and public quests can be appended to campaign quests for context.
+
+**Where quests live**: Gameboard (campaign), Dashboard (active), Quest Wallet (/hand), Market (browse).
+`,
+    },
+    {
+        slug: 'emotional-first-aid-guide',
+        title: 'How to Use Emotional First Aid',
+        tags: ['efa', 'emotional first aid', 'clean up', 'medbay', 'unblock', 'stuck'],
+        bodyRst: `How to Use Emotional First Aid
+============================
+
+EFA is the Clean Up move. It helps you unblock emotional energy when something is blocking you.
+
+**When to use**: When you feel stuck—when you want to complete a quest but something blocks you. When you're low on energy. When you need to clear inner obstacles before you can Show Up.
+
+**How to use**: Go to /emotional-first-aid (or Game Map → Emotional First Aid). The kit offers prompts and moves. Choose one that resonates. Follow the protocol. You earn vibeulons. Return to your quests with clearer energy.
+`,
+    },
+    {
         slug: 'allyship-domains',
         title: 'Allyship Domains (WHERE)',
         tags: ['domains', 'allyship', 'GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'],

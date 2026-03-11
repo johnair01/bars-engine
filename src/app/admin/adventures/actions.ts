@@ -81,3 +81,51 @@ export async function updateAdventureCampaignRef(formData: FormData) {
     })
     revalidatePath(`/admin/adventures/${adventureId}`)
 }
+
+/** Import passages from JSON. Format: [{ nodeId, text, choices: [{ text, targetId }] }] */
+export async function importPassagesFromJson(
+    adventureId: string,
+    json: string
+): Promise<{ success: true; count: number } | { success: false; error: string }> {
+    let nodes: { nodeId: string; text: string; choices?: { text: string; targetId: string }[] }[]
+    try {
+        const parsed = JSON.parse(json) as unknown
+        if (!Array.isArray(parsed)) {
+            return { success: false, error: 'JSON must be an array of passages' }
+        }
+        nodes = parsed
+    } catch (e) {
+        return { success: false, error: 'Invalid JSON' }
+    }
+
+    const adventure = await db.adventure.findUnique({ where: { id: adventureId } })
+    if (!adventure) return { success: false, error: 'Adventure not found' }
+
+    let count = 0
+    for (const node of nodes) {
+        if (!node.nodeId || typeof node.text !== 'string') continue
+        const choices = Array.isArray(node.choices)
+            ? node.choices.filter((c) => c && typeof c.text === 'string' && typeof c.targetId === 'string')
+            : []
+        try {
+            await db.passage.upsert({
+                where: {
+                    adventureId_nodeId: { adventureId, nodeId: node.nodeId },
+                },
+                update: { text: node.text, choices: JSON.stringify(choices) },
+                create: {
+                    adventureId,
+                    nodeId: node.nodeId,
+                    text: node.text,
+                    choices: JSON.stringify(choices),
+                },
+            })
+            count++
+        } catch {
+            /* skip duplicates or invalid */
+        }
+    }
+
+    revalidatePath(`/admin/adventures/${adventureId}`)
+    return { success: true, count }
+}

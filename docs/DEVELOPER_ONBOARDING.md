@@ -98,7 +98,7 @@ Run each command and fix any failure before proceeding.
 |---------|---------|
 | `npm run smoke` | Checks `DATABASE_URL` and database connectivity |
 | `npm run check` | Lint + TypeScript type-check |
-| `npm run build` | Full Next.js build (includes Prisma migrate deploy) |
+| `npm run build` | Next.js build. With `DATABASE_URL` set: runs migrate deploy + build. Without: skips migrate, runs generate + build (for type-check/compile verification). |
 | `npm run test:quest-grammar` | Quest grammar unit tests (if applicable) |
 
 ### Example verification flow

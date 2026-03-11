@@ -51,7 +51,7 @@ The backlog has **strong examples** of deftness and API-first design (prisma-cli
 | avatar-visibility-and-cert-report-issue | UI (bug fix) | No API surface; acceptable for pure bug fix |
 | admin-agent-forge | Infra | Complex state machine; no explicit API contract section |
 | story-quest-map-exploration | UI | No spec yet; prompt-only |
-| Appreciation Mechanic (W) | Economy | No spec; backlog entry only |
+| Appreciation Mechanic (W) | Economy | ✅ **Resolved** — [spec](.specify/specs/appreciation-mechanic/spec.md) with API contracts |
 | Signature Vibeulons (X) | Economy | No spec; backlog entry only |
 | Bruised Banana House (Y) | UI/Infra | No spec; backlog entry only |
 

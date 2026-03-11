@@ -26,7 +26,7 @@ export function QuestWizard({
     const [step, setStep] = useState<number>(1)
     const [templates, setTemplates] = useState<QuestTemplate[]>([])
     const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
-    const [formData, setFormData] = useState<any>({ scope: 'personal_self', visibility: 'private', reward: 1 })
+    const [formData, setFormData] = useState<any>({ scope: 'personal_self', visibility: 'private', reward: 1, isBounty: false, stakeAmount: 3, maxCompletions: 1, rewardPerCompletion: 1 })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [twineStories, setTwineStories] = useState<{ id: string; title: string }[]>([])
@@ -102,6 +102,10 @@ export function QuestWizard({
                 moveType: formData.moveType || formData.lifecycleFraming,
                 allyshipDomain,
                 barTypeOnCompletion: formData.barTypeOnCompletion || null,
+                isBounty: visibility === 'public' && !!formData.isBounty,
+                stakeAmount: formData.stakeAmount ?? 3,
+                maxCompletions: formData.maxCompletions ?? 1,
+                rewardPerCompletion: formData.rewardPerCompletion ?? 1,
                 ...(gameboardContext && {
                     campaignRef: gameboardContext.campaignRef,
                     campaignGoal: formData.campaignGoal || 'gameboard subquest',
@@ -341,12 +345,68 @@ export function QuestWizard({
                                 }`}
                         >
                             <div className="font-bold mb-1">Collective</div>
-                            <div className="text-xs opacity-70">Anyone can claim. Public. Costs 1 Vibeulon.</div>
+                            <div className="text-xs opacity-70">Anyone can claim. Public. Costs 1 Vibeulon or stake a Bounty.</div>
                         </button>
                     </div>
                 </div>
 
-                {/* Reward */}
+                {/* Bounty mode (when collective) */}
+                {formData.scope === 'collective' && (
+                    <div className="space-y-3 pt-4 border-t border-zinc-800">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={!!formData.isBounty}
+                                onChange={(e) => handleInputChange('isBounty', e.target.checked)}
+                                className="rounded border-zinc-600 bg-zinc-900"
+                            />
+                            <span className="text-sm font-bold text-amber-400">Bounty mode</span>
+                        </label>
+                        <p className="text-[10px] text-zinc-600">Stake vibeulons so others can complete and earn from your pool. Stake ≥ max completions × reward.</p>
+                        {formData.isBounty && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-amber-950/20 border border-amber-800/40 rounded-xl">
+                                <div>
+                                    <label className="block text-xs text-zinc-500 mb-1">Stake (vibeulons)</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={formData.stakeAmount ?? 3}
+                                        onChange={(e) => handleInputChange('stakeAmount', parseInt(e.target.value, 10) || 3)}
+                                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-zinc-500 mb-1">Max completions</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={formData.maxCompletions ?? 1}
+                                        onChange={(e) => handleInputChange('maxCompletions', parseInt(e.target.value, 10) || 1)}
+                                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-zinc-500 mb-1">Reward per completion</label>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={formData.rewardPerCompletion ?? 1}
+                                        onChange={(e) => handleInputChange('rewardPerCompletion', parseInt(e.target.value, 10) || 1)}
+                                        className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                                    />
+                                </div>
+                                {formData.stakeAmount < (formData.maxCompletions ?? 1) * (formData.rewardPerCompletion ?? 1) && (
+                                    <p className="col-span-full text-xs text-amber-400">
+                                        Stake must be ≥ {((formData.maxCompletions ?? 1) * (formData.rewardPerCompletion ?? 1))} (max completions × reward)
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Reward (hidden when Bounty mode - uses rewardPerCompletion) */}
+                {!(formData.scope === 'collective' && formData.isBounty) && (
                 <div className="space-y-3 pt-4 border-t border-zinc-800">
                     <label className="text-xs uppercase text-zinc-500 block">Vibeulon Reward</label>
                     <p className="text-[10px] text-zinc-600">How many vibeulons the completer receives.</p>
@@ -366,6 +426,7 @@ export function QuestWizard({
                         ))}
                     </div>
                 </div>
+                )}
 
                 {/* Move + Domain for gameboard only (non-gameboard has from step 1) */}
                 {gameboardContext && (

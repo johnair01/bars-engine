@@ -10,7 +10,7 @@ export type MarketQuestCreator = {
   name: string | null
   avatarConfig: string | null
   nation: { name: string } | null
-  playbook: { name: string } | null
+  archetype: { name: string } | null
 }
 
 export type MarketQuest = {
@@ -24,6 +24,8 @@ export type MarketQuest = {
   showCreatorName?: boolean
   visibility?: string
   creator: MarketQuestCreator | null
+  /** True when questSource === 'bounty' or stakedPool > 0 */
+  isBounty?: boolean
 }
 
 /** Client-side filter params. Server returns all player quests; client filters for UX. */
@@ -33,6 +35,8 @@ export type MarketFilters = {
   nation?: string[]
   archetype?: string[]
   kotterStage?: number | null
+  /** When true, show only bounties; when false, show only non-bounties; when undefined, show all */
+  bountiesOnly?: boolean
 }
 
 /**
@@ -58,12 +62,14 @@ export function filterMarketQuests(
       if (!creatorNation || !filters.nation.includes(creatorNation)) return false
     }
     if (filters.archetype?.length) {
-      const creatorArchetype = q.creator?.playbook?.name
+      const creatorArchetype = q.creator?.archetype?.name
       if (!creatorArchetype || !filters.archetype.includes(creatorArchetype)) return false
     }
     if (filters.kotterStage != null && q.kotterStage !== filters.kotterStage) {
       return false
     }
+    if (filters.bountiesOnly === true && !q.isBounty) return false
+    if (filters.bountiesOnly === false && q.isBounty) return false
     return true
   })
 }

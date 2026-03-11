@@ -8,10 +8,10 @@ import { slugifyName } from '@/lib/avatar-utils'
 type SpriteAssetsData = {
     byLayer: Record<string, { expected: string[]; existing: string[] }>
     nations: { name: string }[]
-    playbooks: { name: string }[]
+    archetypes: { name: string }[]
 }
 
-const LAYERS = ['base', 'nation_body', 'nation_accent', 'playbook_outfit', 'playbook_accent'] as const
+const LAYERS = ['base', 'nation_body', 'nation_accent', 'archetype_outfit', 'archetype_accent'] as const
 const BASE_KEYS = ['male', 'female', 'neutral', 'default']
 
 export function SpriteAssetsClient({ data }: { data: SpriteAssetsData }) {
@@ -28,8 +28,8 @@ export function SpriteAssetsClient({ data }: { data: SpriteAssetsData }) {
         if (layer === 'nation_body' || layer === 'nation_accent') {
             return data.nations.map((n) => slugifyName(n.name))
         }
-        if (layer === 'playbook_outfit' || layer === 'playbook_accent') {
-            return data.playbooks.map((p) => slugifyName(p.name))
+        if (layer === 'archetype_outfit' || layer === 'archetype_accent') {
+            return data.archetypes.map((p) => slugifyName(p.name))
         }
         return []
     }

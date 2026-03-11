@@ -21,7 +21,7 @@ export default async function OnboardingController(props: { searchParams: Promis
     if (!player) redirect('/login')
 
     // Admins with nation+archetype skip onboarding
-    if (player.nationId && player.playbookId) {
+    if (player.nationId && player.archetypeId) {
         redirect('/?ritualComplete=true')
     }
 

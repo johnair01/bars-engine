@@ -37,7 +37,7 @@ async function verifyE2E() {
         where: { id: playerId },
         data: {
             nationId: null,
-            playbookId: null,
+            archetypeId: null,
             onboardingComplete: false,
             hasCompletedFirstQuest: false,
             hasCreatedFirstQuest: false
@@ -78,10 +78,10 @@ async function verifyE2E() {
     await advanceRun(story.id, 'Archetype: The Catalyst', null, playerId)
 
     // Verify Archetype set
-    const boldHeart = await db.playbook.findFirst({ where: { name: 'The Bold Heart' } })
+    const boldHeart = await db.archetype.findFirst({ where: { name: 'The Bold Heart' } })
     updatedPlayer = await db.player.findUnique({ where: { id: playerId } })
-    console.log(`📊 Archetype set: ${updatedPlayer?.playbookId} (expected ${boldHeart?.id})`)
-    if (updatedPlayer?.playbookId !== boldHeart?.id) throw new Error('Archetype not set correctly')
+    console.log(`📊 Archetype set: ${updatedPlayer?.archetypeId} (expected ${boldHeart?.id})`)
+    if (updatedPlayer?.archetypeId !== boldHeart?.id) throw new Error('Archetype not set correctly')
 
     // 6. Finish (DASHBOARD)
     console.log('⏩ Advancing to Conclusion and Dashboard...')

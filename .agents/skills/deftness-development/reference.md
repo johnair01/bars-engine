@@ -104,3 +104,25 @@ When generating specs, quest prose, or design docs, prefer the metaphor that mak
 | **Action node** | `isActionNode` + `actionType` — campaign-agnostic commitment moment | `isDonationNode` — donation is one specific action |
 | **Campaign mapping** | `campaignId` → `actionType` (bruised-banana → donation, onboarding → signup) | Hardcoding donation-only logic |
 | **Spec** | [quest-grammar-action-node](../../.specify/specs/quest-grammar-action-node/spec.md) | |
+
+---
+
+## Generative Dependency Checklist
+
+When organizing backlog or proposing a new spec, ask:
+
+- [ ] **Merge check**: Can this item absorb one or more other Ready items? (e.g. AG merged AF + AC)
+- [ ] **Supersession check**: Does solving this make other items obsolete? Document "Supersedes: X, Y" in spec or BACKLOG.
+- [ ] **Foundation check**: Does this unlock many downstream items? Prioritize it.
+- [ ] **Testable artifact**: Can we verify the generative relationship? (e.g. after X is done, Y and Z are marked superseded)
+- [ ] **Backlog update**: When a generative item is done, update BACKLOG.md to mark superseded items and remove redundant work.
+
+**Testable artifacts** for generative dependencies:
+- A short analysis file or spec section listing: items merged, items superseded, items that become trivial
+- BACKLOG.md status changes (Superseded by X) that can be verified
+- Post-implementation check: the listed items are indeed obsolete or removed
+
+**Historical examples** (from BACKLOG.md):
+- AG superseded AF, AC
+- FF (Fundraiser Landing Refactor) superseded T
+- CQ (Quest Grammar Action Node): one schema change unlocked Campaign Quality Automation

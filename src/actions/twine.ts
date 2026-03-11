@@ -981,7 +981,7 @@ async function executeBindingsForPassage(
             } else if (binding.actionType === 'CONFIRM_ARCHETYPE') {
                 const archetypeKey = diagState.recommendedArchetype || payload.archetypeId
                 if (archetypeKey) {
-                    const playbook = await db.playbook.findFirst({
+                    const playbook = await db.archetype.findFirst({
                         where: {
                             OR: [
                                 { id: archetypeKey },
@@ -992,7 +992,7 @@ async function executeBindingsForPassage(
                     if (playbook) {
                         await db.player.update({
                             where: { id: playerId },
-                            data: { playbookId: playbook.id }
+                            data: { archetypeId: playbook.id }
                         })
                         diagState = confirmSelection(diagState, 'archetype')
                         diagDirty = true

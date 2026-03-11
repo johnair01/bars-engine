@@ -34,7 +34,7 @@ export async function checkAffinityMatch(playerId: string, questId: string) {
     const [player, quest] = await Promise.all([
         db.player.findUnique({
             where: { id: playerId },
-            include: { playbook: true }
+            include: { archetype: true }
         }),
         db.customBar.findUnique({
             where: { id: questId },
@@ -42,13 +42,13 @@ export async function checkAffinityMatch(playerId: string, questId: string) {
         })
     ])
 
-    if (!player?.playbook || !quest) return { match: false }
+    if (!player?.archetype || !quest) return { match: false }
 
     const stage = quest.kotterStage as KotterStage
     const stageInfo = KOTTER_STAGES[stage]
 
     // Extract trigram name from playbook (e.g., "Heaven (Qian)" -> "Heaven")
-    const playbookTrigram = player.playbook.name.split(' ')[0]
+    const playbookTrigram = player.archetype.name.split(' ')[0]
 
     return {
         match: playbookTrigram === stageInfo.trigram,

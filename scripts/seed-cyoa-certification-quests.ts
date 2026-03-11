@@ -29,7 +29,8 @@ const CERT_QUEST_IDS = [
     'cert-starter-quest-generator-v1',
     'cert-admin-onboarding-flow-api-v1',
     'cert-onboarding-flow-completion-v1',
-    'cert-twine-authoring-ir-v1'
+    'cert-twine-authoring-ir-v1',
+    'cert-offers-bounty-packs-v1'
 ]
 
 async function seed() {
@@ -2947,6 +2948,47 @@ async function seed() {
         },
     })
     console.log(`✅ Quest seeded: cert-twine-authoring-ir-v1`)
+
+    // cert-offers-bounty-packs-v1 (Z)
+    const offersBountySlug = 'cert-offers-bounty-packs-v1'
+    const offersBountyPassages = [
+        { name: 'START', pid: '1', text: 'Prepare the party for the Bruised Banana Fundraiser by verifying Bounties and Donation Packs. Create a bounty, complete it, and redeem a pack.', cleanText: 'Verify Bounties and Donation Packs.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Create a bounty\n\n[Open Create Quest](/quest/create). Choose Collective scope, enable **Bounty mode**, set stake (e.g. 3), max completions (1), reward (1). Publish. Confirm the quest appears on [The Market](/bars/available) with a **Bounty** badge.', cleanText: 'Create a bounty.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Complete the bounty\n\nHave another player (or a second account) claim and complete your bounty. Confirm they receive the staked vibeulons from escrow (not a new mint).', cleanText: 'Complete the bounty.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Redeem a pack\n\n[Donate](/event/donate) (self-report) or have an admin create a pack for you. [Open your Wallet](/wallet). Confirm **Redemption Packs** appear. Click **Redeem** on a pack. Confirm vibeulons are minted.', cleanText: 'Redeem a pack.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '5', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '6', text: 'Bounties and Donation Packs verified. You can create bounties, complete them for staked payout, and redeem packs for vibeulons. Complete this quest to receive your reward.', cleanText: 'Verification complete.', links: [] },
+    ]
+    const offersBountyStory = await db.twineStory.upsert({
+        where: { slug: offersBountySlug },
+        update: { title: 'Certification: Offers, Bounty, Donation Packs V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: offersBountyPassages }), isPublished: true },
+        create: {
+            title: 'Certification: Offers, Bounty, Donation Packs V1',
+            slug: offersBountySlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Offers Bounty Donation Packs certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: offersBountyPassages }),
+            isPublished: true,
+            createdById,
+        },
+    })
+    await db.customBar.upsert({
+        where: { id: offersBountySlug },
+        update: { title: 'Certification: Offers, Bounty, Donation Packs V1', description: 'Verify bounties and donation packs: create bounty, complete bounty, redeem pack.', twineStoryId: offersBountyStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/offers-bounty-donation-packs/spec.md' },
+        create: {
+            id: offersBountySlug,
+            title: 'Certification: Offers, Bounty, Donation Packs V1',
+            description: 'Verify bounties and donation packs: create bounty, complete bounty, redeem pack.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: offersBountyStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/offers-bounty-donation-packs/spec.md',
+        },
+    })
+    console.log(`✅ Quest seeded: cert-offers-bounty-packs-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

@@ -48,7 +48,7 @@ export default function EditPackPage() {
                     setTitle(data.title)
                     setDescription(data.description || '')
                     try {
-                        setAllowedPlaybooks(data.allowedPlaybooks ? JSON.parse(data.allowedPlaybooks) : [])
+                        setAllowedPlaybooks(data.allowedArchetypes ? JSON.parse(data.allowedArchetypes) : [])
                     } catch (e) { setAllowedPlaybooks([]) }
 
                     // Enrich quests
@@ -73,7 +73,7 @@ export default function EditPackPage() {
                 id: isNew ? undefined : id,
                 title,
                 description,
-                allowedPlaybooks: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
+                allowedArchetypes: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
             })
             await updatePackQuests(savedPack.id, packQuests.map(q => q.questId))
 

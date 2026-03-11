@@ -135,8 +135,8 @@ function main() {
     const config = loadSilhouetteConfig()
     const bodyDir = path.join(PARTS_DIR, 'nation_body')
     const accentDir = path.join(PARTS_DIR, 'nation_accent')
-    const outfitDir = path.join(PARTS_DIR, 'playbook_outfit')
-    const playbookAccentDir = path.join(PARTS_DIR, 'playbook_accent')
+    const outfitDir = path.join(PARTS_DIR, 'archetype_outfit')
+    const playbookAccentDir = path.join(PARTS_DIR, 'archetype_accent')
     ensureDir(bodyDir)
     ensureDir(accentDir)
     ensureDir(outfitDir)
@@ -155,7 +155,7 @@ function main() {
         const accentPng = createColoredOverlay(hex, config.playbookAccent, 230)
         fs.writeFileSync(path.join(outfitDir, `${key}.png`), PNG.sync.write(outfitPng))
         fs.writeFileSync(path.join(playbookAccentDir, `${key}.png`), PNG.sync.write(accentPng))
-        console.log(`✅ ${key}: playbook_outfit, playbook_accent`)
+        console.log(`✅ ${key}: archetype_outfit, archetype_accent`)
     }
 
     console.log('Done. Test stacking at /admin/avatars')

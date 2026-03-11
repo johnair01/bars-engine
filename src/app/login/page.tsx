@@ -17,10 +17,10 @@ export default async function LoginPage({
     if (playerId) {
         const player = await db.player.findUnique({
             where: { id: playerId },
-            select: { id: true, nationId: true, playbookId: true }
+            select: { id: true, nationId: true, archetypeId: true }
         })
         if (player) {
-            if (!player.nationId || !player.playbookId) {
+            if (!player.nationId || !player.archetypeId) {
                 redirect('/conclave/onboarding')
             }
             redirect(returnTo && returnTo.startsWith('/') ? returnTo : '/')

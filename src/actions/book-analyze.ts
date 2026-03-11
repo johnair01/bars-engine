@@ -5,14 +5,26 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
-import { chunkBookText, type TextChunk } from '@/lib/book-chunker'
+import { chunkBookText, chunkBookTextWithToc, type TextChunk } from '@/lib/book-chunker'
 import { chunkIsActionable } from '@/lib/chunk-filter'
 import { suggestDomain, CONFIDENCE_THRESHOLD } from '@/lib/quest-classifier'
+import { suggestMove, suggestNation, suggestKotterStage, suggestArchetype } from '@/lib/book-section-mapper'
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
 
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 const ALLYSHIP_DOMAINS = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'] as const
+const NATIONS = ['Argyra', 'Pyrakanth', 'Lamenth', 'Meridia', 'Virelune'] as const
+const LOCK_TYPES = ['identity_lock', 'emotional_lock', 'action', 'possibility'] as const
+
+export type AnalysisFilters = {
+  moveType?: (typeof MOVE_TYPES)[number][]
+  nation?: string[]
+  archetype?: string[]
+  kotterStage?: number[]
+}
+
+const FILTER_CONFIDENCE_THRESHOLD = 0.5
 
 const MAX_CHUNKS = 15
 const PARALLEL_BATCH = 2
@@ -37,6 +49,10 @@ const analysisSchema = z.object({
       description: z.string().describe('Quest instructions or narrative'),
       moveType: z.enum(MOVE_TYPES).describe('Which of the 4 moves: Wake Up, Clean Up, Grow Up, Show Up'),
       allyshipDomain: z.enum(ALLYSHIP_DOMAINS).nullable().describe('Essential domain (WHERE). When multiple apply, choose the primary one. Null if purely individual with no clear collective context.'),
+      nation: z.enum(NATIONS).nullable().optional().describe('Thematic nation alignment (Argyra=clarity, Pyrakanth=passion, Lamenth=emotion, Meridia=balance, Virelune=growth). Null if unclear.'),
+      archetype: z.string().nullable().optional().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
+      kotterStage: z.number().min(1).max(8).optional().describe('Kotter change stage 1-8. Default 1 if unclear.'),
+      lockType: z.enum(LOCK_TYPES).nullable().optional().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
     })
   ),
 })
@@ -46,6 +62,10 @@ type QuestResult = {
   description: string
   moveType: string
   allyshipDomain?: string | null
+  nation?: string | null
+  archetype?: string | null
+  kotterStage?: number
+  lockType?: string | null
 }
 
 async function requireAdmin(): Promise<string> {
@@ -82,13 +102,79 @@ Extract potential quests (actionable tasks) from this text chunk. Each quest sho
 
 ${ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT}
 
+Optional metadata (use when context supports it):
+- nation: Argyra (clarity/precision), Pyrakanth (passion/intensity), Lamenth (emotion/flow), Meridia (balance), Virelune (growth/connection)
+- archetype: Bold Heart, Danger Walker, Truth Seer, Still Point, Subtle Influence, Devoted Guardian, Decisive Storm, Joyful Connector
+- kotterStage: 1-8 (urgency→coalition→vision→communicate→obstacles→wins→scale→anchor)
+- lockType: identity_lock, emotional_lock, action, possibility
+
 Focus on quests that help players Grow Up (skill-building) when the content supports it.
 Return 1-5 quests per chunk. Skip chunks with no actionable content.`
+
+function buildTargetPromptLine(filters: AnalysisFilters): string {
+  const parts: string[] = []
+  if (filters.moveType?.length) parts.push(`move: ${filters.moveType.join(', ')}`)
+  if (filters.nation?.length) parts.push(`nation: ${filters.nation.join(', ')}`)
+  if (filters.archetype?.length) parts.push(`archetype: ${filters.archetype.join(', ')}`)
+  if (filters.kotterStage?.length) parts.push(`Kotter stage: ${filters.kotterStage.join(', ')}`)
+  if (parts.length === 0) return ''
+  return `Extract ONLY quests that fit: ${parts.join('; ')}.\n\n`
+}
+
+/** Section contradicts filters when it has a hint that explicitly doesn't match. Skip such chunks without running heuristics. */
+function sectionContradictsFilters(
+  hint: { moveType?: string; nation?: string; archetype?: string; kotterStage?: number } | null,
+  filters: AnalysisFilters
+): boolean {
+  if (!hint) return false
+  if (filters.moveType?.length && hint.moveType && !filters.moveType.includes(hint.moveType as (typeof MOVE_TYPES)[number])) return true
+  if (filters.nation?.length && hint.nation && !filters.nation.includes(hint.nation)) return true
+  if (filters.archetype?.length && hint.archetype && !filters.archetype.includes(hint.archetype)) return true
+  if (filters.kotterStage?.length && hint.kotterStage != null && !filters.kotterStage.includes(hint.kotterStage)) return true
+  return false
+}
+
+function chunkMatchesFilters(
+  chunk: TextChunk,
+  filters: AnalysisFilters,
+  sectionHints?: Array<{ moveType?: string; nation?: string; archetype?: string; kotterStage?: number }>
+): boolean {
+  const hint = chunk.sectionIndex != null && sectionHints?.[chunk.sectionIndex] ? sectionHints[chunk.sectionIndex] : null
+
+  if (sectionContradictsFilters(hint, filters)) return false
+
+  if (filters.moveType?.length) {
+    const m = suggestMove(chunk.text)
+    const sectionMatch = hint?.moveType && filters.moveType.includes(hint.moveType as (typeof MOVE_TYPES)[number])
+    const chunkMatch = m.value && m.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.moveType.includes(m.value as (typeof MOVE_TYPES)[number])
+    if (!sectionMatch && !chunkMatch) return false
+  }
+  if (filters.nation?.length) {
+    const n = suggestNation(chunk.text)
+    const sectionMatch = hint?.nation && filters.nation.includes(hint.nation)
+    const chunkMatch = n.value && n.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.nation.includes(n.value)
+    if (!sectionMatch && !chunkMatch) return false
+  }
+  if (filters.archetype?.length) {
+    const a = suggestArchetype(chunk.text)
+    const sectionMatch = hint?.archetype && filters.archetype.includes(hint.archetype)
+    const chunkMatch = a.value && a.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.archetype.includes(a.value)
+    if (!sectionMatch && !chunkMatch) return false
+  }
+  if (filters.kotterStage?.length) {
+    const k = suggestKotterStage(chunk.text)
+    const sectionMatch = hint?.kotterStage != null && filters.kotterStage.includes(hint.kotterStage)
+    const chunkMatch = k.value != null && k.confidence >= FILTER_CONFIDENCE_THRESHOLD && filters.kotterStage.includes(k.value)
+    if (!sectionMatch && !chunkMatch) return false
+  }
+  return true
+}
 
 /** Run AI analysis on chunks and return quests + cache stats. */
 async function runChunkAnalysis(
   bookId: string,
   chunksToProcess: TextChunk[],
+  targetPromptLine = ''
 ): Promise<{ quests: QuestResult[]; cacheHits: number; cacheMisses: number; heuristicHits: number }> {
   const allQuests: QuestResult[] = []
   let cacheHits = 0
@@ -106,14 +192,14 @@ async function runChunkAnalysis(
             ? `Domain hint (high confidence): ${domainHint}. Prioritize this domain when clear.\n\n`
             : ''
         if (domainHint && confidence >= CONFIDENCE_THRESHOLD) heuristicHits++
-        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}`
+        const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}:target:${targetPromptLine.slice(0, 100)}`
         return generateObjectWithCache<z.infer<typeof analysisSchema>>({
           feature: 'book_analysis',
           inputKey,
           model: modelId,
           schema: analysisSchema,
           system: SYSTEM_PROMPT,
-          prompt: `Analyze this book chunk and extract quests:\n\n${hintLine}---\n${chunk.text}\n---`,
+          prompt: `Analyze this book chunk and extract quests:\n\n${targetPromptLine}${hintLine}---\n${chunk.text}\n---`,
           getModel: () => getOpenAI()(modelId),
         })
       })
@@ -161,6 +247,10 @@ async function createQuestsFromAnalysis(
         isSystem: true,
         moveType: q.moveType,
         allyshipDomain: q.allyshipDomain ?? null,
+        nation: q.nation ?? null,
+        archetype: q.archetype ?? null,
+        kotterStage: q.kotterStage ?? 1,
+        lockType: q.lockType ?? null,
         completionEffects: JSON.stringify({ source: 'library', bookId }),
         inputs: JSON.stringify([
           { key: 'reflection', label: 'Response', type: 'textarea', placeholder: 'Share what you did or learned' },
@@ -179,8 +269,9 @@ async function createQuestsFromAnalysis(
 /**
  * Analyze a book's extracted text and create CustomBar (quest) records.
  * Chunks the text, filters non-actionable chunks, calls AI per chunk (with cache), creates quests.
+ * When options.filters is provided, pre-filters chunks by dimension hints and adds target to AI prompt.
  */
-export async function analyzeBook(bookId: string) {
+export async function analyzeBook(bookId: string, options?: { filters?: AnalysisFilters }) {
   try {
     if (process.env.BOOK_ANALYSIS_AI_ENABLED === 'false') {
       return { error: 'Book analysis AI is disabled. Set BOOK_ANALYSIS_AI_ENABLED=true to enable.' }
@@ -195,22 +286,57 @@ export async function analyzeBook(bookId: string) {
       return { error: 'Book must be in extracted status to analyze' }
     }
 
-    const chunks = chunkBookText(book.extractedText)
+    const filters = options?.filters
+    const hasFilters = Boolean(
+      filters &&
+        (filters.moveType?.length ||
+          filters.nation?.length ||
+          filters.archetype?.length ||
+          filters.kotterStage?.length)
+    )
+
+    const existingMeta = book.metadataJson ? JSON.parse(book.metadataJson) : {}
+    const toc = existingMeta.toc ?? null
+    const sectionHints = toc?.sectionHints ?? undefined
+
+    const chunks = toc?.entries?.length
+      ? chunkBookTextWithToc(book.extractedText, toc)
+      : chunkBookText(book.extractedText)
     if (chunks.length === 0) return { error: 'No text to analyze' }
 
-    const actionableChunks = chunks.filter(chunkIsActionable)
+    let actionableChunks = chunks.filter(chunkIsActionable)
+    let chunksFilteredByTarget = 0
+    if (hasFilters && filters) {
+      const beforeFilter = actionableChunks.length
+      actionableChunks = actionableChunks.filter((c) => chunkMatchesFilters(c, filters, sectionHints))
+      chunksFilteredByTarget = beforeFilter - actionableChunks.length
+      if (actionableChunks.length === 0) {
+        return {
+          error:
+            'No chunks match the selected filters. Try extracting TOC first (Extract TOC button) or relaxing filters.',
+        }
+      }
+    }
+
     const chunksSkipped = chunks.length - actionableChunks.length
     const chunksToProcess = sampleEvenly(actionableChunks, MAX_CHUNKS)
     const chunksTotal = chunks.length
 
+    const targetPromptLine = hasFilters && filters ? buildTargetPromptLine(filters) : ''
+
     const creatorId = await getSystemCreatorId()
-    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(bookId, chunksToProcess)
+    const { quests, cacheHits, cacheMisses, heuristicHits } = await runChunkAnalysis(
+      bookId,
+      chunksToProcess,
+      targetPromptLine
+    )
     const createdIds = await createQuestsFromAnalysis(bookId, quests, creatorId)
 
     const analysisMeta = {
       chunksAnalyzed: chunksToProcess.length,
       chunksTotal,
       chunksSkipped,
+      ...(hasFilters && chunksFilteredByTarget > 0 && { chunksFilteredByTarget }),
       cacheHits,
       cacheMisses,
       heuristicHits,
@@ -219,8 +345,6 @@ export async function analyzeBook(bookId: string) {
       analyzedChunkIndices: chunksToProcess.map((c) => c.index),
       analyzedAt: new Date().toISOString(),
     }
-
-    const existingMeta = book.metadataJson ? JSON.parse(book.metadataJson) : {}
     await db.book.update({
       where: { id: bookId },
       data: {
@@ -235,6 +359,7 @@ export async function analyzeBook(bookId: string) {
       questsCreated: createdIds.length,
       chunkCount: chunksToProcess.length,
       chunksTotal,
+      ...(chunksFilteredByTarget > 0 && { chunksFilteredByTarget }),
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Analysis failed'

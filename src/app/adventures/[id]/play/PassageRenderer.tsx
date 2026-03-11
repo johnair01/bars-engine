@@ -417,7 +417,7 @@ export function PassageRenderer({
             ) : recommendationBinding ? (
                 <OnboardingRecommendation
                     type={recommendationBinding.actionType === 'SET_NATION' ? 'nation' : 'archetype'}
-                    recommendedId={recommendationPayload.nationId || recommendationPayload.playbookId}
+                    recommendedId={recommendationPayload.nationId || recommendationPayload.archetypeId}
                     options={recommendationBinding.actionType === 'SET_NATION' ? nations : playbooks}
                     questId={questId}
                     threadId={threadId}

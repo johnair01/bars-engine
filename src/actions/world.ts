@@ -324,7 +324,7 @@ async function ensurePeriodStoryQuests(period: number, sequence: number[]) {
     const creator = await db.player.findFirst({ select: { id: true } })
     if (!creator?.id) return
 
-    const allPlaybooks = await db.playbook.findMany({
+    const allPlaybooks = await db.archetype.findMany({
         select: { id: true, name: true, description: true }
     })
     const playbookByElement = new Map(

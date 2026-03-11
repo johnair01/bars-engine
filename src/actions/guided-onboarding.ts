@@ -84,7 +84,7 @@ export async function getOrientationHandbookEntry(kind: 'nation' | 'playbook', i
             return { success: true, entry }
         }
 
-        const entry = await db.playbook.findUnique({
+        const entry = await db.archetype.findUnique({
             where: { id },
             select: { id: true, name: true, description: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true, content: true }
         })
@@ -152,7 +152,7 @@ export async function recordStoryChoice(
                 selectedPlaybookId = playbookId
                 await db.player.update({
                     where: { id: playerId },
-                    data: { playbookId } // Set their playbook selection
+                    data: { archetypeId: playbookId } // Set their archetype selection
                 })
             }
         }
@@ -171,7 +171,7 @@ export async function recordStoryChoice(
 
         const nextNodeId = await getNextNodeId(nodeId, choiceId)
         const resolvedNationId = selectedNationId || player.nationId
-        const resolvedPlaybookId = selectedPlaybookId || player.playbookId
+        const resolvedPlaybookId = selectedPlaybookId || player.archetypeId
 
         if (nextNodeId === 'playbook_select' && !resolvedNationId) {
             return { success: false, error: 'Please select a nation before continuing.' }
@@ -234,7 +234,7 @@ async function getNextNodeId(currentNodeId: string, choiceId: string): Promise<s
 export async function finalizeOnboarding(
     playerId: string,
     nationId: string,
-    playbookId: string
+    archetypeId: string
 ) {
     try {
         const player = await db.player.findUnique({
@@ -254,7 +254,7 @@ export async function finalizeOnboarding(
             where: { id: playerId },
             data: {
                 nationId,
-                playbookId,
+                archetypeId,
                 onboardingComplete: true
             }
         })
@@ -300,7 +300,7 @@ export async function resetOnboarding(playerId: string) {
             where: { id: playerId },
             data: {
                 nationId: null,
-                playbookId: null,
+                archetypeId: null,
                 onboardingComplete: false,
                 storyProgress: JSON.stringify({
                     currentNodeId: 'intro_001',

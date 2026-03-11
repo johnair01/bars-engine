@@ -58,7 +58,7 @@ export async function getAlignmentContext(playerId: string): Promise<IChingAlign
   const [player, instance, playedBars] = await Promise.all([
     db.player.findUnique({
       where: { id: playerId },
-      include: { nation: true, playbook: true },
+      include: { nation: true, archetype: true },
     }),
     getActiveInstance(),
     db.playerBar.findMany({
@@ -74,8 +74,8 @@ export async function getAlignmentContext(playerId: string): Promise<IChingAlign
   }
 
   const nationName = player.nation?.name ?? null
-  const playbookTrigram = player.playbook?.name
-    ? PLAYBOOK_TRIGRAM[player.playbook.name] ?? null
+  const playbookTrigram = player.archetype?.name
+    ? PLAYBOOK_TRIGRAM[player.archetype.name] ?? null
     : null
 
   let activeFace: string | null = null

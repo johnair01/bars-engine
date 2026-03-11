@@ -50,5 +50,5 @@
 
 ## Backlog
 
-- [ ] Add AI to BACKLOG.md
-- [ ] Create .specify/backlog/prompts/k-space-librarian.md
+- [x] Add AI to BACKLOG.md (prompt exists; AI marked Ready)
+- [x] Create .specify/backlog/prompts/k-space-librarian.md

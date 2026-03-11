@@ -28,8 +28,8 @@ export default async function EmotionalFirstAidPage({
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-10">
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center justify-between gap-4">
-                    <Link href={backHref} className="text-sm text-zinc-500 hover:text-white transition">
-                        ← Back
+                    <Link href={backHref === '/' ? '/game-map' : backHref} className="text-sm text-zinc-500 hover:text-white transition">
+                        ← {backHref === '/' ? 'Game Map' : 'Back'}
                     </Link>
                     <div className="text-[11px] uppercase tracking-[0.16em] font-mono text-zinc-600">
                         Emotional First Aid Kit

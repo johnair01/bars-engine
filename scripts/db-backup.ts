@@ -16,12 +16,12 @@ async function backup() {
     console.log('📦 Starting Manual Backup...')
 
     try {
-        const [players, accounts, customBars, nations, playbooks, instances, invites] = await Promise.all([
+        const [players, accounts, customBars, nations, archetypes, instances, invites] = await Promise.all([
             prisma.player.findMany(),
             prisma.account.findMany(),
             prisma.customBar.findMany(),
             prisma.nation.findMany(),
-            prisma.playbook.findMany(),
+            prisma.archetype.findMany(),
             prisma.instance.findMany(),
             prisma.invite.findMany(),
         ])
@@ -32,7 +32,7 @@ async function backup() {
             accounts,
             customBars,
             nations,
-            playbooks,
+            archetypes,
             instances,
             invites,
         }
@@ -45,7 +45,7 @@ async function backup() {
         console.log(`   - Accounts: ${accounts.length}`)
         console.log(`   - Quests: ${customBars.length}`)
         console.log(`   - Nations: ${nations.length}`)
-        console.log(`   - Playbooks: ${playbooks.length}`)
+        console.log(`   - Archetypes: ${archetypes.length}`)
         console.log(`   - Instances: ${instances.length}`)
 
     } catch (error) {

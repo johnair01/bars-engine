@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { id: true, name: true, nationId: true, playbookId: true }
+        select: { id: true, name: true, nationId: true, archetypeId: true }
     })
 
     if (!player) {
@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
     }
 
     // If already fully set up, go to dashboard
-    if (player.nationId && player.playbookId) {
+    if (player.nationId && player.archetypeId) {
         redirect('/')
     }
 
@@ -31,7 +31,7 @@ export default async function OnboardingPage() {
         orderBy: { name: 'asc' }
     })
 
-    const playbooks = await db.playbook.findMany({
+    const playbooks = await db.archetype.findMany({
         select: { id: true, name: true, description: true },
         orderBy: { name: 'asc' }
     })
@@ -59,7 +59,7 @@ export default async function OnboardingPage() {
                 playerId={player.id}
                 playerName={player.name}
                 currentNationId={player.nationId}
-                currentPlaybookId={player.playbookId}
+                currentArchetypeId={player.archetypeId}
                 nations={nations}
                 playbooks={playbooks}
             />

@@ -22,7 +22,7 @@ export default async function IChingWikiPage() {
             select: { id: true, name: true },
             orderBy: { id: 'asc' }
         }),
-        db.playbook.findMany({
+        db.archetype.findMany({
             select: { id: true, name: true, description: true }
         })
     ])

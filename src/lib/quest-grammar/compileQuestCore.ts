@@ -281,7 +281,7 @@ function generateChoices(
   beatType: BeatType,
   index: number,
   nodeIds: string[],
-  privilegeContext?: { nationElement: ElementKey; playbookWave: PersonalMoveType },
+  privilegeContext?: { nationElement: ElementKey; archetypeWave: PersonalMoveType },
   depthBranchIds?: string[],
   nodeConfig?: NodeChoiceOverride,
   depthBranchOrder?: Record<number, string[]>
@@ -345,7 +345,7 @@ function generateChoices(
       const privileged = selectPrivilegedChoices({
         validMoves: ALL_CANONICAL_MOVES,
         nationElement: privilegeContext.nationElement,
-        playbookWave: privilegeContext.playbookWave,
+        archetypeWave: privilegeContext.archetypeWave,
         limit: 4,
       })
       const targetId = nodeIds[index + 1]

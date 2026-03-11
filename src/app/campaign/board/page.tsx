@@ -35,19 +35,27 @@ export default async function GameboardPage(props: {
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col font-sans tracking-tight">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
           <Link
-            href="/event"
-            className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
+            href="/game-map"
+            className="text-sm text-zinc-500 hover:text-white transition-colors"
           >
-            Support the Residency →
+            ← Game Map
           </Link>
-          <Link
-            href="/campaign/twine?ref=bruised-banana"
-            className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
-          >
-            Begin the Journey
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/event"
+              className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
+            >
+              Support the Residency →
+            </Link>
+            <Link
+              href="/campaign/twine?ref=bruised-banana"
+              className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
+            >
+              Begin the Journey
+            </Link>
+          </div>
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-2">Campaign Gameboard</h1>

@@ -25,6 +25,8 @@ export function QuestNestingActions({ parentQuestId, onNestingComplete }: Props)
     // Form states for creation
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
+    const [frictionNote, setFrictionNote] = useState('')
+    const [isKeyUnblocker, setIsKeyUnblocker] = useState(false)
 
     // Available quests for appending
     const [availableQuests, setAvailableQuests] = useState<Quest[]>([])
@@ -44,7 +46,12 @@ export function QuestNestingActions({ parentQuestId, onNestingComplete }: Props)
     const handleCreateSubQuest = () => {
         if (!title) return setError('Title is required')
         startTransition(async () => {
-            const res = await createSubQuest(parentQuestId, { title, description })
+            const res = await createSubQuest(parentQuestId, {
+                title,
+                description,
+                frictionNote: frictionNote || undefined,
+                isKeyUnblocker: isKeyUnblocker || undefined,
+            })
             if (res && 'error' in res) {
                 setError(res.error as string)
             } else {
@@ -52,6 +59,8 @@ export function QuestNestingActions({ parentQuestId, onNestingComplete }: Props)
                 setMode('none')
                 setTitle('')
                 setDescription('')
+                setFrictionNote('')
+                setIsKeyUnblocker(false)
                 router.refresh()
                 onNestingComplete?.()
             }
@@ -126,6 +135,24 @@ export function QuestNestingActions({ parentQuestId, onNestingComplete }: Props)
                                     className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-sm text-white h-20 focus:border-purple-500 outline-none resize-none"
                                 />
                             </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] uppercase text-zinc-500 font-bold">What friction? (Optional)</label>
+                                <textarea
+                                    value={frictionNote}
+                                    onChange={e => setFrictionNote(e.target.value)}
+                                    placeholder="What blocker are you facing?"
+                                    className="w-full bg-black border border-zinc-800 rounded-lg p-2 text-sm text-white h-14 focus:border-purple-500 outline-none resize-none"
+                                />
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isKeyUnblocker}
+                                    onChange={e => setIsKeyUnblocker(e.target.checked)}
+                                    className="rounded border-zinc-600 text-amber-500 focus:ring-amber-500"
+                                />
+                                <span className="text-[10px] text-zinc-400">This is the key — completing it unblocks everything else</span>
+                            </label>
                         </div>
                     )}
 

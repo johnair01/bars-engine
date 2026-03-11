@@ -92,6 +92,12 @@ export async function completeQuestForPlayer(
 
     if (!quest) throw new Error('Quest not found')
 
+    if (quest.status === 'blocked') {
+        return {
+            error: 'This quest is blocked. Complete the key subquest to unlock it.',
+        }
+    }
+
     const storyMeta = parseStoryQuestMeta(quest.completionEffects)
     const isStoryClockQuest = storyMeta.questSource === 'story_clock'
     const isPersonalIChingQuest =
@@ -101,6 +107,31 @@ export async function completeQuestForPlayer(
     if (isPersonalIChingQuest && quest.creatorId === playerId) {
         return {
             error: 'You cannot complete your own personal I Ching quest. Offer it to the collective.'
+        }
+    }
+
+    const isBounty = quest.questSource === 'bounty' || (quest.stakedPool ?? 0) > 0
+    if (isBounty && quest.creatorId === playerId) {
+        return {
+            error: 'You cannot complete your own bounty. Others must complete it to earn your staked vibeulons.'
+        }
+    }
+
+    if (isBounty) {
+        const completedCount = await db.playerQuest.count({
+            where: { questId, status: 'completed' },
+        })
+        if (completedCount >= (quest.maxAssignments ?? 1)) {
+            return {
+                error: 'This bounty has reached its maximum number of completions.',
+            }
+        }
+        const poolRemaining = quest.stakedPool ?? 0
+        const rewardAmount = quest.reward ?? 1
+        if (poolRemaining < rewardAmount) {
+            return {
+                error: 'This bounty has insufficient staked vibeulons remaining.',
+            }
         }
     }
 
@@ -212,17 +243,37 @@ export async function completeQuestForPlayer(
             }
         })
 
-        // MINT ACTUAL VIBULON TOKENS (Vibulon model)
-        const tokenData = []
-        for (let i = 0; i < finalReward; i++) {
-            tokenData.push({
-                ownerId: playerId,
-                originSource: 'quest',
-                originId: questId,
-                originTitle: quest.title
+        // Bounty: pay from escrow (transfer); otherwise mint new tokens
+        const isBountyInTx = quest.questSource === 'bounty' || (quest.stakedPool ?? 0) > 0
+        if (isBountyInTx && finalReward > 0) {
+            const stakes = await tx.bountyStake.findMany({
+                where: { barId: questId },
+                take: finalReward,
             })
-        }
-        if (tokenData.length > 0) {
+            for (const stake of stakes) {
+                await tx.vibulon.update({
+                    where: { id: stake.vibulonId },
+                    data: { ownerId: playerId },
+                })
+                await tx.bountyStake.delete({ where: { id: stake.id } })
+            }
+            await tx.customBar.update({
+                where: { id: questId },
+                data: { stakedPool: { decrement: finalReward } },
+            })
+        } else if (finalReward > 0) {
+            const creatorId =
+                quest.creatorId && !quest.isSystem ? quest.creatorId : null
+            const tokenData = []
+            for (let i = 0; i < finalReward; i++) {
+                tokenData.push({
+                    ownerId: playerId,
+                    creatorId,
+                    originSource: 'quest',
+                    originId: questId,
+                    originTitle: quest.title
+                })
+            }
             await tx.vibulon.createMany({ data: tokenData })
         }
 
@@ -249,6 +300,7 @@ export async function completeQuestForPlayer(
             await tx.vibulon.create({
                 data: {
                     ownerId: bar.creatorId,
+                    creatorId: bar.creatorId,
                     originSource: 'bar_creator_quest_completion',
                     originId: questId,
                     originTitle: quest.title,
@@ -258,6 +310,21 @@ export async function completeQuestForPlayer(
 
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
         await processCompletionEffects(tx, playerId, quest, inputs)
+
+        // MOVES LIBRARY: unlock move if quest grants one (idempotent)
+        if (quest.grantsMoveId) {
+            const moveExists = await tx.nationMove.findUnique({
+                where: { id: quest.grantsMoveId },
+                select: { id: true },
+            })
+            if (moveExists) {
+                await tx.playerNationMoveUnlock.upsert({
+                    where: { playerId_moveId: { playerId, moveId: quest.grantsMoveId } },
+                    create: { playerId, moveId: quest.grantsMoveId },
+                    update: {},
+                })
+            }
+        }
 
         // K-Space Librarian: DocQuest completion → DocEvidenceLink
         if (quest.type === 'doc' && quest.docQuestMetadata) {
@@ -321,6 +388,26 @@ export async function completeQuestForPlayer(
     }, {
         timeout: 10000 // Increase timeout to 10s for intensive operations
     })
+
+    // Tetris: on key completion, cascade unblock root + siblings
+    if (result && !('error' in result) && quest.isKeyUnblocker) {
+        const rootId = quest.rootId || quest.id
+        await db.customBar.updateMany({
+            where: {
+                OR: [{ id: rootId }, { rootId }],
+                status: 'blocked',
+            },
+            data: { status: 'active' },
+        })
+    }
+
+    // 321 metabolizability: update questCompletedAt when quest was created from 321
+    if (result && !('error' in result)) {
+        await db.shadow321Session.updateMany({
+            where: { linkedQuestId: questId },
+            data: { questCompletedAt: new Date() },
+        })
+    }
 
     // LEGACY CHECK: Moved OUTSIDE transaction to avoid bloat
     try {
@@ -386,7 +473,7 @@ interface CompletionEffect {
 async function processCompletionEffects(
     tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
     playerId: string,
-    quest: { id: string; completionEffects: string | null; title: string },
+    quest: { id: string; completionEffects: string | null; title: string; creatorId?: string | null; isSystem?: boolean },
     inputs: Record<string, any>
 ) {
     if (!quest.completionEffects) return
@@ -441,15 +528,15 @@ async function processCompletionEffects(
                     break
                 }
                 case 'setPlaybook': {
-                    const playbookId = effect.fromInput
+                    const archetypeId = effect.fromInput
                         ? inputs[effect.fromInput]
                         : effect.value
-                    if (playbookId) {
+                    if (archetypeId) {
                         await tx.player.update({
                             where: { id: playerId },
-                            data: { playbookId }
+                            data: { archetypeId }
                         })
-                        console.log(`[CompletionEffects] Set playbook=${playbookId} for player ${playerId}`)
+                        console.log(`[CompletionEffects] Set archetype=${archetypeId} for player ${playerId}`)
                     }
                     break
                 }
@@ -490,8 +577,11 @@ async function processCompletionEffects(
                                 questId: quest.id,
                             }
                         })
+                        const creatorId =
+                            quest.creatorId && !quest.isSystem ? quest.creatorId : null
                         const bonusTokens = Array.from({ length: amount }, () => ({
                             ownerId: playerId,
+                            creatorId,
                             originSource: 'completion_effect',
                             originId: quest.id,
                             originTitle: quest.title
@@ -504,18 +594,18 @@ async function processCompletionEffects(
                 case 'deriveAvatarFromExisting': {
                     const player = await tx.player.findUnique({
                         where: { id: playerId },
-                        select: { nationId: true, playbookId: true, campaignDomainPreference: true, pronouns: true }
+                        select: { nationId: true, archetypeId: true, campaignDomainPreference: true, pronouns: true }
                     })
-                    if (!player?.nationId || !player?.playbookId) break
+                    if (!player?.nationId || !player?.archetypeId) break
                     const [nation, playbook] = await Promise.all([
                         tx.nation.findUnique({ where: { id: player.nationId }, select: { name: true } }),
-                        tx.playbook.findUnique({ where: { id: player.playbookId }, select: { name: true } })
+                        tx.archetype.findUnique({ where: { id: player.archetypeId }, select: { name: true } })
                     ])
                     const avatarConfig = deriveAvatarConfig(
                         player.nationId,
-                        player.playbookId,
+                        player.archetypeId,
                         player.campaignDomainPreference,
-                        { nationName: nation?.name, playbookName: playbook?.name, pronouns: player.pronouns }
+                        { nationName: nation?.name, archetypeName: playbook?.name, pronouns: player.pronouns }
                     )
                     if (avatarConfig) {
                         await tx.player.update({
@@ -568,7 +658,7 @@ export async function runCompletionEffectsForQuest(
 ) {
     const quest = await db.customBar.findUnique({
         where: { id: questId },
-        select: { id: true, completionEffects: true, title: true }
+        select: { id: true, completionEffects: true, title: true, creatorId: true, isSystem: true }
     })
     if (!quest?.completionEffects) return
     await processCompletionEffects(db as any, playerId, quest, inputs)
@@ -691,12 +781,12 @@ export async function deleteBar(barId: string) {
  */
 export async function getArchetypeHandbookData() {
     const player = await getCurrentPlayer()
-    if (!player || !player.playbook) {
+    if (!player || !player.archetype) {
         return { error: 'No archetype found' }
     }
 
     return {
         success: true,
-        playbook: player.playbook
+        archetype: player.archetype
     }
 }

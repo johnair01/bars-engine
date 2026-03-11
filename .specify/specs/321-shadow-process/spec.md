@@ -22,9 +22,10 @@ Enable a digital 3→2→1 flow (Integral Theory shadow work) so shadow work can
 **As a player**, I want to complete a 321 shadow session (Face It → Talk to It → Be It), so I can process shadow work and optionally turn it into a BAR.
 
 **Acceptance**:
-- Phase 3 (Face It): Nation/archetype, developmental level, gender of personified charge
-- Phase 2 (Talk to It): 6 unpacking questions from `UNPACKING_QUESTIONS` (import from `@/lib/quest-grammar`)
-- Phase 1 (Be It): Identification and integration (freeform or structured)
+- Phase 3 (Face It): Free-type identity (nation, archetype, or energy in own words); developmental lens; gender of personified charge. System extracts nation/archetype at BAR creation.
+- Phase 2 (Talk to It): 6 unpacking questions from `UNPACKING_QUESTIONS`; life state distance uses short response field (allows spaces); q5 short response
+- Phase 1 (Be It): Identification and integration (short response fields)
+- Orientation: Inline expandable "New to 321? Read this" with text panes teaching the process
 - Post-321: Prompt "Create a BAR?" with option to import metadata; skip allowed
 
 ### P2: BAR Creator Mint on Quest Completion
@@ -42,7 +43,8 @@ Enable a digital 3→2→1 flow (Integral Theory shadow work) so shadow work can
 **Acceptance**:
 - `createCustomBar` accepts optional `metadata321` (FormData or JSON)
 - When provided, pre-fill title, description, tags derived from 321 answers
-- Deterministic derivation: rules only, no AI
+- When `phase3Snapshot` includes `identityFreeText`, call `extractNationArchetypeFromText`; apply to `allowedNations`/`allowedTrigrams` when form did not provide them
+- Deterministic derivation for metadata; AI extraction for nation/archetype from free text
 
 ## API Contracts
 
@@ -76,8 +78,17 @@ type Metadata321 = {
 
 **Rules** (no AI):
 - `title`: q1 (experience) + truncated q5, or first 50 chars of combined
-- `description`: Concatenate unpacking answers (q1–q6) with separators
-- `tags`: Selected options from q2, q4, q6; dedupe
+- `description`: Concatenate unpacking answers (q1–q6) with separators; include `identityFreeText` in Face It when present
+- `tags`: Selected options from q2, q4, q6; add words from `identityFreeText`; dedupe
+
+### extractNationArchetypeFromText (AI)
+
+**Input**: `freeText: string` (from `phase3.identityFreeText`)
+**Output**: `{ nationName?: string; archetypeName?: string; confidence?: number }`
+
+**Behavior**: AI parses free text against canonical nations and archetypes. Used at BAR creation when `phase3Snapshot` includes `identityFreeText`. Results applied to `allowedNations`/`allowedTrigrams` when form did not provide them.
+
+**Scaling**: Set `EXTRACT_321_TAXONOMY_ENABLED=false` to disable. Model override via `EXTRACT_321_TAXONOMY_MODEL` (default: gpt-4o-mini).
 
 ## Integration Flow
 
@@ -94,4 +105,6 @@ type Metadata321 = {
 ## References
 
 - Unpacking constants: [src/lib/quest-grammar/unpacking-constants.ts](../../src/lib/quest-grammar/unpacking-constants.ts)
+- deriveMetadata321: [src/lib/quest-grammar/deriveMetadata321.ts](../../src/lib/quest-grammar/deriveMetadata321.ts)
+- extractNationArchetypeFromText: [src/actions/extract-321-taxonomy.ts](../../src/actions/extract-321-taxonomy.ts)
 - Deftness: [.agents/skills/deftness-development/SKILL.md](../../.agents/skills/deftness-development/SKILL.md)

@@ -115,6 +115,13 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                             )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                            <Link
+                                href={`/map?type=thread&threadId=${thread.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[10px] text-zinc-500 hover:text-purple-400 transition-colors"
+                            >
+                                Map
+                            </Link>
                             {thread.completionReward > 0 && (
                                 <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full">
                                     +{thread.completionReward} ⓥ
@@ -266,6 +273,8 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                         twineLogic: selectedQuest.quest.twineLogic || null,
                         twineStoryId: selectedQuest.quest.twineStoryId || null,
                         microTwine: selectedQuest.quest.microTwine || null,
+                        status: (selectedQuest.quest as { status?: string }).status ?? null,
+                        blockedKeyQuestTitle: (selectedQuest.quest as { blockedKeyQuestTitle?: string }).blockedKeyQuestTitle ?? null,
                     }}
                     context={{ threadId: thread.id, threadType: thread.threadType }}
                     isCompleted={selectedQuest.position < currentPos}

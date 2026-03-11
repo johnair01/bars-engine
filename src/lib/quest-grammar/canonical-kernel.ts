@@ -95,16 +95,16 @@ export function getLabelsForMove(move: CanonicalMove): {
 }
 
 /**
- * Pick experience (Q1) for a player based on nation element and playbook WAVE.
+ * Pick experience (Q1) for a player based on nation element and archetype WAVE.
  * Intersects domains when both present; fallback to random from EXPERIENCE_OPTIONS.
  */
 export function pickExperienceForPlayer(
   nationElement?: ElementKey,
-  playbookWave?: PersonalMoveType
+  archetypeWave?: PersonalMoveType
 ): string {
-  if (nationElement && playbookWave) {
+  if (nationElement && archetypeWave) {
     const nationDomains = ELEMENT_TO_DOMAINS[nationElement]
-    const waveDomain = WAVE_TO_DOMAIN[playbookWave]
+    const waveDomain = WAVE_TO_DOMAIN[archetypeWave]
     const intersection = nationDomains.filter((d) => d === waveDomain)
     if (intersection.length > 0) {
       return intersection[0]!
@@ -114,8 +114,8 @@ export function pickExperienceForPlayer(
     const domains = ELEMENT_TO_DOMAINS[nationElement]
     return domains[Math.floor(Math.random() * domains.length)]!
   }
-  if (playbookWave) {
-    return WAVE_TO_DOMAIN[playbookWave]
+  if (archetypeWave) {
+    return WAVE_TO_DOMAIN[archetypeWave]
   }
   return EXPERIENCE_OPTIONS[Math.floor(Math.random() * EXPERIENCE_OPTIONS.length)]!
 }

@@ -160,7 +160,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
             {initialContext.player.emotionalFirstAid && (
                 <div className="rounded-xl border border-orange-900/40 bg-orange-950/20 p-4">
                     <p className="text-[11px] uppercase tracking-widest text-orange-400 font-bold mb-2">
-                        Archetype Clean-Up Protocol · {initialContext.player.playbookName || 'Unassigned'}
+                        Archetype Clean-Up Protocol · {initialContext.player.archetypeName || 'Unassigned'}
                     </p>
                     <p className="text-sm text-orange-100/90 leading-relaxed">
                         {initialContext.player.emotionalFirstAid}

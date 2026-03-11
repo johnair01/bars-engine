@@ -2,6 +2,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import { getAdventureProgress } from '@/actions/adventure-progress'
 import { AdventurePlayer } from './AdventurePlayer'
 
 /**
@@ -56,6 +57,14 @@ export default async function AdventurePlayPage({
     startNodeId = adventure.passages[0]?.nodeId ?? 'Start'
   }
 
+  // Resume from saved progress if available and node still exists
+  const progress = await getAdventureProgress(adventureId)
+  const nodeIds = new Set(adventure.passages.map((p) => p.nodeId))
+  const effectiveStartNodeId =
+    progress?.currentNodeId && nodeIds.has(progress.currentNodeId)
+      ? progress.currentNodeId
+      : startNodeId
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -66,12 +75,21 @@ export default async function AdventurePlayPage({
           >
             ← Back
           </Link>
-          <span className="text-xs text-zinc-600 font-mono">{adventure.title}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-zinc-600 font-mono">{adventure.title}</span>
+            <Link
+              href={`/map?type=story&adventureId=${adventureId}`}
+              className="text-xs text-purple-400 hover:text-purple-300"
+            >
+              View map
+            </Link>
+          </div>
         </div>
 
         <AdventurePlayer
+          adventureId={adventureId}
           adventureSlug={adventure.slug}
-          startNodeId={startNodeId}
+          startNodeId={effectiveStartNodeId}
           questId={questId ?? undefined}
           threadId={threadId ?? undefined}
           isRitual={isRitual}

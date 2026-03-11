@@ -9,8 +9,8 @@ export type PartLayer =
     | 'base'
     | 'nation_body'
     | 'nation_accent'
-    | 'playbook_outfit'
-    | 'playbook_accent'
+    | 'archetype_outfit'
+    | 'archetype_accent'
 
 export type PartSpec = {
     layer: PartLayer
@@ -35,11 +35,11 @@ export function getAvatarPartSpecs(config: AvatarConfig | null): PartSpec[] {
             path: `/sprites/parts/nation_body/${config.nationKey}.png`
         })
     }
-    if (config.playbookKey) {
+    if (config.archetypeKey) {
         specs.push({
-            layer: 'playbook_outfit',
-            key: config.playbookKey,
-            path: `/sprites/parts/playbook_outfit/${config.playbookKey}.png`
+            layer: 'archetype_outfit',
+            key: config.archetypeKey,
+            path: `/sprites/parts/archetype_outfit/${config.archetypeKey}.png`
         })
     }
     if (config.nationKey) {
@@ -49,11 +49,11 @@ export function getAvatarPartSpecs(config: AvatarConfig | null): PartSpec[] {
             path: `/sprites/parts/nation_accent/${config.nationKey}.png`
         })
     }
-    if (config.playbookKey) {
+    if (config.archetypeKey) {
         specs.push({
-            layer: 'playbook_accent',
-            key: config.playbookKey,
-            path: `/sprites/parts/playbook_accent/${config.playbookKey}.png`
+            layer: 'archetype_accent',
+            key: config.archetypeKey,
+            path: `/sprites/parts/archetype_accent/${config.archetypeKey}.png`
         })
     }
     return specs
@@ -76,9 +76,9 @@ export function getUnlockedLayersForNode(
     }
     if (
         /^BB_SetPlaybook_|^BB_PlaybookInfo_|^BB_ChoosePlaybook/.test(nodeId) ||
-        campaignState.playbookId
+        campaignState.archetypeId
     ) {
-        layers.push('playbook_outfit')
+        layers.push('archetype_outfit')
     }
     if (
         /^BB_SetDomain_|^BB_ChooseDomain/.test(nodeId) ||
@@ -87,7 +87,7 @@ export function getUnlockedLayersForNode(
         layers.push('nation_accent')
     }
     if (/^BB_Moves_/.test(nodeId)) {
-        layers.push('playbook_accent')
+        layers.push('archetype_accent')
     }
     return layers
 }

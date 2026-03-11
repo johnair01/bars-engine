@@ -5,7 +5,7 @@ import { AssignAvatarForm } from '@/components/admin/AssignAvatarForm'
 import { getAdminWorldData } from '@/actions/admin'
 
 export default async function AdminAvatarsPage() {
-    const [players, [nations, playbooks]] = await Promise.all([
+    const [players, [nations, archetypes]] = await Promise.all([
         db.player.findMany({
             orderBy: { createdAt: 'desc' },
             select: {
@@ -15,7 +15,7 @@ export default async function AdminAvatarsPage() {
                 avatarConfig: true,
                 pronouns: true,
                 nation: { select: { name: true } },
-                playbook: { select: { name: true } },
+                archetype: { select: { name: true } },
             },
         }),
         getAdminWorldData(),
@@ -39,7 +39,7 @@ export default async function AdminAvatarsPage() {
             <AssignAvatarForm
                 players={players}
                 nations={nations}
-                playbooks={playbooks}
+                archetypes={archetypes}
             />
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -62,8 +62,8 @@ export default async function AdminAvatarsPage() {
                             {player.nation && (
                                 <p className="text-xs text-zinc-500">{player.nation.name}</p>
                             )}
-                            {player.playbook && (
-                                <p className="text-xs text-zinc-500">{player.playbook.name}</p>
+                            {player.archetype && (
+                                <p className="text-xs text-zinc-500">{player.archetype.name}</p>
                             )}
                         </div>
                     </div>

@@ -109,7 +109,7 @@ export async function createCharacter(prevState: any, formData: FormData) {
                     // passwordHash, // Removed from Player
                     inviteId: invite.id,
                     nationId,
-                    playbookId,
+                    archetypeId: playbookId,
                 },
             })
 
@@ -149,12 +149,12 @@ export async function createCharacter(prevState: any, formData: FormData) {
             if (n) nationName = n.name
         }
         if (playbookId) {
-            const p = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
+            const p = await db.archetype.findUnique({ where: { id: playbookId }, select: { name: true } })
             if (p) playbookName = p.name
         }
         const avatarConfig = deriveAvatarConfig(nationId, playbookId, null, {
             nationName,
-            playbookName,
+            archetypeName: playbookName,
             pronouns: identity.pronouns
         })
         if (avatarConfig) {

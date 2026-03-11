@@ -7,6 +7,8 @@ import { writeFile, mkdir, readFile } from 'fs/promises'
 import path from 'path'
 import { put } from '@vercel/blob'
 import { extractTextFromPdf } from '@/lib/pdf-extract'
+import { extractTocFromText } from '@/lib/book-toc'
+import { mapSectionsToDimensions } from '@/lib/book-section-mapper'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'books')
 
@@ -178,6 +180,43 @@ export async function extractBookText(bookId: string) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Extraction failed'
     console.error('[BOOKS] Extract error:', msg)
+    return { error: msg }
+  }
+}
+
+/**
+ * Extract table of contents from a book's extracted text.
+ * Persists TOC to Book.metadataJson.toc.
+ * Spec: .specify/specs/book-quest-targeted-extraction/spec.md
+ */
+export async function extractBookToc(bookId: string) {
+  try {
+    await requireAdmin()
+
+    const book = await db.book.findUnique({
+      where: { id: bookId },
+      select: { id: true, extractedText: true, metadataJson: true, status: true },
+    })
+    if (!book) return { error: 'Book not found' }
+    if (!book.extractedText) return { error: 'Book has no extracted text. Run Extract Text first.' }
+
+    const toc = extractTocFromText(book.extractedText)
+    const sectionHints = mapSectionsToDimensions(toc, book.extractedText)
+    const tocWithHints = { ...toc, sectionHints }
+
+    const existingMeta = book.metadataJson ? JSON.parse(book.metadataJson) : {}
+    await db.book.update({
+      where: { id: bookId },
+      data: {
+        metadataJson: JSON.stringify({ ...existingMeta, toc: tocWithHints }),
+      },
+    })
+
+    revalidatePath('/admin/books')
+    return { success: true, entryCount: toc.entries.length }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'TOC extraction failed'
+    console.error('[BOOKS] Extract TOC error:', msg)
     return { error: msg }
   }
 }

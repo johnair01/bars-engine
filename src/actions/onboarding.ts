@@ -31,7 +31,7 @@ export async function getOnboardingState(playerId?: string): Promise<GetOnboardi
             select: {
                 id: true,
                 nationId: true,
-                playbookId: true,
+                archetypeId: true,
                 campaignDomainPreference: true,
                 onboardingComplete: true,
                 storyProgress: true,
@@ -45,7 +45,7 @@ export async function getOnboardingState(playerId?: string): Promise<GetOnboardi
             select: {
                 id: true,
                 nationId: true,
-                playbookId: true,
+                archetypeId: true,
                 campaignDomainPreference: true,
                 onboardingComplete: true,
                 storyProgress: true,
@@ -97,7 +97,7 @@ export async function getOnboardingState(playerId?: string): Promise<GetOnboardi
         onboardingState = 'onboarding_complete'
     } else if (hasLens || (campaignDomainPreference && campaignDomainPreference.length > 0)) {
         onboardingState = 'vector_declaration'
-    } else if (player.nationId || player.playbookId) {
+    } else if (player.nationId || player.archetypeId) {
         onboardingState = 'identity_setup'
     } else if (state && Object.keys(state).length > 0) {
         onboardingState = 'campaign_intro'
@@ -109,7 +109,7 @@ export async function getOnboardingState(playerId?: string): Promise<GetOnboardi
         playerId: player.id,
         onboardingState,
         nationId: player.nationId,
-        playbookId: player.playbookId,
+        archetypeId: player.archetypeId,
         campaignDomainPreference,
         hasLens,
     }
@@ -121,7 +121,7 @@ export async function getOnboardingState(playerId?: string): Promise<GetOnboardi
  */
 export async function advanceOnboardingState(
     event: string,
-    options?: { playerId?: string; nationId?: string; playbookId?: string; lens?: string; campaignDomainPreference?: string[] }
+    options?: { playerId?: string; nationId?: string; archetypeId?: string; lens?: string; campaignDomainPreference?: string[] }
 ): Promise<AdvanceOnboardingStateResult> {
     const validEvent = ONBOARDING_ADVANCE_EVENTS.includes(event as OnboardingAdvanceEvent)
     if (!validEvent) {
@@ -137,7 +137,7 @@ export async function advanceOnboardingState(
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { id: true, storyProgress: true, nationId: true, playbookId: true },
+        select: { id: true, storyProgress: true, nationId: true, archetypeId: true },
     })
     if (!player) return { success: false, error: 'Player not found' }
 
@@ -154,10 +154,10 @@ export async function advanceOnboardingState(
             }
             break
         case 'archetype_selected':
-            if (options?.playbookId) {
+            if (options?.archetypeId) {
                 await db.player.update({
                     where: { id: playerId },
-                    data: { playbookId: options.playbookId },
+                    data: { archetypeId: options.archetypeId },
                 })
                 await assignGatedThreads(playerId)
             }
@@ -363,7 +363,7 @@ export async function updatePlayerIdentity(
         } else {
             await db.player.update({
                 where: { id: player.id },
-                data: { playbookId: id }
+                data: { archetypeId: id }
             })
         }
 
@@ -385,14 +385,14 @@ export async function updatePlayerIdentity(
 export async function saveOnboardingSelections(
     playerId: string,
     nationId: string,
-    playbookId: string
+    archetypeId: string
 ) {
     try {
         const updatedPlayer = await db.player.update({
             where: { id: playerId },
             data: {
                 nationId,
-                playbookId,
+                archetypeId,
                 onboardingComplete: true,
                 onboardingCompletedAt: new Date()
             }
@@ -502,7 +502,7 @@ Complete this quest to earn your first 5 vibeulons and unlock the quest creation
 export async function getWorldData() {
     return Promise.all([
         db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
-        db.playbook.findMany({ orderBy: { name: 'asc' } })
+        db.archetype.findMany({ orderBy: { name: 'asc' } })
     ])
 }
 
@@ -516,7 +516,7 @@ export async function assignGatedThreads(playerIdOverride?: string) {
     // Get player details
     const player = await db.player.findUnique({
         where: { id: playerId },
-        select: { nationId: true, playbookId: true }
+        select: { nationId: true, archetypeId: true }
     })
 
     if (!player) return { error: 'Player not found' }
@@ -526,7 +526,7 @@ export async function assignGatedThreads(playerIdOverride?: string) {
         where: {
             OR: [
                 { gateNationId: player.nationId || '---' },
-                { gatePlaybookId: player.playbookId || '---' }
+                { gateArchetypeId: player.archetypeId || '---' }
             ],
             status: 'active'
         }

@@ -16,9 +16,9 @@ type AvatarProps = {
 }
 
 const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-14 h-14 text-lg',
+    sm: 'w-10 h-10 text-xs',
+    md: 'w-12 h-12 text-sm',
+    lg: 'w-16 h-16 text-lg',
     xl: 'w-64 h-64 text-4xl'
 }
 

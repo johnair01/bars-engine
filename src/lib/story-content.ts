@@ -352,7 +352,7 @@ You must project a specific intent to resonate with the tumblers. What do you ch
     }
 
     if (nodeId === 'playbook_reveal') {
-        const playbooks = await db.playbook.findMany({ orderBy: { name: 'asc' } })
+        const playbooks = await db.archetype.findMany({ orderBy: { name: 'asc' } })
 
         // Mapping alignment to playbooks (Simplified matching)
         const groups: Record<string, string[]> = {
@@ -399,7 +399,7 @@ Select your archetype. This defines your unique moves and your contribution to t
     // ARCHETYPE INFO NODES
     if (nodeId.startsWith('playbook_info_')) {
         const playbookId = nodeId.replace('playbook_info_', '')
-        const playbook = await db.playbook.findUnique({ where: { id: playbookId } })
+        const playbook = await db.archetype.findUnique({ where: { id: playbookId } })
 
         if (!playbook) return null
 

@@ -1,7 +1,7 @@
 /**
  * Random unpacking for I Ching grammatic quests.
  * Uses canonical kernel: satisfaction/dissatisfaction from emotional alchemy moves;
- * experience from nation + playbook; alignedAction = move name.
+ * experience from nation + archetype; alignedAction = move name.
  *
  * See: .specify/specs/random-unpacking-canonical-kernel/spec.md
  */
@@ -43,7 +43,7 @@ const Q5_PHRASES = [
 
 export interface RandomUnpackingPlayerContext {
   nationElement?: ElementKey
-  playbookPrimaryWave?: PersonalMoveType
+  archetypePrimaryWave?: PersonalMoveType
 }
 
 export interface RandomUnpackingResult {
@@ -65,7 +65,7 @@ export function generateRandomUnpacking(
 
   const q1 = pickExperienceForPlayer(
     playerContext?.nationElement,
-    playerContext?.playbookPrimaryWave
+    playerContext?.archetypePrimaryWave
   )
 
   const lifeState = pick(LIFE_STATE_OPTIONS)

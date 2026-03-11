@@ -187,7 +187,7 @@ async function getBruisedBananaNode(nodeId: string): Promise<{ id: string; text:
         }
     }
     if (nodeId === 'BB_ChoosePlaybook') {
-        const playbooks = await db.playbook.findMany({
+        const playbooks = await db.archetype.findMany({
             orderBy: { name: 'asc' },
             select: { id: true, name: true }
         })
@@ -205,7 +205,7 @@ async function getBruisedBananaNode(nodeId: string): Promise<{ id: string; text:
     }
     if (nodeId.startsWith('BB_PlaybookInfo_')) {
         const playbookId = nodeId.replace('BB_PlaybookInfo_', '')
-        const playbook = await db.playbook.findUnique({
+        const playbook = await db.archetype.findUnique({
             where: { id: playbookId },
             select: { id: true, name: true, description: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true }
         })
@@ -254,7 +254,7 @@ async function getBruisedBananaNode(nodeId: string): Promise<{ id: string; text:
     // BB_SetPlaybook_<id>: set playbook state + playbookKey for avatar parts, continue to domain
     if (nodeId.startsWith('BB_SetPlaybook_')) {
         const playbookId = nodeId.replace('BB_SetPlaybook_', '')
-        const playbook = await db.playbook.findUnique({ where: { id: playbookId }, select: { name: true } })
+        const playbook = await db.archetype.findUnique({ where: { id: playbookId }, select: { name: true } })
         if (!playbook) return null
         const playbookKey = slugifyName(playbook.name)
         return {
@@ -561,7 +561,7 @@ export async function GET(
                     const state = parsed?.state ?? {}
                     const updates = { ...state }
                     let updatePlayer = false
-                    const playerData: { nationId?: string; playbookId?: string; campaignDomainPreference?: string; storyProgress: string } = {
+                    const playerData: { nationId?: string; archetypeId?: string; campaignDomainPreference?: string; storyProgress: string } = {
                         storyProgress: JSON.stringify({ ...parsed, state: updates }),
                     }
                     if (charSetSuffix === 'cognitive' || charSetSuffix === 'emotional' || charSetSuffix === 'action') {
@@ -574,11 +574,12 @@ export async function GET(
                             playerData.nationId = nationId
                             updatePlayer = true
                         }
-                    } else if (charSetSuffix.startsWith('playbook_')) {
-                        const playbookId = charSetSuffix.slice(9)
-                        if (playbookId) {
-                            updates.playbookId = playbookId
-                            playerData.playbookId = playbookId
+                    } else if (charSetSuffix.startsWith('playbook_') || charSetSuffix.startsWith('archetype_')) {
+                        const archetypeId = charSetSuffix.startsWith('playbook_') ? charSetSuffix.slice(9) : charSetSuffix.slice(10)
+                        if (archetypeId) {
+                            updates.playbookId = archetypeId
+                            updates.archetypeId = archetypeId
+                            playerData.archetypeId = archetypeId
                             updatePlayer = true
                         }
                     } else if (charSetSuffix.startsWith('domain_')) {

@@ -30,7 +30,7 @@ type EffectsSchemaV1 = {
 }
 
 export type NationMovePanelData =
-  | { success: true; quest: { id: string; title: string; status: string; isSystem: boolean }; nation: { id: string; name: string }; moves: Array<{ key: string; name: string; description: string; unlocked: boolean; applicable: boolean; appliesToStatus: string[]; requirements: RequirementsSchemaV1; effects: EffectsSchemaV1 }>; collaborators: Array<{ id: string; name: string }>; canMoveToGraveyard: boolean }
+  | { success: true; quest: { id: string; title: string; status: string; isSystem: boolean }; nation: { id: string; name: string }; moves: Array<{ id: string; key: string; name: string; description: string; unlocked: boolean; applicable: boolean; appliesToStatus: string[]; requirements: RequirementsSchemaV1; effects: EffectsSchemaV1 }>; collaborators: Array<{ id: string; name: string }>; canMoveToGraveyard: boolean }
   | { error: string }
 
 export type ApplyNationMoveState =
@@ -61,7 +61,7 @@ function userSafeError(error: unknown): string {
 
 const METAL_NATION_NAME = 'Metal'
 
-async function ensureMetalNationMoves() {
+export async function ensureMetalNationMoves() {
   // Make this all-or-nothing: if the move tables don't exist yet (schema drift during deploy),
   // we don't want to partially seed "Metal" into nations without the supporting tables.
   return db.$transaction(async (tx) => {
@@ -194,6 +194,15 @@ async function ensureMetalNationMoves() {
       })
     }
 
+    // Archetype pool: link Forge a Template to The Bold Heart playbook (craft/initiative)
+    const boldHeart = await tx.archetype.findUnique({ where: { name: 'The Bold Heart' }, select: { id: true } })
+    if (boldHeart) {
+      await tx.nationMove.updateMany({
+        where: { key: 'metal_forge_a_template' },
+        data: { archetypeId: boldHeart.id }
+      })
+    }
+
     return metalNation
   })
 }
@@ -247,7 +256,12 @@ export async function getNationMovePanelData(questId: string): Promise<NationMov
     if (!nation) return { error: 'Nation not found' }
 
     const moves = await db.nationMove.findMany({
-      where: { nationId: player.nationId },
+      where: {
+        OR: [
+          { nationId: player.nationId },
+          ...(player.archetypeId ? [{ archetypeId: player.archetypeId }] : []),
+        ],
+      },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
@@ -285,6 +299,7 @@ export async function getNationMovePanelData(questId: string): Promise<NationMov
       const applicable = applies.length === 0 ? true : applies.includes(quest.status)
 
       return {
+        id: m.id,
         key: m.key,
         name: m.name,
         description: m.description,
@@ -507,7 +522,9 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
     })
     if (!move) return { error: 'Unknown move' }
 
-    if (move.nationId !== player.nationId) {
+    const inNation = move.nationId === player.nationId
+    const inArchetype = !!player.archetypeId && (move as { archetypeId?: string | null }).archetypeId === player.archetypeId
+    if (!inNation && !inArchetype) {
       return { error: 'Player is not aligned with this nation move' }
     }
 

@@ -12,7 +12,7 @@ export interface NationChoice {
   name: string
 }
 
-export interface PlaybookChoice {
+export interface ArchetypeChoice {
   id: string
   name: string
 }
@@ -20,7 +20,7 @@ export interface PlaybookChoice {
 export interface CharacterCreationPacketInput {
   segment?: SegmentVariant
   nations?: NationChoice[]
-  playbooks?: PlaybookChoice[]
+  archetypes?: ArchetypeChoice[]
 }
 
 const LENS_CHOICES = [
@@ -36,7 +36,7 @@ function toSafeId(id: string): string {
 export function compileCharacterCreationPacket(
   input: CharacterCreationPacketInput = {}
 ): SerializableQuestPacket {
-  const { segment = 'player', nations = [], playbooks = [] } = input
+  const { segment = 'player', nations = [], archetypes = [] } = input
 
   const nodes: QuestNode[] = []
 
@@ -76,7 +76,7 @@ export function compileCharacterCreationPacket(
           text: n.name,
           targetId: `char_set_nation_${toSafeId(n.id)}`,
         }))
-      : [{ text: 'Continue (skip)', targetId: 'char_playbook' }]
+      : [{ text: 'Continue (skip)', targetId: 'char_archetype' }]
 
   if (nations.length > 0) {
     nodes.push({
@@ -97,7 +97,7 @@ export function compileCharacterCreationPacket(
         wordCountEstimate: 15,
         emotional: { channel: 'Neutrality', movement: 'translate' },
         text: `You chose ${n.name}. Continue.`,
-        choices: [{ text: 'Continue', targetId: 'char_playbook' }],
+        choices: [{ text: 'Continue', targetId: 'char_archetype' }],
         anchors: {},
       })
     }
@@ -107,34 +107,34 @@ export function compileCharacterCreationPacket(
       beatType: 'tension',
       wordCountEstimate: 25,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Nation** — Continue to choose your playbook.',
+      text: '**Nation** — Continue to choose your archetype.',
       choices: [{ text: 'Continue', targetId: 'char_playbook' }],
       anchors: {},
     })
   }
 
-  // Playbook hub
-  const playbookChoices: Choice[] =
-    playbooks.length > 0
-      ? playbooks.map((p) => ({
+  // Archetype hub
+  const archetypeChoices: Choice[] =
+    archetypes.length > 0
+      ? archetypes.map((p) => ({
           text: p.name,
-          targetId: `char_set_playbook_${toSafeId(p.id)}`,
+          targetId: `char_set_archetype_${toSafeId(p.id)}`,
         }))
       : [{ text: 'Continue (skip)', targetId: 'char_domain' }]
 
-  if (playbooks.length > 0) {
+  if (archetypes.length > 0) {
     nodes.push({
-      id: 'char_playbook',
+      id: 'char_archetype',
       beatType: 'tension',
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**How do you approach the heist?** Each archetype brings a different lens — a different way of moving through the world. Your playbook is your approach.',
-      choices: playbookChoices,
+      text: '**How do you approach the heist?** Each archetype brings a different lens — a different way of moving through the world.',
+      choices: archetypeChoices,
       anchors: {},
     })
 
-    for (const p of playbooks) {
-      const nodeId = `char_set_playbook_${toSafeId(p.id)}`
+    for (const p of archetypes) {
+      const nodeId = `char_set_archetype_${toSafeId(p.id)}`
       nodes.push({
         id: nodeId,
         beatType: 'integration',
@@ -147,11 +147,11 @@ export function compileCharacterCreationPacket(
     }
   } else {
     nodes.push({
-      id: 'char_playbook',
+      id: 'char_archetype',
       beatType: 'tension',
       wordCountEstimate: 25,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: '**Playbook** — Continue to choose your domain.',
+      text: '**Archetype** — Continue to choose your domain.',
       choices: [{ text: 'Continue', targetId: 'char_domain' }],
       anchors: {},
     })

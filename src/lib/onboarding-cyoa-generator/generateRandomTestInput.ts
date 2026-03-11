@@ -12,7 +12,7 @@ import { drawAlignedHexagram } from '@/lib/iching-alignment'
 import { getHexagramStructure } from '@/lib/iching-struct'
 import {
   generateRandomUnpacking,
-  getPlaybookPrimaryWave,
+  getArchetypePrimaryWave,
 } from '@/lib/quest-grammar'
 import type { IChingContext } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
@@ -38,7 +38,7 @@ export async function generateRandomTestInput(): Promise<RandomTestInput> {
   const [hexagram, nations, playbooks] = await Promise.all([
     db.bar.findUnique({ where: { id: hexagramId } }),
     db.nation.findMany({ select: { id: true, element: true } }),
-    db.playbook.findMany({ select: { id: true } }),
+    db.archetype.findMany({ select: { id: true } }),
   ])
 
   const structure = getHexagramStructure(hexagramId)
@@ -55,7 +55,7 @@ export async function generateRandomTestInput(): Promise<RandomTestInput> {
   let nationId: string | null = null
   let playbookId: string | null = null
   let nationElement: ElementKey | undefined
-  let playbookPrimaryWave: 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | undefined
+  let archetypePrimaryWave: 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | undefined
 
   if (nations.length > 0) {
     const nation = nations[Math.floor(Math.random() * nations.length)]!
@@ -71,12 +71,12 @@ export async function generateRandomTestInput(): Promise<RandomTestInput> {
   if (playbooks.length > 0) {
     const playbook = playbooks[Math.floor(Math.random() * playbooks.length)]!
     playbookId = playbook.id
-    playbookPrimaryWave = await getPlaybookPrimaryWave(playbookId)
+    archetypePrimaryWave = await getArchetypePrimaryWave(playbookId)
   }
 
   const { unpackingAnswers, alignedAction } = generateRandomUnpacking({
     nationElement,
-    playbookPrimaryWave,
+    archetypePrimaryWave,
   })
 
   return {

@@ -84,12 +84,12 @@ export interface QuestCompileInput {
   developmentalLens?: string
   /** Optional: target nation ID for choice privileging (nation element). */
   targetNationId?: string
-  /** Optional: target playbook ID for choice privileging (playbook WAVE). */
-  targetPlaybookId?: string
+  /** Optional: target archetype ID for choice privileging (archetype WAVE). */
+  targetArchetypeId?: string
   /** Optional: I Ching draw context. Injected into AI prompt when present. */
   ichingContext?: IChingContext
   /** Internal: resolved by compileQuestWithPrivileging. Do not set directly. */
-  privilegeContext?: { nationElement: 'metal' | 'water' | 'wood' | 'fire' | 'earth'; playbookWave: PersonalMoveType }
+  privilegeContext?: { nationElement: 'metal' | 'water' | 'wood' | 'fire' | 'earth'; archetypeWave: PersonalMoveType }
   /** Short intro: 4 beats only (orientation, rising, tension, integration). Terminal last node for chaining. */
   spineLength?: 'short' | 'full'
   /** Altitude Map order: gapIndex -> ordered depth node ids. Overrides default face order. */

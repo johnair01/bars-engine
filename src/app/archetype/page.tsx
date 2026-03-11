@@ -7,7 +7,7 @@ import { ArchetypeHandbookContent } from '@/components/conclave/ArchetypeHandboo
 export default async function ArchetypePage() {
     const player = await getCurrentPlayer()
     if (!player) return redirect('/')
-    if (!player.playbook) return redirect('/')
+    if (!player.archetype) return redirect('/')
 
     return (
         <div className="min-h-screen bg-black text-zinc-100 font-sans p-6 md:p-12">
@@ -17,7 +17,7 @@ export default async function ArchetypePage() {
                     ← Dashboard
                 </Link>
 
-                <ArchetypeHandbookContent playbook={player.playbook as any} />
+                <ArchetypeHandbookContent playbook={player.archetype as any} />
             </div>
         </div>
     )

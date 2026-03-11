@@ -81,7 +81,7 @@ export async function login(formData: FormData) {
         // node where those choices are made.
         let redirectToPath = !player.nationId
             ? '/conclave/guided?step=nation_select'
-            : (!player.playbookId ? '/conclave/guided?step=playbook_select' : '/')
+            : (!player.archetypeId ? '/conclave/guided?step=archetype_select' : '/')
         if (redirectToPath === '/' && returnTo && returnTo.startsWith('/')) {
             redirectToPath = returnTo
         }

@@ -11,16 +11,18 @@ import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
-import { KotterGauge } from '@/components/KotterGauge'
+import { DashboardSectionButtons } from '@/components/dashboard/DashboardSectionButtons'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { IntentionDisplay } from '@/components/IntentionDisplay'
-import { CampaignEntryBanner } from '@/components/campaign/CampaignEntryBanner'
 import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
-import { LibraryRequestButton } from '@/components/LibraryRequestButton'
+import { AppreciationsReceived } from '@/components/AppreciationsReceived'
+import { getAppreciationFeed } from '@/actions/appreciation'
+import { getRecentChargeBars } from '@/actions/charge-capture'
+import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -134,7 +136,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       where: { id: playerId },
       include: {
         ...commonPlayerInclude,
-        playbook: true,
+        archetype: true,
       }
     })
   } catch {
@@ -143,7 +145,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       where: { id: playerId },
       include: {
         ...commonPlayerInclude,
-        playbook: {
+        archetype: {
           select: {
             id: true,
             name: true,
@@ -240,7 +242,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   if (!player.nationId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=nation_select')
   }
-  if (!player.playbookId && !hasActiveOrientationThread) {
+  if (!player.archetypeId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=playbook_select')
   }
 
@@ -331,7 +333,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     if (!bar.allowedTrigrams || bar.allowedTrigrams === '[]') return true // Public if no gating
     try {
       const allowed = JSON.parse(bar.allowedTrigrams)
-      return player.playbook && allowed.includes(player.playbook.name)
+      return player.archetype && allowed.includes(player.archetype.name)
     } catch {
       return true // Fallback to visible if error
     }
@@ -341,6 +343,14 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const threads = await getPlayerThreads()
   const packs = await getPlayerPacks()
 
+  // Appreciations received (Phase 2)
+  const appreciationResult = await getAppreciationFeed(10)
+  const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
+
+  // Recent charge captures (Charge Capture UX)
+  const chargeResult = await getRecentChargeBars({ limit: 5 })
+  const recentCharges = 'success' in chargeResult ? chargeResult.bars : []
+
   // Derive completed move types for flow checking
   const completedMoveTypes = Array.from(new Set(
     player.quests
@@ -348,7 +358,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       .map(q => q.quest.moveType as string)
   ))
 
-  const isSetupIncomplete = !player.nationId || !player.playbookId
+  const isSetupIncomplete = !player.nationId || !player.archetypeId
 
   // Campaign Entry: show when player has bruised-banana thread and hasn't dismissed
   const bbThread = threads.find(
@@ -383,73 +393,56 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div className="flex items-center gap-3 space-y-0">
+        <div className="flex flex-row justify-between items-center gap-4 w-full">
+          <div className="flex items-center gap-3 min-w-0 flex-shrink">
             <DashboardAvatarWithModal player={{ name: player.name, avatarConfig: player.avatarConfig, pronouns: player.pronouns }} />
-            <div className="space-y-1">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">{player.name}</h1>
-              <div className="text-zinc-400 text-sm font-mono">{player.contactValue}</div>
+            <div className="space-y-0.5 min-w-0">
+              <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight truncate">{player.name}</h1>
+              <div className="text-zinc-400 text-sm font-mono truncate">{player.contactValue}</div>
             </div>
           </div>
 
-          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-            {/* CLOCK WIDGET */}
-            <div className="flex flex-col gap-2">
-              <div className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 text-center min-w-[70px]">
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Act</div>
-                <div className="text-xl sm:text-2xl font-mono text-purple-400">{globalState.currentAct}/2</div>
-              </div>
-
-              {/* KOTTER GAUGE (Small) */}
-              <Link href="/story-clock" className="block">
-                <KotterGauge currentStage={globalStage} label="Global Phase" />
-              </Link>
-            </div>
-
-            <Link href="/wallet" className="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
-              <div className="text-xl sm:text-2xl font-mono text-green-400 truncate">{vibulons} ♦</div>
-            </Link>
-          </div>
+          <Link href="/wallet" className="shrink-0 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
+            <div className="text-xl sm:text-2xl font-mono text-green-400 truncate">{vibulons} ♦</div>
+          </Link>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:gap-4">
-          {player.nation && (
-            <Link href="/nation" className="block cursor-pointer hover:opacity-80 transition">
-              <div className="px-4 py-2 bg-purple-900/20 border border-purple-900/50 rounded-lg">
-                <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-1">Nation</div>
-                <div className="text-purple-100 font-bold">{player.nation.name}</div>
-              </div>
-            </Link>
-          )}
-          {player.playbook && (
-            <Link href="/archetype" className="block cursor-pointer hover:opacity-80 transition">
-              <div className="px-4 py-2 bg-blue-900/20 border border-blue-900/50 rounded-lg">
-                <div className="text-[10px] uppercase tracking-widest text-blue-400 mb-1">Archetype</div>
-                <div className="text-blue-100 font-bold">{player.playbook.name}</div>
-              </div>
-            </Link>
-          )}
-          {player.roles.length > 0 && (
-            <div className="px-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
-              <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Roles</div>
-              <div className="flex gap-2">
-                {player.roles.map(r => (
-                  <span key={r.id} className="text-zinc-300 font-medium">{r.role.key}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          <Link href="/campaign" className="px-4 py-2 bg-emerald-900/20 border border-emerald-800/50 rounded-lg hover:border-emerald-600/60 transition">
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
-            <div className="text-emerald-100 font-bold">Begin the Journey</div>
-          </Link>
-          <Link href="/campaign/board?ref=bruised-banana" className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Campaign</div>
-            <div className="text-zinc-200 font-bold">Gameboard</div>
-          </Link>
-          <LibraryRequestButton />
+        <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4">
+          <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Play the Game</div>
+          <DashboardSectionButtons
+          player={{
+            nation: player.nation ? { id: player.nation.id, name: player.nation.name, description: player.nation.description } : null,
+            archetype: player.archetype ? { name: player.archetype.name, description: player.archetype.description, wakeUp: player.archetype.wakeUp } : null,
+            roles: player.roles,
+          }}
+          globalStage={globalStage}
+          campaignEntry={
+            showCampaignEntry && bbThread
+              ? {
+                  nation: player.nation ? { id: player.nation.id, name: player.nation.name } : null,
+                  archetype: player.archetype ? { id: player.archetype.id, name: player.archetype.name } : null,
+                  intendedImpact: intendedImpactLabels,
+                  starterQuests: (bbThread as { quests?: { quest: { id: string; title: string } }[] }).quests?.map((tq) => ({ id: tq.quest.id, title: tq.quest.title })) ?? [],
+                }
+              : null
+          }
+          activeInstance={activeInstance}
+          eventGoal={eventGoal}
+          eventCurrent={eventCurrent}
+          eventPct={eventPct}
+          formattedEventCurrent={formatUsdCents(eventCurrent)}
+          formattedEventGoal={formatUsdCents(eventGoal)}
+          />
         </div>
+
+        {/* Appreciations received */}
+        {appreciations.length > 0 && (
+          <AppreciationsReceived items={appreciations} maxItems={5} />
+        )}
+
+        {/* Recent Charge */}
+        <RecentChargeSection bars={recentCharges} />
 
         {/* Player Intention */}
         {intention && (
@@ -470,94 +463,48 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             You have successfully navigated the first gates of the Conclave.
             The collective field is now open to you. Go forth and weave.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link href="/" className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-900/40">
               Enter the Flow
+            </Link>
+            <Link href="/game-map" className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl font-bold transition-all text-sm">
+              Explore the Game Map
             </Link>
           </div>
         </section>
       )}
 
-      {/* ORIENTATION RITUAL BANNER */}
-      {!isRitualComplete && hasActiveOrientationThread && (
-        <section className="bg-gradient-to-br from-purple-900/40 to-black border border-purple-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl shadow-purple-900/10 active:border-purple-500/50 transition-colors">
-          <div className="space-y-1 text-center sm:text-left">
-            <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-              <span className="text-[10px] text-purple-400 font-black uppercase tracking-[0.2em]">Active Ritual</span>
-            </div>
-            <h2 className="text-xl font-bold text-white">{hasActiveOrientationThread.thread.title}</h2>
-            <p className="text-zinc-500 text-xs">Complete your orientation to unlock the full potential of the Conclave.</p>
-          </div>
-          <Link
-            href="/conclave/onboarding?ritual=true"
-            className="w-full sm:w-auto px-8 py-4 bg-white text-black hover:bg-zinc-200 font-black rounded-xl transition-all shadow-xl shadow-white/5 active:scale-95 text-center uppercase tracking-widest text-xs"
-          >
-            Continue Ritual →
+      {/* GETTING STARTED — Feature discovery */}
+      <section className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5 sm:p-6">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-500 font-bold mb-4">Get Started</h2>
+        <p className="text-zinc-400 text-sm mb-4 max-w-xl">
+          Create BARs, complete quests, use Emotional First Aid when stuck, and support the residency. Here&apos;s how.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <Link href="/wiki/bars-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-amber-500/50 transition-colors">
+            <div className="text-amber-400 font-medium text-sm mb-0.5">BARs</div>
+            <div className="text-zinc-500 text-xs">What they are, how to create, how they fuel quests</div>
           </Link>
-        </section>
-      )}
-
-      {/* CAMPAIGN ENTRY (Bruised Banana first visit) */}
-      {showCampaignEntry && bbThread && (
-        <CampaignEntryBanner
-          nation={player.nation ? { id: player.nation.id, name: player.nation.name } : null}
-          playbook={player.playbook ? { id: player.playbook.id, name: player.playbook.name } : null}
-          intendedImpact={intendedImpactLabels}
-          starterQuests={(bbThread as { quests?: { quest: { id: string; title: string } }[] }).quests?.map((tq) => ({ id: tq.quest.id, title: tq.quest.title })) ?? []}
-        />
-      )}
-
-      {/* EVENT MODE BANNER (Active Instance) */}
-      {activeInstance?.isEventMode && (
-        <section className="bg-green-950/20 border border-green-900/40 rounded-2xl p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-widest text-green-400 font-bold mb-1">Live Instance</div>
-              <div className="text-xl font-bold text-white truncate">{activeInstance.name}</div>
-              {activeInstance.targetDescription && (
-                <div className="text-sm text-zinc-400 mt-1">
-                  {activeInstance.targetDescription}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              <Link
-                href="/event"
-                className="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-green-600/60 text-zinc-200 text-xs font-bold"
-              >
-                Event Page →
-              </Link>
-              {activeInstance.stripeOneTimeUrl && (
-                <a
-                  href={activeInstance.stripeOneTimeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-bold"
-                >
-                  Donate
-                </a>
-              )}
-            </div>
-          </div>
-
-          {eventGoal > 0 && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-zinc-500 font-mono">
-                <span>{formatUsdCents(eventCurrent)}</span>
-                <span>{formatUsdCents(eventGoal)}</span>
-              </div>
-              <div className="h-2 rounded-full bg-black border border-zinc-800 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
-                  style={{ width: `${Math.round(eventPct * 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </section>
-      )}
+          <Link href="/wiki/quests-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-emerald-500/50 transition-colors">
+            <div className="text-emerald-400 font-medium text-sm mb-0.5">Quests</div>
+            <div className="text-zinc-500 text-xs">Make quests, add subquests, complete on Gameboard</div>
+          </Link>
+          <Link href="/wiki/emotional-first-aid-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-cyan-500/50 transition-colors">
+            <div className="text-cyan-400 font-medium text-sm mb-0.5">Emotional First Aid</div>
+            <div className="text-zinc-500 text-xs">Unblock when stuck—vibeulon moves, grounding</div>
+          </Link>
+          <Link href="/wiki/donation-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-green-500/50 transition-colors">
+            <div className="text-green-400 font-medium text-sm mb-0.5">Donate</div>
+            <div className="text-zinc-500 text-xs">Support the residency—Event page → Donate</div>
+          </Link>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/bars/create" className="text-sm text-amber-400 hover:text-amber-300 font-medium">Create BAR →</Link>
+          <Link href="/emotional-first-aid" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium">Try EFA →</Link>
+          <Link href="/event/donate" className="text-sm text-green-400 hover:text-green-300 font-medium">Donate →</Link>
+          <Link href="/game-map" className="text-sm text-zinc-400 hover:text-white font-medium">Game Map →</Link>
+        </div>
+      </section>
 
       {/* WELCOME SCREEN (if not seen yet) */}
       {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (

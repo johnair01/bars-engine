@@ -4,13 +4,13 @@
  * player POV, and Voice Style Guide into a consumable block.
  *
  * Phase 5b: Prompt context builder per quest-grammar-ux-flow spec.
- * CE: Choice privileging when targetNationId/targetPlaybookId present.
+ * CE: Choice privileging when targetNationId/targetArchetypeId present.
  */
 
 import { db } from '@/lib/db'
 import { compileQuest } from './compileQuestCore'
 import { channelToElement } from './elements'
-import { getPlaybookPrimaryWave } from './playbook-wave'
+import { getArchetypePrimaryWave } from './archetype-wave'
 import { buildChoicePrivilegingContext } from './choice-privileging-context'
 import { getMovesForLens } from './lens-moves'
 import type { ElementKey } from './elements'
@@ -78,7 +78,7 @@ function toText(value: string | string[]): string {
 /**
  * Assemble structured prompt context for AI consumption.
  * Uses compileQuest to derive emotional signature when packet not provided.
- * CE: Fetches nation.element and playbook primary WAVE when targetNationId/targetPlaybookId present.
+ * CE: Fetches nation.element and archetype primary WAVE when targetNationId/targetArchetypeId present.
  */
 export async function buildQuestPromptContext(
   input: BuildQuestPromptContextInput,
@@ -94,7 +94,7 @@ export async function buildQuestPromptContext(
     playerPOV,
     expectedMoves,
     targetNationId,
-    targetPlaybookId,
+    targetArchetypeId,
   } = input
 
   const sig: EmotionalAlchemySignature = pkt.signature
@@ -163,10 +163,10 @@ ${lensMoves.length ? `- Lens moves to privilege: ${lensMoves.map((m) => m.name).
   }
 
   // CE: Choice privileging (nation element + playbook WAVE)
-  if (targetNationId || targetPlaybookId) {
+  if (targetNationId || targetArchetypeId) {
     let nationElement: ElementKey = 'earth'
-    const playbookWave = targetPlaybookId
-      ? await getPlaybookPrimaryWave(targetPlaybookId)
+    const archetypeWave = targetArchetypeId
+      ? await getArchetypePrimaryWave(targetArchetypeId)
       : 'showUp'
     if (targetNationId) {
       const nation = await db.nation.findUnique({
@@ -177,7 +177,7 @@ ${lensMoves.length ? `- Lens moves to privilege: ${lensMoves.map((m) => m.name).
         nationElement = nation.element as ElementKey
       }
     }
-    sections.push(buildChoicePrivilegingContext(nationElement, playbookWave))
+    sections.push(buildChoicePrivilegingContext(nationElement, archetypeWave))
   }
 
   // Expected moves (milestones)

@@ -368,8 +368,8 @@ async function main() {
         {
             name: 'STEP_1',
             pid: '2',
-            text: '### Step 1: Request from Library\n\nOpen the [dashboard](/). Click **Request from Library** in the header.',
-            cleanText: 'Open the dashboard. Click Request from Library in the header.',
+            text: '### Step 1: Learn the skill\n\nRead the [Report to the Library](/wiki/request-from-library) skill guide first—it teaches when and how to report. Then open the [dashboard](/) and click **Request from Library** in the header.',
+            cleanText: 'Learn the skill: Report to the Library. Then open dashboard and click Request from Library.',
             links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
         {
@@ -382,8 +382,8 @@ async function main() {
         {
             name: 'STEP_3',
             pid: '4',
-            text: '### Step 3: Confirm result\n\nIf resolved: confirm you got a link to a doc. If spawned: a DocQuest was created and added to your Active Quests.',
-            cleanText: 'If resolved: confirm you got a doc link. If spawned: DocQuest added to Active Quests.',
+            text: '### Step 3: Confirm result\n\nIf resolved: confirm you got a link to a doc. If spawned: a DocQuest was created and added to your Active Quests.\n\n**Learn the skill:** [Report to the Library](/wiki/request-from-library) teaches when and how to report—so you can use it anytime.',
+            cleanText: 'If resolved: confirm you got a doc link. If spawned: DocQuest added to Active Quests. Learn the skill: Report to the Library.',
             links: [{ label: 'Complete', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
         {
@@ -571,7 +571,7 @@ async function main() {
         where: { id: 'bars-wallet-guide-quest' },
         update: {
             title: 'BARs Wallet Guide',
-            description: 'Your BARs wallet is where you create, manage, and share BARs. [Visit the BARs page](/bars) to create your first BAR or browse what you\'ve made.',
+            description: 'Your BARs wallet is where you create, manage, and share BARs. BARs fuel quests and add context. [Visit the BARs page](/bars) to create your first BAR. [Read the full guide](/wiki/bars-guide) for how BARs connect to gameplay.',
             type: 'onboarding',
             reward: 1,
             status: 'active',
@@ -582,7 +582,7 @@ async function main() {
         create: {
             id: 'bars-wallet-guide-quest',
             title: 'BARs Wallet Guide',
-            description: 'Your BARs wallet is where you create, manage, and share BARs. [Visit the BARs page](/bars) to create your first BAR or browse what you\'ve made.',
+            description: 'Your BARs wallet is where you create, manage, and share BARs. BARs fuel quests and add context. [Visit the BARs page](/bars) to create your first BAR. [Read the full guide](/wiki/bars-guide) for how BARs connect to gameplay.',
             type: 'onboarding',
             creatorId: creator.id,
             reward: 1,
@@ -620,7 +620,7 @@ async function main() {
         where: { id: 'emotional-first-aid-guide-quest' },
         update: {
             title: 'Emotional First Aid Kit',
-            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. Learn how to use the Emotional First Aid Kit to unblock and return to flow.',
+            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. [Read the guide](/wiki/emotional-first-aid-guide) or [try the EFA Kit](/emotional-first-aid) to unblock and return to flow.',
             type: 'onboarding',
             reward: 1,
             moveType: 'cleanUp',
@@ -632,7 +632,7 @@ async function main() {
         create: {
             id: 'emotional-first-aid-guide-quest',
             title: 'Emotional First Aid Kit',
-            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. Learn how to use the Emotional First Aid Kit to unblock and return to flow.',
+            description: 'When you\'re blocked emotionally, the Medbay has protocols to help. [Read the guide](/wiki/emotional-first-aid-guide) or [try the EFA Kit](/emotional-first-aid) to unblock and return to flow.',
             type: 'onboarding',
             creatorId: creator.id,
             reward: 1,
@@ -664,6 +664,57 @@ async function main() {
         create: { threadId: efaThread.id, questId: efaQuest.id, position: 1 }
     })
     console.log(`  Linked Emotional First Aid quest to thread`)
+
+    // 8b. Quests Guide orientation thread (onboarding-feature-discovery)
+    console.log('\nCreating Quests Guide thread...')
+    const questsGuideQuest = await db.customBar.upsert({
+        where: { id: 'quests-guide-quest' },
+        update: {
+            title: 'Quests Guide',
+            description: 'Learn how to make quests and add subquests to campaign quests. The Gameboard is where you complete campaign work. [Read the full guide](/wiki/quests-guide) or [visit the Gameboard](/campaign/board?ref=bruised-banana) to get started.',
+            type: 'onboarding',
+            reward: 1,
+            moveType: 'showUp',
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'visited', label: "I've visited the Gameboard or read the guide", type: 'text', placeholder: 'Optional', required: false }])
+        },
+        create: {
+            id: 'quests-guide-quest',
+            title: 'Quests Guide',
+            description: 'Learn how to make quests and add subquests to campaign quests. The Gameboard is where you complete campaign work. [Read the full guide](/wiki/quests-guide) or [visit the Gameboard](/campaign/board?ref=bruised-banana) to get started.',
+            type: 'onboarding',
+            creatorId: creator.id,
+            reward: 1,
+            moveType: 'showUp',
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            inputs: JSON.stringify([{ key: 'visited', label: "I've visited the Gameboard or read the guide", type: 'text', placeholder: 'Optional', required: false }])
+        }
+    })
+    let questsGuideThread = await db.questThread.findUnique({ where: { id: 'quests-guide-thread' } })
+    const questsGuideThreadData = {
+        title: 'Quests Guide',
+        description: 'How to make quests and add subquests to campaign quests.',
+        threadType: 'orientation',
+        creatorType: 'system' as const,
+        creatorId: creator.id,
+        completionReward: 1,
+        status: 'active'
+    }
+    if (questsGuideThread) {
+        questsGuideThread = await db.questThread.update({ where: { id: questsGuideThread.id }, data: questsGuideThreadData })
+    } else {
+        questsGuideThread = await db.questThread.create({ data: { id: 'quests-guide-thread', ...questsGuideThreadData } })
+    }
+    await db.threadQuest.upsert({
+        where: { threadId_questId: { threadId: questsGuideThread.id, questId: questsGuideQuest.id } },
+        update: { position: 1 },
+        create: { threadId: questsGuideThread.id, questId: questsGuideQuest.id, position: 1 }
+    })
+    console.log(`  Linked Quests Guide quest to thread`)
 
     // 9. Four Moves orientation thread (dashboard-ui-vibe-cleanup Phase 4)
     console.log('\nCreating Four Moves orientation thread...')

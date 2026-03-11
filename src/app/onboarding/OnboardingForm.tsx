@@ -8,26 +8,26 @@ interface Props {
     playerId: string
     playerName: string
     currentNationId: string | null
-    currentPlaybookId: string | null
+    currentArchetypeId: string | null
     nations: { id: string; name: string; description: string }[]
     playbooks: { id: string; name: string; description: string }[]
 }
 
-export function OnboardingForm({ playerId, playerName, currentNationId, currentPlaybookId, nations, playbooks }: Props) {
+export function OnboardingForm({ playerId, playerName, currentNationId, currentArchetypeId, nations, playbooks }: Props) {
     const router = useRouter()
     const [nationId, setNationId] = useState(currentNationId || '')
-    const [playbookId, setPlaybookId] = useState(currentPlaybookId || '')
+    const [archetypeId, setArchetypeId] = useState(currentArchetypeId || '')
     const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
     const handleSubmit = () => {
-        if (!nationId || !playbookId) {
+        if (!nationId || !archetypeId) {
             setError('Please select both a Nation and an Archetype.')
             return
         }
         setError(null)
         startTransition(async () => {
-            const result = await saveOnboardingSelections(playerId, nationId, playbookId)
+            const result = await saveOnboardingSelections(playerId, nationId, archetypeId)
             if (result.error) {
                 setError(result.error)
             } else {
@@ -38,7 +38,7 @@ export function OnboardingForm({ playerId, playerName, currentNationId, currentP
     }
 
     const selectedNation = nations.find(n => n.id === nationId)
-    const selectedPlaybook = playbooks.find(p => p.id === playbookId)
+    const selectedPlaybook = playbooks.find(p => p.id === archetypeId)
 
     return (
         <div className="w-full max-w-lg mx-auto bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800 backdrop-blur-sm space-y-6">
@@ -72,8 +72,8 @@ export function OnboardingForm({ playerId, playerName, currentNationId, currentP
             <div className="space-y-2">
                 <label className="block text-xs uppercase text-zinc-500 font-bold tracking-widest">Archetype</label>
                 <select
-                    value={playbookId}
-                    onChange={(e) => setPlaybookId(e.target.value)}
+                    value={archetypeId}
+                    onChange={(e) => setArchetypeId(e.target.value)}
                     className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition"
                 >
                     <option value="">Select an Archetype...</option>
@@ -94,7 +94,7 @@ export function OnboardingForm({ playerId, playerName, currentNationId, currentP
 
             <button
                 onClick={handleSubmit}
-                disabled={isPending || !nationId || !playbookId}
+                disabled={isPending || !nationId || !archetypeId}
                 className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-purple-900/20 disabled:opacity-50"
             >
                 {isPending ? 'Saving...' : 'Begin Your Journey →'}

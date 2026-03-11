@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef, useActionState } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { completeQuest, getArchetypeHandbookData } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
@@ -18,9 +18,12 @@ import { TwineLogic } from '@/lib/twine-engine'
 import { DEFAULT_INTENTION_INPUTS, INTENTION_GUIDED_TWINE_LOGIC } from '@/lib/intention-guided-journey'
 import { getIntentionOptionsForPreference } from '@/lib/intention-options'
 import Link from 'next/link'
-import { applyNationMoveWithState, getNationMovePanelData, moveQuestToGraveyard, type NationMovePanelData, type ApplyNationMoveState } from '@/actions/nation-moves'
+import { getNationMovePanelData, moveQuestToGraveyard, type NationMovePanelData } from '@/actions/nation-moves'
+import { getPlayerMovePool, useMove, type PlayerMovePoolResult } from '@/actions/moves-library'
 import { QuestNestingActions } from './QuestNestingActions'
 import { createSubQuest } from '@/actions/quest-nesting'
+import { sendAppreciationAction } from '@/actions/appreciation'
+import { getCurrentPlayerId } from '@/actions/auth'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -38,6 +41,9 @@ interface QuestDetailModalProps {
             htmlArtifact: string | null
             isDraft: boolean
         } | null
+        creatorId?: string // When present, enables Appreciate button (hide when viewer is creator)
+        status?: string | null // active | blocked; when blocked, Complete is disabled
+        blockedKeyQuestTitle?: string | null // When blocked, show "Unlocked when you complete [this]"
     }
     context?: {
         packId?: string
@@ -72,6 +78,7 @@ function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
 }
 
 export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [], isAdmin }: QuestDetailModalProps) {
+    const isBlocked = quest.status === 'blocked'
     const router = useRouter()
     const pathname = usePathname()
     const [isPending, startTransition] = useTransition()
@@ -81,11 +88,9 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
 
     // Nation moves / graveyard state
     const [movePanel, setMovePanel] = useState<NationMovePanelData | null>(null)
+    const [movePool, setMovePool] = useState<PlayerMovePoolResult | null>(null)
     const [selectedMoveKey, setSelectedMoveKey] = useState<string>('')
-    const [moveApplyState, moveApplyAction, isApplyingMove] = useActionState<ApplyNationMoveState | null, FormData>(
-        applyNationMoveWithState,
-        null
-    )
+    const [isApplyingMove, setIsApplyingMove] = useState(false)
 
     // Archetype Quest State
     const [archetypeData, setArchetypeData] = useState<any>(null)
@@ -99,12 +104,19 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     // Phase 5d: Stuckness — player indicates stuck to surface EFAK + subquest options
     const [stuckExpanded, setStuckExpanded] = useState(false)
 
+    // Appreciation: show when creatorId present and not own quest
+    const [canAppreciate, setCanAppreciate] = useState<boolean | null>(null)
+    const [appreciateExpanded, setAppreciateExpanded] = useState(false)
+    const [appreciateAmount, setAppreciateAmount] = useState(2)
+    const [appreciateType, setAppreciateType] = useState<string>('care')
+    const [isAppreciating, setIsAppreciating] = useState(false)
+
     // Handle initial data for specialized quests
     useEffect(() => {
         if (isOpen && quest.id === 'orientation-quest-2' && !isCompleted) {
             getArchetypeHandbookData().then(res => {
                 if (res.success) {
-                    setArchetypeData(res.playbook)
+                    setArchetypeData(res.archetype)
                 } else {
                     console.error('[QuestDetailModal] Archetype fetch failed:', res.error)
                     setArchetypeError(res.error || 'Failed to load archetype')
@@ -119,6 +131,13 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                 if (res.success) setTransferContext(res)
             })
         }
+        if (isOpen && quest.creatorId) {
+            getCurrentPlayerId().then(res => {
+                setCanAppreciate(res !== null && res.playerId !== quest.creatorId)
+            })
+        } else {
+            setCanAppreciate(null)
+        }
 
         if (isOpen) {
             // Best-effort: if nation move tables haven't been pushed yet, this returns an error payload.
@@ -131,6 +150,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
             }).catch(() => {
                 setMovePanel({ error: 'Failed to load nation moves' })
             })
+            getPlayerMovePool().then(setMovePool).catch(() => setMovePool(null))
         }
 
         // Cleanup if closed
@@ -142,23 +162,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
             setMovePanel(null)
             setSelectedMoveKey('')
             setStuckExpanded(false)
+            setCanAppreciate(null)
+            setAppreciateExpanded(false)
         }
-    }, [isOpen, quest.id, isCompleted])
+    }, [isOpen, quest.id, quest.creatorId, isCompleted])
 
-    useEffect(() => {
-        if (!moveApplyState) return
-        if ('ok' in moveApplyState && moveApplyState.ok) {
-            setFeedback('✨ Move applied!')
-            setTimeout(() => {
-                setFeedback(null)
-                router.refresh()
-            }, 1200)
-            return
-        }
-        if ('error' in moveApplyState && moveApplyState.error) {
-            setFeedback(`❌ ${moveApplyState.error}`)
-        }
-    }, [moveApplyState, router])
 
     useEffect(() => {
         if (!isOpen) {
@@ -264,6 +272,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const shouldRenderTwine = !!effectiveTwineLogic
         && !isCompleted
         && !isLocked
+        && !isBlocked
         && !isArchetypeQuest
         && !isTransferQuest
         && !hasCompiledMicroTwine // Fallback if no MicroTwine
@@ -295,6 +304,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         🔒 Locked
                                     </span>
                                 )}
+                                {isBlocked && (
+                                    <span className="text-amber-500/90 font-medium px-2 py-0.5 bg-amber-950/40 rounded-full">
+                                        🔑 Blocked — complete the key subquest to unlock
+                                    </span>
+                                )}
                                 {quest.moveType && (
                                     <span className={`font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${quest.moveType === 'wakeUp' ? 'bg-yellow-900/30 text-yellow-400' :
                                         quest.moveType === 'cleanUp' ? 'bg-orange-900/30 text-orange-400' :
@@ -311,6 +325,15 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                            {context?.threadId && (
+                                <Link
+                                    href={`/map?type=thread&threadId=${context.threadId}`}
+                                    className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg border border-zinc-700 bg-zinc-800/60 text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-300 transition-colors"
+                                    title="View thread map"
+                                >
+                                    Map
+                                </Link>
+                            )}
                             {isAdmin && (
                                 <Link
                                     href={`/admin/quests/${quest.id}`}
@@ -356,8 +379,19 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         return null
                     })()}
 
+                    {/* Blocked: show unlock hint */}
+                    {isBlocked && quest.blockedKeyQuestTitle && (
+                        <p className="text-sm text-amber-400/90 bg-amber-950/20 px-3 py-2 rounded-lg border border-amber-900/40">
+                            Unlocked when you complete: {quest.blockedKeyQuestTitle}
+                        </p>
+                    )}
+                    {isBlocked && !quest.blockedKeyQuestTitle && (
+                        <p className="text-sm text-amber-400/90 bg-amber-950/20 px-3 py-2 rounded-lg border border-amber-900/40">
+                            Unlocked when you complete the key subquest.
+                        </p>
+                    )}
                     {/* Phase 5d: Surface EFAK + subquests when player indicates stuckness */}
-                    {!isCompleted && !isLocked && (
+                    {!isCompleted && !isLocked && !isBlocked && (
                         <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 overflow-hidden">
                             {!stuckExpanded ? (
                                 <button
@@ -448,7 +482,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Intention Quest: Direct vs Guided vs Options Path */}
-                    {isIntentionQuest && !isCompleted && !isLocked && (
+                    {isIntentionQuest && !isCompleted && !isLocked && !isBlocked && (
                         <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
                             <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Choose your path</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -490,7 +524,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Intention Quest: Options grid (when options mode) */}
-                    {isIntentionQuest && intentionMode === 'options' && !isCompleted && !isLocked && (
+                    {isIntentionQuest && intentionMode === 'options' && !isCompleted && !isLocked && !isBlocked && (
                         <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
                             <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold">Select your intention</p>
                             <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
@@ -569,100 +603,151 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         )}
                                     </div>
 
-                                    {movePanel.moves.length === 0 ? (
-                                        <div className="text-xs text-zinc-500 italic">
-                                            No nation moves available for this nation yet.
-                                        </div>
-                                    ) : (
-                                        <form action={moveApplyAction} className="space-y-3">
-                                            <input type="hidden" name="questId" value={quest.id} />
+                                    {(() => {
+                                        const equippedIds = movePool && 'success' in movePool
+                                            ? new Set(movePool.equipped.filter((e) => e.move).map((e) => e.move!.id))
+                                            : new Set<string>()
+                                        const usableMoves = movePanel.moves.filter((m) => equippedIds.has(m.id))
+                                        const usesRemaining = movePool && 'success' in movePool ? movePool.usesRemaining : {} as Record<string, number>
 
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Move</label>
-                                                <select
-                                                    name="moveKey"
-                                                    value={selectedMoveKey}
-                                                    onChange={(e) => setSelectedMoveKey(e.target.value)}
-                                                    className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
-                                                >
-                                                    <option value="">Select a move...</option>
-                                                    {movePanel.moves.map((m) => (
-                                                        <option key={m.key} value={m.key} disabled={!m.unlocked}>
-                                                            {m.unlocked ? '' : '[LOCKED] '} {m.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {selectedMoveKey && (() => {
-                                                const move = movePanel.moves.find(m => m.key === selectedMoveKey)
-                                                if (!move) return null
-
-                                                return (
-                                                    <div className="space-y-3">
-                                                        <div className="text-xs text-zinc-400">
-                                                            {move.description}
-                                                        </div>
-
-                                                        {!move.unlocked && (
-                                                            <div className="text-xs text-red-300">
-                                                                This move is locked.
-                                                            </div>
-                                                        )}
-
-                                                        {!move.applicable && (
-                                                            <div className="text-xs text-amber-300">
-                                                                Not applicable to status "{movePanel.quest.status}". Applies to: {move.appliesToStatus.join(', ') || '(any)'}.
-                                                            </div>
-                                                        )}
-
-                                                        {move.requirements.fields.map((f) => (
-                                                            <div key={f.key} className="space-y-1">
-                                                                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-                                                                    {f.label || f.key}
-                                                                </label>
-                                                                {f.type === 'player_id' ? (
-                                                                    <select
-                                                                        name={f.key}
-                                                                        className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
-                                                                        required={f.required !== false}
-                                                                    >
-                                                                        <option value="">Select...</option>
-                                                                        {movePanel.collaborators.map((p) => (
-                                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                                        ))}
-                                                                    </select>
-                                                                ) : (
-                                                                    <input
-                                                                        name={f.key}
-                                                                        type="text"
-                                                                        required={f.required !== false}
-                                                                        maxLength={f.maxLength}
-                                                                        className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        ))}
-
-                                                        <button
-                                                            type="submit"
-                                                            disabled={!move.unlocked || !move.applicable || isApplyingMove}
-                                                            className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 py-2.5 font-bold text-white text-sm disabled:opacity-50"
-                                                        >
-                                                            {isApplyingMove ? 'Applying...' : 'Apply Move'}
-                                                        </button>
+                                        if (movePanel.moves.length === 0) {
+                                            return (
+                                                <div className="text-xs text-zinc-500 italic">
+                                                    No nation moves available for this nation yet.
+                                                </div>
+                                            )
+                                        }
+                                        if (usableMoves.length === 0) {
+                                            return (
+                                                <div className="space-y-2">
+                                                    <div className="text-xs text-amber-300">
+                                                        Equip moves in your Moves Library to use them here.
                                                     </div>
-                                                )
-                                            })()}
-                                        </form>
-                                    )}
+                                                    <Link href="/hand/moves" className="inline-block rounded-lg border border-amber-800/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-300 hover:text-amber-200 hover:border-amber-700 transition-colors">
+                                                        ⚔️ Open Moves Library
+                                                    </Link>
+                                                </div>
+                                            )
+                                        }
+                                        return (
+                                            <form
+                                                className="space-y-3"
+                                                onSubmit={async (e) => {
+                                                    e.preventDefault()
+                                                    const move = movePanel.moves.find((m) => m.key === selectedMoveKey)
+                                                    if (!move || !move.unlocked || !move.applicable) return
+                                                    const form = e.target as HTMLFormElement
+                                                    const formData = new FormData(form)
+                                                    const inputs: Record<string, unknown> = {}
+                                                    for (const [k, v] of formData.entries()) {
+                                                        if (k !== 'questId' && k !== 'moveKey' && v) inputs[k] = v
+                                                    }
+                                                    setIsApplyingMove(true)
+                                                    const res = await useMove(move.id, quest.id, inputs)
+                                                    setIsApplyingMove(false)
+                                                    if ('success' in res) {
+                                                        setFeedback('✨ Move applied!')
+                                                        setTimeout(() => { setFeedback(null); router.refresh() }, 1200)
+                                                    } else {
+                                                        setFeedback(`❌ ${res.error}`)
+                                                    }
+                                                }}
+                                            >
+                                                <input type="hidden" name="questId" value={quest.id} />
+
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Move</label>
+                                                    <select
+                                                        name="moveKey"
+                                                        value={selectedMoveKey}
+                                                        onChange={(e) => setSelectedMoveKey(e.target.value)}
+                                                        className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                    >
+                                                        <option value="">Select a move...</option>
+                                                        {usableMoves.map((m) => {
+                                                            const remaining = usesRemaining[m.id] ?? 0
+                                                            return (
+                                                                <option key={m.key} value={m.key}>
+                                                                    {m.name} ({remaining} uses left)
+                                                                </option>
+                                                            )
+                                                        })}
+                                                    </select>
+                                                </div>
+
+                                                {selectedMoveKey && (() => {
+                                                    const move = movePanel.moves.find((m) => m.key === selectedMoveKey)
+                                                    if (!move || !usableMoves.some((m) => m.key === selectedMoveKey)) return null
+
+                                                    const remaining = usesRemaining[move.id] ?? 0
+                                                    const outOfUses = remaining <= 0
+
+                                                    return (
+                                                        <div className="space-y-3">
+                                                            <div className="text-xs text-zinc-400">
+                                                                {move.description}
+                                                            </div>
+
+                                                            {outOfUses && (
+                                                                <div className="text-xs text-amber-300">
+                                                                    No uses remaining for today. Resets at midnight UTC.
+                                                                </div>
+                                                            )}
+
+                                                            {!move.applicable && (
+                                                                <div className="text-xs text-amber-300">
+                                                                    Not applicable to status &quot;{movePanel.quest.status}&quot;. Applies to: {move.appliesToStatus.join(', ') || '(any)'}.
+                                                                </div>
+                                                            )}
+
+                                                            {move.requirements.fields.map((f) => (
+                                                                <div key={f.key} className="space-y-1">
+                                                                    <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                                                                        {f.label || f.key}
+                                                                    </label>
+                                                                    {f.type === 'player_id' ? (
+                                                                        <select
+                                                                            name={f.key}
+                                                                            className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                                            required={f.required !== false}
+                                                                        >
+                                                                            <option value="">Select...</option>
+                                                                            {movePanel.collaborators.map((p) => (
+                                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <input
+                                                                            name={f.key}
+                                                                            type="text"
+                                                                            required={f.required !== false}
+                                                                            maxLength={f.maxLength}
+                                                                            className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+
+                                                            <button
+                                                                type="submit"
+                                                                disabled={!move.unlocked || !move.applicable || isApplyingMove || outOfUses}
+                                                                className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 py-2.5 font-bold text-white text-sm disabled:opacity-50"
+                                                            >
+                                                                {isApplyingMove ? 'Applying...' : 'Apply Move'}
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                })()}
+                                            </form>
+                                        )
+                                    })()}
                                 </>
                             )}
                         </div>
                     )}
 
                     {/* MICRO-TWINE RITUAL ENGINE */}
-                    {hasCompiledMicroTwine && quest.microTwine?.htmlArtifact && !isCompleted && !isLocked && (
+                    {hasCompiledMicroTwine && quest.microTwine?.htmlArtifact && !isCompleted && !isLocked && !isBlocked && (
                         <QuestTwineIframe
                             htmlArtifact={quest.microTwine.htmlArtifact}
                             onComplete={(bindPayload) => {
@@ -765,7 +850,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     )}
 
                     {/* Input (if not completed and not locked) */}
-                    {!isCompleted && !isLocked && !isArchetypeQuest && !isTransferQuest && !shouldRenderTwine && !(isIntentionQuest && intentionMode === 'options') && (
+                    {!isCompleted && !isLocked && !isBlocked && !isArchetypeQuest && !isTransferQuest && !shouldRenderTwine && !(isIntentionQuest && intentionMode === 'options') && (
                         <div className="space-y-3">
                             {/* Check for Trigger in inputs */}
                             {effectiveInputs.some(input => input.trigger === 'ICHING_CAST') || quest.id === 'orientation-quest-3' ? (
@@ -801,6 +886,90 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                         </div>
                     )}
 
+                    {/* Appreciation: give vibeulons to quest creator */}
+                    {canAppreciate && (
+                        <div className="rounded-xl border border-amber-900/40 bg-amber-950/20 overflow-hidden">
+                            {!appreciateExpanded ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setAppreciateExpanded(true)}
+                                    className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-amber-900/20 transition-colors"
+                                >
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-1">Appreciate this quest</p>
+                                        <p className="text-xs text-amber-100/80">Send vibeulons to the creator</p>
+                                    </div>
+                                    <span className="shrink-0 text-amber-400 text-sm font-semibold">Send appreciation →</span>
+                                </button>
+                            ) : (
+                                <div className="p-4 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Send appreciation</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAppreciateExpanded(false)}
+                                            className="text-[10px] text-zinc-500 hover:text-white uppercase tracking-widest"
+                                        >
+                                            Collapse
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1">Amount (ⓥ)</label>
+                                            <select
+                                                value={appreciateAmount}
+                                                onChange={(e) => setAppreciateAmount(Number(e.target.value))}
+                                                className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                            >
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                                                    <option key={n} value={n}>{n} ⓥ</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-zinc-500 uppercase tracking-widest block mb-1">Type</label>
+                                            <select
+                                                value={appreciateType}
+                                                onChange={(e) => setAppreciateType(e.target.value)}
+                                                className="w-full rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white"
+                                            >
+                                                <option value="courage">Courage</option>
+                                                <option value="care">Care</option>
+                                                <option value="clarity">Clarity</option>
+                                                <option value="support">Support</option>
+                                                <option value="creativity">Creativity</option>
+                                                <option value="completion">Completion</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={isAppreciating}
+                                        onClick={async () => {
+                                            setIsAppreciating(true)
+                                            const res = await sendAppreciationAction({
+                                                amount: appreciateAmount,
+                                                targetQuestId: quest.id,
+                                                appreciationType: appreciateType as 'courage' | 'care' | 'clarity' | 'support' | 'creativity' | 'completion',
+                                            })
+                                            setIsAppreciating(false)
+                                            if ('error' in res) {
+                                                setFeedback(`❌ ${res.error}`)
+                                            } else {
+                                                setFeedback(`✨ Sent ${appreciateAmount} ⓥ as ${appreciateType}!`)
+                                                setAppreciateExpanded(false)
+                                                setTimeout(() => { setFeedback(null); router.refresh() }, 1500)
+                                            }
+                                        }}
+                                        className="w-full py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm disabled:opacity-50"
+                                    >
+                                        {isAppreciating ? 'Sending...' : `Send ${appreciateAmount} ⓥ`}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Feedback */}
                     {feedback && (
                         <div className={`text-center text-sm font-bold p-3 rounded-xl animate-in slide-in-from-bottom-2 ${feedback.includes('❌') ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>
@@ -832,7 +1001,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             {isCompleted ? 'Done' : 'Cancel'}
                         </button>
 
-                        {!isCompleted && !isLocked && !shouldRenderTwine && (
+                        {!isCompleted && !isLocked && !isBlocked && !shouldRenderTwine && (
                             <button
                                 onClick={isCompleted === undefined ? handleAccept : handleComplete}
                                 // Disable for triggered quests (except archetype reader)

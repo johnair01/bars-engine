@@ -254,7 +254,9 @@ export async function getMovementFeed(limit = 20) {
                 ? questMap[e.questId]
                 : e.source === 'p2p_transfer'
                   ? (e.notes?.replace(/^Received from /, '')?.split(' • ')[0] || 'transfer')
-                  : e.notes?.replace(/^Quest Completed: /, '')?.replace(/^Bonus from quest: /, '')?.split(' (')[0] || e.source,
+                  : e.source === 'appreciation'
+                    ? (e.notes?.replace(/^Appreciation from /, '')?.split(' (')[0] || 'appreciation')
+                    : e.notes?.replace(/^Quest Completed: /, '')?.replace(/^Bonus from quest: /, '')?.split(' (')[0] || e.source,
         createdAt: e.createdAt
     }))
 }

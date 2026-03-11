@@ -1,6 +1,6 @@
 ---
 name: deftness-development
-description: Applies spec kit discipline, API-first design, and scaling robustness during implementation. Ontology: integral theory—holocratic stewardship, generative movement, effective composting, tight UI-to-component loops. Vibes layer: I Ching wisdom included without extra energy to weave in. Thesis: gamification increases deftness in RPG dev/production software. Builds in-game artifacts (e.g. Bruised Banana + Six Faces) so the game creates the game. Use when building features with persistence, UI, or external surface; when adding uploads, AI, or large payloads; or when the user mentions spec kit, API-first, scaling, token efficiency, or deftness.
+description: Applies spec kit discipline, API-first design, and scaling robustness during implementation. Includes generative dependencies—organizing backlog so solving one item eliminates the need for others. Ontology: integral theory—holocratic stewardship, generative movement, effective composting, tight UI-to-component loops. Vibes layer: I Ching wisdom included without extra energy to weave in. Thesis: gamification increases deftness in RPG dev/production software. Builds in-game artifacts (e.g. Bruised Banana + Six Faces) so the game creates the game. Use when building features with persistence, UI, or external surface; when adding uploads, AI, or large payloads; when organizing backlog; or when the user mentions spec kit, API-first, scaling, token efficiency, deftness, or generative dependencies.
 ---
 
 # Skill: Deftness Development
@@ -23,7 +23,7 @@ Whenever possible, build an artifact that can be interfaced with the user **insi
 
 - Building features with persistence, UI, or external API surface
 - Adding uploads, AI calls, or large request payloads
-- User mentions: spec kit, API-first, scaling, token efficiency, deftness
+- User mentions: spec kit, API-first, scaling, token efficiency, deftness, generative dependencies, backlog organization
 - Before implementing when a backlog prompt or spec exists
 
 ## Spec Kit First
@@ -71,6 +71,36 @@ See [reference.md](reference.md) for full checklist and code examples.
 - **Deterministic over AI**: Use rules, regex, or cached responses when possible. See [ai-deftness-token-strategy](.specify/specs/ai-deftness-token-strategy/spec.md).
 - **Graceful degradation**: Feature flags (`*_AI_ENABLED`), env-based model selection. Return clear errors when disabled.
 - **Observability**: Log `chunksSkipped`, `cacheHits`, `cacheMisses` in metadata for debugging.
+
+## Generative Dependencies and Backlog Organization
+
+**Generative dependency**: Solving one item eliminates or reduces the need for others. This is the opposite of a blocking dependency (A depends on B). A generative item, when done, makes other items obsolete, trivial, or redundant.
+
+**Deftness goal**: Organize backlog so that solving one item eliminates the need for others. Increase deftness = learn to identify and prioritize generative items.
+
+### How to Find Generative Items
+
+1. **Merge candidates**: Two or more items address overlapping concerns. One spec can merge them (e.g. AG merged AF + AC).
+2. **Foundation items**: Items that unlock many downstream items (e.g. BY Quest Grammar unlocks CX, CD, CR, DF, DE).
+3. **Supersession patterns**: Items marked "Superseded by X" — the superseding item was generative.
+4. **Schema/API contracts**: One schema change or API contract that propagates across many features; doing it right eliminates rework.
+
+### Testable Artifacts for Generative Dependencies
+
+When organizing backlog or proposing a generative item:
+
+- **Generate**: A short analysis (e.g. `.specify/backlog/GENERATIVE_ANALYSIS.md` or inline in spec) that lists:
+  - Items that could be merged or superseded by solving X
+  - Items that become trivial when X is done
+  - Items that become obsolete when X is done
+- **Test**: The analysis is testable — after implementing X, verify the listed items are indeed marked obsolete or removed from backlog.
+- **Artifact**: Document the generative relationship in the spec or in BACKLOG.md (e.g. "Supersedes: AF, AC" or "Solves: X, Y; Z becomes trivial").
+
+### Example
+
+AG (Lore Index + Event-Driven CYOA Onboarding) was generative: it superseded AF (Lore Index) and AC (Event-Driven CYOA). One item solved two. A testable artifact: BACKLOG.md lists AF and AC as "Superseded by AG". Verifying: both are marked; no separate work remains.
+
+See [reference.md](reference.md) for the Generative Dependency Checklist.
 
 ## Integration
 

@@ -1,13 +1,25 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
+import { getChargeBar } from '@/actions/charge-capture'
 import { Shadow321Form } from '@/components/shadow/Shadow321Form'
 
-export default async function Shadow321Page() {
+export default async function Shadow321Page(props: { searchParams: Promise<{ chargeBarId?: string }> }) {
+  const searchParams = await props.searchParams
+  const chargeBarId = searchParams.chargeBarId ?? null
+
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
-  const isProfileIncomplete = !player.nationId || !player.playbookId
+  let initialQ1: string | undefined
+  if (chargeBarId) {
+    const chargeResult = await getChargeBar(chargeBarId)
+    if ('success' in chargeResult) {
+      initialQ1 = chargeResult.bar.title
+    }
+  }
+
+  const isProfileIncomplete = !player.nationId || !player.archetypeId
   if (isProfileIncomplete) {
     return (
       <div className="min-h-screen bg-black text-zinc-200 p-6">
@@ -49,7 +61,27 @@ export default async function Shadow321Page() {
           Face It (taxonomic) → Talk to It (6 unpacking questions) → Be It (identification). Optionally turn your session into a BAR.
         </p>
 
-        <Shadow321Form />
+        <details className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm">
+          <summary className="cursor-pointer text-purple-400 hover:text-purple-300 font-medium">
+            New to 321? Read this
+          </summary>
+          <div className="mt-4 space-y-3 text-zinc-400">
+            <p>
+              <strong className="text-zinc-300">Face It</strong> — Name your charge. Describe in your own words what nation, archetype, or energy it connects to. You don&apos;t need to know archetype names; free-type and we&apos;ll figure it out when you create a BAR.
+            </p>
+            <p>
+              <strong className="text-zinc-300">Talk to It</strong> — Six unpacking questions help you break down the charge. Short responses are fine.
+            </p>
+            <p>
+              <strong className="text-zinc-300">Be It</strong> — Identification and integration. What are you identifying with? How does this integrate?
+            </p>
+            <p>
+              The system identifies nation and archetype on the backend when you create a BAR. No need to memorize lists.
+            </p>
+          </div>
+        </details>
+
+        <Shadow321Form key={chargeBarId ?? 'standalone'} initialQ1={initialQ1} />
       </div>
     </div>
   )

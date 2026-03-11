@@ -21,17 +21,17 @@ export async function castAlchemyMove(moveName: string, notes?: string) {
     try {
         const player = await db.player.findUnique({
             where: { id: playerId },
-            include: { playbook: true, nation: true }
+            include: { archetype: true, nation: true }
         })
 
-        if (!player || !player.playbook) {
+        if (!player || !player.archetype) {
             return { error: 'No playbook found' }
         }
 
         // 1. Check Playbook Moves
         let allowedMoves: string[] = []
         try {
-            allowedMoves = JSON.parse(player.playbook.moves)
+            allowedMoves = JSON.parse(player.archetype.moves)
         } catch (e) {
             console.error("Failed to parse playbook moves", e)
         }

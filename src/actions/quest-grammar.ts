@@ -200,7 +200,7 @@ Return ${hasLensChoice ? 7 : 6} refined node texts (nodeTexts array), one per no
       segment: effectiveInput.segment,
       questModel: effectiveInput.questModel ?? 'personal',
       targetNationId: effectiveInput.targetNationId ?? null,
-      targetPlaybookId: effectiveInput.targetPlaybookId ?? null,
+      targetArchetypeId: effectiveInput.targetArchetypeId ?? null,
       targetArchetypeIds: effectiveInput.targetArchetypeIds ?? [],
       developmentalLens: effectiveInput.developmentalLens ?? null,
       playerPOV: effectiveInput.playerPOV ?? null,
@@ -334,7 +334,7 @@ Generate a quest skeleton. Return:
     const inputKey = JSON.stringify({
       ...input,
       targetNationId: input.targetNationId ?? null,
-      targetPlaybookId: input.targetPlaybookId ?? null,
+      targetArchetypeId: input.targetArchetypeId ?? null,
       ichingContext: input.ichingContext ?? null,
       feature: 'quest_overview_ai',
     })
@@ -1161,13 +1161,13 @@ export async function getCharacterCreationPacket(segment: 'player' | 'sponsor' =
   }
 
   try {
-    const [nations, playbooks] = await Promise.all([
+    const [nations, archetypes] = await Promise.all([
       db.nation.findMany({
         where: { archived: false },
         select: { id: true, name: true },
         orderBy: { name: 'asc' },
       }),
-      db.playbook.findMany({
+      db.archetype.findMany({
         select: { id: true, name: true },
         orderBy: { name: 'asc' },
       }),
@@ -1176,7 +1176,7 @@ export async function getCharacterCreationPacket(segment: 'player' | 'sponsor' =
     const packet = compileCharacterCreationPacket({
       segment,
       nations: nations.map((n) => ({ id: n.id, name: n.name })),
-      playbooks: playbooks.map((p) => ({ id: p.id, name: p.name })),
+      archetypes: archetypes.map((p) => ({ id: p.id, name: p.name })),
     })
     return { packet }
   } catch (e) {

@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   UNPACKING_QUESTIONS,
   EXPERIENCE_OPTIONS,
@@ -14,8 +13,10 @@ import {
 } from '@/lib/quest-grammar'
 import type { UnpackingAnswers, Metadata321 } from '@/lib/quest-grammar'
 import type { Phase3Taxonomic, Phase1Identification } from '@/lib/quest-grammar'
+import { createQuestFrom321Metadata, fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
 
 const STORAGE_KEY = 'shadow321_metadata'
+const STORAGE_SESSION_KEY = 'shadow321_session'
 
 type Phase = 'face' | 'talk' | 'be' | 'prompt'
 
@@ -26,15 +27,19 @@ export type Shadow321FormProps = {
   embedded?: boolean
   /** Optional: for linkedQuestId in metadata when creating BAR from quest context */
   contextQuestId?: string | null
+  /** Optional: prefill q1 (experience) from charge BAR when launched via run321FromCharge */
+  initialQ1?: string
 }
 
-export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow321FormProps = {}) {
+export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 }: Shadow321FormProps = {}) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [chargeError, setChargeError] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>('face')
 
   const [phase3, setPhase3] = useState<Phase3Taxonomic>({})
   const [answers, setAnswers] = useState<UnpackingAnswers>({
-    q1: '',
+    q1: initialQ1 ?? '',
     q2: [],
     q3: '',
     q4: [],
@@ -52,11 +57,21 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
     contextQuestId ?? undefined
   )
 
+  const store321SessionForCreateBar = () => {
+    if (typeof window !== 'undefined') {
+      const metadata = getMetadata()
+      const phase2 = { ...answers, q6Context: q6Context || undefined, alignedAction }
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(metadata))
+      sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
+        phase3Snapshot: JSON.stringify(phase3),
+        phase2Snapshot: JSON.stringify(phase2),
+      }))
+    }
+  }
+
   const handleImportMetadata = () => {
     const metadata = getMetadata()
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(metadata))
-    }
+    store321SessionForCreateBar()
     if (embedded && onComplete) {
       window.open('/create-bar?from321=1', '_blank')
       onComplete(metadata)
@@ -66,11 +81,12 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
   }
 
   const handleCreateBar = () => {
+    store321SessionForCreateBar()
     if (embedded && onComplete) {
-      window.open('/create-bar', '_blank')
+      window.open('/create-bar?from321=1', '_blank')
       onComplete(getMetadata())
     } else {
-      router.push('/create-bar')
+      router.push('/create-bar?from321=1')
     }
   }
 
@@ -78,6 +94,57 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
     if (embedded && onComplete) {
       onComplete(getMetadata())
     }
+  }
+
+  const handleTurnIntoQuest = () => {
+    setChargeError(null)
+    startTransition(async () => {
+      const metadata = getMetadata()
+      const phase2 = { ...answers, q6Context: q6Context || undefined, alignedAction }
+      const res = await createQuestFrom321Metadata(metadata, phase2, phase3)
+      if (res && 'error' in res) {
+        setChargeError(res.error)
+      } else if (res?.success) {
+        if (embedded && onComplete) {
+          onComplete(metadata)
+        } else {
+          router.push('/')
+          router.refresh()
+        }
+      }
+    })
+  }
+
+  const handleFuelSystem = () => {
+    setChargeError(null)
+    startTransition(async () => {
+      const metadata = getMetadata()
+      const res = await fuelSystemFrom321(metadata)
+      if (res && 'error' in res) {
+        setChargeError(res.error)
+      } else if (res?.success) {
+        if (embedded && onComplete) {
+          onComplete(metadata)
+        }
+        setChargeError(null)
+        router.refresh()
+      }
+    })
+  }
+
+  const handleSkip = () => {
+    setChargeError(null)
+    startTransition(async () => {
+      const phase3Snapshot = JSON.stringify(phase3)
+      const phase2Snapshot = JSON.stringify({ ...answers, q6Context: q6Context || undefined, alignedAction })
+      await persist321Session({
+        phase3Snapshot,
+        phase2Snapshot,
+        outcome: 'skipped',
+      })
+      router.push('/')
+      router.refresh()
+    })
   }
 
   const renderQuestion = (item: (typeof UNPACKING_QUESTIONS)[number]) => {
@@ -141,15 +208,15 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>
-          <textarea
+          <input
+            type="text"
             value={distance}
             onChange={(e) => {
               const d = e.target.value
               setAnswers((a) => ({ ...a, [key]: sel ? `${sel}${d ? Q3_SEP + d : ''}` : (d ? Q3_SEP + d : '') }))
             }}
             placeholder="How far do you feel from your creation?"
-            rows={2}
-            className={`${baseInputClass} text-sm mt-2 resize-none`}
+            className={`${baseInputClass} text-sm mt-2`}
           />
         </div>
       )
@@ -248,12 +315,14 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
           <h2 className="text-xl font-bold text-white">Face It — Taxonomic Layer</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">Nation / Archetype</label>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">
+                What nation, archetype, or energy does this connect to?
+              </label>
               <input
                 type="text"
-                value={phase3.nationName ?? ''}
-                onChange={(e) => setPhase3((p) => ({ ...p, nationName: e.target.value || undefined }))}
-                placeholder="e.g. The Bold Heart"
+                value={phase3.identityFreeText ?? ''}
+                onChange={(e) => setPhase3((p) => ({ ...p, identityFreeText: e.target.value || undefined }))}
+                placeholder="Free type — describe in your own words. We'll figure it out when you create a BAR."
                 className={baseInputClass}
               />
             </div>
@@ -336,21 +405,21 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-1">Identification</label>
-              <textarea
+              <input
+                type="text"
                 value={phase1.identification ?? ''}
                 onChange={(e) => setPhase1((p) => ({ ...p, identification: e.target.value || undefined }))}
                 placeholder="What are you identifying with?"
-                rows={3}
                 className={baseInputClass}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-1">Integration</label>
-              <textarea
+              <input
+                type="text"
                 value={phase1.integration ?? ''}
                 onChange={(e) => setPhase1((p) => ({ ...p, integration: e.target.value || undefined }))}
                 placeholder="How does this integrate?"
-                rows={3}
                 className={baseInputClass}
               />
             </div>
@@ -376,11 +445,30 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
 
       {phase === 'prompt' && (
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-white">Create a BAR?</h2>
+          <h2 className="text-xl font-bold text-white">What next?</h2>
           <p className="text-zinc-400">
-            You can turn this 321 session into a BAR. Import metadata to pre-fill the creation form, or create from scratch.
+            Turn this charge into a BAR, a quest, or fuel the system. Or skip.
           </p>
+          {chargeError && (
+            <div className="text-sm text-red-400 bg-red-950/30 px-3 py-2 rounded-lg">{chargeError}</div>
+          )}
           <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleTurnIntoQuest}
+              disabled={isPending}
+              className="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg disabled:opacity-50"
+            >
+              {isPending ? '…' : 'Turn into Quest'}
+            </button>
+            <button
+              type="button"
+              onClick={handleFuelSystem}
+              disabled={isPending}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg disabled:opacity-50"
+            >
+              Fuel System
+            </button>
             <button
               type="button"
               onClick={handleImportMetadata}
@@ -404,12 +492,14 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId }: Shadow32
                 Continue to resolution
               </button>
             ) : (
-              <Link
-                href="/"
-                className="px-6 py-3 text-zinc-400 hover:text-white transition"
+              <button
+                type="button"
+                onClick={handleSkip}
+                disabled={isPending}
+                className="px-6 py-3 text-zinc-400 hover:text-white transition disabled:opacity-50"
               >
                 Skip
-              </Link>
+              </button>
             )}
           </div>
         </div>

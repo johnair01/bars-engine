@@ -11,7 +11,7 @@ import {
   getCampaignDeckQuestIds,
 } from '@/lib/gameboard'
 import { getActiveInstance } from '@/actions/instance'
-import { generateRandomUnpacking, getPlaybookPrimaryWave } from '@/lib/quest-grammar'
+import { generateRandomUnpacking, getArchetypePrimaryWave } from '@/lib/quest-grammar'
 import { compileQuestWithAI, publishGameboardAlignedQuestToPlayer } from '@/actions/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
 import type { PersonalMoveType, IChingContext } from '@/lib/quest-grammar/types'
@@ -847,7 +847,7 @@ export async function generateGameboardAlignedQuest(
 
   const playerWithRoles = await db.player.findUnique({
     where: { id: player.id },
-    include: { roles: { include: { role: true } }, nation: true, playbook: true },
+    include: { roles: { include: { role: true } }, nation: true, archetype: true },
   })
   if (!playerWithRoles) return { error: 'Player not found' }
   const isAdmin = playerWithRoles.roles.some((r) => r.role.key === 'admin')
@@ -870,20 +870,20 @@ export async function generateGameboardAlignedQuest(
     playerWithRoles.nation?.element && ELEMENT_KEYS.includes(playerWithRoles.nation.element as ElementKey)
       ? (playerWithRoles.nation.element as ElementKey)
       : undefined
-  const playbookPrimaryWave = playerWithRoles.playbookId
-    ? await getPlaybookPrimaryWave(playerWithRoles.playbookId)
+  const archetypePrimaryWave = playerWithRoles.archetypeId
+    ? await getArchetypePrimaryWave(playerWithRoles.archetypeId)
     : undefined
 
   const { unpackingAnswers, alignedAction, moveType } = generateRandomUnpacking({
     nationElement,
-    playbookPrimaryWave,
+    archetypePrimaryWave,
   })
 
   const compileResult = await compileQuestWithAI({
     unpackingAnswers,
     alignedAction,
     segment: 'player',
-    targetPlaybookId: playerWithRoles.playbookId ?? undefined,
+    targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType,
     gameboardContext: buildGameboardContext(
       parentQuest,
@@ -938,7 +938,7 @@ export async function previewGameboardAlignedQuest(
 
   const playerWithRoles = await db.player.findUnique({
     where: { id: player.id },
-    include: { roles: { include: { role: true } }, nation: true, playbook: true },
+    include: { roles: { include: { role: true } }, nation: true, archetype: true },
   })
   if (!playerWithRoles) return { error: 'Player not found' }
   const isAdmin = playerWithRoles.roles.some((r) => r.role.key === 'admin')
@@ -970,11 +970,11 @@ export async function previewGameboardAlignedQuest(
       playerWithRoles.nation?.element && ELEMENT_KEYS.includes(playerWithRoles.nation.element as ElementKey)
         ? (playerWithRoles.nation.element as ElementKey)
         : undefined
-    const playbookPrimaryWave = playerWithRoles.playbookId
-      ? await getPlaybookPrimaryWave(playerWithRoles.playbookId)
+    const archetypePrimaryWave = playerWithRoles.archetypeId
+      ? await getArchetypePrimaryWave(playerWithRoles.archetypeId)
       : undefined
 
-    const random = generateRandomUnpacking({ nationElement, playbookPrimaryWave })
+    const random = generateRandomUnpacking({ nationElement, archetypePrimaryWave })
     unpackingAnswers = random.unpackingAnswers
     alignedAction = random.alignedAction
     moveType = random.moveType
@@ -1010,7 +1010,7 @@ export async function previewGameboardAlignedQuest(
     unpackingAnswers,
     alignedAction,
     segment: 'player',
-    targetPlaybookId: playerWithRoles.playbookId ?? undefined,
+    targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType,
     adminFeedback: opts?.adminFeedback,
     ichingContext,

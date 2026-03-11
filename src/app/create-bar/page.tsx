@@ -11,7 +11,7 @@ export default async function CreateBarPage({ searchParams }: { searchParams: Pr
 
     if (!player) redirect('/login')
 
-    const isProfileIncomplete = !player.nationId || !player.playbookId
+    const isProfileIncomplete = !player.nationId || !player.archetypeId
     if (isProfileIncomplete) {
         return (
             <div className="min-h-screen bg-black text-zinc-200 p-6">

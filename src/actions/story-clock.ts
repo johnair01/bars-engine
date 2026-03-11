@@ -24,7 +24,7 @@ export async function getStoryClockData() {
     const sequence = JSON.parse(globalState.hexagramSequence) as number[]
 
     // Canonical trigram -> archetype mapping (via playbook element metadata)
-    const playbooks = await db.playbook.findMany({
+    const playbooks = await db.archetype.findMany({
         select: { id: true, name: true, description: true }
     })
     const playbookByElement = new Map(

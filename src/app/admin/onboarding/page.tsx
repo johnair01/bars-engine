@@ -27,7 +27,7 @@ export default async function AdminOnboardingPage() {
         where: {
             OR: [
                 { gateNationId: { not: null } },
-                { gatePlaybookId: { not: null } }
+                { gateArchetypeId: { not: null } }
             ]
         }
     })
@@ -35,11 +35,11 @@ export default async function AdminOnboardingPage() {
     // Fetch nations and playbooks for mapping names
     const [nations, playbooks] = await Promise.all([
         db.nation.findMany({ select: { id: true, name: true } }),
-        db.playbook.findMany({ select: { id: true, name: true } })
+        db.archetype.findMany({ select: { id: true, name: true } })
     ])
 
     const nationMap = Object.fromEntries(nations.map(n => [n.id, n.name]))
-    const playbookMap = Object.fromEntries(playbooks.map(p => [p.id, p.name]))
+    const archetypeMap = Object.fromEntries(playbooks.map(p => [p.id, p.name]))
 
     return (
         <div className="space-y-8 p-6">
@@ -177,7 +177,7 @@ export default async function AdminOnboardingPage() {
                             const gateType = thread.gateNationId ? 'Nation' : 'Archetype'
                             const gateName = thread.gateNationId
                                 ? nationMap[thread.gateNationId]
-                                : playbookMap[thread.gatePlaybookId!]
+                                : archetypeMap[thread.gateArchetypeId!]
 
                             return (
                                 <Link

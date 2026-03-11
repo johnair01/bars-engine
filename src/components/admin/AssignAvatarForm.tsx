@@ -8,7 +8,7 @@ import { Avatar } from '@/components/Avatar'
 
 type Player = { id: string; name: string; contactValue?: string }
 type Nation = { id: string; name: string }
-type Playbook = { id: string; name: string }
+type Archetype = { id: string; name: string }
 
 const BASE_VARIANTS = [
     { value: '', label: 'Default (from pronouns)' },
@@ -21,36 +21,36 @@ const BASE_VARIANTS = [
 interface AssignAvatarFormProps {
     players: Player[]
     nations: Nation[]
-    playbooks: Playbook[]
+    archetypes: Archetype[]
     onSuccess?: () => void
 }
 
-export function AssignAvatarForm({ players, nations, playbooks, onSuccess }: AssignAvatarFormProps) {
+export function AssignAvatarForm({ players, nations, archetypes, onSuccess }: AssignAvatarFormProps) {
     const router = useRouter()
     const [playerId, setPlayerId] = useState('')
     const [nationId, setNationId] = useState('')
-    const [playbookId, setPlaybookId] = useState('')
+    const [archetypeId, setArchetypeId] = useState('')
     const [genderKey, setGenderKey] = useState<string>('')
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [isPending, startTransition] = useTransition()
 
     const previewConfig = useMemo(() => {
-        if (!nationId && !playbookId) {
+        if (!nationId && !archetypeId) {
             return JSON.stringify({
                 nationKey: '',
-                playbookKey: '',
+                archetypeKey: '',
                 variant: 'default',
                 genderKey: (genderKey as AvatarConfig['genderKey']) || 'default',
             } satisfies AvatarConfig)
         }
-        return deriveAvatarConfig(nationId || null, playbookId || null, null, {
+        return deriveAvatarConfig(nationId || null, archetypeId || null, null, {
             nationName: nations.find((n) => n.id === nationId)?.name,
-            playbookName: playbooks.find((p) => p.id === playbookId)?.name,
+            archetypeName: archetypes.find((p) => p.id === archetypeId)?.name,
             genderKey: genderKey
                 ? (genderKey as 'male' | 'female' | 'neutral' | 'default')
                 : undefined,
         })
-    }, [nationId, playbookId, genderKey, nations, playbooks])
+    }, [nationId, archetypeId, genderKey, nations, archetypes])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -59,15 +59,15 @@ export function AssignAvatarForm({ players, nations, playbooks, onSuccess }: Ass
             setMessage({ type: 'error', text: 'Select a player' })
             return
         }
-        if (!nationId && !playbookId) {
-            setMessage({ type: 'error', text: 'Select at least one nation or playbook' })
+        if (!nationId && !archetypeId) {
+            setMessage({ type: 'error', text: 'Select at least one nation or archetype' })
             return
         }
 
         startTransition(async () => {
             const result = await assignAvatarToPlayer(playerId, {
                 nationId: nationId || undefined,
-                playbookId: playbookId || undefined,
+                archetypeId: archetypeId || undefined,
                 genderKey: genderKey ? (genderKey as 'male' | 'female' | 'neutral' | 'default') : undefined,
             })
             if ('error' in result) {
@@ -137,13 +137,13 @@ export function AssignAvatarForm({ players, nations, playbooks, onSuccess }: Ass
                 <div className="space-y-1.5">
                     <label className="text-xs text-zinc-400">Archetype</label>
                     <select
-                        value={playbookId}
-                        onChange={(e) => setPlaybookId(e.target.value)}
+                        value={archetypeId}
+                        onChange={(e) => setArchetypeId(e.target.value)}
                         disabled={isPending}
                         className="w-full bg-zinc-900 border border-zinc-800 text-sm text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500/50"
                     >
                         <option value="">None</option>
-                        {playbooks.map((p) => (
+                        {archetypes.map((p) => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                     </select>

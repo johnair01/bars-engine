@@ -33,14 +33,14 @@ function buildConfigFromState(state: Record<string, unknown>): AvatarConfig | nu
     if (!nationKey && !playbookKey) {
         return {
             nationKey: 'unknown',
-            playbookKey: 'unknown',
+            archetypeKey: 'unknown',
             variant: 'default',
             genderKey: 'default'
         }
     }
     return {
         nationKey: nationKey || 'unknown',
-        playbookKey: playbookKey || 'unknown',
+        archetypeKey: playbookKey || 'unknown',
         variant: 'default',
         genderKey: 'default'
     }
@@ -58,7 +58,7 @@ export function OnboardingAvatarPreview({
     const showFallback = specs.length === 0 || visibleSpecs.length === 0
 
     const initials = config
-        ? `${(config.nationKey || '').charAt(0)}${(config.playbookKey || '').charAt(0)}`.toUpperCase() || '?'
+        ? `${(config.nationKey || '').charAt(0)}${(config.archetypeKey || '').charAt(0)}`.toUpperCase() || '?'
         : '?'
     const hue = getAvatarHue(config)
 

@@ -234,6 +234,8 @@ export function QuestPack({ pack, completedMoveTypes, focusQuest, isAdmin }: { p
                         twineLogic: selectedQuest.quest.twineLogic || null,
                         twineStoryId: selectedQuest.quest.twineStoryId || null,
                         microTwine: selectedQuest.quest.microTwine || null,
+                        status: (selectedQuest.quest as { status?: string }).status ?? null,
+                        blockedKeyQuestTitle: (selectedQuest.quest as { blockedKeyQuestTitle?: string }).blockedKeyQuestTitle ?? null,
                     }}
                     context={{ packId: pack.id }}
                     isCompleted={pack.completedQuestIds.includes(selectedQuest.questId)}

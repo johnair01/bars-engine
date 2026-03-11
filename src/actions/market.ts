@@ -31,14 +31,24 @@ export async function getMarketQuests(): Promise<MarketQuest[]> {
       where: { visibility: 'public', status: 'active', isSystem: false },
       include: {
         creator: {
-          include: { nation: true, playbook: true },
+          include: { nation: true, archetype: true },
         },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
   ])
-  let filtered = publicQuests
+  // Exclude onboarding BARs (spec: onboarding-bars-wallet). They belong in creator's wallet, not marketplace.
+  const excludeOnboarding = publicQuests.filter((q) => {
+    if (!q.completionEffects) return true
+    try {
+      const parsed = JSON.parse(q.completionEffects) as { onboarding?: boolean }
+      return parsed.onboarding !== true
+    } catch {
+      return true
+    }
+  })
+  let filtered = excludeOnboarding
   if (globalState?.isPaused) {
     filtered = filtered.filter((q) => q.kotterStage === 1)
   }
@@ -61,8 +71,8 @@ export async function getMarketQuests(): Promise<MarketQuest[]> {
       if (q.allowedTrigrams) {
         try {
           const allowed = JSON.parse(q.allowedTrigrams) as string[]
-          if (allowed.length > 0 && player.playbook) {
-            const trigram = player.playbook.name.split(' ')[0]
+          if (allowed.length > 0 && player.archetype) {
+            const trigram = player.archetype.name.split(' ')[0]
             if (!allowed.includes(trigram)) return false
           }
         } catch {
@@ -86,13 +96,14 @@ export async function getMarketQuests(): Promise<MarketQuest[]> {
     allyshipDomain: q.allyshipDomain,
     kotterStage: q.kotterStage,
     visibility: q.visibility,
+    isBounty: q.questSource === 'bounty' || (q.stakedPool ?? 0) > 0,
     creator: q.creator
       ? {
           id: q.creator.id,
           name: q.creator.name,
           avatarConfig: q.creator.avatarConfig,
           nation: q.creator.nation ? { name: q.creator.nation.name } : null,
-          playbook: q.creator.playbook ? { name: q.creator.playbook.name } : null,
+          archetype: q.creator.archetype ? { name: q.creator.archetype.name } : null,
         }
       : null,
   }))
@@ -131,7 +142,7 @@ export async function getMarketContent() {
                   },
                   include: {
                       microTwine: true,
-                      creator: { include: { nation: true, playbook: true } },
+                      creator: { include: { nation: true, archetype: true } },
                   },
                   orderBy: { createdAt: 'desc' },
               })
@@ -152,13 +163,14 @@ export async function getMarketContent() {
                   name: q.creator.name,
                   avatarConfig: q.creator.avatarConfig,
                   nation: q.creator.nation ? { name: q.creator.nation.name } : null,
-                  playbook: q.creator.playbook ? { name: q.creator.playbook.name } : null,
+                  archetype: q.creator.archetype ? { name: q.creator.archetype.name } : null,
               }
             : null,
     }))
 
     const activeInstance = await getActiveInstance()
     return {
+        currentPlayerId: player?.id ?? null,
         packs: publicPacks.map((p) => ({
             ...p,
             isOwned: p.progress && p.progress.length > 0,

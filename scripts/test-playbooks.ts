@@ -1,21 +1,21 @@
-// Test script to get playbook data
+// Test script to get archetype data
 import './require-db-env'
 import { db } from '../src/lib/db'
 
-async function getPlaybooks() {
-    const playbooks = await db.playbook.findMany({
+async function getArchetypes() {
+    const archetypes = await db.archetype.findMany({
         orderBy: { name: 'asc' }
     })
 
-    console.log(`Found ${playbooks.length} playbooks:\n`)
+    console.log(`Found ${archetypes.length} archetypes:\n`)
 
-    playbooks.forEach(pb => {
-        console.log(`📖 ${pb.name}`)
-        console.log(`   ${pb.description}`)
+    archetypes.forEach(archetype => {
+        console.log(`📖 ${archetype.name}`)
+        console.log(`   ${archetype.description}`)
         console.log('')
     })
 
     await db.$disconnect()
 }
 
-getPlaybooks().catch(console.error)
+getArchetypes().catch(console.error)

@@ -5,7 +5,7 @@
 
 export type AvatarConfig = {
     nationKey: string
-    playbookKey: string
+    archetypeKey: string
     domainKey?: string
     variant: string
     genderKey?: 'male' | 'female' | 'neutral' | 'default'
@@ -13,7 +13,7 @@ export type AvatarConfig = {
 
 export type DeriveAvatarConfigOptions = {
     nationName?: string | null
-    playbookName?: string | null
+    archetypeName?: string | null
     pronouns?: string | null
     /** Override base variant; when set, used instead of deriveGenderFromPronouns */
     genderKey?: AvatarConfig['genderKey']
@@ -47,13 +47,13 @@ export function deriveGenderFromPronouns(
 }
 
 /**
- * Derive avatar config from nation, playbook, and domain.
- * Prefer nationName/playbookName for stable keys; fall back to slugifyId when not provided.
+ * Derive avatar config from nation, archetype, and domain.
+ * Prefer nationName/archetypeName for stable keys; fall back to slugifyId when not provided.
  * Returns null if insufficient data to derive.
  */
 export function deriveAvatarConfig(
     nationId?: string | null,
-    playbookId?: string | null,
+    archetypeId?: string | null,
     campaignDomainPreference?: string | null,
     options?: DeriveAvatarConfigOptions
 ): string | null {
@@ -62,12 +62,12 @@ export function deriveAvatarConfig(
         : nationId
           ? slugifyId(nationId)
           : ''
-    const playbookKey = options?.playbookName
-        ? slugifyName(options.playbookName)
-        : playbookId
-          ? slugifyId(playbookId)
+    const archetypeKey = options?.archetypeName
+        ? slugifyName(options.archetypeName)
+        : archetypeId
+          ? slugifyId(archetypeId)
           : ''
-    if (!nationKey && !playbookKey) return null
+    if (!nationKey && !archetypeKey) return null
 
     let domainKey = ''
     if (campaignDomainPreference) {
@@ -82,7 +82,7 @@ export function deriveAvatarConfig(
 
     const config: AvatarConfig = {
         nationKey: nationKey || '',
-        playbookKey: playbookKey || '',
+        archetypeKey: archetypeKey || '',
         domainKey: domainKey || undefined,
         variant: 'default',
         genderKey: options?.genderKey ?? deriveGenderFromPronouns(options?.pronouns)
@@ -102,9 +102,18 @@ function slugifyId(id: string): string {
 export function parseAvatarConfig(avatarConfig: string | null): AvatarConfig | null {
     if (!avatarConfig?.trim()) return null
     try {
-        const parsed = JSON.parse(avatarConfig) as AvatarConfig
-        if (parsed && typeof parsed === 'object' && ('nationKey' in parsed || 'playbookKey' in parsed))
-            return parsed
+        const parsed = JSON.parse(avatarConfig) as Record<string, unknown>
+        if (!parsed || typeof parsed !== 'object' || !('nationKey' in parsed || 'archetypeKey' in parsed || 'playbookKey' in parsed))
+            return null
+        // Normalize legacy playbookKey → archetypeKey
+        const archetypeKey = (parsed.archetypeKey as string) || (parsed.playbookKey as string) || ''
+        return {
+            nationKey: (parsed.nationKey as string) || '',
+            archetypeKey,
+            domainKey: parsed.domainKey as string | undefined,
+            variant: (parsed.variant as string) || 'default',
+            genderKey: parsed.genderKey as AvatarConfig['genderKey']
+        }
     } catch {
         // ignore
     }
@@ -116,7 +125,7 @@ export function parseAvatarConfig(avatarConfig: string | null): AvatarConfig | n
  */
 export function getAvatarHue(config: AvatarConfig | null): number {
     if (!config) return 200 // default teal
-    const str = (config.nationKey || '') + (config.playbookKey || '')
+    const str = (config.nationKey || '') + (config.archetypeKey || '')
     let hash = 0
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash)
@@ -138,7 +147,7 @@ export function getAvatarInitials(config: AvatarConfig | null, fallbackName?: st
     }
     if (config) {
         const n = (config.nationKey || '').charAt(0).toUpperCase()
-        const p = (config.playbookKey || '').charAt(0).toUpperCase()
+        const p = (config.archetypeKey || '').charAt(0).toUpperCase()
         if (n || p) return (n + p) || '?'
     }
     return '?'

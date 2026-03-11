@@ -7,6 +7,8 @@ import { redirect } from 'next/navigation'
 import { VibulonTransfer } from '@/components/VibulonTransfer'
 import { RedemptionPacksSection } from '@/components/RedemptionPacksSection'
 import { MovementFeed } from '@/components/MovementFeed'
+import { AppreciationsReceived } from '@/components/AppreciationsReceived'
+import { getAppreciationFeed } from '@/actions/appreciation'
 
 export default async function WalletPage() {
     const cookieStore = await cookies()
@@ -26,10 +28,12 @@ export default async function WalletPage() {
     })
     const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-    const [wallet, movementFeedItems] = await Promise.all([
+    const [wallet, movementFeedItems, appreciationResult] = await Promise.all([
         getWallet(playerId),
-        isAdmin ? getMovementFeed(20) : Promise.resolve([])
+        isAdmin ? getMovementFeed(20) : Promise.resolve([]),
+        getAppreciationFeed(20),
     ])
+    const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
     const total = wallet.length
 
     // Fetch potential recipients
@@ -88,6 +92,11 @@ export default async function WalletPage() {
                 <RedemptionPacksSection packs={redemptionPacks} />
             )}
 
+            {/* Appreciations received */}
+            {appreciations.length > 0 && (
+                <AppreciationsReceived items={appreciations} maxItems={10} />
+            )}
+
             {/* Local Balances */}
             {participations.length > 0 && (
                 <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -105,7 +114,25 @@ export default async function WalletPage() {
 
             {/* Movement Feed (admin-only per dashboard-ui-vibe-cleanup FR2b) */}
             {isAdmin && (
-                <MovementFeed items={movementFeedItems} title="Recent Vibeulon Activity" maxHeight="14rem" />
+                <section className="relative">
+                    <Link
+                        href="/map?type=vibeulon"
+                        className="absolute top-0 right-0 text-[10px] text-zinc-500 hover:text-purple-400 transition-colors"
+                    >
+                        View flow →
+                    </Link>
+                    <MovementFeed items={movementFeedItems} title="Recent Vibeulon Activity" maxHeight="14rem" />
+                </section>
+            )}
+
+            {/* Vibeulon flow link for all users */}
+            {!isAdmin && (
+                <Link
+                    href="/map?type=vibeulon"
+                    className="block bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 text-center text-zinc-400 hover:text-purple-400 hover:border-purple-800/50 transition-colors"
+                >
+                    View your vibeulon flow →
+                </Link>
             )}
 
             {/* Transfer Section */}

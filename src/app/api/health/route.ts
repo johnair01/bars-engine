@@ -8,12 +8,12 @@ import {
 
 export async function GET() {
     try {
-        const [playerCount, barCount, customBarCount, nationCount, playbookCount, vibulonCount] = await Promise.all([
+        const [playerCount, barCount, customBarCount, nationCount, archetypeCount, vibulonCount] = await Promise.all([
             db.player.count(),
             db.bar.count(),
             db.customBar.count({ where: { status: 'active' } }),
             db.nation.count(),
-            db.playbook.count(),
+            db.archetype.count(),
             db.vibulon.count(),
         ])
 
@@ -49,7 +49,7 @@ export async function GET() {
                 hexagramBars: barCount,
                 activeQuests: customBarCount,
                 nations: nationCount,
-                playbooks: playbookCount,
+                archetypes: archetypeCount,
                 vibulons: vibulonCount,
                 barShares: barSharesCount,
             },
@@ -59,7 +59,7 @@ export async function GET() {
             },
             gameLoop: {
                 signup: playerCount > 0 ? 'WORKING' : 'NEEDS_TEST',
-                nationArchetype: nationCount > 0 && playbookCount > 0 ? 'READY' : 'NEEDS_SEED',
+                nationArchetype: nationCount > 0 && archetypeCount > 0 ? 'READY' : 'NEEDS_SEED',
                 questCreation: 'READY',
                 barCreation: 'READY',
                 barSharing: barSharesReady ? 'READY' : 'TABLE_MISSING',

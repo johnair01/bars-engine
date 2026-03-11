@@ -1,7 +1,7 @@
 /**
  * Move Assignment for Choice Privileging
  *
- * Selects 2–4 canonical moves per passage, privileging nation element and playbook WAVE.
+ * Selects 2–4 canonical moves per passage, privileging nation element and archetype WAVE.
  * When move spread is primary (longitudinal branching), limit can be 4 (one per move).
  * Used by compileQuest and generateQuestOverviewWithAI.
  */
@@ -30,16 +30,16 @@ export function getMovesForWaveStage(stage: PersonalMoveType): CanonicalMove[] {
 export interface SelectPrivilegedChoicesParams {
   validMoves: CanonicalMove[]
   nationElement: ElementKey
-  playbookWave: PersonalMoveType
+  archetypeWave: PersonalMoveType
   limit?: number
 }
 
 /**
  * Select 2–4 moves from validMoves, privileging at least one nation-element move
- * and one playbook-WAVE move when possible.
+ * and one archetype-WAVE move when possible.
  */
 export function selectPrivilegedChoices(params: SelectPrivilegedChoicesParams): CanonicalMove[] {
-  const { validMoves, nationElement, playbookWave, limit = 4 } = params
+  const { validMoves, nationElement, archetypeWave, limit = 4 } = params
   if (validMoves.length === 0) return []
   if (validMoves.length <= limit) return validMoves
 
@@ -48,7 +48,7 @@ export function selectPrivilegedChoices(params: SelectPrivilegedChoicesParams): 
     if (m.fromElement === nationElement || m.toElement === nationElement) return true
     return false
   })
-  const waveMoves = validMoves.filter((m) => m.primaryWaveStage === playbookWave)
+  const waveMoves = validMoves.filter((m) => m.primaryWaveStage === archetypeWave)
 
   const selected: CanonicalMove[] = []
   const used = new Set<string>()
@@ -60,7 +60,7 @@ export function selectPrivilegedChoices(params: SelectPrivilegedChoicesParams): 
     used.add(nationPick.id)
   }
 
-  // 2. Add one playbook-WAVE move if available (and not already added)
+  // 2. Add one archetype-WAVE move if available (and not already added)
   const wavePick = waveMoves.find((m) => !used.has(m.id))
   if (wavePick) {
     selected.push(wavePick)

@@ -1,15 +1,16 @@
 /**
- * Build script that ensures DATABASE_URL is available before prisma migrate deploy.
- * When DATABASE_URL is missing, attempts to pull from Vercel (vercel env pull).
- * If pull fails, exits with a clear message.
+ * Build script: when DATABASE_URL is set, runs prisma migrate deploy + next build.
+ * When DATABASE_URL is missing, skips migrate and runs prisma generate + next build
+ * so contributors can verify the app compiles without a database.
  *
  * @see .specify/specs/prisma-migrate-deploy-database-url/spec.md
  */
 
 import { config } from 'dotenv'
-import { execSync, spawnSync } from 'child_process'
+import { execSync } from 'child_process'
 
-const BUILD_CMD = 'prisma migrate deploy && next build'
+const FULL_BUILD_CMD = 'prisma migrate deploy && next build'
+const NO_MIGRATE_CMD = 'prisma generate && next build'
 
 function hasDatabaseUrl(): boolean {
   return !!(process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL)
@@ -20,38 +21,13 @@ function loadEnv(): void {
   config({ path: '.env.local' })
 }
 
-function runBuild(): void {
-  execSync(BUILD_CMD, { stdio: 'inherit', shell: true })
-}
-
 loadEnv()
 
 if (hasDatabaseUrl()) {
-  runBuild()
-  process.exit(0)
+  execSync(FULL_BUILD_CMD, { stdio: 'inherit', shell: true })
+} else {
+  console.warn(
+    '⚠ DATABASE_URL not set. Skipping prisma migrate deploy. Run npm run env:pull or add DATABASE_URL to .env.local for full build.'
+  )
+  execSync(NO_MIGRATE_CMD, { stdio: 'inherit', shell: true })
 }
-
-// DATABASE_URL missing — try to pull from Vercel
-console.log('DATABASE_URL not set. Attempting to pull from Vercel...')
-const pull = spawnSync('npx', ['vercel', 'env', 'pull', '.env.local'], {
-  stdio: 'inherit',
-  shell: true,
-})
-
-if (pull.status !== 0) {
-  console.error('\nDATABASE_URL is required for build.')
-  console.error('Run \'npm run env:pull\' first (or add DATABASE_URL to .env.local).')
-  console.error('See docs/ENV_AND_VERCEL.md')
-  process.exit(1)
-}
-
-// Reload env after pull
-loadEnv()
-
-if (!hasDatabaseUrl()) {
-  console.error('vercel env pull completed but DATABASE_URL is still not set.')
-  console.error('Check that DATABASE_URL is configured in Vercel Dashboard → Settings → Environment Variables.')
-  process.exit(1)
-}
-
-runBuild()

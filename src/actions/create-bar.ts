@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-aid'
 import { getQuestGeneratorMode } from '@/lib/mvp-flags'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
+import { persist321Session } from '@/actions/charge-metabolism'
+import { extractNationArchetypeFromText } from '@/actions/extract-321-taxonomy'
 
 function parseTags(raw: string | null) {
     if (!raw) return []
@@ -60,6 +62,28 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
     const campaignRef = (formData.get('campaignRef') as string)?.trim() || null
     const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
+    const phase3Snapshot = (formData.get('phase3Snapshot') as string)?.trim() || null
+    const phase2Snapshot = (formData.get('phase2Snapshot') as string)?.trim() || null
+
+    // Extract nation/archetype from 321 identityFreeText when present
+    let extractedAllowedNations = allowedNations
+    let extractedAllowedTrigrams = allowedTrigrams
+    if (phase3Snapshot) {
+      try {
+        const phase3 = JSON.parse(phase3Snapshot) as { identityFreeText?: string }
+        if (phase3?.identityFreeText?.trim()) {
+          const extracted = await extractNationArchetypeFromText(phase3.identityFreeText)
+          if (extracted.nationName && (!extractedAllowedNations || extractedAllowedNations === '')) {
+            extractedAllowedNations = JSON.stringify([extracted.nationName])
+          }
+          if (extracted.archetypeName && (!extractedAllowedTrigrams || extractedAllowedTrigrams === '')) {
+            extractedAllowedTrigrams = JSON.stringify([extracted.archetypeName])
+          }
+        }
+      } catch {
+        /* ignore parse errors */
+      }
+    }
 
     if (!title) {
         return { error: 'Title is required' }
@@ -68,10 +92,10 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     try {
         const creator = await db.player.findUnique({
             where: { id: playerId },
-            select: { id: true, nationId: true, playbookId: true }
+            select: { id: true, nationId: true, archetypeId: true }
         })
         if (!creator) return { error: 'Player not found' }
-        if (!creator.nationId || !creator.playbookId) {
+        if (!creator.nationId || !creator.archetypeId) {
             return { error: 'Please choose both nation and archetype before creating BARs.' }
         }
 
@@ -177,8 +201,8 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                     parentId: linkedQuest?.id || null,
                     completionEffects,
                     rootId: rootIdSeed,
-                    allowedNations,
-                    allowedTrigrams,
+                    allowedNations: extractedAllowedNations,
+                    allowedTrigrams: extractedAllowedTrigrams,
                     allyshipDomain,
                     campaignRef: campaignRef || null,
                     campaignGoal: campaignGoal || null
@@ -227,6 +251,15 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
 
             return newBar
         })
+
+        if (phase3Snapshot && phase2Snapshot) {
+            await persist321Session({
+                phase3Snapshot,
+                phase2Snapshot,
+                outcome: 'bar_created',
+                linkedBarId: result.id,
+            })
+        }
 
         revalidatePath('/')
         revalidatePath('/hand')
@@ -301,7 +334,8 @@ export async function createQuestFromWizard(data: any) {
             reward, inputs, lifecycleFraming, moveType, approach, applyFirstAidLens,
             allowedNations, allowedTrigrams, allyshipDomain,
             campaignRef: dataCampaignRef, campaignGoal: dataCampaignGoal,
-            barTypeOnCompletion
+            barTypeOnCompletion,
+            isBounty, stakeAmount, maxCompletions, rewardPerCompletion
         } = data
 
         const creator = await db.player.findUnique({
@@ -309,15 +343,15 @@ export async function createQuestFromWizard(data: any) {
             select: {
                 id: true,
                 nationId: true,
-                playbookId: true,
+                archetypeId: true,
                 hasCreatedFirstQuest: true,
                 nation: { select: { name: true } },
-                playbook: { select: { name: true } }
+                archetype: { select: { name: true } }
             }
         })
 
         if (!creator) return { error: 'Player not found' }
-        if (!creator.nationId || !creator.playbookId) {
+        if (!creator.nationId || !creator.archetypeId) {
             return { error: 'Please choose both nation and archetype before creating quests.' }
         }
 
@@ -334,7 +368,7 @@ export async function createQuestFromWizard(data: any) {
         const requestedVisibility = visibility === 'public' ? 'public' : 'private'
         let effectiveVisibility: 'public' | 'private' = requestedVisibility
         const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16)
-        const placeholderTitle = `MVP Quest • ${creator.nation?.name || 'Nation'} × ${creator.playbook?.name || 'Archetype'} • ${timestamp}`
+        const placeholderTitle = `MVP Quest • ${creator.nation?.name || 'Nation'} × ${creator.archetype?.name || 'Archetype'} • ${timestamp}`
         const finalTitle = (title as string || '').trim() || placeholderTitle
 
         let finalDescription = (description as string || '').trim()
@@ -347,7 +381,7 @@ export async function createQuestFromWizard(data: any) {
             finalDescription = [
                 finalDescription,
                 `Placeholder quest generated in ${generatorMode} mode.`,
-                `Context: ${creator.nation?.name || 'Unknown Nation'} / ${creator.playbook?.name || 'Unknown Archetype'}.`,
+                `Context: ${creator.nation?.name || 'Unknown Nation'} / ${creator.archetype?.name || 'Unknown Archetype'}.`,
                 `Timestamp: ${timestamp}.`
             ].filter(Boolean).join('\n\n')
         }
@@ -375,18 +409,30 @@ export async function createQuestFromWizard(data: any) {
         }
         const completionEffects = JSON.stringify(completionEffectsObj)
 
+        const isBountyMode = !!isBounty && effectiveVisibility === 'public'
+        const stake = Math.max(0, Number(stakeAmount) || 0)
+        const maxComp = Math.max(1, Number(maxCompletions) || 1)
+        const rewardPer = Math.max(1, Number(rewardPerCompletion) || 1)
+
+        if (isBountyMode && stake < maxComp * rewardPer) {
+            return { error: `Bounty stake (${stake}) must be >= max completions (${maxComp}) × reward (${rewardPer}) = ${maxComp * rewardPer}` }
+        }
+
         const newBar = await db.$transaction(async (tx) => {
             if (effectiveVisibility === 'public') {
+                const needed = isBountyMode ? stake : 1
                 const wallet = await tx.vibulon.findMany({
                     where: { ownerId: playerId },
                     orderBy: { createdAt: 'asc' },
-                    take: 1
+                    take: needed
                 })
 
-                if (wallet.length < 1) {
+                if (wallet.length < needed) {
                     effectiveVisibility = 'private'
-                    warning = 'Insufficient balance to stake public quest; saved as private.'
-                } else {
+                    warning = isBountyMode
+                        ? `Insufficient balance for bounty (need ${needed}); saved as private.`
+                        : 'Insufficient balance to stake public quest; saved as private.'
+                } else if (!isBountyMode) {
                     await tx.vibulon.delete({ where: { id: wallet[0].id } })
                     await tx.vibulonEvent.create({
                         data: {
@@ -406,7 +452,7 @@ export async function createQuestFromWizard(data: any) {
                     title: finalTitle,
                     description: finalDescription,
                     type: category || 'custom',
-                    reward: Math.min(5, Math.max(1, Number(reward) || 1)),
+                    reward: isBountyMode ? rewardPer : Math.min(5, Math.max(1, Number(reward) || 1)),
                     inputs: JSON.stringify(inputs || []),
                     visibility: effectiveVisibility,
                     status: 'active',
@@ -419,9 +465,25 @@ export async function createQuestFromWizard(data: any) {
                     allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null,
                     allyshipDomain: finalAllyshipDomain,
                     campaignRef: (dataCampaignRef as string) || null,
-                    campaignGoal: (dataCampaignGoal as string) || null
+                    campaignGoal: (dataCampaignGoal as string) || null,
+                    questSource: isBountyMode ? 'bounty' : null,
+                    stakedPool: isBountyMode ? stake : 0,
+                    maxAssignments: isBountyMode ? maxComp : 1
                 }
             })
+
+            if (isBountyMode && effectiveVisibility === 'public') {
+                const walletForBounty = await tx.vibulon.findMany({
+                    where: { ownerId: playerId },
+                    orderBy: { createdAt: 'asc' },
+                    take: stake
+                })
+                for (const v of walletForBounty) {
+                    await tx.bountyStake.create({
+                        data: { barId: created.id, vibulonId: v.id, playerId }
+                    })
+                }
+            }
 
             await tx.customBar.update({
                 where: { id: created.id },
@@ -470,13 +532,13 @@ export async function createQuestFromWizard(data: any) {
 }
 
 export async function getGatingOptions() {
-    const [nations, playbooks] = await Promise.all([
+    const [nations, archetypes] = await Promise.all([
         db.nation.findMany({ where: { archived: false }, select: { id: true, name: true } }),
-        db.playbook.findMany({ select: { id: true, name: true } })
+        db.archetype.findMany({ select: { id: true, name: true } })
     ])
 
     return {
         nations: nations.map(n => n.name),
-        trigrams: Array.from(new Set(playbooks.map(p => p.name.split(' ')[0])))
+        trigrams: Array.from(new Set(archetypes.map(p => p.name.split(' ')[0])))
     }
 }

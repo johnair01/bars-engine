@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
 import { StartNodeForm } from "./StartNodeForm"
 import { CampaignRefForm } from "./CampaignRefForm"
+import { ImportPassagesForm } from "./ImportPassagesForm"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -100,6 +101,10 @@ export default async function AdventureDetailPage({
                                 </div>
                             )}
                         </div>
+                    </div>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">Import JSON</h3>
+                        <ImportPassagesForm adventureId={adventure.id} />
                     </div>
                 </div>
 

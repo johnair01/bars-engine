@@ -4,9 +4,24 @@ import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 const SECTIONS = [
   {
+    title: 'Getting Started',
+    links: [
+      { href: '/wiki/bars-guide', label: 'What Are BARs & How to Create Them' },
+      { href: '/wiki/quests-guide', label: 'How to Make Quests & Add Subquests' },
+      { href: '/wiki/emotional-first-aid-guide', label: 'How to Use Emotional First Aid' },
+      { href: '/wiki/donation-guide', label: 'How to Donate to the Campaign' },
+    ],
+  },
+  {
     title: 'Campaign',
     links: [
       { href: '/wiki/campaign/bruised-banana', label: 'Bruised Banana Residency & Fundraiser' },
+    ],
+  },
+  {
+    title: 'Rules',
+    links: [
+      { href: '/wiki/rules', label: 'Game Rules (BAR ecology, decks, quests, vibeulons)' },
     ],
   },
   {
@@ -30,6 +45,7 @@ const SECTIONS = [
   {
     title: 'Library',
     links: [
+      { href: '/wiki/request-from-library', label: 'Report to the Library (skill guide)' },
       { href: '/docs', label: 'Player Handbook (generated docs)' },
     ],
   },

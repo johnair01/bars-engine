@@ -113,6 +113,11 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
                         <SendBarForm barId={bar.id} recipients={recipients} />
                     </section>
                 )}
+
+                <div className="flex flex-wrap gap-4 text-sm text-zinc-500 pt-4 border-t border-zinc-800">
+                    <Link href="/bars" className="hover:text-white transition">My BARs</Link>
+                    <Link href="/library/bars" className="hover:text-white transition">Public BARs</Link>
+                </div>
             </div>
         </div>
     )

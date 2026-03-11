@@ -117,7 +117,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
         targetNationId: targetNationId ?? undefined,
-        targetPlaybookId: targetArchetypeIds[0],
+        targetArchetypeId: targetArchetypeIds[0],
       })
       if ('error' in result) {
         setError(result.error)

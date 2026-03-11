@@ -17,6 +17,8 @@ export type Metadata321 = {
 export type Phase3Taxonomic = {
   archetypeName?: string
   nationName?: string
+  /** Free-type identity from Face It; extraction populates nationName/archetypeName at BAR creation */
+  identityFreeText?: string
   developmentalLens?: string
   genderOfCharge?: string
 }
@@ -77,6 +79,7 @@ export function deriveMetadata321(
 
   // Phase 3 taxonomic (optional header)
   const taxParts: string[] = []
+  if (phase3.identityFreeText) taxParts.push(phase3.identityFreeText)
   if (phase3.archetypeName) taxParts.push(phase3.archetypeName)
   if (phase3.nationName) taxParts.push(phase3.nationName)
   if (phase3.developmentalLens) taxParts.push(phase3.developmentalLens)
@@ -91,6 +94,14 @@ export function deriveMetadata321(
   q4Arr.forEach((t) => tagSet.add(t.toLowerCase()))
   q6Arr.forEach((t) => tagSet.add(t.toLowerCase()))
   if (phase3.developmentalLens) tagSet.add(phase3.developmentalLens.toLowerCase())
+  if (phase3.identityFreeText) {
+    phase3.identityFreeText
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+      .slice(0, 3)
+      .forEach((w) => tagSet.add(w))
+  }
   if (q1) tagSet.add(q1.toLowerCase().replace(/\s+/g, '-'))
   const tags = Array.from(tagSet).slice(0, 10) // cap at 10
 

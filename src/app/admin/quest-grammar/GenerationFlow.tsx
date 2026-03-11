@@ -176,7 +176,7 @@ export function GenerationFlow({
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
         targetNationId: targetNationId ?? undefined,
-        targetPlaybookId: targetArchetypeIds[0],
+        targetArchetypeId: targetArchetypeIds[0],
         hexagramId: hexagramId ?? undefined,
       })
       if ('error' in result) {
@@ -640,7 +640,7 @@ export function GenerationFlow({
                 targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                 developmentalLens: developmentalLens ?? undefined,
                 targetNationId: targetNationId ?? undefined,
-                targetPlaybookId: targetArchetypeIds[0],
+                targetArchetypeId: targetArchetypeIds[0],
                 hexagramId: hexagramId ?? undefined,
               })
               setIsRegeneratingSkeleton(false)
@@ -668,7 +668,7 @@ export function GenerationFlow({
                 campaignId: 'bruised-banana',
                 questModel,
                 targetNationId: targetNationId ?? undefined,
-                targetPlaybookId: targetArchetypeIds[0],
+                targetArchetypeId: targetArchetypeIds[0],
                 targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                 developmentalLens: developmentalLens ?? undefined,
                 expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -796,7 +796,7 @@ export function GenerationFlow({
                   campaignId: 'bruised-banana',
                   questModel,
                   targetNationId: targetNationId ?? undefined,
-                  targetPlaybookId: targetArchetypeIds[0],
+                  targetArchetypeId: targetArchetypeIds[0],
                   targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                   developmentalLens: developmentalLens ?? undefined,
                   expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -955,7 +955,7 @@ export function GenerationFlow({
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                     developmentalLens: developmentalLens ?? undefined,
                     targetNationId: targetNationId ?? undefined,
-                    targetPlaybookId: targetArchetypeIds[0],
+                    targetArchetypeId: targetArchetypeIds[0],
                     hexagramId: hexagramId ?? undefined,
                   })
                   if ('error' in result) setError(result.error)
@@ -987,7 +987,7 @@ export function GenerationFlow({
                     questModel: questModel,
                     campaignId: 'bruised-banana',
                     targetNationId: targetNationId ?? undefined,
-                    targetPlaybookId: targetArchetypeIds[0],
+                    targetArchetypeId: targetArchetypeIds[0],
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                     developmentalLens: developmentalLens ?? undefined,
                     expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -1033,7 +1033,7 @@ export function GenerationFlow({
                     questModel: questModel,
                     campaignId: 'bruised-banana',
                     targetNationId: targetNationId ?? undefined,
-                    targetPlaybookId: targetArchetypeIds[0],
+                    targetArchetypeId: targetArchetypeIds[0],
                     targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                     developmentalLens: developmentalLens ?? undefined,
                     expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,

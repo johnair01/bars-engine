@@ -92,12 +92,12 @@ async function runQuest(questName: string) {
             }
         })
 
-        // Step 3: Fetch nation and playbook
+        // Step 3: Fetch nation and archetype
         const nation = await prisma.nation.findFirst()
-        const playbook = await prisma.playbook.findFirst()
+        const archetype = await prisma.archetype.findFirst()
 
-        if (!nation || !playbook) {
-            throw new Error('No nations or playbooks found. Run seed first.')
+        if (!nation || !archetype) {
+            throw new Error('No nations or archetypes found. Run npm run db:seed first.')
         }
 
         // Step 4: Create player (character born)
@@ -110,7 +110,7 @@ async function runQuest(questName: string) {
                 contactValue: testEmail,
                 inviteId: invite.id,
                 nationId: nation.id,
-                playbookId: playbook.id
+                archetypeId: archetype.id
             }
         })
 
@@ -127,7 +127,7 @@ async function runQuest(questName: string) {
         console.log(`\n  🎉 ${quest.victory.check}`)
         console.log(`  👤 Player Created: ${player.name}`)
         console.log(`  📍 Nation: ${nation.name}`)
-        console.log(`  📘 Playbook: ${playbook.name}\n`)
+        console.log(`  📘 Archetype: ${archetype.name}\n`)
 
         // Cleanup
         console.log('🧹 Cleaning up test data...')

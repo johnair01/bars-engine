@@ -8,6 +8,18 @@ import { useRouter } from 'next/navigation'
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 const ALLYSHIP_DOMAINS = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'] as const
 const GAME_MASTER_FACES = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage'] as const
+const NATIONS = ['Argyra', 'Pyrakanth', 'Lamenth', 'Meridia', 'Virelune'] as const
+const ARCHETYPES = [
+  'Bold Heart',
+  'Danger Walker',
+  'Truth Seer',
+  'Still Point',
+  'Subtle Influence',
+  'Devoted Guardian',
+  'Decisive Storm',
+  'Joyful Connector',
+] as const
+const LOCK_TYPES = ['identity_lock', 'emotional_lock', 'action', 'possibility'] as const
 
 type Quest = {
   id: string
@@ -17,6 +29,20 @@ type Quest = {
   allyshipDomain: string | null
   reward?: number
   gameMasterFace?: string | null
+  nation?: string | null
+  archetype?: string | null
+  kotterStage?: number
+  lockType?: string | null
+}
+
+function filterQuests(quests: Quest[], filters: { nation?: string[]; archetype?: string[]; kotterStage?: number[] }) {
+  if (!filters.nation?.length && !filters.archetype?.length && !filters.kotterStage?.length) return quests
+  return quests.filter((q) => {
+    if (filters.nation?.length && (!q.nation || !filters.nation.includes(q.nation))) return false
+    if (filters.archetype?.length && (!q.archetype || !filters.archetype.includes(q.archetype))) return false
+    if (filters.kotterStage?.length && (q.kotterStage == null || !filters.kotterStage.includes(q.kotterStage))) return false
+    return true
+  })
 }
 
 export function BookQuestReviewList({
@@ -36,6 +62,24 @@ export function BookQuestReviewList({
   const [movingToDraft, setMovingToDraft] = useState(false)
   const [upgradingId, setUpgradingId] = useState<string | null>(null)
   const [createdThreadId, setCreatedThreadId] = useState<string | null>(null)
+  const [filterNation, setFilterNation] = useState<string[]>([])
+  const [filterArchetype, setFilterArchetype] = useState<string[]>([])
+  const [filterKotterStage, setFilterKotterStage] = useState<number[]>([])
+  const [showFilters, setShowFilters] = useState(false)
+
+  const filters = { nation: filterNation, archetype: filterArchetype, kotterStage: filterKotterStage }
+  const filteredDrafts = filterQuests(draftQuests, filters)
+  const filteredApproved = filterQuests(approvedQuests, filters)
+  const hasActiveFilters = filterNation.length > 0 || filterArchetype.length > 0 || filterKotterStage.length > 0
+
+  const toggleStr = (list: string[], setList: (v: string[]) => void, value: string) => {
+    const has = list.includes(value)
+    setList(has ? list.filter((x) => x !== value) : [...list, value])
+  }
+  const toggleNum = (list: number[], setList: (v: number[]) => void, value: number) => {
+    const has = list.includes(value)
+    setList(has ? list.filter((x) => x !== value) : [...list, value])
+  }
 
   const handleApprove = async (questId: string) => {
     setActionResult(null)
@@ -84,6 +128,10 @@ export function BookQuestReviewList({
       allyshipDomain: quest.allyshipDomain,
       reward: quest.reward ?? 1,
       gameMasterFace: quest.gameMasterFace ?? null,
+      nation: quest.nation ?? null,
+      archetype: quest.archetype ?? null,
+      kotterStage: quest.kotterStage ?? 1,
+      lockType: quest.lockType ?? null,
     })
   }
 
@@ -120,6 +168,10 @@ export function BookQuestReviewList({
       gameMasterFace: editForm.gameMasterFace !== undefined
         ? (editForm.gameMasterFace as (typeof GAME_MASTER_FACES)[number] | null)
         : undefined,
+      nation: editForm.nation !== undefined ? editForm.nation : undefined,
+      archetype: editForm.archetype !== undefined ? editForm.archetype : undefined,
+      kotterStage: editForm.kotterStage !== undefined ? editForm.kotterStage : undefined,
+      lockType: editForm.lockType !== undefined ? editForm.lockType : undefined,
     })
     if (result.error) setActionResult(result.error)
     else {
@@ -220,8 +272,92 @@ export function BookQuestReviewList({
 
   return (
     <div className="space-y-4">
+      {/* Filter panel */}
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 text-sm text-zinc-300 hover:text-white"
+        >
+          {showFilters ? '▼' : '▶'} Filters
+          {hasActiveFilters && (
+            <span className="rounded-full bg-amber-600/50 px-2 py-0.5 text-xs text-amber-200">active</span>
+          )}
+        </button>
+        {showFilters && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="mb-1 text-xs text-zinc-500">Nation</p>
+              <div className="flex flex-wrap gap-1">
+                {NATIONS.map((n) => (
+                  <label key={n} className="flex cursor-pointer items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={filterNation.includes(n)}
+                      onChange={() => toggleStr(filterNation, setFilterNation, n)}
+                      className="rounded border-zinc-600 bg-zinc-800"
+                    />
+                    <span className="text-xs text-zinc-300">{n}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-1 text-xs text-zinc-500">Archetype</p>
+              <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+                {ARCHETYPES.map((a) => (
+                  <label key={a} className="flex cursor-pointer items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={filterArchetype.includes(a)}
+                      onChange={() => toggleStr(filterArchetype, setFilterArchetype, a)}
+                      className="rounded border-zinc-600 bg-zinc-800"
+                    />
+                    <span className="text-xs text-zinc-300">{a}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-1 text-xs text-zinc-500">Kotter stage</p>
+              <div className="flex flex-wrap gap-1">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
+                  <label key={k} className="flex cursor-pointer items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={filterKotterStage.includes(k)}
+                      onChange={() => toggleNum(filterKotterStage, setFilterKotterStage, k)}
+                      className="rounded border-zinc-600 bg-zinc-800"
+                    />
+                    <span className="text-xs text-zinc-300">{k}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {hasActiveFilters && (
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterNation([])
+                    setFilterArchetype([])
+                    setFilterKotterStage([])
+                  }}
+                  className="text-xs text-zinc-500 hover:text-white"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-500">{draftQuests.length} draft quests to review</p>
+        <p className="text-sm text-zinc-500">
+          {filteredDrafts.length} draft quests to review
+          {hasActiveFilters && ` (${draftQuests.length} total)`}
+        </p>
         <button
           onClick={handleApproveAll}
           disabled={approvingAll}
@@ -238,7 +374,7 @@ export function BookQuestReviewList({
       )}
 
       <div className="space-y-3">
-        {draftQuests.map((quest) => (
+        {filteredDrafts.map((quest) => (
           <div
             key={quest.id}
             className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4"
@@ -301,6 +437,47 @@ export function BookQuestReviewList({
                       ))}
                     </select>
                   )}
+                  <select
+                    value={editForm.nation ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, nation: e.target.value || null }))}
+                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm"
+                  >
+                    <option value="">— Nation —</option>
+                    {NATIONS.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={editForm.archetype ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, archetype: e.target.value || null }))}
+                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm"
+                  >
+                    <option value="">— Archetype —</option>
+                    {ARCHETYPES.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                  <label className="flex items-center gap-2 text-sm text-zinc-400">
+                    Kotter:
+                    <input
+                      type="number"
+                      min={1}
+                      max={8}
+                      value={editForm.kotterStage ?? 1}
+                      onChange={(e) => setEditForm((f) => ({ ...f, kotterStage: parseInt(e.target.value, 10) || 1 }))}
+                      className="w-12 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded text-white text-sm"
+                    />
+                  </label>
+                  <select
+                    value={editForm.lockType ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, lockType: e.target.value || null }))}
+                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm"
+                  >
+                    <option value="">— Lock —</option>
+                    {LOCK_TYPES.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -333,6 +510,18 @@ export function BookQuestReviewList({
                         <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">
                           {domainLabels[quest.allyshipDomain]}
                         </span>
+                      )}
+                      {quest.nation && (
+                        <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">{quest.nation}</span>
+                      )}
+                      {quest.archetype && (
+                        <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">{quest.archetype}</span>
+                      )}
+                      {quest.kotterStage != null && quest.kotterStage > 1 && (
+                        <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">K{quest.kotterStage}</span>
+                      )}
+                      {quest.lockType && (
+                        <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">{quest.lockType}</span>
                       )}
                       <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">
                         {quest.reward ?? 1} vibeulon{(quest.reward ?? 1) !== 1 ? 's' : ''}
@@ -371,17 +560,24 @@ export function BookQuestReviewList({
         ))}
       </div>
 
-      {approvedQuests.length > 0 && (
+      {filteredApproved.length > 0 && (
         <div className="mt-8 pt-6 border-t border-zinc-800">
-          <h3 className="text-sm font-medium text-zinc-300 mb-3">Approved quests ({approvedQuests.length})</h3>
+          <h3 className="text-sm font-medium text-zinc-300 mb-3">
+            Approved quests ({filteredApproved.length}
+            {hasActiveFilters && ` of ${approvedQuests.length}`})
+          </h3>
           <div className="space-y-2">
-            {approvedQuests.map((q) => (
+            {filteredApproved.map((q) => (
               <div key={q.id} className="flex items-center justify-between gap-4 py-2 px-3 bg-zinc-800/50 rounded">
                 <div className="min-w-0 flex-1">
                   <span className="font-medium text-white">{q.title}</span>
                   <div className="flex gap-2 mt-1 flex-wrap">
                     <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{moveLabels[q.moveType ?? 'growUp']}</span>
                     {q.allyshipDomain && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{domainLabels[q.allyshipDomain]}</span>}
+                    {q.nation && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{q.nation}</span>}
+                    {q.archetype && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{q.archetype}</span>}
+                    {q.kotterStage != null && q.kotterStage > 1 && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">K{q.kotterStage}</span>}
+                    {q.lockType && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{q.lockType}</span>}
                     <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{q.reward ?? 1} vibeulon{(q.reward ?? 1) !== 1 ? 's' : ''}</span>
                     {q.gameMasterFace && <span className="text-xs px-2 py-0.5 bg-zinc-700 text-zinc-400 rounded">{faceLabels[q.gameMasterFace]}</span>}
                   </div>

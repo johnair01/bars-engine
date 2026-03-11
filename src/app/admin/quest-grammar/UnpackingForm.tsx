@@ -76,7 +76,7 @@ export function UnpackingForm() {
         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
         developmentalLens: developmentalLens ?? undefined,
         targetNationId: targetNationId ?? undefined,
-        targetPlaybookId: targetArchetypeIds[0],
+        targetArchetypeId: targetArchetypeIds[0],
       }
       const result = await compileQuestWithPrivilegingAction(input)
       if ('error' in result) {
@@ -498,7 +498,7 @@ export function UnpackingForm() {
                 campaignId: 'bruised-banana',
                 questModel,
                 targetNationId: targetNationId ?? undefined,
-                targetPlaybookId: targetArchetypeIds[0],
+                targetArchetypeId: targetArchetypeIds[0],
                 targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                 developmentalLens: developmentalLens ?? undefined,
                 expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -570,7 +570,7 @@ export function UnpackingForm() {
                   campaignId: 'bruised-banana',
                   questModel,
                   targetNationId: targetNationId ?? undefined,
-                  targetPlaybookId: targetArchetypeIds[0],
+                  targetArchetypeId: targetArchetypeIds[0],
                   targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                   developmentalLens: developmentalLens ?? undefined,
                   expectedMoves: parsedMoves.length > 0 ? parsedMoves : undefined,
@@ -642,7 +642,7 @@ export function UnpackingForm() {
                         campaignId: 'bruised-banana',
                         questModel,
                         targetNationId: targetNationId ?? undefined,
-                        targetPlaybookId: targetArchetypeIds[0],
+                        targetArchetypeId: targetArchetypeIds[0],
                         targetArchetypeIds: targetArchetypeIds.length > 0 ? targetArchetypeIds : undefined,
                         developmentalLens: developmentalLens ?? undefined,
                       })

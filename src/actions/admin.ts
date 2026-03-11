@@ -81,7 +81,7 @@ export async function upsertQuestThread(data: {
     description?: string
     threadType: string
     completionReward: number
-    allowedPlaybooks?: string[]
+    allowedArchetypes?: string[]
 }) {
     await checkAdmin()
 
@@ -90,7 +90,7 @@ export async function upsertQuestThread(data: {
         description: data.description,
         threadType: data.threadType,
         completionReward: data.completionReward || 0,
-        allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
+        allowedArchetypes: data.allowedArchetypes ? JSON.stringify(data.allowedArchetypes) : null,
     }
 
     let threadId = data.id
@@ -126,14 +126,14 @@ export async function upsertQuestPack(data: {
     id?: string
     title: string
     description?: string
-    allowedPlaybooks?: string[]
+    allowedArchetypes?: string[]
 }) {
     await checkAdmin()
 
     const payload = {
         title: data.title,
         description: data.description,
-        allowedPlaybooks: data.allowedPlaybooks ? JSON.stringify(data.allowedPlaybooks) : null,
+        allowedArchetypes: data.allowedArchetypes ? JSON.stringify(data.allowedArchetypes) : null,
     }
 
     let packId = data.id
@@ -355,37 +355,37 @@ export async function toggleAdminRole(playerId: string, makeAdmin: boolean) {
     revalidatePath('/admin/players')
 }
 
-export async function updatePlayerProfile(playerId: string, data: { nationId?: string, playbookId?: string }) {
+export async function updatePlayerProfile(playerId: string, data: { nationId?: string, archetypeId?: string }) {
     await checkAdmin()
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        include: { nation: true, playbook: true }
+        include: { nation: true, archetype: true }
     })
     if (!player) throw new Error('Player not found')
 
     // Effective values: use data when provided, else keep existing
     const nationId = data.nationId !== undefined ? (data.nationId || null) : player.nationId
-    const playbookId = data.playbookId !== undefined ? (data.playbookId || null) : player.playbookId
+    const archetypeId = data.archetypeId !== undefined ? (data.archetypeId || null) : player.archetypeId
 
     let avatarConfig: string | null = null
-    if (nationId || playbookId) {
+    if (nationId || archetypeId) {
         const nation = nationId ? await db.nation.findUnique({ where: { id: nationId } }) : player.nation
-        const playbook = playbookId ? await db.playbook.findUnique({ where: { id: playbookId } }) : player.playbook
-        avatarConfig = deriveAvatarConfig(nationId, playbookId, player.campaignDomainPreference, {
+        const archetype = archetypeId ? await db.archetype.findUnique({ where: { id: archetypeId } }) : player.archetype
+        avatarConfig = deriveAvatarConfig(nationId, archetypeId, player.campaignDomainPreference, {
             nationName: nation?.name,
-            playbookName: playbook?.name,
+            archetypeName: archetype?.name,
             pronouns: player.pronouns
         })
     }
     // When both cleared, explicitly set avatarConfig to null
-    const avatarConfigUpdate = nationId || playbookId ? avatarConfig : null
+    const avatarConfigUpdate = nationId || archetypeId ? avatarConfig : null
 
     await db.player.update({
         where: { id: playerId },
         data: {
             nationId,
-            playbookId,
+            archetypeId,
             avatarConfig: avatarConfigUpdate
         }
     })
@@ -397,27 +397,27 @@ export async function updatePlayerProfile(playerId: string, data: { nationId?: s
 
 export async function assignAvatarToPlayer(
     playerId: string,
-    data: { nationId?: string; playbookId?: string; genderKey?: 'male' | 'female' | 'neutral' | 'default' }
+    data: { nationId?: string; archetypeId?: string; genderKey?: 'male' | 'female' | 'neutral' | 'default' }
 ) {
     await checkAdmin()
 
-    const { nationId, playbookId, genderKey } = data
-    if (!nationId && !playbookId) {
-        return { error: 'Select at least one nation or playbook' }
+    const { nationId, archetypeId, genderKey } = data
+    if (!nationId && !archetypeId) {
+        return { error: 'Select at least one nation or archetype' }
     }
 
     const player = await db.player.findUnique({
         where: { id: playerId },
-        include: { nation: true, playbook: true }
+        include: { nation: true, archetype: true }
     })
     if (!player) return { error: 'Player not found' }
 
     const nation = nationId ? await db.nation.findUnique({ where: { id: nationId } }) : player.nation
-    const playbook = playbookId ? await db.playbook.findUnique({ where: { id: playbookId } }) : player.playbook
+    const archetype = archetypeId ? await db.archetype.findUnique({ where: { id: archetypeId } }) : player.archetype
 
-    const avatarConfig = deriveAvatarConfig(nationId ?? null, playbookId ?? null, player.campaignDomainPreference, {
+    const avatarConfig = deriveAvatarConfig(nationId ?? null, archetypeId ?? null, player.campaignDomainPreference, {
         nationName: nation?.name,
-        playbookName: playbook?.name,
+        archetypeName: archetype?.name,
         pronouns: player.pronouns,
         genderKey
     })
@@ -427,7 +427,7 @@ export async function assignAvatarToPlayer(
         where: { id: playerId },
         data: {
             nationId: nationId ?? player.nationId,
-            playbookId: playbookId ?? player.playbookId,
+            archetypeId: archetypeId ?? player.archetypeId,
             avatarConfig
         }
     })
@@ -629,7 +629,7 @@ export async function getAdminWorldData() {
     const { CANONICAL_ARCHETYPE_NAMES } = await import('@/lib/canonical-archetypes')
     return Promise.all([
         db.nation.findMany({ where: { archived: false }, orderBy: { name: 'asc' } }),
-        db.playbook.findMany({
+        db.archetype.findMany({
             where: { name: { in: [...CANONICAL_ARCHETYPE_NAMES] } },
             orderBy: { name: 'asc' },
         }),
@@ -641,7 +641,7 @@ export async function getAdminWorldData() {
 // ===================================
 
 const BASE_KEYS = ['male', 'female', 'neutral', 'default'] as const
-const LAYERS = ['base', 'nation_body', 'nation_accent', 'playbook_outfit', 'playbook_accent'] as const
+const LAYERS = ['base', 'nation_body', 'nation_accent', 'archetype_outfit', 'archetype_accent'] as const
 
 function slugifyName(name: string): string {
     return name
@@ -656,13 +656,13 @@ function slugifyName(name: string): string {
 export async function getAdminSpriteAssets() {
     await checkAdmin()
 
-    const [nations, playbooks] = await Promise.all([
+    const [nations, archetypes] = await Promise.all([
         db.nation.findMany({ where: { archived: false }, select: { name: true } }),
-        db.playbook.findMany({ select: { name: true } })
+        db.archetype.findMany({ select: { name: true } })
     ])
 
     const nationKeys = nations.map((n) => slugifyName(n.name))
-    const playbookKeys = playbooks.map((p) => slugifyName(p.name))
+    const archetypeKeys = archetypes.map((p) => slugifyName(p.name))
 
     const spritesDir = path.join(process.cwd(), 'public', 'sprites', 'parts')
     const byLayer: Record<string, { expected: string[]; existing: string[] }> = {}
@@ -680,12 +680,12 @@ export async function getAdminSpriteAssets() {
         let expected: string[] = []
         if (layer === 'base') expected = [...BASE_KEYS]
         else if (layer === 'nation_body' || layer === 'nation_accent') expected = nationKeys
-        else if (layer === 'playbook_outfit' || layer === 'playbook_accent') expected = playbookKeys
+        else if (layer === 'archetype_outfit' || layer === 'archetype_accent') expected = archetypeKeys
 
         byLayer[layer] = { expected: [...new Set(expected)], existing }
     }
 
-    return { byLayer, nations, playbooks }
+    return { byLayer, nations, archetypes }
 }
 
 export async function uploadSpriteAsset(formData: FormData) {
@@ -743,12 +743,12 @@ export async function updateNation(id: string, data: { description?: string; img
 
 export async function getAdminArchetype(id: string) {
     await checkAdmin()
-    return db.playbook.findUnique({ where: { id } })
+    return db.archetype.findUnique({ where: { id } })
 }
 
 export async function updateArchetype(id: string, data: { description?: string; content?: string; centralConflict?: string; vibe?: string; energy?: string; primaryQuestion?: string; examples?: string; shadowSignposts?: string; lightSignposts?: string; wakeUp?: string; cleanUp?: string; growUp?: string; showUp?: string; emotionalFirstAid?: string }) {
     await checkAdmin()
-    await db.playbook.update({
+    await db.archetype.update({
         where: { id },
         data: {
             description: data.description,

@@ -7,14 +7,14 @@ import { dismissCampaignEntry } from '@/actions/onboarding'
 
 type CampaignEntryBannerProps = {
   nation: { id: string; name: string } | null
-  playbook: { id: string; name: string } | null
+  archetype: { id: string; name: string } | null
   intendedImpact: string[]
   starterQuests: { id: string; title: string }[]
 }
 
 export function CampaignEntryBanner({
   nation,
-  playbook,
+  archetype,
   intendedImpact,
   starterQuests,
 }: CampaignEntryBannerProps) {
@@ -61,7 +61,7 @@ export function CampaignEntryBanner({
             <div className="text-white font-bold">{nation.name}</div>
           </Link>
         )}
-        {playbook && (
+        {archetype && (
           <Link
             href="/archetype"
             className="block p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:border-emerald-600/50 transition"
@@ -69,7 +69,7 @@ export function CampaignEntryBanner({
             <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">
               Archetype
             </div>
-            <div className="text-white font-bold">{playbook.name}</div>
+            <div className="text-white font-bold">{archetype.name}</div>
           </Link>
         )}
         {intendedImpact.length > 0 && (

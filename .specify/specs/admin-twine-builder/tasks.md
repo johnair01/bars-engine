@@ -15,7 +15,15 @@
    - [x] Create `GET /api/adventures/[slug]/[nodeId]` API route.
    - [x] Modify `CampaignReader.tsx` to accept `adventureSlug` as a prop.
    - [x] Enable fetching from DB instead of local files.
-5. End-to-End Testing
+5. PlayerAdventureProgress (EK completion)
+   - [x] `getAdventureProgress`, `saveAdventureProgress` in `src/actions/adventure-progress.ts`
+   - [x] Adventure play page: load saved progress on mount; resume from saved node if valid
+   - [x] AdventurePlayer: save progress after each node load (skip when preview)
+6. Import JSON
+   - [x] `importPassagesFromJson` in adventures actions
+   - [x] ImportPassagesForm on adventure detail page
+7. End-to-End Testing
    - [ ] Manually create test nodes via Admin UI.
    - [ ] Map "start" to "end" with a dummy choice.
    - [ ] Render at `/campaign/[slug]`.
+   - [ ] Verify progress persists across logout/login.

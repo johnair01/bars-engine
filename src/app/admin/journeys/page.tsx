@@ -58,7 +58,7 @@ export default function AdminJourneysPage() {
                                             }`}>
                                             {thread.threadType}
                                         </span>
-                                        {thread.allowedPlaybooks && (
+                                        {thread.allowedArchetypes && (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-900/50 text-indigo-300">
                                                 Restricted
                                             </span>
@@ -95,7 +95,7 @@ export default function AdminJourneysPage() {
                                                 Player Made
                                             </span>
                                         )}
-                                        {pack.allowedPlaybooks && (
+                                        {pack.allowedArchetypes && (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-900/50 text-indigo-300">
                                                 Restricted
                                             </span>

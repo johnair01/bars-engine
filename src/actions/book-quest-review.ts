@@ -165,6 +165,10 @@ export type UpdateBookQuestData = {
   allyshipDomain?: (typeof ALLYSHIP_DOMAINS)[number] | null
   reward?: number
   gameMasterFace?: (typeof GAME_MASTER_FACES)[number] | null
+  nation?: string | null
+  archetype?: string | null
+  kotterStage?: number
+  lockType?: string | null
 }
 
 /**
@@ -185,6 +189,10 @@ export async function updateBookQuest(questId: string, data: UpdateBookQuestData
     if (data.allyshipDomain !== undefined) updateData.allyshipDomain = data.allyshipDomain
     if (data.reward !== undefined) updateData.reward = Math.max(0, Math.min(99, data.reward))
     if (data.gameMasterFace !== undefined) updateData.gameMasterFace = data.gameMasterFace
+    if (data.nation !== undefined) updateData.nation = data.nation
+    if (data.archetype !== undefined) updateData.archetype = data.archetype
+    if (data.kotterStage !== undefined) updateData.kotterStage = Math.max(1, Math.min(8, data.kotterStage))
+    if (data.lockType !== undefined) updateData.lockType = data.lockType
 
     await db.customBar.update({
       where: { id: questId },

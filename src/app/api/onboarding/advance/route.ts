@@ -5,7 +5,7 @@ import { advanceOnboardingState } from '@/actions/onboarding'
 /**
  * POST /api/onboarding/advance
  * Advances onboarding state by event.
- * Request: { event: string, nationId?: string, playbookId?: string, lens?: string, campaignDomainPreference?: string[] }
+ * Request: { event: string, nationId?: string, archetypeId?: string, playbookId?: string, lens?: string, campaignDomainPreference?: string[] }
  * Response: { success: boolean, onboardingState?: string, error?: string }
  */
 export async function POST(request: Request) {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
         const payload = body.payload as Record<string, unknown> | undefined
         const nationId = typeof payload?.nationId === 'string' ? payload.nationId : undefined
-        const playbookId = typeof payload?.playbookId === 'string' ? payload.playbookId : undefined
+        const archetypeId = typeof payload?.archetypeId === 'string' ? payload.archetypeId : (typeof payload?.playbookId === 'string' ? payload.playbookId : undefined)
         const lens = typeof payload?.lens === 'string' ? payload.lens : undefined
         const rawPref = payload?.campaignDomainPreference
         let campaignDomainPreference: string[] | undefined
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         const result = await advanceOnboardingState(event, {
             playerId,
             nationId,
-            playbookId,
+            archetypeId,
             lens,
             campaignDomainPreference,
         })

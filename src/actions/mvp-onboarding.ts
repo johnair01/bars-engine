@@ -25,7 +25,7 @@ export async function getMvpProfileSetupData() {
             select: { id: true, name: true, description: true },
             orderBy: { name: 'asc' }
         }),
-        db.playbook.findMany({
+        db.archetype.findMany({
             select: { id: true, name: true, description: true },
             orderBy: { name: 'asc' }
         }),
@@ -56,7 +56,7 @@ export async function saveMvpProfileSetup(formData: FormData) {
     try {
         const [nation, playbook] = await Promise.all([
             db.nation.findUnique({ where: { id: nationId }, select: { id: true, name: true } }),
-            db.playbook.findUnique({ where: { id: playbookId }, select: { id: true, name: true } }),
+            db.archetype.findUnique({ where: { id: playbookId }, select: { id: true, name: true } }),
         ])
 
         if (!nation || !playbook) {
@@ -65,14 +65,14 @@ export async function saveMvpProfileSetup(formData: FormData) {
 
         const avatarConfig = deriveAvatarConfig(nationId, playbookId, player.campaignDomainPreference, {
             nationName: nation.name,
-            playbookName: playbook.name,
+            archetypeName: playbook.name,
             pronouns: player.pronouns
         })
         await db.player.update({
             where: { id: player.id },
             data: {
                 nationId,
-                playbookId,
+                archetypeId: playbookId,
                 ...(avatarConfig && { avatarConfig })
             }
         })

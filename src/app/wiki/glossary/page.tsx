@@ -19,17 +19,17 @@ export default function GlossaryPage() {
       <section id="vibeulon" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
         <h2 className="text-lg font-bold text-white">Vibeulon</h2>
         <p className="text-zinc-300 text-sm">
-          The currency/token of the game. Vibeulons are earned by completing quests, Emotional First Aid,
-          and other actions. They represent emotional energy and contribution to the collective.
+          A unit of crystallized value minted from completing quests. Vibeulons can attach to BARs (locking them); attached vibeulons are destroyed if the BAR is composted and not transformed before expiry. Earned by completing quests, Emotional First Aid, and other actions.
         </p>
+        <Link href="/wiki/rules" className="text-xs text-amber-400 hover:text-amber-300">→ Game Rules</Link>
       </section>
 
       <section id="bar" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
         <h2 className="text-lg font-bold text-white">BAR</h2>
         <p className="text-zinc-300 text-sm">
-          A kernel — a compressed unit of potential. A BAR can become a quest, a rule, a piece of lore,
-          a design decision, or a community norm. BARs are seeds with provenance, not notes.
+          Basic Artifact Resource — a compact, shareable unit of signal; a &quot;seed packet&quot; for eventual action. BARs can be private (notebook) or public (spellbook). A BAR can become a quest, a rule, a piece of lore, or a community norm. BARs are seeds with provenance, not notes.
         </p>
+        <Link href="/wiki/rules" className="text-xs text-amber-400 hover:text-amber-300">→ Game Rules</Link>
       </section>
 
       <section id="yellow-brick-road" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
@@ -66,8 +66,49 @@ export default function GlossaryPage() {
         </div>
       </section>
 
-      <div className="text-xs text-zinc-500">
+      <section id="stewardship" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Stewardship</h2>
+        <p className="text-zinc-300 text-sm">
+          Responsibility for carrying a BAR. Anyone can adopt stewardship; it does not claim authorship. Persists until released or composted. Practice: carrying, refining, upgrading, converting to quest, composting.
+        </p>
+        <Link href="/wiki/rules/stewardship" className="text-xs text-amber-400 hover:text-amber-300">→ Stewardship</Link>
+      </section>
+
+      <section id="quest" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Quest</h2>
+        <p className="text-zinc-300 text-sm">
+          An actionable commitment in the field. Quests have limited BAR slots; BARs played onto quests mint vibeulons on completion.
+        </p>
+        <Link href="/wiki/rules/quests-slots" className="text-xs text-amber-400 hover:text-amber-300">→ Quests + Slots</Link>
+      </section>
+
+      <section id="compost" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Compost</h2>
+        <p className="text-zinc-300 text-sm">
+          A zone for BARs removed from active play. Temporary; untransformed composted BARs are destroyed after a time window (with any attached vibeulons). Ecological tone—&quot;returned to the fire.&quot;
+        </p>
+        <Link href="/wiki/rules/compost" className="text-xs text-amber-400 hover:text-amber-300">→ Compost Heap</Link>
+      </section>
+
+      <section id="equipped" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Equipped / In Play</h2>
+        <p className="text-zinc-300 text-sm">
+          <strong>Equipped</strong> = BARs in your hand; curated for current play; capacity limits apply; do nothing passively. <strong>In Play</strong> = BAR attached to a quest slot.
+        </p>
+        <Link href="/wiki/rules/decks" className="text-xs text-amber-400 hover:text-amber-300">→ Decks</Link>
+      </section>
+
+      <section id="quadrant" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Quadrant</h2>
+        <p className="text-zinc-300 text-sm">
+          Tag for BAR content: About me, About something happening, About us, About the system. Human language; no AQAL jargon.
+        </p>
+        <Link href="/wiki/rules/bar-format" className="text-xs text-amber-400 hover:text-amber-300">→ BAR Format</Link>
+      </section>
+
+      <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
         <Link href="/wiki" className="hover:text-zinc-300">← Back to index</Link>
+        <Link href="/wiki/rules/glossary" className="hover:text-zinc-300">Rules Glossary</Link>
       </div>
     </div>
   )

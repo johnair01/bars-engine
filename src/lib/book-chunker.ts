@@ -1,7 +1,10 @@
 /**
  * Chunk book text for AI analysis.
  * Splits by approximate token budget (~4 chars per token) to fit context windows.
+ * Spec: .specify/specs/book-quest-targeted-extraction/spec.md — chunkBookTextWithToc adds section metadata.
  */
+import type { BookToc } from './book-toc'
+
 const CHARS_PER_CHUNK = 4000 // ~1000 tokens; leaves room for prompt + response
 const OVERLAP_CHARS = 200 // Overlap to avoid cutting mid-sentence
 
@@ -10,6 +13,8 @@ export type TextChunk = {
   text: string
   charStart: number
   charEnd: number
+  sectionIndex?: number
+  sectionTitle?: string
 }
 
 /**
@@ -51,4 +56,36 @@ export function chunkBookText(text: string): TextChunk[] {
   }
 
   return chunks
+}
+
+/**
+ * Chunk book text with optional TOC metadata.
+ * When toc is provided, each chunk gets sectionIndex and sectionTitle based on char range.
+ */
+export function chunkBookTextWithToc(text: string, toc?: BookToc | null): TextChunk[] {
+  const chunks = chunkBookText(text)
+  if (!toc?.entries?.length) return chunks
+
+  return chunks.map((chunk) => {
+    const chunkMid = Math.floor((chunk.charStart + chunk.charEnd) / 2)
+    const section = toc.entries.find(
+      (e) => chunkMid >= e.charStart && chunkMid <= e.charEnd
+    )
+    if (section) {
+      return {
+        ...chunk,
+        sectionIndex: toc.entries.indexOf(section),
+        sectionTitle: section.title,
+      }
+    }
+    // Chunk is outside TOC region (body content): use last entry that starts before chunk
+    const prevSection = toc.entries
+      .filter((e) => e.charStart <= chunk.charStart)
+      .pop()
+    return {
+      ...chunk,
+      sectionIndex: prevSection ? toc.entries.indexOf(prevSection) : 0,
+      sectionTitle: prevSection?.title ?? toc.entries[0]?.title ?? undefined,
+    }
+  })
 }

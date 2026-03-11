@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { completeQuest } from '@/actions/quest-engine'
+import { saveAdventureProgress } from '@/actions/adventure-progress'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { CastIChingModal } from '@/components/CastIChingModal'
 
@@ -23,6 +24,7 @@ interface Node {
 }
 
 interface Props {
+  adventureId: string
   adventureSlug: string
   startNodeId: string
   questId?: string
@@ -32,6 +34,7 @@ interface Props {
 }
 
 export function AdventurePlayer({
+  adventureId,
   adventureSlug,
   startNodeId,
   questId,
@@ -64,6 +67,11 @@ export function AdventurePlayer({
       const node = (await res.json()) as Node
       setCurrentNode(node)
       setSlideIndex(0)
+
+      // Persist progress for resume on logout/login (PlayerAdventureProgress)
+      if (!isPreview) {
+        await saveAdventureProgress(adventureId, nodeId, {})
+      }
 
       // Check: completion passage with matching quest → complete
       if (

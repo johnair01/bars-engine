@@ -32,8 +32,8 @@ export default async function QuestPage() {
         if (q.allowedTrigrams) {
             try {
                 const allowed = JSON.parse(q.allowedTrigrams) as string[]
-                if (allowed.length > 0 && player.playbook) {
-                    const playerTrigram = player.playbook.name.split(' ')[0]
+                if (allowed.length > 0 && player.archetype) {
+                    const playerTrigram = player.archetype.name.split(' ')[0]
                     if (!allowed.includes(playerTrigram)) return false
                 }
             } catch (e) { }

@@ -5,6 +5,44 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { getActiveInstance } from '@/actions/instance'
 import { revalidatePath } from 'next/cache'
 
+// ---------------------------------------------------------------------------
+// Public BARs (Library discovery — spec: public-bars-library)
+// ---------------------------------------------------------------------------
+
+export type PublicBarSummary = {
+    id: string
+    title: string
+    description: string
+    allyshipDomain: string | null
+    storyContent: string | null
+    creator: { id: string; name: string } | null
+    createdAt: Date
+}
+
+/**
+ * Get public BARs for Library discovery. Distinct from marketplace (quests to claim).
+ * Spec: .specify/specs/public-bars-library/spec.md
+ */
+export async function getPublicBars(limit = 50): Promise<PublicBarSummary[]> {
+    const bars = await db.customBar.findMany({
+        where: { visibility: 'public', status: 'active' },
+        include: {
+            creator: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+    })
+    return bars.map((b) => ({
+        id: b.id,
+        title: b.title,
+        description: b.description,
+        allyshipDomain: b.allyshipDomain,
+        storyContent: b.storyContent,
+        creator: b.creator ? { id: b.creator.id, name: b.creator.name } : null,
+        createdAt: b.createdAt,
+    }))
+}
+
 const REQUEST_TYPES = ['rules', 'ux', 'tech', 'lore', 'social', 'other'] as const
 const MAX_DOC_STUBS_PER_INSTANCE_PER_DAY = 10
 

@@ -264,12 +264,13 @@ export async function getBarDetail(barId: string) {
     })
 
     if (!bar) return { error: 'BAR not found' }
-    if (bar.type !== 'bar') return { error: 'Not a BAR' }
+    // Allow type 'bar' for owner/recipient; allow any type when public (Library discovery)
+    const isPublic = bar.visibility === 'public'
+    if (!isPublic && bar.type !== 'bar') return { error: 'Not a BAR' }
 
     // Access check: owner, or has a share addressed to them, or public
     const isOwner = bar.creatorId === playerId
     const isRecipient = bar.shares.some(s => s.toUserId === playerId)
-    const isPublic = bar.visibility === 'public'
 
     if (!isOwner && !isRecipient && !isPublic) {
         return { error: 'Not authorized to view this BAR' }

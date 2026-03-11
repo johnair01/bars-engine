@@ -50,7 +50,7 @@ export default function EditThreadPage() {
                     setThreadType(data.threadType)
                     setCompletionReward(data.completionReward)
                     try {
-                        setAllowedPlaybooks(data.allowedPlaybooks ? JSON.parse(data.allowedPlaybooks) : [])
+                        setAllowedPlaybooks(data.allowedArchetypes ? JSON.parse(data.allowedArchetypes) : [])
                     } catch (e) { setAllowedPlaybooks([]) }
 
                     // Sort quests by position
@@ -96,7 +96,7 @@ export default function EditThreadPage() {
                 description,
                 threadType,
                 completionReward,
-                allowedPlaybooks: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
+                allowedArchetypes: allowedPlaybooks.length > 0 ? allowedPlaybooks : undefined
             })
             await updateThreadQuests(savedThread.id, threadQuests.map(q => q.questId))
 

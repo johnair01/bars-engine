@@ -45,7 +45,7 @@ export interface EmotionalFirstAidContext {
     player: {
         id: string
         name: string
-        playbookName: string | null
+        archetypeName: string | null
         emotionalFirstAid: string | null
     }
     tools: EmotionalFirstAidToolDTO[]
@@ -211,8 +211,8 @@ export async function getEmotionalFirstAidContext(): Promise<EmotionalFirstAidCo
             player: {
                 id: player.id,
                 name: player.name,
-                playbookName: player.playbook?.name || null,
-                emotionalFirstAid: player.playbook?.emotionalFirstAid || null,
+                archetypeName: player.archetype?.name || null,
+                emotionalFirstAid: player.archetype?.emotionalFirstAid || null,
             },
             tools: toolsRaw.map(toToolDTO),
             quickOptions: VIBES_EMERGENCY_OPTIONS,
@@ -356,6 +356,7 @@ export async function completeEmotionalFirstAidSession(input: {
                 await tx.vibulon.createMany({
                     data: Array.from({ length: mintedAmount }).map(() => ({
                         ownerId: player.id,
+                        creatorId: player.id,
                         originSource: 'emotional_first_aid',
                         originId: session.id,
                         originTitle: `Emotional First Aid: ${toolUsed?.name || session.tool?.name || 'Protocol'}`,
@@ -378,6 +379,7 @@ export async function completeEmotionalFirstAidSession(input: {
                 await tx.vibulon.create({
                     data: {
                         ownerId: player.id,
+                        creatorId: player.id,
                         originSource: 'shadow_321_completion',
                         originId: session.id,
                         originTitle: '321 Shadow Process (gold star)',
@@ -410,7 +412,7 @@ export async function getLatestFirstAidQuestLensForPlayer(playerId: string) {
         const [player, session] = await Promise.all([
             db.player.findUnique({
                 where: { id: playerId },
-                include: { playbook: true }
+                include: { archetype: true }
             }),
             db.emotionalFirstAidSession.findFirst({
                 where: {
@@ -427,8 +429,8 @@ export async function getLatestFirstAidQuestLensForPlayer(playerId: string) {
 
         const toolName = session.tool?.name || 'Emotional First Aid'
         const issueTag = session.issueTag || 'other'
-        const archetypeProtocol = player?.playbook?.emotionalFirstAid || null
-        const archetypeName = player?.playbook?.name || null
+        const archetypeProtocol = player?.archetype?.emotionalFirstAid || null
+        const archetypeName = player?.archetype?.name || null
 
         const promptParts = [
             `Player recently completed "${toolName}" to clear stuckness.`,

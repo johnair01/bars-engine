@@ -66,8 +66,8 @@ export default async function MvpProfileSetupPage({
                     <div>
                         <label className="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Archetype</label>
                         <select
-                            name="playbookId"
-                            defaultValue={player.playbookId || ''}
+                            name="archetypeId"
+                            defaultValue={player.archetypeId || ''}
                             required
                             className="w-full rounded-lg border border-zinc-700 bg-black px-4 py-3 text-white"
                         >

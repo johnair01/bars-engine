@@ -17,7 +17,7 @@ export interface GetOnboardingStateResult {
     playerId: string
     onboardingState: OnboardingState
     nationId: string | null
-    playbookId: string | null
+    archetypeId: string | null
     campaignDomainPreference: string[] | null
     hasLens: boolean
 }

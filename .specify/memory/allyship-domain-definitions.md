@@ -32,6 +32,7 @@ Intention options should map to domains (or be domain-agnostic):
 
 ## Reference
 
+- Intention-activated value: [docs/INTENTION_ACTIVATED_VALUE.md](../../docs/INTENTION_ACTIVATED_VALUE.md)
 - Kotter by domain: [.agent/context/kotter-by-domain.md](../../.agent/context/kotter-by-domain.md)
 - Terminology: [.agent/context/terminology.md](../../.agent/context/terminology.md)
 - Analysis: [.specify/specs/bruised-banana-house-integration/ANALYSIS.md](../specs/bruised-banana-house-integration/ANALYSIS.md)

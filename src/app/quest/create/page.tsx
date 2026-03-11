@@ -19,7 +19,7 @@ export default async function CreateQuestPage(props: {
           }
         : undefined
 
-    const isSetupIncomplete = !player.nationId || !player.playbookId
+    const isSetupIncomplete = !player.nationId || !player.archetypeId
 
     if (isSetupIncomplete) {
         return (

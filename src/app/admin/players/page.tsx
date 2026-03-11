@@ -84,7 +84,7 @@ export default function AdminPlayersPage() {
                     <tbody className="divide-y divide-zinc-800/50">
                         {filteredPlayers.map((player) => {
                             const isAdmin = player.roles.some((r: any) => r.role.key === 'admin')
-                            const archetype = worldData.archetypes.find(a => a.id === player.playbookId)
+                            const archetype = worldData.archetypes.find(a => a.id === player.archetypeId)
                             const nation = worldData.nations.find(n => n.id === player.nationId)
 
                             return (
@@ -142,7 +142,7 @@ export default function AdminPlayersPage() {
             <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredPlayers.map((player) => {
                     const isAdmin = player.roles.some((r: any) => r.role.key === 'admin')
-                    const archetype = worldData.archetypes.find(a => a.id === player.playbookId)
+                    const archetype = worldData.archetypes.find(a => a.id === player.archetypeId)
 
                     return (
                         <div
