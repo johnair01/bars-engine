@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run db:generate && next dev",
-    "build": "tsx scripts/build-with-env.ts",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:sync": "tsx scripts/db-sync.ts",
