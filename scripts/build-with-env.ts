@@ -24,7 +24,15 @@ function loadEnv(): void {
 loadEnv()
 
 if (hasDatabaseUrl()) {
-  execSync(FULL_BUILD_CMD, { stdio: 'inherit', shell: true })
+  try {
+    execSync(FULL_BUILD_CMD, { stdio: 'inherit', shell: true })
+  } catch (err) {
+    console.warn(
+      '⚠ prisma migrate deploy failed. Falling back to prisma generate + next build.'
+    )
+    console.warn('  If schema changed, run "prisma migrate deploy" manually against the DB.')
+    execSync(NO_MIGRATE_CMD, { stdio: 'inherit', shell: true })
+  }
 } else {
   console.warn(
     '⚠ DATABASE_URL not set. Skipping prisma migrate deploy. Run npm run env:pull or add DATABASE_URL to .env.local for full build.'
