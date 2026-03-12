@@ -98,8 +98,16 @@ You are a Spec Kit agent responsible for [Objective].
 
 - **Implementation rule:** Always implement from a Spec Kit spec → plan → tasks. Never implement from Cursor plan or backlog item alone.
 - **Cursor plan:** Strategic overlay; can be larger than Spec Kit backlog. Points to specs. If it lists an item not yet spec'd, create the spec first, then implement.
-- **BACKLOG.md:** Ledger of Spec Kit items; status, dependencies, campaign alignment.
+- **BACKLOG.md:** Ledger of Spec Kit items; status, dependencies, campaign alignment. Synced via backlog API (DB + REST). See [Backlog Sync](#backlog-sync) below.
 - **Spec Kit specs:** `.specify/specs/` — bruised-banana-*, lore-conceptual-model, etc. Use game language (WHO, WHAT, WHERE, Energy, moves) in all specs.
+
+## Backlog Sync
+
+When adding or editing backlog entries in BACKLOG.md:
+
+1. **After editing BACKLOG.md**: Run `npm run backlog:seed` to push changes to the database.
+2. **To refresh BACKLOG.md from DB**: Run `npm run backlog:regen`.
+3. **When switching machines** (or before reading backlog): Run `npm run backlog:fetch -- --write-md` to fetch from API and update BACKLOG.md for file-reading agents.
 
 ## Build / Infra Blocker Protocol
 
@@ -109,6 +117,7 @@ You are a Spec Kit agent responsible for [Objective].
 2. **Add to backlog for immediate resolution** — Priority 0 (Urgent), mark as emergent.
 3. **Artifacts**: `.specify/specs/[kebab-name]/spec.md`, `plan.md`, `tasks.md`, `.specify/backlog/prompts/[kebab-name].md`
 4. **Backlog entry**: Assign next ID; link to spec; dependencies = blocked feature (e.g. AZ for Book-to-Quest).
+5. **Sync**: Run `npm run backlog:seed` to push the new entry to the database.
 
 Example: pdf-parse-new build failure → [pdf-parse-new-build-fix](.specify/specs/pdf-parse-new-build-fix/spec.md).
 

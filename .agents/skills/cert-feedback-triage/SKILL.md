@@ -50,6 +50,7 @@ Follow patterns from [market-clear-filters](.specify/specs/market-clear-filters/
 - Add row to Objective Stack (assign next ID, e.g. AK, AL)
 - Add row to Certification Feedback table with status `[ ] Ready → [prompt-name](prompts/prompt-name.md)`
 - Mark urgent items at top (Priority 0)
+- Run `npm run backlog:seed` to push changes to the database
 
 ## Spec Structure (Feedback-Driven)
 

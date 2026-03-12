@@ -33,6 +33,9 @@ yarn-error.log*
 # feedback logs (user-submitted, agent-pulled)
 .feedback/
 
+# Backlog API fetch output (generated)
+.specify/backlog/items.json
+
 # env files (can opt-in for committing if needed)
 .env*
 

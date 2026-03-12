@@ -19,11 +19,13 @@ When the user recognizes they want more momentum, this skill:
 
 1. **Phase 1 — Unpack**: Ask questions 1–3 (outcome, feeling, current state). Can batch 2–3 per message.
 2. **Phase 2 — Blockers**: Ask questions 4–6 (what's in the way, conditions, reservations).
-3. **Phase 3 — Generate**: Read [.specify/backlog/BACKLOG.md](.specify/backlog/BACKLOG.md), apply matching logic, output next steps.
+3. **Phase 3 — Generate**: Ensure backlog is current, then read [.specify/backlog/BACKLOG.md](.specify/backlog/BACKLOG.md), apply matching logic, output next steps.
 
 **Shortcut**: If user provides rich context (e.g. "I'm stuck on onboarding copy quality"), skip or abbreviate questions and go straight to backlog interface.
 
 ## Backlog Interface
+
+**Backlog freshness**: Before reading the backlog (e.g. when switching machines), run `npm run backlog:fetch -- --write-md` to fetch from API and update BACKLOG.md. On the machine with DB, run `npm run backlog:regen` to refresh from database.
 
 **Sources**: [.specify/backlog/BACKLOG.md](../../.specify/backlog/BACKLOG.md), [.specify/specs/bruised-banana-house-integration/ANALYSIS.md](../../.specify/specs/bruised-banana-house-integration/ANALYSIS.md)
 

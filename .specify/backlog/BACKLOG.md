@@ -6,18 +6,21 @@ This is the central ledger for all pending development objectives and emergent n
 
 | Priority | ID | Feature Name | Category | Status | Dependencies |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **0 (Urgent)** | **AJ** | **[Certification Feedback Multi-Report](.specify/specs/certification-feedback-multi-report/spec.md)** (emergent) | UI | [x] Done | L |
-| **0.1** | **AK** | **[Certification Feedback Stability](.specify/specs/cert-feedback-stability/spec.md)** (emergent) | UI | [x] Done | L |
-| **0.2** | **AL** | **[Certification Quest Passage Links](.specify/specs/cert-quest-passage-links/spec.md)** (emergent) | UI | [x] Done | L |
-| **0.3** | **AM** | **[Progress Indicator Enhancement](.specify/specs/cert-progress-indicator-enhancement/spec.md)** (emergent) | UI | [x] Done | L |
-| **0.4** | **AN** | **[Vibeulon Payoff Visibility](.specify/specs/cert-vibeulon-payoff-visibility/spec.md)** (emergent) | UI | [x] Done | L |
-| 0.5 | AO | [CYOA Slides (Chunk Long Text)](.specify/specs/cert-cyoa-slides/spec.md) (emergent, larger UX) | UI | [x] Done | L |
-| 0.6 | AP | [CYOA Continue Story Horizontal](.specify/specs/cyoa-continue-story-horizontal/spec.md) (emergent) | UI | [x] Done | AO |
-| 0.7 | AQ | [Campaign Onboarding Feature Merge](.specify/specs/campaign-onboarding-feature-merge/spec.md) (emergent) | UI | [x] Done | AG |
+| 0 | AJ | [Certification Feedback Multi-Report (emergent)](.specify/specs/certification-feedback-multi-report/spec.md) | UI | [x] Done | L |
+| 0.1 | AK | [Certification Feedback Stability (emergent)](.specify/specs/cert-feedback-stability/spec.md) | UI | [x] Done | L |
+| 0.1 | BM | [PDF Parse New Build Fix (emergent: pdf-child.js module not found, blocks build)](.specify/specs/pdf-parse-new-build-fix/spec.md) | Infra | [x] Done | AZ |
+| 0.2 | AL | [Certification Quest Passage Links (emergent)](.specify/specs/cert-quest-passage-links/spec.md) | UI | [x] Done | L |
+| 0.3 | AM | [Progress Indicator Enhancement (emergent)](.specify/specs/cert-progress-indicator-enhancement/spec.md) | UI | [x] Done | L |
+| 0.4 | AN | [Vibeulon Payoff Visibility (emergent)](.specify/specs/cert-vibeulon-payoff-visibility/spec.md) | UI | [x] Done | L |
+| 0.5 | AO | [CYOA Slides (Chunk Long Text) (emergent, larger UX)](.specify/specs/cert-cyoa-slides/spec.md) | UI | [x] Done | L |
+| 0.6 | AP | [CYOA Continue Story Horizontal (emergent)](.specify/specs/cyoa-continue-story-horizontal/spec.md) | UI | [x] Done | AO |
+| 0.7 | AQ | [Campaign Onboarding Feature Merge (emergent)](.specify/specs/campaign-onboarding-feature-merge/spec.md) | UI | [x] Done | AG |
+| 0.8 | BE | [OpenAI API Key Access (emergent: Incorrect API key for AI features)](.specify/specs/openai-api-key-access/spec.md) | Infra | [x] Done | - |
+| 0.9 | BJ | [Avatar Overwrite, Transparency, and Size Fix (emergent: nation/archetype overwrite, ChatGPT prompts)](.specify/specs/avatar-overwrite-transparency-fix/spec.md) | UI | [ ] Ready | BB |
 | 1 | A | [Market Identity & Dynamic Filtering](file:///Users/test/.gemini/antigravity/brain/3ff95f09-ab1b-444f-bde9-6eb4bfba0e9e/prompt_a_market_identity.md) | UI | [x] Done | - |
 | 1.1 | E1 | Client Directive Regression Fix | UI | [x] Done | A |
 | 1.2 | F | [Roadblock Metabolism System](.specify/specs/roadblock-metabolism/spec.md) | Infra | [x] Done | A |
-| 1.2.1 | F1 | [Roadblock Metabolism Fixes](.specify/specs/roadblock-metabolism-fixes/spec.md) | Infra | [x] Done | F |
+| 1.2 | F1 | [Roadblock Metabolism Fixes](.specify/specs/roadblock-metabolism-fixes/spec.md) | Infra | [x] Done | F |
 | 1.3 | G | [System Quest Market Discovery](file:///Users/test/.gemini/antigravity/brain/3ff95f09-ab1b-444f-bde9-6eb4bfba0e9e/prompt_g_system_visibility.md) | UI | [x] Done | A |
 | 1.4 | H | [Validation UI/UX Repair](file:///Users/test/.gemini/antigravity/brain/3ff95f09-ab1b-444f-bde9-6eb4bfba0e9e/prompt_h_validation_repair.md) | UI | [x] Done | B |
 | 1.5 | I | [Admin Certification Suite](.specify/specs/admin-certification-suite/spec.md) | Infra | [x] Done | G, H |
@@ -36,54 +39,49 @@ This is the central ledger for all pending development objectives and emergent n
 | 14 | R | [Lore: Conceptual Model](.specify/specs/lore-conceptual-model/spec.md) | Docs | [x] Done | - |
 | 15 | S | [Campaign Kotter Structure + Domain × Kotter](.specify/specs/campaign-kotter-domains/spec.md) | UI/Docs | [x] Done | Q, R |
 | 16 | T | [Landing + Invitation Throughput](.specify/specs/cyoa-invitation-throughput/spec.md) | UI | [Superseded by fundraiser-landing-refactor] | - |
-| 17 | U | [Domain-Aligned Intentions](.specify/specs/domain-aligned-intentions/spec.md) (intention options keyed by allyship domain) | UI | [x] Done | D, Q |
+| 17 | U | [Domain-Aligned Intentions (intention options keyed by allyship domain)](.specify/specs/domain-aligned-intentions/spec.md) | UI | [x] Done | D, Q |
 | 18 | V | [Vibeulon Visibility (Movement Feed)](.specify/specs/vibeulon-visibility/spec.md) | UI | [x] Done | - |
 | 19 | W | Appreciation Mechanic (give vibeulons to player/quest) | Economy | [ ] Ready | - |
 | 20 | X | Signature Vibeulons (creatorId on Vibulon; EFA + BAR completion) | Economy | [ ] Ready | - |
 | 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
 | 22 | Z | [Offers, Bounty Board, Donation Packs](.specify/specs/offers-bounty-donation-packs/spec.md) | Economy | [ ] Ready | P |
-| 23 | AA | [Event Page Campaign Editor](.specify/specs/event-page-campaign-editor/spec.md) (high priority) | UI | [x] Done | - |
-| 24 | AB | [Event Donation Honor System](.specify/specs/event-donation-honor-system/spec.md) (high priority) | UI/Economy | [x] Done | P, Z |
+| 23 | AA | [Event Page Campaign Editor (high priority)](.specify/specs/event-page-campaign-editor/spec.md) | UI | [x] Done | - |
+| 24 | AB | [Event Donation Honor System (high priority)](.specify/specs/event-donation-honor-system/spec.md) | UI/Economy | [x] Done | P, Z |
 | 25 | AC | [Event-Driven CYOA + Developmental Assessment](.specify/backlog/prompts/event-driven-cyoa-developmental-assessment.md) | UI | [Superseded by AG] | T, K |
 | 26 | AD | [2D Sprite Avatar from CYOA Choices](.specify/specs/avatar-from-cyoa-choices/spec.md) | UI | [x] Done | AG |
-| 27 | AE | [Story/Quest Map Exploration](.specify/backlog/prompts/story-quest-map-exploration.md) | UI/Exploration | [ ] Ready | - |
+| 27 | AE | [Story/Quest Map Exploration](.specify/specs/story-quest-map-exploration/spec.md) | UI/Exploration | [x] Done | - |
 | 28 | AF | [Lore Index and Knowledge Base](.specify/specs/lore-index-knowledge-base/spec.md) | Docs/UI | [Superseded by AG] | R |
-| 29 | AG | [Lore Index + Event-Driven CYOA Onboarding](.specify/specs/lore-cyoa-onboarding/spec.md) (merges AF + AC) | Docs/UI | [x] Done | R, T, K |
+| 29 | AG | [Lore Index + Event-Driven CYOA Onboarding (merges AF + AC)](.specify/specs/lore-cyoa-onboarding/spec.md) | Docs/UI | [x] Done | R, T, K |
 | 30 | AH | [2-Minute Ride: Story Bridge + UX Expansion](.specify/specs/two-minute-ride-story-bridge/spec.md) | UI | [x] Done | AG |
 | 31 | AI | [K-Space Librarian: Quest-Driven Docs + BAR-Fueled Canon](.specify/specs/k-space-librarian/spec.md) | Docs/UI | [ ] Ready | - |
-| 31.1 | BQ | [K-Space Librarian Post-Onboarding](.specify/specs/k-space-librarian-post-onboarding/spec.md) (basic quest after onboarding) | Docs/UI | [ ] Ready | AI |
-| 32 | AR | [Onboarding Adventures Unification](.specify/specs/onboarding-adventures-unification/spec.md) (investigation) | UI | [x] Done | AG |
+| 32 | AR | [Onboarding Adventures Unification (investigation)](.specify/specs/onboarding-adventures-unification/spec.md) | UI | [x] Done | AG |
 | 33 | AS | [Game Master Face Sentences](.specify/specs/game-master-face-sentences/spec.md) | UI | [x] Done | AQ, AH |
 | 34 | AT | [JRPG Composable Sprite Avatar + Build-a-Bear Onboarding](.specify/specs/jrpg-composable-sprite-avatar/spec.md) | UI | [x] Done | AD |
 | 35 | AU | [Avatar Sprite Assets](.specify/specs/avatar-sprite-assets/spec.md) | UI | [x] Done | AT |
-| 36 | AV | [Existing Players Character Generation](.specify/specs/existing-players-character-generation/spec.md) (orientation quest) | UI | [x] Done | AU |
+| 36 | AV | [Existing Players Character Generation (orientation quest)](.specify/specs/existing-players-character-generation/spec.md) | UI | [x] Done | AU |
 | 37 | AW | [Avatar Visibility + Cert Report Issue](.specify/specs/avatar-visibility-and-cert-report-issue/spec.md) | UI | [ ] Ready | AV |
 | 38 | AX | [Avatar Click-to-Enlarge + Admin Sprite Viewer](.specify/specs/avatar-enlarge-and-admin-sprite-view/spec.md) | UI | [ ] Ready | AW |
-| 39 | AY | [Avatar Sprite Quality Process](.specify/specs/avatar-sprite-quality-process/spec.md) (emergent: Gathertown/Stardew vibe) | UI | [ ] Ready | AU |
-| 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [ ] Ready | - |
-| 40.1 | BC | [Book Upload Unexpected Response](.specify/specs/book-upload-unexpected-response/spec.md) (fix PDF upload > 1MB) | Infra | [x] Done | AZ |
-| 40.2 | BD | [PDF Extract Worker Fix](.specify/specs/pdf-extract-worker-fix/spec.md) (emergent: pdf.worker.mjs not found) | Infra | [x] Done | AZ |
-| 0.8 | BE | [OpenAI API Key Access](.specify/specs/openai-api-key-access/spec.md) (emergent: Incorrect API key for AI features) | Infra | [x] Done | - |
-| 40.3 | BF | [Book Analysis Schema Fix](.specify/specs/book-analysis-schema-fix/spec.md) (emergent: allyshipDomain required in schema) | Infra | [x] Done | AZ |
-| 40.4 | BI | [Book Analysis Timeout Fix](.specify/specs/book-analysis-timeout-fix/spec.md) (emergent: stuck Analyzing on large books) | Infra | [x] Done | AZ |
-| 40.5 | BK | [Book Analysis Rate Limit Fix](.specify/specs/book-analysis-rate-limit-fix/spec.md) (emergent: TPM rate limit, token efficiency) | Infra | [ ] Ready | AZ |
-| 40.6 | BL | [AI Deftness and Token Efficiency Strategy](.specify/specs/ai-deftness-token-strategy/spec.md) (chunk filter, cache, heuristics, control plane) | Infra | [ ] Ready | BK, AZ |
-| 50 | BA | [Playbook → Archetype Terminology Rename](.specify/specs/playbook-to-archetype-rename/spec.md) (lower priority) | Infra | [ ] Ready | - |
-| 41 | BB | [Admin Manual Avatar Assignment](.specify/specs/admin-manual-avatar-assignment/spec.md) (testing sprite stacking) | UI | [x] Done | AX |
-| 42 | BG | [Avatar Gallery Preview and Sprite Stacking Fix](.specify/specs/avatar-gallery-preview-and-stacking/spec.md) (preview before assign, fix layer replace) | UI | [ ] Ready | BB |
-| 43 | BH | [Avatar Stacking Fix and Base-Only Preview](.specify/specs/avatar-stacking-base-preview/spec.md) (base when unselected, fix layer stacking) | UI | [ ] Ready | BB |
-| 0.9 | BJ | [Avatar Overwrite, Transparency, and Size Fix](.specify/specs/avatar-overwrite-transparency-fix/spec.md) (emergent: nation/archetype overwrite, ChatGPT prompts) | UI | [ ] Ready | BB |
-| **0.10** | **BM** | **[PDF Parse New Build Fix](.specify/specs/pdf-parse-new-build-fix/spec.md)** (emergent: pdf-child.js module not found, blocks build) | Infra | [x] Done | AZ |
-| 40.7 | BN | [Book Quest Draft and Admin Review](.specify/specs/book-quest-draft-review/spec.md) (draft status, review page, edit/approve before publish) | Infra/UI | [x] Done | AZ |
-| 40.8 | BO | [Book Quest Enhancements](.specify/specs/book-quest-enhancements/spec.md) (vibeulon reward, Game Master face, upgrade to thread, Twine context) | Infra/UI | [x] Done | BN |
-| 40.9 | BP | [Book Quest Twine Export](.specify/specs/book-quest-twine-export/spec.md) (export JSON for Twine adventure building) | Infra/UI | [x] Done | BO |
-| 40.10 | BV | [Book Admin Loading Animations](.specify/specs/book-admin-loading-animations/spec.md) (spinner/analyzing animation for extract, analyze, publish, upload) | UI | [x] Done | AZ |
-| 45 | BQ | [Dashboard UI Vibe Cleanup](.specify/specs/dashboard-ui-vibe-cleanup/spec.md) (simplify dashboard, remove unused features, add guiding quests) | UI | [ ] Ready | - |
+| 39 | AY | [Avatar Sprite Quality Process (emergent: Gathertown/Stardew vibe)](.specify/specs/avatar-sprite-quality-process/spec.md) | UI | [ ] Ready | AU |
+| 40 | AZ | [Book-to-Quest Library (PDF ingestion, Quest Library, Grow Up)](.specify/specs/book-to-quest-library/spec.md) | UI/Infra | [ ] Ready | - |
+| 40.1 | BC | [Book Upload Unexpected Response (fix PDF upload > 1MB)](.specify/specs/book-upload-unexpected-response/spec.md) | Infra | [x] Done | AZ |
+| 40.1 | BV | [Book Admin Loading Animations (spinner/analyzing animation for extract, analyze, publish, upload)](.specify/specs/book-admin-loading-animations/spec.md) | UI | [x] Done | AZ |
+| 40.2 | BD | [PDF Extract Worker Fix (emergent: pdf.worker.mjs not found)](.specify/specs/pdf-extract-worker-fix/spec.md) | Infra | [x] Done | AZ |
+| 40.3 | BF | [Book Analysis Schema Fix (emergent: allyshipDomain required in schema)](.specify/specs/book-analysis-schema-fix/spec.md) | Infra | [x] Done | AZ |
+| 40.4 | BI | [Book Analysis Timeout Fix (emergent: stuck Analyzing on large books)](.specify/specs/book-analysis-timeout-fix/spec.md) | Infra | [x] Done | AZ |
+| 40.5 | BK | [Book Analysis Rate Limit Fix (emergent: TPM rate limit, token efficiency)](.specify/specs/book-analysis-rate-limit-fix/spec.md) | Infra | [ ] Ready | AZ |
+| 40.6 | BL | [AI Deftness and Token Efficiency Strategy (chunk filter, cache, heuristics, control plane)](.specify/specs/ai-deftness-token-strategy/spec.md) | Infra | [ ] Ready | BK, AZ |
+| 40.8 | BO | [Book Quest Enhancements (vibeulon reward, Game Master face, upgrade to thread, Twine context)](.specify/specs/book-quest-enhancements/spec.md) | Infra/UI | [x] Done | BN |
+| 40.9 | BP | [Book Quest Twine Export (export JSON for Twine adventure building)](.specify/specs/book-quest-twine-export/spec.md) | Infra/UI | [x] Done | BO |
+| 41 | BB | [Admin Manual Avatar Assignment (testing sprite stacking)](.specify/specs/admin-manual-avatar-assignment/spec.md) | UI | [x] Done | AX |
+| 42 | BG | [Avatar Gallery Preview and Sprite Stacking Fix (preview before assign, fix layer replace)](.specify/specs/avatar-gallery-preview-and-stacking/spec.md) | UI | [ ] Ready | BB |
+| 43 | BH | [Avatar Stacking Fix and Base-Only Preview (base when unselected, fix layer stacking)](.specify/specs/avatar-stacking-base-preview/spec.md) | UI | [ ] Ready | BB |
 | 44 | BN | [Bruised Banana Quest Map (Kotter-Based)](.specify/specs/bruised-banana-quest-map/spec.md) | UI/Infra | [x] Done | S |
-| 46 | BR | [Admin Mobile Readiness](.specify/specs/admin-mobile-readiness/spec.md) (instance edit prefill, quick progress update, mint/transfer without prompt) | UI | [x] Done | AA |
-| 47 | BS | [Go-Live Integration](.specify/specs/go-live-integration/spec.md) (loop:ready, cert-go-live-v1, pre-launch seed doc) | Infra | [x] Done | BR |
-| 48 | BT | [Market Redesign for Launch](.specify/specs/market-redesign-launch/spec.md) (player-created quests only, easy filtering, Play on all breakpoints, cert-market-redesign-v1) | UI | [ ] Ready | BS |
-| 49 | BW | [Campaign In-Context Editing](.specify/specs/campaign-in-context-editing/spec.md) (admin edit copy, slides, branching from modal while in campaign flow) | UI | [ ] Ready | - |
+| 45 | BQ | [Dashboard UI Vibe Cleanup (simplify dashboard, remove unused features, add guiding quests)](.specify/specs/dashboard-ui-vibe-cleanup/spec.md) | UI | [ ] Ready | - |
+| 46 | BR | [Admin Mobile Readiness (instance edit prefill, quick progress update, mint/transfer without prompt)](.specify/specs/admin-mobile-readiness/spec.md) | UI | [x] Done | AA |
+| 47 | BS | [Go-Live Integration (loop:ready, cert-go-live-v1, pre-launch seed doc)](.specify/specs/go-live-integration/spec.md) | Infra | [x] Done | BR |
+| 48 | BT | [Market Redesign for Launch (player-created quests only, easy filtering, Play on all breakpoints, cert-market-redesign-v1)](.specify/specs/market-redesign-launch/spec.md) | UI | [ ] Ready | BS |
+| 49 | BW | [Campaign In-Context Editing (admin edit copy, slides, branching from modal while in campaign flow)](.specify/specs/campaign-in-context-editing/spec.md) | UI | [ ] Ready | - |
+| 50 | BA | [Playbook → Archetype Terminology Rename (lower priority)](.specify/specs/playbook-to-archetype-rename/spec.md) | Infra | [ ] Ready | - |
 
 ## Bruised Banana Campaign (Cursor Plan Alignment)
 

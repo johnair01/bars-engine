@@ -937,6 +937,19 @@ model Schism {
   @@map("schisms")
 }
 
+model SpecKitBacklogItem {
+  id           String   @id
+  priority     Float    @default(0)
+  featureName  String
+  link         String?
+  category     String   @default("UI")
+  status       String   @default("Ready")
+  dependencies String   @default("")
+  updatedAt    DateTime @updatedAt
+
+  @@map("spec_kit_backlog_items")
+}
+
 model AiResponseCache {
   id         String   @id @default(cuid())
   inputHash  String   // SHA-256 of normalized input
