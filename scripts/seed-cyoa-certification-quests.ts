@@ -30,7 +30,8 @@ const CERT_QUEST_IDS = [
     'cert-admin-onboarding-flow-api-v1',
     'cert-onboarding-flow-completion-v1',
     'cert-twine-authoring-ir-v1',
-    'cert-offers-bounty-packs-v1'
+    'cert-offers-bounty-packs-v1',
+    'cert-onboarding-quest-generation-unblock-v1'
 ]
 
 async function seed() {
@@ -2989,6 +2990,50 @@ async function seed() {
         },
     })
     console.log(`✅ Quest seeded: cert-offers-bounty-packs-v1`)
+
+    // cert-onboarding-quest-generation-unblock-v1 (DK)
+    const dkSlug = 'cert-onboarding-quest-generation-unblock-v1'
+    const dkPassages = [
+        { name: 'START', pid: '1', text: 'This certification quest verifies the onboarding quest generation flow: I Ching step, feedback/regenerate, skeleton-first, and publish. Quests generated here will be used for Bruised Banana Fundraiser preparation.', cleanText: 'Verify the onboarding quest generation flow.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Open the quest grammar tool\n\n[Open admin quest grammar](/admin/quest-grammar) and switch to the **CYOA** tab.', cleanText: 'Open admin quest grammar and switch to the CYOA tab.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Complete unpacking and I Ching step\n\nComplete unpacking questions Q1–Q7. When you reach the **I Ching** step, cast or manually select a hexagram (1–64). Confirm the hexagram is stored before continuing.', cleanText: 'Complete unpacking and select a hexagram.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Generate a quest skeleton\n\nReach the **Generate** step. Click **Generate Skeleton** or **Generate with AI**. Confirm that output appears.', cleanText: 'Generate a quest skeleton.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Feedback and regenerate\n\nEnter feedback in the feedback field (e.g. "Make the first choice more emotional"), then click **Regenerate**. Confirm the output updates to reflect your feedback.', cleanText: 'Enter feedback and regenerate.', links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_5', pid: '6', text: '### Step 5: Validate structure\n\nConfirm the generated quest output is structurally valid: it has nodes, at least one choice, and a reachable completion node.', cleanText: 'Confirm the quest structure is valid.', links: [{ label: 'Next', target: 'STEP_6' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_6', pid: '7', text: '### Step 6: Publish or export\n\nPublish the quest to a Campaign, or export it as a **.twee** file. Confirm the action completes without error.', cleanText: 'Publish or export the quest.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething isn\'t working? Use the **Report Issue** button next to any error message, then return to the step where you got stuck.', cleanText: 'Report an Issue.', links: [{ label: 'Back to start', target: 'START' }], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '9', text: 'Onboarding quest generation verified. The I Ching step, feedback/regenerate loop, skeleton-first flow, and publish path are all working. Complete this quest to receive your reward.', cleanText: 'Verification complete.', links: [] },
+    ]
+    const dkStory = await db.twineStory.upsert({
+        where: { slug: dkSlug },
+        update: { title: 'Certification: Onboarding Quest Generation Unblock V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: dkPassages }), isPublished: true },
+        create: {
+            title: 'Certification: Onboarding Quest Generation Unblock V1',
+            slug: dkSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Onboarding Quest Generation Unblock certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: dkPassages }),
+            isPublished: true,
+            createdById,
+        },
+    })
+    await db.customBar.upsert({
+        where: { id: dkSlug },
+        update: { title: 'Certification: Onboarding Quest Generation Unblock V1', description: 'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.', twineStoryId: dkStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/onboarding-quest-generation-unblock/spec.md' },
+        create: {
+            id: dkSlug,
+            title: 'Certification: Onboarding Quest Generation Unblock V1',
+            description: 'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.',
+            creatorId: createdById,
+            reward: 50,
+            twineStoryId: dkStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/onboarding-quest-generation-unblock/spec.md',
+        },
+    })
+    console.log(`✅ Quest seeded: cert-onboarding-quest-generation-unblock-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }
