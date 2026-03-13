@@ -1,0 +1,21 @@
+# Reduce upload size for Vercel CLI deploys
+node_modules
+.next
+out
+build
+coverage
+backups
+*.db
+.env*
+.vercel
+
+# Large optional dirs
+LibreSprite
+backend
+docs/_build
+docs/source
+
+# Specs and tooling (not needed for build)
+.specify
+.agents
+.feedback
