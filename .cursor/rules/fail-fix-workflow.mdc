@@ -8,10 +8,21 @@ alwaysApply: true
 When implementing features, refactors, or migrations:
 
 1. **Verify before moving on** — After adding or modifying code, tests, or scripts, run the relevant commands:
+
+   **Frontend (Next.js):**
    - `npm run build` — Ensures the app builds
    - `npm run check` — Lint + type-check
    - Any new test scripts (e.g., `npm run test:quest-grammar`)
 
+   **Backend (Python, if modified):**
+   - `cd backend && make check` — Python linting
+   - `cd backend && make test` or `make test-agents` — Run tests
+
+   **Database (if schema changed):**
+   - `npm run db:sync` — Push schema, regenerate Prisma Client
+
 2. **Stop and fix on failure** — If any command fails, fix the failure before proceeding to the next task or phase. Do not continue implementation until the failure is resolved.
 
-3. **Why** — New developers on different machines may have different Node versions, PATH, or dependencies. Verifying commands succeed prevents broken states and improves onboarding.
+3. **Why** — New developers on different machines (Mac, WSL, Linux) with different Node/Python versions may encounter issues. Verifying commands succeed prevents broken states and improves onboarding.
+
+4. **Cross-Platform Note** — Tests should pass on both Mac and WSL. If a test fails on one platform, investigate environment differences (PATH, Docker, Python version) before proceeding.
