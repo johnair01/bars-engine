@@ -190,6 +190,7 @@ model CustomBar {
   grantsMoveId         String?   // when set, completing this quest unlocks this NationMove
   questSource          String?   // system | bounty; bounties have stakedPool > 0
   stakedPool           Int       @default(0) // vibeulons in escrow for bounty payouts
+  agentMetadata        String?   // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
   shares               BarShare[]
   bountyStakes         BountyStake[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
@@ -1440,5 +1441,41 @@ model AiResponseCache {
   @@unique([inputHash, feature])
   @@index([expiresAt])
   @@map("ai_response_cache")
+}
+
+model HexagramEncounterLog {
+  id                    String   @id @default(cuid())
+  agentName             String   // architect | challenger | shaman | regent | diplomat | sage
+  hexagramId            Int
+  upperTrigram          String
+  lowerTrigram          String
+  isHomeTrigram         Boolean  @default(false)
+  trigramPosition       String   @default("neither") // upper | lower | both | neither
+  interpretationSummary String?  @db.Text
+  archetypesInvolved    String   @default("[]") // JSON array
+  questOutcome          String?
+  emotionalAlchemyTag   String?
+  questId               String?  // linked quest if applicable
+  playerId              String?
+  createdAt             DateTime @default(now())
+
+  @@index([agentName, hexagramId])
+  @@index([agentName, createdAt])
+  @@map("hexagram_encounter_logs")
+}
+
+model AgentInterpretiveProfile {
+  id                String   @id @default(cuid())
+  agentName         String   // architect | challenger | shaman | regent | diplomat | sage
+  hexagramId        Int?     // null = general profile, set = hexagram-specific
+  profileText       String   @db.Text
+  encounterCount    Int      @default(0)
+  lastSynthesizedAt DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([agentName, hexagramId])
+  @@index([agentName])
+  @@map("agent_interpretive_profiles")
 }
 

@@ -11,6 +11,7 @@ import { suggestDomain, CONFIDENCE_THRESHOLD } from '@/lib/quest-classifier'
 import { suggestMove, suggestNation, suggestKotterStage, suggestArchetype } from '@/lib/book-section-mapper'
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
+import { isBackendAvailable, analyzeChunkViaAgent } from '@/lib/agent-client'
 
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 const ALLYSHIP_DOMAINS = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'] as const
@@ -185,13 +186,34 @@ async function runChunkAnalysis(
   for (let i = 0; i < chunksToProcess.length; i += PARALLEL_BATCH) {
     const batch = chunksToProcess.slice(i, i + PARALLEL_BATCH)
     const results = await Promise.all(
-      batch.map((chunk) => {
+      batch.map(async (chunk) => {
         const { domain: domainHint, confidence } = suggestDomain(chunk.text)
+        if (domainHint && confidence >= CONFIDENCE_THRESHOLD) heuristicHits++
+
+        // Tier 1: Try Agent (Architect analyze-chunk)
+        if (process.env.AGENT_ROUTING_ENABLED !== 'false') {
+          try {
+            const backendUp = await isBackendAvailable()
+            if (backendUp) {
+              const agentResult = await analyzeChunkViaAgent({
+                chunkText: chunk.text,
+                domainHint: domainHint && confidence >= CONFIDENCE_THRESHOLD ? domainHint : undefined,
+              })
+              const output = agentResult.output as { quests?: z.infer<typeof analysisSchema>['quests'] }
+              if (output?.quests) {
+                return { object: { quests: output.quests }, fromCache: false }
+              }
+            }
+          } catch {
+            // Fall through to direct AI
+          }
+        }
+
+        // Tier 2: Direct OpenAI
         const hintLine =
           domainHint && confidence >= CONFIDENCE_THRESHOLD
             ? `Domain hint (high confidence): ${domainHint}. Prioritize this domain when clear.\n\n`
             : ''
-        if (domainHint && confidence >= CONFIDENCE_THRESHOLD) heuristicHits++
         const inputKey = `${bookId}:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}:hint:${domainHint ?? 'none'}:target:${targetPromptLine.slice(0, 100)}`
         return generateObjectWithCache<z.infer<typeof analysisSchema>>({
           feature: 'book_analysis',

@@ -17,6 +17,7 @@ import { compileMovesGMPacket } from '@/lib/quest-grammar/movesGMPacket'
 import { FACE_META } from '@/lib/quest-grammar/types'
 import { getMovesForLens } from '@/lib/quest-grammar/lens-moves'
 import { getFaceSentence } from '@/lib/face-sentences'
+import { isBackendAvailable, compileQuestViaAgent } from '@/lib/agent-client'
 
 const INITIATION_SLUG_PREFIX = 'bruised-banana-initiation'
 
@@ -103,6 +104,55 @@ const questGrammarNodeTextSchema = z.object({
     .describe('Grammatical, coherent story text for every spine node. Personal: 6 beats (or 7 with lens choice). Communal: 8 (or 9 with lens choice).'),
 })
 
+/** Generate depth passages for face-specific depth nodes via direct OpenAI. */
+async function _generateDepthPassages(
+  depthNodes: { id: string; text: string; wordCountEstimate?: number; depth?: number; gameMasterFace?: string }[],
+  effectiveInput: BuildQuestPromptContextInput,
+  ichingContext: IChingContext | undefined
+) {
+  const depthSchema = z.object({
+    depthTexts: z.array(z.string()).length(depthNodes.length).describe('Action-oriented prose for each depth passage'),
+  })
+  const depthPromptParts = depthNodes.map((node, i) => {
+    const face = node.gameMasterFace
+    const meta = face ? FACE_META[face as keyof typeof FACE_META] : null
+    const moves = face ? getMovesForLens(face) : []
+    const move = moves[0]
+    const faceSentence = face ? getFaceSentence(face) : ''
+    return `${i}. Face: ${meta?.label ?? face}. Role: ${meta?.role ?? ''}. Mission: ${meta?.mission ?? ''}. Move: ${move?.name ?? '—'}. Converges to next spine beat. Entry: "${faceSentence}"`
+  })
+  const depthUserPrompt = `Write action-oriented depth passages. Each is a moment where the player descends from narrative understanding into direct engagement. The shadow gives permission to act. Be specific, concrete, and kinetic.
+
+For each depth node:
+${depthPromptParts.join('\n')}
+
+Return ${depthNodes.length} refined depth texts (depthTexts array), one per node. Preserve any **bold** headers. Second-person prose.`
+
+  const inputKey = JSON.stringify({
+    unpackingAnswers: effectiveInput.unpackingAnswers,
+    segment: effectiveInput.segment,
+    questModel: effectiveInput.questModel ?? 'personal',
+    ichingContext: ichingContext ?? null,
+    feature: 'quest_grammar_ai',
+  })
+  const depthInputKey = inputKey + '_depth_' + depthNodes.map((n) => n.id).join(',')
+  const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
+
+  const depthResult = await generateObjectWithCache<z.infer<typeof depthSchema>>({
+    feature: 'quest_grammar_ai',
+    inputKey: depthInputKey,
+    model: modelId,
+    schema: depthSchema,
+    system: `You are writing action-oriented depth passages guided by Game Master faces. Each face is a Taoist sect head who teaches a specific approach. The player descends from narrative understanding into direct engagement through the face's lens. The shadow gives permission to act. Be specific, concrete, and kinetic. Second-person prose.`,
+    prompt: depthUserPrompt,
+    getModel: () => getOpenAI()(modelId),
+  })
+  for (let i = 0; i < depthNodes.length; i++) {
+    depthNodes[i].text = depthResult.object.depthTexts[i]
+    depthNodes[i].wordCountEstimate = depthNodes[i].text.trim().split(/\s+/).filter(Boolean).length
+  }
+}
+
 /**
  * Compile quest with AI-enhanced node text for ALL beats.
  * AI transforms unpacking answers into narrative prose (never verbatim).
@@ -121,6 +171,51 @@ export async function compileQuestWithAI(
     const effectiveInput = { ...rest, ichingContext }
 
     const packet = compileQuest(effectiveInput)
+
+    // ---------------------------------------------------------------------------
+    // Tier 1: Try Agent (backend Architect) — richer context, I Ching learning
+    // ---------------------------------------------------------------------------
+    const useAgent = process.env.AGENT_ROUTING_ENABLED !== 'false'
+    if (useAgent) {
+      try {
+        const backendUp = await isBackendAvailable()
+        if (backendUp) {
+          const player = await getCurrentPlayer()
+          const agentResult = await compileQuestViaAgent({
+            unpackingAnswers: effectiveInput.unpackingAnswers as unknown as Record<string, string>,
+            ichingContext,
+            questGrammar: effectiveInput.questModel === 'communal' ? 'kotter' : 'epiphany_bridge',
+            playerId: player?.id,
+          })
+
+          if (agentResult.output?.node_texts?.length) {
+            const agentTexts = agentResult.output.node_texts
+            const spineNodes = packet.nodes.filter((n) => !n.depth)
+            const spineCount = Math.min(agentTexts.length, spineNodes.length)
+            for (let i = 0; i < spineCount; i++) {
+              packet.nodes[i].text = agentTexts[i]
+              packet.nodes[i].wordCountEstimate = packet.nodes[i].text.trim().split(/\s+/).filter(Boolean).length
+            }
+
+            // Agent handled spine nodes — still need depth passages via direct AI
+            // (depth passages are face-specific and need the existing prompt engineering)
+            const depthNodes = packet.nodes.filter((n) => n.depth === 1)
+            if (depthNodes.length > 0) {
+              await _generateDepthPassages(depthNodes, effectiveInput, ichingContext)
+            }
+
+            const { telemetryHooks: _, ...serializable } = packet
+            return { packet: serializable }
+          }
+        }
+      } catch (agentErr) {
+        console.warn('[compileQuestWithAI] Agent path failed, falling through to direct AI:', agentErr)
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Tier 2: Direct OpenAI (existing behavior)
+    // ---------------------------------------------------------------------------
     const promptContext = await buildQuestPromptContext(effectiveInput, packet)
     const isCommunal = effectiveInput.questModel === 'communal'
 
@@ -229,37 +324,7 @@ Return ${hasLensChoice ? 7 : 6} refined node texts (nodeTexts array), one per no
 
     const depthNodes = packet.nodes.filter((n) => n.depth === 1)
     if (depthNodes.length > 0) {
-      const depthSchema = z.object({
-        depthTexts: z.array(z.string()).length(depthNodes.length).describe('Action-oriented prose for each depth passage'),
-      })
-      const depthPromptParts = depthNodes.map((node, i) => {
-        const face = node.gameMasterFace
-        const meta = face ? FACE_META[face] : null
-        const moves = face ? getMovesForLens(face) : []
-        const move = moves[0]
-        const faceSentence = face ? getFaceSentence(face) : ''
-        return `${i}. Face: ${meta?.label ?? face}. Role: ${meta?.role ?? ''}. Mission: ${meta?.mission ?? ''}. Move: ${move?.name ?? '—'}. Converges to next spine beat. Entry: "${faceSentence}"`
-      })
-      const depthUserPrompt = `Write action-oriented depth passages. Each is a moment where the player descends from narrative understanding into direct engagement. The shadow gives permission to act. Be specific, concrete, and kinetic.
-
-For each depth node:
-${depthPromptParts.join('\n')}
-
-Return ${depthNodes.length} refined depth texts (depthTexts array), one per node. Preserve any **bold** headers. Second-person prose.`
-      const depthInputKey = inputKey + '_depth_' + depthNodes.map((n) => n.id).join(',')
-      const depthResult = await generateObjectWithCache<z.infer<typeof depthSchema>>({
-        feature: 'quest_grammar_ai',
-        inputKey: depthInputKey,
-        model: modelId,
-        schema: depthSchema,
-        system: `You are writing action-oriented depth passages guided by Game Master faces. Each face is a Taoist sect head who teaches a specific approach. The player descends from narrative understanding into direct engagement through the face's lens. The shadow gives permission to act. Be specific, concrete, and kinetic. Second-person prose.`,
-        prompt: depthUserPrompt,
-        getModel: () => getOpenAI()(modelId),
-      })
-      for (let i = 0; i < depthNodes.length; i++) {
-        depthNodes[i].text = depthResult.object.depthTexts[i]
-        depthNodes[i].wordCountEstimate = depthNodes[i].text.trim().split(/\s+/).filter(Boolean).length
-      }
+      await _generateDepthPassages(depthNodes, effectiveInput, ichingContext)
     }
 
     // Strip telemetryHooks (functions) so packet is serializable for client components

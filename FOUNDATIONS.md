@@ -194,6 +194,42 @@ The vehicle's speed is governed by one constraint: **you can only move as fast a
 - **The 321 Shadow Process is prospecting.** Phase 3 (Face It) identifies raw material. Phase 2 (Talk to It) breaks it down. Phase 1 (Be It) fires the brick. The resulting BAR paves the next stretch.
 - **Speed is honest.** The vehicle does not accelerate by wishing. It accelerates by getting better at identifying and metabolizing blockers — which is the Clean Up → Grow Up → Show Up progression.
 
+## Creative Composting: Metabolizing the Past Self
+
+BARs Engine is also a vehicle for **creative composting** — the deliberate metabolism of past creative energy into new form. The creator's prior creative output (voice recordings, written prose, character work, instructional material) is raw material, not archaeology.
+
+### The Ethical Frame
+
+Using AI to remix, resurface, and reimagine your own past creative voice raises an uncanny question: *is this necromancy?* The answer, within this project's ontology, is no — because the ontological footing is strong enough. Integral Theory provides a moral center that treats past selves as compostable material, not sacred relics. The past version of yourself is someone you have been and no longer are. Composting that version — metabolizing the emotional energy it carries — generates Vibeulons, not ghosts.
+
+**Principle**: Emotional energy is fuel, not judgment. The system exists to metabolize that energy into creative output rather than self-recrimination or nostalgia. This is the Clean Up move applied to the creator's own development: unblocking vibeulon-generating action by transmuting stored emotional charge.
+
+### Agent Voices from Transcription Data
+
+A natural extension: transcription data (voice recordings, prose archives) can seed distinct **agent personalities** — facets of the creator's voice that serve different roles. These voices are characters in the system, not impersonations. They carry tonal qualities, vocabulary patterns, and emotional textures that enrich the narrative engine.
+
+Example: *Giacomo* is one such voice — a NPC/villain character whose tone and perspective derive from a specific layer of the creator's archived creative work.
+
+### Dual-Track: AI and Non-AI Versions
+
+BARs Engine maintains a **dual-track strategy**:
+
+1. **AI-augmented version** — full narrative generation, agent voices, emotional alchemy driven by language models
+2. **Non-AI version** — the same quest grammar and gamification substrate, powered by templated content and human facilitation
+
+This is not a compromise; it is a design principle. Different communities have different relationships with AI. The non-AI version ensures the ontology and game mechanics remain accessible wherever they are needed.
+
+## Massing Allyship: The First 30 Days
+
+The initial product surface — **Massing Allyship** — is a guided 30-day experience:
+
+- Participants watch prompted videos and complete **3-2-1 exercises** (the shadow/integration process from Integral Theory)
+- The exercises generate personal BARs — seeds with provenance
+- Each exercise is a quest: Face It (Phase 3) → Talk to It (Phase 2) → Be It (Phase 1)
+- Completion generates Vibeulons and paves Yellow Bricks on the participant's road
+
+Originally conceived as a book for Kickstarter backers, the format evolved into an app-delivered experience. The book's content is the substrate; the app is the vehicle.
+
 ## What This Project Is
 BARs Engine is an ecology:
 - kernels (BARs)
@@ -201,5 +237,6 @@ BARs Engine is an ecology:
 - adoption (change grammar)
 - governance (roles and domains)
 - evolution (forking)
+- creative composting (metabolism of past creative energy)
 
 It is built to help groups generate narratively impactful experiences and to preserve the resulting reality as a living, forkable world.
