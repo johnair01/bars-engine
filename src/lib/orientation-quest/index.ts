@@ -43,3 +43,39 @@ export {
   makeFaceSubPacket,
   makeOrientationMetaPacket,
 } from './types'
+
+// Checkpoint schema — Sub-AC 4a
+// Static checkpoint markers, runtime checkpoint state, and pure utilities
+// for tracking player progress within each face sub-packet.
+export type {
+  SubPacketCheckpointStage,
+  CheckpointMarker,
+  CheckpointEntry,
+  SubPacketCheckpoint,
+  CheckpointedSubPacketState,
+  OrientationCheckpointState,
+} from './checkpoints'
+
+export {
+  FACE_CHECKPOINT_REGISTRY,
+  CHECKPOINTS_PER_FACE,
+  // Lookup helpers
+  getCheckpointEntry,
+  getNextCheckpointEntry,
+  getEntryCheckpoint,
+  getSynthesisCheckpoint,
+  getSubmittedCheckpoint,
+  getFieldCheckpoints,
+  getExpectedFieldKeys,
+  // Factory
+  createSubPacketCheckpoint,
+  // State factories and transitions
+  createInitialCheckpointedSubPacketState,
+  createInitialOrientationCheckpointState,
+  advanceCheckpoint,
+  // Progress queries
+  getSubPacketProgress,
+  getResumeNodeId,
+  hasReachedSynthesis,
+  getResumeLabel,
+} from './checkpoints'

@@ -337,17 +337,45 @@ export function applySessionClose(
 // Checkpoint payload builder
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Checkpoint payload builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Options bag for buildCheckpointPayload().
+ */
+export interface CheckpointPayloadOptions {
+  /**
+   * Quest node ID the player is currently at, if the checkpoint was triggered
+   * from within a face sub-packet beat (FACE_ENTER, PAYLOAD_PATCH, FACE_SUBMIT).
+   * Leave undefined for session-level checkpoints (SESSION_INIT, SESSION_CLOSE).
+   */
+  currentNodeId?: string
+}
+
 /**
  * Builds the upsert payload for an orientation checkpoint write.
  *
  * Does not perform the DB write — the server-action layer calls this and
  * passes the result to `db.orientationSession.upsert()`.
+ *
+ * @param packet      The current (post-transition) OrientationMetaPacket.
+ * @param checkpoint  The named transition that triggered this write.
+ * @param options     Optional — supply currentNodeId for fine-grained resume.
  */
 export function buildCheckpointPayload(
   packet: OrientationMetaPacket,
   checkpoint: CheckpointName,
+  options: CheckpointPayloadOptions = {},
 ): Omit<OrientationCheckpointRecord, 'id' | 'createdAt' | 'updatedAt'> {
   const now = new Date().toISOString()
+
+  // SESSION_INIT and SESSION_CLOSE are session-level: nodeId is null
+  const isSessionLevel =
+    checkpoint === 'SESSION_INIT' || checkpoint === 'SESSION_CLOSE'
+  const checkpointNodeId =
+    isSessionLevel ? null : (options.currentNodeId ?? null)
+
   return {
     packetId: packet.packetId,
     playerId: packet.playerId,
@@ -356,5 +384,7 @@ export function buildCheckpointPayload(
     packetJson: serializePacket(packet),
     lastCheckpoint: checkpoint,
     checkpointAt: now,
+    checkpointNodeId,
+    abandonedAt: null, // never set by the player path; SLA fallback sets this separately
   }
 }
