@@ -6,7 +6,9 @@ This is the central ledger for all pending development objectives and emergent n
 
 | Priority | ID | Feature Name | Category | Status | Dependencies |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **0 (Urgent)** | **PD** | **[Production Database Divergence](.specify/specs/production-database-divergence/spec.md)** (demo blocker: prod login/signup fail; ensure admin@admin.local) | Infra | [ ] Ready | - |
+| **0 (Urgent)** | **PD** | **[Production Database Divergence](.specify/specs/production-database-divergence/spec.md)** (demo blocker: prod login/signup fail; ensure admin@admin.local) | Infra | [x] Done | - |
+| 0.01 | RB | [Bruised Banana Residency Ship](.specify/specs/bruised-banana-residency-ship/spec.md) (main loop, pre-launch seeds, psychofauna prompt; orchestrates PD + loop:ready) | Infra | [x] Done | PD |
+| 0.02 | DS | [Dev Setup Anti-Fragile](.specify/specs/dev-setup-anti-fragile/spec.md) (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues) | Infra | [ ] Ready | - |
 | **0 (Urgent)** | **AJ** | **[Certification Feedback Multi-Report](.specify/specs/certification-feedback-multi-report/spec.md)** (emergent) | UI | [x] Done | L |
 | **0.1** | **AK** | **[Certification Feedback Stability](.specify/specs/cert-feedback-stability/spec.md)** (emergent) | UI | [x] Done | L |
 | **0.2** | **AL** | **[Certification Quest Passage Links](.specify/specs/cert-quest-passage-links/spec.md)** (emergent) | UI | [x] Done | L |
@@ -27,6 +29,7 @@ This is the central ledger for all pending development objectives and emergent n
 | 4 | D | [Intention-Activated Value](.specify/specs/intention-activated-value/spec.md) (Philosophy & Docs) | Docs | [x] Done | - |
 | 5 | E | [Admin Validation Suite (Twine)](.specify/specs/admin-validation-suite-twine/spec.md) | Quality | [x] Done | B |
 | 6 | J | [Env Seed Scripts Onboarding](.specify/backlog/prompts/env-seed-scripts-onboarding.md) | Infra | [x] Done | - |
+| 6.1 | EA | [Backend–Vercel Integration](.specify/specs/backend-vercel-integration/spec.md) (Python backend deploy to Railway/Render; NEXT_PUBLIC_BACKEND_URL; CORS) | Infra | [x] Done | - |
 | 7 | K | [In-App CYOA Editing](.specify/specs/cyoa-in-app-editing/spec.md) | UI | [x] Done | - |
 | 8 | L | [Certification Quest UX (Links + Feedback)](.specify/specs/certification-quest-ux/spec.md) | UI | [x] Done | - |
 | 9 | M | [Admin Adventures Discoverability](.specify/specs/admin-adventures-discoverability/spec.md) | UI | [x] Done | - |

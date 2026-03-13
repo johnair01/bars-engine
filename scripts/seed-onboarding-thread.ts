@@ -44,16 +44,16 @@ async function main() {
 
     // 1. Fetch nations and playbooks for reference
     const nations = await db.nation.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: 'asc' } })
-    const playbooks = await db.playbook.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: 'asc' } })
+    const archetypes = await db.archetype.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: 'asc' } })
 
     const pyrakanth = nations.find(n => n.name === 'Pyrakanth') || nations[0]
-    const dangerWalker = playbooks.find(p => p.name === 'The Danger Walker') || playbooks[0]
+    const dangerWalker = archetypes.find(p => p.name === 'The Danger Walker') || archetypes[0]
 
-    if (nations.length === 0 || playbooks.length === 0) {
-        console.error('❌ No nations or playbooks found. Run seed-world-content.ts first.')
+    if (nations.length === 0 || archetypes.length === 0) {
+        console.error('❌ No nations or archetypes found. Run db:seed first.')
         process.exit(1)
     }
-    console.log(`Found ${nations.length} nations, ${playbooks.length} playbooks\n`)
+    console.log(`Found ${nations.length} nations, ${archetypes.length} archetypes\n`)
 
     // 2. Create the 4 onboarding quests
     console.log('Creating onboarding quests...')
