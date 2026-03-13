@@ -4,6 +4,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { getOpenAI } from '@/lib/openai'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
+import { isBackendAvailable, refineCopyViaAgent } from '@/lib/agent-client'
 import { z } from 'zod'
 
 const VOICE_STYLE_GUIDE = `
@@ -74,6 +75,32 @@ export async function improveCopyWithAI(
     }
 
     const targetLabel = TARGET_LABELS[target]
+
+    // ---------------------------------------------------------------------------
+    // Tier 1: Try Agent (Diplomat refine-copy) — richer I Ching context
+    // ---------------------------------------------------------------------------
+    if (process.env.AGENT_ROUTING_ENABLED !== 'false') {
+      try {
+        const backendUp = await isBackendAvailable()
+        if (backendUp) {
+          const agentResult = await refineCopyViaAgent({
+            targetType: target,
+            currentCopy,
+          })
+          const output = agentResult.output as { improved_copy?: string; improvedCopy?: string }
+          const improved = output?.improved_copy ?? output?.improvedCopy
+          if (improved) {
+            return { improvedCopy: improved.trim() }
+          }
+        }
+      } catch (agentErr) {
+        console.warn('[copy-improvement] Agent path failed, falling through to direct AI:', agentErr)
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Tier 2: Direct OpenAI (existing behavior)
+    // ---------------------------------------------------------------------------
     const inputKey = JSON.stringify({ target, currentCopy })
     const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
 

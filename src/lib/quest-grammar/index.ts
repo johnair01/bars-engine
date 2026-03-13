@@ -27,6 +27,48 @@ export type { CharacterCreationPacketInput, NationChoice, ArchetypeChoice } from
 export { compileStoryIntroPacket } from './storyIntroPacket'
 export type { StoryIntroPacketInput } from './storyIntroPacket'
 export { compileMovesGMPacket } from './movesGMPacket'
+export {
+  compileFaceSubPacket,
+  compileShamanFaceSubPacket,
+  compileChallengerFaceSubPacket,
+  compileRegentFaceSubPacket,
+  compileArchitectFaceSubPacket,
+  compileDiplomatFaceSubPacket,
+  compileSageFaceSubPacket,
+  FACE_FIELD_MAP,
+  FACE_SUB_PACKET_COMPILERS,
+} from './orientationFaceSubPackets'
+export type { FaceSubPacketInput } from './orientationFaceSubPackets'
+export {
+  // Dispatch / compile (Sub-AC 3)
+  compileOrientationMetaPacket,
+  getOrientationMetaPacketNodeIds,
+  // State management (Sub-AC 4)
+  ORIENTATION_SUB_PACKET_FACES,
+  ORIENTATION_SUB_PACKET_COUNT,
+  createInitialMetaPacketState,
+  startSubPacket,
+  markSubPacketComplete,
+  isMetaPacketComplete,
+  getCompletedSubPackets,
+  getPendingSubPackets,
+  getInProgressSubPackets,
+  getMetaPacketProgress,
+} from './orientationMetaPacket'
+export type {
+  OrientationMetaPacketInput,
+  SubPacketStatus,
+  SubPacketState,
+  OrientationMetaPacketState,
+} from './orientationMetaPacket'
+export {
+  // Face sub-packet utilities (Sub-AC 3 helpers)
+  FACE_TO_CANONICAL_MOVE_ID,
+  faceSubPacketPrefix,
+  faceSubPacketTerminalId,
+  compileFaceSubPacketWithConvergence,
+  instantiateAllFaceSubPackets,
+} from './orientationFaceSubPacket'
 export { questPacketToTwee } from './questPacketToTwee'
 export {
   buildQuestPromptContext,
