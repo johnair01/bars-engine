@@ -90,6 +90,7 @@ model Player {
   eventParticipations   EventParticipant[]  @relation("EventParticipantAsParticipant")
   eventInvitesReceived  EventInvite[]       @relation("EventInviteReceived")
   eventInvitesSent      EventInvite[]       @relation("EventInviteSent")
+  orientationSessions  OrientationSession[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -1477,5 +1478,66 @@ model AgentInterpretiveProfile {
   @@unique([agentName, hexagramId])
   @@index([agentName])
   @@map("agent_interpretive_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Orientation Quest — session checkpoint persistence
+// ---------------------------------------------------------------------------
+// One record per orientation quest session (packetId is the natural key).
+// The full OrientationMetaPacket is stored as JSON in packetJson so any
+// sub-packet state can be reconstructed after a page reload or SLA fallback.
+// Each write carries the checkpoint label that triggered it, enabling audit
+// of the player's exact path through the six-face sub-packet system.
+// ---------------------------------------------------------------------------
+
+model OrientationSession {
+  /// Surrogate primary key (cuid).
+  id               String   @id @default(cuid())
+
+  /// Natural key — maps 1-to-1 to OrientationMetaPacket.packetId.
+  packetId         String   @unique
+
+  /// Owning player.
+  playerId         String
+
+  /// Mirror of OrientationMetaPacket.sessionState for indexed queries.
+  /// Values: active | submitted | closed
+  sessionState     String   @default("active")
+
+  /// Mirror of OrientationMetaPacket.submissionPath for indexed queries.
+  /// Values: player_direct | player_assisted | admin_authored | ai_autonomous
+  submissionPath   String
+
+  /// Full OrientationMetaPacket serialised as JSON.
+  /// Authoritative source for resuming or auditing the session.
+  packetJson       String   @db.Text
+
+  /// Named checkpoint that triggered the most recent write.
+  /// Values: SESSION_INIT | FACE_ENTER | PAYLOAD_PATCH | FACE_SUBMIT | FACE_SKIP | SESSION_CLOSE
+  lastCheckpoint   String   @default("SESSION_INIT")
+
+  /// Timestamp of the most recent checkpoint write.
+  /// Doubles as the "last active at" timestamp for abandonment detection.
+  checkpointAt     DateTime @default(now())
+
+  /// The quest node ID the player was at when the checkpoint was written.
+  /// Enables fine-grained resume: caller advances to this node instead of the face hub.
+  /// Null when the checkpoint is at session-level (e.g. SESSION_INIT, SESSION_CLOSE).
+  checkpointNodeId String?
+
+  /// Set when sessionState transitions to 'abandoned' (player did not return
+  /// within the abandonment threshold). Null for all other states.
+  abandonedAt      DateTime?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([sessionState])
+  @@index([playerId, sessionState])
+  @@index([playerId, checkpointAt])
+  @@map("orientation_sessions")
 }
 

@@ -224,3 +224,46 @@ class ArchitectAnalyzeChunkRequest(BaseModel):
     iching_context: IChingContextPayload | None = None
     player_id: str | None = None
     instance_id: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Mapping Proposer (Orientation Quest — AC 23c)
+# ---------------------------------------------------------------------------
+
+
+class MappingProposerRequest(BaseModel):
+    """Request body for POST /api/agents/mapping-proposer/propose.
+
+    Asks the Mapping Proposer to generate and rank field-to-face assignments
+    for a TransformationMove, used when building GM-face sub-packets for the
+    orientation quest system.
+    """
+
+    move_id: str | None = Field(
+        default=None,
+        description=(
+            "TransformationMove ID to scope the proposal "
+            "(e.g. 'observe', 'feel'). None = schema-level generic proposal."
+        ),
+    )
+    move_name: str | None = Field(
+        default=None,
+        description="Human-readable move name for context",
+    )
+    face_context: str | None = Field(
+        default=None,
+        description=(
+            "Optional free-text description of the admin's current face sub-packet "
+            "context (natural language constraints saved to DB by admin UI author)"
+        ),
+    )
+    fields: list[str] | None = Field(
+        default=None,
+        description=(
+            "Subset of TransformationMove field names to produce assignments for. "
+            "Defaults to all 16 canonical fields."
+        ),
+    )
+    player_id: str | None = None
+    instance_id: str | None = None
+    iching_context: IChingContextPayload | None = None

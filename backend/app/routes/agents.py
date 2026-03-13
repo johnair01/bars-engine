@@ -23,6 +23,11 @@ from app.agents.architect import (
     deterministic_architect_draft,
 )
 from app.agents.challenger import MoveProposal, challenger_agent, deterministic_challenger_proposal
+from app.agents.mapping_proposer import (
+    MappingProposal,
+    mapping_proposer_agent,
+    deterministic_mapping_proposal,
+)
 from app.agents.diplomat import CommunityGuidance, diplomat_agent, deterministic_diplomat_guidance
 from app.agents.mind import create_mind, get_mind, step_mind
 from app.agents.regent import CampaignAssessment, regent_agent, deterministic_regent_assessment
@@ -42,6 +47,7 @@ from app.schemas.agents import (
     DiplomatGuideRequest,
     DiplomatRefineCopyRequest,
     IChingContextPayload,
+    MappingProposerRequest,
     RegentAssessRequest,
     SageConsultRequest,
     ShamanIdentifyRequest,
@@ -813,6 +819,110 @@ async def report_issue(body: ReportIssueRequest):
         deterministic=True,
         legibility_note="Deterministic fallback — no AI model configured or AI path failed.",
     )
+
+
+# ---------------------------------------------------------------------------
+# Mapping Proposer — POST /api/agents/mapping-proposer/propose
+# ---------------------------------------------------------------------------
+
+
+@router.post("/mapping-proposer/propose", response_model=AgentResponse[MappingProposal])
+async def mapping_proposer_propose(
+    body: MappingProposerRequest,
+    db: AsyncSession = Depends(get_db),
+    player_id: str | None = Depends(get_current_player_id),
+):
+    """Generate and rank principled field-to-face assignments for a TransformationMove.
+
+    Ingests face description context and TransformationMove field semantics,
+    then produces a ranked MappingProposal used by the orientation quest packet
+    compiler to determine which GM-face sub-packet authors which fields.
+
+    Deterministic path: uses the static FACE_FIELD_AFFINITY compile-time lookup.
+    AI path: generates confidence-annotated justifications and alternative rankings.
+    """
+    pid = body.player_id or player_id
+    ic_dict = _iching_to_dict(body.iching_context)
+    deps = AgentDeps(db=db, player_id=pid, instance_id=body.instance_id, iching_context=ic_dict)
+
+    # Deterministic path — no AI key required
+    if not settings.openai_api_key:
+        proposal = deterministic_mapping_proposal(
+            move_id=body.move_id,
+            move_name=body.move_name,
+            fields=body.fields,
+        )
+        return AgentResponse[MappingProposal](
+            agent="mapping_proposer",
+            output=proposal,
+            deterministic=True,
+            legibility_note=(
+                "Deterministic fallback — FACE_FIELD_AFFINITY static lookup used. "
+                "Configure an AI model for ranked justifications."
+            ),
+        )
+
+    # Build AI prompt from request context
+    prompt_parts = [
+        "Generate a principled field-to-face assignment mapping for a TransformationMove.",
+    ]
+    if body.move_id:
+        prompt_parts.append(f"Move ID: {body.move_id}")
+    if body.move_name:
+        prompt_parts.append(f"Move Name: {body.move_name}")
+    if body.face_context:
+        prompt_parts.append(
+            f"\nAdmin face sub-packet context (natural language constraints):\n{body.face_context}"
+        )
+    if body.fields:
+        prompt_parts.append(f"\nScope to these fields only: {', '.join(body.fields)}")
+    else:
+        prompt_parts.append(
+            "\nProduce assignments for all 16 canonical TransformationMove fields."
+        )
+    prompt_parts.append(
+        "\nFor each field: identify the primary face, primary confidence (0.0–1.0), "
+        "a principled justification, and ranked_candidates for all faces with confidence ≥ 0.3. "
+        "Then produce overall_coherence and a 2–4 sentence mapping_narrative."
+    )
+    prompt = "\n".join(prompt_parts)
+
+    try:
+        result = await mapping_proposer_agent.run(prompt, deps=deps)
+        proposal = result.output
+
+        if ic_dict:
+            await log_hexagram_encounter(
+                db=db,
+                agent_name="mapping_proposer",
+                iching_context=ic_dict,
+                player_id=pid,
+            )
+
+        return AgentResponse[MappingProposal](
+            agent="mapping_proposer",
+            output=proposal,
+            deterministic=False,
+            legibility_note=(
+                f"Field-to-face mapping for move '{body.move_id or 'schema-level'}' "
+                f"with {len(proposal.assignments)} assignments "
+                f"(coherence: {proposal.overall_coherence:.2f})."
+            ),
+            usage_tokens=result.usage().total_tokens if result.usage() else None,
+        )
+    except Exception:
+        logger.warning("Mapping Proposer AI path failed, falling back to deterministic", exc_info=True)
+        proposal = deterministic_mapping_proposal(
+            move_id=body.move_id,
+            move_name=body.move_name,
+            fields=body.fields,
+        )
+        return AgentResponse[MappingProposal](
+            agent="mapping_proposer",
+            output=proposal,
+            deterministic=True,
+            legibility_note="AI path failed — deterministic FACE_FIELD_AFFINITY fallback used.",
+        )
 
 
 # ---------------------------------------------------------------------------

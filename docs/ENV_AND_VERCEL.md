@@ -160,6 +160,38 @@ When production cannot log in or sign up (or admin credentials fail), run these 
 
 ---
 
+## Cron Jobs
+
+### `CRON_SECRET`
+
+**TODO (pre-production):** This env var must be added to Vercel before cron endpoints go live.
+
+| | |
+|---|---|
+| **Purpose** | Authenticates Vercel Cron (or any external scheduler) against cron API routes. |
+| **Format** | Any high-entropy secret string. Generate with: `openssl rand -hex 32` |
+| **Vercel** | Settings → Environment Variables → add `CRON_SECRET` for Production (and Preview if desired). |
+| **Local** | Add `CRON_SECRET=<any-value>` to `.env.local` if you need to test cron routes locally. |
+
+Cron routes check `Authorization: Bearer <CRON_SECRET>` and return `401` if it is missing or wrong.
+
+### Configured cron endpoints
+
+| Route | Schedule | Description |
+|---|---|---|
+| `/api/cron/abandon-sessions` | `0 * * * *` (hourly) | Mark orientation sessions inactive > 24 h as abandoned. |
+
+**TODO:** Add the following to `vercel.json` (create it in the repo root if it doesn't exist yet):
+```json
+{
+  "crons": [
+    { "path": "/api/cron/abandon-sessions", "schedule": "0 * * * *" }
+  ]
+}
+```
+
+---
+
 ## Production recovery (after DB reset or first deploy)
 
 Same as above; see **Production demo readiness**. The canonical admin for demos is `admin@admin.local` (from seed / `ensure-admin-local`). The `create-admin` script creates `admin@bars-engine.local` / `veritaserum` — a different account.
