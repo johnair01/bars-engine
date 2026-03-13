@@ -49,6 +49,12 @@ const SECTIONS = [
       { href: '/docs', label: 'Player Handbook (generated docs)' },
     ],
   },
+  {
+    title: 'Technical',
+    links: [
+      { href: '/wiki/tech-stack', label: 'Tech Stack (Next.js, FastAPI, Pydantic AI)' },
+    ],
+  },
 ] as const
 
 export default async function WikiIndexPage() {

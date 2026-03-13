@@ -175,10 +175,88 @@ function testWitnessCannotCreateBar() {
   console.log('✓ testWitnessCannotCreateBar')
 }
 
+function testUnreachableCompletion() {
+  // A flow with no completion/handoff node — simulator should report unreachable_completion
+  const flow: FlowJSON = {
+    flow_id: 'unreachable_test_v1',
+    start_node_id: 'intro',
+    nodes: [
+      {
+        id: 'intro',
+        type: 'introduction',
+        copy: 'Start node with no path to completion.',
+        actions: [
+          {
+            type: 'read',
+            requires: ['observe'],
+            emits: ['orientation_viewed'],
+            next_node_id: null,
+          },
+        ],
+      },
+    ],
+  }
+  const r = simulateFlow({ flow })
+  assert(r.status === 'fail', `unreachable_completion: expected fail, got ${r.status}`)
+  assert(
+    r.errors.some((e) => e.includes('completion_unreachable') || e.includes('unreachable')),
+    'Should report completion_unreachable'
+  )
+  assert(!r.completion_reached, 'completion_reached should be false')
+  console.log('✓ testUnreachableCompletion')
+}
+
+function testWitnessNeverEmitsCompletion() {
+  // Witness role has only 'observe' capability — cannot reach completion on a BAR flow
+  const flow = loadFlow(path.join(FLOWS, 'orientation_linear_minimal.json'))
+  const witness = getSimulatedActorRole('witness')
+  const r = simulateFlowWithActors({
+    flow,
+    actor_roster: [{ role_id: 'witness' }],
+  })
+  // Witness with only 'observe' can read/observe nodes — orientation_linear_minimal uses only 'observe'
+  // so witness should pass. But witness must NEVER emit completion events directly.
+  // Validate: if it reaches completion, the completion event is node-emitted, not a direct actor action.
+  const actorEmittedCompletion = r.events_emitted.includes('quest_completed') && witness!.event_types.includes('quest_completed')
+  assert(!actorEmittedCompletion, 'Witness event_types must not include quest_completed')
+  assert(!witness!.flow_capabilities.includes('create'), 'Witness must not have create capability')
+  console.log('✓ testWitnessNeverEmitsCompletion')
+}
+
+function testLibrarianOnlyProposesAllowedActions() {
+  const flow = loadFlow(path.join(FLOWS, 'orientation_linear_minimal.json'))
+  const librarian = getSimulatedActorRole('librarian')
+
+  // Librarian has 'observe' and 'continue' but not 'create' or 'choose'
+  assert(librarian!.flow_capabilities.includes('observe'), 'Librarian has observe')
+  assert(librarian!.flow_capabilities.includes('continue'), 'Librarian has continue')
+  assert(!librarian!.flow_capabilities.includes('create'), 'Librarian must not have create')
+
+  // Simulate with librarian capabilities
+  const r = simulateFlowWithActors({
+    flow,
+    actor_roster: [{ role_id: 'librarian' }],
+  })
+  // orientation_linear_minimal uses only 'observe' for all actions — librarian can pass
+  assert(r.status === 'pass', `Librarian simulation: expected pass, got ${r.status}`)
+
+  // Proposal at action_1 node (requires 'observe' via 'choose') — librarian proposes but the
+  // node action requires 'observe' which librarian has, so proposal is allowed
+  const proposal = proposeActorAction({
+    actor_role_id: 'librarian',
+    flow,
+    quest_state: { current_node_id: 'action_1' },
+  })
+  assert(proposal.allowed, 'Librarian proposal at action_1 is allowed')
+  assert(proposal.action_type === 'propose', 'Librarian proposes actions')
+  console.log('✓ testLibrarianOnlyProposesAllowedActions')
+}
+
 function main() {
   testLinearMinimalPasses()
   testBarCreatePasses()
   testMissingStartNode()
+  testUnreachableCompletion()
   testBruisedBananaFixturesPass()
   testGetSimulatedActorRole()
   testSimulateFlowWithActors()
@@ -186,6 +264,8 @@ function main() {
   testGetActorGuidance()
   testLoadFlowBySlug()
   testWitnessCannotCreateBar()
+  testWitnessNeverEmitsCompletion()
+  testLibrarianOnlyProposesAllowedActions()
   console.log('\nAll simulation tests passed.')
 }
 
