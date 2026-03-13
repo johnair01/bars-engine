@@ -209,7 +209,7 @@ const SHAMAN_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Shaman's Threshold',
+      resumeLabel: "Introduction — The Shaman's Threshold",
     },
   },
   {
@@ -283,7 +283,7 @@ const CHALLENGER_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Challenger's Proving Ground',
+      resumeLabel: "Introduction — The Challenger's Proving Ground",
     },
   },
   {
@@ -357,7 +357,7 @@ const REGENT_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Regent's Order',
+      resumeLabel: "Introduction — The Regent's Order",
     },
   },
   {
@@ -431,7 +431,7 @@ const ARCHITECT_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Architect's Blueprint',
+      resumeLabel: "Introduction — The Architect's Blueprint",
     },
   },
   {
@@ -506,7 +506,7 @@ const DIPLOMAT_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Diplomat's Relational Field',
+      resumeLabel: "Introduction — The Diplomat's Relational Field",
     },
   },
   {
@@ -580,7 +580,7 @@ const SAGE_CHECKPOINTS: CheckpointEntry[] = [
       stage: 'entry',
       ordinal: 0,
       isSavePoint: true,
-      resumeLabel: 'Introduction — The Sage's Whole View',
+      resumeLabel: "Introduction — The Sage's Whole View",
     },
   },
   {
