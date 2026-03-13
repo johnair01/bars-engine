@@ -79,3 +79,41 @@ export {
   hasReachedSynthesis,
   getResumeLabel,
 } from './checkpoints'
+
+// Checkpoint persistence — Sub-AC 4b
+// Named session-level checkpoints, DB record shape, pure state-transition
+// helpers, serialisation utilities, abandonment detection, and resume logic.
+// Server-action layer: src/actions/orientation-checkpoint.ts
+export type {
+  CheckpointName,
+  OrientationCheckpointRecord,
+  CheckpointPayloadOptions,
+  ResumeOutcome,
+  OrientationResumeResult,
+} from './checkpoint'
+
+export {
+  CHECKPOINT_SEQUENCE,
+  ABANDONMENT_THRESHOLD_MS,
+  // Serialisation
+  serializePacket,
+  deserializePacket,
+  // State-transition helpers (pure — no DB writes)
+  applyFaceEnter,
+  applyPayloadPatch,
+  applyFaceSubmit,
+  applyFaceSkip,
+  applySessionClose,
+  // DB payload builder
+  buildCheckpointPayload,
+  // Abandonment detection
+  isSessionAbandoned,
+  getSessionAgeMs,
+  // Resume utilities
+  hasResumableProgress,
+  getPacketProgress,
+  deriveResumeNodeId,
+  buildResumeBanner,
+  buildResumeLabel,
+  classifySessionForResume,
+} from './checkpoint'

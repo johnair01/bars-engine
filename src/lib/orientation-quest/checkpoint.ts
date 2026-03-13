@@ -388,3 +388,330 @@ export function buildCheckpointPayload(
     abandonedAt: null, // never set by the player path; SLA fallback sets this separately
   }
 }
+
+// ---------------------------------------------------------------------------
+// Abandonment detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Milliseconds of inactivity after which an active session is considered
+ * abandoned. Default: 24 hours.
+ *
+ * Callers may supply a custom threshold to override (e.g. for testing or
+ * configurable per-environment SLA windows).
+ */
+export const ABANDONMENT_THRESHOLD_MS: number = 24 * 60 * 60 * 1000
+
+/**
+ * Returns true when all of the following hold:
+ *   1. `sessionState` is 'active' (not closed, submitted, or already abandoned).
+ *   2. The elapsed time since `checkpointAt` exceeds `thresholdMs`.
+ *
+ * A session that is 'submitted' or 'closed' is considered complete, not
+ * abandoned — callers should check those states separately.
+ *
+ * @param sessionState - Value from OrientationSession.sessionState.
+ * @param checkpointAt - Value from OrientationSession.checkpointAt (Date or ISO string).
+ * @param now          - Reference "current" time. Defaults to `new Date()`.
+ *                       Override in tests to avoid wall-clock dependency.
+ * @param thresholdMs  - Inactivity threshold in ms. Defaults to ABANDONMENT_THRESHOLD_MS.
+ */
+export function isSessionAbandoned(
+  sessionState: string,
+  checkpointAt: Date | string,
+  now: Date = new Date(),
+  thresholdMs: number = ABANDONMENT_THRESHOLD_MS,
+): boolean {
+  if (sessionState !== 'active') return false
+  const lastActive = checkpointAt instanceof Date ? checkpointAt : new Date(checkpointAt)
+  return now.getTime() - lastActive.getTime() > thresholdMs
+}
+
+/**
+ * Returns the elapsed milliseconds since the last checkpoint write.
+ *
+ * Useful for displaying "last active N hours ago" in the admin UI or
+ * computing percentage through the abandonment window.
+ *
+ * @param checkpointAt - Value from OrientationSession.checkpointAt.
+ * @param now          - Reference "current" time. Defaults to `new Date()`.
+ */
+export function getSessionAgeMs(checkpointAt: Date | string, now: Date = new Date()): number {
+  const lastActive = checkpointAt instanceof Date ? checkpointAt : new Date(checkpointAt)
+  return now.getTime() - lastActive.getTime()
+}
+
+// ---------------------------------------------------------------------------
+// Resume outcome types
+// ---------------------------------------------------------------------------
+
+/**
+ * Outcome codes returned by classifySessionForResume() and
+ * resumeOrientationSession().
+ *
+ * - resumed:          A live, resumable session was found. Caller should render
+ *                     from checkpointNodeId with the restored packet.
+ * - no_session:       No prior session record exists (or packet JSON is corrupt).
+ *                     Caller should start a fresh session.
+ * - already_complete: The most recent session was fully submitted or closed.
+ *                     Caller may show a "start a new session" prompt.
+ * - abandoned:        The session was either already marked abandoned (DB flag)
+ *                     or has been inactive beyond the threshold.
+ *                     Caller should offer to resume despite staleness or start fresh.
+ * - fresh_start:      A session record exists but has no meaningful progress
+ *                     (all sub-packets still pending). Better to reinitialise
+ *                     rather than show a stale resume banner.
+ */
+export type ResumeOutcome =
+  | 'resumed'
+  | 'no_session'
+  | 'already_complete'
+  | 'abandoned'
+  | 'fresh_start'
+
+/**
+ * Full result of attempting to resume an orientation session.
+ *
+ * When `outcome === 'resumed'`:
+ *   - `packet`           — the deserialized OrientationMetaPacket to restore.
+ *   - `checkpointNodeId` — the quest node to render first (DB-recorded or derived).
+ *   - `resumeBanner`     — player-facing context text.
+ *   - `sessionId`        — DB row ID for subsequent saveOrientationCheckpoint() calls.
+ *   - `resumeLabel`      — short label for the resume UI button.
+ *
+ * Other outcomes may populate `sessionId` only (for follow-up DB operations
+ * such as markSessionAbandoned).
+ */
+export interface OrientationResumeResult {
+  outcome: ResumeOutcome
+  /** Deserialized meta-packet, present when outcome === 'resumed'. */
+  packet?: OrientationMetaPacket
+  /** Quest node ID to render on resume. */
+  checkpointNodeId?: string
+  /** Player-facing banner shown at the top of the resumed quest. */
+  resumeBanner?: string
+  /** Short label for the resume UI action button. */
+  resumeLabel?: string
+  /** DB row ID of the OrientationSession being resumed (or acted upon). */
+  sessionId?: string
+}
+
+// ---------------------------------------------------------------------------
+// Progress inspection
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when the packet has at least one face sub-packet that is
+ * `in_progress` or `complete`. Sessions with all faces `pending` have no
+ * meaningful content to resume — callers should treat them as `fresh_start`.
+ *
+ * Guards against missing face keys when `enabledFaces` was a subset at
+ * session init (coordinator warning: faceSubPackets may not contain all 6 faces).
+ */
+export function hasResumableProgress(packet: OrientationMetaPacket): boolean {
+  return Object.values(packet.faceSubPackets).some(
+    (sp) => sp.state === 'in_progress' || sp.state === 'complete',
+  )
+}
+
+/**
+ * Returns a breakdown of how many sub-packets are in each state.
+ *
+ * Guards against missing face keys — only iterates over keys actually
+ * present in `faceSubPackets` (which may be fewer than 6 for subset sessions).
+ */
+export function getPacketProgress(packet: OrientationMetaPacket): {
+  completed: number
+  inProgress: number
+  skipped: number
+  pending: number
+  total: number
+} {
+  const counts = { completed: 0, inProgress: 0, skipped: 0, pending: 0, total: 0 }
+  for (const sp of Object.values(packet.faceSubPackets)) {
+    counts.total++
+    if (sp.state === 'complete') counts.completed++
+    else if (sp.state === 'in_progress') counts.inProgress++
+    else if (sp.state === 'skipped') counts.skipped++
+    else counts.pending++
+  }
+  return counts
+}
+
+// ---------------------------------------------------------------------------
+// Resume node derivation
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive the quest node ID to render when the player resumes a session,
+ * falling back through a priority chain when no DB-recorded node is available.
+ *
+ * Priority order:
+ *   1. `activeFace` is non-null and its sub-packet is `in_progress`
+ *      → resume at that face's entry node (`orient_<face>_<face>_intro`)
+ *   2. Any sub-packet is `in_progress` (activeFace was null or stale)
+ *      → resume at that face's entry node
+ *   3. At least one sub-packet is `pending` (no in-progress face)
+ *      → resume at the face selection hub (`orient_face_hub`)
+ *   4. All sub-packets are complete or skipped
+ *      → resume at the shared terminal (`orient_terminal`)
+ *
+ * Note: This derives the *face entry* node rather than an intra-face node
+ * because the packet state does not track per-node position within a face path.
+ * When a DB-recorded `checkpointNodeId` exists, callers should prefer it over
+ * the result of this function — the DB value is more precise.
+ *
+ * @param packet - Deserialized OrientationMetaPacket.
+ */
+export function deriveResumeNodeId(packet: OrientationMetaPacket): string {
+  const subPackets = packet.faceSubPackets
+
+  // Priority 1: activeFace in_progress
+  if (packet.activeFace !== null && packet.activeFace !== undefined) {
+    const activeSub = subPackets[packet.activeFace]
+    if (activeSub && activeSub.state === 'in_progress') {
+      return `orient_${packet.activeFace}_${packet.activeFace}_intro`
+    }
+  }
+
+  // Priority 2: any in_progress face (regardless of activeFace)
+  const allFaces = Object.keys(subPackets) as GameMasterFace[]
+  const inProgressFace = allFaces.find((f) => subPackets[f].state === 'in_progress')
+  if (inProgressFace) {
+    return `orient_${inProgressFace}_${inProgressFace}_intro`
+  }
+
+  // Priority 3: any pending face → face hub
+  const hasPending = allFaces.some((f) => subPackets[f].state === 'pending')
+  if (hasPending) {
+    return 'orient_face_hub'
+  }
+
+  // Priority 4: all done → terminal
+  return 'orient_terminal'
+}
+
+// ---------------------------------------------------------------------------
+// Resume banner
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a player-facing context message shown when the session resumes.
+ *
+ * Examples:
+ *   "Welcome back — you are partway through the Shaman path. Pick up where you left off."
+ *   "Welcome back — you have completed 3 of 6 faces. Continue from where you left off."
+ *   "Welcome back — you have not started any face yet. Choose your first face to begin."
+ *
+ * @param packet - Deserialized OrientationMetaPacket.
+ */
+export function buildResumeBanner(packet: OrientationMetaPacket): string {
+  const { completed, inProgress, total } = getPacketProgress(packet)
+
+  if (inProgress > 0 && packet.activeFace) {
+    const name = packet.activeFace.charAt(0).toUpperCase() + packet.activeFace.slice(1)
+    return `Welcome back — you are partway through the ${name} path. Pick up where you left off.`
+  }
+  if (completed > 0) {
+    const plural = completed === 1 ? 'face' : 'faces'
+    return `Welcome back — you have completed ${completed} of ${total} ${plural}. Continue from where you left off.`
+  }
+  return 'Welcome back — you have not started any face yet. Choose your first face to begin.'
+}
+
+/**
+ * Build the short label for the resume UI action button.
+ *
+ * Examples:
+ *   "Continue Shaman path"
+ *   "Continue (3 / 6 complete)"
+ *   "Choose a face"
+ *
+ * @param packet - Deserialized OrientationMetaPacket.
+ */
+export function buildResumeLabel(packet: OrientationMetaPacket): string {
+  const { completed, inProgress, total } = getPacketProgress(packet)
+
+  if (inProgress > 0 && packet.activeFace) {
+    const name = packet.activeFace.charAt(0).toUpperCase() + packet.activeFace.slice(1)
+    return `Continue ${name} path`
+  }
+  if (completed > 0) {
+    return `Continue (${completed} / ${total} complete)`
+  }
+  return 'Choose a face'
+}
+
+// ---------------------------------------------------------------------------
+// Session classification
+// ---------------------------------------------------------------------------
+
+/**
+ * Classify a raw OrientationSession DB row for resume eligibility.
+ *
+ * This is the authoritative pure function for the resume decision tree.
+ * It accepts the minimal DB row fields needed to make the classification
+ * without any additional DB queries.
+ *
+ * The caller (server action) retrieves the DB row and passes it here;
+ * this function handles all classification logic and returns the result.
+ *
+ * @param row          - Minimal DB row from orientation_sessions.
+ * @param now          - Reference "current" time for abandonment check.
+ * @param thresholdMs  - Abandonment threshold override.
+ */
+export function classifySessionForResume(
+  row: {
+    id: string
+    sessionState: string
+    checkpointAt: Date
+    packetJson: string
+    checkpointNodeId: string | null
+    abandonedAt: Date | null
+  },
+  now: Date = new Date(),
+  thresholdMs: number = ABANDONMENT_THRESHOLD_MS,
+): OrientationResumeResult {
+  const { id, sessionState, checkpointAt, packetJson, checkpointNodeId, abandonedAt } = row
+
+  // Already explicitly abandoned (DB flag)
+  if (sessionState === 'abandoned' || abandonedAt !== null) {
+    return { outcome: 'abandoned', sessionId: id }
+  }
+
+  // Already complete / closed
+  if (sessionState === 'submitted' || sessionState === 'closed') {
+    return { outcome: 'already_complete', sessionId: id }
+  }
+
+  // Active session — check time-based abandonment
+  if (isSessionAbandoned(sessionState, checkpointAt, now, thresholdMs)) {
+    return { outcome: 'abandoned', sessionId: id }
+  }
+
+  // Deserialise packet — treat corrupt JSON as no_session
+  let packet: OrientationMetaPacket
+  try {
+    packet = deserializePacket(packetJson)
+  } catch {
+    return { outcome: 'no_session' }
+  }
+
+  // No meaningful progress → fresh_start (don't show a stale resume banner)
+  if (!hasResumableProgress(packet)) {
+    return { outcome: 'fresh_start', sessionId: id }
+  }
+
+  // Derive resume position: DB-recorded node takes priority over derived node
+  const derivedNodeId = deriveResumeNodeId(packet)
+  const resumeNodeId = checkpointNodeId ?? derivedNodeId
+
+  return {
+    outcome: 'resumed',
+    packet,
+    checkpointNodeId: resumeNodeId,
+    resumeBanner: buildResumeBanner(packet),
+    resumeLabel: buildResumeLabel(packet),
+    sessionId: id,
+  }
+}
