@@ -6,3 +6,4 @@
 export { CANONICAL_MOVES } from './registry'
 export * from './services'
 export * from './types'
+export * from './field-semantics'

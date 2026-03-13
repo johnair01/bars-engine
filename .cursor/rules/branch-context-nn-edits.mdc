@@ -1,0 +1,108 @@
+---
+description: Branch context and cross-platform setup for nn-edits-20260312
+alwaysApply: true
+---
+
+# Branch Context: nn-edits-20260312
+
+## What's New in This Branch
+
+This branch adds:
+1. **Ergonomic Database Switching** — Toggle between synthetic (local Docker) and real (Vercel) modes with one command
+2. **Python FastAPI Backend** — AI-powered agents framework (Pydantic AI, tool use)
+3. **Makefile Targets** — Convenient `make` commands for common tasks
+4. **Comprehensive Documentation** — Guides for cross-platform development, environment setup, production troubleshooting
+
+## Quick Reference
+
+### Start Development
+- **Synthetic (local)**: `make dev-local`
+- **Real (Vercel)**: `make dev-vercel`
+- **Show all targets**: `make help`
+
+### Database Management
+- **Switch to local**: `npm run switch -- local`
+- **Switch to Vercel**: `npm run switch -- vercel`
+- **Start Postgres**: `make db-local`
+- **Seed test data**: `make db-seed`
+
+---
+
+## Cross-Platform Setup
+
+### macOS (Wendell)
+- Cursor or VS Code works natively
+- Docker Desktop handles containerization
+- Use `make` commands as-is
+- **Note**: Ensure Docker Desktop is running before `make dev-local`
+
+### WSL Ubuntu (Nate)
+- All tools work in WSL terminal
+- Docker runs natively in WSL
+- Use `make` commands as-is
+- **Note**: Verify WSL Docker daemon is running: `docker ps`
+
+### Both Platforms
+- Environment switching via `.env.local` is identical
+- Synthetic mode uses local Docker Postgres (same code path)
+- Real mode pulls from Vercel (same code path)
+- All tests, builds, and type-checks are platform-agnostic
+
+---
+
+## Key Files for This Branch
+
+| File | Purpose |
+|------|---------|
+| `Makefile` | User-facing Make targets for dev, switching, db commands |
+| `scripts/switch-db-mode.ts` | Switches DATABASE_URL between local and Vercel |
+| `docs/SYNTHETIC_VS_REAL.md` | Complete guide to mode switching |
+| `docs/ENV_AND_VERCEL.md` | Environment setup, Vercel linking, production troubleshooting |
+| `backend/` | New Python FastAPI backend with AI agents |
+| `backend/Makefile` | Backend-specific targets (Python, tests, Docker) |
+
+---
+
+## When Making Changes
+
+### Adding Features
+1. Identify whether it's frontend (Next.js), backend (FastAPI), or both
+2. Update relevant Makefile targets if you add new commands
+3. Test on both synthetic and real databases
+4. Document in `docs/` if it affects setup or deployment
+
+### Schema Changes
+- Run `npm run db:sync` after modifying `prisma/schema.prisma`
+- This pushes the schema and regenerates Prisma Client
+- If using Vercel backend, migration happens automatically on next deploy
+
+### Python Backend Changes
+- Run `make check` in the `backend/` directory to lint
+- Run `make test` or `make test-agents` to verify
+- Backend Makefile mirrors frontend patterns
+
+### Tests
+- Run `npm run check` (frontend) to lint/type-check
+- Run `make check` in `backend/` (Python) to lint
+- Always run before committing
+
+---
+
+## Documentation for Cursor/Collaborators
+
+When asking Claude or another LLM to work on this codebase:
+- Mention it has both **frontend (Next.js)** and **backend (FastAPI)**
+- Clarify whether changes affect **synthetic** or **real** mode (or both)
+- Reference [CLAUDE.md](./CLAUDE.md) for project ethos (Integral Theory)
+- Point to [docs/SYNTHETIC_VS_REAL.md](./docs/SYNTHETIC_VS_REAL.md) for database context
+- Use `make help` to see all available commands
+
+---
+
+## Troubleshooting Checklist
+
+- **"Database unreachable"** → Run `make db-local` first
+- **"Wrong DATABASE_URL"** → Check with `grep DATABASE_URL .env.local | head -1`
+- **"Vercel env missing"** → Run `npm run env:pull` (requires `vercel link` once)
+- **Build fails** → Run `npm run check` to find lint/type issues
+- **Python tests fail** → Ensure `backend/.venv` is activated: `cd backend && uv sync`

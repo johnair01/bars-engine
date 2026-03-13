@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { getOpenAI } from '@/lib/openai'
 import { generateObjectWithRetry } from '@/lib/ai-with-cache'
+import { isBackendAvailable, identifyViaAgent } from '@/lib/agent-client'
 import { CANONICAL_ARCHETYPE_NAMES } from '@/lib/canonical-archetypes'
 
 const EXTRACT_321_TAXONOMY_ENABLED = process.env.EXTRACT_321_TAXONOMY_ENABLED !== 'false'
@@ -39,6 +40,40 @@ export async function extractNationArchetypeFromText(
     return {}
   }
 
+  // ---------------------------------------------------------------------------
+  // Tier 1: Try Agent (Shaman identify) — richer I Ching context
+  // ---------------------------------------------------------------------------
+  if (process.env.AGENT_ROUTING_ENABLED !== 'false') {
+    try {
+      const backendUp = await isBackendAvailable()
+      if (backendUp) {
+        const agentResult = await identifyViaAgent({ freeText: trimmed })
+        const output = agentResult.output as {
+          nation_name?: string | null
+          nationName?: string | null
+          archetype_name?: string | null
+          archetypeName?: string | null
+          confidence?: number
+        }
+        if (output) {
+          const result: Extract321TaxonomyResult = {
+            confidence: output.confidence,
+          }
+          const nationName = output.nation_name ?? output.nationName
+          const archetypeName = output.archetype_name ?? output.archetypeName
+          if (nationName) result.nationName = nationName
+          if (archetypeName) result.archetypeName = archetypeName
+          return result
+        }
+      }
+    } catch (agentErr) {
+      console.warn('[extract-321-taxonomy] Agent path failed, falling through to direct AI:', agentErr)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tier 2: Direct OpenAI (existing behavior)
+  // ---------------------------------------------------------------------------
   try {
     const [nations, playbooks] = await Promise.all([
       db.nation.findMany({ where: { archived: false }, select: { name: true } }),
