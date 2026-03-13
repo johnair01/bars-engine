@@ -22,7 +22,7 @@ help:
 	@echo "  make build           Production build"
 	@echo ""
 	@echo "🌱 Ouroboros Seeds:"
-	@echo "  make seed-sync       Copy seeds from ~/.ouroboros/seeds/ into .specify/seeds/"
+	@echo "  make seed-sync SPEC=<feature>   Copy latest seed into .specify/specs/<feature>/seed.yaml"
 	@echo ""
 	@echo "📚 More Info:"
 	@echo "  See docs/SYNTHETIC_VS_REAL.md for detailed guide"
@@ -71,20 +71,25 @@ build:
 	npm run build
 
 # 🌱 Ouroboros Seeds
+# Usage: make seed-sync SPEC=my-feature-name
+# Seeds land at .specify/specs/<name>/seed.yaml alongside spec.md/plan.md/tasks.md
 
 seed-sync:
-	@mkdir -p .specify/seeds
-	@count=0; \
-	for f in ~/.ouroboros/seeds/*.yaml; do \
-		[ -f "$$f" ] || continue; \
-		name=$$(basename "$$f"); \
-		if [ ! -f ".specify/seeds/$$name" ]; then \
-			cp "$$f" ".specify/seeds/$$name"; \
-			echo "  + $$name"; \
-			count=$$((count + 1)); \
-		fi; \
-	done; \
-	echo "$$count seed(s) synced to .specify/seeds/"
+	@set -e; \
+	if [ -z "$(SPEC)" ]; then \
+		echo "Error: SPEC is required. Usage: make seed-sync SPEC=<feature>"; \
+		exit 1; \
+	fi; \
+	latest=$$(ls -t ~/.ouroboros/seeds/*.yaml 2>/dev/null | head -1); \
+	if [ -z "$$latest" ]; then \
+		echo "No seeds found in ~/.ouroboros/seeds/"; \
+		exit 1; \
+	fi; \
+	dest=".specify/specs/$(SPEC)"; \
+	mkdir -p "$$dest"; \
+	cp "$$latest" "$$dest/seed.yaml"; \
+	echo "Copied $$(basename $$latest) -> $$dest/seed.yaml"; \
+	echo "Next: run spec-kit-translator to generate spec.md, plan.md, tasks.md"
 
 # Aliases for convenience
 dev: dev-vercel
