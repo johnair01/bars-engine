@@ -120,6 +120,22 @@ Output includes:
 
 **If schema is correct**: Issue may be missing seed data, connection, or env. Run seed and ensure-admin-local.
 
+### P3009: Failed migration (Vercel build)
+
+When the Vercel build fails with `Error: P3009` ("migrate found failed migrations in the target database"), a previous migration was marked as failed and blocks new ones.
+
+**Fix:** Mark the failed migration as rolled back, then redeploy:
+
+```bash
+# 1. Get production DATABASE_URL from Vercel Dashboard → Settings → Environment Variables
+# 2. Run (replace <prod-url> with your production connection string):
+DATABASE_URL="<prod-url>" npx prisma migrate resolve --rolled-back 20260311000000_add_spec_kit_backlog
+```
+
+If a different migration failed, check `diagnose:prod-db` output for migrations marked `✗ (failed)`, then use that migration name in the command.
+
+After resolving, push a commit or trigger a redeploy. The next build will run `prisma migrate deploy` successfully.
+
 ---
 
 ## Production Demo Readiness
@@ -157,6 +173,33 @@ When production cannot log in or sign up (or admin credentials fail), run these 
    ```
 
 **Note**: Never commit production `DATABASE_URL` to the repo. Use env vars or a secure secret manager.
+
+---
+
+---
+
+## Python Backend (Game Master Agents)
+
+The Python FastAPI backend (`backend/`) runs the Game Master agents (Architect, Sage, Shaman, etc.). Vercel does not support Python serverless, so the backend is deployed separately (Railway, Render, or Fly.io).
+
+### Frontend (Vercel)
+
+| Env | Purpose | When to set |
+|-----|---------|-------------|
+| `NEXT_PUBLIC_BACKEND_URL` | URL of the deployed Python backend (e.g. `https://bars-backend.railway.app`) | Set for Production and Preview when backend is deployed. Omit or leave empty to use fallback (direct OpenAI or deterministic logic). |
+
+### Backend (Railway / Render / Fly.io)
+
+Set these in the backend service's environment:
+
+| Env | Purpose |
+|-----|---------|
+| `DATABASE_URL` | Same production Postgres URL as Vercel. Backend and Next.js share the database. |
+| `OPENAI_API_KEY` | Required for AI agents. Same key as Vercel. |
+| `CORS_ORIGINS` | Comma-separated allowed origins. Must include your Vercel app URL(s), e.g. `https://bars-engine.vercel.app,https://bars-engine-*.vercel.app` |
+| `PORT` | Injected by Railway/Render. Backend listens on this port. |
+
+**CORS**: If the frontend gets CORS errors when calling the backend, add the exact Vercel URL (and preview URLs if needed) to `CORS_ORIGINS`.
 
 ---
 
