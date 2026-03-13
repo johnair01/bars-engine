@@ -1,14 +1,25 @@
-# Database Synchronization Rule
+# Cursor Rules for BARs Engine
 
-When you modify the file `prisma/schema.prisma`, you MUST automatically run the following command to synchronize the database and regenerate types:
+## Database Synchronization
+
+When you modify the file `prisma/schema.prisma`, you MUST automatically run:
 
 ```bash
 npm run db:sync
 ```
 
-This ensures that:
-1. The database schema is updated (via `prisma db push`).
-2. The Prisma Client is regenerated with new types.
-3. Other developers on different machines receive the updates seamlessly.
+This ensures:
+1. The database schema is updated (via `prisma db push`)
+2. The Prisma Client is regenerated with new types
+3. Other developers on different machines receive updates seamlessly
 
-Do not wait for the user to ask; execute this command as a post-modification step.
+Do not wait for the user to ask; execute this as a post-modification step.
+
+---
+
+## See Also
+
+- **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
+- **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference
+- **`docs/SYNTHETIC_VS_REAL.md`** — How to switch between local and Vercel databases
+- **`Makefile`** — Run `make help` to see all available development commands
