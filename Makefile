@@ -1,4 +1,4 @@
-.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed
+.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed seed-sync
 
 # Default: show help
 help:
@@ -20,6 +20,9 @@ help:
 	@echo "📦 Build & Check:"
 	@echo "  make check           Lint + type check"
 	@echo "  make build           Production build"
+	@echo ""
+	@echo "🌱 Ouroboros Seeds:"
+	@echo "  make seed-sync SPEC=<feature>   Copy latest seed into .specify/specs/<feature>/seed.yaml"
 	@echo ""
 	@echo "📚 More Info:"
 	@echo "  See docs/SYNTHETIC_VS_REAL.md for detailed guide"
@@ -66,6 +69,27 @@ check:
 
 build:
 	npm run build
+
+# 🌱 Ouroboros Seeds
+# Usage: make seed-sync SPEC=my-feature-name
+# Seeds land at .specify/specs/<name>/seed.yaml alongside spec.md/plan.md/tasks.md
+
+seed-sync:
+	@set -e; \
+	if [ -z "$(SPEC)" ]; then \
+		echo "Error: SPEC is required. Usage: make seed-sync SPEC=<feature>"; \
+		exit 1; \
+	fi; \
+	latest=$$(ls -t ~/.ouroboros/seeds/*.yaml 2>/dev/null | head -1); \
+	if [ -z "$$latest" ]; then \
+		echo "No seeds found in ~/.ouroboros/seeds/"; \
+		exit 1; \
+	fi; \
+	dest=".specify/specs/$(SPEC)"; \
+	mkdir -p "$$dest"; \
+	cp "$$latest" "$$dest/seed.yaml"; \
+	echo "Copied $$(basename $$latest) -> $$dest/seed.yaml"; \
+	echo "Next: run spec-kit-translator to generate spec.md, plan.md, tasks.md"
 
 # Aliases for convenience
 dev: dev-vercel
