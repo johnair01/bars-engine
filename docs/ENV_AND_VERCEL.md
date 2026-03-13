@@ -120,21 +120,25 @@ Output includes:
 
 **If schema is correct**: Issue may be missing seed data, connection, or env. Run seed and ensure-admin-local.
 
-### P3009: Failed migration (Vercel build)
+### P3009 / P3018: Failed migration (Vercel build)
 
-When the Vercel build fails with `Error: P3009` ("migrate found failed migrations in the target database"), a previous migration was marked as failed and blocks new ones.
+When the Vercel build fails with `Error: P3009` ("migrate found failed migrations") or `P3018` ("relation already exists"), a migration was partially applied or is in a failed state.
 
-**Fix:** Mark the failed migration as rolled back, then redeploy:
+**If the table already exists** (P3018 / "relation X already exists"): Mark as applied so Prisma skips it:
 
 ```bash
-# 1. Get production DATABASE_URL from Vercel Dashboard → Settings → Environment Variables
-# 2. Run (replace <prod-url> with your production connection string):
-DATABASE_URL="<prod-url>" npx prisma migrate resolve --rolled-back 20260311000000_add_spec_kit_backlog
+npx tsx scripts/with-env.ts "npx prisma migrate resolve --applied 20260311000000_add_spec_kit_backlog"
 ```
 
-If a different migration failed, check `diagnose:prod-db` output for migrations marked `✗ (failed)`, then use that migration name in the command.
+**If the table does not exist** (P3009 only): Mark as rolled back so Prisma will retry it:
 
-After resolving, push a commit or trigger a redeploy. The next build will run `prisma migrate deploy` successfully.
+```bash
+npx tsx scripts/with-env.ts "npx prisma migrate resolve --rolled-back 20260311000000_add_spec_kit_backlog"
+```
+
+Use your production `DATABASE_URL` (from `npm run env:pull` or Vercel Dashboard). For a different migration, use its name from `diagnose:prod-db` output.
+
+After resolving, push a commit or trigger a redeploy.
 
 ---
 
