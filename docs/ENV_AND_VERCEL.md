@@ -122,7 +122,7 @@ Output includes:
 
 ---
 
-## Production demo readiness
+## Production Demo Readiness
 
 When production cannot log in or sign up (or admin credentials fail), run these steps against the **production** database. Get the production `DATABASE_URL` from Vercel Dashboard → Settings → Environment Variables (Production scope).
 
@@ -147,7 +147,7 @@ When production cannot log in or sign up (or admin credentials fail), run these 
 
 5. **Ensure admin@admin.local** (canonical demo admin)
    ```bash
-   DATABASE_URL="<your-production-url>" npx tsx scripts/ensure-admin-local.ts
+   DATABASE_URL="<your-production-url>" npm run ensure:admin-local
    ```
    Credentials: `admin@admin.local` / `password`. Log in at `/conclave`, then access `/admin`. Idempotent — safe to run multiple times.
 
