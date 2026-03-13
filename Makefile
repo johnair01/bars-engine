@@ -1,4 +1,4 @@
-.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed
+.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed seed-sync
 
 # Default: show help
 help:
@@ -20,6 +20,9 @@ help:
 	@echo "📦 Build & Check:"
 	@echo "  make check           Lint + type check"
 	@echo "  make build           Production build"
+	@echo ""
+	@echo "🌱 Ouroboros Seeds:"
+	@echo "  make seed-sync       Copy seeds from ~/.ouroboros/seeds/ into .specify/seeds/"
 	@echo ""
 	@echo "📚 More Info:"
 	@echo "  See docs/SYNTHETIC_VS_REAL.md for detailed guide"
@@ -66,6 +69,22 @@ check:
 
 build:
 	npm run build
+
+# 🌱 Ouroboros Seeds
+
+seed-sync:
+	@mkdir -p .specify/seeds
+	@count=0; \
+	for f in ~/.ouroboros/seeds/*.yaml; do \
+		[ -f "$$f" ] || continue; \
+		name=$$(basename "$$f"); \
+		if [ ! -f ".specify/seeds/$$name" ]; then \
+			cp "$$f" ".specify/seeds/$$name"; \
+			echo "  + $$name"; \
+			count=$$((count + 1)); \
+		fi; \
+	done; \
+	echo "$$count seed(s) synced to .specify/seeds/"
 
 # Aliases for convenience
 dev: dev-vercel
