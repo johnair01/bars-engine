@@ -497,12 +497,17 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             <div className="text-green-400 font-medium text-sm mb-0.5">Donate</div>
             <div className="text-zinc-500 text-xs">Support the residency—Event page → Donate</div>
           </Link>
+          <Link href="/daemons" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-purple-500/50 transition-colors">
+            <div className="text-purple-400 font-medium text-sm mb-0.5">Daemons</div>
+            <div className="text-zinc-500 text-xs">Discover and summon inner allies—321 Wake Up</div>
+          </Link>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/bars/create" className="text-sm text-amber-400 hover:text-amber-300 font-medium">Create BAR →</Link>
           <Link href="/emotional-first-aid" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium">Try EFA →</Link>
           <Link href="/event/donate" className="text-sm text-green-400 hover:text-green-300 font-medium">Donate →</Link>
           <Link href="/game-map" className="text-sm text-zinc-400 hover:text-white font-medium">Game Map →</Link>
+          <Link href="/daemons" className="text-sm text-purple-400 hover:text-purple-300 font-medium">Daemons →</Link>
         </div>
       </section>
 

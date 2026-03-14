@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { Avatar } from './Avatar'
 
 type AvatarModalProps = {
@@ -43,6 +44,13 @@ export function AvatarModal({ open, onClose, player }: AvatarModalProps) {
             <div className="relative flex flex-col items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-2xl">
                 <Avatar player={player} size="xl" />
                 <p className="text-lg font-medium text-white">{player.name}</p>
+                <Link
+                    href="/reliquary"
+                    onClick={onClose}
+                    className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                    Reliquary →
+                </Link>
                 <button
                     onClick={onClose}
                     className="absolute right-4 top-4 rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"

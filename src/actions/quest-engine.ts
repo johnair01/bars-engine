@@ -56,7 +56,13 @@ export async function checkQuestStatus(questId: string, context?: { packId?: str
  * Campaign quests can only be completed when source is 'gameboard'.
  */
 export type QuestCompletionSource = 'dashboard' | 'quest_wallet' | 'twine_end' | 'adventure_passage' | 'gameboard'
-type QuestCompletionContext = { packId?: string, threadId?: string, source?: QuestCompletionSource }
+type QuestCompletionContext = {
+  packId?: string
+  threadId?: string
+  source?: QuestCompletionSource
+  instanceId?: string
+  kotterStage?: number
+}
 type QuestCompletionOptions = { skipRevalidate?: boolean }
 
 export async function completeQuest(questId: string, inputs: any, context?: QuestCompletionContext, options?: QuestCompletionOptions) {
@@ -310,6 +316,33 @@ export async function completeQuestForPlayer(
 
         // PROCESS COMPLETION EFFECTS (e.g. setNation, setPlaybook from onboarding quests)
         await processCompletionEffects(tx, playerId, quest, inputs)
+
+        // Daemons: unlock stage talisman when completing campaign quest on gameboard
+        if (
+          context?.source === 'gameboard' &&
+          context?.instanceId &&
+          context?.kotterStage != null
+        ) {
+          const existing = await tx.blessedObjectEarned.findFirst({
+            where: {
+              playerId,
+              source: 'stage_talisman',
+              instanceId: context.instanceId,
+              kotterStage: context.kotterStage,
+            },
+          })
+          if (!existing) {
+            await tx.blessedObjectEarned.create({
+              data: {
+                playerId,
+                source: 'stage_talisman',
+                instanceId: context.instanceId,
+                kotterStage: context.kotterStage,
+                questId,
+              },
+            })
+          }
+        }
 
         // MOVES LIBRARY: unlock move if quest grants one (idempotent)
         if (quest.grantsMoveId) {

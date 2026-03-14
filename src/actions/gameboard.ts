@@ -697,7 +697,12 @@ export async function completeGameboardQuest(
   const result = await completeQuest(
     slot.questId,
     { gameboardComplete: true },
-    { source: 'gameboard', threadId: resolvedThreadId },
+    {
+      source: 'gameboard',
+      threadId: resolvedThreadId,
+      instanceId: slot.instanceId,
+      kotterStage: slot.period,
+    },
     { skipRevalidate: true }
   )
 

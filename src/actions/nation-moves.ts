@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { getActiveDaemonMoves } from '@/actions/daemons'
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 
@@ -310,6 +311,27 @@ export async function getNationMovePanelData(questId: string): Promise<NationMov
         effects,
       }
     })
+
+    // Add daemon moves when summoned
+    const daemonMoves = await getActiveDaemonMoves(player.id)
+    const existingIds = new Set(mapped.map((m) => m.id))
+    for (const pm of daemonMoves) {
+      if (existingIds.has(pm.id)) continue
+      const applies = safeParseJson<string[]>(pm.appliesToStatus, [])
+      const requirements = safeParseJson<RequirementsSchemaV1>(pm.requirementsSchema, { version: 1, fields: [] })
+      const effects = safeParseJson<EffectsSchemaV1>(pm.effectsSchema, { version: 1 })
+      mapped.push({
+        id: pm.id,
+        key: pm.key,
+        name: pm.name,
+        description: pm.description,
+        unlocked: true,
+        applicable: applies.length === 0 ? true : applies.includes(quest.status),
+        appliesToStatus: applies,
+        requirements,
+        effects,
+      })
+    }
 
     return {
       success: true,

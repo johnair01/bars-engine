@@ -124,6 +124,24 @@ async function createDonationAndPacks(
         },
       })
 
+      // Daemons: campaign participation (donation) — one per instance per player
+      const existingCampaign = await tx.blessedObjectEarned.findFirst({
+        where: {
+          playerId,
+          source: 'campaign_completion',
+          instanceId,
+        },
+      })
+      if (!existingCampaign) {
+        await tx.blessedObjectEarned.create({
+          data: {
+            playerId,
+            source: 'campaign_completion',
+            instanceId,
+          },
+        })
+      }
+
       return { donation, packs }
     })
 
