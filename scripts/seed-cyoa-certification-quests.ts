@@ -31,7 +31,9 @@ const CERT_QUEST_IDS = [
     'cert-onboarding-flow-completion-v1',
     'cert-twine-authoring-ir-v1',
     'cert-offers-bounty-packs-v1',
-    'cert-onboarding-quest-generation-unblock-v1'
+    'cert-onboarding-quest-generation-unblock-v1',
+    'cert-ouroboros-character-interview-v1',
+    'cert-daemons-discovery-v1'
 ]
 
 async function seed() {
@@ -3034,6 +3036,53 @@ async function seed() {
         },
     })
     console.log(`✅ Quest seeded: cert-onboarding-quest-generation-unblock-v1`)
+
+    // --- Certification: Ouroboros Character Interview (DC-1) ---
+    const ouroborosSlug = 'cert-ouroboros-character-interview-v1'
+    const ouroborosPassages = [
+        { name: 'START', pid: '1', text: 'This certification quest verifies the Ouroboros character creation interview: lens → nation → archetype → playbook → domain → complete. State is persisted to the player.', cleanText: 'Verify Ouroboros interview flow.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Open character create\n\n[Open /character/create](/character/create). Confirm the Ouroboros interview loads (lens, nation, archetype steps).', cleanText: 'Open /character/create.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Complete interview\n\nComplete the interview: choose lens, nation, archetype, playbook, and campaign domain. Advance through each step.', cleanText: 'Complete lens, nation, archetype, domain.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Verify persistence\n\nAfter completion, [open the dashboard](/). Confirm your nation and archetype are reflected (e.g. in Character modal or avatar).', cleanText: 'Verify state persisted.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '7', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '6', text: 'Verification complete. Ouroboros interview flow works and state is persisted. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] }
+    ]
+    const ouroborosParsedJson = JSON.stringify({ title: 'Certification: Ouroboros Character Interview V1', startPassage: 'START', passages: ouroborosPassages })
+    const ouroborosStory = await db.twineStory.upsert({
+        where: { slug: ouroborosSlug },
+        update: { title: 'Certification: Ouroboros Character Interview V1', parsedJson: ouroborosParsedJson, isPublished: true },
+        create: { title: 'Certification: Ouroboros Character Interview V1', slug: ouroborosSlug, sourceType: 'manual_seed', sourceText: 'Ouroboros character interview certification (seed-cyoa-certification-quests.ts)', parsedJson: ouroborosParsedJson, isPublished: true, createdById }
+    })
+    await db.customBar.upsert({
+        where: { id: ouroborosSlug },
+        update: { title: 'Certification: Ouroboros Character Interview V1', description: 'Verify Ouroboros interview: lens, nation, archetype, domain; state persisted.', reward: 1, twineStoryId: ouroborosStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/deftness-uplevel-character-daemons-agents/ouroboros-character-interview/spec.md' },
+        create: { id: ouroborosSlug, title: 'Certification: Ouroboros Character Interview V1', description: 'Verify Ouroboros interview: lens, nation, archetype, domain; state persisted.', creatorId: createdById, reward: 1, twineStoryId: ouroborosStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/deftness-uplevel-character-daemons-agents/ouroboros-character-interview/spec.md' }
+    })
+    console.log(`✅ Quest seeded: cert-ouroboros-character-interview-v1`)
+
+    // --- Certification: Daemons Discovery (DC-3) ---
+    const daemonsSlug = 'cert-daemons-discovery-v1'
+    const daemonsPassages = [
+        { name: 'START', pid: '1', text: 'This certification quest verifies daemon discovery via 321 Wake Up: complete Face/Talk/Be, discover a daemon, summon it, and confirm its move appears in the nation moves panel.', cleanText: 'Verify daemon discovery and summon.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Open 321 Wake Up\n\n[Open /daemons](/daemons), then click **321 Wake Up** (or [open /shadow/321](/shadow/321) directly).', cleanText: 'Open 321 Wake Up.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Complete Face/Talk/Be\n\nComplete the three steps: Face It, Talk to It, Be It. Submit to discover a daemon.', cleanText: 'Complete Face/Talk/Be.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Verify daemon in list\n\n[Open /daemons](/daemons). Confirm your discovered daemon appears in the list.', cleanText: 'Daemon appears in list.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Summon and verify move\n\nSummon the daemon (ritual). Open a quest or nation moves panel. Confirm the daemon\'s move appears when summoned.', cleanText: 'Summon; verify move in panel.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '7', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '6', text: 'Verification complete. Daemon discovery and summon flow works. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] }
+    ]
+    const daemonsParsedJson = JSON.stringify({ title: 'Certification: Daemons Discovery V1', startPassage: 'START', passages: daemonsPassages })
+    const daemonsStory = await db.twineStory.upsert({
+        where: { slug: daemonsSlug },
+        update: { title: 'Certification: Daemons Discovery V1', parsedJson: daemonsParsedJson, isPublished: true },
+        create: { title: 'Certification: Daemons Discovery V1', slug: daemonsSlug, sourceType: 'manual_seed', sourceText: 'Daemons discovery certification (seed-cyoa-certification-quests.ts)', parsedJson: daemonsParsedJson, isPublished: true, createdById }
+    })
+    await db.customBar.upsert({
+        where: { id: daemonsSlug },
+        update: { title: 'Certification: Daemons Discovery V1', description: 'Verify daemon discovery via 321 Wake Up, summon, and move in nation panel.', reward: 1, twineStoryId: daemonsStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/deftness-uplevel-character-daemons-agents/daemons-system/spec.md' },
+        create: { id: daemonsSlug, title: 'Certification: Daemons Discovery V1', description: 'Verify daemon discovery via 321 Wake Up, summon, and move in nation panel.', creatorId: createdById, reward: 1, twineStoryId: daemonsStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/deftness-uplevel-character-daemons-agents/daemons-system/spec.md' }
+    })
+    console.log(`✅ Quest seeded: cert-daemons-discovery-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }
