@@ -1,0 +1,52 @@
+---
+description: Plans must produce spec kit output (spec, plan, tasks in .specify/specs/)
+alwaysApply: true
+---
+
+# Spec Kit Plans
+
+**Spec Kit is the implementation authority.** All feature work must flow from spec kit; Cursor plans are strategic overlays that point to specs.
+
+## Implementation Rule
+
+Always implement from a Spec Kit spec → plan → tasks. Never implement from a Cursor plan or backlog item alone.
+
+1. **Spec kit exists first** — Create `.specify/specs/<spec-name>/` with `spec.md`, `plan.md`, `tasks.md` before implementing.
+2. **Cursor plan links to spec kit** — Every Cursor plan must reference the spec kit path: "Implement per `.specify/specs/<spec-name>/`".
+3. **Implementation follows tasks.md** — Execute tasks in order; use tasks as the checklist.
+4. **Update tasks when done** — Check off completed tasks in `tasks.md` as work is finished.
+
+## Required Output
+
+Every plan that defines or implements a feature must produce a **spec kit** in `.specify/specs/<spec-name>/`:
+
+| File | Purpose |
+|------|---------|
+| `spec.md` | Requirements, user stories, schema, acceptance criteria |
+| `plan.md` | Implementation order, phases, file impacts |
+| `tasks.md` | Granular, checkable tasks |
+
+## When to Create Spec Kits
+
+- New features or backlog items
+- Emergent fixes that warrant documentation
+- Any work that will be tracked in BACKLOG.md
+
+## Pre-Implementation Checklist
+
+Before implementing any feature:
+
+- [ ] Spec kit exists (spec.md, plan.md, tasks.md)
+- [ ] Cursor plan links to spec kit path
+- [ ] Implementation will follow tasks.md in order
+
+After implementing:
+
+- [ ] Completed tasks checked off in tasks.md
+- [ ] `npm run build` and `npm run check` pass
+
+## Example
+
+Planning "Daemons inner work collectibles" → create `.specify/specs/daemons-inner-work-collectibles/spec.md`, `plan.md`, `tasks.md`.
+
+Do not create plans that only produce `.cursor/plans/*.plan.md` without corresponding spec kit files. The spec kit is the canonical artifact; the Cursor plan summarizes or links to it.
