@@ -5,6 +5,7 @@
  * Feeds the Sage structured context (not raw markdown): open backlog as parsed
  * objects, recently completed items, build/schema status, branch divergence.
  * Constrains the Sage to canonical WAVE move names and a scannable output format.
+ * When --face is set, includes backlog items owned by that agent face (DC-4).
  *
  * Usage:
  *   npm run sage:brief
@@ -12,8 +13,12 @@
  *   npm run sage:brief -- --format brief        (single-line output)
  *   npm run sage:brief -- --top 15
  *   npm run sage:brief -- --backend http://localhost:8000
+ *   npm run sage:brief -- --face sage          (include owned backlog items; default: sage)
  */
 
+import './require-db-env'
+import { db } from '../src/lib/db'
+import { getSageCoordinationSuggestions } from '../src/lib/sage-coordination'
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, statSync } from 'fs'
 import { join } from 'path'
@@ -21,6 +26,9 @@ import { join } from 'path'
 // ---------------------------------------------------------------------------
 // Flags
 // ---------------------------------------------------------------------------
+
+const GAME_MASTER_FACES = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage'] as const
+type GameMasterFace = (typeof GAME_MASTER_FACES)[number]
 
 function flag(name: string): string | null {
   const eqForm = process.argv.find((a) => a.startsWith(`--${name}=`))
@@ -36,6 +44,10 @@ const BACKEND_URL = flag('backend') ?? process.env.NEXT_PUBLIC_BACKEND_URL ?? 'h
 const TOP_N = parseInt(flag('top') ?? '10') || 10
 const FORMAT = (flag('format') ?? 'full') as 'full' | 'brief'
 const CUSTOM_QUESTION = flag('question')
+const FACE = (() => {
+  const f = flag('face') ?? 'sage'
+  return GAME_MASTER_FACES.includes(f as GameMasterFace) ? (f as GameMasterFace) : 'sage'
+})()
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,6 +60,17 @@ interface OpenItem {
   dependencies: string
 }
 
+interface OwnedItem {
+  id: string
+  featureName: string
+  category: string
+}
+
+interface CoordinationSuggestions {
+  assignments: { itemId: string; suggestedOwner: string; rationale: string }[]
+  convergenceGroups: { itemIds: string[]; suggestedOrder: string[]; reason: string }[]
+}
+
 interface BriefContext {
   date: string
   branch: string
@@ -57,6 +80,9 @@ interface BriefContext {
   recentCommits: string[]
   completedRecently: string[]
   openItems: OpenItem[]
+  ownedItems: OwnedItem[]
+  face: GameMasterFace
+  coordination: CoordinationSuggestions
 }
 
 // ---------------------------------------------------------------------------
@@ -149,11 +175,25 @@ function getCompletedRecently(recentCommits: string[], completedIds: Set<string>
   return found
 }
 
-function compileContext(): BriefContext {
+async function getOwnedBacklogItems(face: GameMasterFace): Promise<OwnedItem[]> {
+  try {
+    const items = await db.specKitBacklogItem.findMany({
+      where: { ownerFace: face },
+      orderBy: [{ priority: 'asc' }, { id: 'asc' }],
+      select: { id: true, featureName: true, category: true },
+    })
+    return items
+  } catch {
+    return []
+  }
+}
+
+async function compileContext(): Promise<BriefContext> {
   const branch = git('git branch --show-current', 'unknown')
   const recentCommits = getRecentCommits()
   const { open, completedIds } = parseBacklogItems(TOP_N)
   const completedRecently = getCompletedRecently(recentCommits, completedIds)
+  const ownedItems = await getOwnedBacklogItems(FACE)
 
   return {
     date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
@@ -164,6 +204,9 @@ function compileContext(): BriefContext {
     recentCommits,
     completedRecently,
     openItems: open,
+    ownedItems,
+    face: FACE,
+    coordination,
   }
 }
 
@@ -202,6 +245,14 @@ function buildPrompt(ctx: BriefContext): string {
     for (const item of ctx.openItems) {
       const deps = item.dependencies && item.dependencies !== '-' ? ` — deps: ${item.dependencies}` : ''
       lines.push(`- [${item.id}] ${item.name} (${item.category})${deps}`)
+    }
+    lines.push('')
+  }
+
+  if (ctx.coordination.assignments.length > 0) {
+    lines.push('Suggested assignments (for coordination):')
+    for (const a of ctx.coordination.assignments) {
+      lines.push(`- [${a.itemId}] → ${a.suggestedOwner}: ${a.rationale}`)
     }
     lines.push('')
   }
@@ -323,6 +374,22 @@ function formatFull(resp: AgentResponse, ctx: BriefContext): void {
     }
   }
 
+  // DC-5: Coordination — Assign to / Convergence
+  if (ctx.coordination.assignments.length > 0) {
+    console.log('\n## Assign to')
+    for (const a of ctx.coordination.assignments) {
+      const item = ctx.openItems.find((i) => i.id === a.itemId)
+      const name = item?.name ?? a.itemId
+      console.log(`- [${a.itemId}] ${name} → ${a.suggestedOwner}: ${a.rationale}`)
+    }
+  }
+  if (ctx.coordination.convergenceGroups.length > 0) {
+    console.log('\n## Convergence')
+    for (const g of ctx.coordination.convergenceGroups) {
+      console.log(`- ${g.itemIds.join(', ')}: ${g.reason}`)
+    }
+  }
+
   // Context summary footer
   const flags = [
     ctx.buildStatus === 'passing' ? '✅ build' : ctx.buildStatus === 'failing' ? '❌ build' : '? build',
@@ -360,7 +427,7 @@ function formatBrief(resp: AgentResponse): void {
 
 async function main() {
   if (FORMAT !== 'brief') console.log('Gathering context...')
-  const ctx = compileContext()
+  const ctx = await compileContext()
 
   if (FORMAT !== 'brief') {
     console.log(`Branch: ${ctx.branch} | Backend: ${BACKEND_URL}`)
@@ -383,7 +450,9 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e)
-  process.exit(1)
-})
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(() => db.$disconnect())

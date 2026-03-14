@@ -80,14 +80,31 @@ export function CharacterModal({ open, onClose, player }: CharacterModalProps) {
                         <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
                         <div className="text-emerald-100 font-bold">Begin the Journey</div>
                     </Link>
+                    <Link
+                        href="/reliquary"
+                        onClick={onClose}
+                        className="px-4 py-2 bg-amber-900/20 border border-amber-800/50 rounded-lg hover:border-amber-600/60 transition"
+                    >
+                        <div className="text-[10px] uppercase tracking-widest text-amber-400 mb-1">Reliquary</div>
+                        <div className="text-amber-100 font-bold">Blessed Objects</div>
+                    </Link>
                 </div>
-                <Link
-                    href="/campaign"
-                    onClick={onClose}
-                    className="block w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-center font-medium rounded-lg transition-colors"
-                >
-                    View full page →
-                </Link>
+                <div className="flex flex-col gap-2">
+                    <Link
+                        href="/character/create"
+                        onClick={onClose}
+                        className="block w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
+                    >
+                        Ouroboros Interview
+                    </Link>
+                    <Link
+                        href="/campaign"
+                        onClick={onClose}
+                        className="block w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-center font-medium rounded-lg transition-colors"
+                    >
+                        View full page →
+                    </Link>
+                </div>
             </div>
         </div>
     )
