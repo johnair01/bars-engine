@@ -11,6 +11,28 @@ type CheckResult = {
     note?: string
 }
 
+/** Remediation hints for common failures. See .specify/specs/dev-setup-anti-fragile/INCIDENTS.md */
+function getRemediation(check: string, note?: string): string | null {
+    const n = (note ?? '').toLowerCase()
+    if (check === 'Core quest configuration intact') {
+        if (n.includes('orientation-quest-1') || n.includes('system-feedback')) {
+            return 'Fix: npm run db:seed. For full setup: npm run setup'
+        }
+    }
+    if (check === 'Build passes') {
+        return 'Fix: npx tsx scripts/with-env.ts "prisma migrate deploy" or npm run db:sync. See docs/DB_STRATEGY.md'
+    }
+    if (check === 'Feedback cap integration test' && (n.includes('column') || n.includes('does not exist') || n.includes('agentMetadata'))) {
+        return 'Fix: Schema out of sync. Run: npx tsx scripts/with-env.ts "prisma migrate deploy"'
+    }
+    if (check === 'Reset history script runs' || check === 'Feedback cap history query') {
+        if (n.includes('column') || n.includes('does not exist')) {
+            return 'Fix: npx tsx scripts/with-env.ts "prisma migrate deploy"'
+        }
+    }
+    return null
+}
+
 const prisma = new PrismaClient()
 const quickMode = process.argv.includes('--quick')
 const results: CheckResult[] = []
@@ -127,6 +149,14 @@ async function main() {
     const failed = results.filter((result) => result.status === 'FAIL')
     if (failed.length > 0) {
         console.log(`\n❌ NO-GO: ${failed.length} check(s) failed.`)
+        for (const r of failed) {
+            const rem = getRemediation(r.check, r.note)
+            if (rem) {
+                console.log(`\n  ${r.check}:`)
+                console.log(`  ${rem}`)
+            }
+        }
+        console.log('\nSee .specify/specs/dev-setup-anti-fragile/INCIDENTS.md for more.')
         process.exit(1)
     }
 

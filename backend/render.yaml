@@ -1,0 +1,17 @@
+# Render Blueprint for BARs Engine Backend
+# Deploy: Connect repo, select backend/, add env vars in dashboard
+services:
+  - type: web
+    name: bars-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Override CMD to use PORT (Render injects PORT)
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

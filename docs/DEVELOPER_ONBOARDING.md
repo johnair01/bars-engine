@@ -81,12 +81,33 @@ See [docs/ENV_AND_VERCEL.md](ENV_AND_VERCEL.md) for full details.
 
 ## 4. Database setup
 
+**Option A: One-command setup (recommended)**
+
 ```bash
-npx prisma migrate dev --name init   # First-time setup
-npm run db:seed                      # Seed initial data
+npm run setup
+```
+
+Runs: migrate deploy → db:seed → pre-launch seeds (party, quest-map, onboarding, cert:cyoa) → loop:ready:quick. Fails fast with a clear message at first error.
+
+**Option B: Manual steps**
+
+```bash
+npx tsx scripts/with-env.ts "prisma migrate deploy"   # Apply migrations
+npm run db:seed                                       # Base data (nations, archetypes, orientation + feedback quests)
+```
+
+For full Bruised Banana / loop:ready, also run (in order):
+
+```bash
+npm run seed:party
+npm run seed:quest-map
+npm run seed:onboarding
+npm run seed:cert:cyoa
 ```
 
 If `DATABASE_URL` is missing, you'll get a clear error. Run `npm run env:pull` or add it to `.env` first.
+
+See [docs/DB_STRATEGY.md](DB_STRATEGY.md) for migrate vs push.
 
 ---
 
@@ -177,7 +198,9 @@ See [docs/ENV_AND_VERCEL.md](ENV_AND_VERCEL.md).
 
 **Fix:**
 1. Ensure `DATABASE_URL` is set (`npm run smoke`).
-2. Run `npm run db:sync` after pulling schema changes.
+2. Run `npx tsx scripts/with-env.ts "prisma migrate deploy"` or `npm run db:sync`. See [docs/DB_STRATEGY.md](DB_STRATEGY.md).
+
+**More incidents:** [.specify/specs/dev-setup-anti-fragile/INCIDENTS.md](../.specify/specs/dev-setup-anti-fragile/INCIDENTS.md) — schema drift, failed migrations, missing seeds.
 
 ---
 

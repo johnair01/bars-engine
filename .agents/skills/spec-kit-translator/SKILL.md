@@ -121,9 +121,20 @@ You are a Spec Kit agent responsible for [Objective].
 **Spec Kit is the implementation authority.** Cursor plan and BACKLOG are strategic layers that select which spec to implement next.
 
 - **Implementation rule:** Always implement from a Spec Kit spec → plan → tasks. Never implement from Cursor plan or backlog item alone.
-- **Cursor plan:** Strategic overlay; can be larger than Spec Kit backlog. Points to specs. If it lists an item not yet spec'd, create the spec first, then implement.
+- **Cursor plan:** Strategic overlay; can be larger than Spec Kit backlog. Points to specs. Every Cursor plan must state: "Implement per `.specify/specs/<spec-name>/`". If it lists an item not yet spec'd, create the spec first, then implement.
 - **BACKLOG.md:** Ledger of Spec Kit items; status, dependencies, campaign alignment. Synced via backlog API (DB + REST). See [Backlog Sync](#backlog-sync) below.
 - **Spec Kit specs:** `.specify/specs/` — bruised-banana-*, lore-conceptual-model, etc. Use game language (WHO, WHAT, WHERE, Energy, moves) in all specs.
+
+### Implementation Checklist
+
+Before implementing:
+- [ ] Spec kit exists (spec.md, plan.md, tasks.md)
+- [ ] Cursor plan links to spec kit path
+- [ ] Implementation will follow tasks.md in order
+
+After implementing:
+- [ ] Completed tasks checked off in tasks.md
+- [ ] `npm run build` and `npm run check` pass
 
 ## Backlog Sync
 

@@ -19,6 +19,7 @@ Do not wait for the user to ask; execute this as a post-modification step.
 
 ## See Also
 
+- **`.cursor/rules/spec-kit-plans.mdc`** — Plans must produce spec kit output (spec, plan, tasks in .specify/specs/)
 - **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
 - **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference
 - **`docs/SYNTHETIC_VS_REAL.md`** — How to switch between local and Vercel databases

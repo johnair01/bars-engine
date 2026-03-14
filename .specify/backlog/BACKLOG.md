@@ -7,7 +7,9 @@ This is the central ledger for all pending development objectives and emergent n
 | Priority | ID | Feature Name | Category | Status | Dependencies |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **0 (Urgent)** | **PD** | **[Production Database Divergence](.specify/specs/production-database-divergence/spec.md)** (demo blocker: prod login/signup fail; ensure admin@admin.local) | Infra | [x] Done | - |
-| 0.01 | RB | [Bruised Banana Residency Ship](.specify/specs/bruised-banana-residency-ship/spec.md) (main loop, pre-launch seeds, psychofauna prompt; orchestrates PD + loop:ready) | Infra | [x] Done | PD |
+| 0.01 | RB | [Bruised Banana Residency Ship](.specify/specs/bruised-banana-residency-ship/spec.md) (main loop, pre-launch seeds, daemons prompt; orchestrates PD + loop:ready) | Infra | [x] Done | PD |
+| 0.5 | PF | [Daemons Inner Work Collectibles](.specify/specs/daemons-inner-work-collectibles/spec.md) (inner work → unlock talismans; Reliquary; use-in-quests Phase 2) | Economy/UI | [ ] Ready | RB, CM, ER |
+| 0.6 | AVS | [Avatar System Strategy](.specify/specs/avatar-system-strategy/spec.md) (bundle AW/AX/AY/BG/BH; deftness + agent-implementability; future: agent-built assets) | UI | [ ] Ready | AV, BB |
 | 0.02 | DS | [Dev Setup Anti-Fragile](.specify/specs/dev-setup-anti-fragile/spec.md) (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues) | Infra | [ ] Ready | - |
 | **0 (Urgent)** | **AJ** | **[Certification Feedback Multi-Report](.specify/specs/certification-feedback-multi-report/spec.md)** (emergent) | UI | [x] Done | L |
 | **0.1** | **AK** | **[Certification Feedback Stability](.specify/specs/cert-feedback-stability/spec.md)** (emergent) | UI | [x] Done | L |
@@ -61,9 +63,9 @@ This is the central ledger for all pending development objectives and emergent n
 | 34 | AT | [JRPG Composable Sprite Avatar + Build-a-Bear Onboarding](.specify/specs/jrpg-composable-sprite-avatar/spec.md) | UI | [x] Done | AD |
 | 35 | AU | [Avatar Sprite Assets](.specify/specs/avatar-sprite-assets/spec.md) | UI | [x] Done | AT |
 | 36 | AV | [Existing Players Character Generation](.specify/specs/existing-players-character-generation/spec.md) (orientation quest) | UI | [x] Done | AU |
-| 37 | AW | [Avatar Visibility + Cert Report Issue](.specify/specs/avatar-visibility-and-cert-report-issue/spec.md) | UI | [ ] Ready | AV |
-| 38 | AX | [Avatar Click-to-Enlarge + Admin Sprite Viewer](.specify/specs/avatar-enlarge-and-admin-sprite-view/spec.md) | UI | [ ] Ready | AW |
-| 39 | AY | [Avatar Sprite Quality Process](.specify/specs/avatar-sprite-quality-process/spec.md) (emergent: Gathertown/Stardew vibe) | UI | [ ] Ready | AU |
+| 37 | AW | [Avatar Visibility + Cert Report Issue](.specify/specs/avatar-visibility-and-cert-report-issue/spec.md) | UI | [Superseded by AVS] | AV |
+| 38 | AX | [Avatar Click-to-Enlarge + Admin Sprite Viewer](.specify/specs/avatar-enlarge-and-admin-sprite-view/spec.md) | UI | [Superseded by AVS] | AW |
+| 39 | AY | [Avatar Sprite Quality Process](.specify/specs/avatar-sprite-quality-process/spec.md) (emergent: Gathertown/Stardew vibe) | UI | [Superseded by AVS] | AU |
 | 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [ ] Ready | - |
 | 40.1 | BC | [Book Upload Unexpected Response](.specify/specs/book-upload-unexpected-response/spec.md) (fix PDF upload > 1MB) | Infra | [x] Done | AZ |
 | 40.2 | BD | [PDF Extract Worker Fix](.specify/specs/pdf-extract-worker-fix/spec.md) (emergent: pdf.worker.mjs not found) | Infra | [x] Done | AZ |
@@ -74,8 +76,8 @@ This is the central ledger for all pending development objectives and emergent n
 | 40.6 | BL | [AI Deftness and Token Efficiency Strategy](.specify/specs/ai-deftness-token-strategy/spec.md) (chunk filter, cache, heuristics, control plane) | Infra | [x] Done | BK, AZ |
 | 50 | BA | [Playbook → Archetype Terminology Rename](.specify/specs/playbook-to-archetype-rename/spec.md) (lower priority) | Infra | [x] Done | - |
 | 41 | BB | [Admin Manual Avatar Assignment](.specify/specs/admin-manual-avatar-assignment/spec.md) (testing sprite stacking) | UI | [x] Done | AX |
-| 42 | BG | [Avatar Gallery Preview and Sprite Stacking Fix](.specify/specs/avatar-gallery-preview-and-stacking/spec.md) (preview before assign, fix layer replace) | UI | [ ] Ready | BB |
-| 43 | BH | [Avatar Stacking Fix and Base-Only Preview](.specify/specs/avatar-stacking-base-preview/spec.md) (base when unselected, fix layer stacking) | UI | [ ] Ready | BB |
+| 42 | BG | [Avatar Gallery Preview and Sprite Stacking Fix](.specify/specs/avatar-gallery-preview-and-stacking/spec.md) (preview before assign, fix layer replace) | UI | [Superseded by AVS] | BB |
+| 43 | BH | [Avatar Stacking Fix and Base-Only Preview](.specify/specs/avatar-stacking-base-preview/spec.md) (base when unselected, fix layer stacking) | UI | [Superseded by AVS] | BB |
 | 0.9 | BJ | [Avatar Overwrite, Transparency, and Size Fix](.specify/specs/avatar-overwrite-transparency-fix/spec.md) (emergent: nation/archetype overwrite, ChatGPT prompts) | UI | [x] Done | BB |
 | **0.10** | **BM** | **[PDF Parse New Build Fix](.specify/specs/pdf-parse-new-build-fix/spec.md)** (emergent: pdf-child.js module not found, blocks build) | Infra | [x] Done | AZ |
 | **0.34** | **CW** | **[Book Upload Vercel Client Exception](.specify/specs/book-upload-vercel-client-exception/spec.md)** (emergent: client-side exception on PDF upload; BLOB token, module bundling) | Infra | [x] Done | BU |
@@ -208,6 +210,7 @@ This is the central ledger for all pending development objectives and emergent n
 | 1.20 | GL | [Dashboard Header: Explore, Character, Campaign](.specify/specs/dashboard-header-explore-character-campaign/spec.md) (3 sections; remove Act 1/2; campaign stage button; modals with full-page links) | UI | [x] Done | BQ |
 | 1.21 | GM | [Dashboard Section Modal Buttons](.specify/specs/dashboard-section-modal-buttons/spec.md) (Explore/Character/Campaign as buttons; modals contain existing actions + full-page link) | UI | [x] Done | GL |
 | 1.22 | GN | [Dashboard Header Row + Play the Game Box](.specify/specs/dashboard-header-row-and-play-box/spec.md) (identity + vibeulons in one row; Explore/Character/Campaign in labeled box) | UI | [x] Done | GM |
+| 1.23 | DU | [Deftness Uplevel: Character, Daemons, Agents](.specify/specs/deftness-uplevel-character-daemons-agents/spec.md) (Ouroboros interview; Archetype playbooks; Daemons discovery/level/summon; Sage coordination; agent-domain backlog ownership; 6-face parallel) | UI/Infra | [ ] Ready | AV, CM |
 ## Bruised Banana Campaign (Cursor Plan Alignment)
 
 **Onboarding flow status (Mar 2025)**: DG, DQ, DS, DM, DN, DR done. DJ/DK (quest generation) are admin-side, not player flow.

@@ -2,7 +2,9 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run db:generate && next dev",
     "build": "tsx scripts/build-with-env.ts",
@@ -78,6 +80,7 @@
     "docs:export": "tsx scripts/export-docs-to-rst.ts",
     "docs:build": "npm run docs:export && sphinx-build -b html docs/source docs/_build/html",
     "env:pull": "npx vercel env pull .env.local",
+    "setup": "tsx scripts/setup-dev.ts",
     "switch": "tsx scripts/switch-db-mode.ts",
     "dev:local": "npm run switch -- local && npm run db:seed && npm run dev",
     "dev:vercel": "npm run switch -- vercel && npm run dev",
@@ -88,7 +91,7 @@
     "@ai-sdk/openai": "^3.0.25",
     "@prisma/client": "^5.22.0",
     "@prisma/extension-accelerate": "^3.0.1",
-    "@vercel/blob": "^2.3.0",
+    "@vercel/blob": "^2.3.1",
     "@xyflow/react": "^12.10.1",
     "ai": "^6.0.67",
     "bcryptjs": "^3.0.3",
