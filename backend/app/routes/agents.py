@@ -46,6 +46,7 @@ from app.schemas.agents import (
     DiplomatBridgeRequest,
     DiplomatGuideRequest,
     DiplomatRefineCopyRequest,
+    FaceTaskRequest,
     IChingContextPayload,
     MappingProposerRequest,
     RegentAssessRequest,
@@ -402,6 +403,96 @@ async def sage_consult(
             output=deterministic_sage_response(body.question),
             deterministic=True,
             legibility_note="AI path failed — deterministic fallback used.",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Generic Task — POST /api/agents/{face}/task (DC-6 Six-Face Parallel)
+# ---------------------------------------------------------------------------
+
+def _deterministic_face_output(face: str, task: str, instance_id: str | None) -> dict:
+    """Produce a stub output for each face when AI is unavailable."""
+    if face == "sage":
+        out = deterministic_sage_response(task[:500])
+        return out.model_dump()
+    if face == "shaman":
+        out = deterministic_shaman_reading(task[:300])
+        return out.model_dump()
+    if face == "challenger":
+        out = deterministic_challenger_proposal()
+        return out.model_dump()
+    if face == "regent":
+        out = deterministic_regent_assessment(instance_id or "default")
+        return out.model_dump()
+    if face == "architect":
+        out = deterministic_architect_draft(task[:200], "epiphany_bridge")
+        return out.model_dump()
+    if face == "diplomat":
+        out = deterministic_diplomat_guidance()
+        return out.model_dump()
+    return {"message": f"[{face}] Task received (deterministic stub): {task[:100]}..."}
+
+
+@router.post("/{face}/task", response_model=AgentResponse[dict])
+async def face_task(
+    face: str,
+    body: FaceTaskRequest,
+    db: AsyncSession = Depends(get_db),
+    player_id: str | None = Depends(get_current_player_id),
+):
+    """Run a generic task for a Game Master face. DC-6 parallel feature work."""
+    VALID_FACES = ("shaman", "challenger", "regent", "architect", "diplomat", "sage")
+    if face not in VALID_FACES:
+        from fastapi import HTTPException
+        raise HTTPException(404, f"Unknown face: {face}")
+
+    AGENTS = {
+        "shaman": shaman_agent,
+        "challenger": challenger_agent,
+        "regent": regent_agent,
+        "architect": architect_agent,
+        "diplomat": diplomat_agent,
+        "sage": sage_agent,
+    }
+    agent = AGENTS[face]
+
+    pid = body.player_id or player_id
+    ic_dict = _iching_to_dict(body.iching_context)
+    deps = AgentDeps(db=db, player_id=pid, instance_id=body.instance_id, iching_context=ic_dict)
+
+    prompt = body.task
+    if body.feature_id:
+        prompt = f"[Feature: {body.feature_id}]\n\n{prompt}"
+
+    if not settings.openai_api_key:
+        payload = _deterministic_face_output(face, prompt, body.instance_id)
+        return AgentResponse[dict](
+            agent=face,
+            output=payload,
+            deterministic=True,
+            legibility_note="Deterministic fallback — no AI model configured.",
+        )
+
+    try:
+        result = await agent.run(prompt, deps=deps)
+        out = result.output
+        payload = out.model_dump() if hasattr(out, "model_dump") else {"output": str(out)}
+        move = await _safe_discern_move(deps)
+        return AgentResponse[dict](
+            agent=face,
+            output=payload,
+            discerned_move=move,
+            usage_tokens=result.usage().total_tokens if result.usage() else None,
+        )
+    except Exception as e:
+        logger.warning("Face task AI path failed", exc_info=True)
+        payload = _deterministic_face_output(face, prompt, body.instance_id)
+        payload["_fallback_error"] = str(e)
+        return AgentResponse[dict](
+            agent=face,
+            output=payload,
+            deterministic=True,
+            legibility_note=f"AI path failed — deterministic fallback used: {e}",
         )
 
 

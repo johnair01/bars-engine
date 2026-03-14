@@ -227,6 +227,23 @@ class ArchitectAnalyzeChunkRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Generic Task (DC-6 Six-Face Parallel)
+# ---------------------------------------------------------------------------
+
+
+class FaceTaskRequest(BaseModel):
+    """Request body for POST /api/agents/{face}/task — generic task for parallel feature work."""
+
+    task: str = Field(description="The task to run for this face")
+    feature_id: str | None = Field(default=None, alias="featureId", description="Feature ID for context")
+    player_id: str | None = None
+    instance_id: str | None = None
+    iching_context: IChingContextPayload | None = None
+
+    model_config = {"populate_by_name": True}
+
+
+# ---------------------------------------------------------------------------
 # Mapping Proposer (Orientation Quest — AC 23c)
 # ---------------------------------------------------------------------------
 

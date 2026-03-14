@@ -50,9 +50,9 @@
 
 ## DC-6: Six-Face Parallel Handling
 
-- [ ] Document manual decomposition protocol (v0)
-- [ ] Implement decomposeFeature (v1)
-- [ ] Implement runParallelFeatureWork (v1)
-- [ ] Implement synthesizeFeatureOutputs (v1)
+- [x] Document manual decomposition protocol (v0)
+- [x] Implement decomposeFeature (v1)
+- [x] Implement runParallelFeatureWork (v1)
+- [x] Implement synthesizeFeatureOutputs (v1)
 - [ ] Full pipeline (v2) — when resource allows
-- [ ] Run `npm run build` and `npm run check`
+- [x] Run `npm run build` and `npm run check`
