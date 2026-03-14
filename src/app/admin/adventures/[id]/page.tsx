@@ -3,8 +3,14 @@ import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
 import { StartNodeForm } from "./StartNodeForm"
 import { CampaignRefForm } from "./CampaignRefForm"
 import { ImportPassagesForm } from "./ImportPassagesForm"
+import { CharacterCreatorTemplateEditor } from "./CharacterCreatorTemplateEditor"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+
+const ICHING_NAMES = new Set([
+    'Heaven (Qian)', 'Earth (Kun)', 'Thunder (Zhen)', 'Wind (Xun)',
+    'Water (Kan)', 'Fire (Li)', 'Mountain (Gen)', 'Lake (Dui)',
+])
 
 export default async function AdventureDetailPage({
     params
@@ -12,18 +18,27 @@ export default async function AdventureDetailPage({
     params: Promise<{ id: string }>
 }) {
     const p = await params
-    const adventure = await db.adventure.findUnique({
-        where: { id: p.id },
-        include: {
-            passages: {
-                orderBy: { createdAt: 'asc' }
+    const [adventure, allArchetypes] = await Promise.all([
+        db.adventure.findUnique({
+            where: { id: p.id },
+            include: {
+                passages: {
+                    orderBy: { createdAt: 'asc' }
+                }
             }
-        }
-    })
+        }),
+        db.archetype.findMany({
+            where: {},
+            select: { id: true, name: true, primaryQuestion: true },
+            orderBy: { name: 'asc' },
+        })
+    ])
 
     if (!adventure) {
         notFound()
     }
+
+    const namedArchetypes = allArchetypes.filter((a) => !ICHING_NAMES.has(a.name))
 
     return (
         <div className="space-y-6">
@@ -106,6 +121,15 @@ export default async function AdventureDetailPage({
                         <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">Import JSON</h3>
                         <ImportPassagesForm adventureId={adventure.id} />
                     </div>
+                    {adventure.adventureType === 'CHARACTER_CREATOR' && (
+                        <CharacterCreatorTemplateEditor
+                            adventureId={adventure.id}
+                            archetypes={namedArchetypes}
+                            currentTemplate={adventure.playbookTemplate ? (() => {
+                                try { return JSON.parse(adventure.playbookTemplate!) } catch { return null }
+                            })() : null}
+                        />
+                    )}
                 </div>
 
                 <div className="lg:col-span-2">

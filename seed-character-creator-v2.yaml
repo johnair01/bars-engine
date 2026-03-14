@@ -1,0 +1,128 @@
+goal: >
+  Build a narrative-first PbtA character creator for bars-engine.
+  Players answer guided discovery questions that surface archetype resonance,
+  choose one of 8 named archetypes, answer archetype-specific questions,
+  pick 2 of 4 archetype moves and 2 of 4 nation moves, then receive
+  a completed character that updates their player profile and generates
+  a public shareable character card.
+
+constraints:
+  - Brownfield Next.js 16 / React 19 / TypeScript / Prisma app — no new packages without justification
+  - Use existing DB models: PlayerPlaybook, Adventure (adventureType=CHARACTER_CREATOR), Archetype, Nation, Player
+  - 8 named archetypes only: Truth Seer, Bold Heart, Still Point, Danger Walker,
+    Subtle Influence, Devoted Guardian, Joyful Connector, Decisive Storm
+  - The 8 I Ching trigram archetypes (Heaven, Earth, Thunder, etc.) must be excluded
+    from the player-facing character creator — they are mechanical background only
+  - No stats/dice in this version — stat system is deferred
+  - Character creation requires player authentication; shareable card (/character/[token]) is public
+  - Move structure: 4 moves per archetype keyed to Wake Up / Clean Up / Grow Up / Show Up
+  - Nation moves: 4 available per nation, player picks 2
+  - No AI generation at character creation time — moves are GM-authored and stored in the archetype/nation records
+  - GM configures archetype templates via /admin; players consume them at /character-creator
+
+acceptance_criteria:
+  - Discovery questions (same for all) are presented before archetype selection
+  - Each question's answer influences which archetype(s) are highlighted as resonant
+  - Player can view all 8 archetypes with resonance scoring and select one
+  - After selecting archetype, archetype-specific questions are presented
+  - Player chooses 2 of 4 archetype moves (Wake Up / Clean Up / Grow Up / Show Up)
+  - Player chooses 2 of 4 nation moves (requires player.nationId to be set)
+  - Completion sets player.archetypeId and saves a PlayerPlaybook record with playerAnswers JSON
+  - A unique shareToken is generated and stored on the PlayerPlaybook record
+  - Shareable character card is accessible at /character/[shareToken] without authentication
+  - The 8 I Ching trigram archetypes do NOT appear in /character-creator
+  - Admin can configure archetype question templates and move text via /admin/adventures/[id] (CHARACTER_CREATOR type)
+  - PDF export available at /api/character-creator/[id]/export
+
+ontology_schema:
+  name: CharacterCreator
+  description: Data model for PbtA character creation flow
+  entities:
+    - name: Adventure
+      table: adventures
+      relevant_fields:
+        - adventureType: string  # CHARACTER_CREATOR for character creator adventures
+        - playbookTemplate: string  # JSON — see ArchetypeTemplate below
+    - name: ArchetypeTemplate
+      description: JSON structure stored in Adventure.playbookTemplate
+      fields:
+        - archetypeId: string  # FK to archetypes.id
+        - discoveryQuestions: array  # [{id, question, answers: [{label, archetypeWeights: {archetypeId: weight}}]}]
+        - archetypeQuestions: array  # [{id, question}] — shown after archetype selection
+        - moves:
+            wakeUp: {id, name, description}
+            cleanUp: {id, name, description}
+            growUp: {id, name, description}
+            showUp: {id, name, description}
+    - name: PlayerPlaybook
+      table: player_playbooks
+      fields:
+        - playerId: string
+        - adventureId: string  # the CHARACTER_CREATOR Adventure for their archetype
+        - playbookName: string  # archetype name
+        - playerAnswers: string  # JSON: {discovery: [{qId, answer}], archetype: [{qId, answer}]}
+        - playbookMoves: string  # JSON: [{id, name, key}] — chosen archetype moves (2)
+        - playbookBonds: string  # JSON: [{id, name, key}] — chosen nation moves (2)
+        - shareToken: string  # unique, public
+        - completedAt: datetime
+    - name: Archetype
+      table: archetypes
+      relevant_fields:
+        - id, name, description, primaryQuestion, wakeUp, cleanUp, growUp, showUp
+        - vibe, energy, shadowSignposts, lightSignposts  # used on shareable card
+    - name: Nation
+      table: nations (existing)
+      relevant_fields:
+        - id, name  # nation moves fetched via NationMove relation
+
+pages:
+  - path: /character-creator
+    description: Archetype grid — shows 8 named archetypes with resonance scores after discovery questions
+    auth: required
+  - path: /character-creator/[archetypeId]
+    description: Full creation wizard — discovery Qs → archetype confirm → archetype Qs → move picks → complete
+    auth: required
+  - path: /character/[shareToken]
+    description: Public shareable character card — archetype, answers, chosen moves
+    auth: none (public)
+  - path: /admin/adventures/[id] (CHARACTER_CREATOR type)
+    description: GM editor for archetype template — discovery questions, archetype questions, move text
+    auth: admin or gm role
+  - path: /api/character-creator/[id]/export
+    description: PDF export of completed character
+    auth: required (own character)
+
+evaluation_principles:
+  - name: narrative_integrity
+    weight: 0.35
+    description: Discovery questions genuinely surface archetype resonance; answers feel meaningful
+  - name: move_clarity
+    weight: 0.25
+    description: Players understand what each move does and why they'd choose it
+  - name: completion_rate
+    weight: 0.20
+    description: Wizard flow is clear enough that players finish without abandoning
+  - name: data_correctness
+    weight: 0.20
+    description: PlayerPlaybook saved correctly; archetypeId set on player; shareToken works
+
+exit_conditions:
+  - All 8 named archetypes are playable through the full wizard
+  - PlayerPlaybook record created with correct move selections and answers
+  - Public shareable card renders without auth
+  - I Ching trigrams absent from player-facing UI
+  - Zero TypeScript errors
+
+metadata:
+  version: "2.0"
+  created: "2026-03-13"
+  ambiguity_score: 0.12
+  based_on_interview: true
+  interview_questions: 12
+  branch: ooo/run/character-creator
+  prior_seed: seed-character-creator.yaml
+  notes: >
+    v2 supersedes the prior seed. Key changes: narrative-first discovery
+    question layer added; I Ching trigrams explicitly excluded from player UI;
+    stats deferred; move selection clarified (2-of-4 archetype + 2-of-4 nation);
+    no AI generation at creation time.

@@ -2,6 +2,8 @@
 
 import ReactMarkdown from 'react-markdown'
 
+type PlaybookMove = { id: string; key: string; name: string; description: string; isStartingUnlocked: boolean; sortOrder: number }
+
 interface Playbook {
     name: string
     description: string
@@ -18,7 +20,7 @@ interface Playbook {
     emotionalFirstAid?: string | null
 }
 
-export function ArchetypeHandbookContent({ playbook }: { playbook: Playbook }) {
+export function ArchetypeHandbookContent({ playbook, playbookMoves = [] }: { playbook: Playbook; playbookMoves?: PlaybookMove[] }) {
     const moves = playbook.moves ? JSON.parse(playbook.moves) as string[] : []
 
     return (
@@ -67,6 +69,27 @@ export function ArchetypeHandbookContent({ playbook }: { playbook: Playbook }) {
                         ))}
                     </div>
                 </section>
+
+                {/* YOUR PLAYBOOK — NationMoves for this Archetype */}
+                {playbookMoves.length > 0 && (
+                    <section className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+                        <h2 className="text-zinc-500 uppercase tracking-widest text-[10px] font-bold mb-6 flex items-center gap-2">
+                            <span className="text-lg">📖</span> Your Playbook
+                        </h2>
+                        <p className="text-sm text-zinc-400 mb-4">Moves available to your archetype. Use these when completing quests.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {playbookMoves.map((m) => (
+                                <div key={m.id} className="bg-black/40 border border-zinc-800/50 p-4 rounded-lg hover:border-blue-500/30 transition duration-300">
+                                    <div className="font-mono text-blue-300 text-xs font-bold uppercase tracking-wider mb-1">{m.name}</div>
+                                    <div className="text-zinc-500 text-xs">{m.description}</div>
+                                    {m.isStartingUnlocked && (
+                                        <span className="inline-block mt-2 text-[10px] text-emerald-400/80">Starting unlock</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* GROWTH CYCLE */}
                 <section className="space-y-6">
