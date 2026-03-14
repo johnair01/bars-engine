@@ -91,6 +91,10 @@ model Player {
   eventInvitesReceived  EventInvite[]       @relation("EventInviteReceived")
   eventInvitesSent      EventInvite[]       @relation("EventInviteSent")
   orientationSessions  OrientationSession[]
+  daemons              Daemon[]
+  daemonSummons        DaemonSummon[]
+  blessedObjectsEarned BlessedObjectEarned[]
+  playerPlaybooks      PlayerPlaybook[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -237,6 +241,56 @@ model Shadow321Session {
   @@index([playerId])
   @@index([outcome])
   @@map("shadow_321_sessions")
+}
+
+model Daemon {
+  id           String   @id @default(cuid())
+  playerId     String
+  name         String
+  source       String   // 321_wake_up | school
+  level        Int      @default(1)
+  moveIds      String   @default("[]") // JSON array of NationMove ids
+  discoveredAt DateTime @default(now())
+
+  player  Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  summons DaemonSummon[]
+
+  @@index([playerId])
+  @@map("daemons")
+}
+
+model DaemonSummon {
+  id        String     @id @default(cuid())
+  daemonId  String
+  playerId  String
+  summonedAt DateTime   @default(now())
+  expiresAt  DateTime
+  status    String     @default("active") // active | dismissed
+
+  daemon Daemon @relation(fields: [daemonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([daemonId])
+  @@index([playerId])
+  @@index([status, expiresAt])
+  @@map("daemon_summons")
+}
+
+model BlessedObjectEarned {
+  id          String    @id @default(cuid())
+  playerId    String
+  source      String    // efa | 321 | stage_talisman | campaign_completion | personal
+  earnedAt    DateTime  @default(now())
+  instanceId  String?
+  kotterStage Int?
+  questId     String?
+  metadata    Json?     // extra provenance: loreBarId, etc.
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([playerId, source, instanceId, kotterStage])
+  @@map("blessed_objects_earned")
 }
 
 model QuestProposal {
@@ -1268,22 +1322,46 @@ model InstanceParticipation {
 }
 
 model Adventure {
-  id           String    @id @default(cuid())
-  slug         String    @unique
-  title        String
-  description  String?
-  status       String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
-  visibility   String    @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
-  startNodeId  String?
-  campaignRef  String?   // e.g. bruised-banana; when set, campaign page uses this Adventure for ref=bruised-banana
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  title            String
+  description      String?
+  status           String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
+  visibility       String    @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
+  startNodeId      String?
+  campaignRef      String?   // e.g. bruised-banana; when set, campaign page uses this Adventure for ref=bruised-banana
+  adventureType    String?   // CHARACTER_CREATOR | null
+  playbookTemplate String?   // JSON: ArchetypeTemplate
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  passages     Passage[]
-  progress     PlayerAdventureProgress[]
-  questThread  QuestThread?
+  passages         Passage[]
+  progress         PlayerAdventureProgress[]
+  questThread      QuestThread?
+  playerPlaybooks  PlayerPlaybook[]
 
   @@map("adventures")
+}
+
+model PlayerPlaybook {
+  id             String    @id @default(cuid())
+  playerId       String
+  adventureId    String?
+  playbookName   String
+  playerAnswers  String?   // JSON: {discovery: [{qId, answer}], archetype: [{qId, answer}]}
+  playbookMoves  String?   // JSON: [{id, name, key}] — chosen archetype moves (2)
+  playbookBonds  String?   // JSON: [{id, name, key}] — chosen nation moves (2)
+  shareToken     String    @unique @default(cuid())
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  adventure      Adventure? @relation(fields: [adventureId], references: [id], onDelete: SetNull)
+
+  @@index([playerId])
+  @@index([adventureId])
+  @@map("player_playbooks")
 }
 
 model Passage {
@@ -1425,6 +1503,7 @@ model SpecKitBacklogItem {
   category     String   @default("UI")
   status       String   @default("Ready")
   dependencies String   @default("")
+  ownerFace    String?  // shaman | challenger | regent | architect | diplomat | sage
   updatedAt    DateTime @updatedAt
 
   @@map("spec_kit_backlog_items")

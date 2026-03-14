@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Session persistence for Quest Grammar Generation Flow.
  * Data persists across refresh so admin can resume. Phase 4: CYOA process.
