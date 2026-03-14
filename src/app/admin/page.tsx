@@ -69,6 +69,12 @@ export default async function AdminDashboard() {
                     href="/admin/quest-proposals"
                     icon="📋"
                 />
+                <DashboardCard
+                    title="Backlog"
+                    value="Spec Kit"
+                    href="/admin/backlog"
+                    icon="📌"
+                />
             </div>
 
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">

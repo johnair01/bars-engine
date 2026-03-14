@@ -20,19 +20,26 @@ export async function PATCH(
   try {
     await requireAdmin()
     const { id } = await params
-    const body = await _request.json()
-    const status = typeof body === 'object' && body !== null && 'status' in body
-      ? String(body.status)
-      : null
-    if (!status) {
+    const body = (await _request.json()) as Record<string, unknown>
+    const status = typeof body?.status === 'string' ? body.status : null
+    const ownerFace = typeof body?.ownerFace === 'string' || body?.ownerFace === null
+      ? (body.ownerFace as string | null)
+      : undefined
+
+    const data: { status?: string; ownerFace?: string | null } = {}
+    if (status) data.status = status
+    if (ownerFace !== undefined) data.ownerFace = ownerFace
+
+    if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: 'status is required' },
+        { error: 'status or ownerFace is required' },
         { status: 400 }
       )
     }
+
     const item = await db.specKitBacklogItem.update({
       where: { id },
-      data: { status },
+      data,
     })
     return NextResponse.json(item)
   } catch (e) {
