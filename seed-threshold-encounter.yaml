@@ -1,0 +1,236 @@
+seed_id: threshold-encounter
+version: "0.1.0"
+created: "2026-03-15"
+ambiguity_score: 0.13
+
+goal: >
+  Build the Threshold Encounter .twee template system — a unified emotional alchemy
+  scene generator that absorbs SceneDsl as its minimum viable form, is AI-generated
+  with GM editing capability, and emits structured artifacts (BAR candidates, quest
+  hooks, alchemy state updates) via a post-adventure overlay. Threshold Encounter
+  becomes the canonical .twee output format for both check-in-triggered scenes and
+  GM-authored encounters.
+
+problem_statement: >
+  The system can generate emotional alchemy scenes (SceneDsl) but has no canonical
+  .twee template format that ties together the emotional vector, wuxing routing,
+  encounter phases, and artifact emission. Two template types (QuestPacket /
+  Epiphany Bridge and Orb-style encounter) need a unified self-describing format
+  so the game can emit .twee and ingest the right data (BARs, quests, alchemy state)
+  regardless of which template produced the file.
+
+solution_approach: >
+  Unify SceneDsl and the Orb triadic encounter structure into a single
+  Threshold Encounter format. SceneDsl (situation / friction / invitation =
+  Context / Anomaly / Choice) becomes the 1-beat-per-phase minimum. The canonical
+  9-passage shape (3 context + 3 anomaly + 1 choice + 1 response + 1 artifact) is
+  the full form. Both are the same format — just different beat counts per phase.
+  The .twee file is self-describing via an embedded StoryData JSON block.
+  AI generates the draft; GM edits via existing IRAuthoringClient pattern.
+  Artifacts are declared in StoryData and emitted via post-adventure overlay
+  (not Twine macros), keeping the overlay in the Next.js layer.
+
+constraints:
+  - SceneDsl must remain backward-compatible (existing growth scene runner unchanged)
+  - Phases are fixed (Context / Anomaly / Choice / Response / Artifact); beats per phase are flexible
+  - BAR candidate write-in happens via post-adventure overlay, not inside .twee
+  - .twee is the canonical playtest artifact; intermediate abstractions are secondary
+  - Admin-editable generated drafts; GM promotes BAR candidates via quest-grammar flow
+  - DailyCheckIn wizard is the canonical player trigger for Threshold Encounter generation
+  - Generator must accept all four input axes: emotionalVector, hexagramId, gmFace, nationSlug + archetypeSlug
+
+architecture:
+  template_types:
+    - id: threshold_encounter
+      description: >
+        Orb-style atmospheric encounter. Fixed phases, flexible beats.
+        9-passage canonical shape. Absorbs SceneDsl as 1-beat minimum.
+    - id: quest_packet
+      description: >
+        Epiphany Bridge / QuestPacket template. Player-facing CYOA path
+        output. Produces .twee that a player walks through to generate
+        quest artifacts.
+
+  storydata_fields:
+    template_type: "threshold_encounter | quest_packet"
+    emotional_vector: "e.g. fear:dissatisfied→anger:neutral (wuxing: generate)"
+    wuxing_routing:
+      scene_type: "transcend | generate | control"
+      from_channel: EmotionChannel
+      to_channel: EmotionChannel
+      altitude_from: AlchemyAltitude
+      altitude_to: AlchemyAltitude
+    phase_map:
+      context: { beats: 3 }
+      anomaly: { beats: 3 }
+      choice: { beats: 1 }
+      response: { beats: 1 }
+      artifact: { beats: 1 }
+    declared_artifacts:
+      - type: "bar_candidate | BAR | quest_hook | vibeulon | relationship_update | memory_entry"
+        payload_schema: "see ArtifactType in src/lib/growth-scene/types.ts"
+
+  generator_inputs:
+    emotional_vector: "channel:altitude → channel:altitude"
+    hexagram_id: "1–64 (I Ching situational seed)"
+    gm_face: "shaman | challenger | regent | architect | diplomat | sage"
+    nation_slug: "argyra | pyrakanth | virelune | meridia | lamenth"
+    archetype_slug: "string (from PlayerPlaybook archetype)"
+    bar_candidate_seeds: "string[] — optional admin-flagged BAR candidates to weave in"
+
+  bar_candidate_flow:
+    trigger: "post-adventure overlay (Next.js layer, not Twine macro)"
+    step_1: "Player completes encounter → overlay appears"
+    step_2: "Player optionally writes in a BAR candidate"
+    step_3: "Stored as ArtifactType: bar_candidate in SceneArtifact"
+    step_4: "Admin reviews in backlog"
+    step_5: "GM promotes via existing quest-grammar flow to live BAR or quest_hook"
+
+  scene_dsl_mapping:
+    situation: context_1   # minimum 1 beat; canonical 3
+    friction:  anomaly_1   # minimum 1 beat; canonical 3
+    invitation: choice     # always exactly 1 passage
+
+  api_surface:
+    generate:
+      method: POST
+      path: /api/threshold-encounter/generate
+      body:
+        emotional_vector: string
+        hexagram_id: number
+        gm_face: string
+        nation_slug: string
+        archetype_slug: string
+        bar_candidate_seeds: string[]
+        beat_mode: "minimal | canonical"   # minimal=SceneDsl shape, canonical=9-passage
+      response:
+        twee_source: string
+        scene_id: string
+        storydata: object
+
+    edit:
+      description: >
+        GM edits via existing IRAuthoringClient pattern (passage-level edits).
+        No new editing surface needed — reuse admin authoring UI.
+
+    export:
+      method: GET
+      path: /api/threshold-encounter/[id]/export
+      response: .twee file download
+
+  data_model:
+    ThresholdEncounter:
+      id: cuid
+      scene_id: string          # links to AlchemyCheckIn.sceneId
+      twee_source: text
+      storydata: json
+      beat_mode: string         # 'minimal' | 'canonical'
+      gm_face: string
+      hexagram_id: int
+      status: string            # 'draft' | 'active' | 'archived'
+      artifacts: json[]         # SceneArtifact[]
+      created_at: DateTime
+      updated_at: DateTime
+
+    AlchemyCheckIn_extension:
+      # existing model — add foreign key to ThresholdEncounter
+      threshold_encounter_id: string?  # nullable — check-in may not have launched an encounter yet
+
+phases:
+  - id: "TE-1"
+    name: "Schema + Migration"
+    description: >
+      Add ThresholdEncounter model to Prisma schema.
+      Extend AlchemyCheckIn with optional thresholdEncounterId FK.
+      Run migration.
+    outputs:
+      - prisma/schema.prisma updated
+      - migration file
+
+  - id: "TE-2"
+    name: "Generator API"
+    description: >
+      POST /api/threshold-encounter/generate.
+      Accepts all 4 input axes. Uses AI SDK to draft .twee.
+      System prompt encodes phase structure, wuxing routing,
+      StoryData schema, and GM face modulation.
+      Returns twee_source + storydata.
+    outputs:
+      - src/app/api/threshold-encounter/generate/route.ts
+      - src/lib/threshold-encounter/generator.ts
+      - src/lib/threshold-encounter/prompts.ts
+
+  - id: "TE-3"
+    name: "StoryData parser + artifact extractor"
+    description: >
+      Parse StoryData JSON from .twee source.
+      Extract declared_artifacts after encounter completion.
+      Store as SceneArtifact[] on ThresholdEncounter record.
+    outputs:
+      - src/lib/threshold-encounter/parse-storydata.ts
+      - src/lib/threshold-encounter/extract-artifacts.ts
+
+  - id: "TE-4"
+    name: "Post-adventure overlay"
+    description: >
+      After encounter passage marked complete, show overlay.
+      Offers BAR candidate write-in (optional).
+      Saves ArtifactType: bar_candidate via server action.
+      Links ThresholdEncounter.artifacts.
+    outputs:
+      - src/components/encounter/PostAdventureOverlay.tsx
+      - src/actions/threshold-encounter.ts (saveArtifact, completeEncounter)
+
+  - id: "TE-5"
+    name: "DailyCheckIn → Threshold Encounter wiring"
+    description: >
+      Extend DailyCheckInQuest to launch Threshold Encounter
+      instead of legacy growth scene for check-in triggers.
+      Pass hexagram_id (draw or random), gm_face from player profile,
+      nation/archetype from PlayerPlaybook.
+    outputs:
+      - src/components/dashboard/DailyCheckInQuest.tsx updated
+
+  - id: "TE-6"
+    name: "Admin BAR candidate review"
+    description: >
+      Admin queue for bar_candidate artifacts awaiting promotion.
+      Promote → quest_hook or BAR via existing quest-grammar flow.
+    outputs:
+      - src/app/admin/bar-candidates/page.tsx
+      - src/actions/threshold-encounter.ts (promoteBarCandidate)
+
+  - id: "TE-7"
+    name: "Export + GM editing"
+    description: >
+      GET /api/threshold-encounter/[id]/export → .twee download.
+      GM edit surface reuses IRAuthoringClient pattern.
+    outputs:
+      - src/app/api/threshold-encounter/[id]/export/route.ts
+      - src/app/admin/encounters/[id]/page.tsx (GM edit view)
+
+success_criteria:
+  - Player completes DailyCheckIn → Threshold Encounter .twee launches in browser
+  - .twee StoryData block is parseable and carries correct emotional_vector + wuxing_routing
+  - Post-adventure overlay appears; BAR candidate write-in saved and visible in admin queue
+  - GM can promote BAR candidate to quest_hook via admin UI
+  - GM can export .twee file for offline/Twine use
+  - npm run build + npm run check pass
+  - No regressions in existing growth scene runner or AlchemyCheckIn flow
+
+world_logic_alignment:
+  - "Encounters before actions: check-in triggers scene, actions emerge from response"
+  - "Context transforms: each phase should move the player emotionally, not just explain"
+  - "Self-composting: ThresholdEncounter.status='archived' when dormant; branches fade"
+  - "Triadic rhythm: canonical 3-beat context + 3-beat anomaly + 1-beat choice"
+  - "Substrate reuse: .twee is canonical; build toward it, not away from it"
+  - "World notices the player: wuxing routing ensures encounter is keyed to player state"
+
+related_specs:
+  - seed: seed-agentic-npc-constitution.yaml
+  - backlog_id: "1.27 | OTG"
+  - depends_on:
+      - "1.25 | AES phases 1–4"
+      - "src/lib/alchemy/wuxing.ts (resolveMoveDestination)"
+      - "src/lib/growth-scene/types.ts (SceneDsl, ArtifactType)"
+      - "src/actions/alchemy.ts (createDailyCheckIn, linkCheckInScene)"
