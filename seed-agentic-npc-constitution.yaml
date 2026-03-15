@@ -1,0 +1,100 @@
+goal: >
+  Implement Agentic NPC Constitution System v0 for BARs Engine —
+  constitution-governed NPCs that traverse the 4-lobby game map, deliver
+  CYOA dialogue Adventures as portals to story content, and are
+  activated/governed by the Regent AI agent (Claude API with Regent persona).
+
+constraints:
+  - TypeScript/Next.js 14+/Prisma — extend existing Adventure/Passage system
+  - Constitution governs identity/limits/memory/location; Adventures deliver dialogue
+  - Regent = Claude API call with Regent persona for activation + reflection review (not purely deterministic)
+  - NPCs cannot self-amend constitutions
+  - NPC initiative is lowest priority (below world laws, campaign coherence, player growth, EA alignment, NPC constitutional integrity)
+  - First NPC is Giacomo (villain, Tier 4)
+  - Vibeulons = inspiration — no new resource type needed
+  - NPC movement driven by story clock ticks AND Kotter stage advancement
+  - Scene verbs (reveal_lore, deepen_scene, etc.) land in Adventures; artifact verbs (offer_quest_seed, reflect_bar) surface on player dashboard
+
+acceptance_criteria:
+  - NpcConstitution model has currentLocation field (library|efa|dojos|gameboard|none) and linkedAdventures JSON array
+  - Giacomo has an active Regent-governed constitution (tier 4)
+  - Giacomo's location is visible on /game-map and player can trigger his linked Adventure by interacting
+  - Regent Claude API call is invoked for constitution activation and suspension
+  - NPC reflections have status pending|approved|rejected and require Regent review before active
+  - NPC currentLocation updates when story clock ticks or Kotter stage advances
+  - offer_quest_seed verb creates a QuestProposal visible on player dashboard
+  - All 6 NPC DB models exist (npc_constitutions, npc_constitution_versions, npc_memories, npc_reflections, npc_actions, npc_relationship_states)
+  - Attempting to self-amend a constitution is blocked at the action layer
+
+ontology_schema:
+  name: AgenticNPCConstitution
+  description: >
+    Constitution-governed NPCs with stable identity, bounded memory, game-map
+    location, and linked CYOA Adventures — all administered by the Regent
+    Game Master Agent (Claude API).
+  fields:
+    - name: npcConstitution
+      type: object
+      description: Stable NPC identity, limits, memory policy, reflection policy, current game map location, governance status
+    - name: constitutionStatus
+      type: string
+      description: "draft|active|suspended|archived — only Regent can activate/suspend"
+    - name: currentLocation
+      type: string
+      description: "Current game map lobby: library|efa|dojos|gameboard|none"
+    - name: linkedAdventures
+      type: array
+      description: Adventure IDs this NPC triggers as CYOA dialogue portals
+    - name: npcMemory
+      type: object
+      description: Bounded relational memory per player (scope: scene|campaign|relationship)
+    - name: npcReflection
+      type: object
+      description: Offstage reflection pending Regent review (status: pending|approved|rejected)
+    - name: npcAction
+      type: object
+      description: Verb-bounded action (reveal_lore|ask_question|challenge_player|affirm_player|offer_quest_seed|reflect_bar|redirect_scene|deepen_scene|handoff_to_other_npc) with payload and Regent-approval flag
+    - name: tier
+      type: number
+      description: "1–4 NPC sophistication tier (Giacomo = 4)"
+    - name: npcRelationshipState
+      type: object
+      description: trust/tension state per player per NPC (-100 to 100)
+
+evaluation_principles:
+  - name: world-generativity
+    description: Every NPC action produces more world (lore, quests, relational depth) — not less
+    weight: 0.35
+  - name: regent-sovereignty
+    description: All constitution activation and mutation routes through the Regent Claude API call
+    weight: 0.25
+  - name: adventure-portal-fidelity
+    description: NPC interactions launch valid linked Adventures that advance the story and award vibeulons
+    weight: 0.25
+  - name: story-clock-alignment
+    description: NPC location and available dialogue update on story clock ticks and Kotter stage advancement
+    weight: 0.15
+
+exit_conditions:
+  - name: giacomo-active
+    description: Giacomo has an active constitution and is interactable on the game map
+    criteria: >
+      Regent has activated Giacomo's constitution; he appears at a location on
+      /game-map; interacting launches his linked Adventure
+  - name: regent-governance-proven
+    description: Regent blocks unauthorized constitution mutations
+    criteria: >
+      Attempting to self-amend a constitution is rejected; a second NPC can be
+      activated via the Regent flow
+  - name: reflection-gate-proven
+    description: NPC reflection requires Regent review before becoming active
+    criteria: >
+      A generated reflection stays pending until Regent approves it;
+      approved reflection influences the NPC's next dialogue Adventure
+
+metadata:
+  version: "1.0"
+  ambiguity_score: 0.14
+  interview_source: "ooo interview — agentic-npc-constitution — 2026-03-13"
+  spec_ref: ".specify/specs/agentic-npc-constitution/spec.md"
+  plan_ref: ".specify/specs/agentic-npc-constitution/plan.md"

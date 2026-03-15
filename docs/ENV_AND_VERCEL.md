@@ -186,6 +186,16 @@ When production cannot log in or sign up (or admin credentials fail), run these 
 
 The Python FastAPI backend (`backend/`) runs the Game Master agents (Architect, Sage, Shaman, etc.). Vercel does not support Python serverless, so the backend is deployed separately (Railway, Render, or Fly.io).
 
+### Running the backend locally
+
+From the repo root:
+
+```bash
+npm run dev:backend
+```
+
+This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_URL` and `OPENAI_API_KEY` from the root `.env.local` (or `.env`). For local dev, set `NEXT_PUBLIC_BACKEND_URL=http://localhost:8000` in `.env.local` so the frontend uses the local backend instead of a deployed one.
+
 ### Frontend (Vercel)
 
 | Env | Purpose | When to set |

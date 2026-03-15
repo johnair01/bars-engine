@@ -33,7 +33,8 @@ const CERT_QUEST_IDS = [
     'cert-offers-bounty-packs-v1',
     'cert-onboarding-quest-generation-unblock-v1',
     'cert-ouroboros-character-interview-v1',
-    'cert-daemons-discovery-v1'
+    'cert-daemons-discovery-v1',
+    'cert-template-library-v1'
 ]
 
 async function seed() {
@@ -3083,6 +3084,30 @@ async function seed() {
         create: { id: daemonsSlug, title: 'Certification: Daemons Discovery V1', description: 'Verify daemon discovery via 321 Wake Up, summon, and move in nation panel.', creatorId: createdById, reward: 1, twineStoryId: daemonsStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/deftness-uplevel-character-daemons-agents/daemons-system/spec.md' }
     })
     console.log(`✅ Quest seeded: cert-daemons-discovery-v1`)
+
+    // --- Certification: Template Library & Draft→Adventure (TLA) ---
+    const templateLibSlug = 'cert-template-library-v1'
+    const templateLibPassages = [
+        { name: 'START', pid: '1', text: 'This certification quest verifies the Template Library flow: open Templates, generate a draft from template, edit a passage, and promote to Active.', cleanText: 'Verify Template Library: generate, edit, promote.', links: [{ label: 'Begin', target: 'STEP_1' }] },
+        { name: 'STEP_1', pid: '2', text: '### Step 1: Open Template Library\n\n[Open /admin/templates](/admin/templates) (admin only). Confirm at least one template is listed (e.g. Encounter 9-passage).', cleanText: 'Open Template Library; confirm templates listed.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_2', pid: '3', text: '### Step 2: Generate from template\n\nClick **Generate** on a template. Confirm you are redirected to the new Adventure edit page with passages created (e.g. 9 passages with placeholder text).', cleanText: 'Generate; confirm redirect to Adventure with passages.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Edit a passage\n\nClick **Edit** on any passage. Change the text (e.g. replace placeholder). Save. Confirm the change persists.', cleanText: 'Edit passage; confirm change persists.', links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_4', pid: '5', text: '### Step 4: Promote to Active\n\nIn the Settings panel, click **Promote to Active**. Confirm the status changes from DRAFT to ACTIVE.', cleanText: 'Promote to Active; confirm status change.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'FEEDBACK', pid: '7', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '6', text: 'Verification complete. Template Library flow works. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] }
+    ]
+    const templateLibParsedJson = JSON.stringify({ title: 'Certification: Template Library V1', startPassage: 'START', passages: templateLibPassages })
+    const templateLibStory = await db.twineStory.upsert({
+        where: { slug: templateLibSlug },
+        update: { title: 'Certification: Template Library V1', parsedJson: templateLibParsedJson, isPublished: true },
+        create: { title: 'Certification: Template Library V1', slug: templateLibSlug, sourceType: 'manual_seed', sourceText: 'Template Library certification (seed-cyoa-certification-quests.ts)', parsedJson: templateLibParsedJson, isPublished: true, createdById }
+    })
+    await db.customBar.upsert({
+        where: { id: templateLibSlug },
+        update: { title: 'Certification: Template Library V1', description: 'Verify Template Library: generate draft, edit passage, promote to Active.', reward: 1, twineStoryId: templateLibStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/template-library-draft-adventure/spec.md' },
+        create: { id: templateLibSlug, title: 'Certification: Template Library V1', description: 'Verify Template Library: generate draft, edit passage, promote to Active.', creatorId: createdById, reward: 1, twineStoryId: templateLibStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/template-library-draft-adventure/spec.md' }
+    })
+    console.log(`✅ Quest seeded: cert-template-library-v1`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

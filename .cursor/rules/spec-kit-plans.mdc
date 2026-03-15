@@ -26,11 +26,22 @@ Every plan that defines or implements a feature must produce a **spec kit** in `
 | `plan.md` | Implementation order, phases, file impacts |
 | `tasks.md` | Granular, checkable tasks |
 
+## When Making Cursor Plans
+
+**Create the spec kit first.** When you create a Cursor plan for feature work:
+
+1. Create `.specify/specs/<spec-name>/` with `spec.md`, `plan.md`, `tasks.md` before or alongside the plan
+2. The Cursor plan MUST reference the spec kit: "Implement per `.specify/specs/<spec-name>/`"
+3. The spec kit is the canonical artifact; the Cursor plan is a thin strategic overlay
+
+Do not create Cursor plans that define features without a corresponding spec kit.
+
 ## When to Create Spec Kits
 
 - New features or backlog items
 - Emergent fixes that warrant documentation
 - Any work that will be tracked in BACKLOG.md
+- **Before or when creating a Cursor plan** — plans point to specs, not replace them
 
 ## Pre-Implementation Checklist
 

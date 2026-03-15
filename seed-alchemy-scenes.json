@@ -1,0 +1,305 @@
+{
+  "templates": [
+    {
+      "channel": "fear",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Threshold",
+      "situation": "You have been circling the same doorway for weeks. The quest is clear, the resources are ready, and still you do not move. Something unnamed holds you at the edge.",
+      "friction": "The fear is not irrational — it is information. But information crystallized into paralysis is no longer useful. The question is: what is the fear protecting, and is that protection still necessary?",
+      "invitation": "Name the threshold. What are you actually afraid of losing if you step through? Not the surface story — the real cost you have been unwilling to say aloud.",
+      "choices": [
+        { "key": "name_the_cost", "label": "Say it plainly: the real thing I fear losing is...", "isGrowth": true },
+        { "key": "take_one_step", "label": "One step only. Cross the threshold without resolving the fear first.", "isGrowth": true },
+        { "key": "tend_the_fear", "label": "Not yet. This fear needs more tending before I move.", "isGrowth": false }
+      ],
+      "advice": "Fear at the dissatisfied altitude often masquerades as prudence. The move is not courage-performance but honest contact with what is actually at stake."
+    },
+    {
+      "channel": "fear",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Worst Case Oracle",
+      "situation": "The catastrophe scenarios are running on loop. You have imagined the failure state so many times it has become more real than the present moment.",
+      "friction": "Catastrophizing is a failed attempt at control — if you can imagine the worst, maybe you can prevent it. But the loop itself has become the cage.",
+      "invitation": "Externalize one catastrophe scenario completely. Walk it all the way to its end. What actually happens after the worst case lands?",
+      "choices": [
+        { "key": "walk_it_out", "label": "Narrate the worst case to its actual conclusion — not just the disaster moment.", "isGrowth": true },
+        { "key": "distinguish_threat", "label": "Sort: which catastrophe is likely, which is a story, which is a signal?", "isGrowth": true },
+        { "key": "stay_in_loop", "label": "Continue monitoring. The threat still feels unresolved.", "isGrowth": false }
+      ],
+      "advice": "The therapeutic move here is completion, not suppression. Most catastrophe loops stall mid-story — the actual ending (even a bad one) is usually survivable."
+    },
+    {
+      "channel": "fear",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Gift of Orientation",
+      "situation": "You have moved from spinning anxiety into something steadier. You can see the landscape now. Fear is still present but no longer in command.",
+      "friction": "Orientation is not safety — it is the capacity to navigate. There is a temptation to call this peace and stop here. But orientation wants to become agency.",
+      "invitation": "From this steadier ground, what is the one action that becomes possible now that was not possible in the anxious state?",
+      "choices": [
+        { "key": "act_from_clarity", "label": "Name and execute the action that orientation makes possible.", "isGrowth": true },
+        { "key": "share_the_map", "label": "Offer your orientation to someone who is still in the fog.", "isGrowth": true },
+        { "key": "consolidate", "label": "Stay here. Consolidate before moving further.", "isGrowth": false }
+      ],
+      "advice": "Fear:neutral is orientation — you know where you are. The vector into excitement is purposeful action taken from that orientation, not resolution of all risk."
+    },
+    {
+      "channel": "anger",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Fire Report",
+      "situation": "The anger is running hot and directionless. It has found fuel in everything. The community, the project, the pace, the politics — all of it is kindling.",
+      "friction": "Diffuse anger is anger without a legitimate target. It is often anger that has been rerouted because the real target felt unsafe. The heat is real; the address is wrong.",
+      "invitation": "What is the anger actually protecting? What value has been violated? Name it with precision — not what triggered you, but what matters enough to produce this heat.",
+      "choices": [
+        { "key": "name_the_value", "label": "The value being violated is... and here is the evidence:", "isGrowth": true },
+        { "key": "find_the_address", "label": "Reroute: the real target of this anger is... not...", "isGrowth": true },
+        { "key": "discharge_first", "label": "The body needs to move before I can think clearly.", "isGrowth": false }
+      ],
+      "advice": "Anger at dissatisfied altitude is frequently displaced. The alchemy move is precision — narrowing diffuse heat into a clear signal about what matters."
+    },
+    {
+      "channel": "anger",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Second Arrow",
+      "situation": "You are angry. And now you are angry that you are angry. The self-judgment about the emotion has layered over the original signal, making both harder to read.",
+      "friction": "The second arrow (shame about the anger) is doing more damage than the first. Anger is information. Shame about anger is noise.",
+      "invitation": "Remove the second arrow. The anger itself is not the problem. What is the anger, before the self-judgment arrived, trying to tell you?",
+      "choices": [
+        { "key": "separate_arrows", "label": "Set down the judgment. Listen to what the anger says underneath.", "isGrowth": true },
+        { "key": "legitimize", "label": "This anger is legitimate because... (complete the sentence).", "isGrowth": true },
+        { "key": "work_the_shame", "label": "The shame needs attention before the anger can be heard.", "isGrowth": false }
+      ],
+      "advice": "Anger compounded by shame becomes rage or collapse. The stabilizing move is to legitimize the anger signal before working its content."
+    },
+    {
+      "channel": "anger",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Precision Strike",
+      "situation": "You have moved from diffuse frustration into clarity. You know what is wrong, you know what matters, and you have energy available. This is anger as bravery waiting to happen.",
+      "friction": "Clarity without action collapses back into frustration. This altitude requires a decision: what does this clarity want to do in the world?",
+      "invitation": "Translate the clarity into one specific, consequential act. Not the whole campaign — the one move that only you can make from this position.",
+      "choices": [
+        { "key": "make_the_move", "label": "Name and execute the specific act this clarity is calling for.", "isGrowth": true },
+        { "key": "say_the_thing", "label": "Speak the truth that clarity has revealed — to someone who needs to hear it.", "isGrowth": true },
+        { "key": "hold_the_clarity", "label": "Not yet. Hold the clarity without acting until conditions are better.", "isGrowth": false }
+      ],
+      "advice": "Anger:neutral is clarity — you see what is unjust or misaligned. The vector into bravery is committed action from that clarity, not further analysis."
+    },
+    {
+      "channel": "sadness",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Uncomposted Grief",
+      "situation": "Something ended — a relationship, a project, a version of yourself — and the grief has not been given its full due. You have been carrying partial grief, keeping it at the edges.",
+      "friction": "Grief unexpressed becomes ballast. It does not disappear; it accumulates and slows everything that comes after. The quest is being weighted by something that needs to be mourned properly.",
+      "invitation": "What is the specific loss that has not been fully grieved? Give it a name and a ceremony, however small.",
+      "choices": [
+        { "key": "name_and_mourn", "label": "Name the loss precisely and give it a simple ritual of completion.", "isGrowth": true },
+        { "key": "witness_with_someone", "label": "Bring the grief to a witness — let it be seen by one trusted other.", "isGrowth": true },
+        { "key": "not_ready", "label": "The grief is still too raw for ceremony. More time is needed.", "isGrowth": false }
+      ],
+      "advice": "Grief at dissatisfied altitude is often stuck because it feels too big or too private. Even a minimal naming (a sentence, a held moment) begins the metabolization."
+    },
+    {
+      "channel": "sadness",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Archive of What Was Good",
+      "situation": "Loss has flattened the landscape. What came before feels inaccessible — not just gone but somehow retroactively reduced, as if it were not real or not enough.",
+      "friction": "The grief is distorting memory. What was good is being absorbed into the loss narrative. Recovery of what was actually good is part of the alchemy.",
+      "invitation": "Before this loss, what was true and good? Name three specific things from the before-time that deserve to be held as real — not as contrast to the loss, but as their own fact.",
+      "choices": [
+        { "key": "recover_the_good", "label": "Name three true, good things from before the loss.", "isGrowth": true },
+        { "key": "carry_forward", "label": "Identify what from that period still belongs in the future.", "isGrowth": true },
+        { "key": "too_soon", "label": "The loss is still too present to recover the good yet.", "isGrowth": false }
+      ],
+      "advice": "Recovering the real goodness of what was lost is not toxic positivity — it is the foundation for acceptance. Grief that erases the good has no ground to stand on."
+    },
+    {
+      "channel": "sadness",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Clear Pool",
+      "situation": "You have moved through the grief into something quieter. There is acceptance — not resolution, not forgetting, but a willingness for what happened to have happened.",
+      "friction": "Acceptance is not the end of the story. It is the ground from which something new becomes possible. The question is what wants to grow from this cleared ground.",
+      "invitation": "From this acceptance, what new possibility is visible that the grief was blocking? It does not have to be large — what is the first small shoot?",
+      "choices": [
+        { "key": "name_the_new", "label": "Name the possibility that acceptance has opened — however tentative.", "isGrowth": true },
+        { "key": "offer_the_learning", "label": "What does this grief teach that you can offer to others who are still in it?", "isGrowth": true },
+        { "key": "stay_with_acceptance", "label": "Stay in acceptance for now. The new has not yet arrived.", "isGrowth": false }
+      ],
+      "advice": "Sadness:neutral is acceptance — the loss has been received. The vector into poignance is carrying the grief's meaning forward, not leaving it behind."
+    },
+    {
+      "channel": "joy",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Restless Fire",
+      "situation": "You can feel the potential energy — the sense that something wants to happen — but it is not landing anywhere. The aliveness is present but scattered across too many directions.",
+      "friction": "Restlessness is joy without a container. The energy is real and good; the container (a clear focus, a committed project, a specific relationship) is what is missing.",
+      "invitation": "Of all the directions this energy is pointing, which one actually matters most right now? Not the most exciting — the most true.",
+      "choices": [
+        { "key": "find_the_true_one", "label": "Name the direction that matters most, even if it is less exciting than others.", "isGrowth": true },
+        { "key": "make_a_container", "label": "Create a simple structure (time, project, commitment) to hold this energy.", "isGrowth": true },
+        { "key": "let_it_scatter", "label": "The energy needs more time to show where it wants to go.", "isGrowth": false }
+      ],
+      "advice": "Joy at dissatisfied altitude is often restlessness — vital energy without direction. The alchemy move is not suppression but focus: pick one and go all the way in."
+    },
+    {
+      "channel": "joy",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Borrowed Light",
+      "situation": "The joy feels contingent — dependent on external conditions (the project going well, the community showing up, others being in good spirits). When conditions shift, the joy collapses.",
+      "friction": "Borrowed joy is real but fragile. The transition from restlessness to appreciation requires finding something to be grateful for that does not depend on conditions being favorable.",
+      "invitation": "What is present right now — regardless of how the project is going, how others are showing up — that is worth genuinely appreciating?",
+      "choices": [
+        { "key": "find_the_unconditional", "label": "Name something genuinely worth appreciating that is not condition-dependent.", "isGrowth": true },
+        { "key": "practice_the_notice", "label": "Spend two minutes actively noticing what is actually good in this moment.", "isGrowth": true },
+        { "key": "wait_for_conditions", "label": "When conditions improve, the joy will return. Tend the conditions instead.", "isGrowth": false }
+      ],
+      "advice": "The move from restlessness to appreciation is a shift from wanting conditions to change to finding what is actually present. This is not resignation — it is the ground of durable joy."
+    },
+    {
+      "channel": "joy",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Overflow",
+      "situation": "The appreciation is real and steady. You have been receiving well. Now there is a pull toward giving — toward letting the fullness become generative rather than just receptive.",
+      "friction": "Appreciation that stays private can become a kind of hoarding. The movement into bliss involves overflow — giving what you have received in a form that the community can use.",
+      "invitation": "What has been filling you that wants to be shared? Not performed generosity — what actually wants to move outward from this fullness?",
+      "choices": [
+        { "key": "let_it_overflow", "label": "Identify what wants to move outward and offer it without waiting for the right moment.", "isGrowth": true },
+        { "key": "create_with_it", "label": "Make something from this fullness — a gesture, an artifact, a contribution.", "isGrowth": true },
+        { "key": "receive_more_first", "label": "The appreciation is still consolidating. Receive more before giving.", "isGrowth": false }
+      ],
+      "advice": "Joy:neutral is appreciation — receiving well. The vector into bliss is generativity: allowing the appreciation to become creation, offering, or connection."
+    },
+    {
+      "channel": "neutrality",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Gray Country",
+      "situation": "Everything is flat. Not bad, not good — just absent. The quest continues but there is no resonance in it. You are going through the motions in a landscape without weather.",
+      "friction": "Numbness is not absence of feeling — it is a protective layer over feeling that became too much. Something underneath the flatness has not been attended to.",
+      "friction": "Numbness is protective dampening. The move is not to force feeling but to find the smallest possible point of real contact with the present moment.",
+      "invitation": "Without forcing feeling, what is one thing in the immediate environment that has some quality — a texture, a sound, a smell — that you can actually register?",
+      "choices": [
+        { "key": "find_the_texture", "label": "Ground in one sensory detail that is actually present. Stay with it for a full minute.", "isGrowth": true },
+        { "key": "locate_the_underneath", "label": "Ask: what would I feel if I were not numb right now?", "isGrowth": true },
+        { "key": "honor_the_protection", "label": "The numbness is serving a purpose. Do not push through it yet.", "isGrowth": false }
+      ],
+      "advice": "Numbness is functional — it is protecting something real. The alchemy move is gentle contact with the present, not dramatic feeling-recovery. Small is right."
+    },
+    {
+      "channel": "neutrality",
+      "altitudeFrom": "dissatisfied",
+      "altitudeTo": "neutral",
+      "title": "The Motivationless Quest",
+      "situation": "The quest is assigned. The skills are available. The path is clear. And yet the motivation refuses to arrive. You are executing without being in it.",
+      "friction": "Execution without motivation is sustainable for short sprints and corrosive over time. The absence of motivation is either a mismatch signal or an energy depletion signal. Both are worth reading.",
+      "invitation": "Which is it: this quest is misaligned with what actually matters to you, or you are depleted and this is not the right moment?",
+      "choices": [
+        { "key": "name_the_mismatch", "label": "The mismatch: this quest is not actually about what matters to me because...", "isGrowth": true },
+        { "key": "name_the_depletion", "label": "The depletion: I am running on empty. What needs to be restored first?", "isGrowth": true },
+        { "key": "push_through", "label": "Push through the resistance. Motivation sometimes follows action.", "isGrowth": false }
+      ],
+      "advice": "Distinguishing mismatch from depletion changes the intervention: mismatch requires reorientation, depletion requires rest and restoration. Getting this diagnosis right is the move."
+    },
+    {
+      "channel": "neutrality",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Witness Seat",
+      "situation": "You have arrived in a steadier place — not inflated, not collapsed. There is a quality of simple presence: you are here, the work is here, the community is here.",
+      "friction": "Presence can be mistaken for passivity. The movement from presence into peace requires discovering what becomes possible from the witness seat — not what you control, but what you participate in.",
+      "invitation": "From this presence, what in the community or the work is asking for your simple witness rather than your intervention?",
+      "choices": [
+        { "key": "witness_without_fixing", "label": "Identify something that needs to be witnessed rather than fixed, and stay with it.", "isGrowth": true },
+        { "key": "participate_from_presence", "label": "Find the form of participation that flows from presence rather than effort.", "isGrowth": true },
+        { "key": "deepen_the_presence", "label": "Presence needs more consolidation before action.", "isGrowth": false }
+      ],
+      "advice": "Neutrality:neutral is presence — being here without agenda. The vector into peace is engaged witnessing: full contact with what is, without the compulsion to change it."
+    },
+    {
+      "channel": "fear",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Map-Holder",
+      "situation": "Others in the community are still in the fog of anxiety. You have orientation and can see the terrain. There is a pull to use that orientation in service.",
+      "friction": "Orientation offered prematurely can feel like dismissal. The timing and form of the offering matters as much as the content.",
+      "invitation": "Who in the community is in the fear-fog that your orientation could genuinely help? What form of offering is actually useful to them right now?",
+      "choices": [
+        { "key": "offer_the_map", "label": "Reach toward someone in the fog with your orientation — in their terms, not yours.", "isGrowth": true },
+        { "key": "make_the_path_visible", "label": "Create an artifact (a framework, a story, a practice) from your orientation that others can use.", "isGrowth": true },
+        { "key": "hold_it_close", "label": "The orientation is still fragile. Protect it before offering it.", "isGrowth": false }
+      ],
+      "advice": "Fear:neutral moving toward satisfaction often involves turning inward orientation outward. The growth vector is from seeing clearly for yourself to helping others see."
+    },
+    {
+      "channel": "anger",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Sovereign Voice",
+      "situation": "The clarity has been sitting in you — unnamed publicly. You know what is wrong, you know your position, and you have been waiting for a better moment to speak.",
+      "friction": "There is no better moment. Clarity that stays private becomes resentment. The bravery this altitude calls for is not dramatic confrontation — it is clear, accountable speech.",
+      "invitation": "What is the one true thing that needs to be said, to the right person, in the right register, from this position of clarity?",
+      "choices": [
+        { "key": "speak_clearly", "label": "Say the true thing — clearly, accountably, without escalation.", "isGrowth": true },
+        { "key": "write_it_first", "label": "Write it out completely before speaking, to find the right form.", "isGrowth": true },
+        { "key": "wait_for_alignment", "label": "The conditions are not yet right. The moment for speech will arrive.", "isGrowth": false }
+      ],
+      "advice": "Anger:clarity needs a voice. The alchemy into bravery is not about winning the argument — it is about the integrity of speaking from conviction rather than reaction."
+    },
+    {
+      "channel": "sadness",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Poignance of What Endures",
+      "situation": "The grief has settled into something bittersweet. Loss is real, acceptance is real, and something remains that the loss could not take. This is the emotional register of poignance — holding both.",
+      "friction": "Poignance wants expression. It is not the end of grieving but the beginning of meaning-making. The move here is to articulate what endures — what the loss proved could not be destroyed.",
+      "invitation": "What did the loss reveal about what cannot be taken? Name it as a truth about what endures.",
+      "choices": [
+        { "key": "name_what_endures", "label": "Say what the loss proved could not be destroyed: the love, the learning, the value, the connection.", "isGrowth": true },
+        { "key": "make_from_it", "label": "Create something — a gesture, an offering, a practice — from the meaning the grief revealed.", "isGrowth": true },
+        { "key": "stay_bittersweet", "label": "Remain in the poignance without needing to articulate it yet.", "isGrowth": false }
+      ],
+      "advice": "Sadness:neutral moving toward satisfaction is the alchemy of grief into meaning. What endures after loss is the raw material of depth — the deepest knowing the grief produced."
+    },
+    {
+      "channel": "joy",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Generous Moment",
+      "situation": "You are in genuine appreciation — not performed, not forced. The quality of this aliveness wants to move outward. Something in the Conclave community is waiting for what only this mood can offer.",
+      "friction": "Generous moments are perishable. The impulse to contribute from this place needs to be honored while the aliveness is present, not filed for later.",
+      "invitation": "What does this moment of genuine appreciation want to make or offer? Not a plan for later — right now, from this state.",
+      "choices": [
+        { "key": "act_now", "label": "Make the offering while the appreciation is present — before analysis arrives.", "isGrowth": true },
+        { "key": "express_directly", "label": "Say directly to someone what you genuinely appreciate about them or the work.", "isGrowth": true },
+        { "key": "plan_it_carefully", "label": "Design the contribution carefully so it lands well, even if that takes longer.", "isGrowth": false }
+      ],
+      "advice": "Joy:appreciation is a moving target. The alchemy into bliss requires action while the state is alive. Generous moments are real resources — use them before they pass."
+    },
+    {
+      "channel": "neutrality",
+      "altitudeFrom": "neutral",
+      "altitudeTo": "satisfied",
+      "title": "The Ground of Peace",
+      "situation": "The presence has deepened into something that does not need the external situation to be different. There is a quality of okayness that is not contingent — not because problems are solved but because presence itself is sufficient.",
+      "friction": "This state is rare and worth recognizing. The temptation is to either grasp it (trying to preserve the peace) or dismiss it (waiting for the next crisis to make it feel earned).",
+      "invitation": "What becomes possible from this ground of peace that anxiety or restlessness blocks? What quality of action is available only from here?",
+      "choices": [
+        { "key": "act_from_peace", "label": "Identify and take one action that is only possible from this groundedness.", "isGrowth": true },
+        { "key": "offer_the_ground", "label": "Be a stabilizing presence for someone who is ungrounded right now.", "isGrowth": true },
+        { "key": "receive_the_peace", "label": "Simply receive this. Not every moment of peace requires action.", "isGrowth": false }
+      ],
+      "advice": "Neutrality:presence moving into peace is one of the rarest altitude transitions. The alchemy is recognizing the ground and choosing what to build from it — or choosing to let the stillness be its own contribution."
+    }
+  ]
+}

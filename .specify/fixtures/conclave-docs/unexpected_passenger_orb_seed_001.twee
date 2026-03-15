@@ -1,0 +1,73 @@
+:: context
+You are looking at the screen of the game.
+
+The system has loaded, but nothing has happened yet.
+
+A quiet moment.
+
+Then something changes.
+
+[[Continue|anomaly]]
+
+
+:: anomaly
+A message appears.
+
+Not a notification.
+Not a quest.
+
+Just a sentence.
+
+"Are you lost, or are you looking?"
+
+[[Look closer|contact]]
+
+
+:: contact
+The interface shifts slightly.
+As if the system noticed you noticing it.
+
+You are given three responses.
+
+[[I'm looking.|choice_look]]
+[[I might be lost.|choice_lost]]
+[[Who asked that?|choice_challenge]]
+
+
+:: choice_look
+"Good," the system replies.
+
+"Looking is the first skill."
+
+A faint diagram appears.
+It looks like a map of something.
+
+[[Continue|artifact]]
+
+
+:: choice_lost
+"Then orientation comes first."
+
+A faint diagram appears.
+It looks like a map of something.
+
+[[Continue|artifact]]
+
+
+:: choice_challenge
+"Good," the system replies.
+
+"You noticed the anomaly."
+
+A faint diagram appears.
+It looks like a map of something.
+
+[[Continue|artifact]]
+
+
+:: artifact
+You gained a BAR:
+
+"Clarity begins with noticing."
+
+[[End Encounter|END]]

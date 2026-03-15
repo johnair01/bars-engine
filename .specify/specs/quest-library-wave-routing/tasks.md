@@ -2,17 +2,17 @@
 
 ## Phase 1: Schema and routing
 
-- [ ] Add `questPool String?` to CustomBar in prisma/schema.prisma (values: efa, dojo, discovery, gameboard)
-- [ ] Run `npm run db:sync`
-- [ ] In book-quest-review approve flow: set questPool from moveType (cleanUp→efa, growUp→dojo, showUp→gameboard, wakeUp→discovery)
-- [ ] Verify createThreadFromBook publishes to Quest Library (creatorType='library')
+- [x] Add `questPool String?` to CustomBar in prisma/schema.prisma (values: efa, dojo, discovery, gameboard)
+- [x] Run `npm run db:sync`
+- [x] In book-quest-review approve flow: set questPool from moveType (cleanUp→efa, growUp→dojo, showUp→gameboard, wakeUp→discovery)
+- [x] Verify createThreadFromBook publishes to Quest Library (creatorType='library')
 
 ## Phase 2: getQuestsByPool and EFA surface
 
-- [ ] Create src/actions/quest-pools.ts with getQuestsByPool(pool)
-- [ ] Query CustomBar where questPool = pool, status = 'active'
-- [ ] Add EFA quest pool section to Emotional First Aid page or linked "Learn moves" UI
-- [ ] Player can pull EFA pool quest to active journey
+- [x] Create src/actions/quest-pools.ts with getQuestsByPool(pool)
+- [x] Query CustomBar where questPool = pool, status = 'active'
+- [x] Add EFA quest pool section to Emotional First Aid page or linked "Learn moves" UI
+- [x] Player can pull EFA pool quest to active journey
 
 ## Phase 3: Discovery queue (admin)
 

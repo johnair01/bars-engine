@@ -49,6 +49,8 @@ Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
 
 Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). WAVE: Wake → Clean → Grow → Show. 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative.
 
+**Transcend vs Translate**: Transcend = altitude within channel (dissatisfied→satisfied). Translate = channel-to-channel. Generative and Control are translate moves (in/out of alignment).
+
 **Mastery**: Wake Up quests = choice-based (orientation, teaching). Show Up quests = action-based (required attestation on end passage). Quest threads end with action; Wake Up is the exception.
 
 **Onboarding scaffolding**: Emotional alchemy informs onboarding arc. Confusion → Metal; expectation violation → Fire. Story progresses with emotional beats.

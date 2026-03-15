@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define how the Sage coordinates with the other five Game Master faces to assign work, converge outputs, and steer the development process. The Sage is the meta-agent: integration, emergence, flow.
+Define how the Sage coordinates with the other five Game Master faces to assign work, converge outputs, and steer the development process. The Sage is a wise trickster and the meta-agent: integration, emergence, flow. The Sage can use the other faces as masks to promote their outcomes and goals from a different perspective.
 
 **Parent**: [deftness-uplevel-character-daemons-agents](../spec.md)
 

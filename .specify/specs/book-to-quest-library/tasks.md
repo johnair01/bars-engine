@@ -33,17 +33,17 @@
 
 ## Phase 4: Quest Library API + Pull
 
-- [ ] Create src/actions/quest-library.ts
-- [ ] Implement getQuestLibraryContent() (filter by creatorType: 'library', player nation/playbook/developmental)
-- [ ] Implement pullFromLibrary(threadId) → ThreadProgress
-- [ ] Extend startThread in quest-thread.ts for library threads
+- [x] Create src/actions/quest-library.ts
+- [x] Implement getQuestLibraryContent() (filter by creatorType: 'library', player nation/playbook/developmental)
+- [x] Implement pullFromLibrary(threadId) → ThreadProgress
+- [x] Extend startThread in quest-thread.ts for library threads (reuses existing startThread)
 
 ## Phase 5: Quest Library UI
 
-- [ ] Create src/app/library/page.tsx
-- [ ] Create QuestLibraryBrowser component (list threads, filter by move type, allyship domain, book)
-- [ ] Create PullFromLibraryButton (or "Start" button)
-- [ ] Add Library link to player nav
+- [x] Create src/app/library/page.tsx
+- [x] Create QuestLibraryBrowser component (list threads, filter by move type, allyship domain, book)
+- [x] Create PullFromLibraryButton (or "Start" button)
+- [x] Add Library link to player nav (Explore modal)
 
 ## Phase 6: Admin UX Polish
 

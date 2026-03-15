@@ -62,7 +62,7 @@ Each lens has an application flavor tied to integral levels. Affects passage ton
 | **Regent** | — | Order, roles and rules | Maintaining culture, tradition; rules, guidelines, structures |
 | **Architect** | Orange | Blueprint, project | Value; instrumental understanding; systematic |
 | **Diplomat** | Green | Weave, relational field | Juggling perspectives; care; relationships; cultural field |
-| **Sage** | Teal | Whole, integration | Sustainable systems; ecology work |
+| **Sage** | Teal | Wise trickster; whole, integration | Sustainable systems; ecology work; can use other faces as masks |
 
 **Implementation**: Lens selects narrative voice, choice framing (e.g. Challenger = "Prove it"; Diplomat = "How does this affect others?"), and which moves are emphasized in prompt context.
 

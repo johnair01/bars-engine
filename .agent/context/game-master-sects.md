@@ -15,7 +15,7 @@ Game Masters are reframed as **heads of Taoist sects**. Players choose to show u
 | **Regent** | Order, structure | Roles, rules, collective tool | Lake |
 | **Architect** | Blueprint; virtual sys-admin teacher | Strategy, project, advantage; stewards collective backlog with honor and amusement | Heaven |
 | **Diplomat** | Weave | Relational field, care, connector | Wind |
-| **Sage** | Whole | Integration, emergence, flow | Mountain |
+| **Sage** | Wise trickster; whole | Integration, emergence, flow; can use other faces as masks to promote outcomes from a different perspective | Mountain |
 
 ## FACE_TRIGRAM_PREFERENCE
 
@@ -35,6 +35,10 @@ export const FACE_TRIGRAM_PREFERENCE: Record<string, string> = {
 ## Serving a Game Master
 
 **Serving** = the player has chosen that face as their developmental lens. Quests drawn from the I Ching should align with that sect's mission — e.g. Shaman-aligned quests emphasize belonging/ritual; Architect-aligned quests emphasize strategy/structure.
+
+## Domain Constraint
+
+Faces must not leave their domains except with counsel from the Sage. When a face would act outside its domain, route to the Sage; the Sage may run as the appropriate face (mask) or delegate. See [.specify/specs/game-master-face-moves/spec.md](../../.specify/specs/game-master-face-moves/spec.md).
 
 **Alignment implication**: When scoring hexagrams for alignment, add +1 to sect score if the hexagram's upper or lower trigram matches FACE_TRIGRAM_PREFERENCE[active_face].
 

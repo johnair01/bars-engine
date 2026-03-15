@@ -67,6 +67,15 @@ Control cycle: Wood↔Earth, Fire↔Metal, Earth↔Water, Metal↔Wood, Water↔
 | Activate Hope | Metal → Wood | Convert fear into forward momentum |
 | Mobilize Grief | Water → Fire | Turn sadness into boundary-setting |
 
+## Transcend vs Translate
+
+- **Transcend**: Same channel; altitude shift (dissatisfied → neutral → satisfied). 5 moves; energy +2.
+- **Translate**: Different channels; element-to-element. 10 moves (5 Generative + 5 Control).
+- **Generative**: Translate in alignment with flow cycle (Wood→Fire→Earth→Metal→Water→Wood). Energy +1.
+- **Control**: Translate out of alignment (precision pivot). Energy -1.
+
+**Vector format**: `channel:fromAltitude->channel:toAltitude` (e.g. `fear:dissatisfied->fear:neutral` for Transcend; `fear:dissatisfied->anger:neutral` for Translate).
+
 ## Binary moves (legacy / Epiphany Bridge)
 
 | Move | Meaning | When it applies |
