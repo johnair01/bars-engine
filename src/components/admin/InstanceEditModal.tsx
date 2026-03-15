@@ -8,6 +8,7 @@ type Instance = {
   slug: string
   name: string
   domainType: string
+  allyshipDomain?: string | null
   theme: string | null
   targetDescription: string | null
   wakeUpContent: string | null
@@ -72,6 +73,17 @@ export function InstanceEditModal({
                 <option value="fundraiser">fundraiser</option>
                 <option value="hackathon">hackathon</option>
                 <option value="business">business</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Allyship Domain (gameboard deck)</label>
+              <select name="allyshipDomain" defaultValue={instance.allyshipDomain ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+                <option value="">— None (legacy deck) —</option>
+                <option value="GATHERING_RESOURCES">GATHERING_RESOURCES</option>
+                <option value="DIRECT_ACTION">DIRECT_ACTION</option>
+                <option value="RAISE_AWARENESS">RAISE_AWARENESS</option>
+                <option value="SKILLFUL_ORGANIZING">SKILLFUL_ORGANIZING</option>
               </select>
             </div>
 

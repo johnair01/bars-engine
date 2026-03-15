@@ -40,6 +40,7 @@ const SECTIONS = [
     links: [
       { href: '/wiki/iching', label: 'I Ching Guidebook' },
       { href: '/wiki/voice-style-guide', label: 'Librarian Campaign Voice Style Guide' },
+      { href: '/wiki/ui-style-guide', label: 'UI Style Guide (uncluttered by default)' },
     ],
   },
   {

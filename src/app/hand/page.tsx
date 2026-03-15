@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { CreateBarForm } from '@/components/CreateBarForm'
-import { getAppConfig } from '@/actions/config'
+import { FaceMovesSection } from '@/components/hand/FaceMovesSection'
 import Link from 'next/link'
 
 export default async function HandPage() {
@@ -90,6 +90,8 @@ export default async function HandPage() {
                     />
                 )}
             </section>
+
+            <FaceMovesSection />
 
             <section className="space-y-6">
                 <div className="flex items-center gap-3">

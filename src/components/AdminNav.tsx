@@ -21,6 +21,7 @@ export function AdminNav() {
         { name: 'Twine Stories', href: '/admin/twine', icon: '📖' },
         { name: 'Books', href: '/admin/books', icon: '📕' },
         { name: 'Adventures', href: '/admin/adventures', icon: '🗺️' },
+        { name: 'Templates', href: '/admin/templates', icon: '📋' },
         { name: 'Quest Grammar', href: '/admin/quest-grammar', icon: '📝' },
         { name: 'Quest Proposals', href: '/admin/quest-proposals', icon: '📋' },
         { name: 'Backlog', href: '/admin/backlog', icon: '📌' },

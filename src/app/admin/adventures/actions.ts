@@ -1,6 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { promoteDraftToActive as promoteService } from "@/lib/template-library"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -128,4 +129,11 @@ export async function importPassagesFromJson(
 
     revalidatePath(`/admin/adventures/${adventureId}`)
     return { success: true, count }
+}
+
+/** Promote a DRAFT Adventure to ACTIVE. */
+export async function promoteDraftToActive(adventureId: string) {
+    await promoteService(adventureId)
+    revalidatePath(`/admin/adventures/${adventureId}`)
+    revalidatePath('/admin/adventures')
 }

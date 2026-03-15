@@ -10,6 +10,13 @@ import {
   drawFromCampaignDeck,
   getCampaignDeckQuestIds,
 } from '@/lib/gameboard'
+import {
+  drawFromDeck,
+  markQuestPlayed,
+  translateQuestForStage,
+} from '@/lib/campaign-domain-deck'
+import { createFaceMoveBar } from '@/actions/face-move-bar'
+import type { AllyshipDomain } from '@/lib/kotter'
 import { getActiveInstance } from '@/actions/instance'
 import { generateRandomUnpacking, getArchetypePrimaryWave } from '@/lib/quest-grammar'
 import { compileQuestWithAI, publishGameboardAlignedQuestToPlayer } from '@/actions/quest-grammar'
@@ -19,7 +26,6 @@ import type { UnpackingAnswers, SerializableQuestPacket } from '@/lib/quest-gram
 import { getAlignmentContext, drawAlignedHexagram } from '@/lib/iching-alignment'
 import { getHexagramStructure } from '@/lib/iching-struct'
 import { getStageAction } from '@/lib/kotter'
-import type { AllyshipDomain } from '@/lib/kotter'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
@@ -107,6 +113,9 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
   if (!instance) return { error: 'No active instance' }
 
   const period = instance.kotterStage ?? 1
+  const domainRaw = instance.allyshipDomain ?? (campaignRef === 'bruised-banana' ? 'GATHERING_RESOURCES' : null)
+  const domain = domainRaw as AllyshipDomain | null
+  const useDomainDeck = domain != null && ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'].includes(domain)
 
   let slots: SlotWithRelations[] = await db.gameboardSlot.findMany({
     where: {
@@ -120,17 +129,32 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
 
   const allSlotsEmpty = slots.length > 0 && slots.every((s) => !s.questId)
   if (allSlotsEmpty) {
-    const deck = await import('@/lib/gameboard').then((m) =>
-      m.getCampaignDeckQuestIds(campaignRef, period, player.id)
-    )
-    if (deck.length > 0) {
-      const drawn = await drawFromCampaignDeck(
+    let drawn: string[] = []
+    if (useDomainDeck) {
+      const result = await drawFromDeck(
         instance.id,
         campaignRef,
+        domain as AllyshipDomain,
         period,
         SLOT_COUNT,
-        player.id
+        []
       )
+      drawn = result.questIds
+    } else {
+      const deck = await import('@/lib/gameboard').then((m) =>
+        m.getCampaignDeckQuestIds(campaignRef, period, player.id)
+      )
+      if (deck.length > 0) {
+        drawn = await drawFromCampaignDeck(
+          instance.id,
+          campaignRef,
+          period,
+          SLOT_COUNT,
+          player.id
+        )
+      }
+    }
+    if (drawn.length > 0) {
       for (let i = 0; i < slots.length; i++) {
         const slot = slots[i]
         if (slot && drawn[i]) {
@@ -153,13 +177,26 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
   }
 
   if (slots.length === 0) {
-    const drawn = await drawFromCampaignDeck(
-      instance.id,
-      campaignRef,
-      period,
-      SLOT_COUNT,
-      player.id
-    )
+    let drawn: string[] = []
+    if (useDomainDeck) {
+      const result = await drawFromDeck(
+        instance.id,
+        campaignRef,
+        domain as AllyshipDomain,
+        period,
+        SLOT_COUNT,
+        []
+      )
+      drawn = result.questIds
+    } else {
+      drawn = await drawFromCampaignDeck(
+        instance.id,
+        campaignRef,
+        period,
+        SLOT_COUNT,
+        player.id
+      )
+    }
     await db.gameboardSlot.createMany({
       data: Array.from({ length: SLOT_COUNT }, (_, i) => ({
         instanceId: instance.id,
@@ -198,18 +235,34 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
     })
   }
 
+  if (useDomainDeck && domain) {
+    for (const slot of slots) {
+      if (slot.quest) {
+        const translated = translateQuestForStage(
+          { title: slot.quest.title, description: slot.quest.description },
+          domain as AllyshipDomain,
+          period
+        )
+        ;(slot.quest as { title: string; description: string }).title = translated.title
+        ;(slot.quest as { title: string; description: string }).description = translated.description
+      }
+    }
+  }
+
   return {
     slots,
     period,
     campaignRef,
+    allyshipDomain: domain ?? undefined,
   }
 }
 
 /**
  * Take a slot quest — current player becomes steward.
  * Only when slot has a quest and no steward.
+ * Optional ritualText: Shaman create ritual — creates a ritual BAR before taking.
  */
-export async function takeSlotQuest(slotId: string) {
+export async function takeSlotQuest(slotId: string, ritualText?: string) {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
 
@@ -220,9 +273,30 @@ export async function takeSlotQuest(slotId: string) {
   if (!slot || !slot.questId) return { error: 'Slot or quest not found' }
   if (slot.stewardId) return { error: 'Quest already taken by another player' }
 
+  // Shaman: Create ritual — optional step before take
+  if (ritualText?.trim()) {
+    await createFaceMoveBar('shaman', 'create_ritual', {
+      title: ritualText.trim().slice(0, 80) + (ritualText.trim().length > 80 ? '…' : ''),
+      description: ritualText.trim(),
+      barType: 'vibe',
+      questId: slot.questId ?? undefined,
+      metadata: { slotId },
+    })
+  }
+
   await db.gameboardSlot.update({
     where: { id: slotId },
     data: { stewardId: player.id },
+  })
+
+  // Regent: Grant role — every face move produces a BAR
+  await createFaceMoveBar('regent', 'grant_role', {
+    title: `Steward: ${slot.quest?.title ?? 'Quest'}`,
+    description: `${player.name} took stewardship of this quest.`,
+    barType: 'vibe',
+    questId: slot.questId ?? undefined,
+    playerId: player.id,
+    metadata: { slotId, role: 'steward' },
   })
 
   revalidatePath('/campaign/board')
@@ -606,6 +680,15 @@ export async function forkQuestPrivately(questId: string) {
     },
   })
 
+  // Architect: Offer blueprint — original quest is the blueprint; fork is player copy
+  await createFaceMoveBar('architect', 'offer_blueprint', {
+    title: `Blueprint: ${original.title}`,
+    description: original.description ?? '',
+    barType: 'vibe',
+    questId: original.id,
+    metadata: { forkedQuestId: fork.id },
+  })
+
   revalidatePath('/campaign/board')
   revalidatePath('/')
   revalidatePath('/hand')
@@ -710,6 +793,17 @@ export async function completeGameboardQuest(
     return result
   }
 
+  // Sage: Witness — every face move produces a BAR
+  await createFaceMoveBar('sage', 'witness', {
+    title: `Witnessed: ${slot.quest?.title ?? 'Quest completed'}`,
+    description: `${player.name} completed this quest on the gameboard. The Sage holds the moment.`,
+    barType: 'insight',
+    questId: slot.questId ?? undefined,
+    playerId: player.id,
+    instanceId: slot.instanceId,
+    metadata: { slotId, source: 'gameboard' },
+  })
+
   await replaceSlotWithDraw(slotId)
   revalidatePath('/campaign/board')
   revalidatePath('/')
@@ -718,6 +812,7 @@ export async function completeGameboardQuest(
 
 /**
  * Replace a slot with a new draw from the deck.
+ * When instance uses domain deck, marks completed quest as played and resets cycle on exhaustion.
  */
 export async function replaceSlotWithDraw(slotId: string) {
   const slot = await db.gameboardSlot.findUnique({
@@ -725,12 +820,46 @@ export async function replaceSlotWithDraw(slotId: string) {
   })
   if (!slot) return { error: 'Slot not found' }
 
-  const drawn = await drawFromCampaignDeck(
-    slot.instanceId,
-    slot.campaignRef,
-    slot.period,
-    1
-  )
+  const instance = await db.instance.findUnique({
+    where: { id: slot.instanceId },
+    select: { allyshipDomain: true },
+  })
+  const domainRaw = instance?.allyshipDomain ?? (slot.campaignRef === 'bruised-banana' ? 'GATHERING_RESOURCES' : null)
+  const domain = domainRaw as AllyshipDomain | null
+  const useDomainDeck = domain != null && ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'].includes(domain)
+
+  let drawn: string[] = []
+  if (useDomainDeck && slot.questId) {
+    await markQuestPlayed(slot.instanceId, domain as AllyshipDomain, slot.questId)
+    const onBoard = await db.gameboardSlot.findMany({
+      where: {
+        instanceId: slot.instanceId,
+        campaignRef: slot.campaignRef,
+        period: slot.period,
+        questId: { not: null },
+      },
+      select: { questId: true },
+    })
+    const exclude = onBoard
+      .map((s) => s.questId)
+      .filter((id): id is string => !!id && id !== slot.questId)
+    const result = await drawFromDeck(
+      slot.instanceId,
+      slot.campaignRef,
+      domain as AllyshipDomain,
+      slot.period,
+      1,
+      exclude
+    )
+    drawn = result.questIds
+  } else {
+    drawn = await drawFromCampaignDeck(
+      slot.instanceId,
+      slot.campaignRef,
+      slot.period,
+      1
+    )
+  }
 
   await db.gameboardSlot.update({
     where: { id: slotId },

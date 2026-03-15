@@ -37,10 +37,13 @@ export function DashboardCaster() {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="mt-4 w-full p-4 border border-dashed border-yellow-800/50 rounded-xl text-yellow-600 hover:text-yellow-400 hover:border-yellow-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full p-4 rounded-xl border border-yellow-800/50 bg-yellow-950/20 hover:border-yellow-600/60 hover:bg-yellow-900/20 text-yellow-500 transition-colors flex items-center justify-between gap-3"
             >
-                <span className="text-xl">☰</span>
-                <span>Cast the I Ching</span>
+                <div>
+                    <span className="text-xl mr-2">☰</span>
+                    <span className="font-semibold text-white">Cast the I Ching</span>
+                </div>
+                <span className="text-lg opacity-60">→</span>
             </button>
         )
     }

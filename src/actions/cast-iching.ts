@@ -7,6 +7,7 @@ import { fireTrigger } from '@/actions/quest-engine'
 import { getAlignmentContext, drawAlignedHexagram, scoreHexagramAlignment } from '@/lib/iching-alignment'
 import { GAME_MASTER_FACES } from '@/lib/quest-grammar/types'
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import { createFaceMoveBar } from '@/actions/face-move-bar'
 
 /** Line-to-face mapping: line 1 (bottom) = Shaman, 2 = Challenger, 3 = Regent, 4 = Architect, 5 = Diplomat, 6 = Sage */
 const LINE_TO_FACE: GameMasterFace[] = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']
@@ -184,6 +185,16 @@ export async function acceptReading(hexagramId: number) {
                 source: 'iching',
                 notes: `Cast on ${new Date().toLocaleDateString()}`
             }
+        })
+
+        // Create face move BAR (Sage: Cast hexagram) — every face move produces a BAR
+        await createFaceMoveBar('sage', 'cast_hexagram', {
+            title: `I Ching: ${hexagram.name}`,
+            description: hexagram.tone
+                ? `${hexagram.tone}\n\n${hexagram.text ?? ''}`
+                : hexagram.text ?? '',
+            barType: 'vibe',
+            metadata: { hexagramId },
         })
 
         // Also add to starterPack activeBars for dashboard display

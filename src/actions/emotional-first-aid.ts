@@ -1,6 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { unlockBlessedObject } from '@/lib/blessed-objects'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import {
@@ -341,6 +342,19 @@ export async function completeEmotionalFirstAidSession(input: {
                 }
             })
 
+            // PF: Unlock blessed object for EFA completion (one per player)
+            const existingEfa = await tx.blessedObjectEarned.findFirst({
+                where: { playerId: player.id, source: 'efa' },
+            })
+            if (!existingEfa) {
+                await tx.blessedObjectEarned.create({
+                    data: {
+                        playerId: player.id,
+                        source: 'efa',
+                    },
+                })
+            }
+
             if (mintedAmount > 0) {
                 await tx.vibulonEvent.create({
                     data: {
@@ -366,6 +380,18 @@ export async function completeEmotionalFirstAidSession(input: {
 
             // Gold star: 321 Shadow Process always mints 1 vibeulon for completing the process
             if (is321Completion) {
+                // PF: Unlock blessed object for 321 completion (one per player)
+                const existing321 = await tx.blessedObjectEarned.findFirst({
+                    where: { playerId: player.id, source: '321' },
+                })
+                if (!existing321) {
+                    await tx.blessedObjectEarned.create({
+                        data: {
+                            playerId: player.id,
+                            source: '321',
+                        },
+                    })
+                }
                 await tx.vibulonEvent.create({
                     data: {
                         playerId: player.id,

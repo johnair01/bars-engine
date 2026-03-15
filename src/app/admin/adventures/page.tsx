@@ -20,6 +20,12 @@ export default async function AdventuresAdminPage() {
                 action={
                     <div className="flex gap-2">
                         <Link
+                            href="/admin/templates"
+                            className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Create from Template
+                        </Link>
+                        <Link
                             href="/admin/adventures/merge"
                             className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >

@@ -38,7 +38,7 @@ const FACE_KEYWORDS: Record<GameMasterFace, string[]> = {
   regent: ['schema', 'playbook', 'campaign structure', 'rules', 'order', 'structure', 'roles', 'prisma'],
   architect: ['quest grammar', 'cyoa', 'character creation', 'compilation', 'strategy', 'blueprint', 'design'],
   diplomat: ['copy', 'community', 'campaign narrative', 'feedback', 'relational', 'care', 'connector'],
-  sage: ['backlog coordination', 'deftness', 'cross-cutting', 'integration', 'meta', 'coordination'],
+  sage: ['backlog coordination', 'deftness', 'cross-cutting', 'integration', 'meta', 'coordination', 'wise trickster', 'masks'],
 }
 
 function scoreItemForFace(item: BacklogItemForCoordination, face: GameMasterFace): number {

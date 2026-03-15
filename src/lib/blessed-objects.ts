@@ -53,6 +53,14 @@ export async function unlockBlessedObject(
       }
     }
 
+    // Idempotent: one per player for efa and 321
+    if (source === 'efa' || source === '321') {
+      const existing = await db.blessedObjectEarned.findFirst({
+        where: { playerId, source },
+      })
+      if (existing) return { id: existing.id }
+    }
+
     const record = await db.blessedObjectEarned.create({
       data: {
         playerId,

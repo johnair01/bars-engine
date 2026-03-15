@@ -10,6 +10,7 @@ type Instance = {
   slug: string
   name: string
   domainType: string
+  allyshipDomain?: string | null
   theme: string | null
   targetDescription: string | null
   wakeUpContent: string | null

@@ -52,6 +52,22 @@ async function checkAdmin() {
     return player
 }
 
+/** Allows admin OR gm role. Use for GM-facing admin pages. */
+export async function checkGM() {
+    const player = await getCurrentPlayer()
+    if (!player) throw new Error('Not authenticated')
+
+    const gmOrAdminRole = await db.playerRole.findFirst({
+        where: {
+            playerId: player.id,
+            role: { key: { in: ['admin', 'gm'] } }
+        }
+    })
+
+    if (!gmOrAdminRole) throw new Error('Not authorized')
+    return player
+}
+
 // ===================================
 // JOURNEYS (Threads & Packs)
 // ===================================

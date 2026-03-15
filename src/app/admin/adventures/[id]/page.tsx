@@ -4,6 +4,7 @@ import { StartNodeForm } from "./StartNodeForm"
 import { CampaignRefForm } from "./CampaignRefForm"
 import { ImportPassagesForm } from "./ImportPassagesForm"
 import { CharacterCreatorTemplateEditor } from "./CharacterCreatorTemplateEditor"
+import { PromoteDraftButton } from "./PromoteDraftButton"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -88,7 +89,12 @@ export default async function AdventureDetailPage({
                         <div className="space-y-4 text-sm">
                             <div>
                                 <div className="text-zinc-500 mb-1">Status</div>
-                                <div className="font-medium text-zinc-300">{adventure.status}</div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-zinc-300">{adventure.status}</span>
+                                    {adventure.status === 'DRAFT' && (
+                                        <PromoteDraftButton adventureId={adventure.id} />
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <div className="text-zinc-500 mb-1">Visibility</div>

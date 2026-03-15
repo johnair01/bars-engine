@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import type { Metadata321 } from '@/lib/quest-grammar'
 import type { UnpackingAnswers } from '@/lib/quest-grammar'
 import { extractCreationIntent } from '@/lib/creation-quest'
+import { createFaceMoveBar } from '@/actions/face-move-bar'
+import { unlockBlessedObject } from '@/lib/blessed-objects'
 
 export type Shadow321SessionInput = {
   phase3Snapshot: string
@@ -36,6 +38,36 @@ export async function persist321Session(
         linkedQuestId: data.linkedQuestId ?? null,
       },
     })
+
+    // Shaman: Name shadow belief — every face move produces a BAR
+    let shadowTitle = 'Shadow belief acknowledged'
+    let shadowDesc = 'The Shaman witnesses this 321 completion.'
+    try {
+      const phase3 = JSON.parse(data.phase3Snapshot || '{}') as { identityFreeText?: string }
+      const phase2 = JSON.parse(data.phase2Snapshot || '{}') as { q6?: string | string[]; q6Context?: string; alignedAction?: string }
+      if (phase3?.identityFreeText?.trim()) {
+        shadowTitle = `Shadow: ${phase3.identityFreeText.slice(0, 60)}${phase3.identityFreeText.length > 60 ? '…' : ''}`
+        shadowDesc = phase3.identityFreeText
+      } else if (phase2?.q6) {
+        const q6 = Array.isArray(phase2.q6) ? phase2.q6[0] : phase2.q6
+        if (typeof q6 === 'string' && q6.trim()) {
+          shadowTitle = `Shadow: ${q6.slice(0, 60)}${q6.length > 60 ? '…' : ''}`
+          shadowDesc = [q6, phase2.q6Context, phase2.alignedAction].filter(Boolean).join('\n\n')
+        }
+      }
+    } catch {
+      /* use defaults */
+    }
+    await createFaceMoveBar('shaman', 'name_shadow_belief', {
+      title: shadowTitle,
+      description: shadowDesc,
+      barType: 'insight',
+      metadata: { sessionId: session.id, outcome: data.outcome },
+    })
+
+    // PF: Unlock blessed object for 321 Shadow Process (standalone flow, not via EFA)
+    await unlockBlessedObject(player.id, '321', { loreBarId: session.id })
+
     return { success: true, sessionId: session.id }
   } catch (e: unknown) {
     console.error('[charge-metabolism] persist321Session failed:', e)

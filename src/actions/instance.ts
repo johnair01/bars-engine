@@ -27,7 +27,8 @@ async function ensureAdmin() {
     include: { roles: { include: { role: true } } }
   })
 
-  const isAdmin = player?.roles.some(r => r.role.key === 'admin')
+  if (!player) throw new Error('Not authenticated')
+  const isAdmin = player.roles.some(r => r.role.key === 'admin')
   if (!isAdmin) throw new Error('Forbidden')
 
   return player
@@ -152,6 +153,12 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const kotterStageRaw = (formData.get('kotterStage') as string | null)?.trim()
     const kotterStage = kotterStageRaw ? Math.min(8, Math.max(1, parseInt(kotterStageRaw, 10) || 1)) : 1
 
+    const allyshipDomain = (formData.get('allyshipDomain') as string | null)?.trim() || null
+    const validAllyshipDomain =
+      allyshipDomain && ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'].includes(allyshipDomain)
+        ? allyshipDomain
+        : null
+
     if (!slug) throw new Error('Slug is required')
     if (!name) throw new Error('Name is required')
     if (!domainType) throw new Error('Domain type is required')
@@ -177,6 +184,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           isEventMode,
           goalAmountCents,
           kotterStage,
+          allyshipDomain: validAllyshipDomain,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         }
       })
@@ -200,6 +208,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           isEventMode,
           goalAmountCents,
           kotterStage,
+          allyshipDomain: validAllyshipDomain,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         },
         create: {
@@ -220,6 +229,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           isEventMode,
           goalAmountCents,
           kotterStage,
+          allyshipDomain: validAllyshipDomain,
           currentAmountCents: currentAmountCents ?? 0,
         }
       })
@@ -275,11 +285,22 @@ export async function updateInstanceFundraise(formData: FormData): Promise<{ err
   }
 }
 
+const KOTTER_STAGE_NAMES: Record<number, string> = {
+  1: 'Urgency',
+  2: 'Coalition',
+  3: 'Vision',
+  4: 'Communicate',
+  5: 'Obstacles',
+  6: 'Wins',
+  7: 'Build On',
+  8: 'Anchor',
+}
+
 export async function updateInstanceKotterStage(formData: FormData): Promise<void> {
   let errorMessage: string | null = null
 
   try {
-    await ensureAdmin()
+    const admin = await ensureAdmin()
 
     const instanceId = (formData.get('instanceId') as string | null)?.trim() || null
     const stageRaw = (formData.get('kotterStage') as string | null)?.trim()
@@ -287,9 +308,25 @@ export async function updateInstanceKotterStage(formData: FormData): Promise<voi
 
     if (!instanceId) throw new Error('Instance ID is required')
 
+    const instance = await db.instance.findUnique({
+      where: { id: instanceId },
+      select: { name: true },
+    })
+
     await db.instance.update({
       where: { id: instanceId },
       data: { kotterStage }
+    })
+
+    // Regent: Declare period — every face move produces a BAR
+    const { createFaceMoveBarAs } = await import('@/actions/face-move-bar')
+    const stageName = KOTTER_STAGE_NAMES[kotterStage] ?? `Stage ${kotterStage}`
+    await createFaceMoveBarAs(admin.id, 'regent', 'declare_period', {
+      title: `Period declared: ${stageName}`,
+      description: `${instance?.name ?? 'Campaign'} is now in ${stageName} (Stage ${kotterStage}).`,
+      barType: 'vibe',
+      instanceId,
+      metadata: { kotterStage },
     })
 
     revalidatePath('/admin/instances')
