@@ -95,6 +95,13 @@ model Player {
   daemonSummons        DaemonSummon[]
   blessedObjectsEarned BlessedObjectEarned[]
   playerPlaybooks      PlayerPlaybook[]
+  alchemyPlayerState   AlchemyPlayerState?
+  alchemySceneEvents   AlchemySceneEvent[]
+  npcMemories          NpcMemory[]
+  npcRelationships     NpcRelationshipState[]
+  growthScenes         GrowthScene[]
+  alchemyCheckIns      AlchemyCheckIn[]
+  thresholdEncounters  ThresholdEncounter[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -196,6 +203,7 @@ model CustomBar {
   questSource          String?   // system | bounty; bounties have stakedPool > 0
   stakedPool           Int       @default(0) // vibeulons in escrow for bounty payouts
   agentMetadata        String?   // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
+  questPool            String?   // efa | dojo | discovery | gameboard — wave routing for book-derived quests
   shares               BarShare[]
   bountyStakes         BountyStake[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
@@ -883,6 +891,8 @@ model Instance {
   goalAmountCents    Int?
   currentAmountCents Int                  @default(0)
   kotterStage        Int                  @default(1) // 1–8; admin advances
+  allyshipDomain     String?              // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING; when set, gameboard uses domain deck
+  domainDeckCycles   Json     @default("{}") // { [domain]: { playedQuestIds: string[], cycleId: string } }
   isEventMode        Boolean              @default(false)
   stripeOneTimeUrl   String?
   patreonUrl         String?
@@ -1268,6 +1278,20 @@ model AppConfig {
   @@map("app_config")
 }
 
+model GmFaceModifier {
+  id                    String   @id @default(cuid())
+  face                  String   @unique // shaman|challenger|regent|architect|diplomat|sage
+  anomalyStyle          String   // numinous|provocative|official|patterned|social|subtle
+  contactVoice          String   // JSON descriptor
+  interpretationPressure String // low|medium|high
+  responseStyle         String   // JSON descriptor
+  artifactAffinity      String   // memory_entry|quest_hook|obligation|orientation|relationship_update|contemplation
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("gm_face_modifiers")
+}
+
 model AdminAuditLog {
   id        String   @id @default(cuid())
   adminId   String
@@ -1341,6 +1365,20 @@ model Adventure {
   playerPlaybooks  PlayerPlaybook[]
 
   @@map("adventures")
+}
+
+model AdventureTemplate {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  name         String
+  description  String?
+  passageSlots String   // JSON: [{ nodeId, label?, order }]
+  startNodeId  String
+  ownership    String   @default("system") // system | player
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("adventure_templates")
 }
 
 model PlayerPlaybook {
@@ -1619,4 +1657,268 @@ model OrientationSession {
   @@index([playerId, checkpointAt])
   @@map("orientation_sessions")
 }
+
+// --- Emotional Alchemy (AES-1) ---
+
+model AlchemyPlayerState {
+  id        String   @id @default(cuid())
+  playerId  String   @unique
+  channel   String   // fear | anger | sadness | joy | neutrality
+  altitude  String   // dissatisfied | neutral | satisfied
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("alchemy_player_states")
+}
+
+model AlchemySceneEvent {
+  id         String   @id @default(cuid())
+  playerId   String
+  templateId String
+  choiceKey  String?
+  outcome    String?  // altitude reached
+  createdAt  DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@map("alchemy_scene_events")
+}
+
+model AlchemySceneTemplate {
+  id            String  @id @default(cuid())
+  sceneType     String  @default("transcend") // transcend | generate | control
+  channel       String  // fear | anger | sadness | joy | neutrality
+  altitudeFrom  String  // dissatisfied | neutral | satisfied
+  altitudeTo    String  // dissatisfied | neutral | satisfied
+  targetChannel String? // for generate/control: destination channel (Wuxing routing)
+  title         String
+  situation     String
+  friction      String
+  invitation    String
+  choices       String  // JSON: [{key, label, isGrowth}]
+  advice        String?
+  archetypeBias String? // JSON: archetype slugs that prefer this template
+  nationBias    String? // JSON: nation slugs
+  status        String  @default("active") // active | draft (draft = awaiting GM review)
+
+  @@index([channel, altitudeFrom, sceneType])
+  @@map("alchemy_scene_templates")
+}
+
+// --- Daily Check-in Quest ---
+
+model AlchemyCheckIn {
+  id              String    @id @default(cuid())
+  playerId        String
+  date            String    // YYYY-MM-DD — one per player per day
+  stucknessRating Int       // 0–10
+  channel         String    // chosen channel
+  altitude        String    // chosen altitude
+  sceneTypeChosen String?   // transcend | generate | control (null if no scene launched)
+  sceneId         String?   // GrowthScene.id if launched
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  thresholdEncounterId String?
+  thresholdEncounter   ThresholdEncounter? @relation(fields: [thresholdEncounterId], references: [id], onDelete: SetNull)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, date])
+  @@index([playerId])
+  @@map("alchemy_check_ins")
+}
+
+// --- Growth Scene Generator (GSG-1) ---
+
+model GrowthScene {
+  id         String    @id @default(cuid())
+  playerId   String
+  vector     String    // e.g. "fear:dissatisfied→fear:neutral"
+  templateId String
+  sceneDsl   String    // JSON: SceneDsl object
+  status     String    @default("active") // active|resolved|abandoned
+  choiceMade String?
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  player    Player               @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  artifacts GrowthSceneArtifact[]
+
+  @@index([playerId, status])
+  @@map("growth_scenes")
+}
+
+model GrowthSceneArtifact {
+  id        String   @id @default(cuid())
+  sceneId   String
+  type      String   // BAR | quest_hook | vibeulon | relationship_update | memory_entry
+  payload   String   // JSON
+  emittedAt DateTime @default(now())
+
+  scene GrowthScene @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+
+  @@index([sceneId])
+  @@map("growth_scene_artifacts")
+}
+
+// --- Threshold Encounter (TE-1) ---
+
+model ThresholdEncounter {
+  id              String    @id @default(cuid())
+  playerId        String
+  vector          String    // e.g. "fear:dissatisfied→anger:neutral"
+  sceneType       String    // transcend | generate | control
+  gmFace          String    @default("shaman") // shaman|challenger|regent|architect|diplomat|sage
+  hexagramId      Int?      // 1–64
+  nationSlug      String?
+  archetypeSlug   String?
+  beatMode        String    @default("canonical") // minimal | canonical
+  tweeSource      String    // full .twee file content
+  storyData       String    // JSON: StoryData block
+  status          String    @default("draft") // draft | active | archived
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  player            Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  artifacts         ThresholdEncounterArtifact[]
+  checkIns          AlchemyCheckIn[]
+
+  @@index([playerId, status])
+  @@map("threshold_encounters")
+}
+
+model ThresholdEncounterArtifact {
+  id          String   @id @default(cuid())
+  encounterId String
+  type        String   // bar_candidate | BAR | quest_hook | vibeulon | relationship_update | memory_entry
+  payload     String   // JSON
+  promoted    Boolean  @default(false)
+  promotedAt  DateTime?
+  emittedAt   DateTime @default(now())
+
+  encounter ThresholdEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@index([encounterId])
+  @@index([type, promoted])
+  @@map("threshold_encounter_artifacts")
+}
+
+// --- Agentic NPC Constitution System (ANC-1) ---
+
+model NpcConstitution {
+  id                   String   @id @default(cuid())
+  name                 String
+  archetypalRole       String
+  tier                 Int      @default(1) // 1-4
+  constitutionVersion  String   @default("1.0")
+  identity             String   // JSON: core_nature, voice_style, worldview, mask_type
+  values               String   // JSON: protects[], longs_for[], refuses[]
+  function             String   // JSON: primary_scene_role, quest_affinities[], bar_affinities[]
+  limits               String   // JSON: can_initiate[], cannot_do[], requires_regent_approval_for[]
+  memoryPolicy         String   // JSON: scope, retention_rules[]
+  reflectionPolicy     String   // JSON: allowed, frequency, max_outputs
+  governedBy           String   @default("regent_game_master")
+  status               String   @default("draft") // draft|active|suspended|archived
+  currentLocation      String   @default("none")  // library|efa|dojos|gameboard|none
+  linkedAdventures     String   @default("[]")     // JSON: Adventure IDs
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  versions      NpcConstitutionVersion[]
+  memories      NpcMemory[]
+  reflections   NpcReflection[]
+  actions       NpcAction[]
+  relationships NpcRelationshipState[]
+
+  @@map("npc_constitutions")
+}
+
+model NpcConstitutionVersion {
+  id        String   @id @default(cuid())
+  npcId     String
+  version   String
+  snapshot  String   // JSON full constitution at this version
+  changedBy String   // regent_game_master | admin
+  createdAt DateTime @default(now())
+
+  npc NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@index([npcId])
+  @@map("npc_constitution_versions")
+}
+
+model NpcMemory {
+  id         String   @id @default(cuid())
+  npcId      String
+  playerId   String?
+  campaignId String?
+  memoryType String   // scene | relationship | campaign
+  summary    String
+  tags       String   @default("[]") // JSON
+  isCanon    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  npc    NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  player Player?         @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([npcId])
+  @@index([npcId, playerId])
+  @@map("npc_memories")
+}
+
+model NpcReflection {
+  id           String    @id @default(cuid())
+  npcId        String
+  campaignId   String?
+  inputSummary String
+  outputs      String    // JSON: stance_update, possible_hooks[], bar_affinity_shift[]
+  status       String    @default("pending") // pending|approved|rejected
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  npc NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@index([npcId, status])
+  @@map("npc_reflections")
+}
+
+model NpcAction {
+  id                     String   @id @default(cuid())
+  npcId                  String
+  sceneId                String?
+  verb                   String   // reveal_lore|ask_question|challenge_player|affirm_player|offer_quest_seed|reflect_bar|redirect_scene|deepen_scene|handoff_to_other_npc
+  payload                String   // JSON
+  requiresRegentApproval Boolean  @default(false)
+  status                 String   @default("executed") // executed|blocked|pending
+  reason                 String?
+  createdAt              DateTime @default(now())
+
+  npc NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@index([npcId])
+  @@map("npc_actions")
+}
+
+model NpcRelationshipState {
+  id         String   @id @default(cuid())
+  npcId      String
+  playerId   String
+  campaignId String?
+  trust      Int      @default(0) // -100 to 100
+  tension    Int      @default(0) // 0 to 100
+  state      String   @default("{}") // JSON: freeform relational metadata
+  updatedAt  DateTime @updatedAt
+
+  npc    NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  player Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([npcId, playerId])
+  @@map("npc_relationship_states")
+}
+
 
