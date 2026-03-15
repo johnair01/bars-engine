@@ -3,7 +3,7 @@
 ## Origin Story
 BARs Engine began as a narrative engine for parties: a way to generate quests, track lore, and turn moments into shared story. Over time, the project clarified itself as something closer to an operating system: a reusable world-building substrate people can install, fork, and evolve.
 
-The app became mythological by necessity. When you are coordinating humans in real time, the “code” is only half the system. The other half is meaning: what counts, what matters, what gets remembered, what gets adopted, and how divergence becomes evolution rather than collapse.
+The app became mythological by necessity. When you are coordinating humans in real time, the "code" is only half the system. The other half is meaning: what counts, what matters, what gets remembered, what gets adopted, and how divergence becomes evolution rather than collapse.
 
 ## The Kernel Principle
 A BAR is a **kernel**.
@@ -18,7 +18,7 @@ A kernel is a compressed unit of potential: small enough to carry, rich enough t
 - a community norm
 - a forked branch of reality
 
-BARs are not “notes.” They are **seeds with provenance**.
+BARs are not "notes." They are **seeds with provenance**.
 
 ## The Five Dimensions
 
@@ -117,7 +117,7 @@ BARs can be **forked**:
 - forks allow simultaneous emergent paths
 - forks treat disagreement as evolution rather than failure
 
-A forked BAR may preserve structural maturity while restarting social adoption. The “same” kernel can bloom into multiple worlds.
+A forked BAR may preserve structural maturity while restarting social adoption. The "same" kernel can bloom into multiple worlds.
 
 ## BARs Engine as Version-Managed Backlog
 
@@ -132,7 +132,7 @@ The **Architect Game Master** teaches players to steward the collective backlog 
 ## Inspiration as Currency
 Vibeulons track inspiration and invested creative energy.
 
-BARs can accumulate “weight” as they become more structurally mature and artifact-rich. Weight is descriptive: it records the amount of meaningful work and coherence loaded into the kernel. It is not a prediction engine and does not assume future momentum.
+BARs can accumulate "weight" as they become more structurally mature and artifact-rich. Weight is descriptive: it records the amount of meaningful work and coherence loaded into the kernel. It is not a prediction engine and does not assume future momentum.
 
 Acceleration is emergent. The system records and rewards real work; it does not fabricate social physics.
 
