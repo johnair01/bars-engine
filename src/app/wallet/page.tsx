@@ -9,6 +9,9 @@ import { RedemptionPacksSection } from '@/components/RedemptionPacksSection'
 import { MovementFeed } from '@/components/MovementFeed'
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
+import { getPlayerAlchemyState } from '@/actions/alchemy'
+import { AlchemyStateWidget } from '@/components/AlchemyStateWidget'
+import { WidgetErrorBoundary } from '@/components/WidgetErrorBoundary'
 
 export default async function WalletPage() {
     const cookieStore = await cookies()
@@ -28,10 +31,11 @@ export default async function WalletPage() {
     })
     const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-    const [wallet, movementFeedItems, appreciationResult] = await Promise.all([
+    const [wallet, movementFeedItems, appreciationResult, alchemyState] = await Promise.all([
         getWallet(playerId),
         isAdmin ? getMovementFeed(20) : Promise.resolve([]),
         getAppreciationFeed(20),
+        getPlayerAlchemyState(playerId).catch(() => null),
     ])
     const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
     const total = wallet.length
@@ -86,6 +90,14 @@ export default async function WalletPage() {
                     <div className="text-4xl font-mono text-green-400">{total} ♦</div>
                 </div>
             </div>
+
+            {/* Emotional Alchemy State */}
+            <WidgetErrorBoundary label="Emotional Alchemy">
+                <AlchemyStateWidget
+                    initialState={alchemyState ? { channel: alchemyState.channel, altitude: alchemyState.altitude } : null}
+                    playerId={playerId}
+                />
+            </WidgetErrorBoundary>
 
             {/* Redemption Packs (BARs from donations) */}
             {redemptionPacks.length > 0 && (

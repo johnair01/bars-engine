@@ -9,7 +9,7 @@
  */
 
 import type { ElementKey } from './elements'
-import type { PersonalMoveType } from './types'
+import type { MoveFamily, PersonalMoveType } from './types'
 
 export interface CanonicalMove {
   id: string
@@ -66,4 +66,15 @@ export function getEnergyDelta(category: 'Transcend' | 'Generative' | 'Control')
     case 'Generative': return 1
     case 'Control': return -1
   }
+}
+
+/** Return Transcend if same-element (altitude within channel); Translate if fromElement→toElement (channel-to-channel). */
+export function getMoveFamily(move: CanonicalMove): MoveFamily {
+  if (move.element != null && move.fromElement == null && move.toElement == null) {
+    return 'Transcend'
+  }
+  if (move.fromElement != null && move.toElement != null) {
+    return 'Translate'
+  }
+  return 'Transcend'
 }

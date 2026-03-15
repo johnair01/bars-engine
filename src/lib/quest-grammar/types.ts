@@ -5,7 +5,62 @@
  * Part of bruised-banana-launch-specbar.
  */
 
+import type { AlchemyAltitude } from '@/lib/alchemy/types'
+
 export type EmotionalChannel = 'Fear' | 'Anger' | 'Sadness' | 'Joy' | 'Neutrality'
+
+/** Move family: Transcend = altitude within channel; Translate = channel-to-channel. */
+export type MoveFamily = 'Transcend' | 'Translate'
+
+/** Emotional vector: channel:altitude -> channel:altitude. Same channel = Transcend; different = Translate. */
+export interface EmotionalVector {
+  channelFrom: EmotionalChannel
+  altitudeFrom: AlchemyAltitude
+  channelTo: EmotionalChannel
+  altitudeTo: AlchemyAltitude
+}
+
+const CHANNEL_TO_LOWER: Record<EmotionalChannel, string> = {
+  Fear: 'fear',
+  Anger: 'anger',
+  Sadness: 'sadness',
+  Joy: 'joy',
+  Neutrality: 'neutrality',
+}
+
+const LOWER_TO_CHANNEL: Record<string, EmotionalChannel> = {
+  fear: 'Fear',
+  anger: 'Anger',
+  sadness: 'Sadness',
+  joy: 'Joy',
+  neutrality: 'Neutrality',
+}
+
+const VALID_ALTITUDES: AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']
+
+/** Serialize vector to string: channel:altitude->channel:altitude */
+export function vectorToString(v: EmotionalVector): string {
+  const cf = CHANNEL_TO_LOWER[v.channelFrom]
+  const ct = CHANNEL_TO_LOWER[v.channelTo]
+  return `${cf}:${v.altitudeFrom}->${ct}:${v.altitudeTo}`
+}
+
+/** Parse vector string; returns null if invalid. */
+export function parseVectorString(s: string): EmotionalVector | null {
+  const match = s.match(/^([a-z]+):(dissatisfied|neutral|satisfied)->([a-z]+):(dissatisfied|neutral|satisfied)$/)
+  if (!match) return null
+  const [, cf, af, ct, at] = match
+  const channelFrom = LOWER_TO_CHANNEL[cf ?? '']
+  const channelTo = LOWER_TO_CHANNEL[ct ?? '']
+  if (!channelFrom || !channelTo) return null
+  if (!VALID_ALTITUDES.includes(af as AlchemyAltitude) || !VALID_ALTITUDES.includes(at as AlchemyAltitude)) return null
+  return {
+    channelFrom,
+    altitudeFrom: af as AlchemyAltitude,
+    channelTo,
+    altitudeTo: at as AlchemyAltitude,
+  }
+}
 export type MovementType = 'translate' | 'transcend'
 export type SegmentVariant = 'player' | 'sponsor'
 

@@ -12,6 +12,9 @@ import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
 import { DashboardSectionButtons } from '@/components/dashboard/DashboardSectionButtons'
+import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
+import { DashboardActionButtons } from '@/components/dashboard/DashboardActionButtons'
+import { GetStartedBlock } from '@/components/dashboard/GetStartedBlock'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
@@ -23,6 +26,8 @@ import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
 import { getRecentChargeBars } from '@/actions/charge-capture'
 import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
+import { DailyCheckInQuest } from '@/components/dashboard/DailyCheckInQuest'
+import { getTodayCheckIn } from '@/actions/alchemy'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -351,6 +356,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const chargeResult = await getRecentChargeBars({ limit: 5 })
   const recentCharges = 'success' in chargeResult ? chargeResult.bars : []
 
+  // Daily alchemy check-in
+  const todayCheckIn = await getTodayCheckIn(playerId).catch(() => null)
+
   // Derive completed move types for flow checking
   const completedMoveTypes = Array.from(new Set(
     player.quests
@@ -452,6 +460,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           />
         )}
 
+        {/* Daily Alchemy Check-in Quest */}
+        <DailyCheckInQuest
+          playerId={playerId}
+          todayCheckIn={todayCheckIn ? {
+            sceneId: todayCheckIn.sceneId ?? null,
+            thresholdEncounterId: todayCheckIn.thresholdEncounterId ?? null,
+            channel: todayCheckIn.channel,
+            altitude: todayCheckIn.altitude,
+            sceneTypeChosen: todayCheckIn.sceneTypeChosen ?? null,
+          } : null}
+        />
+
       </header >
 
       {/* RITUAL SUCCESS BANNER */}
@@ -474,42 +494,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         </section>
       )}
 
-      {/* GETTING STARTED — Feature discovery */}
-      <section className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5 sm:p-6">
-        <h2 className="text-sm uppercase tracking-widest text-zinc-500 font-bold mb-4">Get Started</h2>
-        <p className="text-zinc-400 text-sm mb-4 max-w-xl">
-          Create BARs, complete quests, use Emotional First Aid when stuck, and support the residency. Here&apos;s how.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Link href="/wiki/bars-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-amber-500/50 transition-colors">
-            <div className="text-amber-400 font-medium text-sm mb-0.5">BARs</div>
-            <div className="text-zinc-500 text-xs">What they are, how to create, how they fuel quests</div>
-          </Link>
-          <Link href="/wiki/quests-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-emerald-500/50 transition-colors">
-            <div className="text-emerald-400 font-medium text-sm mb-0.5">Quests</div>
-            <div className="text-zinc-500 text-xs">Make quests, add subquests, complete on Gameboard</div>
-          </Link>
-          <Link href="/wiki/emotional-first-aid-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-cyan-500/50 transition-colors">
-            <div className="text-cyan-400 font-medium text-sm mb-0.5">Emotional First Aid</div>
-            <div className="text-zinc-500 text-xs">Unblock when stuck—vibeulon moves, grounding</div>
-          </Link>
-          <Link href="/wiki/donation-guide" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-green-500/50 transition-colors">
-            <div className="text-green-400 font-medium text-sm mb-0.5">Donate</div>
-            <div className="text-zinc-500 text-xs">Support the residency—Event page → Donate</div>
-          </Link>
-          <Link href="/daemons" className="block p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-purple-500/50 transition-colors">
-            <div className="text-purple-400 font-medium text-sm mb-0.5">Daemons</div>
-            <div className="text-zinc-500 text-xs">Discover and summon inner allies—321 Wake Up</div>
-          </Link>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link href="/bars/create" className="text-sm text-amber-400 hover:text-amber-300 font-medium">Create BAR →</Link>
-          <Link href="/emotional-first-aid" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium">Try EFA →</Link>
-          <Link href="/event/donate" className="text-sm text-green-400 hover:text-green-300 font-medium">Donate →</Link>
-          <Link href="/game-map" className="text-sm text-zinc-400 hover:text-white font-medium">Game Map →</Link>
-          <Link href="/daemons" className="text-sm text-purple-400 hover:text-purple-300 font-medium">Daemons →</Link>
-        </div>
-      </section>
+      {/* GET STARTED — Collapsible, dismissible */}
+      <GetStartedBlock />
 
       {/* WELCOME SCREEN (if not seen yet) */}
       {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (
@@ -556,43 +542,53 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       )}
 
       {/* QUEST JOURNEYS (Threads & Packs) */}
-      {(threads.length > 0 || packs.length > 0) && (
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-px bg-zinc-800 flex-1"></div>
-            <h2 className="text-purple-500/70 uppercase tracking-widest text-sm font-bold">Journeys</h2>
-            <div className="h-px bg-zinc-800 flex-1"></div>
-          </div>
+      {(threads.length > 0 || packs.length > 0) && (() => {
+        const activeThreads = threads.filter(t => !(t.playerProgress as any)?.isArchived)
+        const journeysCount = activeThreads.length + packs.length
+        return (
+          <CollapsibleSection
+            title="Journeys"
+            count={journeysCount}
+            defaultExpanded={journeysCount <= 3}
+            titleClassName="text-purple-500/70"
+            variant="button"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeThreads.map(thread => (
+                <QuestThread
+                  key={thread.id}
+                  thread={thread as any}
+                  completedMoveTypes={completedMoveTypes}
+                  isSetupIncomplete={isSetupIncomplete}
+                  focusQuest={focusQuest}
+                  campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
+                  isAdmin={isAdmin}
+                />
+              ))}
+              {packs.map(pack => (
+                <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} isAdmin={isAdmin} />
+              ))}
+            </div>
+          </CollapsibleSection>
+        )
+      })()}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {threads.filter(t => !(t.playerProgress as any)?.isArchived).map(thread => (
-              <QuestThread
-                key={thread.id}
-                thread={thread as any}
-                completedMoveTypes={completedMoveTypes}
-                isSetupIncomplete={isSetupIncomplete}
-                focusQuest={focusQuest}
-                campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
-                isAdmin={isAdmin}
-              />
-            ))}
-            {packs.map(pack => (
-              <QuestPack key={pack.id} pack={pack as any} completedMoveTypes={completedMoveTypes} focusQuest={focusQuest} isAdmin={isAdmin} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ACTION BUTTONS — Full width across screen */}
+      <section className="mb-10">
+        <DashboardActionButtons />
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         <div className="space-y-10">
           {/* 2. ACTIVE BARS (Current) */}
-          <section>
-            <div className="flex items-center gap-3 mb-6" id="active-quests">
-              <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-yellow-500/70 uppercase tracking-widest text-sm font-bold">Active Quests</h2>
-              <div className="h-px bg-zinc-800 flex-1"></div>
-            </div>
-
+          <CollapsibleSection
+            title="Active Quests"
+            count={activeBars.length}
+            defaultExpanded={activeBars.length <= 5}
+            titleClassName="text-yellow-500/70"
+            id="active-quests"
+            variant="button"
+          >
             <StarterQuestBoard
               completedBars={completedBars}
               activeBars={activeBars.length > 5 ? activeBars.slice(0, 5) : activeBars}
@@ -615,108 +611,50 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                 <p className="text-xs text-zinc-500 mt-1">Organize and manage your active quests</p>
               </div>
             )}
-          </section>
-
-          {/* 3. AVAILABLE BARS LINK */}
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-green-600/70 uppercase tracking-widest text-sm font-bold">Available Quests</h2>
-              <div className="h-px bg-zinc-800 flex-1"></div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link href="/bars" className="block group">
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-purple-500/50 transition-all">
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1">My BARs</h3>
-                    <p className="text-zinc-500 text-sm">Create &amp; share BARs</p>
-                  </div>
-                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-purple-900 group-hover:text-purple-400 transition-colors">
-                    →
-                  </div>
-                </div>
-              </Link>
-              <Link href="/bars/available" className="block group">
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex justify-between items-center group-hover:border-green-500/50 transition-all">
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1">The Market</h3>
-                    <p className="text-zinc-500 text-sm">Browse &amp; accept collective quests</p>
-                  </div>
-                  <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-green-900 group-hover:text-green-400 transition-colors">
-                    →
-                  </div>
-                </div>
-              </Link>
-            </div>
-
-            {/* CREATE ACTIONS */}
-            <div className="mt-8">
-              <Link
-                href="/bars/create"
-                className="group relative block p-6 border border-dashed border-zinc-700 rounded-xl hover:border-green-500/50 hover:bg-zinc-900/30 transition-all text-center max-w-xs"
-              >
-                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📜</div>
-                <div className="font-bold text-white mb-1">Create BAR</div>
-                <div className="text-sm text-zinc-500">Share an insight or story</div>
-              </Link>
-            </div>
-
-            {/* I CHING */}
-            <DashboardCaster />
-          </section>
+          </CollapsibleSection>
         </div>
 
         <div className="space-y-10">
-          {/* 4. EMOTIONAL FIRST AID */}
-          <section>
-            <Link
-              href="/emotional-first-aid"
-              className="block rounded-xl border border-cyan-900/40 bg-cyan-950/20 p-4 hover:border-cyan-500/60 hover:bg-cyan-900/20 transition-colors"
-            >
-              <div className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Medbay Access</div>
-              <div className="text-white font-semibold">Emotional First Aid Kit</div>
-              <div className="text-xs text-cyan-100/70 mt-1">
-                Feeling stuck? Run a quick vibes emergency protocol.
-              </div>
-            </Link>
-          </section>
+          {/* 4. GRAVEYARD (Completed Bars & Journeys) */}
+          {(() => {
+            const completedThreads = threads.filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
+            const completedPacks = packs.filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
+            const graveyardCount = completedThreads.length + completedPacks.length + completedBars.length
+            return (
+              <CollapsibleSection
+                title="💀 Graveyard"
+                count={graveyardCount}
+                defaultExpanded={graveyardCount <= 3}
+                titleClassName="text-zinc-400"
+                variant="button"
+              >
+                <div className="opacity-60 hover:opacity-100 transition duration-500 space-y-6">
+                  {/* Completed Journeys (Threads & Packs) */}
+                  {(completedThreads.length > 0 || completedPacks.length > 0) && (
+                    <div>
+                      <h3 className="text-xs text-zinc-600 uppercase tracking-widest mb-3">Completed Journeys</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {completedThreads.map(thread => (
+                          <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} isAdmin={isAdmin} />
+                        ))}
+                        {completedPacks.map(pack => (
+                          <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} isAdmin={isAdmin} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-          {/* 5. GRAVEYARD (Completed Bars & Journeys) */}
-          <section className="opacity-60 hover:opacity-100 transition duration-500">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px bg-zinc-800 flex-1"></div>
-              <h2 className="text-zinc-700 uppercase tracking-widest text-sm font-bold">💀 Graveyard</h2>
-              <div className="h-px bg-zinc-800 flex-1"></div>
-            </div>
-
-            {/* Completed Journeys (Threads & Packs) */}
-            {(threads.some(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived) || packs.some(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)) && (
-              <div className="mb-6">
-                <h3 className="text-xs text-zinc-600 uppercase tracking-widest mb-3">Completed Journeys</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {threads
-                    .filter(t => t.playerProgress?.completedAt && !(t.playerProgress as any)?.isArchived)
-                    .map(thread => (
-                      <QuestThread key={thread.id} thread={thread as any} campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)} isAdmin={isAdmin} />
-                    ))}
-                  {packs
-                    .filter(p => p.status === 'completed' && !(p.playerProgress as any)?.isArchived)
-                    .map(pack => (
-                      <QuestPack key={pack.id} pack={pack as any} focusQuest={focusQuest} isAdmin={isAdmin} />
-                    ))}
+                  {/* Completed Individual Quests */}
+                  <StarterQuestBoard
+                    completedBars={completedBars}
+                    activeBars={activeBars}
+                    customBars={customBars as any}
+                    view="completed"
+                  />
                 </div>
-              </div>
-            )}
-
-            {/* Completed Individual Quests */}
-            <StarterQuestBoard
-              completedBars={completedBars}
-              activeBars={activeBars}
-              customBars={customBars as any}
-              view="completed"
-            />
-          </section>
+              </CollapsibleSection>
+            )
+          })()}
         </div>
       </div>
     </div >

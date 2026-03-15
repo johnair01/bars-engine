@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import type { AlchemyAltitude, EmotionChannel } from '@/lib/alchemy/types'
 
 /**
  * Cast a Playbook Move (Emotional Alchemy)
@@ -64,4 +65,95 @@ export async function castAlchemyMove(moveName: string, notes?: string) {
         console.error("Alchemy cast failed:", e?.message)
         return { error: 'Failed to cast move' }
     }
+}
+
+// ---------------------------------------------------------------------------
+// AES-1: Alchemy Player State — read / write / advance
+// ---------------------------------------------------------------------------
+
+const ALTITUDE_ORDER: AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']
+
+export async function getPlayerAlchemyState(playerId: string) {
+    return db.alchemyPlayerState.findUnique({
+        where: { playerId },
+        select: { channel: true, altitude: true, updatedAt: true },
+    })
+}
+
+export async function setPlayerAlchemyState(
+    playerId: string,
+    channel: EmotionChannel,
+    altitude: AlchemyAltitude,
+) {
+    return db.alchemyPlayerState.upsert({
+        where: { playerId },
+        create: { playerId, channel, altitude },
+        update: { channel, altitude },
+    })
+}
+
+/** Today's date in YYYY-MM-DD (UTC). */
+function todayString(): string {
+    return new Date().toISOString().slice(0, 10)
+}
+
+export async function getTodayCheckIn(playerId: string) {
+    return db.alchemyCheckIn.findUnique({
+        where: { playerId_date: { playerId, date: todayString() } },
+    })
+}
+
+/**
+ * Creates a daily check-in record, sets alchemy state, and returns the check-in.
+ * Idempotent: returns existing record if already created today.
+ */
+export async function createDailyCheckIn(
+    playerId: string,
+    stucknessRating: number,
+    channel: EmotionChannel,
+    altitude: AlchemyAltitude,
+    sceneTypeChosen: string,
+) {
+    const date = todayString()
+    const existing = await db.alchemyCheckIn.findUnique({
+        where: { playerId_date: { playerId, date } },
+    })
+    if (existing) return existing
+
+    // Update alchemy state to match check-in
+    await db.alchemyPlayerState.upsert({
+        where: { playerId },
+        create: { playerId, channel, altitude },
+        update: { channel, altitude },
+    })
+
+    return db.alchemyCheckIn.create({
+        data: { playerId, date, stucknessRating, channel, altitude, sceneTypeChosen },
+    })
+}
+
+/** Link a scene to today's check-in once it's launched. */
+export async function linkCheckInScene(playerId: string, sceneId: string) {
+    const date = todayString()
+    await db.alchemyCheckIn.updateMany({
+        where: { playerId, date },
+        data: { sceneId },
+    })
+}
+
+export async function advancePlayerAltitude(playerId: string) {
+    const current = await db.alchemyPlayerState.findUnique({ where: { playerId } })
+    if (!current) return { error: 'No alchemy state found for player' }
+
+    const idx = ALTITUDE_ORDER.indexOf(current.altitude as AlchemyAltitude)
+    if (idx === -1 || idx >= ALTITUDE_ORDER.length - 1) {
+        return { altitude: current.altitude, advanced: false }
+    }
+
+    const next = ALTITUDE_ORDER[idx + 1]
+    const updated = await db.alchemyPlayerState.update({
+        where: { playerId },
+        data: { altitude: next },
+    })
+    return { altitude: updated.altitude, advanced: true }
 }
