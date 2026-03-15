@@ -58,6 +58,14 @@ export function ExploreModal({ open, onClose }: ExploreModalProps) {
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Navigation</div>
                         <div className="text-zinc-200 font-bold">Game Map</div>
                     </Link>
+                    <Link
+                        href="/library"
+                        onClick={onClose}
+                        className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition"
+                    >
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Grow Up</div>
+                        <div className="text-zinc-200 font-bold">Quest Library</div>
+                    </Link>
                     <LibraryRequestButton />
                 </div>
                 <Link

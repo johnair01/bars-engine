@@ -146,6 +146,8 @@ export function GameboardClient({
   const [generateLoading, setGenerateLoading] = useState(false)
   const [subquestParentId, setSubquestParentId] = useState<string | null>(null)
 
+  const [ritualSlotId, setRitualSlotId] = useState<string | null>(null)
+  const [ritualText, setRitualText] = useState('')
   const [generatedPacket, setGeneratedPacket] = useState<SerializableQuestPacket | null>(null)
   const [generatedUnpacking, setGeneratedUnpacking] = useState<GameboardUnpacking | null>(null)
   const [accepted, setAccepted] = useState(false)
@@ -173,13 +175,15 @@ export function GameboardClient({
     }
   }, [aidSlotId, campaignRef])
 
-  async function handleTake(slotId: string) {
+  async function handleTake(slotId: string, ritualTextArg?: string) {
     setTaking(slotId)
     try {
-      const result = await takeSlotQuest(slotId)
+      const result = await takeSlotQuest(slotId, ritualTextArg)
       if (result && 'error' in result) {
         alert(result.error)
       } else {
+        setRitualSlotId(null)
+        setRitualText('')
         window.location.reload()
       }
     } finally {
@@ -534,13 +538,55 @@ export function GameboardClient({
               {/* No steward: Take quest */}
               {!slot.stewardId && (
                 <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => handleTake(slot.id)}
-                    disabled={!!taking}
-                    className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
-                  >
-                    {taking === slot.id ? 'Taking...' : 'Take quest'}
-                  </button>
+                  {ritualSlotId === slot.id ? (
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        placeholder="Name a belief or moment before you begin..."
+                        value={ritualText}
+                        onChange={(e) => setRitualText(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-xs rounded border border-zinc-700"
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleTake(slot.id, ritualText.trim() || undefined)}
+                          disabled={!!taking}
+                          className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                        >
+                          {taking === slot.id ? 'Taking...' : 'Take with ritual'}
+                        </button>
+                        <button
+                          onClick={() => handleTake(slot.id)}
+                          disabled={!!taking}
+                          className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs rounded-lg transition-colors"
+                        >
+                          Skip
+                        </button>
+                        <button
+                          onClick={() => { setRitualSlotId(null); setRitualText('') }}
+                          className="py-2 px-3 text-zinc-500 hover:text-zinc-400 text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleTake(slot.id)}
+                        disabled={!!taking}
+                        className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                      >
+                        {taking === slot.id ? 'Taking...' : 'Take quest'}
+                      </button>
+                      <button
+                        onClick={() => setRitualSlotId(slot.id)}
+                        className="w-full py-1.5 px-3 text-zinc-500 hover:text-zinc-400 text-xs"
+                      >
+                        Take with ritual (optional)
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => setAddQuestSlotId(addQuestSlotId === slot.id ? null : slot.id)}
                     className="w-full py-2 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"

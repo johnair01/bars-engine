@@ -57,8 +57,16 @@ export async function getBookApprovedQuests(bookId: string) {
   return { quests }
 }
 
+const MOVE_TO_POOL: Record<string, string> = {
+  cleanUp: 'efa',
+  growUp: 'dojo',
+  showUp: 'gameboard',
+  wakeUp: 'discovery',
+}
+
 /**
  * Approve a draft quest (status → active).
+ * Sets questPool from moveType for book-derived quests (wave routing).
  */
 export async function approveQuest(questId: string) {
   try {
@@ -68,9 +76,11 @@ export async function approveQuest(questId: string) {
     if (!quest) return { error: 'Quest not found' }
     if (quest.status !== 'draft') return { error: 'Quest is not in draft status' }
 
+    const questPool = quest.moveType ? MOVE_TO_POOL[quest.moveType] ?? null : null
+
     await db.customBar.update({
       where: { id: questId },
-      data: { status: 'active' },
+      data: { status: 'active', questPool: questPool ?? undefined },
     })
 
     revalidatePath('/admin/books')
@@ -134,6 +144,7 @@ export async function moveApprovedToDraft(bookId: string) {
 
 /**
  * Approve all draft quests for a book.
+ * Sets questPool from moveType for each quest (wave routing).
  */
 export async function approveAllQuests(bookId: string) {
   try {
@@ -142,16 +153,23 @@ export async function approveAllQuests(bookId: string) {
     const book = await db.book.findUnique({ where: { id: bookId } })
     if (!book) return { error: 'Book not found' }
 
-    const result = await db.customBar.updateMany({
+    const drafts = await db.customBar.findMany({
       where: {
         completionEffects: { contains: `"bookId":"${bookId}"` },
         status: 'draft',
       },
-      data: { status: 'active' },
     })
 
+    for (const q of drafts) {
+      const questPool = q.moveType ? MOVE_TO_POOL[q.moveType] ?? null : null
+      await db.customBar.update({
+        where: { id: q.id },
+        data: { status: 'active', questPool: questPool ?? undefined },
+      })
+    }
+
     revalidatePath('/admin/books')
-    return { success: true, count: result.count }
+    return { success: true, count: drafts.length }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Approve all failed'
     return { error: msg }

@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getEmotionalFirstAidContext } from '@/actions/emotional-first-aid'
+import { getQuestsByPool } from '@/actions/quest-pools'
 import { EmotionalFirstAidKit } from '@/components/emotional-first-aid/EmotionalFirstAidKit'
+import { EfaQuestPoolSection } from '@/components/emotional-first-aid/EfaQuestPoolSection'
 
 export default async function EmotionalFirstAidPage({
     searchParams
@@ -24,6 +26,9 @@ export default async function EmotionalFirstAidPage({
     const { questId, returnTo } = await searchParams
     const backHref = returnTo || '/'
 
+    const efaPool = await getQuestsByPool('efa')
+    const efaQuests = 'quests' in efaPool ? efaPool.quests : []
+
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-10">
             <div className="max-w-4xl mx-auto space-y-6">
@@ -35,6 +40,8 @@ export default async function EmotionalFirstAidPage({
                         Emotional First Aid Kit
                     </div>
                 </div>
+
+                <EfaQuestPoolSection quests={efaQuests} />
 
                 <EmotionalFirstAidKit initialContext={context} contextQuestId={questId || null} />
             </div>
