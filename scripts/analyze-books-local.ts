@@ -15,13 +15,22 @@
  *   DATABASE_URL  — local postgres
  *   BACKEND_URL   — default http://localhost:8000
  *   OPENAI_API_KEY — needed if backend falls through to Tier-2 (not used directly here)
+ *
+ * Flags:
+ *   --no-auto-start — fail if backend not running; do not auto-start
  */
+
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config({ path: '.env' })
+
+import { ensureBackendReady } from '../src/lib/backend-health'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000'
+const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
 
 // ---------------------------------------------------------------------------
 // Chunk splitter (mirrors src/lib/book-chunker.ts)
@@ -226,18 +235,6 @@ async function analyzeBook(bookId: string) {
   const sampled = sampleEvenly(actionable, MAX_CHUNKS)
   console.log(`   ${sampled.length} chunks sampled for analysis`)
 
-  // Check backend health
-  try {
-    const h = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(2000) })
-    if (h.ok) {
-      console.log('   ✅ Backend is healthy — using Architect agent')
-    } else {
-      console.log('   ⚠️ Backend returned ' + h.status + ' — agent calls may fail')
-    }
-  } catch {
-    console.log('   ⚠️ Backend not reachable at ' + BACKEND_URL)
-  }
-
   const creatorId = await getCreatorId()
   const allQuests: QuestResult[] = []
 
@@ -296,8 +293,15 @@ async function analyzeBook(bookId: string) {
 }
 
 async function main() {
-  const target = process.argv[2]
+  const NO_AUTO_START = process.argv.includes('--no-auto-start')
+  try {
+    await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
 
+  const target = process.argv.slice(2).find((a) => !a.startsWith('--'))
   if (!target) {
     console.log('Usage: npx tsx scripts/analyze-books-local.ts [bookId|all|extracted]')
     console.log('  all       — analyze all extracted books')

@@ -16,6 +16,7 @@ dependencies = [
     "python-multipart",
     "cuid2",
     "psycopg2-binary>=2.9.11",
+    "fastmcp>=2.0",
 ]
 
 [project.optional-dependencies]

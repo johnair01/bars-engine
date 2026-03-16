@@ -5,22 +5,35 @@
  * Usage:
  *   npm run conclave:analyze
  *   npm run conclave:analyze -- --path "/path/to/Construc conclave (3)"
+ *   npm run conclave:analyze -- --backend http://localhost:8000
+ *   npm run conclave:analyze -- --no-auto-start (fail if backend not running; do not auto-start)
  *
- * Requires: Backend running (npm run dev:backend) with Sage agent.
+ * Requires: Backend (auto-starts by default, or npm run dev:backend).
  * Output: .specify/plans/conclave-analysis-{date}.md
  */
 
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config({ path: '.env' })
+
+import { ensureBackendReady } from '../src/lib/backend-health'
 import * as fs from 'fs'
 import * as path from 'path'
 
 const DEFAULT_PATH = process.env.CONCLAVE_DOCS_PATH || path.join(process.cwd(), '.specify/fixtures/conclave-docs')
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
 
-function parseArgs(): { path: string } {
+function parseArgs(): { path: string; backend: string; noAutoStart: boolean } {
   const args = process.argv.slice(2)
   const pathIdx = args.indexOf('--path')
   const docsPath = pathIdx >= 0 && args[pathIdx + 1] ? args[pathIdx + 1] : DEFAULT_PATH
-  return { path: docsPath }
+  const backendIdx = args.findIndex((a) => a.startsWith('--backend='))
+  const backend =
+    backendIdx >= 0
+      ? args[backendIdx].split('=').slice(1).join('=')
+      : args.indexOf('--backend') >= 0 && args[args.indexOf('--backend') + 1]
+        ? args[args.indexOf('--backend') + 1]
+        : process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+  return { path: docsPath, backend, noAutoStart: args.includes('--no-auto-start') }
 }
 
 function readDocs(dirPath: string): Array<{ name: string; content: string }> {
@@ -65,8 +78,8 @@ Format your response as a structured analysis suitable for an implementation pla
 - Suggested implementation order with rationale`
 }
 
-async function callSage(question: string): Promise<{ synthesis: string; consulted_agents?: string[] }> {
-  const res = await fetch(`${BACKEND_URL}/api/agents/sage/consult`, {
+async function callSage(question: string, backendUrl: string): Promise<{ synthesis: string; consulted_agents?: string[] }> {
+  const res = await fetch(`${backendUrl}/api/agents/sage/consult`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
@@ -114,7 +127,7 @@ async function main() {
   console.log(`Found ${docs.length} docs: ${docs.map((d) => d.name).join(', ')}`)
   const prompt = buildPrompt(docs)
   console.log('Calling Sage...')
-  const result = await callSage(prompt)
+  const result = await callSage(prompt, backend)
   const outPath = writeOutput(result.synthesis, result.consulted_agents)
   console.log(`\n✓ Analysis written to ${outPath}`)
 }

@@ -196,6 +196,8 @@ npm run dev:backend
 
 This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_URL` and `OPENAI_API_KEY` from the root `.env.local` (or `.env`). For local dev, set `NEXT_PUBLIC_BACKEND_URL=http://localhost:8000` in `.env.local` so the frontend uses the local backend instead of a deployed one.
 
+**Run agent scripts from Cursor**: Agent scripts (sage:brief, run:parallel-feature, etc.) auto-start the backend when needed. See [docs/AGENT_WORKFLOWS.md](AGENT_WORKFLOWS.md) for run-from-Cursor flows and MCP tools.
+
 ### Frontend (Vercel)
 
 | Env | Purpose | When to set |

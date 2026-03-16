@@ -4,18 +4,35 @@
  *
  * Usage:
  *   npm run gather:analyze
+ *   npm run gather:analyze -- --backend http://localhost:8000
+ *   npm run gather:analyze -- --no-auto-start (fail if backend not running; do not auto-start)
  *
- * Requires: Backend running (npm run dev:backend) with Sage agent.
+ * Requires: Backend (auto-starts by default, or npm run dev:backend).
  * Output: .specify/plans/gather-clone-gm-analysis-{date}.md
  *
  * Fetches key files from https://github.com/trevorwrightdev/gather-clone
  * and asks Sage to recommend integration for BARS (campaign map, encounter spaces, lobby).
  */
 
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config({ path: '.env' })
+
+import { ensureBackendReady, getBackendUrl } from '../src/lib/backend-health'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+function parseArgs(): { backend: string; noAutoStart: boolean } {
+  const backendIdx = process.argv.findIndex((a) => a.startsWith('--backend='))
+  const backend =
+    backendIdx >= 0
+      ? process.argv[backendIdx].split('=').slice(1).join('=')
+      : process.argv.indexOf('--backend') >= 0 && process.argv[process.argv.indexOf('--backend') + 1]
+        ? process.argv[process.argv.indexOf('--backend') + 1]
+        : getBackendUrl()
+  return { backend, noAutoStart: process.argv.includes('--no-auto-start') }
+}
+
 const GATHER_CLONE_BASE = 'https://raw.githubusercontent.com/trevorwrightdev/gather-clone/main'
 
 const FILES_TO_FETCH = [
@@ -62,8 +79,8 @@ Tasks:
 Format your response as a structured analysis suitable for an implementation plan.`
 }
 
-async function callSage(question: string): Promise<{ synthesis: string; consulted_agents?: string[] }> {
-  const res = await fetch(`${BACKEND_URL}/api/agents/sage/consult`, {
+async function callSage(question: string, backendUrl: string): Promise<{ synthesis: string; consulted_agents?: string[] }> {
+  const res = await fetch(`${backendUrl}/api/agents/sage/consult`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
@@ -101,11 +118,19 @@ ${consultedAgents?.length ? `**Consulted:** ${consultedAgents.join(', ')}\n` : '
 }
 
 async function main() {
+  const { backend, noAutoStart } = parseArgs()
+  try {
+    await ensureBackendReady({ url: backend, autoStart: !noAutoStart })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
+
   console.log('Fetching gather-clone code...')
   const codeSummary = await gatherCode()
   console.log('Building prompt and calling Sage...')
   const prompt = buildPrompt(codeSummary)
-  const result = await callSage(prompt)
+  const result = await callSage(prompt, backend)
   const outPath = writeOutput(result.synthesis, result.consulted_agents)
   console.log(`\n✓ Analysis written to ${outPath}`)
 }

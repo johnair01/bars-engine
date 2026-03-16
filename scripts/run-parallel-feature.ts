@@ -10,8 +10,10 @@ config({ path: '.env' })
  * Usage:
  *   npm run run:parallel-feature -- "Add daemon discovery to onboarding"
  *   npm run run:parallel-feature -- --feature "Add daemon discovery" --decompose-only
+ *   npm run run:parallel-feature -- --no-auto-start (fail if backend not running; do not auto-start)
  */
 
+import { ensureBackendReady, getBackendUrl } from '../src/lib/backend-health'
 import {
   decomposeFeature,
   runParallelFeatureWork,
@@ -30,6 +32,7 @@ function flag(name: string): string | null {
 
 const FEATURE_ARG = flag('feature') ?? process.argv.find((a) => !a.startsWith('--'))
 const DECOMPOSE_ONLY = process.argv.includes('--decompose-only')
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 async function main() {
   const featureDesc = FEATURE_ARG ?? 'Feature request (provide as first arg or --feature=...)'
   if (!FEATURE_ARG) {
@@ -52,6 +55,13 @@ async function main() {
   if (DECOMPOSE_ONLY) {
     console.log('\n(--decompose-only: skipping parallel run and synthesis)')
     return
+  }
+
+  try {
+    await ensureBackendReady({ url: getBackendUrl(), autoStart: !NO_AUTO_START })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
   }
 
   console.log('\nRunning parallel work...')
