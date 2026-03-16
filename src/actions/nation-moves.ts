@@ -66,20 +66,27 @@ export async function ensureMetalNationMoves() {
   // Make this all-or-nothing: if the move tables don't exist yet (schema drift during deploy),
   // we don't want to partially seed "Metal" into nations without the supporting tables.
   return db.$transaction(async (tx) => {
-    const metalNation = await tx.nation.upsert({
-      where: { name: METAL_NATION_NAME },
-      update: {
-        description: 'Metal Nation. Standards, craft, clarity, recycling.'
-      },
-      create: {
-        name: METAL_NATION_NAME,
-        description: 'Metal Nation. Standards, craft, clarity, recycling.',
-        wakeUp: 'Call the Standard: Define the clarity BAR for what "good" means.',
-        cleanUp: 'Cut the Noise: Remove distraction and return to signal.',
-        growUp: 'Forge a Template: Turn craft into reusable form.',
-        showUp: 'Highlight the Craft: Name the prestige BAR and deliver it.'
-      }
+    // name is no longer @unique — find global (instanceId=null) Metal nation, upsert by id
+    let metalNation = await tx.nation.findFirst({
+      where: { name: METAL_NATION_NAME, instanceId: null },
     })
+    if (metalNation) {
+      metalNation = await tx.nation.update({
+        where: { id: metalNation.id },
+        data: { description: 'Metal Nation. Standards, craft, clarity, recycling.' },
+      })
+    } else {
+      metalNation = await tx.nation.create({
+        data: {
+          name: METAL_NATION_NAME,
+          description: 'Metal Nation. Standards, craft, clarity, recycling.',
+          wakeUp: 'Call the Standard: Define the clarity BAR for what "good" means.',
+          cleanUp: 'Cut the Noise: Remove distraction and return to signal.',
+          growUp: 'Forge a Template: Turn craft into reusable form.',
+          showUp: 'Highlight the Craft: Name the prestige BAR and deliver it.',
+        },
+      })
+    }
 
     const clarity = await tx.polarity.upsert({
       where: { key: 'clarity' },
@@ -196,7 +203,7 @@ export async function ensureMetalNationMoves() {
     }
 
     // Archetype pool: link Forge a Template to The Bold Heart playbook (craft/initiative)
-    const boldHeart = await tx.archetype.findUnique({ where: { name: 'The Bold Heart' }, select: { id: true } })
+    const boldHeart = await tx.archetype.findFirst({ where: { name: 'The Bold Heart', instanceId: null }, select: { id: true } })
     if (boldHeart) {
       await tx.nationMove.updateMany({
         where: { key: 'metal_forge_a_template' },

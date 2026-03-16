@@ -1,0 +1,279 @@
+seed_id: birthday-onboarding
+version: "0.1.0"
+created: "2026-03-15"
+ambiguity_score: 0.14
+
+goal: >
+  Build the JJ Birthday Onboarding system — a host-controlled Game Lobby where
+  Wendell (server owner) can spin up new game instances for guests like JJ; an
+  Instance Creation Wizard driven by a vibe interview and campaign goal interview
+  that seeds BARs and configures the instance; a guest onboarding flow with full
+  custom nation + archetype creation (AI-assisted, instance-scoped); and a
+  "Fork This Game" BAR that teaches players how to deploy their own copy of the
+  engine, backed by a wiki reference and in-game wizard.
+
+actors:
+  wendell:
+    role: "Server host — runs the Vercel deployment"
+    gate: "admin role in DB + ENABLE_LOBBY=true env var"
+  jj:
+    role: "Birthday person / VIP customer — GM of her instance"
+    note: "Does not need to know she is on Wendell's server"
+  guests:
+    role: "Players who join JJ's birthday instance"
+
+problem_statement: >
+  There is no way for Wendell (server host) to manage multiple game instances from
+  a single deployment, no wizard for JJ to configure her own birthday campaign
+  (generating BARs from her goals), no guest onboarding that produces custom
+  nations/archetypes scoped to an instance, and no pathway for players to fork the
+  engine to their own server.
+
+constraints:
+  - /lobby gated by: admin role in DB AND ENABLE_LOBBY=true env var (not a new DB role)
+  - Nation + Archetype scoped to an instance via optional instanceId FK (null = global)
+  - "Copy + reset" copies config fields only (no players, no BARs, clean slate)
+  - Guest nations/archetypes are instance-scoped but exportable
+  - BAR generation uses existing AI patterns (generateObject + generateText via getOpenAI)
+  - Daily check-in (existing AES system) gates content pacing — no new pacing system
+  - npm run build + npm run check must pass
+
+architecture:
+  system_1_game_lobby:
+    route: /lobby
+    access: admin role + ENABLE_LOBBY=true env var
+    features:
+      - List all Instance records on this deployment (slug, name, domainType, status, player count)
+      - "Create new instance" button → launches Instance Creation Wizard
+      - "Copy + reset" action on any existing instance → copies config template only
+      - Quick links to each instance's admin panel
+    gate_pattern: >
+      Server component reads player from cookie, checks role === 'admin',
+      checks process.env.ENABLE_LOBBY === 'true'; else redirects to /
+
+  system_2_instance_creation_wizard:
+    route: /lobby/new
+    flow:
+      step_1_vibe_interview:
+        description: "Multi-question form capturing birthday energy/theme"
+        fields:
+          - birthday_person_name: string
+          - vibe_words: string[]        # e.g. ["joyful", "chaotic", "intimate"]
+          - desired_feeling: string     # one sentence: "I want guests to feel..."
+          - energy_level: enum          # chill | medium | high-energy
+      step_2_campaign_goals:
+        description: "What do you want this game to accomplish?"
+        fields:
+          - primary_goal: string        # one sentence
+          - secondary_goals: string[]   # up to 3
+          - domain_type: enum           # GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+          - campaign_duration: string   # e.g. "one evening", "a week"
+      step_3_review_and_create:
+        description: "Preview generated config + create Instance"
+        outputs:
+          - new Instance record (isEventMode: true, birthday slug, theme from vibe)
+          - AI-drafted campaign BARs → stored as CustomBar with status: 'draft', visibility: 'private'
+          - Invite link for JJ to share with guests
+    ai_bar_generation:
+      model: gpt-4o-mini
+      input: vibe_interview + campaign_goals
+      output: "3-5 draft campaign BARs (title, description, domain, trigram)"
+      review: "JJ (GM) reviews in admin before publishing"
+
+  system_3_guest_onboarding:
+    route: /join/[instanceSlug]
+    flow:
+      step_1_vibe_check:
+        description: "Short personal emotional state survey (3 questions)"
+        fields:
+          - current_feeling: EmotionChannel   # fear | anger | sadness | joy | neutrality
+          - altitude: AlchemyAltitude          # dissatisfied | neutral | satisfied
+          - one_word_intention: string
+        output: "AI generates 1-2 personal BARs from vibe check → assigned to player"
+      step_2_custom_nation:
+        description: "Full custom nation creation"
+        fields:
+          - nation_name: string
+          - element: enum               # metal | water | wood | fire | earth
+          - nation_vibe: string         # one paragraph
+        ai_completes:
+          - description
+          - wakeUp / cleanUp / growUp / showUp WAVE content
+          - imgUrl (placeholder)
+        scope: "instanceId = this instance; exportable via Export action"
+      step_3_custom_archetype:
+        description: "Full custom archetype creation"
+        fields:
+          - archetype_name: string
+          - central_conflict: string
+          - primary_question: string
+          - vibe: string
+        ai_completes:
+          - description
+          - moves (3 canonical moves selected by AI from existing move-engine)
+          - content / shadowSignposts
+        scope: "instanceId = this instance; exportable"
+      step_4_confirmation:
+        description: "Welcome screen showing player's nation, archetype, and personal BARs"
+        link_to: "Dashboard (/) filtered to birthday instance"
+
+  system_4_fork_bar:
+    bar_title: "Fork This Game"
+    bar_description: >
+      A Brave Act of Resistance: deploy your own copy of the BARs Engine.
+      When you complete this BAR, you'll have your own game running on your own server.
+    player_flow:
+      - Player claims "Fork This Game" BAR from the quest library
+      - Completing it triggers a InstanceExportRequest record (pending host approval)
+      - Host (Wendell) sees pending export requests in /lobby
+      - Wendell approves → generates config bundle (JSON export of instance config)
+      - Player receives download link + link to fork guide
+    host_flow:
+      - /lobby shows pending InstanceExportRequests
+      - Approve → generate config export JSON
+      - Export includes: instance config, seeded nations/archetypes, BAR templates (no player data)
+
+  system_5_fork_guide:
+    wiki_page:
+      route: /wiki/fork-your-instance
+      content_sections:
+        - Prerequisites (GitHub account, Vercel account, Node 18+)
+        - Fork the repo (github.com/johnair01/bars-engine)
+        - Configure env vars (DATABASE_URL, OPENAI_API_KEY, etc.)
+        - Deploy to Vercel (one-click button)
+        - Import config bundle
+        - Create your first instance
+    in_game_wizard:
+      route: /fork-wizard
+      steps:
+        - "Fork the repo" — external link + confirm checkbox
+        - "Configure env vars" — checklist of required vars with descriptions
+        - "Deploy to Vercel" — deploy button + confirm deployed URL
+        - "Import config bundle" — upload JSON downloaded from /lobby export
+        - "You're live" — celebration screen with link to new instance
+
+schema_additions:
+  Nation:
+    add_field: "instanceId String? // null = global; non-null = scoped to this Instance"
+    add_relation: "instance Instance? @relation(fields: [instanceId], references: [id])"
+
+  Archetype:
+    add_field: "instanceId String? // null = global; non-null = scoped to this Instance"
+    add_relation: "instance Instance? @relation(fields: [instanceId], references: [id])"
+
+  Instance:
+    add_fields:
+      - "vibeData String? // JSON: vibe interview answers"
+      - "goalData  String? // JSON: campaign goal interview answers"
+      - "sourceInstanceId String? // if copied from another instance"
+
+  InstanceExportRequest:
+    fields:
+      - id: cuid
+      - instanceId: string
+      - requestedByPlayerId: string
+      - status: string              # pending | approved | rejected
+      - configBundle: string?       # JSON export (set on approval)
+      - requestedAt: DateTime
+      - resolvedAt: DateTime?
+    map: instance_export_requests
+
+phases:
+  - id: "BO-1"
+    name: "Schema + Migration"
+    description: >
+      Add instanceId FK to Nation + Archetype.
+      Add vibeData, goalData, sourceInstanceId to Instance.
+      Add InstanceExportRequest model.
+    outputs:
+      - prisma/schema.prisma updated
+      - migration applied
+
+  - id: "BO-2"
+    name: "Game Lobby (/lobby)"
+    description: >
+      Host-only route (admin + ENABLE_LOBBY env var).
+      Lists all instances with player count, status, quick links.
+      Create + Copy+Reset actions. Shows pending InstanceExportRequests.
+    outputs:
+      - src/app/lobby/page.tsx
+      - src/app/lobby/layout.tsx (host gate)
+      - src/app/lobby/new/page.tsx (wizard entry)
+      - src/actions/lobby.ts (listInstances, copyInstance, approveExport)
+
+  - id: "BO-3"
+    name: "Instance Creation Wizard"
+    description: >
+      3-step wizard: vibe interview → campaign goals → review + create.
+      Creates Instance record. AI generates 3-5 draft campaign BARs.
+      Returns invite link.
+    outputs:
+      - src/app/lobby/new/InstanceCreationWizard.tsx
+      - src/lib/birthday-onboarding/generate-campaign-bars.ts
+      - src/app/api/lobby/create-instance/route.ts
+
+  - id: "BO-4"
+    name: "Guest Onboarding (/join/[instanceSlug])"
+    description: >
+      4-step player onboarding: vibe check → custom nation → custom archetype → confirmation.
+      AI completes nation + archetype fields. AI generates personal BARs.
+      All scoped to instance.
+    outputs:
+      - src/app/join/[instanceSlug]/page.tsx
+      - src/app/join/[instanceSlug]/GuestOnboardingWizard.tsx
+      - src/lib/birthday-onboarding/generate-personal-bars.ts
+      - src/lib/birthday-onboarding/generate-nation.ts
+      - src/lib/birthday-onboarding/generate-archetype.ts
+      - src/actions/guest-onboarding.ts
+
+  - id: "BO-5"
+    name: "Fork This Game BAR + Export Request"
+    description: >
+      Seed "Fork This Game" BAR in the quest library.
+      Claiming it creates an InstanceExportRequest.
+      Lobby shows pending requests; host approves → generates config JSON.
+    outputs:
+      - scripts/seed-fork-bar.ts
+      - src/actions/fork-game.ts (claimForkBar, approveExportRequest, generateConfigBundle)
+      - src/app/api/lobby/export-request/route.ts
+
+  - id: "BO-6"
+    name: "Fork Guide (wiki + wizard)"
+    description: >
+      /wiki/fork-your-instance — step-by-step reference doc (static page).
+      /fork-wizard — 5-step in-game wizard with checkboxes + config import.
+    outputs:
+      - src/app/wiki/fork-your-instance/page.tsx
+      - src/app/fork-wizard/page.tsx
+      - src/app/fork-wizard/ForkWizard.tsx
+
+  - id: "BO-7"
+    name: "Nation + Archetype export action"
+    description: >
+      "Export to global" action on instance-scoped nation/archetype.
+      Sets instanceId = null (promotes to global pool).
+      Admin-gated or player-owned.
+    outputs:
+      - src/actions/guest-onboarding.ts (exportNationToGlobal, exportArchetypeToGlobal)
+      - src/app/admin/world/nation/[id]/page.tsx update (export button)
+
+success_criteria:
+  - Wendell can access /lobby when admin + ENABLE_LOBBY=true; redirected otherwise
+  - Wendell can create a new instance from the vibe + goal wizard in < 5 minutes
+  - "Copy + reset" from bruised-banana produces a clean new instance with config only
+  - Guest navigates /join/[slug] → completes onboarding → has custom nation, archetype, and personal BARs
+  - AI-generated fields (nation description, archetype moves, BARs) are editable after creation
+  - "Fork This Game" BAR is claimable; completing it creates an export request visible in /lobby
+  - /wiki/fork-your-instance and /fork-wizard are accessible and contain correct instructions
+  - npm run build + npm run check pass with 0 new errors
+
+world_logic_alignment:
+  - "Substrate reuse: Instance model already exists; extend, don't replace"
+  - "Encounters before actions: guest vibe check → content surfaces; don't over-formalize player actions first"
+  - "Self-composting: instance-scoped nations/archetypes expire with the instance unless exported"
+  - "The game creates the game: Fork This Game BAR is itself a BAR — the meta-game is in the game"
+  - "Deftness: JJ gets VIP treatment without knowing she's on Wendell's server"
+
+related_seeds:
+  - seed-threshold-encounter.yaml  # guest vibe check can trigger threshold encounter
+  - seed-agentic-npc-constitution.yaml  # future: Giacomo NPC in birthday instance

@@ -13,7 +13,7 @@ This is the central ledger for all **pending** development objectives and emerge
 | 0.6 | AVS | [Avatar System Strategy](.specify/specs/avatar-system-strategy/spec.md) (bundle AW/AX/AY/BG/BH; deftness + agent-implementability; future: agent-built assets) | UI | [ ] Ready | AV, BB |
 | 0.02 | DS | [Dev Setup Anti-Fragile](.specify/specs/dev-setup-anti-fragile/spec.md) (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues) | Infra | [ ] Ready | - |
 | 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
-| 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [ ] Ready | - |
+| 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [x] Done | - |
 | 40.12 | DW | [Quest Library Wave Routing](.specify/specs/quest-library-wave-routing/spec.md) (route book quests by moveType: EFA pool, Dojo, Discovery, Gameboard; auto-assign on approve; model quest training) | UI/Infra | [ ] Ready | AZ, BN |
 | 0.40 | DC | [Branched Path Orientation](.specify/specs/branched-path-orientation/spec.md) (altitude + longitudinal + domain; 2–4 choices) | UI/Infra | [/] Phase 1 done | CE |
 | 0.45.1 | DQ | [Flow Simulator CLI + Bounded Simulated Actor Roles](.specify/specs/flow-simulator-cli/spec.md) (CLI flow simulation; Bruised Banana fixtures; Librarian/Collaborator/Witness scaffold) | Infra | [ ] Ready | - |

@@ -12,7 +12,7 @@ export default async function NationByIdPage({ params }: { params: { id: string 
     // Try finding by ID first, then Name.
     let nation = await db.nation.findUnique({ where: { id } })
     if (!nation) {
-        nation = await db.nation.findUnique({ where: { name: id } }) // Case sensitive?
+        nation = await db.nation.findFirst({ where: { name: id } }) // Case sensitive?
     }
 
     // Try case insensitive name search if needed?

@@ -102,6 +102,7 @@ model Player {
   growthScenes         GrowthScene[]
   alchemyCheckIns      AlchemyCheckIn[]
   thresholdEncounters  ThresholdEncounter[]
+  instanceExportRequests InstanceExportRequest[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -574,7 +575,7 @@ model Vibulon {
 
 model Nation {
   id          String       @id @default(cuid())
-  name        String       @unique
+  name        String
   description String
   element     String       @default("earth") // metal, water, wood, fire, earth — for choice privileging
   imgUrl      String?
@@ -583,10 +584,13 @@ model Nation {
   cleanUp     String?
   growUp      String?
   showUp      String?
+  instanceId  String?      // null = global; non-null = instance-scoped
   createdAt   DateTime     @default(now())
   moves       NationMove[]
   players     Player[]
+  instance    Instance?    @relation("NationInstance", fields: [instanceId], references: [id], onDelete: Cascade)
 
+  @@index([instanceId])
   @@map("nations")
 }
 
@@ -693,7 +697,7 @@ model QuestMoveLog {
 
 model Archetype {
   id                String   @id @default(cuid())
-  name              String   @unique
+  name              String
   description       String
   moves             String
   content           String?
@@ -711,9 +715,12 @@ model Archetype {
   primaryWaveStage  String?   // wakeUp | cleanUp | growUp | showUp — signature WAVE for choice privileging
   createdAt         DateTime @default(now())
   emotionalFirstAid String?
+  instanceId        String?  // null = global; non-null = instance-scoped
   players           Player[]
   nationMoves      NationMove[]
+  instance          Instance? @relation("ArchetypeInstance", fields: [instanceId], references: [id], onDelete: Cascade)
 
+  @@index([instanceId])
   @@map("archetypes")
 }
 
@@ -912,13 +919,36 @@ model Instance {
   redemptionPacks    RedemptionPack[]
   libraryRequests    LibraryRequest[]
 
+  vibeData          String?   // JSON: vibe interview answers
+  goalData          String?   // JSON: campaign goal interview answers
+  sourceInstanceId  String?   // if copied from another instance
+
   gameboardSlots GameboardSlot[]
   eventCampaigns EventCampaign[]
   campaignPlaybook CampaignPlaybook?
   campaignInvitations CampaignInvitation[]
   barDeck BarDeck?
+  scopedNations     Nation[]    @relation("NationInstance")
+  scopedArchetypes  Archetype[] @relation("ArchetypeInstance")
+  exportRequests    InstanceExportRequest[]
 
   @@map("instances")
+}
+
+model InstanceExportRequest {
+  id                  String    @id @default(cuid())
+  instanceId          String
+  requestedByPlayerId String
+  status              String    @default("pending") // pending | approved | rejected
+  configBundle        String?   // JSON config export (set on approval)
+  requestedAt         DateTime  @default(now())
+  resolvedAt          DateTime?
+
+  instance  Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player    Player   @relation(fields: [requestedByPlayerId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId, status])
+  @@map("instance_export_requests")
 }
 
 model BarDeck {
@@ -1921,4 +1951,30 @@ model NpcRelationshipState {
   @@map("npc_relationship_states")
 }
 
+model SpatialMap {
+  id         String    @id @default(cuid())
+  name       String
+  instanceId String?   @map("instance_id")
+  mapType    String    @map("map_type") // campaign_map | encounter | lobby
+  spawnpoint String    // JSON: { roomIndex, x, y }
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  rooms      MapRoom[]
+
+  @@map("spatial_maps")
+}
+
+model MapRoom {
+  id          String     @id @default(cuid())
+  mapId       String     @map("map_id")
+  map         SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  name        String
+  tilemap     String     // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
+  graphNodeId String?    @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
+  channelId   String?    @map("channel_id")    // For video chat if used later
+  sortOrder   Int        @default(0) @map("sort_order")
+
+  @@index([mapId])
+  @@map("map_rooms")
+}
 
