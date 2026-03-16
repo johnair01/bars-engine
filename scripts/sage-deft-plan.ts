@@ -14,9 +14,11 @@
  *   npm run sage:deft-plan -- --top 15
  *   npm run sage:deft-plan -- --backend http://localhost:8000
  *   npm run sage:deft-plan -- --hexagram 20  (use specific hexagram instead of casting)
+ *   npm run sage:deft-plan -- --no-auto-start (fail if backend not running; do not auto-start)
  */
 
 import './require-db-env'
+import { ensureBackendReady } from '../src/lib/backend-health'
 import { db } from '../src/lib/db'
 import { getSageCoordinationSuggestions } from '../src/lib/sage-coordination'
 import { getHexagramStructure } from '../src/lib/iching-struct'
@@ -40,6 +42,7 @@ function flag(name: string): string | null {
 const BACKEND_URL = flag('backend') ?? process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
 const TOP_N = parseInt(flag('top') ?? '20') || 20
 const FIXED_HEXAGRAM = flag('hexagram') ? parseInt(flag('hexagram')!) : null
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 // ---------------------------------------------------------------------------
 // Cast hexagram (traditional 6 lines)
@@ -216,6 +219,13 @@ function synthesizeLocalPlan(
 // ---------------------------------------------------------------------------
 
 async function main() {
+  try {
+    await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
+
   console.log('Casting hexagram...')
   const hexagramId = castHexagram()
 

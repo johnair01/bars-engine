@@ -12,6 +12,7 @@ This is the central ledger for all **pending** development objectives and emerge
 | 0.5 | PF | [Daemons Inner Work Collectibles](.specify/specs/daemons-inner-work-collectibles/spec.md) (inner work → unlock talismans; Reliquary; use-in-quests Phase 2) | Economy/UI | [ ] Ready | RB, CM, ER |
 | 0.6 | AVS | [Avatar System Strategy](.specify/specs/avatar-system-strategy/spec.md) (bundle AW/AX/AY/BG/BH; deftness + agent-implementability; future: agent-built assets) | UI | [ ] Ready | AV, BB |
 | 0.02 | DS | [Dev Setup Anti-Fragile](.specify/specs/dev-setup-anti-fragile/spec.md) (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues) | Infra | [ ] Ready | - |
+| 0.03 | AW | [Agent Workflows Cursor](.specify/specs/agent-workflows-cursor/spec.md) (auto-start backend for scripts; MCP server for Cursor AI) | Infra | [ ] Ready | - |
 | 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
 | 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [x] Done | - |
 | 40.12 | DW | [Quest Library Wave Routing](.specify/specs/quest-library-wave-routing/spec.md) (route book quests by moveType: EFA pool, Dojo, Discovery, Gameboard; auto-assign on approve; model quest training) | UI/Infra | [ ] Ready | AZ, BN |

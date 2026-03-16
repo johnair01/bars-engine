@@ -9,15 +9,30 @@
  * Usage:
  *   npm run sage:backlog-assess
  *   npm run sage:backlog-assess -- --backend http://localhost:8000
+ *   npm run sage:backlog-assess -- --no-auto-start (fail if backend not running; do not auto-start)
  */
 
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config({ path: '.env' })
+
+import { ensureBackendReady } from '../src/lib/backend-health'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
+function flag(name: string): string | null {
+  const eqForm = process.argv.find((a) => a.startsWith(`--${name}=`))
+  if (eqForm) return eqForm.split('=').slice(1).join('=')
+  const idx = process.argv.indexOf(`--${name}`)
+  if (idx !== -1 && process.argv[idx + 1] && !process.argv[idx + 1].startsWith('--')) {
+    return process.argv[idx + 1]
+  }
+  return null
+}
+
 const BACKEND_URL =
-  process.argv.find((a) => a.startsWith('--backend='))?.split('=')[1] ??
-  process.env.NEXT_PUBLIC_BACKEND_URL ??
-  'http://localhost:8000'
+  flag('backend') ?? process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 interface BacklogItem {
   id: string
@@ -141,6 +156,13 @@ function synthesizeLocalAssessment(
 }
 
 async function main() {
+  try {
+    await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
+
   console.log('Parsing backlog...')
   const { ready, superseded } = parseBacklog()
   const appDirection = loadAppDirection()

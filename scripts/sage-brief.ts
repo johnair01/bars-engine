@@ -14,9 +14,11 @@
  *   npm run sage:brief -- --top 15
  *   npm run sage:brief -- --backend http://localhost:8000
  *   npm run sage:brief -- --face sage          (include owned backlog items; default: sage)
+ *   npm run sage:brief -- --no-auto-start      (fail if backend not running; do not auto-start)
  */
 
 import './require-db-env'
+import { ensureBackendReady } from '../src/lib/backend-health'
 import { db } from '../src/lib/db'
 import { getSageCoordinationSuggestions } from '../src/lib/sage-coordination'
 import { execSync } from 'child_process'
@@ -48,6 +50,7 @@ const FACE = (() => {
   const f = flag('face') ?? 'sage'
   return GAME_MASTER_FACES.includes(f as GameMasterFace) ? (f as GameMasterFace) : 'sage'
 })()
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -426,6 +429,13 @@ function formatBrief(resp: AgentResponse): void {
 // ---------------------------------------------------------------------------
 
 async function main() {
+  try {
+    await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
+
   if (FORMAT !== 'brief') console.log('Gathering context...')
   const ctx = await compileContext()
 
