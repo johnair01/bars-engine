@@ -57,6 +57,13 @@ const ZONES = [
     accent: 'border-zinc-600/50 hover:border-zinc-500/60',
     tag: 'text-zinc-400',
   },
+  {
+    label: 'Fork This Game',
+    description: 'Deploy your own copy of the BARs Engine on your own server.',
+    href: '/fork-game',
+    accent: 'border-teal-700/50 hover:border-teal-600/60',
+    tag: 'text-teal-400',
+  },
 ]
 
 export default function GameMapPage() {
