@@ -36,3 +36,8 @@ export async function requirePlayer() {
     if (!player) throw new Error('Authentication required')
     return player.id
 }
+
+/** Player has invite + completed orientation; can access game world. */
+export function isGameAccountReady(player: { inviteId: string; onboardingComplete: boolean } | null): boolean {
+    return !!player && !!player.inviteId && player.onboardingComplete === true
+}

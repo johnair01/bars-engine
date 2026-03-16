@@ -1,0 +1,221 @@
+seed_id: spatial-world
+version: "0.1.0"
+created: "2026-03-15"
+ambiguity_score: 0.16
+
+goal: >
+  Build a spatial social world layer for the BARs Engine — a Pixi.js tile-grid
+  room system at /world/[instanceSlug]/[roomSlug] where players free-roam 2D
+  maps, discover quests and BARs through proximity-triggered anchor interactions
+  (modal CYOA on approach + click), and encounter Intent Agents representing
+  offline players. Bruised Banana House is the first playable room. GMs
+  configure anchors in the existing admin map editor and link them to
+  quest/Twine IDs. Player position is local-session only; NPCs/Intent Agents
+  populate from recent room visitors on entry.
+
+actors:
+  player:
+    role: "Authenticated player navigating the spatial world"
+    avatar: "Custom sprite image (uploaded or selected)"
+  gm:
+    role: "Admin who configures maps, rooms, and anchors via /admin/maps"
+  intent_agent:
+    role: "Offline player's persistent avatar — offers their quests and BARs"
+
+problem_statement: >
+  The BARs Engine presents quests, BARs, and Twine scenes through menus.
+  There is no spatial layer where players can be present together, discover
+  content by moving through a world, or feel the social aliveness of an async
+  collaborative game. The existing SpatialMap schema and admin map editor
+  provide the data foundation but no player-facing runtime.
+
+constraints:
+  - Rendering: Pixi.js (not Phaser, not CSS grid)
+  - Presence: async/snapshot — no WebSockets; poll-based room occupancy
+  - Player position: local-session only (not persisted to DB)
+  - Intent agents populate from recent room visitor records on room entry
+  - Route pattern: /world/[instanceSlug]/[roomSlug]
+  - Anchors are GM-configurable in /admin/maps (linked to CustomBar or AlchemySceneTemplate IDs)
+  - Anchor interaction: proximity → clickable prompt → modal CYOA adventure; abandon = restart
+  - Avatar: custom sprite image per player
+  - BAR exchange: BAR table anchor = system library; Intent Agent = peer BAR discovery
+  - Builds on existing SpatialMap / SpatialMapRoom schema (do not replace)
+  - npm run build + npm run check must pass
+
+architecture:
+  layer_1_narrative:
+    description: "Existing Twine / AlchemySceneTemplate system — triggered by anchor interaction"
+    entry: "Modal CYOA overlay over the room canvas"
+    abandon_behavior: "Player must restart from beginning if they close mid-adventure"
+
+  layer_2_spatial:
+    route: /world/[instanceSlug]/[roomSlug]
+    renderer: "Pixi.js Application embedded in Next.js client component"
+    tile_size: 32px
+    map_source: "SpatialMap record linked to Instance.spatialMapId (new FK)"
+    room_source: "SpatialMapRoom record (roomSlug = slugified room name)"
+    player_movement: "WASD or click-to-move on walkable tiles (impassable flag respected)"
+    avatar_render: "Player sprite image at current tile; name tag underneath"
+    anchor_interaction:
+      proximity: "Within 1 tile of anchor triggers interaction prompt button"
+      trigger: "Player clicks prompt → modal opens with linked CYOA/quest content"
+      anchor_types:
+        - quest_board: "Links to a CustomBar (quest library filtered to this anchor)"
+        - anomaly: "Links to an AlchemySceneTemplate — triggers threshold encounter flow"
+        - bar_table: "Shows claimable BARs from the quest library"
+        - portal: "Transitions player to another SpatialMapRoom"
+        - npc_slot: "Reserved tile for GM-placed NPC / Intent Agent"
+    presence:
+      poll_interval: 30s
+      storage: "RoomPresence table (playerId, roomId, enteredAt, lastSeenAt)"
+      intent_agents: "Players with lastSeenAt > 30 min become Intent Agents on next load"
+
+  layer_3_quest:
+    description: "Unchanged — quests/BARs accessible through anchor modals and Intent Agent interaction"
+
+  intent_agent:
+    description: >
+      Offline player avatar that persists in the room. Appears in a roaming
+      position determined by a seeded random walk from their last visit.
+      Clicking opens an agent panel showing: player name, element/nation,
+      their public BARs (claimable), and quests they've created.
+    position: "Seeded random tile within walkable area — deterministic per visitor record"
+    data_source: "RoomPresence records with lastSeenAt > 30 min"
+
+schema_additions:
+  SpatialMapAnchor:
+    description: "Configurable interactive object placed on a tile by a GM"
+    fields:
+      - id: cuid
+      - roomId: String (FK SpatialMapRoom)
+      - anchorType: String  # quest_board | anomaly | bar_table | portal | npc_slot
+      - tileX: Int
+      - tileY: Int
+      - label: String?      # display label on hover
+      - linkedId: String?   # CustomBar.id | AlchemySceneTemplate.id | target roomId
+      - linkedType: String? # custom_bar | alchemy_scene | room
+      - config: String?     # JSON: extra anchor-type-specific config
+    map: spatial_map_anchors
+
+  RoomPresence:
+    description: "Tracks which players have been in a room (for Intent Agent generation)"
+    fields:
+      - id: cuid
+      - playerId: String (FK Player)
+      - roomId: String (FK SpatialMapRoom)
+      - instanceSlug: String
+      - enteredAt: DateTime
+      - lastSeenAt: DateTime
+    unique: [playerId, roomId]
+    map: room_presence
+
+  Instance:
+    add_field: "spatialMapId String? // FK to SpatialMap for this instance's world"
+    add_relation: "spatialMap SpatialMap? @relation(...)"
+
+  Player:
+    add_field: "spriteUrl String? // custom avatar sprite image URL"
+
+phases:
+  - id: "SW-1"
+    name: "Schema + Migration"
+    description: >
+      Add SpatialMapAnchor model, RoomPresence model, Instance.spatialMapId FK,
+      Player.spriteUrl field. Run db:sync.
+    outputs:
+      - prisma/schema.prisma updated
+      - migration applied
+
+  - id: "SW-2"
+    name: "Admin Anchor Editor"
+    description: >
+      Extend /admin/maps/[id] editor to place and configure anchors on tiles.
+      GM clicks a tile → anchor type picker → optional linkedId field.
+      Anchors displayed as overlay icons on the tile grid.
+    outputs:
+      - src/app/admin/maps/[id]/AnchorEditor.tsx
+      - src/actions/spatial-maps.ts (createAnchor, updateAnchor, deleteAnchor)
+      - src/app/api/spatial-maps/[id]/anchors/route.ts
+
+  - id: "SW-3"
+    name: "Pixi.js Room Runtime"
+    description: >
+      Player-facing /world/[instanceSlug]/[roomSlug] — Pixi.js canvas rendering
+      the tilemap, player avatar, other player snapshots, and Intent Agents.
+      WASD + click-to-move. Proximity detection for anchor interactions.
+      Anchor prompt button appears when within 1 tile.
+    outputs:
+      - src/app/world/[instanceSlug]/[roomSlug]/page.tsx
+      - src/app/world/[instanceSlug]/[roomSlug]/RoomCanvas.tsx (Pixi.js client component)
+      - src/lib/spatial-world/pixi-room.ts (room renderer, movement, proximity)
+      - src/lib/spatial-world/intent-agents.ts (agent generation from RoomPresence)
+      - src/actions/room-presence.ts (enterRoom, heartbeat, leaveRoom)
+
+  - id: "SW-4"
+    name: "Anchor Modal System"
+    description: >
+      When player clicks an anchor prompt: modal opens with the linked content.
+      quest_board → renders claimable quest list. anomaly → starts threshold
+      encounter flow. bar_table → claimable BARs. portal → transitions room.
+      Abandon = session state cleared, next open restarts.
+    outputs:
+      - src/components/world/AnchorModal.tsx
+      - src/components/world/QuestBoardModal.tsx
+      - src/components/world/BarTableModal.tsx
+      - src/components/world/AnomalyModal.tsx (wraps threshold encounter)
+
+  - id: "SW-5"
+    name: "Intent Agent Panel"
+    description: >
+      Clicking an Intent Agent opens a panel: agent player's name, nation/element,
+      public BARs they've created (claimable inline), quests they own (viewable).
+      Agent position is deterministic seeded random walk per RoomPresence record.
+    outputs:
+      - src/components/world/IntentAgentPanel.tsx
+      - src/actions/intent-agents.ts (getIntentAgentsForRoom, getAgentBars)
+
+  - id: "SW-6"
+    name: "Bruised Banana Room Seed"
+    description: >
+      Seed the Bruised Banana House SpatialMap + rooms in DB.
+      Link to bruised-banana Instance. Seed initial anchors:
+      quest board → bruised-banana quest library, BAR table, anomaly.
+    outputs:
+      - scripts/seed-bruised-banana-world.ts
+      - Bruised Banana Instance.spatialMapId set
+
+  - id: "SW-7"
+    name: "Player Sprite + World Entry"
+    description: >
+      Player can upload/select a sprite image (stored as Player.spriteUrl).
+      /world entry: if no spriteUrl, prompt to choose. Add world link to
+      game-map and dashboard.
+    outputs:
+      - src/app/world/page.tsx (world index — redirect to instance room)
+      - src/components/world/SpriteSelector.tsx
+      - src/actions/player-profile.ts (updateSpriteUrl)
+      - game-map updated with World zone
+
+success_criteria:
+  - Player navigates /world/bruised-banana/living-room and sees a Pixi.js tile grid
+  - Player can move with WASD or click-to-move
+  - Player avatar renders as their custom sprite with name tag
+  - Other recent visitors appear as Intent Agents in deterministic positions
+  - Clicking an Intent Agent opens a panel with their BARs and quests
+  - Walking within 1 tile of an anchor shows a prompt button
+  - Clicking quest_board anchor opens modal with claimable quests
+  - Clicking anomaly anchor opens threshold encounter modal; abandon restarts
+  - GM can place and link anchors in /admin/maps/[id] editor
+  - npm run build + npm run check pass with 0 new errors
+
+world_logic_alignment:
+  - "Encounters before actions: players discover content by moving, not menus"
+  - "Self-composting: Intent Agents are built from visit records — no extra data model"
+  - "The game creates the game: the spatial world is navigated like a BAR — a Brave Act of Resistance is to enter the room"
+  - "Dual-track: room works without Pixi on degraded connection (falls back to room presence list)"
+  - "Deftness: Intent Agents make the world feel alive without real-time infrastructure"
+
+related_seeds:
+  - seed-birthday-onboarding.yaml    # birthday instance gets its own spatial room
+  - seed-threshold-encounter.yaml    # anomaly anchors trigger threshold encounter flow
+  - seed-agentic-npc-constitution.yaml  # Giacomo NPC fits into npc_slot anchor type

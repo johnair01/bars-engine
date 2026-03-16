@@ -319,9 +319,16 @@ function makeRow(overrides: Partial<{
   }
 }
 
-function testClassify_corruptJson_noSession() {
+function testClassify_corruptJson_freshStart() {
   const result = classifySessionForResume(makeRow({ packetJson: 'bad-json' }), NOW)
-  assertEq(result.outcome, 'no_session', 'Corrupt JSON → no_session')
+  assertEq(result.outcome, 'fresh_start', 'Corrupt JSON → fresh_start (preserve sessionId)')
+  assertEq(result.sessionId, 'row-1', 'sessionId preserved for corrupt JSON')
+}
+
+function testClassify_emptyPacketJson_freshStart() {
+  const result = classifySessionForResume(makeRow({ packetJson: '' }), NOW)
+  assertEq(result.outcome, 'fresh_start', 'Empty packetJson → fresh_start (likely write bug)')
+  assertEq(result.sessionId, 'row-1', 'sessionId preserved for empty packetJson')
 }
 
 function testClassify_dbAbandonedFlag() {
@@ -447,7 +454,8 @@ const ALL_TESTS: [string, () => void][] = [
   ['buildResumeBanner: activeFace in_progress', testBuildResumeBanner_activeFaceInProgress],
   ['buildResumeBanner: some complete → count', testBuildResumeBanner_someComplete],
   // classifySessionForResume
-  ['classifySessionForResume: corrupt JSON → no_session', testClassify_corruptJson_noSession],
+  ['classifySessionForResume: corrupt JSON → fresh_start', testClassify_corruptJson_freshStart],
+  ['classifySessionForResume: empty packetJson → fresh_start', testClassify_emptyPacketJson_freshStart],
   ['classifySessionForResume: DB abandoned flag', testClassify_dbAbandonedFlag],
   ['classifySessionForResume: time-based abandonment', testClassify_timeBased_abandoned],
   ['classifySessionForResume: submitted → already_complete', testClassify_submitted_alreadyComplete],

@@ -16,18 +16,18 @@
 
 ## Phase 3: Discovery queue (admin)
 
-- [ ] Admin discovery queue: filter /admin/quests by questPool='discovery' or new /admin/discovery page
-- [ ] List Wake Up quests in discovery; admin can approve, reject, edit, or reassign pool
+- [x] Admin discovery queue: filter /admin/quests by questPool='discovery' or new /admin/discovery page
+- [x] List Wake Up quests in discovery; admin can approve, reject, edit, or reassign pool
 
 ## Phase 4: Dojo pool (stub)
 
-- [ ] Grow Up quests get questPool='dojo' on approve
-- [ ] getQuestsByPool('dojo') returns them; no UI (deferred)
+- [x] Grow Up quests get questPool='dojo' on approve
+- [x] getQuestsByPool('dojo') returns them; no UI (deferred)
 
 ## Phase 5: Verification quest
 
-- [ ] Create cert-quest-library-wave-routing-v1 Twine story
-- [ ] Add to scripts/seed-cyoa-certification-quests.ts
+- [x] Create cert-quest-library-wave-routing-v1 Twine story
+- [x] Add to scripts/seed-cyoa-certification-quests.ts
 - [ ] npm run build and npm run check
 
 ## Phase 6: Model quests and suggestions (deferred)

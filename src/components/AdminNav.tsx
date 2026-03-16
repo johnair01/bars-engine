@@ -20,6 +20,7 @@ export function AdminNav() {
         { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
         { name: 'Twine Stories', href: '/admin/twine', icon: '📖' },
         { name: 'Books', href: '/admin/books', icon: '📕' },
+        { name: 'Discovery', href: '/admin/discovery', icon: '🔍' },
         { name: 'Maps', href: '/admin/maps', icon: '🗺️' },
         { name: 'Adventures', href: '/admin/adventures', icon: '🗺️' },
         { name: 'Templates', href: '/admin/templates', icon: '📋' },

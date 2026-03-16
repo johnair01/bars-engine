@@ -87,6 +87,7 @@
     "sprites:derive-base": "tsx scripts/derive-base-sprites.ts",
     "sprites:nation-placeholders": "tsx scripts/generate-nation-placeholders.ts",
     "sprites:analyze-base": "tsx scripts/analyze-base-silhouette.ts",
+    "sprites:walkable-default": "tsx scripts/generate-walkable-default.ts",
     "docs:export": "tsx scripts/export-docs-to-rst.ts",
     "docs:build": "npm run docs:export && sphinx-build -b html docs/source docs/_build/html",
     "env:pull": "npx vercel env pull .env.local",

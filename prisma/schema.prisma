@@ -9,16 +9,17 @@ datasource db {
 }
 
 model Invite {
-  id                 String    @id @default(cuid())
-  token              String    @unique
-  status             String    @default("active")
+  id                 String      @id @default(cuid())
+  token              String      @unique
+  status             String      @default("active")
   preassignedRoleKey String?
-  maxUses            Int       @default(1)
-  uses               Int       @default(0)
-  theme              String    @default("standard")
-  createdAt          DateTime  @default(now())
+  maxUses            Int         @default(1)
+  uses               Int         @default(0)
+  theme              String      @default("standard")
+  createdAt          DateTime    @default(now())
   usedAt             DateTime?
-  players            Player[]  @relation("InviteUsed")
+  players            Player[]    @relation("InviteUsed")
+  invitationBars     CustomBar[] @relation("InvitationBar")
 
   @@map("invites")
 }
@@ -103,6 +104,10 @@ model Player {
   alchemyCheckIns      AlchemyCheckIn[]
   thresholdEncounters  ThresholdEncounter[]
   instanceExportRequests InstanceExportRequest[]
+  assets                 Asset[]
+  mapPresences           PlayerMapPresence[]
+  spriteUrl              String?        @map("sprite_url")
+  roomPresences          RoomPresence[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -205,6 +210,8 @@ model CustomBar {
   stakedPool           Int       @default(0) // vibeulons in escrow for bounty payouts
   agentMetadata        String?   // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
   questPool            String?   // efa | dojo | discovery | gameboard — wave routing for book-derived quests
+  inviteId             String?   // when set, this BAR is an invitation BAR linked to that invite
+  invite               Invite?   @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
   shares               BarShare[]
   bountyStakes         BountyStake[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
@@ -230,6 +237,7 @@ model CustomBar {
   questProposals      QuestProposal[]
   responses           BarResponse[]
   bindings            BarBinding[]
+  assets              Asset[]
 
   @@map("custom_bars")
 }
@@ -373,6 +381,23 @@ model BarResponse {
   @@index([barId])
   @@index([responderId])
   @@map("bar_responses")
+}
+
+model Asset {
+  id           String    @id @default(cuid())
+  type         String    // bar_attachment | sprite | tile
+  url          String
+  mimeType     String?   @map("mime_type")
+  metadataJson String?   @map("metadata_json") // { intention?, altText?, ... }
+  ownerId      String    @map("owner_id")
+  customBarId  String?   @map("custom_bar_id")
+  createdAt    DateTime  @default(now())
+  owner        Player    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customBar    CustomBar? @relation(fields: [customBarId], references: [id], onDelete: SetNull)
+
+  @@index([customBarId])
+  @@index([type])
+  @@map("assets")
 }
 
 model Quest {
@@ -931,6 +956,8 @@ model Instance {
   scopedNations     Nation[]    @relation("NationInstance")
   scopedArchetypes  Archetype[] @relation("ArchetypeInstance")
   exportRequests    InstanceExportRequest[]
+  spatialMapId      String?     @map("spatial_map_id")
+  spatialMap        SpatialMap? @relation("InstanceSpatialMap", fields: [spatialMapId], references: [id], onDelete: SetNull)
 
   @@map("instances")
 }
@@ -1952,16 +1979,35 @@ model NpcRelationshipState {
 }
 
 model SpatialMap {
-  id         String    @id @default(cuid())
+  id         String               @id @default(cuid())
   name       String
-  instanceId String?   @map("instance_id")
-  mapType    String    @map("map_type") // campaign_map | encounter | lobby
-  spawnpoint String    // JSON: { roomIndex, x, y }
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  rooms      MapRoom[]
+  instanceId String?              @map("instance_id")
+  mapType    String               @map("map_type") // campaign_map | encounter | lobby
+  spawnpoint String               // JSON: { roomIndex, x, y }
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  rooms           MapRoom[]
+  presences       PlayerMapPresence[]
+  linkedInstances Instance[] @relation("InstanceSpatialMap")
 
   @@map("spatial_maps")
+}
+
+model PlayerMapPresence {
+  id         String     @id @default(cuid())
+  playerId   String     @map("player_id")
+  mapId      String     @map("map_id")
+  roomIndex  Int        @map("room_index")
+  x          Int
+  y          Int
+  direction  String     @default("south") // north | south | east | west
+  updatedAt  DateTime   @updatedAt
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  map        SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, mapId])
+  @@index([mapId])
+  @@map("player_map_presences")
 }
 
 model MapRoom {
@@ -1969,12 +2015,50 @@ model MapRoom {
   mapId       String     @map("map_id")
   map         SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
   name        String
+  slug        String     @default("") @map("slug")
   tilemap     String     // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
   graphNodeId String?    @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
   channelId   String?    @map("channel_id")    // For video chat if used later
   sortOrder   Int        @default(0) @map("sort_order")
+  anchors     SpatialMapAnchor[]
+  presences   RoomPresence[]
 
+  @@unique([mapId, slug])
   @@index([mapId])
   @@map("map_rooms")
+}
+
+model SpatialMapAnchor {
+  id          String   @id @default(cuid())
+  roomId      String   @map("room_id")
+  room        MapRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  anchorType  String   @map("anchor_type")
+  tileX       Int      @map("tile_x")
+  tileY       Int      @map("tile_y")
+  label       String?
+  linkedId    String?  @map("linked_id")
+  linkedType  String?  @map("linked_type")
+  config      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([roomId])
+  @@map("spatial_map_anchors")
+}
+
+model RoomPresence {
+  id           String   @id @default(cuid())
+  playerId     String   @map("player_id")
+  roomId       String   @map("room_id")
+  instanceSlug String   @map("instance_slug")
+  enteredAt    DateTime @default(now()) @map("entered_at")
+  lastSeenAt   DateTime @updatedAt @map("last_seen_at")
+
+  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  room   MapRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, roomId])
+  @@index([roomId, lastSeenAt])
+  @@map("room_presence")
 }
 

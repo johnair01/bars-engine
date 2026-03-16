@@ -64,6 +64,13 @@ const ZONES = [
     accent: 'border-teal-700/50 hover:border-teal-600/60',
     tag: 'text-teal-400',
   },
+  {
+    label: 'World',
+    description: 'Enter the spatial world — walk around, interact with anchors, and meet others.',
+    href: '/world',
+    accent: 'border-teal-600/50 hover:border-teal-500/60',
+    tag: 'text-teal-400',
+  },
 ]
 
 export default function GameMapPage() {

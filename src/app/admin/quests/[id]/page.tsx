@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { MicroTwineWizard } from '@/components/admin/MicroTwineWizard'
 import { UpgradeQuestToCYOAFlow } from '@/components/admin/UpgradeQuestToCYOAFlow'
+import { BarAttachmentForm } from '@/components/admin/BarAttachmentForm'
 
 export default function EditQuestPage() {
     const params = useParams<{ id: string }>()
@@ -234,6 +235,16 @@ export default function EditQuestPage() {
                 </div>
             ) : (
                 <>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <BarAttachmentForm
+                            customBarId={id}
+                            assets={questData?.assets ?? []}
+                            onUploaded={async () => {
+                                const data = await getAdminQuest(id)
+                                setQuestData(data)
+                            }}
+                        />
+                    </div>
                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
                         <UpgradeQuestToCYOAFlow
                             questId={id}

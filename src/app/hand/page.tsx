@@ -1,17 +1,18 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { CreateBarForm } from '@/components/CreateBarForm'
 import { FaceMovesSection } from '@/components/hand/FaceMovesSection'
 import Link from 'next/link'
 
 export default async function HandPage() {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
+    const player = await getCurrentPlayer()
+    if (!player) redirect('/conclave/guided')
+    if (!isGameAccountReady(player)) redirect('/conclave/guided')
 
-    if (!playerId) {
-        return <div className="p-8 text-white">Please log in.</div>
-    }
+    const playerId = player.id
 
     // Unassigned Private Drafts (Created by me, Private, Unclaimed)
     const privateDrafts = await db.customBar.findMany({

@@ -25,6 +25,13 @@ const ACTIONS = [
     color: 'cyan',
     icon: null,
   },
+  {
+    href: '/conclave/space',
+    label: 'The Conclave',
+    description: 'Walk the shared space with other avatars',
+    color: 'purple',
+    icon: '🗺️',
+  },
 ] as const
 
 const COLOR_CLASSES = {

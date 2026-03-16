@@ -106,11 +106,17 @@ export async function runSeed(prisma: PrismaClient) {
     ]
 
     for (const n of nations) {
-        await prisma.nation.upsert({
-            where: { name: n.name },
-            update: n,
-            create: n,
+        const existing = await prisma.nation.findFirst({
+            where: { name: n.name, instanceId: null },
         })
+        if (existing) {
+            await prisma.nation.update({
+                where: { id: existing.id },
+                data: n,
+            })
+        } else {
+            await prisma.nation.create({ data: n })
+        }
     }
 
     // 5. Create Playbooks (Archetypes)
@@ -253,11 +259,18 @@ export async function runSeed(prisma: PrismaClient) {
             }
         }
 
-        await prisma.archetype.upsert({
-            where: { name: p.name },
-            update: { ...p, content, ...richData },
-            create: { ...p, content, ...richData },
+        const existingArchetype = await prisma.archetype.findFirst({
+            where: { name: p.name, instanceId: null },
         })
+        const data = { ...p, content, ...richData }
+        if (existingArchetype) {
+            await prisma.archetype.update({
+                where: { id: existingArchetype.id },
+                data,
+            })
+        } else {
+            await prisma.archetype.create({ data })
+        }
     }
 
     // 5b. Seed Emotional First Aid Tools

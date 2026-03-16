@@ -54,13 +54,20 @@ export async function generateFromTemplate(
     },
   })
 
-  for (const slot of sortedSlots) {
+  for (let i = 0; i < sortedSlots.length; i++) {
+    const slot = sortedSlots[i]
+    const nextSlot = sortedSlots[i + 1]
+    // Linear flow: each passage links to next (except artifact)
+    const choices =
+      nextSlot
+        ? JSON.stringify([{ text: 'Continue', targetId: nextSlot.nodeId }])
+        : '[]'
     await db.passage.create({
       data: {
         adventureId: adventure.id,
         nodeId: slot.nodeId,
         text: `[Edit: ${slot.nodeId}]`,
-        choices: '[]',
+        choices,
       },
     })
   }

@@ -453,8 +453,8 @@ export function getSessionAgeMs(checkpointAt: Date | string, now: Date = new Dat
  *
  * - resumed:          A live, resumable session was found. Caller should render
  *                     from checkpointNodeId with the restored packet.
- * - no_session:       No prior session record exists (or packet JSON is corrupt).
- *                     Caller should start a fresh session.
+ * - no_session:       No prior session record exists. Caller should start a fresh session.
+ *                     (Empty or corrupt packetJson returns fresh_start with sessionId preserved.)
  * - already_complete: The most recent session was fully submitted or closed.
  *                     Caller may show a "start a new session" prompt.
  * - abandoned:        The session was either already marked abandoned (DB flag)
@@ -691,12 +691,21 @@ export function classifySessionForResume(
     return { outcome: 'abandoned', sessionId: id }
   }
 
-  // Deserialise packet — treat corrupt JSON as no_session
+  // Empty string: likely a write bug (race, failed serialization). Preserve sessionId for recovery.
+  const trimmed = packetJson?.trim() ?? ''
+  if (trimmed === '') {
+    return { outcome: 'fresh_start', sessionId: id }
+  }
+
+  // Deserialise packet — corrupt JSON is a data integrity issue; preserve sessionId and surface
   let packet: OrientationMetaPacket
   try {
     packet = deserializePacket(packetJson)
   } catch {
-    return { outcome: 'no_session' }
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[orientation-quest] Corrupt packetJson for session', id, '— treating as fresh_start')
+    }
+    return { outcome: 'fresh_start', sessionId: id }
   }
 
   // No meaningful progress → fresh_start (don't show a stale resume banner)

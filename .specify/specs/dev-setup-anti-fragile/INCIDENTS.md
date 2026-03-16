@@ -142,6 +142,23 @@ Or if using db push for local dev: `npm run db:sync` (but db push may reject som
 
 ---
 
+## 7. db:seed fails "Argument `where` needs at least one of `id`" (Nation/Archetype)
+
+**Symptom:** `npm run db:seed` fails with:
+```
+Argument `where` of type NationWhereUniqueInput needs at least one of `id` arguments.
+```
+
+**Root Cause:** Nation and Archetype models have no `@@unique` on `name`. The seed used `upsert({ where: { name } })`, which requires a unique field. Prisma 5.x enforces this strictly.
+
+**Fix:** Use `findFirst` + `create`/`update` instead of `upsert` for Nation and Archetype in `src/lib/seed-utils.ts`. Match by `name` and `instanceId: null` for global records.
+
+**Doc Update:** None. Code fix in seed-utils.
+
+**Reference:** DS verification (Mar 2026)
+
+---
+
 ## Adding New Incidents
 
 When you hit a new setup/loop-readiness issue:

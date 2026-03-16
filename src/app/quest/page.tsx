@@ -1,4 +1,4 @@
-import { getCurrentPlayer } from '@/lib/auth'
+import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { QuestForm } from './QuestForm'
@@ -6,7 +6,8 @@ import Link from 'next/link'
 
 export default async function QuestPage() {
     const player = await getCurrentPlayer()
-    if (!player) return redirect('/invite/ANTIGRAVITY')
+    if (!player) return redirect('/conclave/guided')
+    if (!isGameAccountReady(player)) return redirect('/conclave/guided')
 
     // Find active quests for this player (specifically those assigned)
     const activeAssignments = await db.playerQuest.findMany({

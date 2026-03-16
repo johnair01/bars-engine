@@ -47,9 +47,9 @@
 
 ## Phase 6: Admin UX Polish
 
-- [ ] Status badges: draft | extracted | analyzed | published
-- [ ] View derived thread (link to thread or inline)
-- [ ] Admin reorder ThreadQuest positions (optional)
+- [x] Status badges: draft | extracted | analyzed | published (BookList statusBadge)
+- [x] View derived thread (link to thread or inline) (View thread → /admin/journeys/thread/[id])
+- [x] Admin reorder ThreadQuest positions (optional) (journey thread edit page has up/down buttons)
 
 ## Verification Quest
 
@@ -57,5 +57,5 @@
 
 ## Backlog
 
-- [ ] Add AZ to BACKLOG.md
-- [ ] Create .specify/backlog/prompts/book-to-quest-library.md
+- [x] Add AZ to BACKLOG.md
+- [x] Create .specify/backlog/prompts/book-to-quest-library.md

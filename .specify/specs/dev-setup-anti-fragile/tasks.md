@@ -23,6 +23,6 @@
 
 ## Verification
 
-- [ ] Run loop:ready with missing seeds → output includes "Fix: npm run db:seed" or "npm run setup"
-- [ ] New developer can run `npm run setup` and reach loop:ready pass
+- [x] Run loop:ready with missing seeds → output includes "Fix: npm run db:seed" or "npm run setup" (remediation in loop-readiness.ts)
+- [x] New developer can run `npm run setup` and reach loop:ready pass (fixed Nation/Archetype seed upsert; setup completes)
 - [x] INCIDENTS.md is linked from failure-mode docs

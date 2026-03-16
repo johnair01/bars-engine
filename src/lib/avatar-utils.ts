@@ -134,6 +134,19 @@ export function getAvatarHue(config: AvatarConfig | null): number {
 }
 
 /**
+ * Get walkable spritesheet URL for spatial map (top-down avatar).
+ * Key: {nationKey}-{archetypeKey}; fallback to default when either missing.
+ * See docs/WALKABLE_SPRITES.md for format.
+ */
+export function getWalkableSpriteUrl(config: AvatarConfig | null): string {
+    if (!config?.nationKey || !config?.archetypeKey) {
+        return '/sprites/walkable/default.png'
+    }
+    const key = `${config.nationKey}-${config.archetypeKey}`
+    return `/sprites/walkable/${key}.png`
+}
+
+/**
  * Get initials for avatar placeholder.
  * v1: Prefer name initials (e.g. "JD" for "John Doe"); config provides color only.
  */

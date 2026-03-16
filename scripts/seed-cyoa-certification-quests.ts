@@ -15,6 +15,7 @@ const CERT_QUEST_IDS = [
     'cert-existing-players-character-v1',
     'cert-book-to-quest-library-v1',
     'cert-book-quest-twine-export-v1',
+    'cert-quest-library-wave-routing-v1',
     'cert-admin-manual-avatar-v1',
     'cert-admin-mobile-readiness-v1',
     'cert-go-live-v1',
@@ -1479,6 +1480,116 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${twineExportStory.title} (${twineExportStory.id})`)
     console.log(`✅ Quest seeded: ${twineExportQuest.title} (${twineExportQuest.id})`)
+
+    // --- Certification: Quest Library Wave Routing (DW) ---
+    const waveRoutingTitle = 'Certification: Quest Library Wave Routing V1'
+    const waveRoutingSlug = 'cert-quest-library-wave-routing-v1'
+
+    const waveRoutingPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Quest Library Wave Routing flow. Book-derived quests are auto-routed by moveType: Clean Up → EFA, Grow Up → Dojo, Show Up → Gameboard, Wake Up → Discovery. Confirm the routing and surfaces work.',
+            cleanText: 'Verify Quest Library Wave Routing: questPool from moveType, EFA surface, discovery queue.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Books admin\n\n[Open /admin/books](/admin/books) (admin only). You need a book with status **analyzed** or **published** (run cert-book-to-quest-library-v1 first if needed).',
+            cleanText: '### Step 1: Open Books admin\n\nConfirm /admin/books loads; have a book with analyzed/published status.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Approve quests with moveType\n\nClick **Review quests** on a book. Approve at least one draft quest that has a moveType (Wake Up, Clean Up, Grow Up, or Show Up). On approve, questPool is set automatically.',
+            cleanText: '### Step 2: Approve quests\n\nApprove at least one quest with moveType; questPool is set on approve.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Verify discovery queue\n\n[Open /admin/discovery](/admin/discovery). If you approved a Wake Up quest, it should appear in the discovery queue. You can reassign to another pool, reject, or edit.',
+            cleanText: '### Step 3: Verify discovery queue\n\nOpen /admin/discovery; Wake Up quests appear here.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Verify EFA pool surface\n\n[Open /emotional-first-aid](/emotional-first-aid). If you approved a Clean Up quest, it should appear in the "Learn moves" section. Confirm EFA pool quests surface here.',
+            cleanText: '### Step 4: Verify EFA pool\n\nOpen /emotional-first-aid; Clean Up quests appear in Learn moves.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have confirmed the Quest Library Wave Routing flow. Book quests are routed by moveType to EFA, Dojo, Discovery, and Gameboard pools. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const waveRoutingParsedJson = JSON.stringify({
+        title: waveRoutingTitle,
+        startPassage: 'START',
+        passages: waveRoutingPassages
+    })
+
+    const waveRoutingStory = await db.twineStory.upsert({
+        where: { slug: waveRoutingSlug },
+        update: {
+            title: waveRoutingTitle,
+            parsedJson: waveRoutingParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: waveRoutingTitle,
+            slug: waveRoutingSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Quest Library Wave Routing certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: waveRoutingParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const waveRoutingQuest = await db.customBar.upsert({
+        where: { id: waveRoutingSlug },
+        update: {
+            title: waveRoutingTitle,
+            description: 'Verify Quest Library Wave Routing: approve quests, verify questPool from moveType, discovery queue, EFA pool surface.',
+            reward: 1,
+            twineStoryId: waveRoutingStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-library-wave-routing/spec.md'
+        },
+        create: {
+            id: waveRoutingSlug,
+            title: waveRoutingTitle,
+            description: 'Verify Quest Library Wave Routing: approve quests, verify questPool from moveType, discovery queue, EFA pool surface.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: waveRoutingStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/quest-library-wave-routing/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${waveRoutingStory.title} (${waveRoutingStory.id})`)
+    console.log(`✅ Quest seeded: ${waveRoutingQuest.title} (${waveRoutingQuest.id})`)
 
     // --- Certification: Admin Manual Avatar Assignment ---
     const adminAvatarTitle = 'Certification: Admin Manual Avatar Assignment V1'

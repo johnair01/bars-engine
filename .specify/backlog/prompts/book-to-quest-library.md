@@ -17,12 +17,12 @@ Implement per [.specify/specs/book-to-quest-library/spec.md](../specs/book-to-qu
 
 ## Deliverables
 
-- [ ] Schema (Book, QuestThread.bookId)
-- [ ] src/lib/pdf-extract.ts, src/actions/books.ts, src/actions/book-analyze.ts, src/lib/book-chunker.ts
-- [ ] src/actions/book-to-thread.ts, src/actions/quest-library.ts
-- [ ] Admin /admin/books page (upload, extract, analyze, publish)
-- [ ] Player /library page (browse, filter, pull)
-- [ ] Verification quest cert-book-to-quest-library-v1
+- [x] Schema (Book, QuestThread.bookId)
+- [x] src/lib/pdf-extract.ts, src/actions/books.ts, src/actions/book-analyze.ts, src/lib/book-chunker.ts
+- [x] src/actions/book-to-thread.ts, src/actions/quest-library.ts
+- [x] Admin /admin/books page (upload, extract, analyze, publish)
+- [x] Player /library page (browse, filter, pull)
+- [x] Verification quest cert-book-to-quest-library-v1
 
 ## Game Language
 

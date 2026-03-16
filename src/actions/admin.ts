@@ -250,6 +250,7 @@ export async function getAdminQuest(id: string) {
         where: { id },
         include: {
             upgradedThreads: { select: { adventureId: true } },
+            assets: true,
         },
     })
 }
