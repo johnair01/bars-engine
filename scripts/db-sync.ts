@@ -50,11 +50,18 @@ function sync() {
 
         if (hasDbUrl) {
             console.log('🚀 Schema change detected. Pushing to Database...')
+            console.warn('')
+            console.warn('⚠️  WARNING: db push bypasses migration files.')
+            console.warn('   Before shipping to production you MUST create a migration:')
+            console.warn('   npx prisma migrate dev --name describe_your_change')
+            console.warn('   Without a migration file, Vercel deploy will fail or leave')
+            console.warn('   the production DB out of sync.')
+            console.warn('')
             try {
                 // Remove --accept-data-loss for safety.
                 execSync('npx prisma db push', { stdio: 'inherit' })
                 if (currentHash) writeFileSync(HASH_FILE, currentHash)
-                console.log('✅ Database synchronized.')
+                console.log('✅ Database synchronized (dev only — create a migration before shipping).')
             } catch {
                 console.error('❌ Prisma DB Push failed. Check your DATABASE_URL.')
                 if (isProd) process.exit(1)

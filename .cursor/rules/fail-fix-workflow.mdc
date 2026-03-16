@@ -19,7 +19,12 @@ When implementing features, refactors, or migrations:
    - `cd backend && make test` or `make test-agents` — Run tests
 
    **Database (if schema changed):**
-   - `npm run db:sync` — Push schema, regenerate Prisma Client
+   - `npm run db:sync` — Push schema to dev DB + regenerate Prisma Client
+   - ⚠️ **REQUIRED before any commit**: `npx prisma migrate dev --name describe_change`
+     creates the migration SQL file. Without it, Vercel (`prisma migrate deploy`) won't
+     apply the schema to production and 500 errors will follow.
+   - Rule: `db push` is for local iteration only. Every schema change that ships must
+     have a migration file committed alongside it.
 
 2. **Stop and fix on failure** — If any command fails, fix the failure before proceeding to the next task or phase. Do not continue implementation until the failure is resolved.
 
