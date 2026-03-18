@@ -543,19 +543,8 @@ export async function runSeed(prisma: PrismaClient) {
         }
     })
 
-    const orientationThread = await prisma.questThread.upsert({
-        where: { id: 'orientation-thread' },
-        update: {},
-        create: { id: 'orientation-thread', title: 'Welcome Journey', threadType: 'orientation', creatorType: 'system' }
-    })
-
-    for (let i = 0; i < orientationQuests.length; i++) {
-        await prisma.threadQuest.upsert({
-            where: { threadId_questId: { threadId: orientationThread.id, questId: orientationQuests[i].id } },
-            update: { position: i + 1 },
-            create: { threadId: orientationThread.id, questId: orientationQuests[i].id, position: i + 1 }
-        })
-    }
+    // Deprecated: Welcome Journey (orientation-thread) removed until useful orientation exists.
+    // orientationQuests remain as CustomBar records but are not linked to any thread.
 
     // 11. Twine Adventure Quest
     const twineLogic = {

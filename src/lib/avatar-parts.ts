@@ -51,6 +51,15 @@ export type PartSpec = {
 }
 
 /**
+ * Map PartLayer to filesystem directory. Archetype layers use playbook_* dirs (assets not yet renamed).
+ */
+export function getSpriteDirForLayer(layer: string): string {
+    if (layer === 'archetype_outfit') return 'playbook_outfit'
+    if (layer === 'archetype_accent') return 'playbook_accent'
+    return layer
+}
+
+/**
  * Get ordered part specs for full avatar from config.
  */
 export function getAvatarPartSpecs(config: AvatarConfig | null): PartSpec[] {
@@ -68,10 +77,11 @@ export function getAvatarPartSpecs(config: AvatarConfig | null): PartSpec[] {
         })
     }
     if (config.archetypeKey) {
+        const dir = getSpriteDirForLayer('archetype_outfit')
         specs.push({
             layer: 'archetype_outfit',
             key: config.archetypeKey,
-            path: `/sprites/parts/archetype_outfit/${config.archetypeKey}.png`
+            path: `/sprites/parts/${dir}/${config.archetypeKey}.png`
         })
     }
     if (config.nationKey) {
@@ -82,10 +92,11 @@ export function getAvatarPartSpecs(config: AvatarConfig | null): PartSpec[] {
         })
     }
     if (config.archetypeKey) {
+        const dir = getSpriteDirForLayer('archetype_accent')
         specs.push({
             layer: 'archetype_accent',
             key: config.archetypeKey,
-            path: `/sprites/parts/archetype_accent/${config.archetypeKey}.png`
+            path: `/sprites/parts/${dir}/${config.archetypeKey}.png`
         })
     }
     return specs

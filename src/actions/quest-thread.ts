@@ -8,6 +8,15 @@ import { getCurrentPlayer } from '@/lib/auth'
 // QUEST THREADS — Sequential Quest Journeys
 // ============================================================
 
+/** Deprecated: Welcome Journey + copy-paste domain templates + Welcome Aboard (removed until useful) */
+const DEPRECATED_THREAD_IDS = new Set([
+    'orientation-thread',
+    'bruised-banana-orientation-DIRECT_ACTION',
+    'bruised-banana-orientation-RAISE_AWARENESS',
+    'bruised-banana-orientation-SKILLFUL_ORGANIZING',
+])
+const DEPRECATED_THREAD_TITLES = new Set(['Welcome Aboard'])
+
 /**
  * Get all threads available to a player
  * - Includes orientation threads (auto-assigned to all)
@@ -40,7 +49,12 @@ export async function getPlayerThreads() {
 
     // Hide Build Your Character from non-admin players (admin onboarding keeps it)
     const isAdmin = player.roles?.some((r: { role: { key: string } }) => r.role?.key === 'admin') ?? false
-    const visibleThreads = threads.filter(t => t.id !== 'build-character-thread' || isAdmin)
+    const visibleThreads = threads.filter(
+        t =>
+            (t.id !== 'build-character-thread' || isAdmin) &&
+            !DEPRECATED_THREAD_IDS.has(t.id) &&
+            !DEPRECATED_THREAD_TITLES.has(t.title)
+    )
 
     return visibleThreads.map(thread => ({
         ...thread,
@@ -295,11 +309,14 @@ export async function assignOrientationThreads(
         include: { adventure: { select: { campaignRef: true, subcampaignDomain: true } } },
     })
 
+    const assignableThreads = orientationThreads.filter(
+        t => !DEPRECATED_THREAD_IDS.has(t.id) && !DEPRECATED_THREAD_TITLES.has(t.title)
+    )
     const playerDomains = new Set(
         (params?.allyshipDomains ?? []).map((d) => d.toUpperCase().replace(/-/g, '_'))
     )
 
-    for (const thread of orientationThreads) {
+    for (const thread of assignableThreads) {
         // Subcampaign threads: only assign when player's chosen domain matches
         if (thread.adventure?.subcampaignDomain) {
             const domain = thread.adventure.subcampaignDomain.toUpperCase().replace(/-/g, '_')

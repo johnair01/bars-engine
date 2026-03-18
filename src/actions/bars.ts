@@ -1,5 +1,6 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
@@ -61,19 +62,26 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
 
     const content = (formData.get('content') as string || '').trim()
     const tags = (formData.get('tags') as string || '').trim()
+    const socialLinksRaw = (formData.get('socialLinks') as string || '').trim()
+    const photoFront = formData.get('photoFront') as File | null
+    const photoBack = formData.get('photoBack') as File | null
 
-    // Validation
-    if (!content) return { error: 'Content is required' }
-    if (content.length < 3) return { error: 'Content must be at least 3 characters' }
+    const hasContent = content.length >= 3
+    const hasPhoto = (photoFront && photoFront.size > 0) || (photoBack && photoBack.size > 0)
 
-    const title = deriveTitle(content)
+    if (!hasContent && !hasPhoto) {
+        return { error: 'Add some text or a photo' }
+    }
+
+    const title = hasContent ? deriveTitle(content) : 'Photo'
+    const description = hasContent ? content : 'Photo'
 
     try {
         const bar = await db.customBar.create({
             data: {
                 creatorId: playerId,
                 title,
-                description: content,
+                description,
                 type: 'bar',
                 reward: 0,
                 visibility: 'private',
@@ -89,6 +97,37 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
             where: { id: bar.id },
             data: { rootId: bar.id }
         })
+
+        const { uploadBarAttachment } = await import('@/actions/assets')
+        if (photoFront && photoFront.size > 0) {
+            const fd = new FormData()
+            fd.set('file', photoFront)
+            fd.set('side', 'front')
+            const r = await uploadBarAttachment(bar.id, fd)
+            if (!r.success) console.warn('[BAR] Front photo upload failed:', r.error)
+        }
+        if (photoBack && photoBack.size > 0) {
+            const fd = new FormData()
+            fd.set('file', photoBack)
+            fd.set('side', 'back')
+            const r = await uploadBarAttachment(bar.id, fd)
+            if (!r.success) console.warn('[BAR] Back photo upload failed:', r.error)
+        }
+
+        const { validateSocialUrl, getMaxLinksPerBar } = await import('@/lib/bar-social-links')
+        const urls = socialLinksRaw
+            .split(/[\n,]+/)
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0)
+            .slice(0, getMaxLinksPerBar())
+        for (let i = 0; i < urls.length; i++) {
+            const result = validateSocialUrl(urls[i])
+            if (result.ok) {
+                await db.barSocialLink.create({
+                    data: { barId: bar.id, platform: result.platform, url: urls[i], sortOrder: i },
+                })
+            }
+        }
 
         console.log(`[BAR] Created bar (${bar.id}) by player ${playerId}`)
 
@@ -199,8 +238,13 @@ export async function sendBar(prevState: { error?: string; success?: boolean } |
 // ---------------------------------------------------------------------------
 
 export type SendBarExternalResult =
-    | { success: true; inviteUrl: string; token: string }
+    | { success: true; shareUrl: string; inviteUrl: string; token: string }
     | { error: string }
+
+/** Generate a secure share token (url-safe, 32 chars). */
+function generateShareToken(): string {
+    return randomBytes(24).toString('base64url')
+}
 
 export async function sendBarExternal(
     prevState: SendBarExternalResult | null,
@@ -214,7 +258,7 @@ export async function sendBarExternal(
 
     const bar = await db.customBar.findUnique({
         where: { id: barId },
-        select: { id: true, type: true, creatorId: true, status: true, title: true },
+        select: { id: true, type: true, creatorId: true, status: true, title: true, collapsedFromInstanceId: true },
     })
     if (!bar) return { error: 'BAR not found' }
     if (bar.type !== 'bar') return { error: 'Only BARs can be shared outside the game' }
@@ -222,14 +266,18 @@ export async function sendBarExternal(
     if (bar.status !== 'active') return { error: 'BAR is not active' }
 
     try {
-        const token = `invite_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+        const shareToken = generateShareToken()
+        const expiresAt = new Date()
+        expiresAt.setHours(expiresAt.getHours() + 72)
 
-        await db.invite.create({
+        await db.barShareExternal.create({
             data: {
-                token,
-                status: 'active',
-                forgerId: playerId,
-                invitationBarId: barId,
+                barId,
+                fromUserId: playerId,
+                shareToken,
+                status: 'pending',
+                instanceId: bar.collapsedFromInstanceId ?? undefined,
+                expiresAt,
             },
         })
 
@@ -239,15 +287,80 @@ export async function sendBarExternal(
                 : typeof process.env.VERCEL_URL === 'string'
                   ? `https://${process.env.VERCEL_URL}`
                   : ''
-        const inviteUrl = baseUrl ? `${baseUrl}/invite/${token}` : `/invite/${token}`
+        const shareUrl = baseUrl ? `${baseUrl}/bar/share/${shareToken}` : `/bar/share/${shareToken}`
 
         revalidatePath(`/bars/${barId}`)
-        return { success: true, inviteUrl, token }
+        return { success: true, shareUrl, inviteUrl: shareUrl, token: shareToken }
     } catch (e) {
         const message = e instanceof Error ? e.message : 'Unknown error'
         console.error('[BAR] sendBarExternal failed:', message)
-        return { error: 'Failed to generate invite link. Please try again.' }
+        return { error: 'Failed to generate share link. Please try again.' }
     }
+}
+
+/** Claim an external BAR share (link share to current player, create BarShare, redirect to BAR). */
+export async function claimBarShareExternal(shareToken: string): Promise<{ success: true; barId: string } | { error: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const share = await db.barShareExternal.findUnique({
+        where: { shareToken },
+        select: { id: true, barId: true, fromUserId: true, status: true, expiresAt: true, claimedById: true },
+    })
+    if (!share) return { error: 'Share not found' }
+    if (share.status !== 'pending') return { error: 'Share no longer available' }
+    if (new Date() > share.expiresAt) return { error: 'Share expired' }
+    if (share.claimedById) return { error: 'Share already claimed' }
+    if (share.fromUserId === playerId) return { error: 'Cannot claim your own share' }
+
+    await db.$transaction([
+        db.barShareExternal.update({
+            where: { id: share.id },
+            data: { status: 'claimed', claimedById: playerId },
+        }),
+        db.barShare.create({
+            data: {
+                barId: share.barId,
+                fromUserId: share.fromUserId,
+                toUserId: playerId,
+            },
+        }),
+    ])
+    revalidatePath(`/bar/share/${shareToken}`)
+    revalidatePath(`/bars/${share.barId}`)
+    return { success: true, barId: share.barId }
+}
+
+/** Revoke an external BAR share (sender only). */
+export async function revokeBarShareExternal(shareId: string): Promise<{ success: true } | { error: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const share = await db.barShareExternal.findUnique({
+        where: { id: shareId },
+        select: { fromUserId: true, status: true },
+    })
+    if (!share) return { error: 'Share not found' }
+    if (share.fromUserId !== playerId) return { error: 'Only the sender can revoke' }
+    if (share.status !== 'pending') return { error: 'Share already revoked or claimed' }
+
+    await db.barShareExternal.update({
+        where: { id: shareId },
+        data: { status: 'revoked' },
+    })
+    return { success: true }
+}
+
+/** Server action for useActionState: claim share from formData. */
+export async function claimBarShareFromForm(
+    _prev: { error?: string; barId?: string } | null,
+    formData: FormData
+): Promise<{ error?: string; barId?: string } | null> {
+    const shareToken = (formData.get('shareToken') as string)?.trim()
+    if (!shareToken) return { error: 'Invalid share' }
+    const result = await claimBarShareExternal(shareToken)
+    if ('success' in result) return { barId: result.barId }
+    return { error: result.error }
 }
 
 // ---------------------------------------------------------------------------
@@ -278,8 +391,8 @@ export async function listMyBars() {
             assets: {
                 where: { type: 'bar_attachment' },
                 orderBy: { createdAt: 'asc' },
-                take: 1,
-                select: { id: true, url: true, mimeType: true },
+                take: 2,
+                select: { id: true, url: true, mimeType: true, metadataJson: true },
             },
         }
     })
@@ -310,8 +423,8 @@ export async function listReceivedBars() {
                     assets: {
                         where: { type: 'bar_attachment' },
                         orderBy: { createdAt: 'asc' },
-                        take: 1,
-                        select: { id: true, url: true, mimeType: true },
+                        take: 2,
+                        select: { id: true, url: true, mimeType: true, metadataJson: true },
                     },
                 }
             },
@@ -449,9 +562,17 @@ export async function getBarDetail(barId: string) {
                 },
                 orderBy: { createdAt: 'desc' }
             },
+            shareExternals: {
+                where: { status: 'pending' },
+                include: { instance: { select: { name: true, slug: true } } },
+                orderBy: { createdAt: 'desc' },
+            },
             assets: {
                 where: { type: 'bar_attachment' },
                 orderBy: { createdAt: 'asc' },
+            },
+            socialLinks: {
+                orderBy: { sortOrder: 'asc' },
             },
             collapsedFromQuest: { select: { id: true, title: true } },
             collapsedFromInstance: { select: { id: true, slug: true, name: true } },
@@ -617,7 +738,12 @@ export async function growArtifactFromBar(barId: string): Promise<{ sceneId?: st
     if (!isOwner && !isRecipient) return { error: 'Not authorized to grow from this BAR' }
 
     const { generateScene } = await import('@/lib/growth-scene/generator')
-    const sceneResult = await generateScene(playerId)
+    const { getActiveDaemonState } = await import('@/actions/daemons')
+    const daemonState = await getActiveDaemonState(playerId).catch(() => null)
+    const sceneResult = await generateScene(playerId, {
+      daemonChannel: daemonState?.channel ?? undefined,
+      daemonAltitude: daemonState?.altitude ?? undefined,
+    })
     if ('error' in sceneResult) return { error: sceneResult.error }
 
     const scene = sceneResult.scene

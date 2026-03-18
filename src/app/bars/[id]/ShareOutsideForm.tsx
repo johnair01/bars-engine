@@ -15,11 +15,11 @@ export function ShareOutsideForm({ barId }: { barId: string }) {
 
     const fullUrl =
         state && 'success' in state
-            ? state.inviteUrl.startsWith('http')
-                ? state.inviteUrl
+            ? (state.shareUrl ?? state.inviteUrl).startsWith('http')
+                ? (state.shareUrl ?? state.inviteUrl)
                 : typeof window !== 'undefined'
-                  ? `${window.location.origin}${state.inviteUrl}`
-                  : state.inviteUrl
+                  ? `${window.location.origin}${state.shareUrl ?? state.inviteUrl}`
+                  : state.shareUrl ?? state.inviteUrl
             : ''
 
     return (

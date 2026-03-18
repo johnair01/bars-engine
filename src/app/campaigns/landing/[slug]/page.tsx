@@ -8,22 +8,25 @@ export default async function CampaignLandingPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ invite?: string }>
+  searchParams: Promise<{ invite?: string; shareToken?: string }>
 }) {
   const { slug } = await params
-  const { invite: inviteToken } = await searchParams
+  const { invite: inviteToken, shareToken } = await searchParams
 
-  const data = await getCampaignLandingData(slug, inviteToken ?? null)
+  const data = await getCampaignLandingData(slug, inviteToken ?? null, shareToken ?? null)
 
   if (!data) notFound()
 
-  const { instance, inviter, firstQuestCta } = data
+  const { instance, inviter, firstQuestCta, shareContext } = data
   const campaignRef = instance.campaignRef ?? instance.slug
   const domainLabel = getDomainLabel(instance.primaryCampaignDomain ?? instance.allyshipDomain)
 
-  const ctaHref = firstQuestCta.questId
-    ? `/adventure/hub/${firstQuestCta.questId}?ref=${encodeURIComponent(campaignRef)}`
-    : `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`
+  // When shareToken present: onboarding-first flow — go to initiation before signup
+  const ctaHref = shareContext && campaignRef === 'bruised-banana'
+    ? `/campaign/initiation?segment=player&shareToken=${encodeURIComponent(shareContext.shareToken)}`
+    : firstQuestCta.questId
+      ? `/adventure/hub/${firstQuestCta.questId}?ref=${encodeURIComponent(campaignRef)}`
+      : `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans flex items-center justify-center p-4">
@@ -41,7 +44,18 @@ export default async function CampaignLandingPage({
 
           {inviter && (
             <p className="text-zinc-500 text-sm">
-              <span className="text-zinc-400">{inviter.name}</span> invited you
+              {shareContext
+                ? (
+                    <>
+                      <span className="text-zinc-400">{shareContext.senderName}</span>
+                      {' '}shared a reflection with you. Complete a short orientation to view it.
+                    </>
+                  )
+                : (
+                    <>
+                      <span className="text-zinc-400">{inviter.name}</span> invited you
+                    </>
+                  )}
             </p>
           )}
 

@@ -8,8 +8,6 @@ import { discoverDaemon } from '@/actions/daemons'
 import { deriveShadowName } from '@/lib/shadow-name-grammar'
 import { deriveMetadata321 } from '@/lib/quest-grammar'
 import { logShadowNameFeedback } from '@/actions/shadow-name-feedback'
-import { nameShadowBelief } from '@/actions/face-move-bar'
-
 // ---------------------------------------------------------------------------
 // Feeling chip vocabulary — Wuxing neutral + satisfied
 // ---------------------------------------------------------------------------
@@ -159,14 +157,6 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       // storage full or private mode — silently ignore
     }
   }, [phase, alignedAction, answers])
-
-  // Shaman: Name shadow belief — fire-and-forget BAR when process reaches artifact phase
-  useEffect(() => {
-    if (phase === 'artifact' && answers.maskName.trim()) {
-      void nameShadowBelief({ belief: answers.maskName.trim() })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase])
 
   // -------------------------------------------------------------------------
   // Helpers

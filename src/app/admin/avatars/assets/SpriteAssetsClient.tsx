@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { uploadSpriteAsset } from '@/actions/admin'
 import { slugifyName } from '@/lib/avatar-utils'
+import { getSpriteDirForLayer } from '@/lib/avatar-parts'
 
 type SpriteAssetsData = {
     byLayer: Record<string, { expected: string[]; existing: string[] }>
@@ -85,7 +86,7 @@ export function SpriteAssetsClient({ data }: { data: SpriteAssetsData }) {
                                     className="flex flex-col items-center gap-1 p-2 bg-zinc-900 border border-zinc-700 rounded-lg"
                                 >
                                     <img
-                                        src={`/sprites/parts/${layer}/${key}.png`}
+                                        src={`/sprites/parts/${getSpriteDirForLayer(layer)}/${key}.png`}
                                         alt={key}
                                         className="w-12 h-12 object-contain rounded"
                                     />
@@ -115,7 +116,7 @@ export function SpriteAssetsClient({ data }: { data: SpriteAssetsData }) {
                                     title="Extra - not in expected list"
                                 >
                                     <img
-                                        src={`/sprites/parts/${layer}/${key}.png`}
+                                        src={`/sprites/parts/${getSpriteDirForLayer(layer)}/${key}.png`}
                                         alt={key}
                                         className="w-12 h-12 object-contain rounded"
                                     />

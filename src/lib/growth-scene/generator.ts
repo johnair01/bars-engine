@@ -9,6 +9,10 @@ export interface GenerateSceneOpts {
   nationSlug?: string
   campaignPhase?: string
   sceneType?: SceneType // defaults to 'transcend'
+  /** Active daemon channel for scene scoring (IE-6) */
+  daemonChannel?: string
+  /** Active daemon altitude for scene scoring (IE-6) */
+  daemonAltitude?: string
 }
 
 /**
@@ -41,6 +45,8 @@ export async function generateScene(playerId: string, opts: GenerateSceneOpts = 
     sceneType,
     channel: targetChannel, // scene content lives in destination channel
     altitudeFrom,
+    daemonChannel: opts.daemonChannel,
+    daemonAltitude: opts.daemonAltitude,
   })
   if (!template) {
     return { error: `No scene template available for ${vector}` }

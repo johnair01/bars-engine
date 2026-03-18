@@ -4,13 +4,23 @@ import { getBarDetail, getBarRecipients } from '@/actions/bars'
 import Link from 'next/link'
 import { SendBarForm } from './SendBarForm'
 import { ShareOutsideForm } from './ShareOutsideForm'
+import { ExternalShareRevokeButton } from './ExternalShareRevokeButton'
 import { BarPhotoForm } from '@/components/bars/BarPhotoForm'
 import { BarDetailClient } from './BarDetailClient'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
+import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
+import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 
-export default async function BarDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BarDetailPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ share?: string }>
+}) {
     const { id } = await params
+    const { share } = await searchParams
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
 
@@ -82,10 +92,40 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
                 <BarFaceBackTabs
                     description={bar.description}
                     imageUrl={bar.assets?.find((a) => a.mimeType?.startsWith('image/'))?.url}
+                    assets={bar.assets ?? []}
                     tags={tags}
                     isOwner={isOwner}
                     barId={bar.id}
                 />
+
+                {/* Pending external shares (owner only) */}
+                {isOwner && bar.shareExternals && bar.shareExternals.length > 0 && (
+                    <section>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="h-px bg-zinc-800 flex-1"></div>
+                            <h2 className="text-zinc-600 uppercase tracking-widest text-xs font-bold">
+                                Active share links
+                            </h2>
+                            <div className="h-px bg-zinc-800 flex-1"></div>
+                        </div>
+                        <div className="space-y-2">
+                            {bar.shareExternals.map((ext) => {
+                                const baseUrl = typeof process.env.NEXT_PUBLIC_APP_URL === 'string'
+                                    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+                                    : ''
+                                const shareUrl = baseUrl ? `${baseUrl}/bar/share/${ext.shareToken}` : `/bar/share/${ext.shareToken}`
+                                return (
+                                    <div key={ext.id} className="text-xs text-zinc-500 bg-zinc-900/30 rounded-lg px-3 py-2">
+                                        <ExternalShareRevokeButton shareId={ext.id} shareUrl={shareUrl} barId={bar.id} />
+                                        {ext.instance && (
+                                            <div className="mt-1 text-zinc-600">→ {ext.instance.name}</div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 {/* Share History */}
                 {bar.shares.length > 0 && (
@@ -125,6 +165,17 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
                     <GrowFromBar barId={bar.id} />
                 )}
 
+                {/* Inspirations (social links) */}
+                {(isOwner || (bar.socialLinks?.length ?? 0) > 0) && (
+                    <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">
+                        {isOwner ? (
+                            <BarSocialLinksForm barId={bar.id} links={bar.socialLinks ?? []} />
+                        ) : (
+                            <BarSocialLinks links={bar.socialLinks ?? []} />
+                        )}
+                    </section>
+                )}
+
                 {/* Add photo (owner only) */}
                 {isOwner && (
                     <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">
@@ -144,7 +195,19 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
 
                 {/* Share outside the game (owner only) */}
                 {isOwner && (
-                    <section className="bg-indigo-950/20 border border-indigo-900/40 rounded-xl p-6">
+                    <section
+                        id="share-outside"
+                        className={`rounded-xl p-6 border ${
+                            share === 'external'
+                                ? 'bg-indigo-950/40 border-indigo-700/60 ring-2 ring-indigo-500/30'
+                                : 'bg-indigo-950/20 border-indigo-900/40'
+                        }`}
+                    >
+                        {share === 'external' && (
+                            <p className="mb-4 text-sm font-medium text-indigo-200">
+                                BAR created. Share it with someone outside the game below — they get an invite link and the BAR is delivered when they sign up.
+                            </p>
+                        )}
                         <h2 className="text-lg font-bold text-white mb-1">Share outside the game</h2>
                         <p className="text-zinc-400 text-sm mb-4">
                             Send this BAR to someone who isn&apos;t in the game yet. They get an invite link — when they sign up, the BAR is delivered to them.

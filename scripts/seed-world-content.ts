@@ -57,34 +57,8 @@ async function main() {
         inputs: JSON.stringify([{ key: 'signal', label: 'Signal Message', type: 'text' }])
     })
 
-    // 2. Upsert Orientation Thread
-    // ===============================================
-    console.log('Upserting "Welcome Aboard" Thread...')
-
-    let thread = await db.questThread.findFirst({ where: { title: 'Welcome Aboard' } })
-    const threadData = {
-        title: 'Welcome Aboard',
-        description: 'Your official orientation to the Conclave. Complete these steps to unlock full access.',
-        threadType: 'orientation',
-        completionReward: 1
-    }
-
-    if (thread) {
-        thread = await db.questThread.update({ where: { id: thread.id }, data: threadData })
-    } else {
-        thread = await db.questThread.create({ data: threadData })
-    }
-
-    // Relink Quests (Clear & Re-add to ensure order)
-    await db.threadQuest.deleteMany({ where: { threadId: thread.id } })
-    await db.threadQuest.createMany({
-        data: [
-            { threadId: thread.id, questId: q1.id, position: 1 },
-            { threadId: thread.id, questId: q2.id, position: 2 },
-            { threadId: thread.id, questId: q3.id, position: 3 }
-        ]
-    })
-    console.log(`Linked 3 quests to thread "${thread.title}"`)
+    // 2. Welcome Aboard thread (deprecated — not useful for this instance; filtered in quest-thread.ts)
+    // q1, q2, q3 remain as CustomBar records but are not linked to any thread.
 
     // 3. Upsert Starter Pack
     // ===============================================

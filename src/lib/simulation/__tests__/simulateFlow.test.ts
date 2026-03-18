@@ -12,6 +12,7 @@ import { simulateFlowWithActors } from '../simulateFlowWithActors'
 import { proposeActorAction } from '../proposeActorAction'
 import { getActorGuidance } from '../guidance'
 import { loadFlowBySlug } from '../flowLoader'
+import { validateFlowSchema, isValidFlow } from '../validateFlowSchema'
 import type { FlowJSON } from '../types'
 
 const FIXTURES = path.join(process.cwd(), 'fixtures')
@@ -223,6 +224,44 @@ function testWitnessNeverEmitsCompletion() {
   console.log('✓ testWitnessNeverEmitsCompletion')
 }
 
+function testSeedParam() {
+  const flow = loadFlow(path.join(FLOWS, 'orientation_linear_minimal.json'))
+  const r1 = simulateFlow({ flow, seed: 42 })
+  const r2 = simulateFlow({ flow, seed: 42 })
+  assert(r1.status === 'pass', 'r1 pass')
+  assert(r2.status === 'pass', 'r2 pass')
+  assert(r1.events_emitted.length === r2.events_emitted.length, 'Same events length')
+  assert(r1.events_emitted.join(',') === r2.events_emitted.join(','), 'Deterministic: same seed → same events')
+  assert(r1.seed === 42, 'Result includes seed')
+  console.log('✓ testSeedParam')
+}
+
+function testValidateFlowSchema() {
+  const flow = loadFlow(path.join(FLOWS, 'orientation_linear_minimal.json'))
+  const errors = validateFlowSchema(flow)
+  assert(errors.length === 0, 'Valid flow has no errors')
+  assert(isValidFlow(flow), 'isValidFlow returns true')
+
+  const badFlow = { flow_id: '', start_node_id: 'x', nodes: [] }
+  const badErrors = validateFlowSchema(badFlow)
+  assert(badErrors.length > 0, 'Invalid flow has errors')
+  assert(!isValidFlow(badFlow), 'isValidFlow returns false for invalid')
+  console.log('✓ testValidateFlowSchema')
+}
+
+function testNewFixturesBarCreationAndQuestCompletion() {
+  const barCreation = loadFlow(path.join(BB, 'bar_creation.json'))
+  const r1 = simulateFlow({ flow: barCreation })
+  assert(r1.status === 'pass', 'bar_creation passes')
+  assert(r1.events_emitted.includes('bar_created'), 'bar_creation emits bar_created')
+
+  const questCompletion = loadFlow(path.join(BB, 'quest_completion.json'))
+  const r2 = simulateFlow({ flow: questCompletion })
+  assert(r2.status === 'pass', 'quest_completion passes')
+  assert(r2.events_emitted.includes('quest_completed'), 'quest_completion emits quest_completed')
+  console.log('✓ testNewFixturesBarCreationAndQuestCompletion')
+}
+
 function testLibrarianOnlyProposesAllowedActions() {
   const flow = loadFlow(path.join(FLOWS, 'orientation_linear_minimal.json'))
   const librarian = getSimulatedActorRole('librarian')
@@ -265,6 +304,9 @@ function main() {
   testLoadFlowBySlug()
   testWitnessCannotCreateBar()
   testWitnessNeverEmitsCompletion()
+  testSeedParam()
+  testValidateFlowSchema()
+  testNewFixturesBarCreationAndQuestCompletion()
   testLibrarianOnlyProposesAllowedActions()
   console.log('\nAll simulation tests passed.')
 }

@@ -2,9 +2,11 @@
 
 ## Purpose
 
-Add a lightweight simulation environment for quest flows and onboarding flows, with optional support for bounded simulated actor roles. Supports fixture validation, onboarding debugging, quest execution testing, and event/state inspection. Lays groundwork for future single-player mode with simulated collaborators.
+Add a lightweight simulation environment for quest flows and onboarding flows, with optional support for bounded simulated actor roles. Supports fixture validation, onboarding debugging, quest execution testing, and event/state inspection. Lays groundwork for future single-player mode with simulated collaborators and **autonomous agent testing and content creation**.
 
 **Practice**: Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI.
+
+**Source**: [STRAND_CONSULT.md](./STRAND_CONSULT.md) — Game Master consultation (Architect, Regent, Challenger, Sage) on extending utility and unblocking autonomous agents.
 
 ## Design Decisions
 
@@ -14,6 +16,50 @@ Add a lightweight simulation environment for quest flows and onboarding flows, w
 | CLI entry | `bars simulate` or `npm run simulate` (adapt to project conventions) |
 | Determinism | All flow simulation deterministic; no non-deterministic branching in v1 |
 | Actor roles | Librarian, Collaborator, Witness — bounded, useful before dramatic |
+| Agent testing | Deterministic seed; isolated sandbox; fixture validation; audit trail |
+| Content creation | Simulator validation before human review; creatorType traceability; admin approval gate |
+
+## Agent Testing & Content Creation (from Strand Consult)
+
+### Agent Testing Blockers (to address)
+
+| Blocker | Priority | Mitigation |
+|---------|----------|------------|
+| No `completeQuest`-style API for agents | High | Add agent-facing API or Server Action that agents can call to simulate quest completion |
+| Fixtures missing key pathways (creation, deletion) | High | Extend fixtures to cover BAR creation, quest completion, move validation flows |
+| Incomplete endpoint/response documentation | Medium | Document SimulationResult schema; add OpenAPI or typed contracts |
+| No sandbox for agent experiments | High | Agents must use isolated DB or in-memory state; never production |
+| Lack of deterministic IDs in fixtures | Medium | Use stable IDs in flow JSON; document fixture schema |
+| Player context and unlock data not visible | Medium | Expose state_changes and events_emitted so agents can assert on readiness |
+
+### Content Creation Rules (Regent)
+
+- **Simulator validation**: All new quests or BARs from agents must pass simulator validation before human review.
+- **Creator type**: Agent-created content must have `creatorType: 'agent'` (or equivalent) for traceability.
+- **Admin approval**: Content creation by agents requires subsequent admin approval before publication.
+- **Mandatory validation**: Agents cannot bypass validation; all content must pass format and schema checks.
+
+### Boundary Rules
+
+- **No production mutation**: Agents must never mutate production database or environment.
+- **Traceable content only**: All agent-created content must be logged with agent ID and timestamp.
+- **Fixture reset**: Tests that alter default fixture state must reset or use isolated copies.
+
+### Integration Path
+
+Flow Simulator CLI, [transformation-simulation-harness](../transformation-simulation-harness/spec.md), and [npc-agent-game-loop](../npc-agent-game-loop-simulation/spec.md) should interoperate via:
+
+- **Shared protocol**: State and intent passed between tools; publish-subscribe or shared config.
+- **Unified CLI**: Single entry point (`bars simulate` or `npm run simulate`) with subcommands for flow, quest, agent, campaign, onboarding.
+- **Shared contracts**: Fixture schema, SimulationResult shape, and logging format reused across tools.
+
+### Risks and Mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| Data corruption from untraceable mutations | Sandbox isolation; audit trail; creatorType on all agent records |
+| Analytics pollution from test actions | Separate test data from production analytics; tag agent runs |
+| Fixture drift over time | Immutable fixture snapshots; reset after each run; version fixtures |
 
 ## Conceptual Model
 
@@ -84,6 +130,18 @@ Returns a bounded proposed action or guidance event. Light scaffold in v1.
 
 **Acceptance**: `getSimulatedActorRole(roleId)` returns role contract; no full actor execution in v1.
 
+### P4: Agent testing (Phase 4+)
+
+**As an autonomous agent**, I can run flow simulations and assert on `events_emitted` and `state_changes`, so I can validate features without human-in-the-loop.
+
+**Acceptance**: SimulationResult includes structured events; deterministic seed; agents run in sandbox; no production mutation.
+
+### P5: Agent content creation (Phase 4+)
+
+**As an autonomous agent**, I can propose quests or BARs that pass simulator validation, so content can be validated before human review.
+
+**Acceptance**: Format contracts (JSON templates); creatorType traceability; validation pipeline before approval gate.
+
 ## Functional Requirements
 
 ### Phase 1: Flow simulator core
@@ -106,6 +164,15 @@ Returns a bounded proposed action or guidance event. Light scaffold in v1.
 - **FR10**: Role definitions for Librarian, Collaborator, Witness (docs + types).
 - **FR11**: `getSimulatedActorRole(roleId)` returns role contract.
 - **FR12**: Light scaffold for `simulateFlowWithActors` and `proposeActorAction` (signatures only or minimal impl).
+
+### Phase 4: Agent-oriented extensions (from STRAND_CONSULT)
+
+- **FR13**: **Replay capability**: SimulationResult includes full `events_emitted` sequence; agents can assert on event order and presence.
+- **FR14**: **Deterministic seed**: All simulations accept optional `seed`; same seed + same flow → same result.
+- **FR15**: **Fixture schema contract**: Document flow JSON schema; use deterministic IDs; validate before run.
+- **FR16**: **Extended fixtures**: Add fixtures for BAR creation, quest completion, move validation (creation/deletion flows).
+- **FR17**: **Sandbox isolation**: When used by agents, simulator uses in-memory or isolated DB; never production.
+- **FR18**: **Integration contract**: Define shared protocol with transformation-simulation-harness and npc-agent-game-loop; unified CLI subcommands or shared config.
 
 ## Implementation Paths
 
@@ -151,6 +218,9 @@ Adapt if project structure differs (e.g. `src/lib/simulation/`).
 
 ## References
 
+- [STRAND_CONSULT.md](./STRAND_CONSULT.md) — Game Master consultation; run `npm run strand:consult:dq` to refresh
+- [transformation-simulation-harness](../transformation-simulation-harness/spec.md) — Quest, agent, campaign, onboarding simulation
+- [npc-agent-game-loop-simulation](../npc-agent-game-loop-simulation/spec.md) — pickQuestForAgent, simulateAgentGameLoop
 - [docs/architecture/flow-simulator-cli.md](../../docs/architecture/flow-simulator-cli.md)
 - [docs/architecture/simulated-actor-roles.md](../../docs/architecture/simulated-actor-roles.md)
 - [docs/architecture/flow-simulator-contract.md](../../docs/architecture/flow-simulator-contract.md)

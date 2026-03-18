@@ -136,6 +136,10 @@ All BARs MUST have `gameMasterFace` set to the face that produced them. BARs may
 - Route out-of-domain actions to Sage
 - Sage counsel or mask before cross-domain act
 
+## API Contracts
+
+Codebase moves invoke MCP tools (architect_draft, challenger_propose, shaman_read, regent_assess, diplomat_guide, sage_consult, etc.). Input/output contracts are documented in [docs/AGENT_WORKFLOWS.md](../../docs/AGENT_WORKFLOWS.md#mcp-tool-contracts).
+
 ## Reference
 
 - [.agent/context/game-master-sects.md](../../.agent/context/game-master-sects.md)

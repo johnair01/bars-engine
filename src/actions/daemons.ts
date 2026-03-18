@@ -101,6 +101,29 @@ export async function getActiveDaemonMoves(playerId: string) {
   })
 }
 
+/**
+ * Returns the channel and altitude of the most recently summoned active daemon.
+ * Returns null if no active summon exists.
+ * Spec: .specify/specs/individuation-engine/plan.md (IE-2)
+ */
+export async function getActiveDaemonState(
+  playerId: string
+): Promise<{ channel: string | null; altitude: string | null } | null> {
+  const now = new Date()
+  const summon = await db.daemonSummon.findFirst({
+    where: { playerId, status: 'active', expiresAt: { gt: now } },
+    orderBy: { summonedAt: 'desc' },
+    select: {
+      daemon: { select: { channel: true, altitude: true } },
+    },
+  })
+  if (!summon) return null
+  return {
+    channel: summon.daemon.channel ?? null,
+    altitude: summon.daemon.altitude ?? null,
+  }
+}
+
 export async function dismissDaemonSummon(
   summonId: string
 ): Promise<{ success: boolean; error?: string }> {

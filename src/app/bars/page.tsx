@@ -2,6 +2,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { listMyBars, listReceivedBars, listSentBars } from '@/actions/bars'
 import Link from 'next/link'
+import { BarListThumb } from '@/components/bars/BarListThumb'
 
 export default async function BarsPage() {
     const player = await getCurrentPlayer()
@@ -58,7 +59,6 @@ export default async function BarsPage() {
 
                         <div className="space-y-3">
                             {received.map((share) => {
-                                const primaryImage = share.bar.assets?.find((a) => a.mimeType?.startsWith('image/'))
                                 const isUnviewed = !share.viewedAt
                                 return (
                                 <Link key={share.id} href={`/bars/${share.bar.id}`} className="block group">
@@ -68,13 +68,7 @@ export default async function BarsPage() {
                                             : 'bg-zinc-900/50 border border-green-900/40 hover:border-green-600/50'
                                     }`}>
                                         <div className="flex justify-between items-start gap-3">
-                                            {primaryImage && (
-                                                <img
-                                                    src={primaryImage.url}
-                                                    alt=""
-                                                    className="h-14 w-14 object-cover rounded-lg border border-zinc-700 shrink-0"
-                                                />
-                                            )}
+                                            <BarListThumb assets={share.bar.assets ?? []} />
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-zinc-200 text-sm line-clamp-2 group-hover:text-green-400/90 transition-colors font-mono">
                                                     {share.bar.description}
@@ -135,19 +129,11 @@ export default async function BarsPage() {
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {myBars.map((bar) => {
-                                const primaryImage = bar.assets?.[0]?.mimeType?.startsWith('image/') ? bar.assets[0] : null
-                                return (
+                            {myBars.map((bar) => (
                                 <Link key={bar.id} href={`/bars/${bar.id}`} className="block group">
                                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 hover:border-purple-600/50 transition-colors">
                                         <div className="flex justify-between items-start gap-3">
-                                            {primaryImage && (
-                                                <img
-                                                    src={primaryImage.url}
-                                                    alt=""
-                                                    className="h-14 w-14 object-cover rounded-lg border border-zinc-700 shrink-0"
-                                                />
-                                            )}
+                                            <BarListThumb assets={bar.assets ?? []} />
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-zinc-200 text-sm line-clamp-2 group-hover:text-purple-400/90 transition-colors font-mono">
                                                     {bar.description}
@@ -175,8 +161,7 @@ export default async function BarsPage() {
                                         )}
                                     </div>
                                 </Link>
-                                )
-                            })}
+                            ))}
                         </div>
                     )}
                 </section>

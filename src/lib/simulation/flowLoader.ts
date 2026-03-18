@@ -12,6 +12,8 @@ const FLOW_REGISTRY: Record<string, string> = {
   'campaign-intro': 'fixtures/onboarding/bruised-banana/campaign_intro.json',
   'identity-selection': 'fixtures/onboarding/bruised-banana/identity_selection.json',
   'intended-impact-bar': 'fixtures/onboarding/bruised-banana/intended_impact_bar.json',
+  'bar-creation': 'fixtures/onboarding/bruised-banana/bar_creation.json',
+  'quest-completion': 'fixtures/onboarding/bruised-banana/quest_completion.json',
   'orientation-linear': 'fixtures/flows/orientation_linear_minimal.json',
   'orientation-bar': 'fixtures/flows/orientation_bar_create.json',
 }

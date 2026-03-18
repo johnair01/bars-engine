@@ -10,14 +10,14 @@ This is the central ledger for all **pending** development objectives and emerge
 | Priority | ID | Feature Name | Category | Status | Dependencies |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 0.5 | PF | [Daemons Inner Work Collectibles](.specify/specs/daemons-inner-work-collectibles/spec.md) (inner work → unlock talismans; Reliquary; use-in-quests Phase 2) | Economy/UI | [x] Done | RB, CM, ER |
-| 0.6 | AVS | [Avatar System Strategy](.specify/specs/avatar-system-strategy/spec.md) (bundle AW/AX/AY/BG/BH; deftness + agent-implementability; future: agent-built assets) | UI | [ ] Ready | AV, BB |
-| 0.01 | DBP | [DB Data Safety](.specify/specs/db-data-safety/spec.md) (reset guard; PITR runbook; post-restore script; snapshot cron; gemini credential isolation; INCIDENTS.md) | Infra | [ ] Ready | DS |
+| 0.6 | AVS | [Avatar System Strategy](.specify/specs/avatar-system-strategy/spec.md) (bundle AW/AX/AY/BG/BH; deftness + agent-implementability; future: agent-built assets) | UI | [x] Done | AV, BB |
+| 0.01 | DBP | [DB Data Safety](.specify/specs/db-data-safety/spec.md) (reset guard; PITR runbook; post-restore script; snapshot cron; gemini credential isolation; INCIDENTS.md) | Infra | [x] Done | DS |
 | 0.02 | DS | [Dev Setup Anti-Fragile](.specify/specs/dev-setup-anti-fragile/spec.md) (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues) | Infra | [x] Done | - |
 | 0.03 | AW | [Agent Workflows Cursor](.specify/specs/agent-workflows-cursor/spec.md) (auto-start backend for scripts; MCP server for Cursor AI) | Infra | [x] Done | - |
 | 0.03.1 | GMC | [Game Master Agents Cursor Integration](.specify/specs/game-master-agents-cursor-integration/spec.md) (MCP wrapper for backend auto-start; Cursor rule + Sage mapping; bars-agents as orchestrators, Cursor subagents as tools) | Infra | [x] Done | AW |
 | 0.03.2 | OKB | [OpenAI Key Brittleness Fix](.specify/specs/openai-key-brittleness-fix/spec.md) (absolute env paths; MCP wrapper dotenv; health openai_configured; loop:ready agent check) | Infra | [x] Done | GMC |
-| 0.03.3 | GMAP | [Game Master Agent Pass](.specify/specs/game-master-agent-pass/spec.md) (deftness improvements + spec kit compliance; API contracts, deterministic fallbacks, Practice tags; GM specs plan/tasks) | Infra | [ ] Ready | GMC |
-| 0.04 | DBC | [DB Connection Diagnostic](.specify/specs/db-connection-diagnostic/spec.md) (observe before act; which URL app uses; tables exist; shared db-resolve) | Infra | [ ] Ready | DS |
+| 0.03.3 | GMAP | [Game Master Agent Pass](.specify/specs/game-master-agent-pass/spec.md) (deftness improvements + spec kit compliance; API contracts, deterministic fallbacks, Practice tags; GM specs plan/tasks) | Infra | [x] Done | GMC |
+| 0.04 | DBC | [DB Connection Diagnostic](.specify/specs/db-connection-diagnostic/spec.md) (observe before act; which URL app uses; tables exist; shared db-resolve) | Infra | [x] Done | DS |
 | 21 | Y | Bruised Banana House Instance (instance, recurring quests, house state) | UI/Infra | [ ] Ready | S, T |
 | 40 | AZ | [Book-to-Quest Library](.specify/specs/book-to-quest-library/spec.md) (PDF ingestion, Quest Library, Grow Up) | UI/Infra | [x] Done | - |
 | 40.12 | DW | [Quest Library Wave Routing](.specify/specs/quest-library-wave-routing/spec.md) (route book quests by moveType: EFA pool, Dojo, Discovery, Gameboard; auto-assign on approve; model quest training) | UI/Infra | [ ] Ready | AZ, BN |
@@ -35,7 +35,7 @@ This is the central ledger for all **pending** development objectives and emerge
 | 0.68.1 | EZ | [Archetype Influence Overlay v1](.specify/specs/archetype-influence-overlay/spec.md) (canonical trigram archetypes; agency overlay; Experiment/Integrate expression; superpowers separate) | Infra | [ ] Ready | EG, EE |
 | 0.69 | EH | [Superpower Move Extensions v0](.specify/specs/superpower-move-extensions/spec.md) (Allyship prestige; Connector, Storyteller, etc.; extends base archetypes for domain quests) | Infra | [ ] Ready | EG |
 | 0.70 | EI | [Archetype Key Resolution](.specify/specs/archetype-key-resolution/spec.md) (ARCHETYPE_KEYS → playbook slug mapping; resolveArchetypeKeyForTransformation; transformation/avatar use playbook slugs) | Infra | [ ] Ready | EG |
-| 0.71 | EJ | [Admin Agent Forge](.specify/specs/admin-agent-forge/spec.md) (admin-only 3-2-1 Forge; distortion gate; friction mint; AgentSpec/AgentPatch; vibeulon routing) | Infra | [ ] Ready | - |
+| 0.71 | EJ | [Admin Agent Forge](.specify/specs/admin-agent-forge/spec.md) (admin-only 3-2-1 Forge; distortion gate; friction mint; AgentSpec/AgentPatch; vibeulon routing) | Infra | [x] Done | - |
 | 0.73 | EL | [Attunement Translation](.specify/specs/attunement-translation/spec.md) (Vibeulon economy: Global/Local; attune; transmute; VibeulonLedger) | Economy | [ ] Ready | - |
 | 0.74 | EM | [CYOA Certification Quests](.specify/specs/cyoa-certification-quests/spec.md) (cert quests for CYOA onboarding: landing CTA, campaign flow, sign-up redirect) | Quality | [ ] Ready | AG |
 | 0.76 | EO | [Push to Main and Vercel Deployment](.specify/specs/push-to-main-vercel-deploy/spec.md) (process: pre-push checks, commit strategy, Vercel deploy, post-deploy verification) | Infra | [ ] Ready | - |
@@ -69,7 +69,11 @@ This is the central ledger for all **pending** development objectives and emerge
 | 1.27 | GMGB | [Game Map Gameboard Bridge](.specify/specs/game-map-gameboard-bridge/spec.md) (4 slots by move; quest-adventure links; View/Start Adventure; BAR emission; shared metaphor) | UI/Infra | [ ] Ready | GL, GT |
 | 1.27.1 | MEE | [Emergent Move Ecology](.specify/specs/move-ecology-emergent/spec.md) (PDF move extraction; proposal queue; repeatable pipeline; library integration) | Infra/UI | [ ] Ready | AZ, EE |
 | 1.28 | BUO | [BARs UI Overhaul](.specify/specs/bars-ui-overhaul/spec.md) (talisman receive; BAR as seed for quests/daemons/artifacts; organize & compost; photo upload) | UI | [ ] Ready | - |
+| 1.28.1 | BES | [BAR External Sharing](.specify/specs/bar-external-sharing/spec.md) (share BAR to external recipient; login/signup; campaign-BAR → onboarding first; iOS Open Graph preview) | UI/Infra | [ ] Ready | GP-INV |
+| 1.28.2 | BPCP | [BAR Physical Capture & Photo](.specify/specs/bar-physical-capture-photo/spec.md) (rotate uploaded photos; text OR photo at capture; front/back + FLIP UI) | UI | [ ] Ready | BUO |
+| 1.28.3 | BSL | [BAR Social Links](.specify/specs/bar-social-links/spec.md) (inspiration links: YouTube, Spotify, Instagram, Twitter; add at create/edit; platform labels) | UI | [x] Done | - |
 | 1.29 | NSPE | [NPC & Simulated Player Content Ecology](.specify/specs/npc-simulated-player-content-ecology/spec.md) (single-player companionship; simulated collaborators; persona cohort; NPC content proposal; test before real players) | UI/Infra | [ ] Ready | FO, GF, DQ |
+| 1.30 | DSBD | [Dominion-Style BAR Decks](.specify/specs/dominion-style-bar-decks/spec.md) (Library → Decks → Hand; borrow nation/archetype decks; deck creation quest thread; campaign domain decks collective; ActorDeckState for BARs; charge/321 → Library) | Economy/UI | [ ] Ready | GL, GF |
 
 ## Golden Path Onboarding (Agent-Parallel)
 

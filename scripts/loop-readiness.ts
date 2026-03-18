@@ -22,6 +22,9 @@ function getRemediation(check: string, note?: string): string | null {
     if (check === 'Build passes') {
         return 'Fix: npx tsx scripts/with-env.ts "prisma migrate deploy" or npm run db:sync. See docs/DB_STRATEGY.md'
     }
+    if (check === 'Schema drift check') {
+        return 'Fix: Add missing columns to a migration file, then prisma migrate deploy. Never use db push on shared/production databases.'
+    }
     if (check === 'Feedback cap integration test' && (n.includes('column') || n.includes('does not exist') || n.includes('agentMetadata'))) {
         return 'Fix: Schema out of sync. Run: npx tsx scripts/with-env.ts "prisma migrate deploy"'
     }
@@ -134,6 +137,7 @@ async function main() {
         addResult('Build passes', 'PASS', 'Skipped in --quick mode')
     }
 
+    runCommand('Schema drift check', 'npx tsx scripts/find-schema-drift.ts')
     runCommand('Reset history script runs', 'npm run db:reset-history')
 
     try {

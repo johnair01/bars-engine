@@ -6,6 +6,7 @@ import { CreateBarForm } from '@/components/CreateBarForm'
 import { FaceMovesSection } from '@/components/hand/FaceMovesSection'
 import Link from 'next/link'
 import { HandQuestActions } from '@/components/hand/HandQuestActions'
+import { ChargeBarCard } from '@/components/hand/ChargeBarCard'
 
 export default async function HandPage() {
     const player = await getCurrentPlayer()
@@ -23,7 +24,17 @@ export default async function HandPage() {
         },
         orderBy: { createdAt: 'desc' },
         take: 10,
-        select: { id: true, title: true, description: true, createdAt: true },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            assets: {
+                where: { type: 'bar_attachment' },
+                orderBy: { createdAt: 'asc' },
+                select: { id: true, url: true, mimeType: true, metadataJson: true },
+            },
+        },
     })
 
     // Personal quests: created from a BAR (sourceBarId set), not yet a subquest (no parentId),
@@ -100,20 +111,7 @@ export default async function HandPage() {
                     </div>
                     <div className="space-y-2">
                         {chargeBars.map((bar) => (
-                            <div key={bar.id} className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3">
-                                <div className="min-w-0">
-                                    <p className="text-white text-sm font-medium truncate">{bar.title}</p>
-                                    <p className="text-zinc-500 text-xs mt-0.5">
-                                        {new Date(bar.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <Link
-                                    href={`/capture/explore?barId=${bar.id}`}
-                                    className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white transition"
-                                >
-                                    Explore →
-                                </Link>
-                            </div>
+                            <ChargeBarCard key={bar.id} bar={bar} />
                         ))}
                     </div>
                 </section>

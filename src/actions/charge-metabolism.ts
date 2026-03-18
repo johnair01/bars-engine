@@ -66,13 +66,16 @@ export async function persist321Session(
       /* use defaults */
       nextAction = 'What is the next smallest honest action?'
     }
-    await createFaceMoveBar('shaman', 'name_shadow_belief', {
-      title: shadowTitle,
-      description: shadowDesc,
-      barType: 'insight',
-      metadata: { sessionId: session.id, outcome: data.outcome },
-      nextAction,
-    })
+    // When extending to quest, the quest is the artifact — skip the Shaman witness BAR
+    if (data.outcome !== 'quest_created') {
+      await createFaceMoveBar('shaman', 'name_shadow_belief', {
+        title: shadowTitle,
+        description: shadowDesc,
+        barType: 'insight',
+        metadata: { sessionId: session.id, outcome: data.outcome },
+        nextAction,
+      })
+    }
 
     // PF: Unlock blessed object for 321 Shadow Process (standalone flow, not via EFA)
     await unlockBlessedObject(player.id, '321', { loreBarId: session.id })

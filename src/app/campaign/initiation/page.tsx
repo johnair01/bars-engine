@@ -8,9 +8,9 @@ const VALID_SEGMENTS = ['player', 'sponsor'] as const
 type Segment = (typeof VALID_SEGMENTS)[number]
 
 export default async function CampaignInitiationPage(props: {
-  searchParams: Promise<{ segment?: string }>
+  searchParams: Promise<{ segment?: string; shareToken?: string }>
 }) {
-  const { segment: rawSegment } = await props.searchParams
+  const { segment: rawSegment, shareToken } = await props.searchParams
   const segment: Segment =
     rawSegment && VALID_SEGMENTS.includes(rawSegment as Segment)
       ? (rawSegment as Segment)
@@ -70,6 +70,7 @@ export default async function CampaignInitiationPage(props: {
           campaignRef="bruised-banana"
           isAdmin={isAdmin}
           flowId="bruised-banana"
+          shareToken={shareToken ?? undefined}
         />
       </div>
     </div>

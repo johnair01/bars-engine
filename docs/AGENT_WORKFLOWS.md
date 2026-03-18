@@ -45,6 +45,8 @@ Then exits with code 1.
 | Sage brief | `sage:brief` |
 | Sage deft plan | `sage:deft-plan` |
 | Sage backlog assess | `sage:backlog-assess` |
+| Strand consult (strand system) | `strand:consult` |
+| Strand consult (Admin Agent Forge) | `strand:consult:forge` |
 | Conclave analyze | `conclave:analyze` |
 | Gather analyze | `gather:analyze` |
 | Run parallel feature | `run:parallel-feature` |

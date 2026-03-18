@@ -1,0 +1,110 @@
+name: individuation-engine
+slug: individuation-engine
+ambiguity: 0.16
+telos: >
+  An emotional charge enters the system, is shaped by archetype grammar,
+  accumulated by a Daemon reagent, routed through a weighted encounter table,
+  and situated inside a Nation-Face era. Inner change and outer change are
+  the same action recorded in two ledgers. Individuation is the game.
+
+source_specs:
+  - archetype_action_grammar_v0
+  - bar_quest_ui_scene_spec
+  - daemon_codex_spec
+  - emotional_alchemy_encounter_table_spec
+  - nation_face_era_teleology_v0
+  - language_of_emotions_mclaren
+
+entities:
+  existing_unwired:
+    - name: ArchetypeInfluenceProfile + applyArchetypeOverlay
+      location: src/lib/archetype-influence-overlay/
+      status: present_not_wired
+    - name: Daemon
+      location: prisma/schema.prisma
+      status: present_missing_codex_fields
+    - name: AlchemySceneTemplate
+      location: prisma/schema.prisma
+      status: present_missing_bias_fields
+    - name: selectScene
+      location: src/lib/alchemy/select-scene.ts
+      status: present_not_daemon_aware
+
+  new_typescript_only:
+    - QuestSeedContext interface
+    - buildQuestSeedInput() in src/lib/quest-seed-composer.ts
+
+  new_schema_phase_2:
+    - Daemon: voice, desire, fear, shadow, evolutionLog
+    - CustomBar: archetypeKey
+    - AlchemySceneTemplate: kotterStageBias, campaignFrontBias
+
+  new_schema_phase_3:
+    - NationFaceEra model
+
+phases:
+  - id: phase-1
+    label: Wire existing infrastructure
+    no_migrations: true
+    files:
+      - create: src/lib/quest-seed-composer.ts
+      - edit: src/actions/charge-capture.ts
+      - edit: src/actions/quest-generation.ts
+      - edit: src/actions/daemons.ts
+      - edit: src/lib/alchemy/select-scene.ts
+      - edit: src/actions/alchemy.ts
+
+  - id: phase-2
+    label: Schema migrations + Daemon Codex + Transition Ceremony
+    migrations:
+      - add_individuation_engine_daemon_codex
+      - add_individuation_engine_scene_biases
+      - add_individuation_engine_charge_archetype
+    files:
+      - edit: prisma/schema.prisma
+      - edit: src/actions/daemons.ts
+      - edit: src/lib/blessed-objects.ts
+      - edit: src/lib/alchemy/select-scene.ts
+      - create: src/app/daemons/[id]/codex/page.tsx
+      - create: src/components/charge-capture/TransitionCeremony.tsx
+      - edit: src/components/charge-capture/ChargeCaptureForm.tsx
+
+  - id: phase-3
+    label: NationFaceEra + transition protocol + collective ecology
+    migrations:
+      - add_nation_face_era
+    files:
+      - create: src/actions/nation-face-era.ts
+      - edit: src/lib/quest-seed-composer.ts
+      - create: src/app/admin/instances/[id]/face-era/page.tsx
+      - edit: src/lib/alchemy/select-scene.ts
+      - edit: src/actions/alchemy.ts
+
+resolved_decisions:
+  daemon_write_authority: player_only_via_actions
+  era_transitions: gm_only_phase_1_and_3
+  archetype_null_behavior: silent_skip
+  collective_daemon_aggregation: union_semantics
+  blessed_object_daemon_id: metadata_only_phase_1
+
+acceptance:
+  phase_1:
+    - applyArchetypeOverlay called in generateQuestSuggestionsFromCharge
+    - daemon channel/altitude passed to selectScene
+    - QuestSeedContext returned with all fields
+    - npm run build passes
+    - npm run check passes
+
+  phase_2:
+    - Daemon codex fields writable via updateDaemonCodex
+    - evolutionLog appended on quest completion and 321/EFA unlock
+    - AlchemySceneTemplate scoring includes new bias fields
+    - archetypeKey stamped on new ChargeBar records
+    - Transition ceremony renders and is interruptible
+
+  phase_3:
+    - NationFaceEra model live; getActiveFaceEra returns current era
+    - openFaceEra closes previous era before opening new one
+    - Admin UI for GM era declaration functional
+    - npm run build passes
+    - npm run check passes

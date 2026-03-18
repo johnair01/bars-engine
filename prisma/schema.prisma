@@ -64,6 +64,8 @@ model Player {
   createdAt              DateTime                   @default(now())
   barSharesSent          BarShare[]                 @relation("BarSharesSent")
   barSharesReceived      BarShare[]                 @relation("BarSharesReceived")
+  barShareExternalsSent BarShareExternal[]         @relation("BarShareExternalsSent")
+  barShareExternalsClaimed BarShareExternal[]       @relation("BarShareExternalsClaimed")
   barTopics              BarTopic[]
   claimedBars            CustomBar[]                @relation("ClaimedBars")
   createdBars            CustomBar[]                @relation("CreatedBars")
@@ -127,6 +129,8 @@ model Player {
   mapPresences           PlayerMapPresence[]
   spriteUrl              String?        @map("sprite_url")
   roomPresences          RoomPresence[]
+  lastForgeTimestamp     DateTime?      // Admin Agent Forge: cooldown start
+  forgeSessions          ForgeSession[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -245,6 +249,8 @@ model CustomBar {
   invitesAsStarterQuest Invite[] @relation("InviteStarterQuest")
   invitesAsInvitationBar Invite[] @relation("InviteInvitationBar")
   shares               BarShare[]
+  shareExternals      BarShareExternal[]
+  socialLinks         BarSocialLink[]
   bountyStakes         BountyStake[]
   claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
   creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
@@ -313,6 +319,75 @@ model Shadow321Session {
   @@index([playerId])
   @@index([outcome])
   @@map("shadow_321_sessions")
+}
+
+model ForgeSession {
+  id                    String    @id @default(cuid())
+  adminId               String
+  stage                 String    // THIRD_PERSON | SECOND_PERSON | FIRST_PERSON | FRICTION_REASSESS | ROUTING | COMPLETE
+  partDescription       String?   @db.Text
+  triggerContext        String?   @db.Text
+  observedPattern       String?   @db.Text
+  desiredExperience     String?   @db.Text
+  desiredSatisfaction   String?   // SatisfactionApexEnum
+  currentGameState      String?   @db.Text
+  currentDissatisfaction String? // DissatisfactionEnum
+  underlyingBelief      String?   @db.Text
+  sabotageBelief        String?   // SelfSabotageEnum
+  firstPersonVoice      String?   @db.Text
+  reclaimedIntent       String?   @db.Text
+  alignedStep           String?   @db.Text
+  mintedValues          String?   @default("[]") // JSON array
+  mintedConstraints     String?   @default("[]") // JSON array
+  frictionStart         Int?
+  frictionEnd           Int?
+  frictionDelta         Int?
+  vibeulonMinted        Boolean   @default(false)
+  outputType            String?   // NEW_AGENT | APPEND_EXISTING
+  routingTargetType     String?   // ARCHETYPE | NATION | CAMPAIGN | META_AGENT | GLOBAL_POLICY
+  routingTargetId       String?
+  allocationWeight     Int?
+  agentSpecId           String?
+  agentPatchId          String?
+  createdAt             DateTime  @default(now())
+  completedAt           DateTime?
+
+  admin  Player     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  agentSpec AgentSpec? @relation(fields: [agentSpecId], references: [id], onDelete: SetNull)
+  agentPatch AgentPatch? @relation(fields: [agentPatchId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([stage])
+  @@map("forge_sessions")
+}
+
+model AgentSpec {
+  id                      String    @id @default(cuid())
+  name                    String
+  nationOrientation       String?
+  distortionSignature     String?
+  coreValues              String    @default("[]") // JSON array
+  constraints             String    @default("[]") // JSON array
+  beliefContext            String?   @db.Text
+  sabotageSignature       String?
+  createdAt               DateTime  @default(now())
+
+  forgeSessions ForgeSession[]
+
+  @@map("agent_specs")
+}
+
+model AgentPatch {
+  id                      String    @id @default(cuid())
+  targetAgentId           String    // Mind agent or backend agent ID
+  addValues               String    @default("[]") // JSON array
+  addConstraints          String    @default("[]") // JSON array
+  updateDistortionSignature String?
+  createdAt               DateTime  @default(now())
+
+  forgeSessions ForgeSession[]
+
+  @@map("agent_patches")
 }
 
 model ShadowNameFeedback {
@@ -461,6 +536,45 @@ model BarShare {
   @@map("bar_shares")
 }
 
+model BarShareExternal {
+  id           String    @id @default(cuid())
+  barId        String
+  fromUserId   String
+  toEmail      String?
+  shareToken   String    @unique
+  status       String    @default("pending") // pending | claimed | expired | revoked
+  instanceId   String?   // campaign instance when BAR is campaign-linked
+  expiresAt    DateTime
+  claimedById  String?
+  createdAt    DateTime  @default(now())
+
+  bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  fromUser  Player    @relation("BarShareExternalsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  claimedBy Player?   @relation("BarShareExternalsClaimed", fields: [claimedById], references: [id], onDelete: SetNull)
+  instance  Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+
+  @@index([shareToken])
+  @@index([fromUserId, createdAt])
+  @@index([expiresAt])
+  @@map("bar_share_externals")
+}
+
+model BarSocialLink {
+  id           String   @id @default(cuid())
+  barId        String
+  platform     String   // instagram | spotify | twitter | youtube | generic
+  url          String   @db.Text
+  note         String?  @db.Text
+  metadataJson String?  @map("metadata_json")
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  bar CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  @@index([barId])
+  @@map("bar_social_links")
+}
+
 model BarResponse {
   id           String   @id @default(cuid())
   barId        String
@@ -513,7 +627,8 @@ model Asset {
   type         String    // bar_attachment | sprite | tile
   url          String
   mimeType     String?   @map("mime_type")
-  metadataJson String?   @map("metadata_json") // { intention?, altText?, ... }
+  metadataJson String?   @map("metadata_json") // { intention?, rotationDegrees?, altText?, ... }
+  side         String?   // front | back | null (legacy = front); BAR physical capture
   ownerId      String    @map("owner_id")
   customBarId  String?   @map("custom_bar_id")
   createdAt    DateTime  @default(now())
@@ -1116,6 +1231,7 @@ model Instance {
   schoolsAdventure   Adventure?  @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
   invites            Invite[]
   barsCollapsedFromInstance CustomBar[] @relation("BarCollapsedFromInstance")
+  barShareExternals  BarShareExternal[]
 
   @@map("instances")
 }

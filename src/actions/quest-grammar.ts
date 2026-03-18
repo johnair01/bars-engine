@@ -672,7 +672,7 @@ export async function publishIChingQuestToPlayer(
       data: {
         slug,
         title,
-        status: 'DRAFT',
+        status: 'ACTIVE',
         startNodeId: packet.startNodeId,
         description: `I Ching grammatic quest: ${questTitle}.`,
         visibility: 'PRIVATE_QUEST',
@@ -774,7 +774,7 @@ export async function publishGameboardAlignedQuestToPlayer(
       data: {
         slug,
         title,
-        status: 'DRAFT',
+        status: 'ACTIVE',
         startNodeId: packet.startNodeId,
         description: `Gameboard-aligned quest under ${parentTitle}.`,
         visibility: 'PRIVATE_QUEST',

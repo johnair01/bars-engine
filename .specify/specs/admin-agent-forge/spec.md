@@ -66,6 +66,11 @@ Implement a private Admin-only Agent Forge system that integrates the full 3-2-1
 
 **Acceptance**: On session completion: `last_forge_timestamp = now()`. Cooldown begins immediately. Cooldown is NOT tied to aligned step completion.
 
+### P11: Admin Forge UI
+**As an admin**, I want a Forge UI at `/admin/forge` that gates by eligibility and guides me through the 3-2-1 stages, so I can complete the process without leaving the admin tool.
+
+**Acceptance**: Eligibility check on load; if blocked, show reason (cooldown or low distortion). If eligible, show Start Forge with optional friction slider. Multi-step wizard: THIRD_PERSON → SECOND_PERSON → FIRST_PERSON → FRICTION_REASSESS → ROUTING → Complete. Each stage persists via PATCH; ROUTING submit triggers complete. Forge link in admin nav.
+
 ## Enums (Reference)
 
 **SatisfactionApexEnum**: BLISS, TRIUMPH, POIGNANCE, PEACE, EXCITEMENT
@@ -101,3 +106,7 @@ Existing: EmotionalFirstAidSession, EmotionalFirstAidTool, Role (admin), Player.
 - Conceptual model: [.specify/memory/conceptual-model.md](../../.specify/memory/conceptual-model.md) (Admin 3-2-1 Shadow Process & Agent Forge)
 - Emotional First Aid: [src/actions/emotional-first-aid.ts](../../src/actions/emotional-first-aid.ts)
 - Kotter: [src/lib/kotter.ts](../../src/lib/kotter.ts)
+
+## Reevaluation (GM Consult)
+
+Run `npm run strand:consult:forge` to invoke the Game Master agents (Architect, Regent, Shaman, Sage) for a reevaluation of this spec against the current system. Output: [GM_CONSULT_REEVALUATION.md](./GM_CONSULT_REEVALUATION.md).

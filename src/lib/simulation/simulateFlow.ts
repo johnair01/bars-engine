@@ -17,6 +17,7 @@ const DEFAULT_CAPABILITIES = ['observe', 'create', 'continue', 'choose']
 export function simulateFlow(input: SimulateFlowInput): SimulationResult {
   const flow = input.flow
   const capabilities = input.actor_capabilities ?? DEFAULT_CAPABILITIES
+  const seed = input.seed
   const state: Record<string, unknown> = {
     bar_count: 0,
     ...input.initial_state,
@@ -79,6 +80,7 @@ export function simulateFlow(input: SimulateFlowInput): SimulationResult {
         warnings: !eventsMatch ? ['expected_events order mismatch'] : warnings,
         errors,
         completion_reached: completionReached && !hasErrors,
+        ...(seed !== undefined && { seed }),
       }
     }
 
@@ -135,5 +137,6 @@ export function simulateFlow(input: SimulateFlowInput): SimulationResult {
     warnings,
     errors,
     completion_reached: false,
+    ...(seed !== undefined && { seed }),
   }
 }

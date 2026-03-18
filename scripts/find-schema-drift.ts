@@ -45,6 +45,12 @@ async function main() {
       }
     }
   }
-  if (missing.length === 0) console.log('  All probed columns present ✅')
+  if (missing.length === 0) {
+    console.log('  All probed columns present ✅')
+  } else {
+    console.error('\n  Fix: Add missing columns to a migration file, then run prisma migrate deploy.')
+    console.error('  Never use db push on shared/production databases.')
+    process.exit(1)
+  }
 }
-main().catch(e => console.error(e.message)).finally(() => db.$disconnect())
+main().catch(e => { console.error(e.message); process.exit(1) }).finally(() => db.$disconnect())

@@ -27,6 +27,8 @@ interface CampaignReaderProps {
     campaignRef?: string
     isAdmin?: boolean
     flowId?: string
+    /** When present: after signup redirect to /bar/share/[token] to claim BAR share */
+    shareToken?: string
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -148,13 +150,14 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false, flowId }: CampaignReaderProps) {
+export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false, flowId, shareToken }: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
     const [lastFailedNodeId, setLastFailedNodeId] = useState<string | null>(null)
     const [campaignState, setCampaignState] = useState<Record<string, any>>({
         ref: campaignRef ?? undefined,
+        shareToken: shareToken ?? undefined,
         completed_shaman: false,
         completed_challenger: false,
         completed_regent: false,

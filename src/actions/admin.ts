@@ -8,6 +8,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { mintVibulon } from '@/actions/economy'
 import { hashPassword } from '@/lib/auth-utils'
 import { deriveAvatarConfig } from '@/lib/avatar-utils'
+import { getSpriteDirForLayer } from '@/lib/avatar-parts'
 
 // ===================================
 // ADMIN STATS
@@ -687,7 +688,7 @@ export async function getAdminSpriteAssets() {
     const byLayer: Record<string, { expected: string[]; existing: string[] }> = {}
 
     for (const layer of LAYERS) {
-        const layerDir = path.join(spritesDir, layer)
+        const layerDir = path.join(spritesDir, getSpriteDirForLayer(layer))
         let existing: string[] = []
         if (fs.existsSync(layerDir)) {
             existing = fs
@@ -726,7 +727,7 @@ export async function uploadSpriteAsset(formData: FormData) {
     }
 
     const spritesDir = path.join(process.cwd(), 'public', 'sprites', 'parts')
-    const layerDir = path.join(spritesDir, layer)
+    const layerDir = path.join(spritesDir, getSpriteDirForLayer(layer))
     if (!fs.existsSync(layerDir)) {
         fs.mkdirSync(layerDir, { recursive: true })
     }

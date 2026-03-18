@@ -3,17 +3,23 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarCardFace } from './BarCardFace'
+import { BarFlipCard } from './BarFlipCard'
 import { updateBar } from '@/actions/bars'
+
+type AssetLike = { id: string; url: string; mimeType?: string | null; metadataJson?: string | null; side?: string | null }
 
 type BarFaceBackTabsProps = {
   description: string
   imageUrl?: string | null
+  assets?: AssetLike[]
   tags: string[]
   isOwner?: boolean
   barId?: string
 }
 
-export function BarFaceBackTabs({ description, imageUrl, tags, isOwner, barId }: BarFaceBackTabsProps) {
+export function BarFaceBackTabs({ description, imageUrl, assets = [], tags, isOwner, barId }: BarFaceBackTabsProps) {
+  const imageAssets = assets.filter((a) => a.mimeType?.startsWith('image/'))
+  const useFlipCard = imageAssets.length > 0
   const router = useRouter()
   const [active, setActive] = useState<'face' | 'back'>('face')
   const [editing, setEditing] = useState(false)
@@ -90,11 +96,19 @@ export function BarFaceBackTabs({ description, imageUrl, tags, isOwner, barId }:
       </div>
 
       {active === 'face' && (
-        <BarCardFace
-          description={editing ? editContent : description}
-          imageUrl={imageUrl}
-          className="shadow-lg"
-        />
+        useFlipCard ? (
+          <BarFlipCard
+            assets={imageAssets}
+            description={editing ? editContent : description}
+            className="shadow-lg"
+          />
+        ) : (
+          <BarCardFace
+            description={editing ? editContent : description}
+            imageUrl={imageUrl}
+            className="shadow-lg"
+          />
+        )
       )}
 
       {active === 'back' && (

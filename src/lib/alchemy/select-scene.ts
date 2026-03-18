@@ -8,6 +8,10 @@ export interface SelectSceneOpts {
   sceneType?: string // 'transcend' | 'generate' | 'control'
   channel?: string   // override: use targetChannel for generate/control
   altitudeFrom?: string // override: caller computes via wuxing
+  /** Active daemon's wuxing channel — low-weight (3) scoring signal. IE-5 */
+  daemonChannel?: string
+  /** Active daemon's altitude — informational, not scored directly. IE-5 */
+  daemonAltitude?: string
 }
 
 type SceneResult = AlchemySceneTemplateRow | null
@@ -39,6 +43,13 @@ function scoreCandidate(
     try {
       const slugs: string[] = JSON.parse(row.nationBias)
       if (slugs.includes(opts.nationSlug)) score += 5
+    } catch { /* malformed JSON */ }
+  }
+  // Daemon channel: low-weight signal from active summoned daemon (IE-5)
+  if (opts.daemonChannel && row.archetypeBias) {
+    try {
+      const slugs: string[] = JSON.parse(row.archetypeBias)
+      if (slugs.includes(opts.daemonChannel.toLowerCase())) score += 3
     } catch { /* malformed JSON */ }
   }
   return score

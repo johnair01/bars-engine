@@ -1,0 +1,53 @@
+{
+  "flow_id": "bb_quest_completion_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "quest_start",
+  "nodes": [
+    {
+      "id": "quest_start",
+      "type": "introduction",
+      "copy": "Complete this quest step.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["quest_started"],
+          "next_node_id": "quest_action",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "quest_action",
+      "type": "prompt",
+      "copy": "Take the required action.",
+      "actions": [
+        {
+          "type": "choose",
+          "requires": ["choose"],
+          "emits": ["action_completed"],
+          "next_node_id": "quest_complete",
+          "label": "Complete"
+        }
+      ]
+    },
+    {
+      "id": "quest_complete",
+      "type": "completion",
+      "copy": "Quest completed.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "quest_complete"
+    }
+  ],
+  "expected_events": [
+    "quest_started",
+    "action_completed",
+    "quest_completed"
+  ]
+}

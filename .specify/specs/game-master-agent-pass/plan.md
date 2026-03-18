@@ -46,6 +46,24 @@ Per [ai-deftness-token-strategy](../ai-deftness-token-strategy/spec.md):
 - Document: which agent calls have stable inputs (e.g. nation_context, archetype_context) that could be cached
 - Defer implementation to separate spec if non-trivial
 
+**Cache opportunities (stable inputs → cache key)**:
+
+| Tool | Stable inputs | Cache key candidate |
+|------|---------------|---------------------|
+| sage_consult | question | hash(question) |
+| architect_draft | narrative_lock, quest_grammar | hash(narrative_lock, quest_grammar) |
+| architect_compile | unpacking_answers_json, quest_grammar | hash(unpacking_answers_json, quest_grammar) |
+| architect_analyze_chunk | chunk_text, domain_hint | hash(chunk_text, domain_hint) |
+| challenger_propose | context | hash(context) |
+| shaman_read | context | hash(context) |
+| shaman_identify | free_text | hash(free_text) |
+| regent_assess | instance_id | hash(instance_id) |
+| diplomat_guide | context | hash(context) |
+| diplomat_bridge | narrative_text, move_type | hash(narrative_text, move_type) |
+| diplomat_refine_copy | target_type, current_copy, context | hash(target_type, current_copy, context) |
+
+**Note**: AgentDeps (player_id, instance_id) may affect output for HTTP API calls; include in cache key when present. MCP calls typically use deps with player_id=None. Implementation deferred to [ai-deftness-token-strategy](../ai-deftness-token-strategy/spec.md) Phase 3.
+
 ## Phase 2: Spec Kit Implementation
 
 ### 2.1 Add Practice Tag to GM Specs

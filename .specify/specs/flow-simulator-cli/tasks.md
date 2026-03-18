@@ -35,3 +35,14 @@
 - [ ] Test: Librarian only proposes allowed actions
 - [ ] Test: Witness does not emit false completion
 - [ ] npm run build and npm run check
+
+## Phase 5: Agent-oriented extensions (from STRAND_CONSULT)
+
+- [x] Add optional `seed` param to simulateFlow; document deterministic behavior
+- [x] Ensure SimulationResult includes full `events_emitted` sequence for agent assertions
+- [x] Document flow JSON schema (docs/simulation/flow-json-schema.md)
+- [x] Add deterministic IDs to existing fixtures; validate fixture schema before run
+- [x] Add fixtures: bar_creation.json, quest_completion.json (creation/deletion flows)
+- [x] Implement sandbox isolation (in-memory or isolated DB) for agent runs
+- [x] Define integration contract with transformation-simulation-harness and npc-agent-game-loop
+- [x] Add unified CLI subcommands or shared config for cross-tool interoperability

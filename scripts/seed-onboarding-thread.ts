@@ -368,8 +368,8 @@ async function main() {
         {
             name: 'STEP_1',
             pid: '2',
-            text: '### Step 1: Learn the skill\n\nRead the [Report to the Library](/wiki/request-from-library) skill guide first—it teaches when and how to report. Then open the [dashboard](/) and click **Request from Library** in the header.',
-            cleanText: 'Learn the skill: Report to the Library. Then open dashboard and click Request from Library.',
+            text: '### Step 1: Open Request from Library\n\nOpen the [dashboard](/) and click **Request from Library** in the header.',
+            cleanText: 'Open dashboard and click Request from Library.',
             links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
         {
@@ -382,14 +382,14 @@ async function main() {
         {
             name: 'STEP_3',
             pid: '4',
-            text: '### Step 3: Confirm result\n\nIf resolved: confirm you got a link to a doc. If spawned: a DocQuest was created and added to your Active Quests.\n\n**Learn the skill:** [Report to the Library](/wiki/request-from-library) teaches when and how to report—so you can use it anytime.',
-            cleanText: 'If resolved: confirm you got a doc link. If spawned: DocQuest added to Active Quests. Learn the skill: Report to the Library.',
+            text: '### Step 3: Confirm result\n\nIf resolved: confirm you got a link to a doc. If spawned: a DocQuest was created and added to your Active Quests.\n\n[Learn the skill](/wiki/request-from-library) — the wiki teaches when and how to use Request from Library anytime.',
+            cleanText: 'If resolved: confirm you got a doc link. If spawned: DocQuest added to Active Quests. Learn the skill in the wiki.',
             links: [{ label: 'Complete', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
         {
             name: 'FEEDBACK',
             pid: '6',
-            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.',
+            text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered so we can fix it.',
             cleanText: '### Report an Issue\n\nDescribe what you encountered.',
             links: [],
             tags: ['feedback']
@@ -718,17 +718,47 @@ async function main() {
 
     // 9. Four Moves orientation thread (dashboard-ui-vibe-cleanup Phase 4)
     console.log('\nCreating Four Moves orientation thread...')
-    const fourMovesQuests: { id: string; title: string; moveType: string; description: string }[] = [
-        { id: 'four-moves-wake-up-quest', title: 'Wake Up', moveType: 'wakeUp', description: 'Wake Up is about awareness and insight. See what\'s available: who can help, what resources exist, where the work happens. Quests tagged Wake Up help you see more clearly before acting.' },
+    const wakeUpPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Wake Up is about awareness and insight. See what\'s available: who can help, what resources exist, where the work happens.\n\n[Learn more in the Wiki](/wiki/moves#wake-up) — the full guide explains how Wake Up quests help you see more clearly before acting.',
+            cleanText: 'Wake Up: awareness and insight. Learn more in the Wiki.',
+            links: [{ label: 'Complete', target: 'END' }]
+        },
+        { name: 'END', pid: '2', text: 'You\'ve oriented to Wake Up.', cleanText: 'Done.', links: [] }
+    ]
+    const wakeUpStory = await db.twineStory.upsert({
+        where: { slug: 'four-moves-wake-up' },
+        update: { parsedJson: JSON.stringify({ startPassage: 'START', passages: wakeUpPassages }), isPublished: true },
+        create: {
+            title: 'Wake Up',
+            slug: 'four-moves-wake-up',
+            sourceType: 'manual_seed',
+            sourceText: 'Four Moves Wake Up quest — link to wiki (seed-onboarding-thread.ts)',
+            parsedJson: JSON.stringify({ startPassage: 'START', passages: wakeUpPassages }),
+            isPublished: true,
+            createdById: creator.id
+        }
+    })
+    const fourMovesQuests: { id: string; title: string; moveType: string; description: string; twineStoryId?: string }[] = [
+        { id: 'four-moves-wake-up-quest', title: 'Wake Up', moveType: 'wakeUp', description: 'Wake Up is about awareness and insight. See what\'s available: who can help, what resources exist, where the work happens. Quests tagged Wake Up help you see more clearly before acting.', twineStoryId: wakeUpStory.id },
         { id: 'four-moves-clean-up-quest', title: 'Clean Up', moveType: 'cleanUp', description: 'Clean Up is about unblocking emotional energy. When something is blocking you, Clean Up quests help you clear the way so you can move forward.' },
         { id: 'four-moves-grow-up-quest', title: 'Grow Up', moveType: 'growUp', description: 'Grow Up is about building skill and capacity. These quests help you develop new abilities and expand what you can do.' },
         { id: 'four-moves-show-up-quest', title: 'Show Up', moveType: 'showUp', description: 'Show Up is about doing the work. When you\'re ready to act, Show Up quests help you contribute directly to the collective.' }
-    ]
+    ] as { id: string; title: string; moveType: string; description: string; twineStoryId?: string }[]
     const fourMovesCreated: { id: string; quest: Awaited<ReturnType<typeof db.customBar.upsert>> }[] = []
     for (const q of fourMovesQuests) {
         const quest = await db.customBar.upsert({
             where: { id: q.id },
-            update: { title: q.title, description: q.description, moveType: q.moveType, type: 'onboarding', reward: 1 },
+            update: {
+                title: q.title,
+                description: q.description,
+                moveType: q.moveType,
+                type: 'onboarding',
+                reward: 1,
+                ...(q.twineStoryId && { twineStoryId: q.twineStoryId })
+            },
             create: {
                 id: q.id,
                 title: q.title,
@@ -740,7 +770,8 @@ async function main() {
                 status: 'active',
                 visibility: 'public',
                 isSystem: true,
-                inputs: JSON.stringify([])
+                inputs: JSON.stringify([]),
+                ...(q.twineStoryId && { twineStoryId: q.twineStoryId })
             }
         })
         fourMovesCreated.push({ id: q.id, quest })

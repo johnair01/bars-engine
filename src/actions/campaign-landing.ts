@@ -5,6 +5,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 
 export type CampaignLandingData = {
   instance: {
+    id: string
     name: string
     targetDescription: string | null
     primaryCampaignDomain: string | null
@@ -15,15 +16,18 @@ export type CampaignLandingData = {
   inviter: { name: string } | null
   starterQuest: { id: string; title: string } | null
   firstQuestCta: { questId: string; label: string }
+  /** When shareToken present: BAR share context for onboarding-first flow */
+  shareContext: { shareToken: string; senderName: string; barTitle: string } | null
 }
 
 /**
  * Resolve campaign landing data for /campaigns/landing/[slug].
- * Instance slug in URL; inviter from invite token or player.invitedBy; starter quest from invite or campaign pool.
+ * Instance slug in URL; inviter from invite token or player.invitedBy or shareToken; starter quest from invite or campaign pool.
  */
 export async function getCampaignLandingData(
   slug: string,
-  inviteToken?: string | null
+  inviteToken?: string | null,
+  shareToken?: string | null
 ): Promise<CampaignLandingData | null> {
   const instance = await db.instance.findUnique({
     where: { slug },
@@ -58,6 +62,29 @@ export async function getCampaignLandingData(
     if (invite?.starterQuest) starterQuest = { id: invite.starterQuest.id, title: invite.starterQuest.title }
   }
 
+  let shareContext: CampaignLandingData['shareContext'] = null
+  if (shareToken) {
+    const share = await db.barShareExternal.findUnique({
+      where: { shareToken },
+      select: {
+        status: true,
+        expiresAt: true,
+        instanceId: true,
+        bar: { select: { title: true } },
+        fromUser: { select: { name: true } },
+      },
+    })
+    const validInstance = !share?.instanceId || share.instanceId === instance.id
+    if (share && share.status === 'pending' && new Date() < share.expiresAt && validInstance) {
+      shareContext = {
+        shareToken,
+        senderName: share.fromUser.name,
+        barTitle: share.bar.title,
+      }
+      if (!inviter) inviter = { name: share.fromUser.name }
+    }
+  }
+
   if (!inviter) {
     const player = await getCurrentPlayer()
     if (player?.invitedByPlayerId) {
@@ -85,11 +112,12 @@ export async function getCampaignLandingData(
   }
 
   const firstQuestCta = starterQuest
-    ? { questId: starterQuest.id, label: 'Accept your first quest' }
-    : { questId: '', label: 'Start' }
+    ? { questId: starterQuest.id, label: shareContext ? 'Start orientation to view reflection' : 'Accept your first quest' }
+    : { questId: '', label: shareContext ? 'Start orientation' : 'Start' }
 
   return {
     instance: {
+      id: instance.id,
       name: instance.name,
       targetDescription: instance.targetDescription,
       primaryCampaignDomain: instance.primaryCampaignDomain,
@@ -100,6 +128,7 @@ export async function getCampaignLandingData(
     inviter,
     starterQuest,
     firstQuestCta,
+    shareContext,
   }
 }
 

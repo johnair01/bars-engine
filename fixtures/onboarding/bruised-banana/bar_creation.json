@@ -1,0 +1,78 @@
+{
+  "flow_id": "bb_bar_creation_v1",
+  "campaign_id": "bruised_banana_residency",
+  "start_node_id": "bar_intro",
+  "nodes": [
+    {
+      "id": "bar_intro",
+      "type": "introduction",
+      "copy": "Create a BAR to mark your intended impact.",
+      "actions": [
+        {
+          "type": "read",
+          "requires": ["observe"],
+          "emits": ["orientation_viewed"],
+          "next_node_id": "bar_capture",
+          "label": "Continue"
+        }
+      ]
+    },
+    {
+      "id": "bar_capture",
+      "type": "BAR_capture",
+      "copy": "What would you like to see become possible?",
+      "actions": [
+        {
+          "type": "create_BAR",
+          "requires": ["create"],
+          "emits": ["bar_created"],
+          "next_node_id": "bar_validation",
+          "label": "Create BAR"
+        }
+      ]
+    },
+    {
+      "id": "bar_validation",
+      "type": "BAR_validation",
+      "copy": "Your BAR is recorded.",
+      "conditions": [
+        {
+          "type": "BAR_exists",
+          "source": "current_actor"
+        }
+      ],
+      "actions": [
+        {
+          "type": "confirm",
+          "requires": ["observe"],
+          "emits": ["bar_validated", "quest_progressed"],
+          "next_node_id": "bar_complete",
+          "label": "Confirm"
+        }
+      ]
+    },
+    {
+      "id": "bar_complete",
+      "type": "completion",
+      "copy": "BAR creation complete.",
+      "actions": [],
+      "emits": ["quest_completed"]
+    }
+  ],
+  "completion_conditions": [
+    {
+      "type": "node_reached",
+      "node_id": "bar_complete"
+    },
+    {
+      "type": "BAR_created_before_validation"
+    }
+  ],
+  "expected_events": [
+    "orientation_viewed",
+    "bar_created",
+    "bar_validated",
+    "quest_progressed",
+    "quest_completed"
+  ]
+}

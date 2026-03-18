@@ -1,0 +1,116 @@
+name: deck-card-move-grammar
+slug: deck-card-move-grammar
+ambiguity: 0.18
+telos: >
+  bars-engine is a deck-building game. The highest-leverage move is: do inner
+  work → turn it into a playable card. The loop is Charge → BAR → Deck → Action
+  → Charge → BAR → ∞. Cards are composed from Nation × Face × Archetype grammar
+  at render time, not stored as N×M×P rows. Starter decks let players play
+  before they've done inner work. Inner work upgrades the deck.
+
+loop: "Charge → BAR → Deck → Action → Charge → BAR"
+
+grammar_model:
+  layers:
+    - BaseFaceMove         # authored TypeScript constants (12 total)
+    - NationFlavorProfile  # authored TypeScript constants (5 nations)
+    - ArchetypeInfluenceProfile  # already exists in archetype-influence-overlay/
+  resolver: resolveMoveSentence(faceKey, moveTypeKey, nationKey, archetypeKey)
+  db_rows: false  # grammar lives in TypeScript, not the database
+
+existing_infrastructure:
+  do_not_touch:
+    - BarDeck / BarDeckCard / ActorDeckState  # campaign GM tool, separate layer
+    - QuestProposal  # extended only
+    - CustomBar existing fields  # one field added
+    - applyArchetypeOverlay()  # called by resolver
+
+  present_but_unwired:
+    - applyArchetypeOverlay()
+    - Nation.wakeUp/cleanUp/growUp/showUp fields
+    - NationMove.archetypeId FK (no archetype move pools yet)
+
+new_schema:
+  models:
+    - PlayerDeck
+    - PlayerCard
+  fields:
+    CustomBar: [promotedCardId]
+    QuestProposal: [proposalType, cardEffect]
+
+starter_decks:
+  onboarding: 1  # no archetype/nation required
+  domain: 4      # one per allyship domain
+  archetype: 8   # one per AQAL archetype (Phase 4)
+
+nations:
+  - Argyra     # Heaven, Wind — crystalline, reflective
+  - Pyrakanth  # Fire, Thunder — volcanic, combustive
+  - Virelune   # Water, Lake — tidal, adaptive
+  - Meridia    # Lake, Heaven — expansive, bridging
+  - Lamenth    # Mountain, Earth — grounded, immovable
+
+archetypes:
+  - bold-heart          # Heaven trigram
+  - danger-walker       # Water trigram
+  - truth-seer          # Fire trigram
+  - still-point         # Mountain trigram
+  - subtle-influence    # Wind trigram
+  - devoted-guardian    # Earth trigram
+  - decisive-storm      # Thunder trigram
+  - joyful-connector    # Lake trigram
+
+phases:
+  - id: phase-1
+    label: Grammar resolver — no migrations
+    files:
+      - create: src/lib/move-grammar/index.ts
+      - create: src/lib/move-grammar/base-moves.ts
+      - create: src/lib/move-grammar/nation-profiles.ts
+      - create: src/lib/move-grammar/resolver.ts
+      - create: src/lib/deck-templates/index.ts
+
+  - id: phase-2
+    label: Schema + starter decks
+    migrations: [add_player_deck_and_cards]
+    files:
+      - create: src/lib/deck-templates/starters/onboarding.ts
+      - create: src/lib/deck-templates/starters/domain-*.ts (x4)
+      - create: src/actions/deck.ts
+      - edit: src/app/invite/[token]/InviteSignupForm.tsx
+
+  - id: phase-3
+    label: BAR→Card promotion pathway
+    files:
+      - create: src/components/bars/PromoteToCardButton.tsx
+      - create: src/app/bars/[id]/promote/page.tsx
+      - edit: src/app/bars/[id]/BarDetailClient.tsx
+      - edit: src/app/hand/page.tsx
+
+  - id: phase-4
+    label: Archetype starter decks + co-design
+    files:
+      - create: src/lib/deck-templates/starters/archetype-*.ts (x8)
+      - edit: src/actions/deck.ts
+      - edit: admin quest review flow
+
+acceptance:
+  phase_1:
+    - resolveMoveSentence('challenger','issue_challenge','pyrakanth','bold-heart') != resolveMoveSentence('challenger','issue_challenge','meridia','danger-walker')
+    - resolveMoveSentence(null,null,null,null) returns non-empty fallback
+    - npm run check passes
+
+  phase_2:
+    - assemblePlayerDeck creates PlayerDeck + PlayerCard rows
+    - onboarding template used as fallback for no-archetype players
+    - npm run build passes
+
+  phase_3:
+    - BAR promotion creates PlayerCard and sets CustomBar.promotedCardId
+    - Second promotion attempt blocked (idempotent)
+    - npm run build passes
+
+  phase_4:
+    - Danger Walker player gets archetype-specific cards in assembled deck
+    - Community-approved cards appear for matching players
+    - npm run build passes

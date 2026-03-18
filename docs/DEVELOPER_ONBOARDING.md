@@ -109,6 +109,8 @@ If `DATABASE_URL` is missing, you'll get a clear error. Run `npm run env:pull` o
 
 See [docs/DB_STRATEGY.md](DB_STRATEGY.md) for migrate vs push.
 
+**⚠️ Never use `db push` on shared or production databases.** Always create a migration file (`npx prisma migrate dev --name describe_change`) for schema changes. `db push` is for local iteration only and can cause data loss or schema drift when used against production.
+
 ---
 
 ## 5. Verification — run these before you start coding

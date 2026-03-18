@@ -14,7 +14,6 @@ import Link from 'next/link'
 import { DashboardSectionButtons } from '@/components/dashboard/DashboardSectionButtons'
 import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
 import { DashboardActionButtons } from '@/components/dashboard/DashboardActionButtons'
-import { GetStartedBlock } from '@/components/dashboard/GetStartedBlock'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
@@ -519,9 +518,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </div>
         </section>
       )}
-
-      {/* GET STARTED — Collapsible, dismissible */}
-      <GetStartedBlock />
 
       {/* WELCOME SCREEN (if not seen yet) */}
       {!('error' in onboardingStatus) && !onboardingStatus.hasSeenWelcome && (

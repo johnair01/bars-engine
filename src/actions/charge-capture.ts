@@ -6,6 +6,7 @@ import { getActiveInstance } from '@/actions/instance'
 import { revalidatePath } from 'next/cache'
 import { generateQuestSuggestions } from '@/lib/charge-quest-generator'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
+import { buildQuestSeedInput } from '@/lib/quest-seed-composer'
 
 export type CreateChargeBarPayload = {
   summary: string
@@ -325,10 +326,25 @@ export async function generateQuestSuggestionsFromCharge(
     context_note,
   })
 
+  // Apply archetype flavor to quest summaries (IE-3)
+  let flavored = suggestions
+  try {
+    const context = await buildQuestSeedInput(player.id, bar.id)
+    if (context.archetypeProfile?.quest_style_modifiers?.[0]) {
+      const modifier = context.archetypeProfile.quest_style_modifiers[0]
+      flavored = suggestions.map((s) => ({
+        ...s,
+        quest_summary: `${s.quest_summary} ${modifier}`.trim(),
+      }))
+    }
+  } catch {
+    // overlay failure never blocks generation
+  }
+
   return {
     success: true,
     bar_id: bar.id,
-    quest_suggestions: suggestions,
+    quest_suggestions: flavored,
   }
 }
 

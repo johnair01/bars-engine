@@ -1,12 +1,14 @@
 #!/usr/bin/env npx tsx
 /**
- * Flow simulator CLI. Run: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>]
+ * Flow simulator CLI. Run: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]
+ * Validate only: npm run simulate -- validate <path-to-flow.json>
  */
 
 import * as fs from 'fs'
 import * as path from 'path'
 import { simulateFlow } from '../src/lib/simulation/simulateFlow'
 import { getSimulatedActorRole } from '../src/lib/simulation/actors'
+import { validateFlowSchema } from '../src/lib/simulation/validateFlowSchema'
 import type { FlowJSON } from '../src/lib/simulation/types'
 
 const DEFAULT_ACTOR_CAPS: Record<string, string[]> = {
@@ -26,18 +28,54 @@ function loadFlow(filePath: string): FlowJSON {
   return JSON.parse(raw) as FlowJSON
 }
 
-function main() {
-  const args = process.argv.slice(2)
+function parseArgs(args: string[]) {
   const jsonMode = args.includes('--json')
   const verboseMode = args.includes('--verbose')
   const actorIdx = args.indexOf('--actor')
   const actorId = actorIdx >= 0 ? args[actorIdx + 1] : 'default'
-  const paths = args.filter((a) => !a.startsWith('--') && (actorIdx < 0 || args.indexOf(a) !== actorIdx + 1))
+  const seedIdx = args.indexOf('--seed')
+  const seed = seedIdx >= 0 && args[seedIdx + 1] ? parseInt(args[seedIdx + 1], 10) : undefined
+  const validateOnly = args[0] === 'validate'
+  const positional = args.filter((a, i) => {
+    if (a.startsWith('--')) return false
+    if (actorIdx >= 0 && i === actorIdx + 1) return false
+    if (seedIdx >= 0 && i === seedIdx + 1) return false
+    return true
+  })
+  const paths = validateOnly ? positional.slice(1) : positional
+  return { jsonMode, verboseMode, actorId, seed, validateOnly, paths }
+}
+
+function main() {
+  const args = process.argv.slice(2)
+  const { jsonMode, verboseMode, actorId, seed, validateOnly, paths } = parseArgs(args)
 
   if (paths.length === 0) {
-    console.error('Usage: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>]')
+    console.error('Usage: npm run simulate -- [validate] <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]')
     console.error('Example: npm run simulate -- fixtures/flows/orientation_linear_minimal.json --verbose')
+    console.error('Validate: npm run simulate -- validate fixtures/onboarding/bruised-banana/campaign_intro.json')
     process.exit(1)
+  }
+
+  if (validateOnly) {
+    let allValid = true
+    for (const p of paths) {
+      try {
+        const flow = JSON.parse(fs.readFileSync(path.isAbsolute(p) ? p : path.join(process.cwd(), p), 'utf-8'))
+        const errors = validateFlowSchema(flow)
+        if (errors.length === 0) {
+          console.log(`${path.basename(p)}: valid`)
+        } else {
+          allValid = false
+          console.error(`${path.basename(p)}: invalid`)
+          errors.forEach((e) => console.error(`  ${e.path}: ${e.message}`))
+        }
+      } catch (err) {
+        allValid = false
+        console.error(`${p}: ERROR ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
+    process.exit(allValid ? 0 : 1)
   }
 
   const capabilities = getCapabilitiesForActor(actorId)
@@ -46,9 +84,14 @@ function main() {
   for (const p of paths) {
     try {
       const flow = loadFlow(p)
+      const schemaErrors = validateFlowSchema(flow)
+      if (schemaErrors.length > 0) {
+        throw new Error(schemaErrors.map((e) => `${e.path}: ${e.message}`).join('; '))
+      }
       const result = simulateFlow({
         flow,
         actor_capabilities: capabilities,
+        seed,
       })
       results.push({ path: p, result })
 

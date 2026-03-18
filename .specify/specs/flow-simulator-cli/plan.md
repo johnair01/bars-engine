@@ -38,6 +38,15 @@ Implement a CLI tool for simulating quest flows and fixtures; add Bruised Banana
 - Test: Failure cases (missing_start_node, unreachable_completion, etc.).
 - Test: Bounded actor role constraints.
 
+### Phase 5: Agent-oriented extensions (from STRAND_CONSULT)
+
+- **Replay capability**: SimulationResult includes full `events_emitted` sequence; agents can assert on event order and presence.
+- **Deterministic seed**: All simulations accept optional `seed`; same seed + same flow → same result.
+- **Fixture schema contract**: Document flow JSON schema; use deterministic IDs; validate before run.
+- **Extended fixtures**: Add fixtures for BAR creation, quest completion, move validation (creation/deletion flows).
+- **Sandbox isolation**: When used by agents, simulator uses in-memory or isolated DB; never production.
+- **Integration contract**: Define shared protocol with transformation-simulation-harness and npc-agent-game-loop; unified CLI subcommands or shared config.
+
 ## File Impacts
 
 | File | Action |
@@ -49,9 +58,14 @@ Implement a CLI tool for simulating quest flows and fixtures; add Bruised Banana
 | `fixtures/onboarding/bruised-banana/*.json` | New — fixtures |
 | `scripts/simulate-flow.ts` | New — CLI script |
 | `package.json` | Add `simulate` script |
+| `docs/simulation/flow-json-schema.md` | New (Phase 5) — fixture schema contract |
+| `fixtures/onboarding/bruised-banana/bar_creation.json` | New (Phase 5) — BAR creation flow |
+| `fixtures/onboarding/bruised-banana/quest_completion.json` | New (Phase 5) — quest completion flow |
+| `src/lib/simulation/sandbox.ts` | New (Phase 5) — sandbox isolation for agents |
 
 ## Dependencies
 
 - flow-simulator-contract (existing)
 - quest-bar-flow-grammar (existing)
 - orientation-golden-paths (existing)
+- [STRAND_CONSULT.md](./STRAND_CONSULT.md) — run `npm run strand:consult:dq` to refresh

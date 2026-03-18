@@ -262,8 +262,10 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
         })
 
         const postSignupRedirect = await getPostSignupRedirect()
-        const redirectTo =
-            postSignupRedirect === 'dashboard'
+        const shareToken = typeof state?.shareToken === 'string' && state.shareToken.trim() ? state.shareToken.trim() : null
+        const redirectTo = shareToken
+            ? `/bar/share/${encodeURIComponent(shareToken)}`
+            : postSignupRedirect === 'dashboard'
                 ? await getDashboardRedirectForPlayer(player.id)
                 : '/conclave/onboarding'
 
@@ -311,9 +313,12 @@ export async function loginWithCampaignState(
         if (applyResult.error) return { error: applyResult.error }
     }
 
+    const shareToken = typeof campaignState?.shareToken === 'string' && campaignState.shareToken.trim() ? campaignState.shareToken.trim() : null
     const postSignupRedirect = await getPostSignupRedirect()
     let redirectTo: string
-    if (postSignupRedirect === 'dashboard') {
+    if (shareToken) {
+        redirectTo = `/bar/share/${encodeURIComponent(shareToken)}`
+    } else if (postSignupRedirect === 'dashboard') {
         const cookieStore = await cookies()
         const playerId = cookieStore.get('bars_player_id')?.value
         redirectTo = playerId ? await getDashboardRedirectForPlayer(playerId) : '/'

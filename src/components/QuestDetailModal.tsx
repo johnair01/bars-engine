@@ -6,7 +6,6 @@ import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter, usePathname } from 'next/navigation'
 import { pickupMarketQuest } from '@/actions/market'
-import { JOURNEY_SEQUENCE } from '@/lib/bars'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
 import { VibulonTransfer } from './VibulonTransfer'
 import { getTransferContext } from '@/actions/economy'
@@ -106,8 +105,8 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     // Transfer Quest State
     const [transferContext, setTransferContext] = useState<any>(null)
 
-    // Phase 5d: Stuckness — player indicates stuck to surface EFAK + subquest options (expand by default per golden-path-friction)
-    const [stuckExpanded, setStuckExpanded] = useState(true)
+    // Phase 5d: Stuckness — always collapsed; player opens when they need unblock options
+    const [stuckExpanded, setStuckExpanded] = useState(false)
     const [frictionRecorded, setFrictionRecorded] = useState<FrictionType | null>(null)
     const [isRecordingFriction, setIsRecordingFriction] = useState(false)
 
@@ -408,7 +407,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         setIsSharingAsBar(false)
                                         if (result.barId) {
                                             onClose()
-                                            router.push(`/bars/${result.barId}`)
+                                            router.push(`/bars/${result.barId}?share=external`)
                                             router.refresh()
                                         }
                                     })
@@ -486,26 +485,6 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             </button>
                         </div>
                     )}
-
-                    {/* Flow Violation Check */}
-                    {quest.moveType && completedMoveTypes && !isCompleted && (() => {
-                        const currentIdx = JOURNEY_SEQUENCE.indexOf(quest.moveType)
-                        if (currentIdx > 0) {
-                            const previousMove = JOURNEY_SEQUENCE[currentIdx - 1]
-                            if (!completedMoveTypes.includes(previousMove)) {
-                                return (
-                                    <div className="mb-4 p-3 bg-red-900/20 border border-red-900/50 rounded-lg flex items-center gap-3">
-                                        <span className="text-xl">⚠️</span>
-                                        <div className="text-xs text-red-200">
-                                            <p className="font-bold uppercase tracking-tight text-[10px]">Sequence Warning</p>
-                                            <p className="opacity-80">This is a <span className="text-red-400 font-bold">{quest.moveType.replace(/([A-Z])/g, ' $1').trim()}</span> move. It is recommended to complete a <span className="text-white font-bold">{previousMove.replace(/([A-Z])/g, ' $1').trim()}</span> quest first.</p>
-                                        </div>
-                                    </div>
-                                )
-                            }
-                        }
-                        return null
-                    })()}
 
                     {/* Blocked: show unlock hint */}
                     {isBlocked && quest.blockedKeyQuestTitle && (

@@ -6,6 +6,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import { put } from '@vercel/blob'
 import { getCurrentPlayer } from '@/lib/auth'
+import { getAssetRotation } from '@/lib/asset-utils'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'assets')
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB
@@ -47,6 +48,8 @@ export async function uploadBarAttachment(
     if (!file || file.size === 0) return { success: false, error: 'No file provided' }
 
     const intention = (formData.get('intention') as string)?.trim() || undefined
+    const sideRaw = (formData.get('side') as string)?.trim() || undefined
+    const side = sideRaw === 'back' ? 'back' : sideRaw === 'front' ? 'front' : null
 
     const isImage = ALLOWED_IMAGE_TYPES.includes(file.type)
     const isPdf = file.type === ALLOWED_PDF_TYPE
@@ -66,6 +69,7 @@ export async function uploadBarAttachment(
         url: '', // set below
         mimeType: file.type,
         metadataJson: intention ? JSON.stringify({ intention }) : null,
+        side: side ?? undefined,
         ownerId: player.id,
         customBarId,
       },
@@ -117,4 +121,52 @@ export async function getBarAssets(customBarId: string) {
     where: { customBarId, type: 'bar_attachment' },
     orderBy: { createdAt: 'asc' },
   })
+}
+
+/**
+ * Rotate an asset 90° CW. Updates metadataJson.rotationDegrees (0→90→180→270→0).
+ */
+export async function rotateAsset(
+  assetId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { player, isAdmin } = await requirePlayerOrAdmin()
+
+    const asset = await db.asset.findUnique({
+      where: { id: assetId },
+      select: { id: true, metadataJson: true, customBarId: true, ownerId: true },
+    })
+    if (!asset) return { success: false, error: 'Asset not found' }
+    if (asset.customBarId) {
+      const bar = await db.customBar.findUnique({
+        where: { id: asset.customBarId },
+        select: { creatorId: true },
+      })
+      if (!bar || (bar.creatorId !== player.id && !isAdmin)) {
+        return { success: false, error: 'Not authorized to edit this asset' }
+      }
+    } else if (asset.ownerId !== player.id && !isAdmin) {
+      return { success: false, error: 'Not authorized to edit this asset' }
+    }
+
+    const current = getAssetRotation(asset)
+    const next = (current + 90) % 360
+    const meta = asset.metadataJson ? (JSON.parse(asset.metadataJson) as Record<string, unknown>) : {}
+    meta.rotationDegrees = next
+    await db.asset.update({
+      where: { id: assetId },
+      data: { metadataJson: JSON.stringify(meta) },
+    })
+
+    if (asset.customBarId) {
+      revalidatePath('/bars')
+      revalidatePath(`/bars/${asset.customBarId}`)
+      revalidatePath('/hand')
+    }
+    return { success: true }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Rotate failed'
+    console.error('[ASSETS] rotateAsset error:', msg)
+    return { success: false, error: msg }
+  }
 }

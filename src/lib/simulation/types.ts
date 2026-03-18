@@ -43,6 +43,8 @@ export interface SimulateFlowInput {
   flow: FlowJSON
   actor_capabilities?: string[]
   initial_state?: Record<string, unknown>
+  /** Optional seed for deterministic runs. Same seed + same flow → same result. Used by agents for replay. */
+  seed?: number
 }
 
 export interface StateChange {
@@ -55,9 +57,12 @@ export interface SimulationResult {
   status: 'pass' | 'warn' | 'fail'
   flow_id: string
   visited_nodes: string[]
+  /** Full event sequence for agent assertions. Order preserved. */
   events_emitted: string[]
   state_changes: StateChange[]
   warnings: string[]
   errors: string[]
   completion_reached: boolean
+  /** Seed used (if provided). Enables deterministic replay. */
+  seed?: number
 }

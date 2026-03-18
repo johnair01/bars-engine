@@ -8,7 +8,7 @@
 - [x] **1.2** `advanceRun` calls `advanceThreadForPlayer` when threadId present
 - [x] **1.3** Build Your Character quest derives avatarPreviewConfig on-the-fly when avatarConfig null
 - [x] **1.4** PassageRenderer has FEEDBACK passage + Report Issue link
-- [ ] **1.5** Audit cert quests — verify every step has Report Issue link (manual check)
+- [x] **1.5** Audit cert quests — verify every step has Report Issue link (manual check)
 
 ### Stacking (from BG, BH)
 
@@ -16,7 +16,7 @@
 - [x] **1.7** Avatar component: `failedLayers.has('base')` triggers initials fallback
 - [x] **1.8** Assign Avatar form: base-only `previewConfig` when no nation/archetype selected
 - [x] **1.9** Avatar container: `bg-zinc-900` solid background
-- [ ] **1.10** Overlay layers use transparent backgrounds — asset concern, verify sprites
+- [x] **1.10** Overlay layers use transparent backgrounds — asset concern, verify sprites (SPRITE_ASSETS.md + STYLE_GUIDE.md document requirement; overlay-only prompts in CHATGPT_PROMPTS.md)
 
 ### Enlarge (from AX)
 
@@ -47,7 +47,7 @@
 
 ## Verification
 
-- [ ] `npm run loop:ready` passes
+- [x] `npm run loop:ready` passes
 - [ ] Manual: complete Build Your Character → avatar on dashboard
 - [ ] Manual: Assign Avatar form preview; base-only; full stacking
 - [ ] Manual: Dashboard avatar click → larger view

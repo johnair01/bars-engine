@@ -165,7 +165,13 @@ export function AdventurePlayer({
 
   const handleChoice = async (choice: Choice) => {
     if (choice.targetId === 'signup' || choice.targetId === 'Game_Login') {
-      router.push('/login')
+      const params = new URLSearchParams()
+      if (questId) params.set('questId', questId)
+      if (threadId) params.set('threadId', threadId)
+      if (campaignRef) params.set('ref', campaignRef)
+      const qs = params.toString()
+      const returnPath = `/adventure/${adventureId}/play${qs ? `?${qs}` : ''}`
+      router.push(`/login?returnTo=${encodeURIComponent(returnPath)}`)
       return
     }
     if (choice.targetId === 'redirect:returnTo' && returnTo) {
@@ -246,16 +252,30 @@ export function AdventurePlayer({
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
         <ReactMarkdown
           components={{
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-purple-400 hover:text-purple-300 underline"
-              >
-                {children}
-              </a>
-            ),
+            a: ({ href, children }) => {
+              const safeHref = href && typeof href === 'string' ? href : '/'
+              const isInternal = safeHref.startsWith('/') && !safeHref.startsWith('//')
+              if (isInternal) {
+                return (
+                  <Link
+                    href={safeHref}
+                    className="text-purple-400 hover:text-purple-300 underline"
+                  >
+                    {children}
+                  </Link>
+                )
+              }
+              return (
+                <a
+                  href={safeHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
+                  {children}
+                </a>
+              )
+            },
           }}
         >
           {displayText}

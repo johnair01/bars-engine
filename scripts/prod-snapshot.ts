@@ -1,3 +1,7 @@
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+config({ path: '.env' })
+
 import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
@@ -146,6 +150,17 @@ async function snapshot() {
   fs.writeFileSync(outPath, JSON.stringify(snapshot, null, 2))
   console.log(`\n✅ Snapshot saved: ${outPath}`)
   console.log(`   Total records: ${populated.reduce((sum, [, c]) => sum + c, 0)}`)
+
+  // Write metadata to SNAPSHOT_LOG.md for snapshot:verify
+  const logPath = path.join(backupDir, 'SNAPSHOT_LOG.md')
+  const logEntry = `## ${snapshot.timestamp}\n- File: \`${path.basename(outPath)}\`\n- Total rows: ${populated.reduce((sum, [, c]) => sum + c, 0)}\n- Tables: ${populated.length}\n\n`
+  if (fs.existsSync(logPath)) {
+    const existing = fs.readFileSync(logPath, 'utf-8')
+    fs.writeFileSync(logPath, logEntry + existing)
+  } else {
+    fs.writeFileSync(logPath, `# Snapshot Log\n\n${logEntry}`)
+  }
+  console.log(`   Log: ${logPath}`)
 
   await prisma.$disconnect()
 }

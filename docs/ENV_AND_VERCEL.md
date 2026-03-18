@@ -171,6 +171,53 @@ After resolving, push a commit or trigger a redeploy.
 
 ---
 
+## Point-in-time Recovery (PITR)
+
+If production data was lost (e.g. accidental `db:reset` against prod), Prisma Postgres PITR can restore to a previous point in time.
+
+1. **Prisma Cloud console** → your project → **Backups**
+2. Select a timestamp before the incident (e.g. "8pm March 15")
+3. Click **Restore** — Prisma creates a new database from that snapshot
+4. Update `DATABASE_URL` in Vercel to point to the restored database URL
+5. Run `npm run db:post-restore` to fix schema drift and verify
+
+**PITR retention:** Prisma Postgres free tier retains 7 days.
+
+**Post-restore:** The restored DB may have schema drift (columns added via `db push` after the backup). Run `npm run db:post-restore` to apply missing columns and verify. See [docs/INCIDENTS.md](./INCIDENTS.md).
+
+---
+
+## Daily snapshot cron (belt-and-suspenders)
+
+Prisma PITR is the primary backup. For extra safety, run `npm run prod:snapshot` daily. It writes row-count metadata to `backups/SNAPSHOT_LOG.md` (gitignored). Run `npm run snapshot:verify` to confirm the latest snapshot is &lt; 25 hours old.
+
+**Local cron** (recommended for maintainers with prod access):
+
+1. Ensure `.env.local` has production `DATABASE_URL` (or use `vercel env pull`).
+2. Add to crontab (`crontab -e`):
+   ```
+   0 0 * * * cd /path/to/bars-engine && npm run prod:snapshot >> /tmp/prod-snapshot.log 2>&1
+   ```
+   Replace `/path/to/bars-engine` with your repo path. Runs daily at 00:00 UTC.
+
+**Vercel cron:** Would require a serverless function with DB access and external storage (e.g. Vercel Blob) for snapshot output. Use local cron or GitHub Actions if you need automated runs from CI.
+
+---
+
+## AI Tool Credential Isolation
+
+If you use AI-managed copies of the repo (e.g. Gemini at `~/.gemini/antigravity/bars-engine/web/`), they share the same `DATABASE_URL` and can mutate production data.
+
+**Recommendation:** Use a separate `DATABASE_URL` for AI tool copies:
+
+- Create a dedicated development/staging database (e.g. Prisma Postgres free tier, or local Docker)
+- In the AI copy's `.env.local` (e.g. `~/.gemini/antigravity/bars-engine/web/.env.local`), set `DATABASE_URL` to that dev database instead of production
+- Never commit production URLs; ensure `.env.local` is gitignored
+
+This prevents accidental `db:reset` or schema changes from running against production.
+
+---
+
 ## Production Demo Readiness
 
 When production cannot log in or sign up (or admin credentials fail), run these steps against the **production** database. Get the production `DATABASE_URL` from Vercel Dashboard → Settings → Environment Variables (Production scope).
