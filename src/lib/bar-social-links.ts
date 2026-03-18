@@ -41,6 +41,28 @@ export function validateSocialUrl(url: string): { ok: true; platform: SocialPlat
   return { ok: true, platform }
 }
 
+/**
+ * Validate URL for a specific platform. Use when adding from platform-specific button.
+ */
+export function validateSocialUrlForPlatform(
+  url: string,
+  expectedPlatform: SocialPlatform
+): { ok: true; platform: SocialPlatform } | { ok: false; error: string } {
+  const result = validateSocialUrl(url)
+  if (!result.ok) return result
+  if (result.platform !== expectedPlatform) {
+    const labels: Record<SocialPlatform, string> = {
+      youtube: 'YouTube',
+      spotify: 'Spotify',
+      instagram: 'Instagram',
+      twitter: 'Twitter/X',
+      generic: 'a supported platform',
+    }
+    return { ok: false, error: `Please paste a ${labels[expectedPlatform]} link` }
+  }
+  return result
+}
+
 export function getMaxLinksPerBar(): number {
   return MAX_LINKS_PER_BAR
 }
@@ -57,4 +79,15 @@ export function getPlatformLabel(platform: string): string {
     default:
       return 'Link'
   }
+}
+
+/**
+ * Extract YouTube video ID from URL for embed.
+ * Supports youtube.com/watch?v=ID and youtu.be/ID.
+ */
+export function getYouTubeVideoId(url: string): string | null {
+  const trimmed = url.trim()
+  const m1 = trimmed.match(/[?&]v=([^&]+)/)
+  const m2 = trimmed.match(/youtu\.be\/([^?&]+)/)
+  return m1?.[1] ?? m2?.[1] ?? null
 }

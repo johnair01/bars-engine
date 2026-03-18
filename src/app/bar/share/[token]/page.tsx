@@ -55,7 +55,16 @@ export default async function BarSharePage({ params }: Props) {
     const share = await db.barShareExternal.findUnique({
         where: { shareToken: token },
         include: {
-            bar: { select: { id: true, title: true, description: true } },
+            bar: {
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    storyContent: true,
+                    assets: { select: { id: true, url: true, mimeType: true, metadataJson: true, side: true } },
+                    socialLinks: { select: { id: true, platform: true, url: true, note: true }, orderBy: { sortOrder: 'asc' } },
+                },
+            },
             fromUser: { select: { name: true } },
             instance: { select: { id: true, name: true, slug: true } },
         },

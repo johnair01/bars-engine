@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { validateSocialUrl, getMaxLinksPerBar } from '@/lib/bar-social-links'
+import { validateSocialUrl, validateSocialUrlForPlatform, getMaxLinksPerBar, type SocialPlatform } from '@/lib/bar-social-links'
 
 async function getPlayerId(): Promise<string | null> {
   const { cookies } = await import('next/headers')
@@ -13,7 +13,8 @@ async function getPlayerId(): Promise<string | null> {
 export async function addBarSocialLink(
   barId: string,
   url: string,
-  note?: string
+  note?: string,
+  platform?: SocialPlatform
 ): Promise<{ success: boolean; error?: string }> {
   const playerId = await getPlayerId()
   if (!playerId) return { success: false, error: 'Not logged in' }
@@ -30,7 +31,9 @@ export async function addBarSocialLink(
     return { success: false, error: `Maximum ${getMaxLinksPerBar()} inspiration links per BAR` }
   }
 
-  const result = validateSocialUrl(url)
+  const result = platform
+    ? validateSocialUrlForPlatform(url, platform)
+    : validateSocialUrl(url)
   if (!result.ok) return { success: false, error: result.error }
 
   try {

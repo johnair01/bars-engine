@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { addBarSocialLink, removeBarSocialLink } from '@/actions/bar-social-links'
-import { detectPlatform, getMaxLinksPerBar } from '@/lib/bar-social-links'
+import { getMaxLinksPerBar, type SocialPlatform } from '@/lib/bar-social-links'
+import { BarSocialLinks } from './BarSocialLinks'
 
 type Link = { id: string; platform: string; url: string; note?: string | null }
 
@@ -12,16 +13,15 @@ type BarSocialLinksFormProps = {
   links: Link[]
 }
 
-const PLATFORM_BADGES: Record<string, string> = {
-  youtube: 'YouTube',
-  spotify: 'Spotify',
-  instagram: 'Instagram',
-  twitter: 'Twitter',
-  generic: 'Link',
-}
+const PLATFORMS: { key: SocialPlatform; label: string; placeholder: string }[] = [
+  { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/watch?v=... or youtu.be/...' },
+  { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
+  { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/...' },
+]
 
 export function BarSocialLinksForm({ barId, links }: BarSocialLinksFormProps) {
   const router = useRouter()
+  const [expandedPlatform, setExpandedPlatform] = useState<SocialPlatform | null>(null)
   const [url, setUrl] = useState('')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -30,15 +30,16 @@ export function BarSocialLinksForm({ barId, links }: BarSocialLinksFormProps) {
   const maxLinks = getMaxLinksPerBar()
   const canAdd = links.length < maxLinks
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = (e: React.FormEvent, platform: SocialPlatform) => {
     e.preventDefault()
     setError(null)
     if (!url.trim()) return
     startTransition(async () => {
-      const result = await addBarSocialLink(barId, url.trim(), note.trim() || undefined)
+      const result = await addBarSocialLink(barId, url.trim(), note.trim() || undefined, platform)
       if (result.success) {
         setUrl('')
         setNote('')
+        setExpandedPlatform(null)
         router.refresh()
       } else {
         setError(result.error ?? 'Failed to add link')
@@ -53,76 +54,82 @@ export function BarSocialLinksForm({ barId, links }: BarSocialLinksFormProps) {
     })
   }
 
-  const detectedPlatform = url.trim() ? detectPlatform(url) : null
+  const handleCancel = () => {
+    setExpandedPlatform(null)
+    setUrl('')
+    setNote('')
+    setError(null)
+  }
 
   return (
     <div className="space-y-3">
       <h3 className="text-xs uppercase text-zinc-500 font-bold tracking-widest">Inspirations</h3>
 
       {links.length > 0 && (
-        <ul className="space-y-2">
-          {links.map((link) => (
-            <li
-              key={link.id}
-              className="flex items-center justify-between gap-2 bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2"
-            >
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase text-zinc-500 mr-2">
-                  {PLATFORM_BADGES[link.platform] ?? link.platform}
-                </span>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-purple-400 hover:text-purple-300 text-sm truncate block"
-                >
-                  {link.url}
-                </a>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRemove(link.id)}
-                disabled={pending}
-                className="shrink-0 text-zinc-500 hover:text-red-400 text-xs px-2 py-1"
-              >
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
+        <BarSocialLinks
+          links={links}
+          onRemove={handleRemove}
+          removeDisabled={pending}
+        />
       )}
 
       {canAdd && (
-        <form onSubmit={handleAdd} className="space-y-2">
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste URL (YouTube, Spotify, Instagram, Twitter, Vimeo, Substack)"
-            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:border-purple-500 outline-none"
-          />
-          {detectedPlatform && (
-            <span className="text-[10px] text-zinc-500">
-              Detected: {PLATFORM_BADGES[detectedPlatform] ?? detectedPlatform}
-            </span>
+        <div className="space-y-2">
+          {expandedPlatform ? (
+            <form
+              onSubmit={(e) => handleAdd(e, expandedPlatform)}
+              className="space-y-2 p-3 bg-zinc-900/30 border border-zinc-800 rounded-lg"
+            >
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder={PLATFORMS.find((p) => p.key === expandedPlatform)?.placeholder ?? 'Paste URL'}
+                className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm placeholder:text-zinc-600 focus:border-purple-500 outline-none"
+                autoFocus
+              />
+              <input
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Why this inspired you (optional)"
+                maxLength={200}
+                className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white/80 text-sm placeholder:text-zinc-600 focus:border-zinc-600 outline-none"
+              />
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={pending || !url.trim()}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white disabled:opacity-50"
+                >
+                  {pending ? 'Adding…' : 'Add'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={pending}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-400 hover:text-white disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {PLATFORMS.map((platform) => (
+                <button
+                  key={platform.key}
+                  type="button"
+                  onClick={() => setExpandedPlatform(platform.key)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors border border-zinc-700"
+                >
+                  + {platform.label}
+                </button>
+              ))}
+            </div>
           )}
-          <input
-            type="text"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Why this inspired you (optional)"
-            maxLength={200}
-            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white/80 text-sm placeholder:text-zinc-600 focus:border-zinc-600 outline-none"
-          />
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-          <button
-            type="submit"
-            disabled={pending || !url.trim()}
-            className="text-sm px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white disabled:opacity-50"
-          >
-            {pending ? 'Adding…' : 'Add link'}
-          </button>
-        </form>
+        </div>
       )}
 
       {links.length >= maxLinks && (

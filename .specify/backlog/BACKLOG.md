@@ -72,6 +72,7 @@ This is the central ledger for all **pending** development objectives and emerge
 | 1.28.1 | BES | [BAR External Sharing](.specify/specs/bar-external-sharing/spec.md) (share BAR to external recipient; login/signup; campaign-BAR → onboarding first; iOS Open Graph preview) | UI/Infra | [ ] Ready | GP-INV |
 | 1.28.2 | BPCP | [BAR Physical Capture & Photo](.specify/specs/bar-physical-capture-photo/spec.md) (rotate uploaded photos; text OR photo at capture; front/back + FLIP UI) | UI | [ ] Ready | BUO |
 | 1.28.3 | BSL | [BAR Social Links](.specify/specs/bar-social-links/spec.md) (inspiration links: YouTube, Spotify, Instagram, Twitter; add at create/edit; platform labels) | UI | [x] Done | - |
+| 1.28.4 | BSP | [BAR Share Full Preview](.specify/specs/bar-share-full-preview/spec.md) (shared link shows photos + inspiration links; full BAR experience before auth; claim requires login/signup) | UI | [ ] Ready | BES |
 | 1.29 | NSPE | [NPC & Simulated Player Content Ecology](.specify/specs/npc-simulated-player-content-ecology/spec.md) (single-player companionship; simulated collaborators; persona cohort; NPC content proposal; test before real players) | UI/Infra | [ ] Ready | FO, GF, DQ |
 | 1.30 | DSBD | [Dominion-Style BAR Decks](.specify/specs/dominion-style-bar-decks/spec.md) (Library → Decks → Hand; borrow nation/archetype decks; deck creation quest thread; campaign domain decks collective; ActorDeckState for BARs; charge/321 → Library) | Economy/UI | [ ] Ready | GL, GF |
 
