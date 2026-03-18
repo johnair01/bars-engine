@@ -17,6 +17,8 @@ dependencies = [
     "cuid2",
     "psycopg2-binary>=2.9.11",
     "fastmcp>=2.0",
+    "faster-whisper>=1.0",
+    "pydub>=0.25",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +27,12 @@ dev = [
     "pytest-asyncio",
     "ruff",
     "mypy",
+]
+
+# On Intel Mac, onnxruntime>=1.24 has no x86_64 wheels; pin to 1.23.x
+[tool.uv]
+override-dependencies = [
+    "onnxruntime>=1.14,<1.24",
 ]
 
 [build-system]

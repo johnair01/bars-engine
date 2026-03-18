@@ -33,7 +33,8 @@ export async function getPlayerThreads() {
             },
             progress: {
                 where: { playerId: player.id }
-            }
+            },
+            adventure: { select: { campaignRef: true, subcampaignDomain: true, slug: true } }
         }
     })
 
@@ -290,29 +291,37 @@ export async function assignOrientationThreads(
     }
 
     const orientationThreads = await db.questThread.findMany({
-        where: { threadType: 'orientation', status: 'active' }
+        where: { threadType: 'orientation', status: 'active' },
+        include: { adventure: { select: { campaignRef: true, subcampaignDomain: true } } },
     })
 
+    const playerDomains = new Set(
+        (params?.allyshipDomains ?? []).map((d) => d.toUpperCase().replace(/-/g, '_'))
+    )
+
     for (const thread of orientationThreads) {
+        // Subcampaign threads: only assign when player's chosen domain matches
+        if (thread.adventure?.subcampaignDomain) {
+            const domain = thread.adventure.subcampaignDomain.toUpperCase().replace(/-/g, '_')
+            if (!playerDomains.has(domain)) continue
+        }
+
         try {
-            // Use upsert with a try-catch for maximum resilience against race conditions in parallel requests
             await db.threadProgress.upsert({
                 where: {
                     threadId_playerId: {
                         threadId: thread.id,
-                        playerId: playerId
-                    }
+                        playerId: playerId,
+                    },
                 },
-                update: {}, // No changes if it exists
+                update: {},
                 create: {
                     threadId: thread.id,
                     playerId,
-                    currentPosition: 1
-                }
+                    currentPosition: 1,
+                },
             })
         } catch (error: any) {
-            // If it's a unique constraint error (P2002), we can safely ignore it as 
-            // the record clearly already exists.
             if (error.code === 'P2002') {
                 console.info(`[QuestThread] Orientation thread ${thread.id} already assigned to ${playerId}, ignoring race condition.`)
             } else {

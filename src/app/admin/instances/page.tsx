@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
 import { getInstanceDbReadiness, listInstances, upsertInstance } from '@/actions/instance'
+import { listPromotedMoves } from '@/actions/move-proposals'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceListWithEdit } from '@/components/admin/InstanceListWithEdit'
 
@@ -10,10 +11,13 @@ export default async function AdminInstancesPage({
   searchParams?: Promise<{ error?: string; saved?: string; active?: string }>
 }) {
   const sp = (await searchParams) || {}
-  const config = await getAppConfig()
-  const readiness = await getInstanceDbReadiness()
-  const instances = await listInstances()
-  const activeInstanceId = (config as any).activeInstanceId as string | null
+  const [config, readiness, instances, promotedMoves] = await Promise.all([
+    getAppConfig(),
+    getInstanceDbReadiness(),
+    listInstances(),
+    listPromotedMoves(),
+  ])
+  const activeInstanceId = (config as { activeInstanceId?: string | null }).activeInstanceId ?? null
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans space-y-10 ml-0 sm:ml-64 transition-all duration-300">
@@ -136,6 +140,22 @@ export default async function AdminInstancesPage({
             <input name="campaignRef" placeholder="bruised-banana" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
+          {promotedMoves.length > 0 && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block">
+                Move pool (campaign-curated moves)
+              </label>
+              <div className="flex flex-wrap gap-3 max-h-32 overflow-y-auto p-2 bg-black/50 border border-zinc-800 rounded">
+                {promotedMoves.map((m) => (
+                  <label key={m.id} className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300">
+                    <input type="checkbox" name="moveIds" value={m.id} className="rounded border-zinc-600 bg-zinc-800" />
+                    <span>{m.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Goal Amount (USD)</label>
             <input name="goalAmount" inputMode="decimal" placeholder="3000" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
@@ -201,7 +221,7 @@ export default async function AdminInstancesPage({
           <div className="h-px bg-zinc-800 flex-1" />
         </div>
 
-        <InstanceListWithEdit instances={instances} activeInstanceId={activeInstanceId} />
+        <InstanceListWithEdit instances={instances} activeInstanceId={activeInstanceId} promotedMoves={promotedMoves} />
       </section>
     </div>
   )

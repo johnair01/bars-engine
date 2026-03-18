@@ -8,6 +8,8 @@ from app.config import settings
 from app.database import dispose_engine
 from app.routes.agents import router as agents_router
 from app.routes.health import router as health_router
+from app.routes.strands import router as strands_router
+from app.sprites.routes import router as sprites_router
 
 
 @asynccontextmanager
@@ -44,3 +46,5 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(agents_router)
+app.include_router(strands_router)
+app.include_router(sprites_router)

@@ -1,5 +1,11 @@
+from pathlib import Path
+
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings
+
+# Absolute paths so env_file works regardless of CWD (fixes OpenAI key brittleness)
+_BACKEND_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = _BACKEND_ROOT.parent
 
 
 class Settings(BaseSettings):
@@ -13,15 +19,22 @@ class Settings(BaseSettings):
     cors_origins: str = ""
     github_token: SecretStr = SecretStr("")
     github_repo: str = ""
+    replicate_api_token: SecretStr = SecretStr("")
 
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
-        """Normalize postgres:// or postgresql:// to postgresql+asyncpg://."""
+        """Normalize postgres:// or postgresql:// to postgresql+asyncpg://.
+        Also convert sslmode=require → ssl=require (asyncpg uses ssl, not sslmode).
+        """
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://"):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # asyncpg does not accept sslmode; replace with ssl
+        v = v.replace("sslmode=require", "ssl=require")
+        v = v.replace("sslmode=prefer", "ssl=prefer")
+        v = v.replace("sslmode=disable", "ssl=False")
         return v
 
     @property
@@ -30,7 +43,7 @@ class Settings(BaseSettings):
         return self.database_url.replace("+asyncpg", "")
 
     model_config = {
-        "env_file": (".env", "../.env.local"),
+        "env_file": (str(_BACKEND_ROOT / ".env"), str(_REPO_ROOT / ".env.local")),
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }

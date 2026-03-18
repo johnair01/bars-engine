@@ -11,7 +11,12 @@ router = APIRouter(prefix="/api/health", tags=["health"])
 
 @router.get("")
 async def health_check():
-    return {"status": "ok", "environment": settings.environment}
+    openai_configured = bool(settings.openai_api_key.get_secret_value())
+    return {
+        "status": "ok",
+        "environment": settings.environment,
+        "openai_configured": openai_configured,
+    }
 
 
 @router.get("/db")

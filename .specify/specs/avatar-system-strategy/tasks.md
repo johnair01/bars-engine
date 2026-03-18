@@ -4,41 +4,41 @@
 
 ### Visibility (from AW)
 
-- [ ] **1.1** `autoCompleteQuestFromTwine` calls `processCompletionEffects` when quest has completionEffects
-- [ ] **1.2** `advanceRun` passes threadId; calls `advanceThreadForPlayer` when completing quest in thread
-- [ ] **1.3** Build Your Character quest displays avatar preview when avatarConfig is null but nationId+playbookId exist
-- [ ] **1.4** Report Issue: FEEDBACK passage and Report Issue link on Build Your Character START
-- [ ] **1.5** Report Issue: Audit cert quests; every step has Report Issue link
+- [x] **1.1** `autoCompleteQuestFromTwine` calls `processCompletionEffects` (via `runCompletionEffectsForQuest`)
+- [x] **1.2** `advanceRun` calls `advanceThreadForPlayer` when threadId present
+- [x] **1.3** Build Your Character quest derives avatarPreviewConfig on-the-fly when avatarConfig null
+- [x] **1.4** PassageRenderer has FEEDBACK passage + Report Issue link
+- [ ] **1.5** Audit cert quests — verify every step has Report Issue link (manual check)
 
 ### Stacking (from BG, BH)
 
-- [ ] **1.6** `deriveAvatarConfig` MUST NOT set `nationKey: 'unknown'` when no nation; use `nationKey: ''` so nation layers are skipped
-- [ ] **1.7** Avatar component: when base layer fails, show initials fallback (not partial layers)
-- [ ] **1.8** Assign Avatar form: base-only preview when nation and archetype unselected; show base layer
-- [ ] **1.9** Avatar container has solid background (e.g. bg-zinc-900) so transparency is not confusing
-- [ ] **1.10** Overlay layers use transparent backgrounds per SPRITE_ASSETS.md
+- [x] **1.6** `slugifyName` returns `''` not `'unknown'` for degenerate input; `deriveAvatarConfig` uses `nationKey: ''` → nation layers skipped
+- [x] **1.7** Avatar component: `failedLayers.has('base')` triggers initials fallback
+- [x] **1.8** Assign Avatar form: base-only `previewConfig` when no nation/archetype selected
+- [x] **1.9** Avatar container: `bg-zinc-900` solid background
+- [ ] **1.10** Overlay layers use transparent backgrounds — asset concern, verify sprites
 
 ### Enlarge (from AX)
 
-- [ ] **1.11** Dashboard header avatar is clickable; onClick opens modal with Avatar at larger size
-- [ ] **1.12** Modal: click-outside, Escape, close button to dismiss
+- [x] **1.11** Dashboard avatar click → modal (`DashboardAvatarWithModal`)
+- [x] **1.12** Modal: click-outside, Escape, close button (`AvatarModal`)
 
 ### Gallery (from BG, AX)
 
-- [ ] **1.13** Assign Avatar form: live preview area; updates when nation, playbook, base variant change
-- [ ] **1.14** Admin: `/admin/avatars` or section in admin players — list players with avatars
-- [ ] **1.15** Admin: Preview by config (nation, playbook dropdowns) — optional
+- [x] **1.13** Assign Avatar form: live preview via `useMemo` previewConfig
+- [x] **1.14** Admin: `/admin/avatars` — player avatar gallery
+- [x] **1.15** Admin: Preview by config via AssignAvatarForm dropdowns
 
-### Sprite Assets (from AX, optional Phase 1)
+### Sprite Assets (from AX)
 
-- [ ] **1.16** Admin: Sprite Assets view — list layers; expected keys; which files exist vs missing
-- [ ] **1.17** Admin: Upload PNG for layer+key — optional
+- [x] **1.16** Admin: `/admin/avatars/assets` — layer list, expected keys, missing files
+- [x] **1.17** Admin: Upload PNG for layer+key (`SpriteAssetsClient` + `uploadSpriteAsset`)
 
 ## Phase 2: Quality process (from AY)
 
-- [ ] **2.1** STYLE_GUIDE.md documents palette, review gates; update docs/SPRITE_ASSETS.md
-- [ ] **2.2** `npm run sprites:derive-base` — derive base variants from canonical
-- [ ] **2.3** Nation/playbook placeholder prompts or LPC sourcing
+- [x] **2.1** STYLE_GUIDE.md — palette, review gates, layer design, per-nation motifs; SPRITE_ASSETS.md references it
+- [x] **2.2** `npm run sprites:derive-base` — palette-swap script fully implemented (`scripts/derive-base-sprites.ts`); `--init-from-default` flag
+- [x] **2.3** SPRITE_ASSETS.md has AI prompt table (per-file prompts) + LPC workflow with attribution
 
 ## Phase 3: Agent-built assets (future)
 

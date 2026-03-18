@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { CampaignAuthForm } from './CampaignAuthForm'
 import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
 import { CampaignPassageEditModal } from './CampaignPassageEditModal'
+import { GuidancePanel } from '@/components/simulation/GuidancePanel'
 import { chunkIntoSlides, getBaseNodeId } from '@/lib/slide-chunker'
 
 interface CampaignChoice {
@@ -25,6 +26,7 @@ interface CampaignReaderProps {
     adventureSlug?: string
     campaignRef?: string
     isAdmin?: boolean
+    flowId?: string
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -146,7 +148,7 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false }: CampaignReaderProps) {
+export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false, flowId }: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
@@ -362,6 +364,13 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
                     </button>
                     ))}
                 </div>
+            )}
+            {flowId && currentNode && (
+                <GuidancePanel
+                    flowId={flowId}
+                    nodeId={currentNode.id}
+                    role="librarian"
+                />
             )}
             {showEdit && (
                 <CampaignPassageEditModal

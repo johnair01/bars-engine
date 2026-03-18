@@ -6,17 +6,17 @@ Canonical definitions for when each domain applies. Use when writing quests, int
 
 | Domain | Emergent Problem | When It Applies |
 |--------|------------------|-----------------|
-| **SKILLFUL_ORGANIZING** | No systems exist to solve the problem; the problem *is* lack of organization | "We need capacity"; creating structures, processes, interfaces. If the emergent problem is "there is no skillful organization going on," the project moves to this domain. |
-| **RAISE_AWARENESS** | People aren't aware of resources, organization, or actions available | "People need to know"; visibility, messaging, discovery. If people aren't aware there are resources, organization, and actions to take — campaign is raise awareness. |
-| **DIRECT_ACTION** | Action needs doing but people aren't doing it | Remove obstacles toward taking direct action, OR increase capacity (skill development OR gathering resources as capacity). |
-| **GATHERING_RESOURCES** | Need external (or inner) resources | Preference for external; can be inner (capacity) or outer (money, materials). |
+| **GATHERING_RESOURCES** | Time, attention, skills, and presence—that which allows life to unfold | Gathering is relational: inviting participation, weaving community support, fostering belonging. Resources can be money, materials, time, attention, skills, presence. |
+| **SKILLFUL_ORGANIZING** | No systems exist; the problem is lack of organization | Building capacity for the whole. Creating systems, processes, interfaces that solve what is emergent. The work is relational—inviting co-design, sharing ownership, making the invisible visible. |
+| **RAISE_AWARENESS** | People aren't aware of resources, organization, or actions available | Helping people see what is possible. Visibility, messaging, discovery. The work is relational—making the invisible visible, inviting people to discover. |
+| **DIRECT_ACTION** | Action needs doing but people aren't doing it | Doing—and enabling others to do. Removing obstacles, increasing capacity, taking the next step. The work is relational—acting together, aligning efforts, moving as one. |
 
 ## Refinements
 
-- **Skillful Organizing**: Creating systems designed to solve whatever problem is emergent. If the emergent problem is that no skillful organization is happening, the project moves to this domain.
-- **Raise Awareness**: If the emergent problem is that people aren't aware of resources, organization, and actions — campaign is raise awareness.
-- **Direct Action**: Either (a) removing obstacles toward taking direct action, or (b) increasing capacity via skill development or gathering resources in the form of capacity.
-- **Gathering Resources**: Inner or outer; preference for external resources.
+- **Gathering Resources**: Time, attention, skills, presence—that which allows life to unfold. Relational: inviting participation, weaving community support, fostering belonging.
+- **Skillful Organizing**: Building capacity for the whole. Creating systems designed to solve whatever problem is emergent. The work is relational—inviting co-design, sharing ownership.
+- **Raise Awareness**: Helping people see what is possible. If the emergent problem is that people aren't aware of resources, organization, and actions — campaign is raise awareness.
+- **Direct Action**: Doing—and enabling others to do. Either (a) removing obstacles toward taking direct action, or (b) increasing capacity via skill development or gathering resources in the form of capacity.
 
 ## Intention → Domain Mapping
 

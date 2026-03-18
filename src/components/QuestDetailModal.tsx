@@ -24,6 +24,10 @@ import { QuestNestingActions } from './QuestNestingActions'
 import { createSubQuest } from '@/actions/quest-nesting'
 import { sendAppreciationAction } from '@/actions/appreciation'
 import { getCurrentPlayerId } from '@/actions/auth'
+import { getAdventuresForQuest } from '@/lib/quest-adventure'
+import { recordQuestFriction, FRICTION_TYPES, type FrictionType } from '@/actions/friction'
+import { getNextActionForQuest, linkBarToQuestAsNextAction } from '@/actions/next-action-bridge'
+import { collapseQuestToBar } from '@/actions/bars'
 
 interface QuestDetailModalProps {
     isOpen: boolean
@@ -101,8 +105,10 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     // Transfer Quest State
     const [transferContext, setTransferContext] = useState<any>(null)
 
-    // Phase 5d: Stuckness — player indicates stuck to surface EFAK + subquest options
-    const [stuckExpanded, setStuckExpanded] = useState(false)
+    // Phase 5d: Stuckness — player indicates stuck to surface EFAK + subquest options (expand by default per golden-path-friction)
+    const [stuckExpanded, setStuckExpanded] = useState(true)
+    const [frictionRecorded, setFrictionRecorded] = useState<FrictionType | null>(null)
+    const [isRecordingFriction, setIsRecordingFriction] = useState(false)
 
     // Appreciation: show when creatorId present and not own quest
     const [canAppreciate, setCanAppreciate] = useState<boolean | null>(null)
@@ -110,6 +116,43 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const [appreciateAmount, setAppreciateAmount] = useState(2)
     const [appreciateType, setAppreciateType] = useState<string>('care')
     const [isAppreciating, setIsAppreciating] = useState(false)
+    const [isSharingAsBar, setIsSharingAsBar] = useState(false)
+
+    // View/Start Adventure (game-map-gameboard-bridge)
+    const [adventures, setAdventures] = useState<Awaited<ReturnType<typeof getAdventuresForQuest>>>([])
+
+    // Next action bridge (golden-path-next-action-bridge)
+    const [nextAction, setNextAction] = useState<{ barId: string | null; nextAction: string } | null>(null)
+    const [nextActionInput, setNextActionInput] = useState('')
+    const [isSettingNextAction, setIsSettingNextAction] = useState(false)
+
+    // Visible impact (golden-path-visible-impact) — completion card with campaign impact + next quest
+    const [completionResult, setCompletionResult] = useState<{
+        campaignImpact?: string
+        nextQuestId?: string
+        nextQuestTitle?: string
+        reward?: number
+        threadType?: string
+    } | null>(null)
+
+    // Fetch adventures when modal opens (View/Start Adventure)
+    useEffect(() => {
+        if (isOpen && quest.id) {
+            getAdventuresForQuest(quest.id).then(setAdventures)
+        } else {
+            setAdventures([])
+        }
+    }, [isOpen, quest.id])
+
+    // Fetch next action when modal opens (golden-path-next-action-bridge)
+    useEffect(() => {
+        if (isOpen && quest.id) {
+            getNextActionForQuest(quest.id).then(setNextAction)
+        } else {
+            setNextAction(null)
+            setNextActionInput('')
+        }
+    }, [isOpen, quest.id])
 
     // Handle initial data for specialized quests
     useEffect(() => {
@@ -161,9 +204,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
             setTransferContext(null)
             setMovePanel(null)
             setSelectedMoveKey('')
-            setStuckExpanded(false)
+            setStuckExpanded(true)
+            setFrictionRecorded(null)
             setCanAppreciate(null)
             setAppreciateExpanded(false)
+            setCompletionResult(null)
         }
     }, [isOpen, quest.id, quest.creatorId, isCompleted])
 
@@ -210,21 +255,28 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
         startTransition(async () => {
             const result = await completeQuest(quest.id, { ...responses, autoTriggered: archetypeData ? true : false }, { ...context, source: 'dashboard' })
             if ('success' in result && result.success) {
-                setFeedback('✨ Quest Complete!')
-                setTimeout(() => {
-                    setFeedback(null)
-                    // RITUAL MODE: If this was part of an orientation thread, 
-                    // redirect back to the onboarding controller to maintain flow.
-                    if ('threadType' in result && result.threadType === 'orientation') {
-                        router.push('/conclave/onboarding?ritual=true')
-                    } else {
-                        onClose()
-                    }
-                }, 1500)
+                const r = result as { campaignImpact?: string; nextQuestId?: string; nextQuestTitle?: string; reward?: number; threadType?: string | null }
+                setCompletionResult({
+                    campaignImpact: r.campaignImpact,
+                    nextQuestId: r.nextQuestId,
+                    nextQuestTitle: r.nextQuestTitle,
+                    reward: r.reward,
+                    threadType: r.threadType ?? undefined,
+                })
+                setFeedback(null)
             } else {
                 setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
             }
         })
+    }
+
+    const handleCompletionContinue = () => {
+        setCompletionResult(null)
+        if (completionResult?.threadType === 'orientation') {
+            router.push('/conclave/onboarding?ritual=true')
+        } else {
+            onClose()
+        }
     }
 
     const handleAccept = () => {
@@ -316,13 +368,25 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                                 quest.moveType === 'showUp' ? 'bg-purple-900/30 text-purple-400' :
                                                     'bg-zinc-800 text-zinc-400'
                                         }`}>
-                                        {quest.moveType.replace(/([A-Z])/g, ' $1').trim()}
+                                        {String(quest.moveType).replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim()}
                                     </span>
                                 )}
                                 <span className="text-yellow-500 font-mono px-2 py-0.5 bg-yellow-900/20 rounded-full">
                                     +{quest.reward} ⓥ
                                 </span>
                             </div>
+                            {adventures.length > 0 && (
+                                <Link
+                                    href={
+                                        adventures.length === 1
+                                            ? `/adventure/${adventures[0].adventureId}/play?questId=${quest.id}${adventures[0].startNodeId ? `&start=${encodeURIComponent(adventures[0].startNodeId)}` : ''}`
+                                            : `/adventure/hub/${quest.id}`
+                                    }
+                                    className="mt-2 inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-purple-700/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/50 hover:text-purple-200 text-xs font-medium transition-colors"
+                                >
+                                    View/Start Adventure →
+                                </Link>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             {context?.threadId && (
@@ -334,6 +398,26 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     Map
                                 </Link>
                             )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsSharingAsBar(true)
+                                    startTransition(async () => {
+                                        const result = await collapseQuestToBar(quest.id)
+                                        setIsSharingAsBar(false)
+                                        if (result.barId) {
+                                            onClose()
+                                            router.push(`/bars/${result.barId}`)
+                                            router.refresh()
+                                        }
+                                    })
+                                }}
+                                disabled={isSharingAsBar}
+                                className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg border border-purple-700/60 bg-purple-950/40 text-purple-400 hover:bg-purple-900/50 hover:text-purple-300 transition-colors disabled:opacity-50"
+                                title="Share this quest as a BAR (talisman)"
+                            >
+                                {isSharingAsBar ? '…' : 'Share as BAR'}
+                            </button>
                             {isAdmin && (
                                 <Link
                                     href={`/admin/quests/${quest.id}`}
@@ -359,6 +443,49 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                     onScroll={isArchetypeQuest ? handleScroll : undefined}
                     className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar"
                 >
+                    {/* Golden Path: Visible Impact — completion card (golden-path-visible-impact) */}
+                    {completionResult && (
+                        <div className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 p-5 space-y-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-2xl">✨</span>
+                                <h3 className="text-lg font-bold text-emerald-100">Quest Complete!</h3>
+                            </div>
+                            {completionResult.reward != null && completionResult.reward > 0 && (
+                                <p className="text-emerald-200 font-medium">+{completionResult.reward} ⓥ</p>
+                            )}
+                            {completionResult.campaignImpact && (
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold mb-1">What changed</p>
+                                    <p className="text-sm text-emerald-100">{completionResult.campaignImpact}</p>
+                                </div>
+                            )}
+                            {completionResult.nextQuestId && completionResult.nextQuestTitle && (
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold mb-1">Suggested next</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const nextId = completionResult.nextQuestId
+                                            setCompletionResult(null)
+                                            onClose()
+                                            if (nextId) router.push(`/?focusQuest=${nextId}`)
+                                        }}
+                                        className="text-sm text-emerald-300 hover:text-emerald-100 font-medium underline"
+                                    >
+                                        {completionResult.nextQuestTitle}
+                                    </button>
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                onClick={handleCompletionContinue}
+                                className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm"
+                            >
+                                Continue
+                            </button>
+                        </div>
+                    )}
+
                     {/* Flow Violation Check */}
                     {quest.moveType && completedMoveTypes && !isCompleted && (() => {
                         const currentIdx = JOURNEY_SEQUENCE.indexOf(quest.moveType)
@@ -390,7 +517,67 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             Unlocked when you complete the key subquest.
                         </p>
                     )}
-                    {/* Phase 5d: Surface EFAK + subquests when player indicates stuckness */}
+
+                    {/* Golden Path: Next action bridge (golden-path-next-action-bridge) */}
+                    {!isCompleted && !isLocked && !isBlocked && (
+                        <div className="space-y-2">
+                            {nextAction ? (
+                                <div className="rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-4">
+                                    <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold mb-1">Your next action</p>
+                                    <p className="text-sm text-emerald-100">{nextAction.nextAction}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setNextActionInput(nextAction.nextAction)
+                                            setNextAction(null)
+                                        }}
+                                        className="mt-2 text-[10px] text-zinc-500 hover:text-white uppercase tracking-widest"
+                                    >
+                                        Change
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Set your next action</p>
+                                    <p className="text-xs text-zinc-400">What is the next smallest honest action?</p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={nextActionInput}
+                                            onChange={(e) => setNextActionInput(e.target.value)}
+                                            placeholder="e.g. Send one email"
+                                            className="flex-1 rounded-lg border border-zinc-800 bg-black px-3 py-2 text-sm text-white placeholder:text-zinc-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            disabled={!nextActionInput.trim() || isSettingNextAction}
+                                            onClick={async () => {
+                                                const text = nextActionInput.trim()
+                                                if (!text) return
+                                                setIsSettingNextAction(true)
+                                                const res = await linkBarToQuestAsNextAction(null, quest.id, text)
+                                                setIsSettingNextAction(false)
+                                                if ('success' in res) {
+                                                    setNextAction({ barId: null, nextAction: text })
+                                                    setNextActionInput('')
+                                                    setFeedback('✓ Next action set')
+                                                    setTimeout(() => setFeedback(null), 1500)
+                                                    router.refresh()
+                                                } else {
+                                                    setFeedback(`❌ ${res.error}`)
+                                                }
+                                            }}
+                                            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                                        >
+                                            {isSettingNextAction ? 'Setting...' : 'Set'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Phase 5d: Surface "I'm stuck" prominently — friction is part of play (golden-path-friction) */}
                     {!isCompleted && !isLocked && !isBlocked && (
                         <div className="rounded-xl border border-cyan-900/40 bg-cyan-950/20 overflow-hidden">
                             {!stuckExpanded ? (
@@ -400,15 +587,15 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-cyan-900/20 transition-colors"
                                 >
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">Feeling stuck?</p>
-                                        <p className="text-xs text-cyan-100/80">Emotional First Aid or add a subquest to unblock.</p>
+                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-1">I&apos;m stuck</p>
+                                        <p className="text-xs text-cyan-100/80">Friction is part of play. What kind of stuck?</p>
                                     </div>
                                     <span className="shrink-0 text-cyan-400 text-sm font-semibold">Unblock options →</span>
                                 </button>
                             ) : (
                                 <div className="p-4 space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold">Unblock yourself</p>
+                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold">I&apos;m stuck</p>
                                         <button
                                             type="button"
                                             onClick={() => setStuckExpanded(false)}
@@ -416,6 +603,39 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         >
                                             Collapse
                                         </button>
+                                    </div>
+                                    <p className="text-sm text-cyan-100/90">Friction is part of play. What kind of stuck?</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {FRICTION_TYPES.map((type) => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                disabled={isRecordingFriction}
+                                                onClick={async () => {
+                                                    setIsRecordingFriction(true)
+                                                    const res = await recordQuestFriction(quest.id, type)
+                                                    setIsRecordingFriction(false)
+                                                    if ('success' in res) {
+                                                        setFrictionRecorded(type)
+                                                        setFeedback('✓ Recorded')
+                                                        setTimeout(() => setFeedback(null), 1500)
+                                                        router.refresh()
+                                                    } else {
+                                                        setFeedback(`❌ ${res.error}`)
+                                                    }
+                                                }}
+                                                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                                                    frictionRecorded === type
+                                                        ? 'border-cyan-500 bg-cyan-900/40 text-cyan-100'
+                                                        : 'border-cyan-700/50 bg-cyan-900/20 text-cyan-200 hover:bg-cyan-800/30 disabled:opacity-50'
+                                                }`}
+                                            >
+                                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="pt-2 border-t border-cyan-800/50">
+                                        <p className="text-[10px] uppercase tracking-widest text-cyan-400/80 font-bold mb-2">Unblock yourself</p>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <Link
@@ -774,17 +994,15 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                 startTransition(async () => {
                                     const result = await completeQuest(quest.id, mergedResponses, { ...context, source: 'dashboard' })
                                     if ('success' in result && result.success) {
-                                        setFeedback('✨ Quest Complete!')
-                                        setTimeout(() => {
-                                            setFeedback(null)
-                                            // RITUAL MODE: If this was part of an orientation thread, 
-                                            // redirect back to the onboarding controller to maintain flow.
-                                            if ('threadType' in result && result.threadType === 'orientation') {
-                                                router.push('/conclave/onboarding?ritual=true')
-                                            } else {
-                                                onClose()
-                                            }
-                                        }, 1500)
+                                        const r = result as { campaignImpact?: string; nextQuestId?: string; nextQuestTitle?: string; reward?: number; threadType?: string | null }
+                                        setCompletionResult({
+                                            campaignImpact: r.campaignImpact,
+                                            nextQuestId: r.nextQuestId,
+                                            nextQuestTitle: r.nextQuestTitle,
+                                            reward: r.reward,
+                                            threadType: r.threadType ?? undefined,
+                                        })
+                                        setFeedback(null)
                                     } else {
                                         setFeedback(`❌ ${'error' in result ? result.error : 'Failed to complete quest'}`)
                                     }
@@ -1001,7 +1219,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                             {isCompleted ? 'Done' : 'Cancel'}
                         </button>
 
-                        {!isCompleted && !isLocked && !isBlocked && !shouldRenderTwine && (
+                        {!completionResult && !isCompleted && !isLocked && !isBlocked && !shouldRenderTwine && (
                             <button
                                 onClick={isCompleted === undefined ? handleAccept : handleComplete}
                                 // Disable for triggered quests (except archetype reader)

@@ -50,6 +50,12 @@ function buildGameboardContext(
 
 const SLOT_COUNT = 8
 
+/** Hexagrams 1–64; each period uses 8. Period P uses hexagrams base+1..base+8 where base = ((P-1) % 8) * 8. */
+function getHexagramsForPeriod(period: number): number[] {
+  const cycle = ((period - 1) % 8) * 8
+  return Array.from({ length: 8 }, (_, i) => cycle + i + 1)
+}
+
 const DEFAULT_AID_OFFER_TTL_HOURS = 24
 
 async function getAidOfferTtlHours(): Promise<number> {
@@ -103,7 +109,7 @@ type SlotWithRelations = Prisma.GameboardSlotGetPayload<{
 
 /**
  * Get or create gameboard slots for the current instance/campaign/period.
- * If no slots exist, draw 8 from the campaign deck.
+ * 8 slots (one per hexagram in period). If no slots exist, draw from the campaign deck.
  */
 export async function getOrCreateGameboardSlots(campaignRef: string) {
   const player = await getCurrentPlayer()
@@ -128,6 +134,7 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
   })
 
   const allSlotsEmpty = slots.length > 0 && slots.every((s) => !s.questId)
+  const slotMoveTypes = slots.length > 0 ? slots.map((s) => s.moveType) : undefined
   if (allSlotsEmpty) {
     let drawn: string[] = []
     if (useDomainDeck) {
@@ -137,7 +144,8 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
         domain as AllyshipDomain,
         period,
         SLOT_COUNT,
-        []
+        [],
+        slotMoveTypes
       )
       drawn = result.questIds
     } else {
@@ -150,7 +158,8 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
           campaignRef,
           period,
           SLOT_COUNT,
-          player.id
+          player.id,
+          slotMoveTypes
         )
       }
     }
@@ -197,12 +206,14 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
         player.id
       )
     }
+    const hexagrams = getHexagramsForPeriod(period)
     await db.gameboardSlot.createMany({
       data: Array.from({ length: SLOT_COUNT }, (_, i) => ({
         instanceId: instance.id,
         campaignRef,
         period,
         slotIndex: i,
+        hexagramId: hexagrams[i] ?? null,
         questId: drawn[i] ?? null,
         drawnAt: drawn[i] ? new Date() : null,
       })),
@@ -249,8 +260,22 @@ export async function getOrCreateGameboardSlots(campaignRef: string) {
     }
   }
 
+  const slotsFiltered = slots
+
+  // Enrich slots with adventures for View/Start Adventure (game-map-gameboard-bridge)
+  const { getAdventuresForQuest } = await import('@/lib/quest-adventure')
+  const slotsWithAdventures = await Promise.all(
+    slotsFiltered.map(async (slot) => {
+      const adventures =
+        slot.questId && slot.quest
+          ? await getAdventuresForQuest(slot.questId!)
+          : []
+      return { ...slot, adventures }
+    })
+  )
+
   return {
-    slots,
+    slots: slotsWithAdventures,
     period,
     campaignRef,
     allyshipDomain: domain ?? undefined,
@@ -849,15 +874,19 @@ export async function replaceSlotWithDraw(slotId: string) {
       domain as AllyshipDomain,
       slot.period,
       1,
-      exclude
+      exclude,
+      slot.moveType ? [slot.moveType] : undefined
     )
     drawn = result.questIds
   } else {
+    const player = await getCurrentPlayer()
     drawn = await drawFromCampaignDeck(
       slot.instanceId,
       slot.campaignRef,
       slot.period,
-      1
+      1,
+      player?.id,
+      slot.moveType ? [slot.moveType] : undefined
     )
   }
 

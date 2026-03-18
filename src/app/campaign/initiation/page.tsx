@@ -69,6 +69,7 @@ export default async function CampaignInitiationPage(props: {
           adventureSlug={adventureSlug}
           campaignRef="bruised-banana"
           isAdmin={isAdmin}
+          flowId="bruised-banana"
         />
       </div>
     </div>

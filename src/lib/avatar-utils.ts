@@ -29,7 +29,7 @@ export function slugifyName(name: string): string {
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '')
         .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '') || 'unknown'
+        .replace(/^-|-$/g, '') || ''
 }
 
 /**
@@ -144,6 +144,37 @@ export function getWalkableSpriteUrl(config: AvatarConfig | null): string {
     }
     const key = `${config.nationKey}-${config.archetypeKey}`
     return `/sprites/walkable/${key}.png`
+}
+
+/** Player shape for resolving avatar config (nation/archetype included). */
+export type PlayerForAvatar = {
+    avatarConfig?: string | null
+    nationId?: string | null
+    archetypeId?: string | null
+    campaignDomainPreference?: string | null
+    nation?: { name: string } | null
+    archetype?: { name: string } | null
+    pronouns?: string | null
+}
+
+/**
+ * Resolve avatar config for a player: use stored config if valid, else derive from nation+archetype.
+ * Returns null if player has no nation/archetype and no valid stored config.
+ */
+export function resolveAvatarConfigForPlayer(player: PlayerForAvatar | null): string | null {
+    if (!player) return null
+    const parsed = parseAvatarConfig(player.avatarConfig ?? null)
+    if (parsed?.nationKey && parsed?.archetypeKey) return player.avatarConfig ?? null
+    return deriveAvatarConfig(
+        player.nationId ?? null,
+        player.archetypeId ?? null,
+        player.campaignDomainPreference ?? null,
+        {
+            nationName: player.nation?.name,
+            archetypeName: player.archetype?.name,
+            pronouns: player.pronouns,
+        }
+    )
 }
 
 /**

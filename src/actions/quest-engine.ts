@@ -1,5 +1,7 @@
 'use server'
 
+import { promises as fs } from 'fs'
+import path from 'path'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isCampaignQuest } from '@/lib/quest-scope'
@@ -9,6 +11,7 @@ import { getOnboardingStatus, completeOnboardingStep, assignGatedThreads } from 
 import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
 import { deriveAvatarConfig } from '@/lib/avatar-utils'
+import { enqueueSpriteGeneration } from '@/lib/sprite-queue'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -399,8 +402,35 @@ export async function completeQuestForPlayer(
             }
         }
 
-        // IF FEEDBACK QUEST, REFRESH (Delete the completion record so it appears again)
+        // IF FEEDBACK QUEST: persist to .feedback before delete so triage can process it
         if (questId === 'system-feedback') {
+            try {
+                const player = await tx.player.findUnique({
+                    where: { id: playerId },
+                    select: { name: true }
+                })
+                const sentiment = (inputs as Record<string, unknown>)?.sentiment ?? 'N/A'
+                const clarity = (inputs as Record<string, unknown>)?.clarity ?? 'N/A'
+                const transmission = (inputs as Record<string, unknown>)?.feedback ?? ''
+                const feedbackText = [
+                    `Resonance: ${sentiment} | Clarity: ${clarity}`,
+                    transmission ? `\n\nTransmission: ${transmission}` : ''
+                ].join('')
+                const feedbackDir = path.join(process.cwd(), '.feedback')
+                await fs.mkdir(feedbackDir, { recursive: true })
+                const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
+                const entry = {
+                    timestamp: new Date().toISOString(),
+                    playerId,
+                    playerName: player?.name ?? 'Unknown',
+                    questId: 'system-feedback',
+                    passageName: 'Share Your Signal',
+                    feedback: feedbackText.trim() || 'No text provided'
+                }
+                await fs.appendFile(feedbackFile, JSON.stringify(entry) + '\n')
+            } catch (err) {
+                console.error('[QuestEngine] Failed to persist Share Your Signal feedback:', err)
+            }
             await tx.playerQuest.delete({
                 where: {
                     playerId_questId: {
@@ -442,6 +472,16 @@ export async function completeQuestForPlayer(
         })
     }
 
+    // Unlock hook: when player completes campaign quest (admin capacity signal)
+    if (result && !('error' in result) && quest.campaignRef) {
+        try {
+            const { onPlayerQuestCompletion } = await import('@/actions/quest-completion')
+            await onPlayerQuestCompletion(questId, playerId, quest.campaignRef)
+        } catch (e) {
+            console.warn('[QuestEngine] onPlayerQuestCompletion failed (non-blocking):', e)
+        }
+    }
+
     // LEGACY CHECK: Moved OUTSIDE transaction to avoid bloat
     try {
         const obStatus = await getOnboardingStatus(playerId)
@@ -458,6 +498,46 @@ export async function completeQuestForPlayer(
 
     if (!options?.skipRevalidate) {
         revalidatePath('/')
+    }
+
+    // Golden Path: Visible Impact — add campaignImpact and nextQuestId to success response
+    if (result && !('error' in result)) {
+        let campaignImpact = 'Progress recorded.'
+        if (quest.campaignRef) {
+            const inst = await db.instance.findFirst({
+                where: { OR: [{ campaignRef: quest.campaignRef }, { slug: quest.campaignRef }] },
+                select: { name: true },
+            })
+            const campaignName = inst?.name ?? quest.campaignRef
+            const impactPhrase = quest.campaignGoal?.trim() || 'Progress recorded.'
+            campaignImpact = `Your action contributed to ${campaignName}. ${impactPhrase}`
+        }
+
+        let nextQuestId: string | null = null
+        let nextQuestTitle: string | null = null
+        if (context?.threadId) {
+            const progress = await db.threadProgress.findUnique({
+                where: { threadId_playerId: { threadId: context.threadId, playerId } },
+                select: { currentPosition: true },
+            })
+            if (progress?.currentPosition) {
+                const tq = await db.threadQuest.findFirst({
+                    where: { threadId: context.threadId, position: progress.currentPosition },
+                    include: { quest: { select: { id: true, title: true } } },
+                })
+                if (tq?.quest) {
+                    nextQuestId = tq.quest.id
+                    nextQuestTitle = tq.quest.title
+                }
+            }
+        }
+
+        return {
+            ...result,
+            campaignImpact,
+            nextQuestId: nextQuestId ?? undefined,
+            nextQuestTitle: nextQuestTitle ?? undefined,
+        }
     }
 
     return result
@@ -480,10 +560,13 @@ function parseStoryQuestMeta(raw: string | null) {
 // ============================================================
 
 interface CompletionEffect {
-    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting' | 'strengthenResidency'
-    value?: string   // nationId, playbookId, etc.
+    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting' | 'strengthenResidency' | 'forgeInvitationBar' | 'advanceCampaignWatering'
+    value?: string   // nationId, playbookId, targetId, face, etc.
     amount?: number  // for grantVibeulons
     fromInput?: string // key in quest inputs to read the value from
+    targetType?: 'nation' | 'school' // for forgeInvitationBar
+    face?: string    // for advanceCampaignWatering: shaman | regent | challenger | architect | diplomat | sage
+    campaignBarId?: string // for advanceCampaignWatering: optional specific bar
 }
 
 /**
@@ -503,6 +586,49 @@ interface CompletionEffect {
  *   ]
  * }
  */
+/** Forge an invitation BAR inside a transaction. Used by strengthenResidency and forgeInvitationBar effects. */
+async function _forgeInvitationBarInTx(
+    tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
+    playerId: string,
+    questId: string,
+    targetType: 'nation' | 'school' = 'nation',
+    targetId?: string
+) {
+    const player = await tx.player.findUnique({
+        where: { id: playerId },
+        select: { nationId: true },
+    })
+    const resolvedTargetId = targetId || player?.nationId || ''
+    if (!resolvedTargetId) return
+
+    const token = `invite_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+    const invite = await tx.invite.create({
+        data: {
+            token,
+            status: 'active',
+            forgerId: playerId,
+            invitationTargetType: targetType,
+            invitationTargetId: resolvedTargetId,
+        },
+    })
+    const bar = await tx.customBar.create({
+        data: {
+            creatorId: playerId,
+            title: 'You are invited',
+            description: 'A fellow player has invited you into the game. Accept to begin your journey.',
+            type: 'bar',
+            reward: 0,
+            visibility: 'private',
+            status: 'active',
+            inviteId: invite.id,
+            sourceBarId: questId,
+            inputs: '[]',
+            rootId: 'temp',
+        },
+    })
+    await tx.customBar.update({ where: { id: bar.id }, data: { rootId: bar.id } })
+}
+
 async function processCompletionEffects(
     tx: Parameters<Parameters<typeof db.$transaction>[0]>[0],
     playerId: string,
@@ -646,6 +772,10 @@ async function processCompletionEffects(
                             data: { avatarConfig }
                         })
                         console.log(`[CompletionEffects] Derived avatarConfig for player ${playerId}`)
+                        // Enqueue sprite generation — fire-and-forget (Shaman threshold gate)
+                        void enqueueSpriteGeneration(playerId, avatarConfig).catch(err =>
+                            console.warn('[CompletionEffects] Sprite enqueue failed (non-blocking):', err)
+                        )
                     }
                     break
                 }
@@ -664,9 +794,32 @@ async function processCompletionEffects(
                             })
                             console.log(`[CompletionEffects] Strengthen donate: incremented instance funding for player ${playerId}`)
                         }
-                    } else if (type === 'invite' || type === 'feedback' || type === 'share') {
-                        // Log for observability; extend to DB/analytics as needed
+                    } else if (type === 'invite') {
+                        // Auto-forge invitation BAR linked to this quest
+                        await _forgeInvitationBarInTx(tx, playerId, quest.id)
+                        console.log(`[CompletionEffects] Strengthen invite: forged invitation BAR for player ${playerId}`)
+                    } else if (type === 'feedback' || type === 'share') {
                         console.log(`[CompletionEffects] Strengthen ${type}: player ${playerId} completed via ${type}`)
+                    }
+                    break
+                }
+                case 'forgeInvitationBar': {
+                    const targetType = effect.targetType || 'nation'
+                    const targetId = effect.fromInput
+                        ? inputs[effect.fromInput]
+                        : effect.value
+                    await _forgeInvitationBarInTx(tx, playerId, quest.id, targetType, targetId)
+                    console.log(`[CompletionEffects] forgeInvitationBar: forged for player ${playerId}`)
+                    break
+                }
+                case 'advanceCampaignWatering': {
+                    const { advanceCampaignWatering } = await import('@/actions/campaign-bar')
+                    const face = effect.face || (effect.fromInput === 'face' ? inputs.face : effect.value)
+                    const campaignBarId = effect.campaignBarId || inputs.campaignBarId
+                    const response = effect.fromInput && effect.fromInput !== 'face' ? inputs[effect.fromInput] : undefined
+                    if (face && /^(shaman|regent|challenger|architect|diplomat|sage)$/.test(face)) {
+                        await advanceCampaignWatering(tx, playerId, face as import('@/actions/campaign-bar').WateringFace, campaignBarId, response)
+                        console.log(`[CompletionEffects] advanceCampaignWatering: ${face} for player ${playerId}`)
                     }
                     break
                 }

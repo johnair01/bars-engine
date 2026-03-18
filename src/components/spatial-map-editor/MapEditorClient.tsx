@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SimpleTileEditor } from './SimpleTileEditor'
 import { saveSpatialMapRealmData } from '@/actions/spatial-maps'
+import { importMap } from '@/lib/spatial-map/import'
 import { AnchorEditor } from '@/app/admin/maps/[id]/AnchorEditor'
 import { slugify } from '@/lib/spatial-world/utils'
 import type { RealmData } from '@/lib/spatial-map/types'
@@ -26,6 +27,10 @@ export function MapEditorClient({ mapId, mapName, initialRealmData, rooms = [], 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<EditorMode>('tilemap')
+  const [importOpen, setImportOpen] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importWarnings, setImportWarnings] = useState<string[]>([])
 
   // Derive rooms from realmData when not passed directly (slugify on the fly)
   const editorRooms = rooms.length > 0
@@ -46,6 +51,33 @@ export function MapEditorClient({ mapId, mapName, initialRealmData, rooms = [], 
       setError(err instanceof Error ? err.message : 'Save failed')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleImport() {
+    setError(null)
+    setImportWarnings([])
+    setImporting(true)
+    try {
+      const result = importMap(importText, 'json')
+      if (!result) {
+        setError('Invalid JSON or unsupported format')
+        return
+      }
+      const saveResult = await saveSpatialMapRealmData(mapId, result.realmData)
+      if (saveResult.success) {
+        setRealmData(result.realmData)
+        setImportText('')
+        setImportOpen(false)
+        if (result.warnings.length) setImportWarnings(result.warnings)
+        router.refresh()
+      } else {
+        setError(saveResult.error ?? 'Import failed')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Import failed')
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -90,6 +122,43 @@ export function MapEditorClient({ mapId, mapName, initialRealmData, rooms = [], 
           </button>
         ))}
       </div>
+
+      {mode === 'tilemap' && (
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+          <button
+            type="button"
+            onClick={() => setImportOpen(!importOpen)}
+            className="text-sm text-zinc-400 hover:text-zinc-300"
+          >
+            {importOpen ? '− Hide Import' : '+ Import from JSON'}
+          </button>
+          {importOpen && (
+            <div className="mt-4 space-y-2">
+              <textarea
+                value={importText}
+                onChange={e => setImportText(e.target.value)}
+                placeholder='Paste RealmData JSON (e.g. {"spawnpoint":{"roomIndex":0,"x":0,"y":0},"rooms":[{"name":"Room 1","tilemap":{}}]})'
+                className="w-full h-32 bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleImport}
+                disabled={importing || !importText.trim()}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm rounded"
+              >
+                {importing ? 'Importing…' : 'Import & Replace'}
+              </button>
+              {importWarnings.length > 0 && (
+                <ul className="text-xs text-amber-400">
+                  {importWarnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-6">
         {mode === 'tilemap' ? (

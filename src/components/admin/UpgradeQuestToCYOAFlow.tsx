@@ -79,6 +79,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const [aiError, setAiError] = useState<string | null>(null)
   const [publishStatus, setPublishStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [result, setResult] = useState<{ adventureId: string; threadId: string } | null>(null)
+  const [adventureMoveType, setAdventureMoveType] = useState<string>('')
 
   useEffect(() => {
     getAdminWorldData().then(([nationList, archetypes]) => {
@@ -93,6 +94,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   useEffect(() => {
     if (expanded && quest) {
       setAlignedAction((prev) => prev || moveTypeToAlignedAction(quest.moveType))
+      setAdventureMoveType((prev) => prev || (quest.moveType ?? ''))
       setQ6Context((prev) => prev || (quest.description ?? '').slice(0, 500))
       setAnswers((a) => {
         if (a.q5 || !quest.description) return a
@@ -416,6 +418,20 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
       <div className="space-y-6">
         <h3 className="text-lg font-bold text-white">Generate & publish</h3>
         <p className="text-sm text-zinc-400">Choose how to create the Adventure. Both link to the original quest.</p>
+        <div className="space-y-2 mb-3">
+          <label className="block text-xs text-zinc-500">Move type (for 4-slot gameboard)</label>
+          <select
+            value={adventureMoveType}
+            onChange={(e) => setAdventureMoveType(e.target.value)}
+            className="bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white"
+          >
+            <option value="">None</option>
+            <option value="wakeUp">Wake Up</option>
+            <option value="cleanUp">Clean Up</option>
+            <option value="growUp">Grow Up</option>
+            <option value="showUp">Show Up</option>
+          </select>
+        </div>
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
@@ -431,7 +447,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
               }
               setPreview(res.packet)
               setPublishStatus('pending')
-              const pub = await publishQuestPacketToPassagesWithSourceQuest(res.packet, questId, quest.title)
+              const pub = await publishQuestPacketToPassagesWithSourceQuest(res.packet, questId, quest.title, adventureMoveType || undefined)
               setPublishStatus('idle')
               if (pub.success) {
                 setResult({ adventureId: pub.adventureId, threadId: pub.threadId })
@@ -461,6 +477,7 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
                 title: `${quest.title} (CYOA)`,
                 slug: `${quest.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-cyoa-${Date.now()}`,
                 sourceQuestId: questId,
+                moveType: adventureMoveType || undefined,
               })
               setPublishStatus('idle')
               if (create.success) {

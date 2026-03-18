@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import {
     completeEmotionalFirstAidSession,
@@ -71,6 +72,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
         delta: number
         mintedAmount: number
         threshold: number
+        barDraft?: { id: string; nextAction: string; contextQuestId?: string | null }
     } | null>(null)
 
     const selectedTool = initialContext.tools.find((tool) => tool.id === selectedToolId) || null
@@ -128,6 +130,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
                 delta: response.delta,
                 mintedAmount: response.mintedAmount,
                 threshold: response.threshold,
+                barDraft: response.barDraft,
             })
             setStage('result')
         })
@@ -338,6 +341,31 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
                     ) : (
                         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-zinc-300">
                             Session logged. No mint this round (need a {result.threshold}+ point stuckness drop).
+                        </div>
+                    )}
+
+                    {result.barDraft && (
+                        <div className="rounded-xl border border-cyan-800/40 bg-cyan-950/20 p-4 space-y-2">
+                            <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold">
+                                Suggested next action
+                            </p>
+                            <p className="text-sm text-cyan-100/90">{result.barDraft.nextAction}</p>
+                            <div className="flex flex-wrap gap-2">
+                                <Link
+                                    href={`/bars/${result.barDraft.id}`}
+                                    className="text-xs px-3 py-1.5 rounded-lg border border-cyan-600/60 bg-cyan-900/30 text-cyan-200 hover:bg-cyan-800/40 transition-colors"
+                                >
+                                    View BAR in wallet
+                                </Link>
+                                {result.barDraft.contextQuestId && (
+                                    <Link
+                                        href={`/?focusQuest=${result.barDraft.contextQuestId}`}
+                                        className="text-xs px-3 py-1.5 rounded-lg border border-cyan-600/60 bg-cyan-900/30 text-cyan-200 hover:bg-cyan-800/40 transition-colors"
+                                    >
+                                        Apply to quest
+                                    </Link>
+                                )}
+                            </div>
                         </div>
                     )}
 

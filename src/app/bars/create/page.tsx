@@ -15,8 +15,8 @@ export default async function CreateBarPage() {
                         ←
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Create a BAR</h1>
-                        <p className="text-zinc-500 text-sm">Share an insight, story, or prompt with the collective.</p>
+                        <h1 className="text-2xl font-bold text-white">Pin it</h1>
+                        <p className="text-zinc-500 text-sm">A scrap. A note. Add a photo on the next screen if you have one.</p>
                     </div>
                 </div>
 

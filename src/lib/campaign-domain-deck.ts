@@ -82,9 +82,37 @@ export async function getCampaignDomainDeck(
 }
 
 /**
+ * Get domain deck with moveType for path-dependent drawing.
+ * When slot has moveType, prefer quests with matching moveType.
+ */
+export async function getCampaignDomainDeckWithMoveTypes(
+  instanceId: string,
+  campaignRef: string,
+  domain: AllyshipDomain,
+  kotterStage: number
+): Promise<{ items: { id: string; moveType: string | null }[]; cycleId: string }> {
+  const { questIds, cycleId } = await getCampaignDomainDeck(
+    instanceId,
+    campaignRef,
+    domain,
+    kotterStage
+  )
+  if (questIds.length === 0) return { items: [], cycleId }
+
+  const bars = await db.customBar.findMany({
+    where: { id: { in: questIds } },
+    select: { id: true, moveType: true },
+  })
+  const byId = new Map(bars.map((b) => [b.id, { id: b.id, moveType: b.moveType }]))
+  const items = questIds.map((id) => byId.get(id) ?? { id, moveType: null })
+  return { items, cycleId }
+}
+
+/**
  * Draw up to count quest IDs from the domain deck.
  * Excludes: already on board, played this cycle.
  * When deck exhausted, resets cycle and draws from full pool.
+ * When slotMoveTypes provided, draw per-slot preferring quests with matching moveType (path-dependent).
  */
 export async function drawFromDeck(
   instanceId: string,
@@ -92,7 +120,8 @@ export async function drawFromDeck(
   domain: AllyshipDomain,
   kotterStage: number,
   count: number,
-  excludeQuestIds: string[] = []
+  excludeQuestIds: string[] = [],
+  slotMoveTypes?: (string | null)[]
 ): Promise<{ questIds: string[]; exhausted: boolean }> {
   const exclude = new Set(excludeQuestIds)
 
@@ -104,6 +133,50 @@ export async function drawFromDeck(
   let cycle = cycles[domain] ?? {
     playedQuestIds: [] as string[],
     cycleId: `${instanceId}-${domain}-${Date.now()}`,
+  }
+
+  const getAvailable = (items: { id: string; moveType: string | null }[]) =>
+    items.filter((d) => !exclude.has(d.id) && !cycle.playedQuestIds.includes(d.id))
+
+  if (slotMoveTypes != null && slotMoveTypes.length > 0) {
+    let { items } = await getCampaignDomainDeckWithMoveTypes(
+      instanceId,
+      campaignRef,
+      domain,
+      kotterStage
+    )
+    if (items.length === 0) {
+      const didReset = await resetDeckCycle(instanceId, domain)
+      if (didReset) {
+        const fresh = await getCampaignDomainDeckWithMoveTypes(
+          instanceId,
+          campaignRef,
+          domain,
+          kotterStage
+        )
+        items = fresh.items
+      }
+    }
+
+    const result: string[] = []
+    const drawn = new Set(exclude)
+    for (let i = 0; i < Math.min(count, slotMoveTypes.length); i++) {
+      const slotMove = slotMoveTypes[i]?.trim() || null
+      const available = items.filter((d) => !drawn.has(d.id) && !cycle.playedQuestIds.includes(d.id))
+      if (available.length === 0) break
+
+      const matching = slotMove
+        ? available.filter((d) => d.moveType?.toLowerCase() === slotMove.toLowerCase())
+        : []
+      const pool = matching.length > 0 ? matching : available
+      const shuffled = [...pool].sort(() => Math.random() - 0.5)
+      const picked = shuffled[0]
+      if (picked) {
+        result.push(picked.id)
+        drawn.add(picked.id)
+      }
+    }
+    return { questIds: result, exhausted: false }
   }
 
   const { questIds: pool } = await getCampaignDomainDeck(

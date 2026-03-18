@@ -25,6 +25,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent worktrees and generated files:
+    ".claude/**",
+    "prisma/generated/**",
+    // Vendor / third-party dirs:
+    "LibreSprite/**",
+    "backend/.venv/**",
   ]),
 ]);
 

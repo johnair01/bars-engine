@@ -44,16 +44,22 @@ export default async function GameboardPage(props: {
           </Link>
           <div className="flex gap-4">
             <Link
+              href={`/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`}
+              className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
+            >
+              Portals
+            </Link>
+            <Link
               href="/event"
               className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
             >
               Support the Residency →
             </Link>
             <Link
-              href="/campaign/twine?ref=bruised-banana"
+              href={`/campaign/twine?ref=${encodeURIComponent(campaignRef)}`}
               className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
             >
-              Begin the Journey
+              Campaign story
             </Link>
           </div>
         </div>

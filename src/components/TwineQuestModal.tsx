@@ -90,6 +90,12 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                 return
             }
 
+            if (!runData) {
+                setError('Failed to load adventure run.')
+                setLoading(false)
+                return
+            }
+
             if ('error' in runData) {
                 setError(runData.error || 'Unknown error')
                 setLoading(false)

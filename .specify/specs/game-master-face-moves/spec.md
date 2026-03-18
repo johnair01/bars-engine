@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Define explicit moves for each Game Master face in both the **codebase** and the **game**. Each face has applications in both dimensions; they must not leave their domains except with counsel from the Sage. The Sage, as wise trickster, can run *as* another face (same tools, different prompt) when that lens serves the aim.
+Define explicit moves for each Game Master face in both the **codebase** and the **game**.
+
+**Practice**: Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI. Each face has applications in both dimensions; they must not leave their domains except with counsel from the Sage. The Sage, as wise trickster, can run *as* another face (same tools, different prompt) when that lens serves the aim.
 
 **Parent**: [EXPLORATION.md](EXPLORATION.md)
 

@@ -4,6 +4,7 @@ import { CampaignReader } from './components/CampaignReader'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
+import { parseCampaignRef } from '@/lib/campaign-subcampaigns'
 import fs from 'fs'
 import path from 'path'
 
@@ -17,14 +18,15 @@ export default async function CampaignPage(props: {
     const player = await getCurrentPlayer()
     const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
     // P2: When no ref in URL, use instance.campaignRef (default bruised-banana)
-    let campaignRef = urlRef
-    if (!campaignRef) {
+    let rawRef = urlRef
+    if (!rawRef) {
         const instance = await getActiveInstance()
-        campaignRef = instance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
+        rawRef = instance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
     }
+    const { campaignRef, subcampaignDomain } = parseCampaignRef(rawRef)
 
-    // Bruised Banana: prefer grammatical initiation when a published Adventure exists
-    if (campaignRef === 'bruised-banana') {
+    // Bruised Banana: prefer grammatical initiation when a published Adventure exists (top-level only)
+    if (campaignRef === 'bruised-banana' && !subcampaignDomain) {
         const seg = segment && ['player', 'sponsor'].includes(segment) ? segment : 'player'
         const initAdventure = await db.adventure.findUnique({
             where: { slug: `bruised-banana-initiation-${seg}`, status: 'ACTIVE' },
@@ -39,20 +41,35 @@ export default async function CampaignPage(props: {
         redirect('/campaign/twine?ref=bruised-banana')
     }
 
-    // Resolve Adventure by campaignRef for orientation (e.g. ref=wake-up → Adventure with campaignRef=wake-up)
+    // Resolve Adventure by campaignRef (+ subcampaignDomain for subcampaigns)
     let startNodeId = FALLBACK_START
     let adventureSlug: string | undefined
     try {
         const adventure = await db.adventure.findFirst({
             where: {
                 status: 'ACTIVE',
-                OR: [
-                    { campaignRef },
-                    { slug: campaignRef },
-                ],
+                campaignRef,
+                ...(subcampaignDomain
+                    ? { subcampaignDomain }
+                    : { subcampaignDomain: null }),
             },
         })
-        if (adventure) {
+        if (!adventure) {
+            // Fallback: match by slug (e.g. wake-up) or compound ref
+            const fallback = await db.adventure.findFirst({
+                where: {
+                    status: 'ACTIVE',
+                    OR: [
+                        { slug: rawRef },
+                        { slug: campaignRef },
+                    ],
+                },
+            })
+            if (fallback) {
+                startNodeId = fallback.startNodeId ?? FALLBACK_START
+                adventureSlug = fallback.slug
+            }
+        } else {
             startNodeId = adventure.startNodeId ?? FALLBACK_START
             adventureSlug = adventure.slug
         }
@@ -102,7 +119,7 @@ export default async function CampaignPage(props: {
                 {/* We pass a dummy initial node, but CampaignReader will immediately fetch it based on id */}
                 <CampaignReader
                     initialNode={{ id: startNodeId, text: '', choices: [] }}
-                    campaignRef={campaignRef}
+                    campaignRef={rawRef}
                     adventureSlug={adventureSlug}
                     isAdmin={isAdmin}
                 />

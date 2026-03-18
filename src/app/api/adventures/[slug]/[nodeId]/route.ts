@@ -622,7 +622,7 @@ export async function GET(
             }
         }
 
-        const metadata = passage.metadata as { actionType?: string; castIChingTargetId?: string } | null
+        const metadata = passage.metadata as { actionType?: string; castIChingTargetId?: string; moveType?: string } | null
         return NextResponse.json({
             id: passage.nodeId,
             text: passage.text,

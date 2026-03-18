@@ -1,8 +1,9 @@
 "use client"
 
-import { useActionState, useState, useMemo } from "react"
-import { updatePassage } from "./actions"
+import { useActionState, useState, useTransition, useMemo } from "react"
+import { updatePassage, generateSinglePassage, linkPassageToQuest, unlinkPassageFromQuest } from "./actions"
 import { useFormStatus } from "react-dom"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { BridgeGapModal } from "./BridgeGapModal"
 import { ChoiceBuilder, type Choice } from "@/components/admin/ChoiceBuilder"
@@ -23,16 +24,43 @@ function SubmitButton() {
 
 type PassageItem = { id: string; nodeId: string }
 
+type QuestItem = {
+    id: string
+    title: string
+    description: string
+    storyContent: string | null
+    docQuestMetadata: string | null
+}
+
 export function EditPassageForm({
     adventureId,
     passage,
     passages,
+    faceLabel,
+    faceBg,
+    faceText,
+    linkedQuest: initialLinkedQuest,
+    quests,
 }: {
     adventureId: string
-    passage: { id: string; nodeId: string; text: string; choices: string }
+    passage: { id: string; nodeId: string; text: string; choices: string; linkedQuestId?: string | null }
     passages: PassageItem[]
+    faceLabel?: string
+    faceBg?: string
+    faceText?: string
+    linkedQuest?: { id: string; title: string; description: string } | null
+    quests?: QuestItem[]
 }) {
     const [state, formAction] = useActionState(updatePassage, { success: false, message: "" })
+    const [text, setText] = useState(passage.text)
+    const [isAiDraft, setIsAiDraft] = useState(false)
+    const [generateError, setGenerateError] = useState<string | null>(null)
+    const [isPending, startTransition] = useTransition()
+    const [linkedQuest, setLinkedQuest] = useState(initialLinkedQuest ?? null)
+    const [questSearch, setQuestSearch] = useState("")
+    const [questLinkPending, startQuestLinkTransition] = useTransition()
+    const [questLinkError, setQuestLinkError] = useState<string | null>(null)
+    const router = useRouter()
     const [bridgeTarget, setBridgeTarget] = useState<{ toNodeId: string; choiceLabel: string } | null>(null)
     const [needsWorkOpen, setNeedsWorkOpen] = useState(false)
     const [needsWorkText, setNeedsWorkText] = useState("")
@@ -54,6 +82,54 @@ export function EditPassageForm({
 
     const [choices, setChoices] = useState<Choice[]>(initialChoices)
     const targetOptions = passages.filter((p) => p.nodeId !== passage.nodeId).map((p) => p.nodeId)
+
+    function handleGenerate() {
+        setGenerateError(null)
+        startTransition(async () => {
+            const result = await generateSinglePassage(passage.id)
+            if ('error' in result) {
+                setGenerateError(result.error)
+            } else {
+                setText(result.text)
+                setIsAiDraft(true)
+            }
+        })
+    }
+
+    function handleImportQuest(quest: QuestItem) {
+        // 3.3: prefer storyContent if it's plain text, otherwise description
+        const importText = (quest.storyContent && !quest.storyContent.startsWith('{'))
+            ? quest.storyContent
+            : quest.description
+        setText(importText)
+        setIsAiDraft(false)
+    }
+
+    function handleLinkQuest(quest: QuestItem) {
+        setQuestLinkError(null)
+        startQuestLinkTransition(async () => {
+            const r = await linkPassageToQuest(passage.id, quest.id)
+            if ('error' in r) {
+                setQuestLinkError(r.error)
+            } else {
+                setLinkedQuest({ id: quest.id, title: quest.title, description: quest.description })
+                router.refresh()
+            }
+        })
+    }
+
+    function handleUnlinkQuest() {
+        setQuestLinkError(null)
+        startQuestLinkTransition(async () => {
+            const r = await unlinkPassageFromQuest(passage.id)
+            if ('error' in r) {
+                setQuestLinkError(r.error)
+            } else {
+                setLinkedQuest(null)
+                router.refresh()
+            }
+        })
+    }
 
     async function handleAccept() {
         setRatingResult(null)
@@ -148,15 +224,42 @@ export function EditPassageForm({
                 </div>
 
                 <div>
-                    <label htmlFor="text" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                        Passage Text (Markdown + Macros)
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="text" className="block text-sm font-medium text-zinc-300">
+                            Passage Text (Markdown + Macros)
+                        </label>
+                        <button
+                            type="button"
+                            onClick={handleGenerate}
+                            disabled={isPending}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${faceBg ?? 'bg-violet-500/15'} ${faceText ?? 'text-violet-300'} border-current hover:opacity-80`}
+                        >
+                            {isPending ? (
+                                <>
+                                    <span className="inline-block w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                    Generating…
+                                </>
+                            ) : (
+                                <>✦ Generate with {faceLabel ?? 'GM'}</>
+                            )}
+                        </button>
+                    </div>
+                    {isAiDraft && (
+                        <div className="mb-1.5 flex items-center gap-1.5 text-xs text-amber-400">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                            AI draft — review before saving
+                        </div>
+                    )}
+                    {generateError && (
+                        <p className="mb-1.5 text-xs text-red-400">{generateError}</p>
+                    )}
                     <textarea
                         name="text"
                         id="text"
                         required
                         rows={12}
-                        defaultValue={passage.text}
+                        value={text}
+                        onChange={e => { setText(e.target.value); setIsAiDraft(false) }}
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-mono text-sm"
                         placeholder="Type your story here..."
                     />
@@ -198,6 +301,101 @@ export function EditPassageForm({
                         </div>
                     )}
                 </div>
+
+                {/* Quest Picker — Phase 3 */}
+                {quests && quests.length > 0 && (
+                    <details className="border border-zinc-800 rounded-xl overflow-hidden">
+                        <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer select-none text-sm text-zinc-400 hover:text-zinc-200 transition-colors list-none bg-zinc-900">
+                            <span className="font-medium text-zinc-300">Quest</span>
+                            {linkedQuest ? (
+                                <span className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-sky-500/15 text-sky-300 border border-sky-500/20">
+                                    🔗 {linkedQuest.title}
+                                </span>
+                            ) : (
+                                <span className="text-xs text-zinc-600">Import or link a quest</span>
+                            )}
+                            <span className="ml-auto text-xs text-zinc-600">▾</span>
+                        </summary>
+                        <div className="px-4 pb-4 pt-3 space-y-3 border-t border-zinc-800 bg-zinc-900/50">
+                            {/* Linked quest badge */}
+                            {linkedQuest && (
+                                <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                    <div className="text-sm min-w-0">
+                                        <div className="font-medium text-sky-300 truncate">{linkedQuest.title}</div>
+                                        <div className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{linkedQuest.description}</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleUnlinkQuest}
+                                        disabled={questLinkPending}
+                                        className="shrink-0 text-xs text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                                    >
+                                        Unlink
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Search */}
+                            <input
+                                type="text"
+                                value={questSearch}
+                                onChange={(e) => setQuestSearch(e.target.value)}
+                                placeholder="Search quests…"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                            />
+
+                            {/* Results */}
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                                {quests
+                                    .filter((q) =>
+                                        questSearch.trim() === "" ||
+                                        q.title.toLowerCase().includes(questSearch.toLowerCase()) ||
+                                        q.description.toLowerCase().includes(questSearch.toLowerCase())
+                                    )
+                                    .slice(0, 20)
+                                    .map((q) => {
+                                        const isBook = Boolean(q.docQuestMetadata)
+                                        return (
+                                            <div key={q.id} className="flex items-start justify-between gap-3 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="text-sm font-medium text-zinc-200 truncate">{q.title}</span>
+                                                        {isBook && (
+                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-300">
+                                                                Book
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{q.description}</p>
+                                                </div>
+                                                <div className="shrink-0 flex flex-col gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleImportQuest(q)}
+                                                        className="px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-md transition-colors"
+                                                    >
+                                                        Import
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleLinkQuest(q)}
+                                                        disabled={questLinkPending || linkedQuest?.id === q.id}
+                                                        className="px-2 py-1 text-xs font-medium text-sky-400 hover:text-sky-300 border border-sky-700/50 hover:border-sky-500 rounded-md transition-colors disabled:opacity-40"
+                                                    >
+                                                        Link
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                            </div>
+
+                            {questLinkError && (
+                                <p className="text-xs text-red-400">{questLinkError}</p>
+                            )}
+                        </div>
+                    </details>
+                )}
             </div>
             {bridgeTarget && (
                 <BridgeGapModal

@@ -22,6 +22,7 @@ import {
   type GMVoice,
 } from '@/lib/character-creator/discovery-data'
 import { accumulateWeights, rankByScore, topKey, resonancePercent } from '@/lib/character-creator/scoring'
+import { CharacterCreatorAvatarPreview } from '@/components/character-creator/CharacterCreatorAvatarPreview'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -405,7 +406,14 @@ export function CharacterCreatorRunner({
             &larr; Dashboard
           </Link>
           {phase !== 'landing' && phase !== 'complete' && (
-            <span className="text-zinc-700 text-xs font-mono">Character Creator</span>
+            <div className="flex items-center gap-4">
+              <CharacterCreatorAvatarPreview
+                phase={phase}
+                resolvedArchetypeName={state.resolvedArchetype?.name ?? null}
+                resolvedNationName={state.resolvedNationName ?? null}
+              />
+              <span className="text-zinc-700 text-xs font-mono">Character Creator</span>
+            </div>
           )}
         </div>
 

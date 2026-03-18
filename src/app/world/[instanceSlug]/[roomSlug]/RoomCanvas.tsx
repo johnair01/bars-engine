@@ -8,10 +8,15 @@ import { enterRoom, heartbeat } from '@/actions/room-presence'
 import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
-import { SpriteSelector } from '@/components/world/SpriteSelector'
+import { MapAvatarGate } from '@/components/world/MapAvatarGate'
 
 type RoomCanvasProps = {
-  player: { id: string; name: string; spriteUrl: string | null }
+  player: {
+    id: string
+    name: string
+    avatarConfig: string | null
+    walkableSpriteUrl: string | null
+  }
   room: {
     id: string
     name: string
@@ -32,12 +37,13 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
   const router = useRouter()
 
   const [playerPos, setPlayerPos] = useState({ x: spawnX, y: spawnY })
+  const [lastMoveDirection, setLastMoveDirection] = useState<'north' | 'south' | 'east' | 'west'>('south')
   const [proximateAnchor, setProximateAnchor] = useState<AnchorData | null>(null)
   const [modalAnchor, setModalAnchor] = useState<AnchorData | null>(null)
   const [modalKey, setModalKey] = useState(0)
   const [agents, setAgents] = useState<AgentData[]>([])
   const [selectedAgent, setSelectedAgent] = useState<AgentData | null>(null)
-  const [spriteReady, setSpriteReady] = useState(!!player.spriteUrl)
+  const spriteReady = !!player.avatarConfig
 
   const posRef = useRef(playerPos)
   posRef.current = playerPos
@@ -60,6 +66,7 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
       const renderer = new RoomRenderer(app, room.tilemap)
       rendererRef.current = renderer
       renderer.setPlayerPosition(spawnX, spawnY)
+      if (player.walkableSpriteUrl) renderer.setPlayerSpriteUrl(player.walkableSpriteUrl)
       renderer.setAnchors(room.anchors)
       renderer.onAgentClick(setSelectedAgent)
     })
@@ -71,14 +78,15 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
       rendererRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spriteReady])
+  }, [spriteReady, player.walkableSpriteUrl])
 
   // Update renderer when position changes
   useEffect(() => {
     rendererRef.current?.setPlayerPosition(playerPos.x, playerPos.y)
+    rendererRef.current?.setPlayerDirection(lastMoveDirection)
     const anchor = rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null
     setProximateAnchor(anchor)
-  }, [playerPos])
+  }, [playerPos, lastMoveDirection])
 
   // Update agents in renderer
   useEffect(() => {
@@ -87,17 +95,18 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
   // WASD movement
   useEffect(() => {
-    const DELTAS: Record<string, { dx: number; dy: number }> = {
-      w: { dx: 0, dy: -1 }, ArrowUp: { dx: 0, dy: -1 },
-      s: { dx: 0, dy: 1 }, ArrowDown: { dx: 0, dy: 1 },
-      a: { dx: -1, dy: 0 }, ArrowLeft: { dx: -1, dy: 0 },
-      d: { dx: 1, dy: 0 }, ArrowRight: { dx: 1, dy: 0 },
+    const DELTAS: Record<string, { dx: number; dy: number; dir: 'north' | 'south' | 'east' | 'west' }> = {
+      w: { dx: 0, dy: -1, dir: 'north' }, ArrowUp: { dx: 0, dy: -1, dir: 'north' },
+      s: { dx: 0, dy: 1, dir: 'south' }, ArrowDown: { dx: 0, dy: 1, dir: 'south' },
+      a: { dx: -1, dy: 0, dir: 'west' }, ArrowLeft: { dx: -1, dy: 0, dir: 'west' },
+      d: { dx: 1, dy: 0, dir: 'east' }, ArrowRight: { dx: 1, dy: 0, dir: 'east' },
     }
     const handler = (e: KeyboardEvent) => {
       const delta = DELTAS[e.key]
       if (!delta || !rendererRef.current) return
       const next = { x: posRef.current.x + delta.dx, y: posRef.current.y + delta.dy }
       if (rendererRef.current.isWalkable(next.x, next.y)) {
+        setLastMoveDirection(delta.dir)
         setPlayerPos(next)
       }
     }
@@ -136,11 +145,7 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     : null
 
   if (!spriteReady) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <SpriteSelector playerId={player.id} onSelected={() => setSpriteReady(true)} />
-      </div>
-    )
+    return <MapAvatarGate context="world" />
   }
 
   return (

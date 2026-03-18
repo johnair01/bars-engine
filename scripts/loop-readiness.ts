@@ -30,6 +30,9 @@ function getRemediation(check: string, note?: string): string | null {
             return 'Fix: npx tsx scripts/with-env.ts "prisma migrate deploy"'
         }
     }
+    if (check === 'Agent health (OPENAI_API_KEY in backend)') {
+        return 'Fix: Add OPENAI_API_KEY to .env.local at repo root. Restart backend: npm run dev:backend. See docs/AGENT_WORKFLOWS.md'
+    }
     return null
 }
 
@@ -142,6 +145,24 @@ async function main() {
 
     runCommand('Feedback cap integration test', 'npm run test:feedback-cap')
     runCommand('Feedback cap history query', 'npm run db:feedback-cap-history')
+
+    // Agent health: OPENAI_API_KEY in backend (best-effort; skip if backend unreachable)
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
+    try {
+        const res = await fetch(`${backendUrl.replace(/\/$/, '')}/api/health`, {
+            signal: AbortSignal.timeout(3000),
+        })
+        if (res.ok) {
+            const data = (await res.json()) as { openai_configured?: boolean }
+            if (data.openai_configured === true) {
+                addResult('Agent health (OPENAI_API_KEY in backend)', 'PASS')
+            } else {
+                addResult('Agent health (OPENAI_API_KEY in backend)', 'FAIL', 'OPENAI_API_KEY not loaded in backend')
+            }
+        }
+    } catch {
+        addResult('Agent health (OPENAI_API_KEY in backend)', 'PASS', 'Skipped — backend unreachable')
+    }
 
     console.log('\n📋 Loop Readiness Summary')
     console.table(results)

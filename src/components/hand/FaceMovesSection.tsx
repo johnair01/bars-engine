@@ -6,11 +6,14 @@ import {
   proposeMove,
   offerConnection,
   hostEvent,
+  offerBlueprint,
+  designLayout,
+  witness,
 } from '@/actions/face-move-bar'
 
 export function FaceMovesSection() {
   const [expanded, setExpanded] = useState(false)
-  const [activeForm, setActiveForm] = useState<'challenge' | 'move' | 'connection' | 'event' | null>(null)
+  const [activeForm, setActiveForm] = useState<'challenge' | 'move' | 'connection' | 'event' | 'blueprint' | 'layout' | 'witness' | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,6 +28,16 @@ export function FaceMovesSection() {
   // Host event
   const [eventTitle, setEventTitle] = useState('')
   const [eventDesc, setEventDesc] = useState('')
+
+  // Offer blueprint
+  const [blueprintTitle, setBlueprintTitle] = useState('')
+  const [blueprintDesc, setBlueprintDesc] = useState('')
+
+  // Design layout
+  const [layoutSuggestion, setLayoutSuggestion] = useState('')
+
+  // Witness
+  const [witnessNote, setWitnessNote] = useState('')
 
   async function handleIssueChallenge(e: React.FormEvent) {
     e.preventDefault()
@@ -80,6 +93,67 @@ export function FaceMovesSection() {
       } else {
         setSuggestedName('')
         setConnectionMsg('')
+        setActiveForm(null)
+        window.location.reload()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleOfferBlueprint(e: React.FormEvent) {
+    e.preventDefault()
+    if (!blueprintTitle.trim()) return
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await offerBlueprint({
+        title: blueprintTitle.trim(),
+        description: blueprintDesc.trim(),
+      })
+      if ('error' in result) {
+        setError(result.error)
+      } else {
+        setBlueprintTitle('')
+        setBlueprintDesc('')
+        setActiveForm(null)
+        window.location.reload()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDesignLayout(e: React.FormEvent) {
+    e.preventDefault()
+    if (!layoutSuggestion.trim()) return
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await designLayout({ suggestion: layoutSuggestion.trim() })
+      if ('error' in result) {
+        setError(result.error)
+      } else {
+        setLayoutSuggestion('')
+        setActiveForm(null)
+        window.location.reload()
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleWitness(e: React.FormEvent) {
+    e.preventDefault()
+    if (!witnessNote.trim()) return
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await witness({ note: witnessNote.trim() })
+      if ('error' in result) {
+        setError(result.error)
+      } else {
+        setWitnessNote('')
         setActiveForm(null)
         window.location.reload()
       }
@@ -261,6 +335,103 @@ export function FaceMovesSection() {
                   className="py-2 px-4 bg-amber-800/60 hover:bg-amber-700/60 disabled:opacity-50 text-amber-100 text-sm font-medium rounded-lg"
                 >
                   {loading ? 'Creating...' : 'Host event'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Offer blueprint */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setActiveForm(activeForm === 'blueprint' ? null : 'blueprint')}
+              className="text-sm text-orange-400 hover:text-orange-300"
+            >
+              {activeForm === 'blueprint' ? '−' : '+'} Offer blueprint (Architect)
+            </button>
+            {activeForm === 'blueprint' && (
+              <form onSubmit={handleOfferBlueprint} className="mt-2 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Blueprint title"
+                  value={blueprintTitle}
+                  onChange={(e) => setBlueprintTitle(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-sm rounded border border-zinc-700"
+                  required
+                />
+                <textarea
+                  placeholder="Description — players can fork this as a quest"
+                  value={blueprintDesc}
+                  onChange={(e) => setBlueprintDesc(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-sm rounded border border-zinc-700"
+                  rows={2}
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !blueprintTitle.trim()}
+                  className="py-2 px-4 bg-orange-900/60 hover:bg-orange-800/60 disabled:opacity-50 text-orange-100 text-sm font-medium rounded-lg"
+                >
+                  {loading ? 'Creating...' : 'Offer blueprint'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Design layout */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setActiveForm(activeForm === 'layout' ? null : 'layout')}
+              className="text-sm text-orange-400 hover:text-orange-300"
+            >
+              {activeForm === 'layout' ? '−' : '+'} Design layout (Architect)
+            </button>
+            {activeForm === 'layout' && (
+              <form onSubmit={handleDesignLayout} className="mt-2 space-y-2">
+                <textarea
+                  placeholder="Layout suggestion (slot order, draw logic…)"
+                  value={layoutSuggestion}
+                  onChange={(e) => setLayoutSuggestion(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-sm rounded border border-zinc-700"
+                  rows={2}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !layoutSuggestion.trim()}
+                  className="py-2 px-4 bg-orange-900/60 hover:bg-orange-800/60 disabled:opacity-50 text-orange-100 text-sm font-medium rounded-lg"
+                >
+                  {loading ? 'Creating...' : 'Record layout suggestion'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Witness */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setActiveForm(activeForm === 'witness' ? null : 'witness')}
+              className="text-sm text-teal-400 hover:text-teal-300"
+            >
+              {activeForm === 'witness' ? '−' : '+'} Witness (Sage)
+            </button>
+            {activeForm === 'witness' && (
+              <form onSubmit={handleWitness} className="mt-2 space-y-2">
+                <textarea
+                  placeholder="Hold this without dispatch — a witness note…"
+                  value={witnessNote}
+                  onChange={(e) => setWitnessNote(e.target.value)}
+                  className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-sm rounded border border-zinc-700"
+                  rows={3}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !witnessNote.trim()}
+                  className="py-2 px-4 bg-teal-900/60 hover:bg-teal-800/60 disabled:opacity-50 text-teal-100 text-sm font-medium rounded-lg"
+                >
+                  {loading ? 'Witnessing...' : 'Witness'}
                 </button>
               </form>
             )}

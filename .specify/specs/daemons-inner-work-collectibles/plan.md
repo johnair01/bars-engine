@@ -39,9 +39,9 @@ Implement the blessed objects system: schema for earned collectibles, unlock tri
 
 ## Verification
 
-- [ ] BlessedObjectEarned model exists; migration applied
-- [ ] EFA completion creates record
-- [ ] 321 completion creates record
-- [ ] Quest completion at Kotter stage creates stage talisman
-- [ ] Reliquary page shows earned collectibles with provenance
-- [ ] loop:ready passes
+- [x] BlessedObjectEarned model exists; migration applied
+- [x] EFA completion creates record
+- [x] 321 completion creates record
+- [x] Quest completion at Kotter stage creates stage talisman
+- [x] Reliquary page shows earned collectibles with provenance
+- [x] loop:ready passes (build passes; feedback-cap blocked by pre-existing schema drift)

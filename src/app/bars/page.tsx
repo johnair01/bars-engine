@@ -20,9 +20,16 @@ export default async function BarsPage() {
                 <div className="flex items-center justify-between">
                     <div>
                         <Link href="/" className="text-sm text-zinc-500 hover:text-white transition">← Dashboard</Link>
-                        <h1 className="text-3xl font-bold text-white mt-1">My BARs</h1>
+                        <h1 className="text-3xl font-bold text-white mt-1">Inspirations</h1>
+                        <p className="text-zinc-500 text-sm mt-0.5">Seeds that can grow into quests, daemons, and talismans.</p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Link
+                            href="/hand"
+                            className="px-4 py-2 border border-zinc-700 hover:border-purple-600/50 text-purple-400/90 hover:text-purple-300 font-medium rounded-lg transition"
+                        >
+                            Quest Wallet
+                        </Link>
                         <Link
                             href="/bars/feed"
                             className="px-4 py-2 border border-zinc-700 hover:border-amber-600/50 text-amber-400/90 hover:text-amber-300 font-medium rounded-lg transition"
@@ -33,7 +40,7 @@ export default async function BarsPage() {
                             href="/bars/create"
                             className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition shadow-lg shadow-purple-900/20"
                         >
-                            + Create BAR
+                            + Capture
                         </Link>
                     </div>
                 </div>
@@ -44,26 +51,42 @@ export default async function BarsPage() {
                         <div className="flex items-center gap-3 mb-4">
                             <div className="h-px bg-zinc-800 flex-1"></div>
                             <h2 className="text-green-500/80 uppercase tracking-widest text-sm font-bold">
-                                Inbox ({received.length})
+                                Talismans ({received.length})
                             </h2>
                             <div className="h-px bg-zinc-800 flex-1"></div>
                         </div>
 
                         <div className="space-y-3">
-                            {received.map((share) => (
+                            {received.map((share) => {
+                                const primaryImage = share.bar.assets?.find((a) => a.mimeType?.startsWith('image/'))
+                                const isUnviewed = !share.viewedAt
+                                return (
                                 <Link key={share.id} href={`/bars/${share.bar.id}`} className="block group">
-                                    <div className="bg-zinc-900/50 border border-green-900/40 rounded-xl p-4 hover:border-green-600/50 transition-colors">
+                                    <div className={`rounded-xl p-4 transition-colors ${
+                                        isUnviewed
+                                            ? 'bg-green-950/30 border-2 border-green-700/60 hover:border-green-600/70'
+                                            : 'bg-zinc-900/50 border border-green-900/40 hover:border-green-600/50'
+                                    }`}>
                                         <div className="flex justify-between items-start gap-3">
+                                            {primaryImage && (
+                                                <img
+                                                    src={primaryImage.url}
+                                                    alt=""
+                                                    className="h-14 w-14 object-cover rounded-lg border border-zinc-700 shrink-0"
+                                                />
+                                            )}
                                             <div className="min-w-0 flex-1">
-                                                <h3 className="text-white font-bold truncate group-hover:text-green-400 transition-colors">
-                                                    {share.bar.title}
-                                                </h3>
-                                                <p className="text-zinc-500 text-sm mt-1 line-clamp-2">
+                                                <p className="text-zinc-200 text-sm line-clamp-2 group-hover:text-green-400/90 transition-colors font-mono">
                                                     {share.bar.description}
                                                 </p>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-xs text-green-400 font-bold">From {share.fromUser.name}</div>
+                                                <div className="flex items-center gap-2 justify-end">
+                                                    {isUnviewed && (
+                                                        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Unviewed" />
+                                                    )}
+                                                    <span className="text-xs text-green-400 font-bold">From {share.fromUser.name}</span>
+                                                </div>
                                                 <div className="text-xs text-zinc-600 mt-1">
                                                     {new Date(share.createdAt).toLocaleDateString()}
                                                 </div>
@@ -86,7 +109,8 @@ export default async function BarsPage() {
                                         )}
                                     </div>
                                 </Link>
-                            ))}
+                                )
+                            })}
                         </div>
                     </section>
                 )}
@@ -96,29 +120,36 @@ export default async function BarsPage() {
                     <div className="flex items-center gap-3 mb-4">
                         <div className="h-px bg-zinc-800 flex-1"></div>
                         <h2 className="text-purple-500/80 uppercase tracking-widest text-sm font-bold">
-                            My BARs ({myBars.length})
+                            Your seeds ({myBars.length})
                         </h2>
                         <div className="h-px bg-zinc-800 flex-1"></div>
                     </div>
 
                     {myBars.length === 0 ? (
                         <div className="text-center py-12 border border-dashed border-zinc-800 rounded-xl">
-                            <p className="text-zinc-500 mb-3">You haven&apos;t created any BARs yet.</p>
+                            <p className="text-zinc-500 mb-3">No inspirations yet.</p>
+                            <p className="text-zinc-600 text-sm mb-4">Capture a spark—it can grow into a quest or become a talisman for another.</p>
                             <Link href="/bars/create" className="text-purple-400 hover:text-purple-300 font-bold">
-                                Create your first BAR →
+                                Capture your first inspiration →
                             </Link>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {myBars.map((bar) => (
+                            {myBars.map((bar) => {
+                                const primaryImage = bar.assets?.[0]?.mimeType?.startsWith('image/') ? bar.assets[0] : null
+                                return (
                                 <Link key={bar.id} href={`/bars/${bar.id}`} className="block group">
                                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 hover:border-purple-600/50 transition-colors">
                                         <div className="flex justify-between items-start gap-3">
+                                            {primaryImage && (
+                                                <img
+                                                    src={primaryImage.url}
+                                                    alt=""
+                                                    className="h-14 w-14 object-cover rounded-lg border border-zinc-700 shrink-0"
+                                                />
+                                            )}
                                             <div className="min-w-0 flex-1">
-                                                <h3 className="text-white font-bold truncate group-hover:text-purple-400 transition-colors">
-                                                    {bar.title}
-                                                </h3>
-                                                <p className="text-zinc-500 text-sm mt-1 line-clamp-2">
+                                                <p className="text-zinc-200 text-sm line-clamp-2 group-hover:text-purple-400/90 transition-colors font-mono">
                                                     {bar.description}
                                                 </p>
                                             </div>
@@ -144,7 +175,8 @@ export default async function BarsPage() {
                                         )}
                                     </div>
                                 </Link>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </section>
@@ -155,7 +187,7 @@ export default async function BarsPage() {
                         <div className="flex items-center gap-3 mb-4">
                             <div className="h-px bg-zinc-800 flex-1"></div>
                             <h2 className="text-zinc-600 uppercase tracking-widest text-sm font-bold">
-                                Sent ({sent.length})
+                                Shared forth ({sent.length})
                             </h2>
                             <div className="h-px bg-zinc-800 flex-1"></div>
                         </div>
@@ -165,8 +197,8 @@ export default async function BarsPage() {
                                 <div key={share.id} className="bg-zinc-900/30 border border-zinc-800/50 rounded-lg p-3 space-y-1">
                                     <div className="flex justify-between items-center gap-3">
                                         <div className="min-w-0 flex-1">
-                                            <Link href={`/bars/${share.bar.id}`} className="text-white text-sm font-medium hover:text-purple-400 transition-colors truncate block">
-                                                {share.bar.title}
+                                            <Link href={`/bars/${share.bar.id}`} className="text-zinc-200 text-sm font-mono line-clamp-2 hover:text-purple-400 transition-colors block">
+                                                {share.bar.description}
                                             </Link>
                                         </div>
                                         <div className="text-xs text-zinc-600 shrink-0">

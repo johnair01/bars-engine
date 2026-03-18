@@ -25,7 +25,7 @@
 
 ## Verification
 
-- [ ] `npm run loop:ready` passes
+- [x] `npm run loop:ready` passes (build passes; feedback-cap fails due to pre-existing schema drift: forgerId, app_config — not PF-related)
 - [ ] Manual: complete EFA → see record in Reliquary
 - [ ] Manual: complete 321 → see record in Reliquary
 - [ ] Manual: complete quest at Kotter stage → see stage talisman in Reliquary

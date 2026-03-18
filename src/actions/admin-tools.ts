@@ -42,9 +42,16 @@ export async function switchIdentityAdminPulse(targetPlayerId: string) {
 
 /**
  * Admin only: Full system reset and re-seed
+ * Blocked on Vercel (deployed production) unless ALLOW_PRODUCTION_RESET=1
  */
 export async function triggerSystemReset() {
     const admin = await ensureAdmin()
+
+    if (process.env.VERCEL === '1' && process.env.ALLOW_PRODUCTION_RESET !== '1') {
+        throw new Error(
+            'System reset is blocked on production deploy. Set ALLOW_PRODUCTION_RESET=1 in Vercel env to override (use with extreme caution).'
+        )
+    }
     const resetRunId = `admin_reset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const startedAt = new Date()
 

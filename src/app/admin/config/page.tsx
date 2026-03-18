@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getAppConfig, updateHeroText, updateOrientationQuest, getRecentAuditLogs } from '@/actions/config'
+import { getAppConfig, updateHeroText, updateOrientationQuest, updateDefaultLobbyMap, getRecentAuditLogs } from '@/actions/config'
+import { listSpatialMaps } from '@/actions/spatial-maps'
 import Link from 'next/link'
 import { FeatureFlagsForm } from './FeatureFlagsForm'
 
@@ -27,6 +28,8 @@ export default async function AdminConfigPage() {
         where: { isPublished: true },
         select: { id: true, title: true }
     })
+
+    const spatialMaps = await listSpatialMaps()
 
     // Parse features safely
     let features: Record<string, boolean> = {}
@@ -80,6 +83,37 @@ export default async function AdminConfigPage() {
                             className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded"
                         >
                             Update Ritual
+                        </button>
+                    </form>
+                </section>
+
+                {/* DEFAULT LOBBY MAP */}
+                <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-lg font-bold text-white">Global Lobby</h2>
+                    <form action={async (formData) => { 'use server'; await updateDefaultLobbyMap(formData) }} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="block text-xs uppercase text-zinc-500">Default Lobby Map</label>
+                            <select
+                                name="defaultLobbyMapId"
+                                defaultValue={config.defaultLobbyMapId ?? ''}
+                                className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-white text-sm"
+                            >
+                                <option value="">— Not set (lobby disabled) —</option>
+                                {spatialMaps.map(map => (
+                                    <option key={map.id} value={map.id}>
+                                        {map.name} ({map.mapType})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-zinc-500 italic">
+                                Map used for /lobby. Players without an instance land here.
+                            </p>
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded"
+                        >
+                            Update Lobby Map
                         </button>
                     </form>
                 </section>

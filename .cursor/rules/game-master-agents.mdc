@@ -1,0 +1,37 @@
+---
+description: Game Master faces and Cursor subagent mapping
+alwaysApply: true
+---
+
+# Game Master Agents
+
+**OPENAI_API_KEY is critical.** When it is missing or not loaded in the backend environment, all agents (Sage, Shaman, Architect, etc.) fall back to deterministic templates. You get generic routing hints instead of real synthesis. For full AI behavior — sage_consult synthesis, strand multi-agent output, sage:brief insights — `OPENAI_API_KEY` must be set in `.env.local` (or the backend's env). Run `npm run smoke` to verify. See `docs/AGENT_WORKFLOWS.md` and `docs/ENV_AND_VERCEL.md`.
+
+The six Game Master faces are: **shaman**, **regent**, **challenger**, **architect**, **diplomat**, **sage**.
+
+**Sage = integration agent** — synthesis, meta, coordination, cross-cutting. For integration work, use `sage_consult` (bars-agents MCP) or `mcp_task` with subagent_type `evaluator`.
+
+## bars-agents as orchestrators, Cursor subagents as tools
+
+When delegating via `mcp_task`, use the Sage's mapping:
+
+| Face | Cursor subagent |
+|------|-----------------|
+| shaman | explore |
+| regent | evaluator |
+| challenger | contrarian |
+| architect | generalPurpose |
+| diplomat | simplifier |
+| sage | evaluator |
+
+- Prefer **bars-agents MCP tools** for BARS domain work (quest design, emotional reading, campaign assessment, copy refinement, integration).
+- When using `mcp_task`, pick subagent by the face you're embodying.
+
+## Tool mapping (bars-agents MCP)
+
+- architect_draft, architect_compile → architect
+- challenger_propose → challenger
+- shaman_read, shaman_identify → shaman
+- regent_assess → regent
+- diplomat_guide, diplomat_bridge → diplomat
+- sage_consult → sage

@@ -32,6 +32,8 @@ export interface FaceMoveBarInput {
   instanceId?: string
   /** Additional metadata for the move */
   metadata?: Record<string, unknown>
+  /** GP-CLB: Next smallest honest action (stored in agentMetadata) */
+  nextAction?: string
 }
 
 export interface FaceMoveBarResult {

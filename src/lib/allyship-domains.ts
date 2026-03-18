@@ -12,6 +12,12 @@ export const ALLYSHIP_DOMAINS = [
 
 export type AllyshipDomainKey = (typeof ALLYSHIP_DOMAINS)[number]['key']
 
+export function getDomainLabel(domainKey: string | null): string {
+  if (!domainKey) return ''
+  const d = ALLYSHIP_DOMAINS.find((x) => x.key === domainKey)
+  return d?.label ?? domainKey
+}
+
 export function parseCampaignDomainPreference(raw: string | null): string[] {
   if (!raw || raw.trim() === '') return []
   try {

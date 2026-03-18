@@ -42,6 +42,7 @@ export async function persist321Session(
     // Shaman: Name shadow belief — every face move produces a BAR
     let shadowTitle = 'Shadow belief acknowledged'
     let shadowDesc = 'The Shaman witnesses this 321 completion.'
+    let nextAction: string | undefined
     try {
       const phase3 = JSON.parse(data.phase3Snapshot || '{}') as { identityFreeText?: string }
       const phase2 = JSON.parse(data.phase2Snapshot || '{}') as { q6?: string | string[]; q6Context?: string; alignedAction?: string }
@@ -55,14 +56,22 @@ export async function persist321Session(
           shadowDesc = [q6, phase2.q6Context, phase2.alignedAction].filter(Boolean).join('\n\n')
         }
       }
+      // GP-CLB: Next smallest honest action from alignedAction
+      if (phase2?.alignedAction?.trim()) {
+        nextAction = `Take one ${phase2.alignedAction} step. What is the next smallest honest action?`
+      } else {
+        nextAction = 'What is the next smallest honest action?'
+      }
     } catch {
       /* use defaults */
+      nextAction = 'What is the next smallest honest action?'
     }
     await createFaceMoveBar('shaman', 'name_shadow_belief', {
       title: shadowTitle,
       description: shadowDesc,
       barType: 'insight',
       metadata: { sessionId: session.id, outcome: data.outcome },
+      nextAction,
     })
 
     // PF: Unlock blessed object for 321 Shadow Process (standalone flow, not via EFA)
@@ -112,6 +121,11 @@ export async function createQuestFrom321Metadata(
     }
   }
 
+  const nextAction =
+    phase2?.alignedAction?.trim()
+      ? `Take one ${phase2.alignedAction} step. What is the next smallest honest action?`
+      : 'What is the next smallest honest action?'
+
   try {
     const quest = await db.customBar.create({
       data: {
@@ -124,6 +138,10 @@ export async function createQuestFrom321Metadata(
         visibility: 'private',
         status: 'active',
         claimedById: player.id,
+        agentMetadata: JSON.stringify({
+          sourceType: '321',
+          nextAction,
+        }),
       },
     })
 

@@ -24,18 +24,34 @@ type Instance = {
   venmoUrl: string | null
   cashappUrl: string | null
   paypalUrl: string | null
+  moveIds?: string
+}
+
+type PromotedMove = { id: string; key: string; name: string }
+
+function parseMoveIds(raw: string | undefined): string[] {
+  if (!raw?.trim()) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []
+  } catch {
+    return []
+  }
 }
 
 export function InstanceEditModal({
   instance,
+  promotedMoves,
   onClose,
 }: {
   instance: Instance | null
+  promotedMoves: PromotedMove[]
   onClose: () => void
 }) {
   if (!instance) return null
 
   const goalDollars = instance.goalAmountCents != null ? (instance.goalAmountCents / 100).toString() : ''
+  const selectedMoveIds = new Set(parseMoveIds(instance.moveIds))
   const currentDollars = (instance.currentAmountCents / 100).toString()
 
   return (
@@ -116,6 +132,31 @@ export function InstanceEditModal({
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref</label>
               <input name="campaignRef" defaultValue={instance.campaignRef ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
             </div>
+
+            {promotedMoves.length > 0 && (
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block">
+                  Move pool (campaign-curated moves)
+                </label>
+                <div className="flex flex-wrap gap-3 max-h-32 overflow-y-auto p-2 bg-black/50 border border-zinc-800 rounded">
+                  {promotedMoves.map((m) => (
+                    <label key={m.id} className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300">
+                      <input
+                        type="checkbox"
+                        name="moveIds"
+                        value={m.id}
+                        defaultChecked={selectedMoveIds.has(m.id)}
+                        className="rounded border-zinc-600 bg-zinc-800"
+                      />
+                      <span>{m.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  When set, players in this campaign see only these moves in the move panel. Empty = all nation moves.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Goal Amount (USD)</label>

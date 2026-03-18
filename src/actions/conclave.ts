@@ -11,6 +11,30 @@ import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { isAuthBypassEmailVerificationEnabled } from '@/lib/mvp-flags'
 import { getPostSignupRedirect, getDashboardRedirectForPlayer } from '@/actions/config'
 
+/** Map a school (GM face) invite target to a Bruised Banana orientation lens. */
+const FACE_TO_LENS: Record<string, string> = {
+    shaman:     'community',
+    challenger: 'strategic',
+    regent:     'allyship',
+    architect:  'creative',
+    diplomat:   'allyship',
+    sage:       'creative',
+}
+
+/**
+ * Derive orientation personalization from an invite record.
+ * Player-forged invites (forgerId set) are always Bruised Banana;
+ * the lens is derived from the school target when present.
+ */
+function deriveLensFromInvite(invite: { forgerId: string | null; invitationTargetType: string | null; invitationTargetId: string | null }) {
+    if (!invite.forgerId) return undefined
+    const lens =
+        invite.invitationTargetType === 'school' && invite.invitationTargetId
+            ? (FACE_TO_LENS[invite.invitationTargetId.toLowerCase()] ?? 'community')
+            : 'community'
+    return { lens }
+}
+
 const IdentitySchema = z.object({
     name: z.string().min(2),
     pronouns: z.string().optional(),
@@ -108,6 +132,7 @@ export async function createCharacter(prevState: any, formData: FormData) {
                     contactValue: identity.contact, // TODO: Deprecate
                     // passwordHash, // Removed from Player
                     inviteId: invite.id,
+                    invitedByPlayerId: invite.forgerId || null,
                     nationId,
                     archetypeId: playbookId,
                 },
@@ -139,7 +164,16 @@ export async function createCharacter(prevState: any, formData: FormData) {
         })
 
         // 6. Assign orientation threads (outside transaction for simplicity)
-        await assignOrientationThreads(player.id)
+        // Derive lens from player-forged invites so BB-specific orientation thread is assigned
+        const orientationPersonalization = deriveLensFromInvite(invite)
+        // Persist lens to storyProgress so getStarterQuestsForPlayer can domain-bias quest selection
+        if (orientationPersonalization?.lens) {
+            await db.player.update({
+                where: { id: player.id },
+                data: { storyProgress: JSON.stringify({ state: { lens: orientationPersonalization.lens } }) },
+            })
+        }
+        await assignOrientationThreads(player.id, orientationPersonalization)
 
         // 7. Derive and store avatar config from nation/playbook (use names for stable keys)
         let nationName: string | null = null
@@ -162,6 +196,19 @@ export async function createCharacter(prevState: any, formData: FormData) {
                 where: { id: player.id },
                 data: { avatarConfig }
             })
+        }
+
+        // 8. Deliver pending BAR if invite has one (send-outside-the-game flow)
+        if (invite.invitationBarId) {
+            await db.barShare.create({
+                data: {
+                    barId: invite.invitationBarId,
+                    fromUserId: invite.forgerId ?? player.id,
+                    toUserId: player.id,
+                    note: 'Delivered via invitation',
+                },
+            })
+            console.log(`[Invite] Delivered BAR ${invite.invitationBarId} to new player ${player.id}`)
         }
 
         // MVP: Seed starter vibeulons so new users can create quests immediately

@@ -211,6 +211,13 @@ class ShamanIdentifyRequest(BaseModel):
     instance_id: str | None = None
 
 
+class ShamanSuggestShadowNameRequest(BaseModel):
+    """Request body for POST /api/agents/shaman/suggest-shadow-name."""
+
+    charge_description: str = Field(description="What the user is carrying (321 phase 3)")
+    mask_shape: str = Field(description="If it were a presence, it would be… (321 phase 3)")
+
+
 # ---------------------------------------------------------------------------
 # Architect Analyze Chunk (Phase 3)
 # ---------------------------------------------------------------------------

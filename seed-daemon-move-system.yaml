@@ -1,0 +1,132 @@
+goal: >
+  Implement the Daemon Move System for BARs Engine — a witnessed, tiered move
+  taxonomy that binds daemons to Wuxing elements, enables player-authored moves
+  to grow into canonical status through community witnessing, corrects the 321
+  WakeUp form with embodiment + witness return steps, and closes the loop
+  between shadow work and gameplay obstacle clearing.
+
+constraints:
+  - TypeScript, Next.js 14+, Prisma/PostgreSQL (existing stack)
+  - AI may only classify/suggest move family — never generate canonical move text without human confirmation
+  - Player authority over their own shadow content is inviolable — system proposes, player confirms
+  - Move provenance (GM_AUTHORED, PLAYER_NAMED, AI_PROPOSED) must be visually distinct in UI
+  - Canonical moves are versioned and deprecated with forward pointers, never deleted
+  - Daemon channel and altitude must be set at discovery, not retrofitted
+  - Non-AI path is first-class delivery mode
+  - Daemon.level must be computed from weighted QuestMoveLog entries, not stored as a counter
+  - Custom moves are daemon-scoped with tier CUSTOM and never enter CANONICAL without Regent nomination
+
+acceptance_criteria:
+  - WakeUp321Form has Embody step (player speaks as daemon using I-statements) and Witness Return step before aligned action prompt
+  - Every Daemon record has channel (WuxingElement) and altitude (Altitude) fields set at discovery
+  - NationMove has tier (EPHEMERAL | CUSTOM | CANDIDATE | CANONICAL), origin (GM_AUTHORED | PLAYER_NAMED | AI_PROPOSED), channel (WuxingElement), and moveFamilyId fields
+  - QuestMoveLog has outcome field (ABANDONED | COMPLETED | BAR_WRITTEN | TAUGHT_BACK)
+  - DaemonMoveCreation table captures rawEmbodyText, rawWitnessText, rawActionText, channel, and nullable moveId (set after incubation)
+  - Daemon move injection routes by daemon.channel to channel-appropriate canonical moves, not always Metal defaults
+  - Canonical moves exist for all 5 Wuxing elements (Wood, Fire, Earth, Metal, Water)
+  - Descent, Witness, Containment, and Discharge move classes exist in the canonical taxonomy
+  - Somatic gate prompt (body location / felt-sense question) appears before daemon summon UI
+  - "Vow to [daemon]" flow exists after BAR completion with written witness declaration (replaces "Teach [daemon] this")
+  - Daemon leveling is outcome-weighted: abandoned=0.25, completed=1.0, BAR_written=1.5, BAR+vow=2.0, nominated_to_canonical=5.0
+  - A CUSTOM move can be nominated by a player and promoted to CANDIDATE by a Regent in the admin interface
+
+ontology_schema:
+  name: DaemonMoveSystem
+  description: >
+    Domain model for the witnessed move taxonomy binding shadow work (321 process)
+    to the gameplay obstacle loop through elemental daemons and tiered move governance.
+  fields:
+    - name: daemon
+      type: object
+      description: Player's shadow entity — has channel, altitude, computed level, collective flag, communityScope
+    - name: nationMove
+      type: object
+      description: Tiered move record — has tier, origin, channel, moveFamilyId, parentMoveId, semanticEmbedding, deprecatedAt, supersededById
+    - name: daemonMoveCreation
+      type: object
+      description: Lineage record capturing raw 321 answer text (embody, witness, action) and the nullable moveId that emerged from incubation
+    - name: questMoveLog
+      type: object
+      description: Move application record extended with outcome field for weighted leveling computation
+    - name: moveTier
+      type: string
+      description: "EPHEMERAL | CUSTOM | CANDIDATE | CANONICAL — the promotion ladder from private insight to community-ratified pattern"
+    - name: moveOrigin
+      type: string
+      description: "GM_AUTHORED | PLAYER_NAMED | AI_PROPOSED — provenance for UI trust gradient"
+    - name: moveClass
+      type: string
+      description: "DESCENT | WITNESS | CONTAINMENT | DISCHARGE | APPLY — functional category of move within the shadow-work loop"
+    - name: wuxingElement
+      type: string
+      description: "WOOD | FIRE | EARTH | METAL | WATER — elemental channel the daemon carries"
+    - name: altitude
+      type: string
+      description: "DISSATISFIED | NEUTRAL | SATISFIED — emotional altitude at daemon discovery"
+
+evaluation_principles:
+  - name: developmental_integrity
+    description: >
+      Every move in the canonical namespace names a pattern that has been witnessed
+      through completion, not just named speculatively. The witnessed/unwitnessed
+      distinction is the primary quality signal — not AI vs. human authorship.
+    weight: 0.35
+  - name: taxonomic_coherence
+    description: >
+      The canonical move namespace remains navigable, non-redundant, and governable
+      at 100+ players through move fingerprinting at creation time and nomination
+      gating before Regent review.
+    weight: 0.25
+  - name: felt_sense_preservation
+    description: >
+      The system never reduces shadow work to a productivity loop. Descent, Witness,
+      Containment, and Discharge move classes are load-bearing — they give the system
+      grammar for states that don't produce a BAR. The somatic gate and Vow mechanic
+      are non-negotiable felt-sense anchors.
+    weight: 0.25
+  - name: community_trust
+    description: >
+      AI provenance is always visually distinct and non-interchangeable with human
+      authorship in the move panel. AI-proposed moves require player confirmation
+      (witnessing declaration) before entering the active panel. The Portland
+      community's allergy is to unwitnessed authorship, not to AI per se.
+    weight: 0.15
+
+exit_conditions:
+  - name: schema_complete
+    description: All required schema fields exist in production DB and migration is applied
+    criteria: >
+      NationMove.{tier, origin, channel, moveFamilyId, parentMoveId, semanticEmbedding, deprecatedAt} present;
+      QuestMoveLog.outcome present;
+      DaemonMoveCreation table with {daemonId, rawEmbodyText, rawWitnessText, rawActionText, channel, moveId} present;
+      Daemon.{channel, altitude, collective, communityScope} present
+  - name: canonical_set_complete
+    description: All 5 Wuxing nations have GM-authored starter canonical moves with all 4 new move classes
+    criteria: >
+      canonical_move_count >= 20 across all 5 elements;
+      at least one DESCENT, WITNESS, CONTAINMENT, and DISCHARGE class move per element or shared cross-element
+  - name: vow_loop_functional
+    description: Full shadow-work → gameplay loop operates end-to-end
+    criteria: >
+      Player completes: WakeUp321Form (with Embody + Witness steps) → daemon discovery with channel/altitude →
+      summon with somatic gate → apply channel-appropriate move → BAR completion →
+      Vow declaration → daemon relationship update — without error
+  - name: governance_gate_functional
+    description: Move promotion ladder is operational
+    criteria: >
+      CUSTOM move can be nominated by player; Regent can review in admin and promote to CANDIDATE;
+      semantic fingerprint check runs at CUSTOM move creation and surfaces near-matches
+
+metadata:
+  version: "1.0"
+  timestamp: "2026-03-16"
+  ambiguity_score: 0.13
+  source: "6 GM Sect critique (Architect, Challenger, Shaman, Regent, Diplomat, Sage)"
+  key_decisions:
+    - "witnessed_vs_unwitnessed: The real axis of move quality — not conscious vs. generated"
+    - "daemon_as_witness: Move as vow, not instrument. Daemon is witness, not tool."
+    - "be_it_prompt_correction: Current form collapses steps 3+4. Embody + Witness Return steps are prerequisites."
+    - "daemon_channel_required: Daemons must have intrinsic element to route move injection coherently"
+    - "sheng_vs_ke: Generated moves = sheng (low cost, recognition); consciously created = ke (high cost, ceremony)"
+    - "dissolution_not_accumulation: High-level daemon becomes unnecessary — integration, not power accumulation"
+    - "community_tide: Aggregated feeling tags → GM-named collective daemon → collective moves (not yet MVP)"

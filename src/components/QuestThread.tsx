@@ -3,6 +3,7 @@
 import { startThread, advanceThread, archiveThread } from '@/actions/quest-thread'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getCampaignRef } from '@/lib/campaign-subcampaigns'
 import { useEffect, useState, useTransition } from 'react'
 import { QuestDetailModal } from './QuestDetailModal'
 
@@ -43,6 +44,7 @@ type QuestThreadData = {
     playerProgress: ThreadProgress | null
     totalQuests: number
     currentQuest?: ThreadQuest | null
+    adventure?: { campaignRef: string; subcampaignDomain: string | null; slug: string } | null
 }
 
 export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, focusQuest, campaignDomainPreference = [], isAdmin }: { thread: QuestThreadData, completedMoveTypes?: string[], isSetupIncomplete?: boolean, focusQuest?: string, campaignDomainPreference?: string[], isAdmin?: boolean }) {
@@ -178,6 +180,15 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                     </Link>
                 )}
 
+                {thread.adventure && thread.totalQuests === 0 && (
+                    <Link
+                        href={`/campaign?ref=${getCampaignRef(thread.adventure!.campaignRef, thread.adventure!.subcampaignDomain)}`}
+                        className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors bg-purple-900/20 px-2 py-0.5 rounded border border-purple-800/50"
+                    >
+                        Enter orientation →
+                    </Link>
+                )}
+
                 {/* Quest Steps */}
                 <div className="space-y-2">
                     {thread.quests.slice(0, 5).map((tq, idx) => {
@@ -239,7 +250,7 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                 </div>
 
                 {/* Actions */}
-                {!isStarted && !isComplete && (
+                {!isStarted && !isComplete && !(thread.adventure && thread.totalQuests === 0) && (
                     <button
                         onClick={handleStart}
                         disabled={isPending}

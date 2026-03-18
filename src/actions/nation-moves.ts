@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getActiveDaemonMoves } from '@/actions/daemons'
+import { getAppConfig } from '@/actions/config'
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 
@@ -263,7 +264,7 @@ export async function getNationMovePanelData(questId: string): Promise<NationMov
     })
     if (!nation) return { error: 'Nation not found' }
 
-    const moves = await db.nationMove.findMany({
+    let moves = await db.nationMove.findMany({
       where: {
         OR: [
           { nationId: player.nationId },
@@ -282,6 +283,21 @@ export async function getNationMovePanelData(questId: string): Promise<NationMov
         effectsSchema: true,
       }
     })
+
+    // Campaign move pool: when active instance has moveIds, filter to that pool
+    const config = await getAppConfig()
+    const activeInstanceId = (config as { activeInstanceId?: string | null }).activeInstanceId
+    if (activeInstanceId) {
+      const instance = await db.instance.findUnique({
+        where: { id: activeInstanceId },
+        select: { moveIds: true },
+      })
+      const poolIds = instance?.moveIds ? (safeParseJson<string[]>(instance.moveIds, []) as string[]) : []
+      if (poolIds.length > 0) {
+        const poolSet = new Set(poolIds)
+        moves = moves.filter((m) => poolSet.has(m.id))
+      }
+    }
 
     const unlockedRows = await db.playerNationMoveUnlock.findMany({
       where: {

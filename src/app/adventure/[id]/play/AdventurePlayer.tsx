@@ -6,12 +6,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { completeQuest } from '@/actions/quest-engine'
 import { saveAdventureProgress } from '@/actions/adventure-progress'
+import { emitBarFromPassage } from '@/actions/emit-bar-from-passage'
+import { createBarFromMoveChoice } from '@/actions/create-bar-from-move-choice'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { CastIChingModal } from '@/components/CastIChingModal'
 
 interface Choice {
   text: string
   targetId: string
+  moveType?: string
 }
 
 interface Node {
@@ -20,7 +23,13 @@ interface Node {
   choices: Choice[]
   linkedQuestId?: string
   isCompletionPassage?: boolean
-  metadata?: { actionType?: string; castIChingTargetId?: string }
+  metadata?: {
+    actionType?: string
+    castIChingTargetId?: string
+    barTemplate?: { defaultTitle?: string; defaultDescription?: string }
+    nextTargetId?: string
+    moveType?: string
+  }
 }
 
 interface Props {
@@ -31,6 +40,9 @@ interface Props {
   threadId?: string
   isRitual?: boolean
   isPreview?: boolean
+  campaignRef?: string
+  schoolsAdventureId?: string
+  returnTo?: string
 }
 
 export function AdventurePlayer({
@@ -41,6 +53,9 @@ export function AdventurePlayer({
   threadId,
   isRitual,
   isPreview,
+  campaignRef,
+  schoolsAdventureId,
+  returnTo,
 }: Props) {
   const [currentNode, setCurrentNode] = useState<Node | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,8 +63,13 @@ export function AdventurePlayer({
   const [slideIndex, setSlideIndex] = useState(0)
   const [completing, setCompleting] = useState(false)
   const [castModalOpen, setCastModalOpen] = useState(false)
+  const [barSubmitting, setBarSubmitting] = useState(false)
+  const [moveChoiceProcessing, setMoveChoiceProcessing] = useState(false)
+  const [barTitle, setBarTitle] = useState('')
+  const [barDescription, setBarDescription] = useState('')
   const router = useRouter()
 
+  const isBarEmitNode = currentNode?.metadata?.actionType === 'bar_emit'
   const isCastIChingNode =
     currentNode?.metadata?.actionType === 'cast_iching' &&
     currentNode?.metadata?.castIChingTargetId
@@ -107,11 +127,89 @@ export function AdventurePlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adventureSlug, startNodeId, questId, threadId])
 
-  const handleChoice = (choice: Choice) => {
+  useEffect(() => {
+    if (currentNode?.metadata?.actionType === 'bar_emit') {
+      const t = currentNode.metadata.barTemplate
+      setBarTitle(t?.defaultTitle ?? '')
+      setBarDescription(t?.defaultDescription ?? '')
+    }
+  }, [currentNode?.id, currentNode?.metadata?.actionType, currentNode?.metadata?.barTemplate])
+
+  const handleBarEmitSubmit = async () => {
+    if (!currentNode || !isBarEmitNode) return
+    const title = barTitle.trim()
+    if (!title) {
+      setError('Title is required')
+      return
+    }
+    setBarSubmitting(true)
+    setError(null)
+    const result = await emitBarFromPassage({
+      title,
+      description: barDescription.trim(),
+      adventureId,
+      passageNodeId: currentNode.id,
+      campaignRef: campaignRef ?? undefined,
+    })
+    setBarSubmitting(false)
+    if ('error' in result) {
+      setError(result.error)
+      return
+    }
+    const nextId =
+      currentNode.metadata?.nextTargetId ??
+      currentNode.choices[0]?.targetId
+    if (nextId) fetchNode(nextId)
+    else router.push('/hand')
+  }
+
+  const handleChoice = async (choice: Choice) => {
     if (choice.targetId === 'signup' || choice.targetId === 'Game_Login') {
       router.push('/login')
       return
     }
+    if (choice.targetId === 'redirect:returnTo' && returnTo) {
+      router.push(returnTo)
+      return
+    }
+    if (choice.targetId.startsWith('redirect:')) {
+      const path = choice.targetId.slice(9)
+      let url = path
+      const returnToVal = returnTo ?? (campaignRef ? `/campaign/lobby?ref=${campaignRef}` : null)
+      if (returnToVal) {
+        const sep = path.includes('?') ? '&' : '?'
+        url = `${path}${sep}returnTo=${encodeURIComponent(returnToVal)}`
+      }
+      router.push(url)
+      return
+    }
+    if (choice.targetId === 'schools' && schoolsAdventureId && currentNode) {
+      const refPart = campaignRef ? `&ref=${encodeURIComponent(campaignRef)}` : ''
+      const roomReturn = `/adventure/${adventureId}/play?start=${encodeURIComponent(currentNode.id)}${refPart}`
+      router.push(`/adventure/${schoolsAdventureId}/play?returnTo=${encodeURIComponent(roomReturn)}`)
+      return
+    }
+
+    const moveType = choice.moveType ?? currentNode?.metadata?.moveType
+    if (moveType && currentNode) {
+      setMoveChoiceProcessing(true)
+      setError(null)
+      const result = await createBarFromMoveChoice({
+        moveType,
+        passageNodeId: currentNode.id,
+        adventureId,
+        passageText: currentNode.text,
+        choiceText: choice.text,
+        questId: questId ?? undefined,
+        campaignRef: campaignRef ?? undefined,
+      })
+      setMoveChoiceProcessing(false)
+      if ('error' in result) {
+        setError(result.error)
+        return
+      }
+    }
+
     fetchNode(choice.targetId)
   }
 
@@ -172,10 +270,10 @@ export function AdventurePlayer({
                 setSlideIndex((i) => i + 1)
               } else {
                 const firstChoice = currentNode.choices[0]
-                if (firstChoice) handleChoice(firstChoice)
+                if (firstChoice) void handleChoice(firstChoice)
               }
             }}
-            disabled={completing}
+            disabled={completing || moveChoiceProcessing}
             className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 transition-colors"
           >
             {completing ? 'Completing...' : 'Continue'}
@@ -191,6 +289,32 @@ export function AdventurePlayer({
         </div>
       ) : (
         <div className="space-y-3">
+          {isBarEmitNode && (
+            <div className="space-y-4 p-4 bg-zinc-900/80 border border-zinc-700 rounded-xl">
+              <h3 className="text-lg font-medium text-zinc-200">Create a BAR</h3>
+              <input
+                type="text"
+                placeholder="Title"
+                value={barTitle}
+                onChange={(e) => setBarTitle(e.target.value)}
+                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              />
+              <textarea
+                placeholder="Description (optional)"
+                value={barDescription}
+                onChange={(e) => setBarDescription(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
+              />
+              <button
+                onClick={handleBarEmitSubmit}
+                disabled={barSubmitting || !barTitle.trim()}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+              >
+                {barSubmitting ? 'Creating...' : 'Create BAR & Continue'}
+              </button>
+            </div>
+          )}
           {isCastIChingNode && (
             <>
               <button
@@ -211,7 +335,8 @@ export function AdventurePlayer({
               />
             </>
           )}
-          {currentNode.choices.length === 0 && !isCastIChingNode ? (
+          {!isBarEmitNode &&
+          (currentNode.choices.length === 0 && !isCastIChingNode ? (
             completing ? (
               <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
                 <p className="text-green-400 font-bold">Completing quest...</p>
@@ -245,14 +370,14 @@ export function AdventurePlayer({
             currentNode.choices.map((choice, i) => (
               <button
                 key={i}
-                onClick={() => handleChoice(choice)}
-                disabled={completing}
+                onClick={() => void handleChoice(choice)}
+                disabled={completing || moveChoiceProcessing}
                 className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50"
               >
                 {choice.text}
               </button>
             ))
-          )}
+          ))}
         </div>
       )}
 

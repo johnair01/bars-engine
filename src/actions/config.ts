@@ -21,6 +21,7 @@ export async function getAppConfig() {
     const selectWithInstance = {
         ...baseSelect,
         activeInstanceId: true,
+        defaultLobbyMapId: true,
     } as const
 
     // 1) Try reading with the newest schema fields
@@ -58,6 +59,7 @@ export async function getAppConfig() {
     return {
         ...fallback,
         activeInstanceId: null,
+        defaultLobbyMapId: null,
     }
 }
 
@@ -133,6 +135,40 @@ export async function updateHeroText(formData: FormData) {
 
     revalidatePath('/admin/config')
     revalidatePath('/')
+    return { success: true }
+}
+
+// Update default lobby map
+export async function updateDefaultLobbyMap(formData: FormData) {
+    const cookieStore = await cookies()
+    const adminId = cookieStore.get('bars_player_id')?.value
+
+    if (!adminId) return { error: 'Not authenticated' }
+
+    const defaultLobbyMapId = (formData.get('defaultLobbyMapId') as string) ?? null
+    const value = defaultLobbyMapId?.trim() || null
+
+    await db.appConfig.update({
+        where: { id: 'singleton' },
+        data: {
+            defaultLobbyMapId: value,
+            updatedBy: adminId
+        }
+    })
+
+    // Audit log
+    await db.adminAuditLog.create({
+        data: {
+            adminId,
+            action: 'config_update',
+            target: 'default_lobby_map',
+            payload: JSON.stringify({ defaultLobbyMapId: value })
+        }
+    })
+
+    revalidatePath('/admin/config')
+    revalidatePath('/lobby')
+    revalidatePath('/game-map')
     return { success: true }
 }
 

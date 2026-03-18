@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Define one sentence per game master face (Shaman, Challenger, Regent, Architect, Diplomat, Sage) that sends players into the CYOA story at that particular altitude. The choices are structurally the same but translated for the appropriate face; quests output are connected to that developmental level.
+Define one sentence per game master face (Shaman, Challenger, Regent, Architect, Diplomat, Sage) that sends players into the CYOA story at that particular altitude.
+
+**Practice**: Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI. The choices are structurally the same but translated for the appropriate face; quests output are connected to that developmental level.
 
 **Extends**: [Campaign Onboarding Feature Merge](../campaign-onboarding-feature-merge/spec.md), [2-Minute Ride Story Bridge](../two-minute-ride-story-bridge/spec.md)
 

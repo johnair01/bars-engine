@@ -7,12 +7,12 @@ import { revalidatePath } from 'next/cache'
 const DEFAULT_SUMMON_DURATION_MINUTES = 60
 const DAEMON_DEFAULT_MOVE_KEYS = ['metal_call_the_standard', 'metal_highlight_the_craft'] // starter moves for discovered daemons
 
-export type DiscoverDaemonSource = '321_wake_up' | 'school'
+export type DiscoverDaemonSource = '321_wake_up' | 'school' | 'bar'
 
 export async function discoverDaemon(
   playerId: string,
   source: DiscoverDaemonSource,
-  metadata?: { name?: string }
+  metadata?: { name?: string; sourceBarId?: string }
 ): Promise<{ daemonId?: string; name?: string; moveIds?: string[]; error?: string }> {
   const player = await getCurrentPlayer()
   if (!player || player.id !== playerId) return { error: 'Not authorized' }
@@ -23,13 +23,16 @@ export async function discoverDaemon(
   })
   const moveIds = moves.map((m) => m.id)
 
-  const name = metadata?.name ?? `Daemon (${source === '321_wake_up' ? 'Wake Up' : 'School'})`
+  const name =
+    metadata?.name ??
+    (source === '321_wake_up' ? 'Daemon (Wake Up)' : source === 'bar' ? 'Daemon (from BAR)' : 'Daemon (School)')
 
   const daemon = await db.daemon.create({
     data: {
       playerId,
       name,
       source,
+      sourceBarId: metadata?.sourceBarId ?? null,
       level: 1,
       moveIds: JSON.stringify(moveIds),
     },

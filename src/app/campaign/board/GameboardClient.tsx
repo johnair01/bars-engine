@@ -63,9 +63,19 @@ type AidOffer = {
   linkedQuest?: { id: string; title: string } | null
   expiresAt?: Date | null
 }
+type AdventureForQuest = {
+  adventureId: string
+  slug: string
+  startNodeId: string | null
+  title: string
+  moveType: string | null
+}
+
 type Slot = {
   id: string
   slotIndex: number
+  hexagramId?: number | null
+  moveType?: string | null
   questId: string | null
   stewardId: string | null
   wakeUpAt: Date | null
@@ -80,6 +90,7 @@ type Slot = {
   steward: { id: string; name: string } | null
   bids?: Bid[]
   aidOffers?: AidOffer[]
+  adventures?: AdventureForQuest[]
 }
 
 type CampaignQuest = { id: string; title: string; campaignGoal: string | null }
@@ -456,6 +467,7 @@ export function GameboardClient({
       slot ?? {
         id: `empty-${i}`,
         slotIndex: i,
+        hexagramId: null,
         questId: null,
         stewardId: null,
         wakeUpAt: null,
@@ -465,6 +477,7 @@ export function GameboardClient({
         steward: null,
         bids: [],
         aidOffers: [],
+        adventures: [],
       }
     )
   })
@@ -510,6 +523,9 @@ export function GameboardClient({
           key={slot.id}
           className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex flex-col min-h-[140px]"
         >
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">
+            {slot.hexagramId != null ? `Hexagram ${slot.hexagramId}` : `Slot ${slot.slotIndex + 1}`}
+          </p>
           {slot.quest ? (
             <>
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -526,6 +542,18 @@ export function GameboardClient({
                   </Link>
                 )}
               </div>
+              {slot.adventures && slot.adventures.length > 0 && (
+                <Link
+                  href={
+                    slot.adventures.length === 1
+                      ? `/adventure/${slot.adventures[0].adventureId}/play?questId=${slot.quest.id}${slot.adventures[0].startNodeId ? `&start=${encodeURIComponent(slot.adventures[0].startNodeId)}` : ''}${campaignRef ? `&ref=${encodeURIComponent(campaignRef)}` : ''}`
+                      : `/adventure/hub/${slot.quest.id}${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`
+                  }
+                  className="mb-2 inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-purple-700/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/50 hover:text-purple-200 text-xs font-medium transition-colors"
+                >
+                  View/Start Adventure →
+                </Link>
+              )}
               {slot.steward && (
                 <p className="text-zinc-400 text-xs mb-2">
                   Steward: {slot.steward.name}
@@ -1026,36 +1054,67 @@ export function GameboardClient({
                     Full quest wizard →
                   </Link>
                   {isAdmin && !generatedPacket && (
-                    <button
-                      onClick={async () => {
-                        setGenerateLoading(true)
-                        try {
-                          const { previewGameboardAlignedQuest } = await import(
-                            '@/actions/gameboard'
-                          )
-                          const result = await previewGameboardAlignedQuest(
-                            addQuestSlot.quest!.id,
-                            campaignRef
-                          )
-                          if ('error' in result) {
-                            alert(result.error)
-                          } else {
-                            setGeneratedPacket(result.packet)
-                            setGeneratedUnpacking(result.unpacking)
-                            setGenerationCount(1)
-                            setAccepted(false)
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={async () => {
+                          setGenerateLoading(true)
+                          try {
+                            const { generateQuestFromContext } = await import(
+                              '@/actions/quest-generation'
+                            )
+                            const result = await generateQuestFromContext({
+                              campaignRef,
+                              slotId: addQuestSlot.id,
+                              slotQuestId: addQuestSlot.quest!.id,
+                            })
+                            if ('error' in result) {
+                              alert(result.error)
+                            } else {
+                              closeAddQuestModal()
+                              window.location.reload()
+                            }
+                          } finally {
+                            setGenerateLoading(false)
                           }
-                        } finally {
-                          setGenerateLoading(false)
-                        }
-                      }}
-                      disabled={generateLoading}
-                      className="block w-full py-2 px-3 bg-amber-900/50 hover:bg-amber-800/50 border border-amber-700/50 rounded text-xs text-amber-200 text-center disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {generateLoading
-                        ? 'Generating... (30–90s)'
-                        : 'Generate grammatical quest (admin)'}
-                    </button>
+                        }}
+                        disabled={generateLoading}
+                        className="block w-full py-2 px-3 bg-emerald-700/50 hover:bg-emerald-600/50 border border-emerald-600/50 rounded text-xs text-emerald-200 text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {generateLoading
+                          ? 'Generating... (30–90s)'
+                          : 'Quick generate (one-click) [admin]'}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setGenerateLoading(true)
+                          try {
+                            const { previewGameboardAlignedQuest } = await import(
+                              '@/actions/gameboard'
+                            )
+                            const result = await previewGameboardAlignedQuest(
+                              addQuestSlot.quest!.id,
+                              campaignRef
+                            )
+                            if ('error' in result) {
+                              alert(result.error)
+                            } else {
+                              setGeneratedPacket(result.packet)
+                              setGeneratedUnpacking(result.unpacking)
+                              setGenerationCount(1)
+                              setAccepted(false)
+                            }
+                          } finally {
+                            setGenerateLoading(false)
+                          }
+                        }}
+                        disabled={generateLoading}
+                        className="block w-full py-2 px-3 bg-amber-900/50 hover:bg-amber-800/50 border border-amber-700/50 rounded text-xs text-amber-200 text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {generateLoading
+                          ? 'Generating... (30–90s)'
+                          : 'Generate grammatical quest (preview) [admin]'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </section>

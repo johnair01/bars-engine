@@ -1,6 +1,6 @@
 # Sage Backlog Assessment
 
-**Date**: Sunday, March 15, 2026
+**Date**: Monday, March 16, 2026
 
 ## App Direction (Summary)
 
@@ -8,10 +8,7 @@ BARs Engine: quests as kernels, vibeulons, emotional alchemy, Bruised Banana cam
 
 ## Compost (Archive / Deprecate)
 
-Items that no longer align with current direction or have been fully superseded:
-
-
-**Recommendation**: Move superseded items to an `ARCHIVED.md` or remove from main table. Keep a short reference for traceability.
+Done/Superseded items are in [ARCHIVE.md](.specify/backlog/ARCHIVE.md). Main backlog is composted.
 
 ## Merge (Consolidate)
 

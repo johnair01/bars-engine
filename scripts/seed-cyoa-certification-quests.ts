@@ -35,7 +35,8 @@ const CERT_QUEST_IDS = [
     'cert-onboarding-quest-generation-unblock-v1',
     'cert-ouroboros-character-interview-v1',
     'cert-daemons-discovery-v1',
-    'cert-template-library-v1'
+    'cert-template-library-v1',
+    'cert-game-loop-tighten-v1'
 ]
 
 async function seed() {
@@ -2484,6 +2485,123 @@ async function seed() {
 
     console.log(`✅ Story seeded: ${gameboardQuestGenStory.title} (${gameboardQuestGenStory.id})`)
     console.log(`✅ Quest seeded: ${gameboardQuestGenQuest.title} (${gameboardQuestGenQuest.id})`)
+
+    // --- Certification: Game Loop Tighten — Admin vs Player (GT) ---
+    const gameLoopTightenTitle = 'Certification: Game Loop Tighten V1'
+    const gameLoopTightenSlug = 'cert-game-loop-tighten-v1'
+
+    const gameLoopTightenPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies the Game Loop Tighten: admin one-click quest generation, player completion, and unlock hook. Prepare the Bruised Banana Fundraiser by confirming the admin→player→unlock loop works.',
+            cleanText: 'Verify game loop tighten: admin generate, player complete, unlock hook.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Admin generates quest from slot\n\nLog in as admin. [Open /campaign/board?ref=bruised-banana](/campaign/board?ref=bruised-banana). On a slot with a quest, click **Add quest** and use **Quick generate (one-click) [admin]** to generate a grammatical quest. Wait 30–90s.',
+            cleanText: '### Step 1: Admin generates from slot\n\nAdmin: gameboard → Add quest → Quick generate (one-click).',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Quest under slot\n\nConfirm the generated quest appears under the slot on the gameboard. The quest should be nested under the parent quest.',
+            cleanText: '### Step 2: Quest under slot\n\nConfirm quest appears under slot.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Admin edits via Quest Grammar (optional)\n\n[Open Admin → Quest Grammar](/admin/quest-grammar) or [Quest from Context](/admin/quest-from-context). Confirm you can edit generated quests. (Skip if time-constrained.)',
+            cleanText: '### Step 3: Admin edits (optional)\n\nConfirm Quest Grammar / Quest from Context available.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Player completes campaign quest\n\nAs a player (or admin acting as player), complete a campaign quest on the gameboard. The unlock hook fires when a quest with campaignRef is completed.',
+            cleanText: '### Step 4: Player completes quest\n\nComplete a campaign quest on gameboard.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Unlock hook verified\n\nThe unlock hook logs to console when a player completes a campaign quest. Check server logs for `[onPlayerQuestCompletion]` or complete this step to confirm the loop is wired.',
+            cleanText: '### Step 5: Unlock hook\n\nUnlock hook fires on campaign quest completion.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Game Loop Tighten verified. Admin one-click generation, player completion, and unlock hook are wired for the Bruised Banana Fundraiser. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const gameLoopTightenParsedJson = JSON.stringify({
+        title: gameLoopTightenTitle,
+        startPassage: 'START',
+        passages: gameLoopTightenPassages
+    })
+
+    const gameLoopTightenStory = await db.twineStory.upsert({
+        where: { slug: gameLoopTightenSlug },
+        update: {
+            title: gameLoopTightenTitle,
+            parsedJson: gameLoopTightenParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: gameLoopTightenTitle,
+            slug: gameLoopTightenSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Game Loop Tighten certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: gameLoopTightenParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    const gameLoopTightenQuest = await db.customBar.upsert({
+        where: { id: gameLoopTightenSlug },
+        update: {
+            title: gameLoopTightenTitle,
+            description: 'Verify game loop tighten: admin one-click generate, quest under slot, player completion, unlock hook. Bruised Banana Fundraiser.',
+            reward: 1,
+            twineStoryId: gameLoopTightenStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/game-loop-tighten-admin-player/spec.md'
+        },
+        create: {
+            id: gameLoopTightenSlug,
+            title: gameLoopTightenTitle,
+            description: 'Verify game loop tighten: admin one-click generate, quest under slot, player completion, unlock hook. Bruised Banana Fundraiser.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: gameLoopTightenStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/game-loop-tighten-admin-player/spec.md'
+        }
+    })
+
+    console.log(`✅ Story seeded: ${gameLoopTightenStory.title} (${gameLoopTightenStory.id})`)
+    console.log(`✅ Quest seeded: ${gameLoopTightenQuest.title} (${gameLoopTightenQuest.id})`)
 
     // --- Certification: Dashboard Orientation Flow (DG) ---
     const dashboardFlowTitle = 'Certification: Dashboard Orientation Flow V1'

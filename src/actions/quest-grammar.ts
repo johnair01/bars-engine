@@ -531,11 +531,13 @@ export async function publishQuestPacketToPassages(
  * Publish QuestPacket to a NEW Adventure linked to sourceQuestId (upgrade flow).
  * Creates Adventure + Passages + QuestThread with sourceQuestId.
  * Last node (consequence) gets linkedQuestId = sourceQuestId.
+ * When moveType provided, creates QuestAdventureLink for 4-move gameboard.
  */
 export async function publishQuestPacketToPassagesWithSourceQuest(
   packet: SerializableQuestPacket,
   sourceQuestId: string,
-  questTitle: string
+  questTitle: string,
+  moveType?: string
 ): Promise<
   | { success: true; adventureId: string; threadId: string }
   | { success: false; error: string }
@@ -601,6 +603,20 @@ export async function publishQuestPacketToPassagesWithSourceQuest(
         position: 1,
       },
     })
+
+    if (moveType && ['wakeUp', 'cleanUp', 'growUp', 'showUp'].includes(moveType)) {
+      await db.questAdventureLink.upsert({
+        where: {
+          questId_moveType: { questId: sourceQuestId, moveType },
+        },
+        create: {
+          questId: sourceQuestId,
+          adventureId: adventure.id,
+          moveType,
+        },
+        update: { adventureId: adventure.id },
+      })
+    }
 
     revalidatePath('/admin/adventures')
     revalidatePath('/admin/journeys')
@@ -828,6 +844,8 @@ export type CreateAdventureFromTweeOptions = {
   slug?: string
   /** When set, creates QuestThread with sourceQuestId; end passage links to quest; no CustomBars per passage. */
   sourceQuestId?: string
+  /** When set with sourceQuestId, creates QuestAdventureLink for 4-move gameboard. */
+  moveType?: string
 }
 
 /**
@@ -937,6 +955,20 @@ export async function createAdventureAndThreadFromTwee(
       await db.threadQuest.create({
         data: { threadId: thread.id, questId: sourceQuestId, position: 1 },
       })
+
+      if (opts.moveType && ['wakeUp', 'cleanUp', 'growUp', 'showUp'].includes(opts.moveType)) {
+        await db.questAdventureLink.upsert({
+          where: {
+            questId_moveType: { questId: sourceQuestId, moveType: opts.moveType },
+          },
+          create: {
+            questId: sourceQuestId,
+            adventureId: adventure.id,
+            moveType: opts.moveType,
+          },
+          update: { adventureId: adventure.id },
+        })
+      }
 
       revalidatePath(`/admin/quests/${sourceQuestId}`)
     } else {

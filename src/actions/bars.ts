@@ -49,19 +49,24 @@ async function resolveRecipient(identifier: string): Promise<string | null> {
 // CREATE BAR
 // ---------------------------------------------------------------------------
 
+function deriveTitle(content: string): string {
+    const firstLine = content.trim().split(/\r?\n/)[0] || ''
+    if (firstLine.length <= 80) return firstLine || 'Untitled'
+    return firstLine.slice(0, 77) + '...'
+}
+
 export async function createPlayerBar(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
 
-    const title = (formData.get('title') as string || '').trim()
     const content = (formData.get('content') as string || '').trim()
     const tags = (formData.get('tags') as string || '').trim()
 
     // Validation
-    if (!title) return { error: 'Title is required' }
-    if (title.length < 2) return { error: 'Title must be at least 2 characters' }
     if (!content) return { error: 'Content is required' }
     if (content.length < 3) return { error: 'Content must be at least 3 characters' }
+
+    const title = deriveTitle(content)
 
     try {
         const bar = await db.customBar.create({
@@ -85,7 +90,7 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
             data: { rootId: bar.id }
         })
 
-        console.log(`[BAR] Created bar "${title}" (${bar.id}) by player ${playerId}`)
+        console.log(`[BAR] Created bar (${bar.id}) by player ${playerId}`)
 
         revalidatePath('/bars')
         revalidatePath('/')
@@ -95,6 +100,47 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
         console.error('[BAR] Create failed:', message)
         return { error: 'Failed to create BAR. Please try again.' }
     }
+}
+
+// ---------------------------------------------------------------------------
+// UPDATE BAR (owner only)
+// ---------------------------------------------------------------------------
+
+export async function updateBar(
+    barId: string,
+    data: { description?: string; storyContent?: string }
+): Promise<{ success?: boolean; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: { creatorId: true, type: true },
+    })
+    if (!bar) return { error: 'BAR not found' }
+    if (bar.creatorId !== playerId) return { error: 'Only the owner can edit this BAR' }
+    if (bar.type !== 'bar') return { error: 'Only BARs can be edited' }
+
+    const updates: { description?: string; title?: string; storyContent?: string | null } = {}
+    if (data.description !== undefined) {
+        const content = data.description.trim()
+        if (content.length < 3) return { error: 'Content must be at least 3 characters' }
+        updates.description = content
+        updates.title = deriveTitle(content)
+    }
+    if (data.storyContent !== undefined) {
+        const trimmed = data.storyContent.trim()
+        updates.storyContent = trimmed || null
+    }
+    if (Object.keys(updates).length === 0) return { success: true }
+
+    await db.customBar.update({
+        where: { id: barId },
+        data: updates,
+    })
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${barId}`)
+    return { success: true }
 }
 
 // ---------------------------------------------------------------------------
@@ -149,6 +195,62 @@ export async function sendBar(prevState: { error?: string; success?: boolean } |
 }
 
 // ---------------------------------------------------------------------------
+// SEND BAR OUTSIDE THE GAME (generates an invite link)
+// ---------------------------------------------------------------------------
+
+export type SendBarExternalResult =
+    | { success: true; inviteUrl: string; token: string }
+    | { error: string }
+
+export async function sendBarExternal(
+    prevState: SendBarExternalResult | null,
+    formData: FormData
+): Promise<SendBarExternalResult> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const barId = (formData.get('barId') as string || '').trim()
+    if (!barId) return { error: 'BAR ID is required' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: { id: true, type: true, creatorId: true, status: true, title: true },
+    })
+    if (!bar) return { error: 'BAR not found' }
+    if (bar.type !== 'bar') return { error: 'Only BARs can be shared outside the game' }
+    if (bar.creatorId !== playerId) return { error: "You don't own this BAR" }
+    if (bar.status !== 'active') return { error: 'BAR is not active' }
+
+    try {
+        const token = `invite_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+        await db.invite.create({
+            data: {
+                token,
+                status: 'active',
+                forgerId: playerId,
+                invitationBarId: barId,
+            },
+        })
+
+        const baseUrl =
+            typeof process.env.NEXT_PUBLIC_APP_URL === 'string'
+                ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+                : typeof process.env.VERCEL_URL === 'string'
+                  ? `https://${process.env.VERCEL_URL}`
+                  : ''
+        const inviteUrl = baseUrl ? `${baseUrl}/invite/${token}` : `/invite/${token}`
+
+        revalidatePath(`/bars/${barId}`)
+        return { success: true, inviteUrl, token }
+    } catch (e) {
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        console.error('[BAR] sendBarExternal failed:', message)
+        return { error: 'Failed to generate invite link. Please try again.' }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // LIST: My BARs (created by me)
 // ---------------------------------------------------------------------------
 
@@ -161,6 +263,7 @@ export async function listMyBars() {
             creatorId: playerId,
             type: 'bar',
             status: 'active',
+            archivedAt: null,
         },
         orderBy: { createdAt: 'desc' },
         include: {
@@ -171,7 +274,13 @@ export async function listMyBars() {
                     toUser: { select: { name: true } },
                     createdAt: true,
                 }
-            }
+            },
+            assets: {
+                where: { type: 'bar_attachment' },
+                orderBy: { createdAt: 'asc' },
+                take: 1,
+                select: { id: true, url: true, mimeType: true },
+            },
         }
     })
 }
@@ -187,7 +296,7 @@ export async function listReceivedBars() {
     const shares = await db.barShare.findMany({
         where: {
             toUserId: playerId,
-            bar: { type: 'bar' },
+            bar: { type: 'bar', archivedAt: null },
         },
         orderBy: { createdAt: 'desc' },
         include: {
@@ -198,6 +307,12 @@ export async function listReceivedBars() {
                     description: true,
                     storyContent: true,
                     createdAt: true,
+                    assets: {
+                        where: { type: 'bar_attachment' },
+                        orderBy: { createdAt: 'asc' },
+                        take: 1,
+                        select: { id: true, url: true, mimeType: true },
+                    },
                 }
             },
             fromUser: {
@@ -220,7 +335,7 @@ export async function listSentBars() {
     const shares = await db.barShare.findMany({
         where: {
             fromUserId: playerId,
-            bar: { type: 'bar' },
+            bar: { type: 'bar', archivedAt: null },
         },
         orderBy: { createdAt: 'desc' },
         include: {
@@ -242,6 +357,80 @@ export async function listSentBars() {
 }
 
 // ---------------------------------------------------------------------------
+// COLLAPSE QUEST TO BAR (Share-as-BAR)
+// ---------------------------------------------------------------------------
+
+export async function collapseQuestToBar(questId: string): Promise<{ barId?: string; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const quest = await db.customBar.findUnique({
+        where: { id: questId },
+        include: {
+            assets: { where: { type: 'bar_attachment' }, orderBy: { createdAt: 'asc' }, take: 1 },
+        },
+    })
+    if (!quest) return { error: 'Quest not found' }
+    if (quest.type === 'bar') return { error: 'Already a BAR' }
+
+    // Access: creator or has completed/assigned
+    const isCreator = quest.creatorId === playerId
+    const hasAccess = isCreator || (await db.playerQuest.findFirst({ where: { questId, playerId } }))
+    if (!hasAccess) return { error: 'Not authorized to share this quest' }
+
+    const bar = await db.customBar.create({
+        data: {
+            creatorId: playerId,
+            title: quest.title,
+            description: quest.description,
+            type: 'bar',
+            reward: 0,
+            visibility: 'private',
+            status: 'active',
+            storyContent: quest.allyshipDomain || null,
+            inputs: '[]',
+            rootId: questId,
+            collapsedFromQuestId: questId,
+        },
+    })
+
+    // Self-reference rootId
+    await db.customBar.update({
+        where: { id: bar.id },
+        data: { rootId: bar.id },
+    })
+
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${bar.id}`)
+    return { barId: bar.id }
+}
+
+// ---------------------------------------------------------------------------
+// RECORD BAR SHARE VIEWED (talisman first-view)
+// ---------------------------------------------------------------------------
+
+export async function recordBarShareViewed(shareId: string): Promise<{ success: boolean; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { success: false, error: 'Not logged in' }
+
+    const share = await db.barShare.findUnique({
+        where: { id: shareId },
+        select: { id: true, barId: true, toUserId: true, viewedAt: true },
+    })
+    if (!share) return { success: false, error: 'Share not found' }
+    if (share.toUserId !== playerId) return { success: false, error: 'Not authorized' }
+    if (share.viewedAt) return { success: true } // already viewed
+
+    await db.barShare.update({
+        where: { id: shareId },
+        data: { viewedAt: new Date() },
+    })
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${share.barId}`)
+    return { success: true }
+}
+
+// ---------------------------------------------------------------------------
 // GET BAR DETAIL (with access check)
 // ---------------------------------------------------------------------------
 
@@ -259,7 +448,13 @@ export async function getBarDetail(barId: string) {
                     fromUser: { select: { id: true, name: true } },
                 },
                 orderBy: { createdAt: 'desc' }
-            }
+            },
+            assets: {
+                where: { type: 'bar_attachment' },
+                orderBy: { createdAt: 'asc' },
+            },
+            collapsedFromQuest: { select: { id: true, title: true } },
+            collapsedFromInstance: { select: { id: true, slug: true, name: true } },
         }
     })
 
@@ -271,6 +466,10 @@ export async function getBarDetail(barId: string) {
     // Access check: owner, or has a share addressed to them, or public
     const isOwner = bar.creatorId === playerId
     const isRecipient = bar.shares.some(s => s.toUserId === playerId)
+    // Share through which current user received this BAR (most recent if multiple)
+    const recipientShare = isRecipient
+        ? bar.shares.filter(s => s.toUserId === playerId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
+        : null
 
     if (!isOwner && !isRecipient && !isPublic) {
         return { error: 'Not authorized to view this BAR' }
@@ -280,8 +479,160 @@ export async function getBarDetail(barId: string) {
         bar,
         isOwner,
         isRecipient,
+        recipientShare,
         playerId,
     }
+}
+
+// ---------------------------------------------------------------------------
+// GROW QUEST FROM BAR (BUO Phase 3 — BAR as seed)
+// ---------------------------------------------------------------------------
+
+export async function growQuestFromBar(barId: string): Promise<{ questId?: string; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: { id: true, title: true, description: true, type: true, creatorId: true },
+    })
+    if (!bar) return { error: 'BAR not found' }
+
+    // Access: owner, recipient (for type bar), or creator (for charge_capture)
+    const isOwner = bar.creatorId === playerId
+    const isRecipient =
+        bar.type === 'bar' &&
+        (await db.barShare.findFirst({ where: { barId, toUserId: playerId }, select: { id: true } }))
+    if (!isOwner && !isRecipient) return { error: 'Not authorized to grow from this BAR' }
+
+    const creator = await db.player.findUnique({
+        where: { id: playerId },
+        select: { nationId: true, archetypeId: true },
+    })
+    if (!creator?.nationId || !creator?.archetypeId) {
+        return { error: 'Complete your profile (nation and archetype) before creating quests.' }
+    }
+
+    const title = (bar.title || 'Quest from BAR').trim().slice(0, 200)
+    const description = (bar.description || '').trim() || title
+
+    try {
+        const quest = await db.customBar.create({
+            data: {
+                creatorId: playerId,
+                title,
+                description,
+                type: 'quest',
+                reward: 1,
+                visibility: 'private',
+                status: 'active',
+                moveType: 'showUp',
+                allyshipDomain: 'GATHERING_RESOURCES',
+                sourceBarId: barId,
+                inputs: '[]',
+                rootId: 'temp',
+            },
+        })
+        await db.customBar.update({ where: { id: quest.id }, data: { rootId: quest.id } })
+
+        await db.playerQuest.upsert({
+            where: { playerId_questId: { playerId, questId: quest.id } },
+            update: { status: 'assigned' },
+            create: { playerId, questId: quest.id, status: 'assigned', assignedAt: new Date() },
+        })
+
+        const { completeOnboardingStep } = await import('@/actions/onboarding')
+        const creatorFull = await db.player.findUnique({
+            where: { id: playerId },
+            select: { hasCreatedFirstQuest: true },
+        })
+        if (creatorFull && !creatorFull.hasCreatedFirstQuest) {
+            await completeOnboardingStep('firstCreate')
+        }
+
+        revalidatePath('/')
+        revalidatePath('/hand')
+        revalidatePath(`/bars/${barId}`)
+        return { questId: quest.id }
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Failed to create quest'
+        return { error: msg }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GROW DAEMON FROM BAR (Phase 3 — BAR as seed)
+// ---------------------------------------------------------------------------
+
+export async function growDaemonFromBar(barId: string): Promise<{ daemonId?: string; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: { id: true, title: true, description: true, type: true, creatorId: true },
+    })
+    if (!bar) return { error: 'BAR not found' }
+
+    const isOwner = bar.creatorId === playerId
+    const isRecipient =
+        bar.type === 'bar' &&
+        (await db.barShare.findFirst({ where: { barId, toUserId: playerId }, select: { id: true } }))
+    if (!isOwner && !isRecipient) return { error: 'Not authorized to grow from this BAR' }
+
+    const firstLine = (bar.description || bar.title || '').trim().split(/\r?\n/)[0] || ''
+    const name = firstLine.slice(0, 50) || 'Daemon (from BAR)'
+
+    const { discoverDaemon } = await import('@/actions/daemons')
+    const result = await discoverDaemon(playerId, 'bar', {
+        name: name.length > 2 ? name : 'Daemon (from BAR)',
+        sourceBarId: barId,
+    })
+    if (result.error) return { error: result.error }
+    if (result.daemonId) {
+        revalidatePath(`/bars/${barId}`)
+        return { daemonId: result.daemonId }
+    }
+    return { error: 'Failed to create daemon' }
+}
+
+// ---------------------------------------------------------------------------
+// GROW ARTIFACT FROM BAR (Phase 3 — BAR as seed)
+// ---------------------------------------------------------------------------
+
+export async function growArtifactFromBar(barId: string): Promise<{ sceneId?: string; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: { id: true, description: true, type: true, creatorId: true },
+    })
+    if (!bar) return { error: 'BAR not found' }
+
+    const isOwner = bar.creatorId === playerId
+    const isRecipient =
+        bar.type === 'bar' &&
+        (await db.barShare.findFirst({ where: { barId, toUserId: playerId }, select: { id: true } }))
+    if (!isOwner && !isRecipient) return { error: 'Not authorized to grow from this BAR' }
+
+    const { generateScene } = await import('@/lib/growth-scene/generator')
+    const sceneResult = await generateScene(playerId)
+    if ('error' in sceneResult) return { error: sceneResult.error }
+
+    const scene = sceneResult.scene
+    if (!scene) return { error: 'Scene generation failed' }
+
+    await db.growthSceneArtifact.create({
+        data: {
+            sceneId: scene.id,
+            type: 'BAR',
+            payload: JSON.stringify({ barId }),
+        },
+    })
+
+    revalidatePath(`/bars/${barId}`)
+    return { sceneId: scene.id }
 }
 
 // ---------------------------------------------------------------------------

@@ -17,7 +17,7 @@ type CampaignModalProps = {
     onClose: () => void
     globalStage: number
     campaignEntry?: CampaignEntryData | null
-    activeInstance?: { name: string; targetDescription?: string; isEventMode?: boolean; stripeOneTimeUrl?: string } | null
+    activeInstance?: { name: string; targetDescription?: string; isEventMode?: boolean; stripeOneTimeUrl?: string; campaignRef?: string | null } | null
     eventGoal?: number
     eventCurrent?: number
     eventPct?: number
@@ -25,7 +25,7 @@ type CampaignModalProps = {
     formattedEventGoal?: string
 }
 
-const GAMEBOARD_URL = '/campaign/board?ref=bruised-banana'
+const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 export function CampaignModal({
     open,
@@ -61,6 +61,9 @@ export function CampaignModal({
 
     const hasCampaignEntry = campaignEntry && (campaignEntry.nation || campaignEntry.archetype || campaignEntry.starterQuests.length > 0)
     const hasLiveInstance = activeInstance?.isEventMode
+    const campaignRef = activeInstance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
+    const lobbyHref = `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`
+    const gameboardHref = `/campaign/board?ref=${encodeURIComponent(campaignRef)}`
 
     return (
         <div
@@ -133,7 +136,15 @@ export function CampaignModal({
                 <div className="flex flex-wrap gap-2 sm:gap-4 mb-6">
                     <CampaignStageCard currentStage={globalStage} />
                     <Link
-                        href={GAMEBOARD_URL}
+                        href={lobbyHref}
+                        onClick={onClose}
+                        className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition"
+                    >
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">8 Portals</div>
+                        <div className="text-zinc-200 font-bold">Campaign Lobby</div>
+                    </Link>
+                    <Link
+                        href={gameboardHref}
                         onClick={onClose}
                         className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition"
                     >
@@ -141,13 +152,22 @@ export function CampaignModal({
                         <div className="text-zinc-200 font-bold">Gameboard</div>
                     </Link>
                 </div>
-                <Link
-                    href={GAMEBOARD_URL}
-                    onClick={onClose}
-                    className="block w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
-                >
-                    View full page →
-                </Link>
+                <div className="flex gap-2">
+                    <Link
+                        href={lobbyHref}
+                        onClick={onClose}
+                        className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
+                    >
+                        Campaign Lobby →
+                    </Link>
+                    <Link
+                        href={gameboardHref}
+                        onClick={onClose}
+                        className="flex-1 py-2 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-center font-medium rounded-lg transition-colors"
+                    >
+                        Gameboard →
+                    </Link>
+                </div>
             </div>
         </div>
     )

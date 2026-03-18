@@ -6,6 +6,27 @@ This document captures emergent issues encountered during developer setup and lo
 
 ---
 
+## 0. Home page 500 — "The table public.players does not exist"
+
+**Symptom:** `GET /` returns 500. Terminal shows:
+```
+The table `public.players` does not exist in the current database.
+The table `public.app_config` does not exist in the current database.
+```
+
+**Root Cause:** Database has no tables — migrations were never applied, or the app is using a different/empty database. Common when using Prisma Accelerate with a fresh DB, or when switching between local/prod URLs.
+
+**First step:** Run `npm run diagnose:db` to see which URL the app uses (PRISMA_DATABASE_URL, DATABASE_URL, etc.) and whether that database has tables.
+
+**Fix:**
+1. Run `npm run setup` (migrate deploy → seeds → loop:ready:quick)
+2. Or manually: `npx tsx scripts/with-env.ts "prisma migrate deploy"` then `npm run db:seed`
+3. If you have a stale session cookie, use "Clear session and return home" on the Setup Required page
+
+**Doc Update:** Home page now catches P2021 (table does not exist) and renders SetupRequired with instructions instead of 500. See `src/components/SetupRequired.tsx`.
+
+---
+
 ## 1. db:sync fails with "drop column adventureType" data-loss warning
 
 **Symptom:** `npm run db:sync` fails with:
@@ -156,6 +177,27 @@ Argument `where` of type NationWhereUniqueInput needs at least one of `id` argum
 **Doc Update:** None. Code fix in seed-utils.
 
 **Reference:** DS verification (Mar 2026)
+
+---
+
+---
+
+## 8. Player data wiped — players: 0, instances intact
+
+**Symptom:** `players` table has 0 rows; `instances` and `app_config` still have data. User reports data loss between last night and tonight; similar incident ~Feb 20.
+
+**Root Cause:** A destructive reset was triggered. The codebase has three paths that can wipe player data:
+1. **Admin Panel** — `triggerSystemReset` (AdminResetZone on `/admin`) truncates players, nations, playbooks, etc. Requires admin role.
+2. **Script** — `npm run db:prod-reset` truncates same tables and reseeds.
+3. **Schema reset** — `npm run db:reset` (db push --force-reset) drops entire schema. Would also wipe instances; since instances survive, this is unlikely.
+
+The pattern (players empty, instances intact) matches exactly what `triggerSystemReset` or `prod-reset` does: they truncate a fixed list of tables; `instances` and `audit_logs` are **not** in that list.
+
+**First step:** Run `npm run diagnose:db` to see DB identity and **recent reset events** from `audit_logs`. Run `npm run db:reset-history` for full reset history.
+
+**Fix:** Reseed: `npm run db:seed` then pre-launch seeds (`seed:party`, `seed:quest-map`, etc.). See incident #3.
+
+**Doc Update:** See `.specify/specs/dev-setup-anti-fragile/DATA_LOSS_ROOT_CAUSE_ANALYSIS.md` for full analysis and recommended safeguards (block reset in production, show connected DB in AdminResetZone). For recovery and connection forensics, see `docs/DATA_RECOVERY_AND_CONNECTION_FORENSICS.md`.
 
 ---
 

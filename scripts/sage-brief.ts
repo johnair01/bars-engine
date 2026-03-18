@@ -197,6 +197,9 @@ async function compileContext(): Promise<BriefContext> {
   const { open, completedIds } = parseBacklogItems(TOP_N)
   const completedRecently = getCompletedRecently(recentCommits, completedIds)
   const ownedItems = await getOwnedBacklogItems(FACE)
+  const coordination = getSageCoordinationSuggestions(
+    open.map((o) => ({ id: o.id, name: o.name, category: o.category, dependencies: o.dependencies || '' }))
+  )
 
   return {
     date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),

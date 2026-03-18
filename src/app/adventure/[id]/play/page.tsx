@@ -15,10 +15,10 @@ export default async function AdventurePlayPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string }>
+  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string; start?: string; ref?: string; returnTo?: string }>
 }) {
   const { id: adventureId } = await params
-  const { questId, threadId, ritual, preview } = await searchParams
+  const { questId, threadId, ritual, preview, start: startParam, ref: campaignRef, returnTo } = await searchParams
   const isRitual = ritual === 'true'
   const isPreview = preview === '1'
   const player = await getCurrentPlayer()
@@ -45,9 +45,9 @@ export default async function AdventurePlayPage({
     )
   }
 
-  // Resolve start node: if questId provided, find passage linked to that quest
-  let startNodeId = adventure.startNodeId
-  if (questId) {
+  // Resolve start node: start param (from lobby) > questId > adventure.startNodeId
+  let startNodeId = startParam ?? adventure.startNodeId
+  if (questId && !startParam) {
     const linkedPassage = adventure.passages.find((p) => p.linkedQuestId === questId)
     if (linkedPassage) {
       startNodeId = linkedPassage.nodeId
@@ -65,15 +65,25 @@ export default async function AdventurePlayPage({
       ? progress.currentNodeId
       : startNodeId
 
+  // For portal adventure: resolve schoolsAdventureId for Grow Up navigation
+  let schoolsAdventureId: string | null = null
+  if (campaignRef) {
+    const instance = await db.instance.findFirst({
+      where: { OR: [{ campaignRef }, { slug: campaignRef }] },
+      select: { schoolsAdventureId: true },
+    })
+    schoolsAdventureId = instance?.schoolsAdventureId ?? null
+  }
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <Link
-            href="/conclave/onboarding"
+            href={returnTo ?? (campaignRef ? `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}` : '/conclave/onboarding')}
             className="text-sm text-zinc-500 hover:text-white transition"
           >
-            ← Back
+            ← {returnTo ? 'Back' : campaignRef ? 'Lobby' : 'Back'}
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-xs text-zinc-600 font-mono">{adventure.title}</span>
@@ -94,6 +104,9 @@ export default async function AdventurePlayPage({
           threadId={threadId ?? undefined}
           isRitual={isRitual}
           isPreview={isPreview}
+          campaignRef={campaignRef ?? adventure.campaignRef ?? undefined}
+          schoolsAdventureId={schoolsAdventureId ?? undefined}
+          returnTo={returnTo ?? undefined}
         />
       </div>
     </div>

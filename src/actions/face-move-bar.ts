@@ -41,7 +41,7 @@ export async function createFaceMoveBar(
     return { error: `Invalid face: ${face}` }
   }
 
-  const { title, description, barType = 'vibe', questId, instanceId, metadata = {} } = input
+  const { title, description, barType = 'vibe', questId, instanceId, metadata = {}, nextAction } = input
 
   if (!title?.trim()) {
     return { error: 'Title is required' }
@@ -64,6 +64,11 @@ export async function createFaceMoveBar(
       },
     }
 
+    const agentMetadata =
+      nextAction?.trim()
+        ? JSON.stringify({ sourceType: '321', nextAction: nextAction.trim() })
+        : null
+
     const bar = await db.customBar.create({
       data: {
         creatorId: playerId,
@@ -75,6 +80,7 @@ export async function createFaceMoveBar(
         gameMasterFace: face,
         completionEffects: JSON.stringify(faceMoveMetadata),
         reward: 0,
+        agentMetadata,
       },
     })
 
@@ -210,5 +216,135 @@ export async function hostEvent(input: {
     title: input.title.trim(),
     description: input.description?.trim() || '',
     barType: 'vibe',
+  })
+}
+
+/** Shaman: Create ritual — moment before a quest (name a belief, light a candle) */
+export async function createRitual(input: {
+  belief: string
+  questId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Ritual: ${input.belief.trim()}`
+  return createFaceMoveBar('shaman', 'create_ritual', {
+    title,
+    description: input.belief.trim(),
+    barType: 'vibe',
+    questId: input.questId,
+  })
+}
+
+/** Shaman: Name shadow belief — player names/acknowledges a shadow belief; Shaman witnesses */
+export async function nameShadowBelief(input: {
+  belief: string
+  questId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Shadow belief: ${input.belief.trim()}`
+  return createFaceMoveBar('shaman', 'name_shadow_belief', {
+    title,
+    description: input.belief.trim(),
+    barType: 'insight',
+    questId: input.questId,
+  })
+}
+
+/** Regent: Declare period — "We are in Coalition"; focuses quests on a Kotter stage */
+export async function declarePeriod(input: {
+  period: string
+  instanceId?: string
+  creatorId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `We are in ${input.period.trim()}`
+  const inputObj: FaceMoveBarInput = {
+    title,
+    description: input.period.trim(),
+    barType: 'vibe',
+    instanceId: input.instanceId,
+  }
+  if (input.creatorId) {
+    return createFaceMoveBarAs(input.creatorId, 'regent', 'declare_period', inputObj)
+  }
+  return createFaceMoveBar('regent', 'declare_period', inputObj)
+}
+
+/** Regent: Grant role — steward, quest-owner, campaign contributor */
+export async function grantRole(input: {
+  targetPlayerName: string
+  role: string
+  questId?: string
+  instanceId?: string
+  creatorId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Role granted: ${input.targetPlayerName.trim()} — ${input.role.trim()}`
+  const inputObj: FaceMoveBarInput = {
+    title,
+    description: `${input.role.trim()} granted to ${input.targetPlayerName.trim()}`,
+    barType: 'vibe',
+    questId: input.questId,
+    instanceId: input.instanceId,
+    metadata: { targetPlayerName: input.targetPlayerName.trim(), role: input.role.trim() },
+  }
+  if (input.creatorId) {
+    return createFaceMoveBarAs(input.creatorId, 'regent', 'grant_role', inputObj)
+  }
+  return createFaceMoveBar('regent', 'grant_role', inputObj)
+}
+
+/** Architect: Offer blueprint — quest template players can fork */
+export async function offerBlueprint(input: {
+  title: string
+  description: string
+  questId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  return createFaceMoveBar('architect', 'offer_blueprint', {
+    title: input.title.trim(),
+    description: input.description?.trim() || '',
+    barType: 'vibe',
+    questId: input.questId,
+  })
+}
+
+/** Architect: Design layout — gameboard layout or slot order suggestion */
+export async function designLayout(input: {
+  suggestion: string
+  instanceId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Blueprint: ${input.suggestion.trim()}`
+  return createFaceMoveBar('architect', 'design_layout', {
+    title,
+    description: input.suggestion.trim(),
+    barType: 'vibe',
+    instanceId: input.instanceId,
+  })
+}
+
+/** Sage: Witness — hold paradox; witness completion; offer meta-perspective */
+export async function witness(input: {
+  note: string
+  questId?: string
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Witnessed: ${input.note.trim()}`
+  return createFaceMoveBar('sage', 'witness', {
+    title,
+    description: input.note.trim(),
+    barType: 'insight',
+    questId: input.questId,
+  })
+}
+
+/** Sage: Cast hexagram — I Ching reading for player decision */
+export async function castHexagram(input: {
+  hexagramId: number
+  interpretation: string
+  transformedHexagramId?: number
+}): Promise<FaceMoveBarResult | FaceMoveBarError> {
+  const title = `Hexagram ${input.hexagramId}${input.transformedHexagramId ? ` → ${input.transformedHexagramId}` : ''}`
+  return createFaceMoveBar('sage', 'cast_hexagram', {
+    title,
+    description: input.interpretation.trim(),
+    barType: 'vibe',
+    metadata: {
+      hexagramId: input.hexagramId,
+      transformedHexagramId: input.transformedHexagramId ?? null,
+    },
   })
 }

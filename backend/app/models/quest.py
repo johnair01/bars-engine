@@ -59,6 +59,7 @@ class CustomBar(Base):
     quest_source: Mapped[str | None] = mapped_column("questSource", String, nullable=True, default=None)
     staked_pool: Mapped[int] = mapped_column("stakedPool", Integer, default=0)
     agent_metadata: Mapped[str | None] = mapped_column("agentMetadata", String, nullable=True, default=None)
+    strand_metadata: Mapped[str | None] = mapped_column("strandMetadata", String, nullable=True, default=None)
 
     # Self-referential relationships
     parent: Mapped[CustomBar | None] = relationship("CustomBar", remote_side="CustomBar.id", foreign_keys=[parent_id], back_populates="children")

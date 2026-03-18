@@ -64,6 +64,7 @@ export function GetStartedBlock() {
           <Link href="/bars/create" className="text-sm text-amber-400 hover:text-amber-300 font-medium">Create BAR →</Link>
           <Link href="/emotional-first-aid" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium">Try EFA →</Link>
           <Link href="/event/donate" className="text-sm text-green-400 hover:text-green-300 font-medium">Donate →</Link>
+          <Link href="/campaign/lobby?ref=bruised-banana" className="text-sm text-purple-400 hover:text-purple-300 font-medium">Campaign Lobby →</Link>
           <Link href="/game-map" className="text-sm text-zinc-400 hover:text-white font-medium">Game Map →</Link>
           <Link href="/daemons" className="text-sm text-purple-400 hover:text-purple-300 font-medium">Daemons →</Link>
         </div>

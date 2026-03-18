@@ -39,6 +39,7 @@ export default async function MapEditorPage({ params }: { params: Promise<{ id: 
   } catch {
     const mapRooms = await dbBase.mapRoom.findMany({
       where: { mapId: id },
+      include: { anchors: true },
       orderBy: { sortOrder: 'asc' },
     })
     rooms = mapRooms.map(r => ({
@@ -46,6 +47,19 @@ export default async function MapEditorPage({ params }: { params: Promise<{ id: 
       name: r.name,
       slug: r.slug || slugify(r.name),
     }))
+    initialAnchors = mapRooms.flatMap(r =>
+      r.anchors.map(a => ({
+        id: a.id,
+        roomId: a.roomId,
+        anchorType: a.anchorType,
+        tileX: a.tileX,
+        tileY: a.tileY,
+        label: a.label,
+        linkedId: a.linkedId,
+        linkedType: a.linkedType,
+        config: a.config,
+      }))
+    )
   }
 
   return (

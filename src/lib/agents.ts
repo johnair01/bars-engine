@@ -163,6 +163,40 @@ export async function consultShaman(
   })
 }
 
+export async function suggestShadowName(
+  chargeDescription: string,
+  maskShape: string
+): Promise<{ suggested_name: string; deterministic?: boolean }> {
+  const url = `${AGENT_BASE}/api/agents/shaman/suggest-shadow-name`
+  const opts: RequestInit = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      charge_description: chargeDescription,
+      mask_shape: maskShape,
+    }),
+    signal: AbortSignal.timeout(15_000),
+  }
+  try {
+    const res = await fetch(url, opts)
+    if (!res.ok) {
+      console.error('[suggestShadowName] fetch failed', { url, status: res.status, statusText: res.statusText })
+      throw new Error(`Agent request failed: ${res.status} ${res.statusText}`)
+    }
+    return res.json()
+  } catch (e) {
+    if (e instanceof Error) {
+      if (e.name === 'AbortError') {
+        console.error('[suggestShadowName] timeout (15s)', { url })
+      } else {
+        console.error('[suggestShadowName] error', { url, message: e.message })
+      }
+    }
+    throw e
+  }
+}
+
 // Regent
 export async function consultRegent(
   instanceId: string

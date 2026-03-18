@@ -26,14 +26,19 @@ type Instance = {
   venmoUrl: string | null
   cashappUrl: string | null
   paypalUrl: string | null
+  moveIds?: string
 }
+
+type PromotedMove = { id: string; key: string; name: string }
 
 export function InstanceListWithEdit({
   instances,
   activeInstanceId,
+  promotedMoves,
 }: {
   instances: Instance[]
   activeInstanceId: string | null
+  promotedMoves: PromotedMove[]
 }) {
   const [editingInstance, setEditingInstance] = useState<Instance | null>(null)
   const [progressInstance, setProgressInstance] = useState<Instance | null>(null)
@@ -127,7 +132,11 @@ export function InstanceListWithEdit({
       </div>
 
       {editingInstance && (
-        <InstanceEditModal instance={editingInstance} onClose={() => setEditingInstance(null)} />
+        <InstanceEditModal
+          instance={editingInstance}
+          promotedMoves={promotedMoves}
+          onClose={() => setEditingInstance(null)}
+        />
       )}
     </>
   )

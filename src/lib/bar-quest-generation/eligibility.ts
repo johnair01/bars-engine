@@ -44,6 +44,9 @@ export async function checkBarEligibilityForQuestGeneration(
 /**
  * Check eligibility from an in-memory BAR (e.g. after fetch).
  * Use when you already have the BAR and want to avoid a second query.
+ *
+ * Allyship domain: required only for campaign quests (BAR has campaignRef).
+ * Personal quests (no campaignRef) do not need allyship domain.
  */
 export async function checkBarEligibility(
   bar: BarEligibilityInput,
@@ -63,8 +66,12 @@ export async function checkBarEligibility(
     return { eligible: false, reason: 'Description is required and must be at least 10 characters' }
   }
 
-  if (!bar.allyshipDomain || !bar.allyshipDomain.trim()) {
-    return { eligible: false, reason: 'Allyship domain (intended_impact_domain) is required' }
+  const hasCampaignRef = !!(bar.campaignRef && bar.campaignRef.trim())
+  if (hasCampaignRef && (!bar.allyshipDomain || !bar.allyshipDomain.trim())) {
+    return {
+      eligible: false,
+      reason: 'Allyship domain is required for campaign quests; inherit from campaign context when emitting BAR',
+    }
   }
 
   if (!options?.allowRepeat) {

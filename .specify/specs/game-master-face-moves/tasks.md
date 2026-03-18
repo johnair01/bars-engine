@@ -4,42 +4,51 @@
 
 ### 1.1 BAR creation contract
 
-- [ ] Define `createFaceMoveBar(face, moveType, input)` — creates CustomBar with gameMasterFace, type vibe/insight
-- [ ] Ensure CustomBar.gameMasterFace is set on all face-move BARs
-- [ ] Add metadata fields (questId, playerId, instanceId) to BAR for linking
+- [x] Define `createFaceMoveBar(face, moveType, input)` — creates CustomBar with gameMasterFace, type vibe/insight
+- [x] Ensure CustomBar.gameMasterFace is set on all face-move BARs
+- [x] Add metadata fields (questId, playerId, instanceId) to BAR for linking
 
 ### 1.2 Shaman
 
-- [ ] Create ritual: Add ritual step before quest take/start; create BAR on submit
-- [ ] Name shadow belief: Extend 321/EFA completion to create BAR (type: insight)
+- [x] `createRitual(belief, questId?)` — BAR (type: vibe), title: "Ritual: {belief}"
+  - Wired: `takeSlotQuest(slotId, ritualText?)` in `src/actions/gameboard.ts`
+- [x] `nameShadowBelief(belief, questId?)` — BAR (type: insight), title: "Shadow belief: {belief}"
+  - Wired: `useEffect` on `phase === 'artifact'` in `src/app/shadow/321/Shadow321Runner.tsx`
 
 ### 1.3 Challenger
 
-- [ ] Issue challenge: Challenge UI; create BAR + optional quest with challenge metadata
-- [ ] Propose move: Extend Challenger agent or add "Get move" action; create BAR on output
-- **Implementation spec**: [phase-1-face-moves-remainder](../phase-1-face-moves-remainder/tasks.md)
+- [x] `issueChallenge(title, description, questId?)` — BAR (type: vibe) + optional quest link
+  - Wired: "Issue challenge" form in `src/components/hand/FaceMovesSection.tsx`
+- [x] `proposeMove(moveId?, energyNote?)` — BAR (type: vibe) with canonical move name + energy delta
+  - Wired: "Get move" button in `src/components/hand/FaceMovesSection.tsx`
 
 ### 1.4 Regent
 
-- [ ] Declare period: On Kotter stage advance, create BAR (period declaration)
-- [ ] Grant role: On takeSlotQuest (steward), create BAR; or explicit Grant role action
+- [x] `declarePeriod(period, instanceId?, creatorId?)` — BAR (type: vibe), "We are in {period}"
+  - Wired: Kotter stage advance in `src/actions/instance.ts` via `createFaceMoveBarAs`
+- [x] `grantRole(targetPlayerName, role, questId?, instanceId?, creatorId?)` — BAR (type: vibe)
+  - Wired: `takeSlotQuest` in `src/actions/gameboard.ts` (steward role)
 
 ### 1.5 Architect
 
-- [ ] Offer blueprint: Blueprint library or Architect-aligned flow; create BAR + forkable template
-- [ ] Design layout: (Lower priority) BAR for layout suggestion
-- **Implementation spec**: [phase-1-face-moves-remainder](../phase-1-face-moves-remainder/tasks.md)
+- [x] `offerBlueprint(title, description, questId?)` — BAR (type: vibe), forkable template
+  - Wired: "Offer blueprint" form in `src/components/hand/FaceMovesSection.tsx`
+- [x] `designLayout(suggestion, instanceId?)` — BAR (type: vibe), "Blueprint: {suggestion}"
+  - Wired: "Design layout" form in `src/components/hand/FaceMovesSection.tsx`
 
 ### 1.6 Diplomat
 
-- [ ] Offer connection: "Offer connection" action; create BAR; display to player
-- [ ] Host event: Event creation creates BAR; or link to Event model
-- **Implementation spec**: [phase-1-face-moves-remainder](../phase-1-face-moves-remainder/tasks.md)
+- [x] `offerConnection(suggestedPlayerName, message)` — BAR (type: vibe), "Consider reaching out to X"
+  - Wired: "Offer connection" form in `src/components/hand/FaceMovesSection.tsx`
+- [x] `hostEvent(title, description)` — BAR (type: vibe)
+  - Wired: "Host event" form in `src/components/hand/FaceMovesSection.tsx`
 
 ### 1.7 Sage
 
-- [ ] Witness: On completion, optional "Request witness" → create BAR; or Sage agent produces BAR
-- [ ] Cast hexagram: Extend CastingRitual / I Ching flow to create BAR on completion
+- [x] `witness(note, questId?)` — BAR (type: insight), "Witnessed: {note}"
+  - Wired: "Witness" form in `src/components/hand/FaceMovesSection.tsx`
+- [x] `castHexagram(hexagramId, interpretation, transformedHexagramId?)` — BAR (type: vibe)
+  - Wired: `acceptReading()` in `src/actions/cast-iching.ts`
 
 ## Phase 2: Codebase Moves
 
@@ -57,6 +66,6 @@
 
 ## Verification
 
+- [x] npm run check (0 new errors — 2 pre-existing in verify-avatar-lockstep.ts)
 - [ ] npm run build
-- [ ] npm run check
 - [ ] Manual: Execute each Phase 1 move; verify BAR created with correct gameMasterFace

@@ -325,6 +325,8 @@ export async function completeEmotionalFirstAidSession(input: {
         const delta = session.stuckBefore - stuckAfter
         const mintedAmount = delta >= FIRST_AID_MINT_THRESHOLD ? FIRST_AID_MINT_AMOUNT : 0
 
+        let barDraft: { id: string; nextAction: string; contextQuestId?: string | null } | undefined
+
         await db.$transaction(async (tx) => {
             await tx.emotionalFirstAidSession.update({
                 where: { id: session.id },
@@ -412,6 +414,32 @@ export async function completeEmotionalFirstAidSession(input: {
                     }
                 })
             }
+
+            // GP-CLB: When applyToQuesting, create BAR draft with nextAction
+            if (input.applyToQuesting) {
+                const toolName = toolUsed?.name || session.tool?.name || 'Emotional First Aid'
+                const nextAction =
+                    'Take one small step toward your quest. What is the next smallest honest action?'
+                const bar = await tx.customBar.create({
+                    data: {
+                        creatorId: player.id,
+                        title: `Clean Up: ${toolName}`,
+                        description: `Session relief: stuck ${session.stuckBefore} → ${stuckAfter}. ${session.notes || ''}`.trim(),
+                        type: 'vibe',
+                        moveType: 'cleanUp',
+                        visibility: 'private',
+                        status: 'active',
+                        claimedById: player.id,
+                        agentMetadata: JSON.stringify({
+                            sourceType: 'cleanup',
+                            nextAction,
+                            efaSessionId: session.id,
+                            contextQuestId: session.contextQuestId,
+                        }),
+                    },
+                })
+                barDraft = { id: bar.id, nextAction, contextQuestId: session.contextQuestId }
+            }
         })
 
         revalidatePath('/')
@@ -427,6 +455,7 @@ export async function completeEmotionalFirstAidSession(input: {
             mintedAmount: totalMinted,
             qualifiesForMint: totalMinted > 0,
             threshold: FIRST_AID_MINT_THRESHOLD,
+            barDraft,
         }
     } catch (error: unknown) {
         return { error: toFirstAidErrorMessage(error, 'Failed to complete first-aid session.') }

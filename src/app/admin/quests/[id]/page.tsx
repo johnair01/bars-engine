@@ -1,6 +1,7 @@
 'use client'
 
 import { getAdminQuest, upsertQuest, deleteQuest } from '@/actions/admin'
+import { listPromotedMoves } from '@/actions/move-proposals'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { MicroTwineWizard } from '@/components/admin/MicroTwineWizard'
@@ -24,6 +25,8 @@ export default function EditQuestPage() {
     const [inputs, setInputs] = useState('[]')
     const [allowedNations, setAllowedNations] = useState('[]')
     const [allowedTrigrams, setAllowedTrigrams] = useState('[]')
+    const [grantsMoveId, setGrantsMoveId] = useState<string | null>(null)
+    const [promotedMoves, setPromotedMoves] = useState<{ id: string; key: string; name: string }[]>([])
 
     const id = params.id
     const isNew = id === 'new-quest'
@@ -49,7 +52,9 @@ export default function EditQuestPage() {
                 setInputs(data.inputs || '[]')
                 setAllowedNations(data.allowedNations || '[]')
                 setAllowedTrigrams(data.allowedTrigrams || '[]')
+                setGrantsMoveId((data as { grantsMoveId?: string | null }).grantsMoveId ?? null)
             }
+            listPromotedMoves().then(setPromotedMoves).catch(() => setPromotedMoves([]))
             setLoading(false)
         })
     }, [id, isNew])
@@ -72,7 +77,8 @@ export default function EditQuestPage() {
                 reward,
                 inputs,
                 allowedNations: allowedNations === '[]' ? null : allowedNations,
-                allowedTrigrams: allowedTrigrams === '[]' ? null : allowedTrigrams
+                allowedTrigrams: allowedTrigrams === '[]' ? null : allowedTrigrams,
+                grantsMoveId: grantsMoveId || null,
             })
             router.push('/admin/quests')
             router.refresh()
@@ -157,6 +163,24 @@ export default function EditQuestPage() {
                         <p className="text-xs text-zinc-500">Vibeulons awarded when the player completes this quest.</p>
                     </div>
                 </div>
+
+                {/* Grant move (completing quest unlocks this move) */}
+                {promotedMoves.length > 0 && (
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-zinc-400">Grant move on completion</label>
+                        <select
+                            value={grantsMoveId ?? ''}
+                            onChange={e => setGrantsMoveId(e.target.value || null)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white"
+                        >
+                            <option value="">— None —</option>
+                            {promotedMoves.map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-zinc-500">When the player completes this quest, they unlock this move.</p>
+                    </div>
+                )}
 
                 {/* Gating Fields */}
                 <div className="grid grid-cols-2 gap-4">

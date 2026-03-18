@@ -1,5 +1,9 @@
 # Cursor Rules for BARs Engine
 
+## Environment: OPENAI_API_KEY
+
+Agent workflows (Sage consult, strand, sage:brief, bars-agents MCP) require `OPENAI_API_KEY` in the backend environment. Without it, agents use deterministic fallbacks — no real synthesis. Add to `.env.local`; run `npm run smoke` to verify. See `docs/AGENT_WORKFLOWS.md` troubleshooting.
+
 ## Database Synchronization
 
 When you modify the file `prisma/schema.prisma`, you MUST automatically run:
@@ -19,6 +23,7 @@ Do not wait for the user to ask; execute this as a post-modification step.
 
 ## See Also
 
+- **`.cursor/rules/game-master-agents.mdc`** — Game Master faces, Cursor subagent mapping, when to use bars-agents
 - **`.cursor/rules/spec-kit-plans.mdc`** — Plans must produce spec kit output (spec, plan, tasks in .specify/specs/)
 - **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
 - **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference

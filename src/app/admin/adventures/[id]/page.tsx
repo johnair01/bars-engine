@@ -7,6 +7,7 @@ import { CharacterCreatorTemplateEditor } from "./CharacterCreatorTemplateEditor
 import { PromoteDraftButton } from "./PromoteDraftButton"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getFaceForNodeId, isPlaceholderText } from "@/lib/template-library"
 
 const ICHING_NAMES = new Set([
     'Heaven (Qian)', 'Earth (Kun)', 'Thunder (Zhen)', 'Wind (Xun)',
@@ -114,6 +115,14 @@ export default async function AdventureDetailPage({
                                     adventureId={adventure.id}
                                     currentCampaignRef={adventure.campaignRef}
                                 />
+                                {adventure.campaignRef && (
+                                    <Link
+                                        href={`/admin/campaign/${encodeURIComponent(adventure.campaignRef)}/author`}
+                                        className="mt-1.5 inline-block text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                                    >
+                                        Campaign Hub →
+                                    </Link>
+                                )}
                             </div>
                             {adventure.description && (
                                 <div>
@@ -144,6 +153,7 @@ export default async function AdventureDetailPage({
                             <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 text-sm">
                                 <tr>
                                     <th className="p-4 font-normal">Node ID</th>
+                                    <th className="p-4 font-normal">Face</th>
                                     <th className="p-4 font-normal">Snippet</th>
                                     <th className="p-4 font-normal text-right">Actions</th>
                                 </tr>
@@ -151,23 +161,34 @@ export default async function AdventureDetailPage({
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
                                 {adventure.passages.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="p-8 text-center text-zinc-500">
+                                        <td colSpan={4} className="p-8 text-center text-zinc-500">
                                             No passages yet. Create the first node to begin.
                                         </td>
                                     </tr>
                                 ) : null}
-                                {adventure.passages.map(passage => (
+                                {adventure.passages.map(passage => {
+                                    const faceInfo = getFaceForNodeId(passage.nodeId)
+                                    const isPlaceholder = isPlaceholderText(passage.text)
+                                    return (
                                     <tr key={passage.id} className="hover:bg-zinc-800/50 transition-colors">
                                         <td className="p-4 font-mono text-sm text-indigo-300 font-medium">
-                                            {passage.nodeId}
-                                            {adventure.startNodeId === passage.nodeId && (
-                                                <span className="ml-2 inline-flex items-center px-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                                                    Start
-                                                </span>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isPlaceholder ? 'bg-zinc-600' : 'bg-emerald-500'}`} title={isPlaceholder ? 'Placeholder' : 'Authored'} />
+                                                {passage.nodeId}
+                                                {adventure.startNodeId === passage.nodeId && (
+                                                    <span className="ml-1 inline-flex items-center px-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                                                        Start
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${faceInfo.bg} ${faceInfo.text}`}>
+                                                {faceInfo.label}
+                                            </span>
                                         </td>
                                         <td className="p-4 text-zinc-500 text-sm max-w-xs truncate">
-                                            {passage.text.substring(0, 50)}...
+                                            {passage.text.substring(0, 60)}…
                                         </td>
                                         <td className="p-4 text-right">
                                             <Link
@@ -178,7 +199,8 @@ export default async function AdventureDetailPage({
                                             </Link>
                                         </td>
                                     </tr>
-                                ))}
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>

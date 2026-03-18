@@ -4,6 +4,7 @@ import type { AnchorData } from '@/lib/spatial-world/pixi-room'
 import { QuestBoardModal } from './QuestBoardModal'
 import { BarTableModal } from './BarTableModal'
 import { AnomalyModal } from './AnomalyModal'
+import { CyoaQuestModal } from './CyoaQuestModal'
 
 type Props = {
   anchor: AnchorData
@@ -30,6 +31,9 @@ export function AnchorModal({ anchor, playerId, onClose }: Props) {
         )}
         {anchor.anchorType === 'anomaly' && (
           <AnomalyModal anchor={anchor} playerId={playerId} onClose={onClose} />
+        )}
+        {anchor.anchorType === 'cyoa_quest' && (
+          <CyoaQuestModal anchor={anchor} onClose={onClose} />
         )}
         {anchor.anchorType === 'npc_slot' && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-sm w-full">

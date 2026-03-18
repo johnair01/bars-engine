@@ -1,0 +1,79 @@
+# seed-strand-self-advocacy.yaml
+# Strand System Phase 5: Self-Advocacy Signals
+# Generated: 2026-03-17 | Ambiguity: 0.12
+
+goal: >
+  Implement self-advocacy signals (before/during/after) for BARS Engine strand
+  sects. Coordinator behavior is advisory-only: before-advocacy objections are
+  logged to audit_trail but sects always run. All signals persisted as AuditEntry
+  records in strandMetadata.audit_trail.
+
+constraints:
+  - Python 3.14+ backend (FastAPI + SQLAlchemy async)
+  - No new DB tables — store in strandMetadata.audit_trail JSON field only
+  - Coordinator MUST NOT skip sects based on before-advocacy (advisory only)
+  - Admin strand view is Phase 5b — out of scope for this seed
+  - TypeScript/Next.js frontend unaffected
+
+acceptance_criteria:
+  - Each sect in runner.py emits before_advocacy { shouldRun, suggestRoute?, reason? }
+  - Before-advocacy objections logged to audit_trail (event=before_advocacy), sect runs regardless
+  - Each sect emits during_flag { flag, message, severity? } appended mid-run (event=during_flag)
+  - Each sect emits after_retro { retrospective, suggestedImprovements? } post-run (event=after_retro)
+  - All audit_trail entries conform to AuditEntry { sect, event, actor?, timestamp, rationale?, data? }
+  - POST /api/strands/run returns 200 with audit_trail containing at least 1 advocacy entry per sect
+  - npm run check passes (0 errors)
+  - Existing strand smoke test unbroken
+
+ontology_schema:
+  name: StrandSelfAdvocacy
+  description: >
+    Self-advocacy signal contracts for BARS Engine strand sects —
+    three lifecycle hooks per sect feeding the coordinator's audit_trail.
+  fields:
+    - name: before_advocacy
+      type: object
+      description: "Sect pre-run signal: { shouldRun: bool, suggestRoute?: str, reason?: str }"
+    - name: during_flag
+      type: object
+      description: "Mid-run observation: { flag: str, message: str, severity?: str }"
+    - name: after_retro
+      type: object
+      description: "Post-run reflection: { retrospective: str, suggestedImprovements?: list[str] }"
+    - name: audit_trail
+      type: array
+      description: "AuditEntry list in strandMetadata: { sect, event, actor?, timestamp, rationale?, data? }"
+    - name: coordinator_behavior
+      type: string
+      description: "advisory_only — before-advocacy objections never block execution"
+
+evaluation_principles:
+  - name: advisory_only
+    description: Coordinator never skips a sect based on shouldRun=false — objection logged, sect runs
+    weight: 0.35
+  - name: audit_completeness
+    description: All three signal types appear in audit_trail with correct event field for each sect
+    weight: 0.35
+  - name: backward_compatible
+    description: Existing POST /api/strands/run smoke test passes with no breaking schema changes
+    weight: 0.30
+
+exit_conditions:
+  - name: advocacy_implemented
+    description: All sects in diagnostic preset emit all three signal types
+    criteria: audit_trail contains before_advocacy + during_flag + after_retro per sect
+  - name: verified
+    description: Full pipeline check passes
+    criteria: npm run check 0 errors + POST /api/strands/run returns 200 with populated audit_trail
+
+metadata:
+  version: "1.0"
+  feature: strand-self-advocacy
+  phase: "5"
+  depends_on: strand-system-bars
+  ambiguity_score: 0.12
+  interview_source: conversation-2026-03-17-strand-consult
+  sage_deftness_notes:
+    - thread_linkage is nullable stub — do not implement in this seed
+    - audit_trail is load-bearing — rename already applied
+    - admin strand view is Phase 5b — out of scope

@@ -22,7 +22,7 @@ export default async function TwinePlayPage({
     if (!player) redirect('/login')
 
     const result = await getOrCreateRun(storyId, questId)
-    // ... error handling omitted for brevity but preserved in real apply ...
+    if (!result) redirect('/adventures')
     if ('error' in result) {
         return (
             <div className="min-h-screen bg-black text-zinc-200 p-8 flex items-center justify-center">

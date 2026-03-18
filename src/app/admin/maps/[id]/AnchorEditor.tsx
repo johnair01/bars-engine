@@ -28,9 +28,10 @@ const ANCHOR_COLORS: Record<string, string> = {
   bar_table: 'bg-blue-600',
   portal: 'bg-green-600',
   npc_slot: 'bg-zinc-500',
+  cyoa_quest: 'bg-amber-600',
 }
 
-const ANCHOR_TYPES = ['quest_board', 'anomaly', 'bar_table', 'portal', 'npc_slot']
+const ANCHOR_TYPES = ['quest_board', 'anomaly', 'bar_table', 'portal', 'npc_slot', 'cyoa_quest']
 const GRID_W = 20
 const GRID_H = 15
 

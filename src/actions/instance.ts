@@ -159,6 +159,12 @@ export async function upsertInstance(formData: FormData): Promise<void> {
         ? allyshipDomain
         : null
 
+    const moveIdsRaw = formData.getAll('moveIds')
+    const moveIds = Array.isArray(moveIdsRaw)
+      ? (moveIdsRaw as string[]).filter((id) => typeof id === 'string' && id.trim().length > 0)
+      : []
+    const moveIdsJson = JSON.stringify(moveIds)
+
     if (!slug) throw new Error('Slug is required')
     if (!name) throw new Error('Name is required')
     if (!domainType) throw new Error('Domain type is required')
@@ -185,6 +191,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          moveIds: moveIdsJson,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         }
       })
@@ -209,6 +216,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          moveIds: moveIdsJson,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         },
         create: {
@@ -230,6 +238,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          moveIds: moveIdsJson,
           currentAmountCents: currentAmountCents ?? 0,
         }
       })

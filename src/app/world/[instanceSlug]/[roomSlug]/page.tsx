@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { dbBase } from '@/lib/db'
 import { slugify } from '@/lib/spatial-world/utils'
+import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { RoomCanvas } from './RoomCanvas'
 
 export default async function WorldRoomPage({
@@ -61,9 +62,19 @@ export default async function WorldRoomPage({
     linkedType: a.linkedType,
   }))
 
+  const avatarConfig = resolveAvatarConfigForPlayer(player)
+  const walkableSpriteUrl = avatarConfig
+    ? getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))
+    : null
+
   return (
     <RoomCanvas
-      player={{ id: player.id, name: player.name, spriteUrl: player.spriteUrl ?? null }}
+      player={{
+        id: player.id,
+        name: player.name,
+        avatarConfig: avatarConfig ?? null,
+        walkableSpriteUrl,
+      }}
       room={{ id: room.id, name: room.name, tilemap, anchors }}
       allRooms={allRooms}
       instanceSlug={instanceSlug}

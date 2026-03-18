@@ -1,7 +1,7 @@
 'use client'
 
 import { extractBookText, extractBookToc } from '@/actions/books'
-import { analyzeBook, analyzeBookMore, type AnalysisFilters } from '@/actions/book-analyze'
+import { analyzeBook, analyzeBookMore, analyzeBookForMoves, type AnalysisFilters } from '@/actions/book-analyze'
 import { createThreadFromBook } from '@/actions/book-to-thread'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -52,6 +52,8 @@ export function BookList({ books }: { books: Book[] }) {
   const [publishResult, setPublishResult] = useState<{ id: string; msg: string } | null>(null)
   const [extractingTocId, setExtractingTocId] = useState<string | null>(null)
   const [tocResult, setTocResult] = useState<{ id: string; msg: string } | null>(null)
+  const [extractingMovesId, setExtractingMovesId] = useState<string | null>(null)
+  const [extractMovesResult, setExtractMovesResult] = useState<{ id: string; msg: string } | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<AnalysisFilters>({})
 
@@ -144,6 +146,23 @@ export function BookList({ books }: { books: Book[] }) {
       setAnalyzeResult({
         id: bookId,
         msg: `Analyzed: ${result.questsCreated} quests from ${chunkMsg}`,
+      })
+      router.refresh()
+    }
+  }
+
+  const handleExtractMoves = async (bookId: string) => {
+    setExtractingMovesId(bookId)
+    setExtractMovesResult(null)
+    const result = await analyzeBookForMoves(bookId)
+    setExtractingMovesId(null)
+    if ('error' in result) {
+      setExtractMovesResult({ id: bookId, msg: result.error })
+    } else if ('created' in result) {
+      const errMsg = result.errors?.length ? ` (${result.errors.length} errors)` : ''
+      setExtractMovesResult({
+        id: bookId,
+        msg: `Extracted: ${result.created} moves created, ${result.skipped} skipped${errMsg}`,
       })
       router.refresh()
     }
@@ -326,6 +345,9 @@ export function BookList({ books }: { books: Book[] }) {
               {publishResult?.id === book.id && (
                 <p className="text-sm text-green-400 mt-1">{publishResult.msg}</p>
               )}
+              {extractMovesResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{extractMovesResult.msg}</p>
+              )}
               {tocResult?.id === book.id && (
                 <p className="text-sm text-green-400 mt-1">{tocResult.msg}</p>
               )}
@@ -394,20 +416,42 @@ export function BookList({ books }: { books: Book[] }) {
                 </>
               )}
               {(book.status === 'extracted' || book.status === 'analyzed' || book.status === 'published') && (
-                <button
-                  onClick={() => handleExtractToc(book.id)}
-                  disabled={extractingTocId !== null}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition disabled:opacity-50"
-                >
-                  {extractingTocId === book.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                      Extracting...
-                    </>
-                  ) : (
-                    'Extract TOC'
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={() => handleExtractToc(book.id)}
+                    disabled={extractingTocId !== null}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition disabled:opacity-50"
+                  >
+                    {extractingTocId === book.id ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        Extracting...
+                      </>
+                    ) : (
+                      'Extract TOC'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleExtractMoves(book.id)}
+                    disabled={extractingMovesId !== null}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition disabled:opacity-50"
+                  >
+                    {extractingMovesId === book.id ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        Extracting...
+                      </>
+                    ) : (
+                      'Extract Moves'
+                    )}
+                  </button>
+                  <Link
+                    href={`/admin/books/${book.id}/moves`}
+                    className="px-3 py-1.5 text-sm bg-teal-800 hover:bg-teal-700 text-teal-200 rounded-lg transition"
+                  >
+                    View moves
+                  </Link>
+                </>
               )}
               {book.status === 'extracted' && (
                 <button

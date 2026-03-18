@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 
 const ZONES = [
   {
@@ -7,6 +9,13 @@ const ZONES = [
     href: '/campaign/board',
     accent: 'border-purple-700/50 hover:border-purple-600/60',
     tag: 'text-purple-500',
+  },
+  {
+    label: 'Campaign Lobby',
+    description: '8 I Ching portals — choose your path into the campaign.',
+    href: '/campaign/lobby?ref=bruised-banana',
+    accent: 'border-purple-600/50 hover:border-purple-500/60',
+    tag: 'text-purple-400',
   },
   {
     label: 'Daily Alchemy',
@@ -65,15 +74,27 @@ const ZONES = [
     tag: 'text-teal-400',
   },
   {
+    label: 'Lobby',
+    description: 'Global lobby — walk around, meet others, join or create a campaign.',
+    href: '/lobby',
+    accent: 'border-teal-600/50 hover:border-teal-500/60',
+    tag: 'text-teal-400',
+  },
+  {
     label: 'World',
-    description: 'Enter the spatial world — walk around, interact with anchors, and meet others.',
+    description: 'Instance world — enter your campaign\'s spatial map.',
     href: '/world',
     accent: 'border-teal-600/50 hover:border-teal-500/60',
     tag: 'text-teal-400',
   },
 ]
 
-export default function GameMapPage() {
+export default async function GameMapPage() {
+  const player = await getCurrentPlayer()
+  if (!player || !isGameAccountReady(player)) {
+    redirect('/conclave/guided')
+  }
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
       <div className="max-w-3xl mx-auto px-4 py-12 space-y-10">

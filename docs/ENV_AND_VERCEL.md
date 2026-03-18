@@ -38,6 +38,21 @@ No secrets or real URLs belong in the repo; only this doc and `.env.example` (wi
 
 ---
 
+## Production deploy checklist
+
+Before merging schema changes or deploying to production:
+
+| Check | Action |
+|-------|--------|
+| **DATABASE_URL** | Set for **Production** scope in Vercel Dashboard → Settings → Environment Variables. |
+| **Migration file** | Every schema change must have a migration file. Run `npx prisma migrate dev --name describe_change` before commit. `db push` is for local iteration only. |
+| **Migrate deploy** | Test locally: `DATABASE_URL="<prod-url>" npx prisma migrate deploy` must succeed. If it fails, fix before merging. |
+| **Diagnose first** | If prod login fails, run `DATABASE_URL="<prod>" npm run diagnose:prod-db` before applying fixes. |
+
+**Build behavior**: When `DATABASE_URL` is set, the build runs `prisma migrate deploy` first. If it fails, the build fails — no silent fallback. This prevents deploying an app with schema mismatch (500 errors, login failures).
+
+---
+
 ## Production vs local: which database?
 
 If production cannot log in or sign up while local dev has data, production and local are likely using **different databases**.
@@ -49,6 +64,20 @@ If production cannot log in or sign up while local dev has data, production and 
 ---
 
 ## Troubleshooting
+
+### DB connection diagnostic (observe before act)
+
+When the app shows wrong data, "table does not exist," or you're unsure which database you're using, run `npm run diagnose:db` first. It reports:
+- Which env var the app uses (PRISMA_DATABASE_URL, DATABASE_URL, etc.)
+- Database identity (host / database name) so you can compare to what you expect
+- Whether `players` and `app_config` exist and their row counts
+- How to switch to a different database (unset higher-priority vars)
+
+**Development vs production:** In development (`npm run dev`), the app prefers `DATABASE_URL` (direct) over `PRISMA_DATABASE_URL` (Accelerate), so local dev uses the direct connection even when `vercel env pull` has both set. Production keeps Accelerate-first.
+
+No speculation. Facts only. Compare the output to what you expect, then decide what to fix.
+
+**Connection forensics:** To see which env vars are set and what the app would use (without connecting), run `npm run diagnose:connection`. Useful when debugging "how were things connecting before?" See `docs/DATA_RECOVERY_AND_CONNECTION_FORENSICS.md` for recovery and forensics steps.
 
 ### DATABASE_URL
 
@@ -212,6 +241,8 @@ Set these in the backend service's environment:
 |-----|---------|
 | `DATABASE_URL` | Same production Postgres URL as Vercel. Backend and Next.js share the database. |
 | `OPENAI_API_KEY` | Required for AI agents. Same key as Vercel. |
+| `REPLICATE_API_TOKEN` | Optional. Required for sprite generation (`SPRITE_GENERATION_ENABLED=1`). Get from [replicate.com/account/api-tokens](https://replicate.com/account/api-tokens). Set in `.env.local` (local) and Vercel dashboard (production). |
+| `SPRITE_GENERATION_ENABLED` | Set to `1` to activate walkable sprite generation via Replicate. Default off (stub mode). |
 | `CORS_ORIGINS` | Comma-separated allowed origins. Must include your Vercel app URL(s), e.g. `https://bars-engine.vercel.app,https://bars-engine-*.vercel.app` |
 | `PORT` | Injected by Railway/Render. Backend listens on this port. |
 

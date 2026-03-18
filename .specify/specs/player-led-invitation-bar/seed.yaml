@@ -1,0 +1,138 @@
+goal: >
+  Build the Player-Led Invitation BAR (PLIB) system — a DigitalBAR that delivers
+  a sage-level onboarding quest chain covering daemon discovery (321 wake-up),
+  emotional intelligence journey (vibeulons), creation chain (name daemon →
+  propose move → forge invitation BAR), and external platform quests (Patreon +
+  GitHub follow), wired to the bidirectional quest ↔ move system.
+
+constraints:
+  - Next.js 14+ / TypeScript / Prisma / existing quest-engine.ts
+  - Builds on existing QuestThread, CustomBar, NationMove, Daemon, Vibulon models — no new DB primitives unless required
+  - AI drafts quest content into admin editor — GM approves before publish, no auto-publish
+  - Patreon + GitHub quests use admin-approved verification (no OAuth integration in this phase)
+  - Daemon UX must fix all three gaps — UI reveal moment, narrative framing, reward loop
+  - Quest→Move wiring must be bidirectional — completion unlocks move AND move use can complete quest
+  - DigitalBAR = canonical onboarding chain + forger personalisation layer on top
+  - No regressions to quest-engine.ts existing completion logic
+
+acceptance_criteria:
+  - Player clicks DigitalBAR link and enters onboarding quest chain within 2 taps (no friction)
+  - Daemon discovery (321 wake-up) produces — named daemon, starting move unlocked, vibeulons minted, daemon card reveal screen shown
+  - Player completes full creation chain — daemon named, first move AI-proposed, invitation BAR forged
+  - Patreon + GitHub quests appear in chain, player can submit claim evidence, routes to admin approval queue
+  - Quest completion with grantsMoveId wires move unlock without extra code (existing field honoured)
+  - Move activation can be configured as a quest completion trigger (moveActivationCompletesQuestId)
+  - AI-generated quest drafts appear in admin quest editor with draft status for GM review
+  - Forger can add personal context message and optional custom quests on top of canonical chain
+  - Vibeulons minted at each milestone are visible to the player (wallet/balance shown)
+
+ontology_schema:
+  name: PlayerLedInvitationBAR
+  description: >
+    Invitation system, sage-level onboarding quest chain, daemon UX reveal,
+    and bidirectional quest-move wiring for new player onboarding.
+  fields:
+    - name: invitationBar
+      type: object
+      description: CustomBar with type='invitation_bar', canonicalChainId, forgerNote, forgerCustomQuests[]
+    - name: canonicalOnboardingChain
+      type: object
+      description: QuestThread with ordered quests — signup, daemon discovery, creation chain, external platforms
+    - name: daemonReveal
+      type: object
+      description: UI state for daemon discovery — daemonId, chosenName, startingMoveId, vibeulonsMinted, revealSeen
+    - name: questMoveLink
+      type: object
+      description: Bidirectional — grantsMoveId (completion unlocks move, existing) + moveActivationCompletesQuestId (new)
+    - name: platformQuest
+      type: object
+      description: Quest with verificationType='admin_approved', platformType (patreon|github), claimEvidence, approvedAt
+    - name: creationChain
+      type: array
+      description: Ordered quest sequence — nameDaemon → proposeMove (AI-assisted) → forgeInvitation
+    - name: aiQuestDraft
+      type: object
+      description: CustomBar with status='draft', aiGeneratedAt, generationPrompt, gmApprovedAt
+
+evaluation_principles:
+  - name: daemon_reveal_quality
+    description: Daemon reveal must feel like a meaningful moment — named, rewarded, narrative-framed
+    weight: 0.35
+  - name: quest_chain_coherence
+    description: Onboarding chain flows logically from signup → daemon → creation → external, no dead ends
+    weight: 0.25
+  - name: move_quest_wiring
+    description: Bidirectional move↔quest links work correctly in both directions without regressions
+    weight: 0.20
+  - name: invitation_viral_loop
+    description: Forging an invitation BAR as the final creation act closes the viral loop — player becomes forger
+    weight: 0.12
+  - name: ai_content_quality
+    description: AI-drafted quest text reads as sage-level narrative, not generic onboarding copy
+    weight: 0.08
+
+exit_conditions:
+  - name: complete
+    description: All 5 phases shipped and acceptance criteria met
+    criteria: Player can complete full chain from DigitalBAR link to invitation forged
+  - name: blocked
+    description: quest-engine.ts regression introduced
+    criteria: Any existing quest completion flow breaks — stop and fix before proceeding
+  - name: descoped
+    description: External platform OAuth added before admin-approval path is proven
+    criteria: Complexity exceeds current phase — defer OAuth to Phase 6
+
+phases:
+  - id: P1
+    name: Daemon UX + reward loop
+    priority: highest
+    rationale: Centrepiece of the invitation — if daemon discovery doesn't feel meaningful, nothing else lands
+    deliverables:
+      - Daemon card reveal screen (named daemon, starting move, vibeulons minted)
+      - Narrative framing — what a daemon IS, why it matters in-world
+      - Reward loop wired — discoverDaemon() → mintVibulon() → unlockMove()
+
+  - id: P2
+    name: Canonical onboarding quest chain (AI-drafted)
+    priority: high
+    deliverables:
+      - QuestThread 'canonical-onboarding' with ordered quests
+      - AI agent generates first drafts into admin editor (draft status)
+      - GM review + publish flow in admin
+
+  - id: P3
+    name: Bidirectional quest ↔ move wiring
+    priority: high
+    deliverables:
+      - grantsMoveId completion effect honoured (unlock move on quest complete)
+      - moveActivationCompletesQuestId — move use triggers quest completion check
+      - Move activation UI (player can "play" a move)
+
+  - id: P4
+    name: DigitalBAR invitation flow
+    priority: medium
+    deliverables:
+      - invitationBar CustomBar type with canonicalChainId + forger personalisation layer
+      - Shareable link → landing page → enters quest chain
+      - Forger can add personal note + optional custom quests
+
+  - id: P5
+    name: External platform quests (Patreon + GitHub)
+    priority: medium
+    deliverables:
+      - Platform quest type with admin-approved verification
+      - Claim submission UI (player submits evidence)
+      - Admin approval queue
+
+metadata:
+  version: "1.0"
+  created: "2026-03-17"
+  ambiguity_score: 0.16
+  source: interview + codebase scan (bars-engine session 2026-03-17)
+  interview_topics:
+    - DigitalBAR structure (template + personalisation)
+    - Platform quest verification (admin-approved)
+    - Daemon UX gaps (all three — UI, narrative, reward)
+    - Quest-move directionality (bidirectional)
+    - AI content pipeline (admin editor → GM approve)
+    - Creation chain sequence (daemon name → move → invitation)

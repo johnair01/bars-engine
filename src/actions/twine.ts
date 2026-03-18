@@ -547,16 +547,22 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
 
     // Ensure quest is assigned for adventure/certification quests (handles resume of runs created before auto-assign)
     if (questId) {
-        await db.playerQuest.upsert({
-            where: { playerId_questId: { playerId, questId } },
-            create: {
-                playerId,
-                questId,
-                status: 'assigned',
-                assignedAt: new Date(),
-            },
-            update: {},
-        })
+        try {
+            await db.playerQuest.upsert({
+                where: { playerId_questId: { playerId, questId } },
+                create: {
+                    playerId,
+                    questId,
+                    status: 'assigned',
+                    assignedAt: new Date(),
+                },
+                update: {},
+            })
+        } catch (err: unknown) {
+            // RACE: concurrent request may have created the record; unique constraint = already assigned
+            if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') return
+            throw err
+        }
     }
 
     return { run, story }

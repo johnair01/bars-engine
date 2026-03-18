@@ -13,6 +13,7 @@ import {
 import { createOnboardingBar } from '@/actions/onboarding-bar'
 import { CampaignAuthForm } from '@/app/campaign/components/CampaignAuthForm'
 import { applyCampaignStateFormAction } from '@/app/campaign/actions/campaign'
+import { GuidancePanel } from '@/components/simulation/GuidancePanel'
 import type { ParsedPassage } from '@/lib/twine-parser'
 
 const CAMPAIGN_ID = 'bruised-banana'
@@ -472,6 +473,13 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                     </button>
                 )}
             </div>
+
+            <GuidancePanel
+                flowId="bruised-banana"
+                nodeId={currentPassage.name}
+                role="librarian"
+                visited={history}
+            />
 
             <div className="absolute bottom-4 left-4 flex items-center gap-2">
                 {isPending && (

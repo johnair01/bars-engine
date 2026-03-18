@@ -12,6 +12,7 @@ import { suggestMove, suggestNation, suggestKotterStage, suggestArchetype } from
 import { ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT } from '@/lib/allyship-domains-parser-context'
 import { generateObjectWithCache } from '@/lib/ai-with-cache'
 import { isBackendAvailable, analyzeChunkViaAgent } from '@/lib/agent-client'
+import { ensureMetalNationMoves } from '@/actions/nation-moves'
 
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 const ALLYSHIP_DOMAINS = ['GATHERING_RESOURCES', 'DIRECT_ACTION', 'RAISE_AWARENESS', 'SKILLFUL_ORGANIZING'] as const
@@ -42,6 +43,36 @@ function sampleEvenly<T>(arr: T[], maxN: number): T[] {
   const step = (arr.length - 1) / Math.max(1, maxN - 1)
   return Array.from({ length: maxN }, (_, i) => arr[Math.round(i * step)])
 }
+
+const moveExtractionSchema = z.object({
+  moves: z.array(
+    z.object({
+      name: z.string().describe('Short, memorable move name (e.g. "Cut the Noise", "Call the Standard")'),
+      description: z.string().describe('What this move does and when to use it'),
+      moveType: z.enum(MOVE_TYPES).describe('Which of the 4 moves: wakeUp, cleanUp, growUp, showUp'),
+      barKind: z.enum(['clarity', 'prestige', 'framework']).nullable().optional().describe('What kind of BAR this produces. clarity=reduce ambiguity; prestige=spotlight craft; framework=reusable template. Null if unclear.'),
+      requirementsHint: z.string().nullable().optional().describe('Optional: what inputs the move might need (e.g. "objective rewrite, collaborator")'),
+      nation: z.enum(NATIONS).nullable().optional().describe('Thematic nation alignment. Null if unclear.'),
+    })
+  ),
+})
+
+type MoveExtractionResult = z.infer<typeof moveExtractionSchema>['moves'][number]
+
+const MOVE_EXTRACTION_PROMPT = `You are analyzing a Personal Development book for the Integral Emergence game (bars-engine).
+Extract **transformation moves** — named patterns or practices a player could apply repeatedly. These are NOT one-off quests but reusable "how to" patterns.
+
+Examples of moves: "Call the Standard" (define clarity), "Cut the Noise" (remove distraction), "Forge a Template" (turn craft into reusable form).
+
+For each move extract:
+- name: Short, memorable (2-4 words)
+- description: What it does and when to use it
+- moveType: wakeUp (see more), cleanUp (emotional energy), growUp (skill capacity), showUp (do the work)
+- barKind: clarity | prestige | framework — what kind of BAR it produces. Null if unclear.
+- requirementsHint: Optional inputs (e.g. "objective rewrite"). Null if none.
+- nation: Argyra | Pyrakanth | Lamenth | Meridia | Virelune — thematic fit. Null if unclear.
+
+Return 0-3 moves per chunk. Skip chunks with no move-like patterns.`
 
 const analysisSchema = z.object({
   quests: z.array(
@@ -286,6 +317,242 @@ async function createQuestsFromAnalysis(
     createdIds.push(bar.id)
   }
   return createdIds
+}
+
+// ---------------------------------------------------------------------------
+// Move extraction (Emergent Move Ecology)
+// ---------------------------------------------------------------------------
+
+function slugifyForKey(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, 30)
+}
+
+function buildMoveKey(bookId: string, chunkIndex: number, moveIndex: number, name: string): string {
+  const slug = slugifyForKey(name) || 'move'
+  return `book_${bookId}_c${chunkIndex}_${moveIndex}_${slug}`
+}
+
+async function findSimilarMoveByName(name: string, bookId?: string): Promise<{ id: string; key: string } | null> {
+  const normalized = name.toLowerCase().trim()
+  if (!normalized) return null
+  const slug = slugifyForKey(name)
+  const moves = await db.nationMove.findMany({
+    where: { name: { equals: name, mode: 'insensitive' } },
+    select: { id: true, key: true, sourceMetadata: true },
+  })
+  if (moves.length === 0 && slug) {
+    const byKey = await db.nationMove.findMany({
+      where: { key: { contains: slug, mode: 'insensitive' } },
+      select: { id: true, key: true },
+    })
+    if (byKey.length > 0) return byKey[0]
+  }
+  for (const m of moves) {
+    const meta = m.sourceMetadata ? (JSON.parse(m.sourceMetadata) as { sourceBookId?: string }) : {}
+    if (bookId && meta.sourceBookId === bookId) return m
+  }
+  return moves[0] ?? null
+}
+
+async function runChunkMoveExtraction(
+  bookId: string,
+  chunksToProcess: TextChunk[]
+): Promise<{ moves: MoveExtractionResult[]; chunkIndex: number }[]> {
+  const modelId = getBookAnalysisModel()
+  const results: { moves: MoveExtractionResult[]; chunkIndex: number }[] = []
+
+  for (let i = 0; i < chunksToProcess.length; i += PARALLEL_BATCH) {
+    const batch = chunksToProcess.slice(i, i + PARALLEL_BATCH)
+    const batchResults = await Promise.all(
+      batch.map(async (chunk) => {
+        const inputKey = `${bookId}:move:${chunk.index}:${chunk.text.slice(0, 500)}:${chunk.text.length}`
+        const res = await generateObjectWithCache<z.infer<typeof moveExtractionSchema>>({
+          feature: 'book_move_extraction',
+          inputKey,
+          model: modelId,
+          schema: moveExtractionSchema,
+          system: MOVE_EXTRACTION_PROMPT,
+          prompt: `Extract transformation moves from this book chunk:\n\n---\n${chunk.text}\n---`,
+          getModel: () => getOpenAI()(modelId),
+        })
+        return { moves: res.object.moves, chunkIndex: chunk.index }
+      })
+    )
+    results.push(...batchResults)
+    if (i + PARALLEL_BATCH < chunksToProcess.length) {
+      await new Promise((r) => setTimeout(r, BATCH_DELAY_MS))
+    }
+  }
+  return results
+}
+
+async function createMovesFromExtraction(
+  bookId: string,
+  extractions: { moves: MoveExtractionResult[]; chunkIndex: number }[]
+): Promise<{ created: number; skipped: number; errors: string[] }> {
+  const metalNation = await ensureMetalNationMoves()
+  const clarity = await db.polarity.findUnique({ where: { key: 'clarity' } })
+  const prestige = await db.polarity.findUnique({ where: { key: 'prestige' } })
+  const framework = await db.polarity.findUnique({ where: { key: 'framework' } })
+  const polarityByBarKind: Record<string, string> = {
+    clarity: clarity?.id ?? '',
+    prestige: prestige?.id ?? '',
+    framework: framework?.id ?? '',
+  }
+
+  const emptyReq = JSON.stringify({ version: 1, fields: [] })
+  let created = 0
+  const errors: string[] = []
+
+  for (const { moves, chunkIndex } of extractions) {
+    for (let idx = 0; idx < moves.length; idx++) {
+      const m = moves[idx]
+      try {
+        const similar = await findSimilarMoveByName(m.name, bookId)
+        if (similar) {
+          continue
+        }
+
+        const key = buildMoveKey(bookId, chunkIndex, idx, m.name)
+        const barKind = m.barKind ?? 'clarity'
+        const polarityId = polarityByBarKind[barKind] ?? clarity?.id ?? null
+
+        await db.nationMove.upsert({
+          where: { key },
+          create: {
+            key,
+            nationId: metalNation.id,
+            polarityId,
+            name: m.name,
+            description: m.description,
+            isStartingUnlocked: false,
+            appliesToStatus: JSON.stringify(['active']),
+            requirementsSchema: m.requirementsHint
+              ? JSON.stringify({
+                  version: 1,
+                  fields: [{ key: 'hint', label: 'Requirements', type: 'string', required: false }],
+                })
+              : emptyReq,
+            effectsSchema: JSON.stringify({
+              version: 1,
+              barKind: barKind as 'clarity' | 'prestige' | 'framework',
+            }),
+            sortOrder: 1000 + chunkIndex * 10 + idx,
+            tier: 'CUSTOM',
+            origin: 'BOOK_EXTRACTED',
+            sourceMetadata: JSON.stringify({
+              sourceBookId: bookId,
+              sourceChunkIndex: chunkIndex,
+              moveType: m.moveType,
+            }),
+          },
+          update: {
+            name: m.name,
+            description: m.description,
+            polarityId,
+            requirementsSchema: m.requirementsHint
+              ? JSON.stringify({
+                  version: 1,
+                  fields: [{ key: 'hint', label: 'Requirements', type: 'string', required: false }],
+                })
+              : emptyReq,
+            effectsSchema: JSON.stringify({
+              version: 1,
+              barKind: barKind as 'clarity' | 'prestige' | 'framework',
+            }),
+            sourceMetadata: JSON.stringify({
+              sourceBookId: bookId,
+              sourceChunkIndex: chunkIndex,
+              moveType: m.moveType,
+            }),
+          },
+        })
+        created++
+      } catch (e) {
+        errors.push(`Chunk ${chunkIndex} move "${m.name}": ${(e as Error).message}`)
+      }
+    }
+  }
+
+  const totalMoves = extractions.reduce((s, e) => s + e.moves.length, 0)
+  const skipped = totalMoves - created - errors.length
+  return { created, skipped: Math.max(0, skipped), errors }
+}
+
+/**
+ * Core move extraction logic (no auth). Used by analyzeBookForMoves and scripts.
+ */
+export async function runMoveExtraction(bookId: string): Promise<
+  | { success: true; created: number; skipped: number; errors?: string[] }
+  | { error: string }
+> {
+  try {
+    if (process.env.BOOK_ANALYSIS_AI_ENABLED === 'false') {
+      return { error: 'Book analysis AI is disabled. Set BOOK_ANALYSIS_AI_ENABLED=true to enable.' }
+    }
+
+    const book = await db.book.findUnique({ where: { id: bookId } })
+    if (!book) return { error: 'Book not found' }
+    if (!book.extractedText) return { error: 'Book has no extracted text. Run Extract Text first.' }
+    if (book.status !== 'extracted' && book.status !== 'analyzed' && book.status !== 'published') {
+      return { error: 'Book must be extracted, analyzed, or published to run move extraction.' }
+    }
+
+    const existingMeta = book.metadataJson ? JSON.parse(book.metadataJson) : {}
+    const toc = existingMeta.toc ?? null
+    const chunks = toc?.entries?.length
+      ? chunkBookTextWithToc(book.extractedText, toc)
+      : chunkBookText(book.extractedText)
+    if (chunks.length === 0) return { error: 'No text to analyze' }
+
+    const actionableChunks = chunks.filter(chunkIsActionable)
+    const chunksToProcess = sampleEvenly(actionableChunks, MAX_CHUNKS)
+
+    const extractions = await runChunkMoveExtraction(bookId, chunksToProcess)
+    const { created, skipped, errors } = await createMovesFromExtraction(bookId, extractions)
+
+    const moveMeta = existingMeta.moveExtraction ?? {}
+    const updatedMeta = {
+      ...existingMeta,
+      moveExtraction: {
+        ...moveMeta,
+        lastRunAt: new Date().toISOString(),
+        movesCreated: (moveMeta.movesCreated ?? 0) + created,
+        movesSkipped: (moveMeta.movesSkipped ?? 0) + skipped,
+        chunkCount: chunksToProcess.length,
+      },
+    }
+    await db.book.update({
+      where: { id: bookId },
+      data: { metadataJson: JSON.stringify(updatedMeta) },
+    })
+
+    revalidatePath('/admin/books')
+    revalidatePath(`/admin/books/${bookId}/moves`)
+    return {
+      success: true,
+      created,
+      skipped,
+      errors: errors.length > 0 ? errors : undefined,
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Move extraction failed'
+    console.error('[BOOKS] runMoveExtraction error:', msg)
+    return { error: msg }
+  }
+}
+
+/**
+ * Analyze a book for transformation moves (Emergent Move Ecology).
+ * Extracts moves from chunks, creates NationMove with tier CUSTOM, origin BOOK_EXTRACTED.
+ */
+export async function analyzeBookForMoves(bookId: string) {
+  await requireAdmin()
+  return runMoveExtraction(bookId)
 }
 
 /**

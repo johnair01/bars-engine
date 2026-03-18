@@ -26,18 +26,37 @@ export async function runSeed(prisma: PrismaClient) {
         })
     }
 
-    // 2. Create 64 Bars (Placeholder)
-    for (let i = 1; i <= 64; i++) {
-        await prisma.bar.upsert({
-            where: { id: i },
-            update: {},
-            create: {
-                id: i,
-                name: `Bar #${i}`,
-                tone: 'Neutral',
-                text: `This is the state of Bar ${i}. Potential energy waiting for form.`,
-            },
-        })
+    // 2. Create 64 Bars (from canonical or placeholder)
+    const canonicalPath = path.join(process.cwd(), 'content', 'iching-canonical.json')
+    if (fs.existsSync(canonicalPath)) {
+        const hexagrams = JSON.parse(fs.readFileSync(canonicalPath, 'utf8')) as {
+            id: number
+            name: string
+            tone: string
+            text: string
+        }[]
+        for (const h of hexagrams) {
+            await prisma.bar.upsert({
+                where: { id: h.id },
+                update: { name: h.name, tone: h.tone, text: h.text },
+                create: { id: h.id, name: h.name, tone: h.tone, text: h.text },
+            })
+        }
+        console.log(`Seeded ${hexagrams.length} Bars from content/iching-canonical.json`)
+    } else {
+        console.warn('content/iching-canonical.json not found — using placeholder Bars')
+        for (let i = 1; i <= 64; i++) {
+            await prisma.bar.upsert({
+                where: { id: i },
+                update: {},
+                create: {
+                    id: i,
+                    name: `Bar #${i}`,
+                    tone: 'Neutral',
+                    text: `This is the state of Bar ${i}. Potential energy waiting for form.`,
+                },
+            })
+        }
     }
 
     // 3. Create Admin Invite

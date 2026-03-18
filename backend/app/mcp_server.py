@@ -29,13 +29,18 @@ from app.agents.sage import sage_agent, deterministic_sage_response
 from app.agents.shaman import shaman_agent, deterministic_shaman_reading
 from app.config import settings
 from app.database import async_session_factory
+from app.strand.runner import run_strand
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP(
     name="bars-agents",
-    instructions="Game Master agents for BARS Engine: Architect (quest design), Challenger (moves), Shaman (emotional reading), Regent (campaign), Diplomat (community), Sage (meta/synthesis). Use sage_consult for integrated guidance.",
+    instructions=(
+        "Game Master agents for BARS Engine. The six faces are: shaman, regent, challenger, architect, diplomat, sage. "
+        "Sage is the integration/synthesis agent — use sage_consult for meta, coordination, or cross-cutting questions. "
+        "Do not confuse these with Cursor's mcp_task subagents (evaluator, contrarian, etc.). For BARS domain work, use these tools."
+    ),
 )
 
 
@@ -121,8 +126,7 @@ def architect_compile(unpacking_answers_json: str, quest_grammar: str = "epiphan
 @mcp.tool()
 def architect_analyze_chunk(chunk_text: str, domain_hint: str | None = None) -> str:
     """Analyze a text chunk for quest extraction. Used for book analysis."""
-    async def _run():
-        deps = await _get_deps()
+    async def _run(deps: AgentDeps):
         if not settings.openai_api_key:
             draft = deterministic_architect_draft(chunk_text[:500], "epiphany_bridge")
             return draft.model_dump_json()
@@ -226,7 +230,7 @@ def diplomat_guide(context: str = "") -> str:
             logger.warning("Diplomat failed", exc_info=True)
             return deterministic_diplomat_guidance().model_dump_json()
 
-    return _run_async(_run())
+    return _run_async(_with_session(_run))
 
 
 @mcp.tool()
@@ -245,6 +249,17 @@ def diplomat_bridge(narrative_text: str, move_type: str | None = None) -> str:
         except Exception as e:
             logger.warning("Diplomat bridge failed", exc_info=True)
             return deterministic_diplomat_guidance().model_dump_json()
+
+    return _run_async(_with_session(_run))
+
+
+@mcp.tool()
+def strand_run(subject: str, strand_type: str = "diagnostic") -> str:
+    """Run a multi-agent strand investigation. subject: problem to investigate. strand_type: diagnostic (default), research, content, backlog, etc. Returns strandBarId and outputBarIds."""
+    async def _run():
+        async with async_session_factory() as session:
+            result = await run_strand(session, strand_type, subject)
+            return json.dumps(result)
 
     return _run_async(_run())
 

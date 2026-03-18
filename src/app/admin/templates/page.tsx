@@ -2,9 +2,13 @@ import { listTemplates } from '@/lib/template-library'
 import { AdminPageHeader } from '@/app/admin/components/AdminPageHeader'
 import Link from 'next/link'
 import { GenerateTemplateButton } from './GenerateTemplateButton'
+import { getActiveInstance } from '@/actions/instance'
 
 export default async function TemplatesAdminPage() {
-  const templates = await listTemplates()
+  const [templates, instance] = await Promise.all([
+    listTemplates(),
+    getActiveInstance(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -38,7 +42,12 @@ export default async function TemplatesAdminPage() {
                   <p className="text-sm text-zinc-500 mt-1">{t.description ?? t.key}</p>
                   <p className="text-xs text-zinc-600 mt-1 font-mono">{t.key}</p>
                 </div>
-                <GenerateTemplateButton templateId={t.id} templateName={t.name} />
+                <GenerateTemplateButton
+                  templateId={t.id}
+                  templateName={t.name}
+                  defaultCampaignRef={instance?.campaignRef}
+                  primaryCampaignDomain={instance?.primaryCampaignDomain}
+                />
               </div>
             ))}
           </div>

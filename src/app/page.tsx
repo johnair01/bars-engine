@@ -24,10 +24,13 @@ import { IntentionDisplay } from '@/components/IntentionDisplay'
 import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
-import { getRecentChargeBars } from '@/actions/charge-capture'
+import { getTodayCharge, getChargeArchive } from '@/actions/charge-capture'
 import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
 import { DailyCheckInQuest } from '@/components/dashboard/DailyCheckInQuest'
 import { getTodayCheckIn } from '@/actions/alchemy'
+import { SetupRequired } from '@/components/SetupRequired'
+import { listMyCampaignSeeds } from '@/actions/campaign-bar'
+import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -133,6 +136,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     quests: { include: { quest: true } },
     vibulonEvents: true,
     starterPack: true,
+    invitedBy: { select: { id: true, name: true } },
   } as const
 
   let player = null
@@ -144,35 +148,44 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         archetype: true,
       }
     })
-  } catch {
-    // Fallback for temporary schema drift during deployment rollout.
-    player = await db.player.findUnique({
-      where: { id: playerId },
-      include: {
-        ...commonPlayerInclude,
-        archetype: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            moves: true,
-            content: true,
-            centralConflict: true,
-            primaryQuestion: true,
-            vibe: true,
-            energy: true,
-            shadowSignposts: true,
-            lightSignposts: true,
-            examples: true,
-            wakeUp: true,
-            cleanUp: true,
-            growUp: true,
-            showUp: true,
-            createdAt: true,
-          }
+  } catch (err: unknown) {
+    // P2021 = table does not exist — DB needs migrations/setup
+    const code = (err as { code?: string })?.code
+    if (code === 'P2021') {
+      return <SetupRequired />
+    }
+    // Fallback for temporary schema drift (different columns)
+    try {
+      player = await db.player.findUnique({
+        where: { id: playerId },
+        include: {
+          ...commonPlayerInclude,
+          archetype: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              moves: true,
+              content: true,
+              centralConflict: true,
+              primaryQuestion: true,
+              vibe: true,
+              energy: true,
+              shadowSignposts: true,
+              lightSignposts: true,
+              examples: true,
+              wakeUp: true,
+              cleanUp: true,
+              growUp: true,
+              showUp: true,
+              createdAt: true,
+            }
+          },
         },
-      }
-    })
+      })
+    } catch {
+      throw err
+    }
   }
 
   if (!player) {
@@ -352,12 +365,17 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const appreciationResult = await getAppreciationFeed(10)
   const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
 
-  // Recent charge captures (Charge Capture UX)
-  const chargeResult = await getRecentChargeBars({ limit: 5 })
-  const recentCharges = 'success' in chargeResult ? chargeResult.bars : []
+  // Today's charge (strict one per day) + archive
+  const chargeResult = await getTodayCharge()
+  const todayCharge = 'success' in chargeResult ? chargeResult.bar : null
+  const archiveResult = await getChargeArchive(10)
+  const chargeArchive = 'success' in archiveResult ? archiveResult.bars : []
 
   // Daily alchemy check-in
   const todayCheckIn = await getTodayCheckIn(playerId).catch(() => null)
+
+  // Campaign seeds ready to promote (creator's own, complete, unpromoted)
+  const myCampaignSeeds = await listMyCampaignSeeds(playerId)
 
   // Derive completed move types for flow checking
   const completedMoveTypes = Array.from(new Set(
@@ -407,6 +425,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             <div className="space-y-0.5 min-w-0">
               <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight truncate">{player.name}</h1>
               <div className="text-zinc-400 text-sm font-mono truncate">{player.contactValue}</div>
+              {player.invitedBy && (
+                <div className="text-zinc-500 text-xs truncate">
+                  Invited by <span className="text-zinc-400">{player.invitedBy.name}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -416,6 +439,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
         </div>
 
+        {myCampaignSeeds.some((s) => s.isComplete && !s.promotedInstance) && (
+          <CampaignSeedReadyCard seeds={myCampaignSeeds} />
+        )}
         <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4">
           <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Play the Game</div>
           <DashboardSectionButtons
@@ -449,8 +475,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <AppreciationsReceived items={appreciations} maxItems={5} />
         )}
 
-        {/* Recent Charge */}
-        <RecentChargeSection bars={recentCharges} />
+        {/* Today's Charge + Archive */}
+        <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
         {/* Player Intention */}
         {intention && (

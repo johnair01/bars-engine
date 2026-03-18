@@ -34,6 +34,7 @@ from app.agents.regent import CampaignAssessment, regent_agent, deterministic_re
 from app.agents.sage import SageResponse, sage_agent, deterministic_sage_response
 from app.agents.shaman import EmotionalAlchemyReading, shaman_agent, deterministic_shaman_reading
 from app.auth import get_current_player_id
+from app.shadow_name_grammar import derive_shadow_name
 from app.config import settings
 from app.database import get_db
 from app.schemas.agents import (
@@ -53,6 +54,7 @@ from app.schemas.agents import (
     SageConsultRequest,
     ShamanIdentifyRequest,
     ShamanReadRequest,
+    ShamanSuggestShadowNameRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -679,6 +681,13 @@ async def diplomat_refine_copy(
 # ---------------------------------------------------------------------------
 
 
+@router.post("/shaman/suggest-shadow-name")
+async def shaman_suggest_shadow_name(body: ShamanSuggestShadowNameRequest):
+    """Suggest an evocative name using deterministic 6-face grammar. No AI; instant response."""
+    name = derive_shadow_name(body.charge_description, body.mask_shape)
+    return {"suggested_name": name, "deterministic": True}
+
+
 @router.post("/shaman/identify", response_model=AgentResponse[EmotionalAlchemyReading])
 async def shaman_identify(
     body: ShamanIdentifyRequest,
@@ -1013,6 +1022,278 @@ async def mapping_proposer_propose(
             output=proposal,
             deterministic=True,
             legibility_note="AI path failed — deterministic FACE_FIELD_AFFINITY fallback used.",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Generate Campaign from Kernel — POST /api/agents/generate-campaign
+# ---------------------------------------------------------------------------
+
+
+class GenerateCampaignRequest(BaseModel):
+    kernel: str  # Narrative premise — e.g. "A community facing housing crisis..."
+    domains: list[str]  # e.g. ["GATHERING_RESOURCES", "DIRECT_ACTION", ...]
+    kotter_stage: int = 1
+    campaign_ref: str | None = None
+
+
+# Slot → face mapping (mirrors template-library FACE_PLACEHOLDER)
+_SLOT_FACES: dict[str, str] = {
+    "context_1": "shaman", "context_2": "shaman", "context_3": "shaman",
+    "anomaly_1": "challenger", "anomaly_2": "challenger", "anomaly_3": "challenger",
+    "choice": "diplomat",
+    "response": "regent",
+    "artifact": "architect",
+}
+
+_ENCOUNTER_SLOTS = [
+    "context_1", "context_2", "context_3",
+    "anomaly_1", "anomaly_2", "anomaly_3",
+    "choice", "response", "artifact",
+]
+
+_SLOT_GUIDANCE: dict[str, str] = {
+    "context_1": "Open the scene. Set the world this player walks into.",
+    "context_2": "Deepen the context. What history or texture makes this real?",
+    "context_3": "Ground the stakes. What does the community stand to gain or lose?",
+    "anomaly_1": "Introduce the first disruption. What cracks the surface?",
+    "anomaly_2": "Escalate. A second layer of tension or contradiction.",
+    "anomaly_3": "Name the impasse. What must be faced before moving forward?",
+    "choice": "Present three meaningful paths the player can take. Frame each with its emotional stakes.",
+    "response": "Resolve the moment after a choice is made. What outcome emerges?",
+    "artifact": "Deliver the takeaway. What concrete action, resource, or insight does the player carry forward?",
+}
+
+
+async def _generate_slot(
+    face: str,
+    slot: str,
+    domain: str,
+    kernel: str,
+    kotter_stage: int,
+    campaign_ref: str | None,
+) -> str:
+    from pydantic_ai import Agent as PydanticAgent
+
+    system_prompt = _FACE_SYSTEM_PROMPTS.get(face, _FACE_SYSTEM_PROMPTS["architect"])
+    guidance = _SLOT_GUIDANCE.get(slot, "Write passage content for this slot.")
+
+    prompt = (
+        f"Campaign kernel: {kernel}\n"
+        f"Domain: {domain.replace('_', ' ').title()}\n"
+        f"Kotter stage: {kotter_stage}\n"
+        f"Slot: {slot} ({guidance})\n"
+        + (f"Campaign: {campaign_ref}\n" if campaign_ref else "")
+        + "\nWrite this passage. Return only the passage text."
+    )
+
+    try:
+        agent = PydanticAgent(
+            settings.agent_model,
+            output_type=PassageText,
+            system_prompt=system_prompt,
+        )
+        result = await agent.run(prompt)
+        return result.output.text
+    except Exception:
+        logger.warning("generate-campaign slot %s/%s failed, using stub", domain, slot, exc_info=True)
+        return f"[{face.title()}] {guidance}\n\nCampaign: {campaign_ref or 'general'} | Domain: {domain} | Stage {kotter_stage}"
+
+
+async def _generate_domain(
+    domain: str,
+    kernel: str,
+    kotter_stage: int,
+    campaign_ref: str | None,
+) -> dict[str, str]:
+    import asyncio
+
+    tasks = {
+        slot: _generate_slot(
+            face=_SLOT_FACES[slot],
+            slot=slot,
+            domain=domain,
+            kernel=kernel,
+            kotter_stage=kotter_stage,
+            campaign_ref=campaign_ref,
+        )
+        for slot in _ENCOUNTER_SLOTS
+    }
+    results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+    output: dict[str, str] = {}
+    for slot, result in zip(tasks.keys(), results):
+        if isinstance(result, Exception):
+            guidance = _SLOT_GUIDANCE.get(slot, "")
+            output[slot] = f"[Generation failed] {guidance}"
+        else:
+            output[slot] = result  # type: ignore[assignment]
+    return output
+
+
+class CampaignPassages(BaseModel):
+    passages: dict[str, dict[str, str]]  # { domain: { nodeId: text } }
+
+
+@router.post("/generate-campaign", response_model=AgentResponse[CampaignPassages])
+async def generate_campaign(body: GenerateCampaignRequest):
+    """Generate all passages for a multi-domain campaign from a narrative kernel."""
+    import asyncio
+
+    if not body.kernel.strip():
+        from fastapi import HTTPException
+        raise HTTPException(400, "kernel must not be empty")
+
+    domains = body.domains or ["GATHERING_RESOURCES", "DIRECT_ACTION", "RAISE_AWARENESS", "SKILLFUL_ORGANIZING"]
+
+    if not settings.openai_api_key:
+        # Deterministic stubs
+        stub: dict[str, dict[str, str]] = {}
+        for domain in domains:
+            stub[domain] = {
+                slot: f"[{_SLOT_FACES[slot].title()}] {_SLOT_GUIDANCE[slot]}\n\nKernel: {body.kernel[:100]}…"
+                for slot in _ENCOUNTER_SLOTS
+            }
+        return AgentResponse[CampaignPassages](
+            agent="campaign_generator",
+            output=CampaignPassages(passages=stub),
+            deterministic=True,
+            legibility_note="Deterministic fallback — no AI model configured.",
+        )
+
+    domain_tasks = [
+        _generate_domain(domain, body.kernel, body.kotter_stage, body.campaign_ref)
+        for domain in domains
+    ]
+    results = await asyncio.gather(*domain_tasks, return_exceptions=True)
+
+    passages: dict[str, dict[str, str]] = {}
+    for domain, result in zip(domains, results):
+        if isinstance(result, Exception):
+            logger.warning("generate-campaign domain %s failed", domain, exc_info=result)
+            passages[domain] = {
+                slot: f"[Generation failed] {_SLOT_GUIDANCE[slot]}"
+                for slot in _ENCOUNTER_SLOTS
+            }
+        else:
+            passages[domain] = result  # type: ignore[assignment]
+
+    return AgentResponse[CampaignPassages](
+        agent="campaign_generator",
+        output=CampaignPassages(passages=passages),
+        legibility_note=f"Campaign generated for {len(domains)} domains × {len(_ENCOUNTER_SLOTS)} passages.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Generate Passage — POST /api/agents/generate-passage
+# ---------------------------------------------------------------------------
+
+
+class PassageText(BaseModel):
+    text: str
+
+
+class GeneratePassageRequest(BaseModel):
+    node_id: str
+    face: str  # shaman | challenger | diplomat | regent | architect
+    campaign_function: str  # guidance string for this slot
+    campaign_ref: str | None = None
+    subcampaign_domain: str | None = None
+    campaign_goal: str | None = None
+    kotter_stage: str | None = None
+    preceding_texts: list[str] = []
+
+
+_FACE_SYSTEM_PROMPTS: dict[str, str] = {
+    "shaman": (
+        "You are the Shaman — the grounding voice of the Game Master. "
+        "You write scene-setting passages that orient the player in time, place, and emotional terrain. "
+        "Be evocative and present-tense. 2–4 short paragraphs. No choices. No direct address."
+    ),
+    "challenger": (
+        "You are the Challenger — the disruptive voice of the Game Master. "
+        "You write passages that surface tension, contradiction, or an unexpected obstacle. "
+        "Be direct and visceral. 2–3 short paragraphs."
+    ),
+    "diplomat": (
+        "You are the Diplomat — the bridging voice of the Game Master. "
+        "You write choice-point passages that present 2–3 meaningful paths the player can take. "
+        "Frame each path with its emotional stakes. 1 framing paragraph, then list the paths."
+    ),
+    "regent": (
+        "You are the Regent — the resolving voice of the Game Master. "
+        "You write outcome passages that name what emerged from the player's choice. "
+        "Be decisive and clear. 2 paragraphs: outcome + implication."
+    ),
+    "architect": (
+        "You are the Architect — the consolidating voice of the Game Master. "
+        "You write artifact passages: a concrete takeaway, lesson, or resource the player carries forward. "
+        "Be specific and actionable. 1–2 short paragraphs."
+    ),
+}
+
+
+@router.post("/generate-passage", response_model=AgentResponse[PassageText])
+async def generate_passage(body: GeneratePassageRequest):
+    """Generate passage text for a single template slot using the appropriate GM face."""
+    from pydantic_ai import Agent as PydanticAgent
+
+    face = body.face if body.face in _FACE_SYSTEM_PROMPTS else "architect"
+    system_prompt = _FACE_SYSTEM_PROMPTS[face]
+
+    # Build context paragraph
+    context_parts: list[str] = [f"Slot function: {body.campaign_function}"]
+    if body.campaign_ref:
+        context_parts.append(f"Campaign: {body.campaign_ref}")
+    if body.subcampaign_domain:
+        context_parts.append(f"Domain: {body.subcampaign_domain.replace('_', ' ').title()}")
+    if body.campaign_goal:
+        context_parts.append(f"Campaign goal: {body.campaign_goal}")
+    if body.kotter_stage:
+        context_parts.append(f"Kotter stage: {body.kotter_stage}")
+    if body.preceding_texts:
+        context_parts.append("Preceding passages:\n" + "\n---\n".join(body.preceding_texts[-2:]))
+
+    prompt = (
+        f"Write a passage for node `{body.node_id}`.\n\n"
+        + "\n".join(context_parts)
+        + "\n\nReturn only the passage text — no metadata, no JSON, no labels."
+    )
+
+    def _deterministic_text() -> str:
+        return (
+            f"[{face.title()}] {body.campaign_function}\n\n"
+            + (f"Campaign: {body.campaign_ref or 'general'}" if body.campaign_ref else "")
+        ).strip()
+
+    if not settings.openai_api_key:
+        return AgentResponse[PassageText](
+            agent=face,
+            output=PassageText(text=_deterministic_text()),
+            deterministic=True,
+            legibility_note="Deterministic fallback — no AI model configured.",
+        )
+
+    try:
+        passage_agent = PydanticAgent(
+            settings.agent_model,
+            output_type=PassageText,
+            system_prompt=system_prompt,
+        )
+        result = await passage_agent.run(prompt)
+        return AgentResponse[PassageText](
+            agent=face,
+            output=result.output,
+            legibility_note=f"{face.title()} passage generated for {body.node_id}.",
+            usage_tokens=result.usage().total_tokens if result.usage() else None,
+        )
+    except Exception:
+        logger.warning("generate-passage AI path failed, falling back", exc_info=True)
+        return AgentResponse[PassageText](
+            agent=face,
+            output=PassageText(text=_deterministic_text()),
+            deterministic=True,
+            legibility_note="AI path failed — deterministic fallback used.",
         )
 
 

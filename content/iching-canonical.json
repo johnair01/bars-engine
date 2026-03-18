@@ -1,0 +1,386 @@
+[
+  {
+    "id": 1,
+    "name": "Creative Power",
+    "tone": "Rising Energy",
+    "text": "A dragon awakens. What had been hidden is now ascending. ※ Take pause before you proceed on your endeavor. Confirm your course of action. ※ You will become the dragon that emerges from the depths, visible and rising above your peers. ※ Endurance and patience will be required of you, as what is to unfold shall take its time. Do not be reckless with your surge of creative power."
+  },
+  {
+    "id": 2,
+    "name": "Supportive Power",
+    "tone": "Receptivity",
+    "text": "To receive, be receptive. Embrace the power of yielding and you shall receive. ❊ Clear a pathway and what you seek shall come. ❊ In the depths of darkness, power is being cultivated. Yield and the powers that be will yield to you. ❊ A heart receptive to faith will never fear uncertainty. ❊ To be elegant is to be tender; to be intelligent is to be agile. ❊ You are a vessel that the Divine seeks to fill."
+  },
+  {
+    "id": 3,
+    "name": "Initial Challenge",
+    "tone": "Overcoming obstacles",
+    "text": "Having horses but no chariot. Challenges at the beginning, but you have not been defeated. The matter is merely in an undeveloped stage. You have been challenged. Initial setbacks, even repeated missteps are blessings of strength. When you finally succeed, it will far surpass any that came before and you will hold on to that success with longevity. Embrace the minor achievements."
+  },
+  {
+    "id": 4,
+    "name": "Naiveté",
+    "tone": "Seek Wisdom",
+    "text": "You are focused on the wrong inquiry. The Oracle shall give no further insight unless the inexperienced fool returns with proper sincerity. ※ The master seeks not the disciple; the disciple must seek the master. ※ You need better teachings to learn better ways. Modesty will advance you further than the fool feigning virtuosity. ※ No gains from expelling the foe; no gains from becoming a foe. Gains come from resisting the attack."
+  },
+  {
+    "id": 5,
+    "name": "Patience",
+    "tone": "Cultivate Patience",
+    "text": "Crows circle the skies. You seek to advance just when dangers are at their peak. Wait it out. Cultivate patience. Let momentum build in the natural course, slow and steady. ※ Heaven has set the course for an outcome in your favor, but patience is required. Put your faith in the natural flow of events. ※ Even when we petition the gods and ancestors, they do not come because we’ve summoned them; they come because they’ve summoned us."
+  },
+  {
+    "id": 6,
+    "name": "The Trial",
+    "tone": "Conflict Management",
+    "text": "Do not undertake hazardous enterprises. Conditions are ominous. Where you can reconcile, reach settlement. Do not let conflicts simmer. Move away from conflict. Heaven over Water is an omen of entitlements clashing. Two who serve the same Tao only see their differences; they fight, each believing themselves to be in the right. What do you truly seek—victory with loss, or peace with prosperity?"
+  },
+  {
+    "id": 7,
+    "name": "The Army",
+    "tone": "Unify Ambitions",
+    "text": "Your ambitions are too scattered. The ego is a tenacious general. Auspicious for rallying the troops and marching forward. ※ Your ambitions must be unified as one army serving one general. ※ Shī is the honorific for the master priest. ※ Omen of military strength and great power seeking to be unleashed toward a greater purpose: you are called to protect the innocent, and to teach those seeking guidance."
+  },
+  {
+    "id": 8,
+    "name": "Alliance",
+    "tone": "Unity and Leadership",
+    "text": "Alliance of heart and mind. ※ Kings gain innumerable territories by maintaining close relations with feudal lords. To conquer adversity, hold an assembly of the gods on the mountain. A budding rebellion is simmering. ※ Be a connector, one who brings people together. To bring many together, you will occupy many worlds. ※ When you have won, do not humiliate your opponent. Show mercy. ※ Greatness inspires greatness."
+  },
+  {
+    "id": 9,
+    "name": "Cultivate Gently",
+    "tone": "Gentle Refinement",
+    "text": "Cultivate refinement. ※ Success in minor undertakings; ominous to pursue major undertakings. Passivity has taming power. ※ A storm is brewing, and it is uncertain whether the clouds bring a rain that will nourish the fields or a rain that floods the rivers. ※ Change is guided gently. ※ Confidence is the cord that tethers the hearts of others to our own."
+  },
+  {
+    "id": 10,
+    "name": "Treading",
+    "tone": "High Stakes",
+    "text": "Where a tiger’s tail is seen, fangs and claws are not far. A risky endeavor has the potential to bring great rewards, but do not provoke the powers that be. ※ Conditions in the environment are intense. Do not aggravate that which is known to bite. ※ High pressure, high stakes. Yet the Oracle assures that you are experienced enough and highly competent—perfectly qualified to be tasked with this mission."
+  },
+  {
+    "id": 11,
+    "name": "Harmony",
+    "tone": "Balance & Prosperity",
+    "text": "Small investments yield big returns. A little risk goes a long way. Current conditions support gains and prosperity. The key to continued success after success is balance. Stay consistent. Strive for order and routine, and yet diversity and variety for there to be harmony. Symmetry produces a favorable outcome. A divine union. Affinity. Forecast of peace and well-being. Good fortune."
+  },
+  {
+    "id": 12,
+    "name": "Stalemate",
+    "tone": "Blocked Flow",
+    "text": "What should be flowing is going stale. The ill-intentioned are blocking the flow. Incompetence prevails. Risk of loss. ❉ Practice the virtue of frugality to alleviate difficulties. ❉ Honor the gods and ancestors for protection. Do not let another’s malignity erode your own integrity. ❉ If you want to know why the malevolent has come out victorious, you may ask the Oracle. A heartfelt prayer shall be answered. ❉"
+  },
+  {
+    "id": 13,
+    "name": "Fellowship",
+    "tone": "Community, Generosity",
+    "text": "It is a time for relationship building. Seek out a community of shared interest. ※ Generosity builds bridges and networks. Be one who enriches others to be enriched by fellowship. Help others with their aspirations, and you will find that you’ve accomplished your own. ※ Support another’s happiness and others will support yours. Interchange brings reward. ※ Never let a friend walk alone at night."
+  },
+  {
+    "id": 14,
+    "name": "Accolades",
+    "tone": "Great Blessings",
+    "text": "Many blessings bestowed. A great harvest. Alignment with Heaven’s Will. ※ This is an omen of great validation. What you seek to undertake is a worthy endeavor that will yield success. ※ Heaven supports your expansion. ※ Heed this message if you seek enduring success: When others are lacking, then those blessed with abundance should not allow themselves to feel full. ※"
+  },
+  {
+    "id": 15,
+    "name": "Modesty",
+    "tone": "Humility, Temperance",
+    "text": "Gravity of Earth can either erode the Mountain or build the Mountain. ※ If you must boast to receive honors, then no one will see you as honorable. Nothing is more honorable than decency. Show temperance in your conduct and speech, and moderation in all that you do. ※ When you strive to be undistinguishable, you become the most distinguishable. ※ Humbly fill what is empty of knowledge with the wisdom of masters."
+  },
+  {
+    "id": 16,
+    "name": "Enthusiasm",
+    "tone": "Motivated Action",
+    "text": "Prepare for the advance. Demonstrate enthusiasm and you motivate not just yourself, but the spirit realms to support you. Renounce hesitation. Do not let chronic conditions hold you back. Honor others with enthusiasm and they will reciprocate. When you are relentless, nothing can or will stop you. When you are near conclusion, journey into the underworld to the depths of the hidden. Face inner darkness with dignity."
+  },
+  {
+    "id": 17,
+    "name": "Inspiring Followers",
+    "tone": "Leadership through Service",
+    "text": "To learn how to lead, you must first learn how to serve. A follower becomes the leader. ※ If you obtain your followers through force or cunning, by conspiracy or division, your leadership will be short-lived: there will be movements of resistance against you. ※ Serve them and they will serve you. Reward loyalty with generosity. ※ Trust in your own excellence by always striving for personal excellence."
+  },
+  {
+    "id": 18,
+    "name": "Decay",
+    "tone": "Renewal, Action",
+    "text": "An infestation results in the decay of matter. Dogma causes degeneration. ※ There has been spoilage and degeneration, so it is critical to take action immediately. ※ Old ways are going; new ways bring growth. ※ Serve not the person, but the purpose. Care not for the chief, but for the clan. ※ Obstacles to come; take bold action to avert the obstacles before they arrive. Those who can survive this stage will attain great power."
+  },
+  {
+    "id": 19,
+    "name": "Spring is Coming",
+    "tone": "Renewal",
+    "text": "Arrival of a transcendent and hallowed blessing that will bring rebirth and renewal. That which had putrefied shall rejuvenate and be restored. ※ A new beginning and a time to rebuild. Grieve for what has ended but taste the sweetness. Liberation. ※ Opportunities are coming your way. All the work you have put in propels you toward your peak. ※ First light after winter. Omen of one who prevails."
+  },
+  {
+    "id": 20,
+    "name": "Observation",
+    "tone": "Careful Consideration",
+    "text": "Before you proceed, give the matter a thorough reassessment. A more complete observation of the situation is called for. There is need for further contemplation on the matter. Sometimes it is not the judgment that needs observation, but the judge. To contemplate the matter, go alone and observe the wind moving the earth. Nature will give you the counsel you seek. Honor the gods and ancestors to receive further insight."
+  },
+  {
+    "id": 21,
+    "name": "Bite Through",
+    "tone": "Overcoming Obstacles",
+    "text": "Remove the obstacles without delay. Show of force is needed to break down the obstruction. ※ The road will only be cleared if you demonstrate the clarity of thought to take command and implement immediate action. To do so you will face a difficult choice. ※ Cultivate the power of persuasion. That which seeks not to be moved must be moved. ※ Administer justice with impartiality and objectivity."
+  },
+  {
+    "id": 22,
+    "name": "Luminosity",
+    "tone": "Character Building",
+    "text": "Your public image now suffices for the small undertakings, but you have not yet cultivated the charisma for the large undertakings. ※ A personal journey will strengthen your luminosity. Small gains to be had by undertaking the pilgrimage. ※ Strive to burn brighter, but through little steps day by day, and not by reckless compromises of yourself. To amplify your luminosity, seek advanced development of your talent and skills."
+  },
+  {
+    "id": 23,
+    "name": "Partition",
+    "tone": "Caution, Patience",
+    "text": "There are disadvantages to proceeding with your endeavor. The matter risks incompletion. ※ Stay low to the ground and disturb not that which is in turbulence. Forces at large are disintegrating and splitting. ※ The inferior outnumbers the superior, cons outweigh the pros. ※ Move slowly; this is the combat crawl—opposite limbs move together. ※ Have faith in your greatness. Focus on the foundation. Your time will come."
+  },
+  {
+    "id": 24,
+    "name": "Repose",
+    "tone": "Conserve Strength",
+    "text": "A winter in the season of life, when life itself looks like death. It is a time for repose. ※ Conserve your strength. Thunder at the base means the way to conserve your strength is through movement. Auspicious to undertake action. The action to undertake is to recharge the body, mind, and spirit. ※ Focus not on the grim world around you, but on the brilliant stirring and magnetic charge within. ※ The vessel will once again be filled with grain."
+  },
+  {
+    "id": 25,
+    "name": "Without Folly",
+    "tone": "Common Sense",
+    "text": "Do not cultivate the trampled field. Wu wang is a call for common sense. ※ Do not be arrogant when the time calls for humility. Do not be reckless when the time calls for caution. ※ Wu wang is to be without folly—do not undertake a costly expenditure. Long journeys are unfavorable at this time. Resolve the imminent threats first. ※ Heaven tasks the leader to provide for the kingdom's myriad beings."
+  },
+  {
+    "id": 26,
+    "name": "Cultivate the Supreme",
+    "tone": "Restraint and Power",
+    "text": "A mountain need not move or speak to inspire awe. ※ You have great potential but restraint is necessary to cultivate the supreme. ※ The mountain visible above the heavens is emblematic of your great power. Invest that power in a way that advances humankind. ※ Power must be controlled by yielding that power to the underprivileged. ※ You are Called to be a Giver."
+  },
+  {
+    "id": 27,
+    "name": "Receive Nourishment",
+    "tone": "Nurturing Advice",
+    "text": "Be open to receiving, receive to nourish. Good fortune can be had if you take affirmative action toward your own well-being. Feed yourself with that which is substantial, nourishing, and true. ☀ Take in nourishment so that you may give out nourishment. The measure of who you are is in how you nourish, both yourself and others. Many are relying on you. ☀ Sometimes, the right path is one that is in defiance of the canons."
+  },
+  {
+    "id": 28,
+    "name": "Undertake the Great",
+    "tone": "Critical Juncture",
+    "text": "The many steps you’ve taken have converged. You are at a critical juncture, on the cusp of undertaking the great. ※ A withering poplar will bloom again. ※ Relentless hard work day by day will spread your influence far and wide. ※ A fundamental change is about to take place and you are at its center. An omen of second chances."
+  },
+  {
+    "id": 29,
+    "name": "The Abyss",
+    "tone": "Uncertainty",
+    "text": "A primal chaos before creation, a dark night with no moonlight, sinking into the depths of an abyss—such is the nature of the womb that births the eminent ones. An era of uncertain times. A journey is favorable for avoiding the pitfalls. Move to sidestep the path of the storm. How one untangles a thicket of thorns is the way one must move now. Seek refuge and be refuge. Honor the gods and ancestors to receive further insight."
+  },
+  {
+    "id": 30,
+    "name": "The Spark",
+    "tone": "Enlightenment",
+    "text": "This is the emblem of one who seeks enlightenment and then in turn enlightens others. ※ Your light comes from a fire within. Be the spark that animates the world around you. Nurture your gift of charisma. ※ Hold tight to your community and burn bright. ※ The eminent one illuminates far and wide in the four directions. ※ One light after another—succession of sovereigns. The rightful king is victorious. ※ Divinely inspired clarity."
+  },
+  {
+    "id": 31,
+    "name": "Mutual Accord",
+    "tone": "Attraction, Influence",
+    "text": "To attract love, emanate with love. Show your feelings and people will have feelings for you. Let the people move you, and you will move the people: reciprocal attraction; mutual influence. Lovers are joyous and prosperous. Attract that which you seek without pursuing. Listen closely to what the people are saying; provide what they need. Be mindful of your response. Give empty words and you will be the one left hollow."
+  },
+  {
+    "id": 32,
+    "name": "The Eternal",
+    "tone": "Enduring Change",
+    "text": "The action to take is to endure, and the way to endure is to change. Stability requires constant course-correction. The sage pursues a constant state of change, though your outward demeanor should be one of constancy and stability. Do not seek to change others, for that is oppressive. Seek alliance with those most different from you. Be consistent and steadfast, but willing to move with the wind. Favorable for a journey."
+  },
+  {
+    "id": 33,
+    "name": "Withdraw",
+    "tone": "Strategic Retreat",
+    "text": "Retreat does not mean surrender. Hostile forces are advancing. This is a strategic withdrawal into safety and seclusion while you plan your next move. ※ When the opponent is on the offensive and you have neither the power nor support to prevail, recede and move away. Eventually the opponent will come to a rest, and that is when you strike. ※ Now is a time for self-reflection, prayer to Heaven, and personal growth."
+  },
+  {
+    "id": 34,
+    "name": "Great Power",
+    "tone": "Strength and Caution",
+    "text": "Never strike until you can strike at full strength. Be alert. Be vigilant. Great power attracts great danger. Heaven sanctions force that is tempered, measured, and fair. Only one who is weak would be merciless. A favorable omen for fulfillment of destiny, but be wise, or else your blessing can become your downfall."
+  },
+  {
+    "id": 35,
+    "name": "Advancement",
+    "tone": "Progression",
+    "text": "You have stood where you are for long enough. Now is a time for advancement. May the pawn become a queen. ※ Flames must burn and in the wake of ashes you are the phoenix that rises. ※ Support those above you with loyalty. Support those below you with generosity. That is how you expand your influence. ※ Advance like a mouse. Surmount the throne like a lion. All Hail the Queen Mother."
+  },
+  {
+    "id": 36,
+    "name": "Darkening of the Light",
+    "tone": "Cautious Patience",
+    "text": "Use the cloak of darkness to your advantage. ※ Wait until the darkness has set before the light begins its resistance. Do not compel the change. Let the time of transition take place in due course. ※ Do not draw attention to your light but do not let the fire extinguish. ※ For the one in hardship, take heart. Divine forces are in play."
+  },
+  {
+    "id": 37,
+    "name": "The Family",
+    "tone": "Interdependence, Loyalty",
+    "text": "Do not resist dependence on others but also be independent so that others may depend on you. When there is interdependence, there will be great success. Nurture your familial bonds.\n\nLoyalty to the clan comes first. Leave no housekeeping unattended.\n\nWorking as a team, each plays to their personal strength. That is how the family will prosper."
+  },
+  {
+    "id": 38,
+    "name": "Opposition",
+    "tone": "Conflicting Paths",
+    "text": "Sharply opposing factions. One pushes for progressive movement and one holds back. Estrangement. ※ Two seek the same objective, but they take opposing paths and grow apart. ※ You feel misunderstood. The estrangement is necessary. ※ Do not chase after what will return on its own. ※ You will be making the journey in the rain. You face inclement weather throughout your endeavor. ※ Lake of Fire: A journey riddled with obstacles."
+  },
+  {
+    "id": 39,
+    "name": "An Impasse",
+    "tone": "Blocked Progress",
+    "text": "Progress comes to a standstill. Every movement forward is blocked by an opposing force. Personal difficulties. When extenuating circumstances obstruct your path, yield to the standstill and take pause. Channel a power far beyond the reach of that obstruction and grow it outward from within. This can only be achieved in stillness, beneficence, and calm. A favorable outcome when water carves its path by breaking rock."
+  },
+  {
+    "id": 40,
+    "name": "Release of Tension",
+    "tone": "Completion, Stability",
+    "text": "When your endeavor has not been completed, do not procrastinate: bring it to completion. When your endeavor has been completed, a prompt return to stability will bring you good fortune. Do not bask in the afterglow of glory—go straight back to work. ❋ What you contemplate doing, proceed with. ❋ Hunt rather than run. Sever ties with those who bring you sorrow. ❋ The untying of a knot. The unraveling of a complication. Redemption is recovery."
+  },
+  {
+    "id": 41,
+    "name": "Debilitation",
+    "tone": "Endings and Change",
+    "text": "What goes stale will enter a state of rot. Eradicate that which is decaying before it spreads. Do not let mold fester. Do not linger on matters that have come to their conclusion. Do not fault yourself for outcomes you could not control. ※ When movement takes its course toward decline, it becomes advantageous to take up movement toward change and advancement. ※ A great upheaval is coming, but Heaven will protect you. Honor the gods and ancestors with offerings and prayer."
+  },
+  {
+    "id": 42,
+    "name": "Burgeoning",
+    "tone": "Growth, Opportunity",
+    "text": "When sages see the good of others, they are inspired to be better; and when they see the fault of others, they correct that fault in themselves. ※ A state of increase and expansion. Opportunities come knocking. As you gain, ensure that others gain. What you receive, you must give in kind. ※ Time is of the essence in the matter. Your window of opportunity will not remain open for long. Accept the challenge; rise to the occasion."
+  },
+  {
+    "id": 43,
+    "name": "Decisive Action",
+    "tone": "Breakthrough",
+    "text": "After a long period of tension, there will be a breakthrough. Be careful, as there may be risks ahead. Your interests are not the only ones at stake in the endeavor. No gains from reactive combat. You intuit that you must take decisive action, but how? Pray to Heaven. Place your faith in the Divine that blesses your path and your prayer shall be answered. The solution will be a different path than the one initially conceived."
+  },
+  {
+    "id": 44,
+    "name": "Improper Meeting",
+    "tone": "Caution, Independence",
+    "text": "Unions and partnerships are not auspicious at this time. Honor and nurture personal independence. Temptations lead the weak astray. If error is left uncorrected, then corruption sets in. Complacency turns a minor defect into a grave danger. Abuse of opportunities. The corrupted one is gaining influence. When there is chaos and uncertainty, do not show your struggle. Be the exemplar of fortitude and grace."
+  },
+  {
+    "id": 45,
+    "name": "Assembly",
+    "tone": "Leadership & Preparation",
+    "text": "A leader rises among them. You are destined to gather the people and unite them under your purpose, but take care that when you do, you are prepared to handle the strife that is bound to arise when people congregate. ❈ Weapons will need to be sharpened for the battles ahead. Know the target well and steady that aim before you draw your bow. ❈ Have a contingency plan in place. ❈ Choose progress. Start now."
+  },
+  {
+    "id": 46,
+    "name": "Hoist",
+    "tone": "Growth and Success",
+    "text": "Step up and push up. It is time to rise up the ranks. Reach above and beyond. Small victories accumulate to become greatness: one victory hoists up another until you attain supreme success. The winds of change blow in your favor. Resources avail themselves to you. How a tree grows, resilient and adaptable, yet solid and stable, inspires the path you will take to glory. Honor your roots, for your roots determine your staying power."
+  },
+  {
+    "id": 47,
+    "name": "Blockade",
+    "tone": "Overcoming obstacles",
+    "text": "Ambitions hit a wall. Barriers of entry. You are overwhelmed, unable to cope with your feelings of entanglement. A state of bondage. In the darkness, you do not yet see how the restraining bonds can be broken. Do not let external forces restrain you. Restrain yourself. Control that which you can control. Tree roots can break apart solid rock. Even a sapling can cause oppressive foundations to crack."
+  },
+  {
+    "id": 48,
+    "name": "The Fountainhead",
+    "tone": "Nourishment",
+    "text": "Society may change, but people’s primitive needs never do. Nourish the people’s primitive needs. To succeed, reach deep into the people’s hearts and deeper into the tempest. ❖ The situation at hand is much more complicated than you initially perceived it to be. ❖ Adversity and troubles: take caution. Invoke the Name of the Divine in your times of need. ❖ Clean the well before you drink its water."
+  },
+  {
+    "id": 49,
+    "name": "Revolution",
+    "tone": "Change, Momentum",
+    "text": "Revolution to rectify injustice begins with revolution of the heart. First change inner misalignments before seeking a transformation of others. What you seek requires momentum, and to drum up that momentum, live and abide by higher principles. Those who see you embodying the higher principles will be attracted to you, and you will gain momentum. Having that momentum is the authority you need for a just revolution."
+  },
+  {
+    "id": 50,
+    "name": "The Cauldron",
+    "tone": "Nourishment & Purification",
+    "text": "You are in the developmental phase. Nourish the inner temple. Nurture the innate talent. Bring forth offerings of sustenance to both the inner temple and to the outer temple of the gods. Be sure to cleanse and purge the cauldron thoroughly of its grime before you cook with it. Good fortune and favors bestowed to the one who first purifies, then alchemizes. The sage has a mission to complete. Establish order. Great Work ahead."
+  },
+  {
+    "id": 51,
+    "name": "Jolt",
+    "tone": "Sudden Change",
+    "text": "An upheaval causes aftershock. Circumstances seem beyond your control. ❋ Do not allow cataclysm to weaken your Will. While you cannot control the circumstances, you can control your response. In time, you will fully recover what you have lost. It is still auspicious to go forth on your endeavor. ❋ New beginnings brought on by sudden sharp turns. ❋ Despite the disruption, do not let spill the chalice of sacrificial wine."
+  },
+  {
+    "id": 52,
+    "name": "Listen to the Wind",
+    "tone": "Calm and Silent",
+    "text": "Quiet the heart and be calm. Stillness is a form of movement. It is natural for the heart to fluctuate and a mind to flutter, but exercise restraint. Listen to the wind. The wind will carry an important omen to you. You show your strength to others when you embody the presence of a mountain, calm and serene. Think before you speak. Silence is the way to prevailing in your endeavor. Present inaction paves the way for future gains."
+  },
+  {
+    "id": 53,
+    "name": "Steadfast",
+    "tone": "Patience, Growth",
+    "text": "Do not seek overnight success or instant gratification. A tree can grow at the peak of a mountain if it grows steady and slow, with deep roots. Building a strong foundation is more important than endeavoring for high branches. Do not try to change your nature; instead, embrace your nature. Play to your own strengths. Omen of the wild swan. You are at the beginning of a long journey. Taking your time arriving at the summit."
+  },
+  {
+    "id": 54,
+    "name": "Marrying Maiden",
+    "tone": "Caution, Patience",
+    "text": "Do not accept the first proposition that comes your way. Know what you are worth. A postponement can work to your advantage. The undertaking will meet with great hardships, but the endeavor is well worth the pain endured—great advantages to be gained if you overcome the adversity. Thunder strikes a lake as it does metal—its current stays to the surface."
+  },
+  {
+    "id": 55,
+    "name": "Opulence",
+    "tone": "Abundance and Change",
+    "text": "Honors bestowed. An Age of Enlightenment. You are in a position of great influence. You rise like the sun at the highest point in the sky. Be mindful when abundance becomes opulence. When abundance becomes opulence, the king will fall. Every Age of Enlightenment comes to a decline. A period of tremendous power is upon you, but bear in mind that this, too, shall pass. Embrace the tides of change, come what may."
+  },
+  {
+    "id": 56,
+    "name": "The Wanderer",
+    "tone": "Cautious Integration",
+    "text": "The wanderer is a stranger in a new land; you are the foreigner. Be knowledgeable and cautious. To integrate yourself into the group, be humble, respectful of its hierarchy, and let your humor be tactful. Be dignified. You are not yet familiar with inner politics, so do not engage in gossip and do not publicly declare loyalties just yet. Conceal your assets. Stay guarded and protect yourself from those who want what you have."
+  },
+  {
+    "id": 57,
+    "name": "Use Gentle Force",
+    "tone": "Subtle Influence",
+    "text": "The power you exert must be a gentle force. Be the unseen influence. The wind is powerful because time is its power. You, too, like the wind, must use time to accomplish your endeavor.\n\nThe magus casts a spell that will produce an unseen influence. Whether the warrior advances or retreats, both decisions will bode well, but choose one and do not waver. Do not keep changing paths out of indecision. Winds blow in your favor."
+  },
+  {
+    "id": 58,
+    "name": "Joyous Exchange",
+    "tone": "Exchange, Joy",
+    "text": "A tipping point. Inner light shines outward and attracts a kindred spirit. To seek joy is to seek discourse that will advance knowledge and deepen your compassion. To maintain joy, engage in lively intellectual discourse with your peers. Exchange and interchange are the themes du jour. Auspicious for trade and commerce. ☯️ Enjoy the present moment. A good life is attained when one can embody joyous exchange. Increase in status to come."
+  },
+  {
+    "id": 59,
+    "name": "Making Waves",
+    "tone": "Reform, Change",
+    "text": "An important task is at hand. You are the one who must make waves. Like wind breaking waves, a voice of reason and compassion rises to reform that which is broken and unjust. ※ Set aside personal interest and pursue public interest. Heaven seeks you as a vessel to carry forth its mission. Revelation of one’s true will and purpose. ※ Dispel that which has been oppressive. ※ The old disperses to make way for the new."
+  },
+  {
+    "id": 60,
+    "name": "Boundaries",
+    "tone": "Discipline, Purpose",
+    "text": "Right now, you are aimless. You have not set the proper limits on yourself. Without boundaries, there can be no sense of yourself. Without a sense of yourself, you do not know what you really want. Without knowing your purpose, you remain aimless. Your way to success now is through discipline. Tame your emotions. Know who you are. Do not let the limitations of today deter you. This Oracle is not an echo chamber; the Oracle is here to see you grow. Kingdoms need laws to flourish."
+  },
+  {
+    "id": 61,
+    "name": "Faith Within",
+    "tone": "Inner Truth",
+    "text": "Do not rush to judge others. Be responsive but not reactionary. Gain a deeper understanding for why they act the way they do. ※ The answer to a difficult question is arrived at only when you are receptive to truth. ※ On the brink of an awakening. The time for harvest is coming. You will soon manifest your full potential. ※ There is a certain affinity between the Oracle and you."
+  },
+  {
+    "id": 62,
+    "name": "Pay Attention to Details",
+    "tone": "Attention to Detail",
+    "text": "Do everything a little bit better than everybody else. Do not compare yourself to others who are ahead of you. Soon you will be ahead of them. Pay attention to the details and in that way, you shall achieve success. Initiate small changes toward your goal. Do not ambition for a dramatic change or instant results. Advance up the ladder one rung at a time. Great prosperity if you heed this message."
+  },
+  {
+    "id": 63,
+    "name": "After the Ending",
+    "tone": "Cautious Progress",
+    "text": "It is now after the ending and before the start of a beginning. ※ Anticipate pitfalls before advancing. How might your actions affect others? A noble leader puts the people’s welfare before self-interests. ※ Call upon the Illustrious Ancestor. When seeking favor from the gods and spirits, the extravagance of your offerings does not matter; it is the sincerity of your heart that sways them."
+  },
+  {
+    "id": 64,
+    "name": "Toward an End",
+    "tone": "Approaching Completion",
+    "text": "What is to be has not yet come to pass, but as you ford the river, you see the banks on the other side. ※ You are about to peak, but know that after the peak there comes stagnation and then the decline. This is an order that every one must follow, a higher authority that each one of us must yield to. When the king forgets there is higher, that begins the decline. Remember: reaching the top is only the halfway point. ※"
+  }
+]

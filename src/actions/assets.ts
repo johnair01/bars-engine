@@ -99,6 +99,8 @@ export async function uploadBarAttachment(
 
     revalidatePath(`/admin/quests`)
     revalidatePath(`/quests/${customBarId}`)
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${customBarId}`)
     return { success: true, assetId: asset.id }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Upload failed'

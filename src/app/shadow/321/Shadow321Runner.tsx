@@ -1,11 +1,37 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { SceneCard, SceneInput, SceneShortInput, SceneNav } from '@/components/scene-card/SceneCard'
 import { createQuestFrom321Metadata, fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
 import { discoverDaemon } from '@/actions/daemons'
+import { deriveShadowName } from '@/lib/shadow-name-grammar'
 import { deriveMetadata321 } from '@/lib/quest-grammar'
+import { logShadowNameFeedback } from '@/actions/shadow-name-feedback'
+import { nameShadowBelief } from '@/actions/face-move-bar'
+
+// ---------------------------------------------------------------------------
+// Feeling chip vocabulary — Wuxing neutral + satisfied
+// ---------------------------------------------------------------------------
+
+type FeelingChip = {
+  label: string
+  channel: 'wood' | 'fire' | 'earth' | 'metal' | 'water'
+  altitude: 'neutral' | 'satisfied'
+}
+
+const FEELING_CHIPS: FeelingChip[] = [
+  { label: 'purposeful',  channel: 'wood',  altitude: 'neutral'   },
+  { label: 'generative',  channel: 'wood',  altitude: 'satisfied' },
+  { label: 'open',        channel: 'fire',  altitude: 'neutral'   },
+  { label: 'expansive',   channel: 'fire',  altitude: 'satisfied' },
+  { label: 'grounded',    channel: 'earth', altitude: 'neutral'   },
+  { label: 'centered',    channel: 'earth', altitude: 'satisfied' },
+  { label: 'tender',      channel: 'metal', altitude: 'neutral'   },
+  { label: 'released',    channel: 'metal', altitude: 'satisfied' },
+  { label: 'discerning',  channel: 'water', altitude: 'neutral'   },
+  { label: 'trusting',    channel: 'water', altitude: 'satisfied' },
+]
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -20,28 +46,33 @@ type Answers = {
   maskName: string           // "I'll call this…"
   // Phase 2: Talk to It (2nd person)
   desire: string             // what it wants
-  desireOutcome: string      // what it gets from that
+  desireOutcome: string      // what it gets from that (raw unprimed text)
+  desireFeelingTags: FeelingChip[] // structured feeling chips (up to 2, selected after text)
   lifeState: string          // what life is like for it
   rootCause: string          // what would have to be true
   fear: string               // what it fears
   // Phase 1: Be It (1st person)
   interiorVoice: string      // speaking as the mask from within
   integrationShift: string   // what shifts when held with awareness
+  // Alchemy integration
+  desiredFeeling: string     // "how would you want to feel?" — free text at alchemy phase
+  desiredFeelingTags: FeelingChip[] // structured chips at alchemy phase (up to 2)
 }
 
 type Phase =
-  | 'face_1'      // describe the charge
-  | 'face_2'      // give it a shape
-  | 'face_3'      // give it a name
-  | 'talk_1'      // what does it want
-  | 'talk_2'      // what does it get from that
-  | 'talk_3'      // what is life like for it
-  | 'talk_4'      // what would have to be true
-  | 'talk_5'      // what does it fear
-  | 'be_1'        // let it speak from within
-  | 'be_2'        // what shifts
-  | 'alchemy'     // emotional alchemy reveal — dissatisfied → satisfied
-  | 'artifact'    // dispatch: quest, BAR, daemon, fuel, save
+  | 'face_1'          // describe the charge
+  | 'face_2'          // give it a shape
+  | 'face_3'          // give it a name
+  | 'talk_1'          // what does it want
+  | 'talk_2'          // what does it get from that
+  | 'talk_3'          // what is life like for it
+  | 'talk_4'          // what would have to be true
+  | 'talk_5'          // what does it fear
+  | 'be_1'            // let it speak from within
+  | 'be_2'            // what shifts
+  | 'alchemy'         // emotional alchemy reveal — dissatisfied state
+  | 'alchemy_feeling' // how would you want to feel? — desired state
+  | 'artifact'        // dispatch: quest, BAR, daemon, fuel, save
   | 'done'
 
 const PHASE_ORDER: Phase[] = [
@@ -49,6 +80,7 @@ const PHASE_ORDER: Phase[] = [
   'talk_1', 'talk_2', 'talk_3', 'talk_4', 'talk_5',
   'be_1', 'be_2',
   'alchemy',
+  'alchemy_feeling',
   'artifact',
 ]
 
@@ -74,24 +106,67 @@ type Props = {
 // Component
 // ---------------------------------------------------------------------------
 
+const SESSION_KEY = 'shadow321_progress'
+
+function loadSession(): { phase: Phase; alignedAction: AlignedAction | ''; answers: Answers } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as { phase: Phase; alignedAction: AlignedAction | ''; answers: Answers }
+  } catch {
+    return null
+  }
+}
+
+function clearSession() {
+  if (typeof window !== 'undefined') sessionStorage.removeItem(SESSION_KEY)
+}
+
 export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [phase, setPhase] = useState<Phase>('face_1')
-  const [alignedAction, setAlignedAction] = useState<AlignedAction | ''>('')
-  const [answers, setAnswers] = useState<Answers>({
+  // Tracks the last name produced by "Suggest name" — used for feedback (accepted vs edited)
+  const lastSuggestedNameRef = useRef<string | null>(null)
+
+  // Restore from sessionStorage on mount if available
+  const saved = typeof window !== 'undefined' ? loadSession() : null
+  const [phase, setPhase] = useState<Phase>(saved?.phase ?? 'face_1')
+  const [alignedAction, setAlignedAction] = useState<AlignedAction | ''>(saved?.alignedAction ?? '')
+  const [answers, setAnswers] = useState<Answers>(saved?.answers ?? {
     chargeDescription: initialCharge ?? '',
     maskShape: '',
     maskName: '',
     desire: '',
     desireOutcome: '',
+    desireFeelingTags: [],
     lifeState: '',
     rootCause: '',
     fear: '',
     interiorVoice: '',
     integrationShift: '',
+    desiredFeeling: '',
+    desiredFeelingTags: [],
   })
+
+  // Persist to sessionStorage on every state change
+  useEffect(() => {
+    if (phase === 'done') return
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ phase, alignedAction, answers }))
+    } catch {
+      // storage full or private mode — silently ignore
+    }
+  }, [phase, alignedAction, answers])
+
+  // Shaman: Name shadow belief — fire-and-forget BAR when process reaches artifact phase
+  useEffect(() => {
+    if (phase === 'artifact' && answers.maskName.trim()) {
+      void nameShadowBelief({ belief: answers.maskName.trim() })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase])
 
   // -------------------------------------------------------------------------
   // Helpers
@@ -156,6 +231,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (res && 'error' in res) {
         setError(res.error)
       } else if (res?.success) {
+        clearSession()
         router.push(returnTo ?? '/')
         router.refresh()
       }
@@ -170,6 +246,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (res && 'error' in res) {
         setError(res.error)
       } else {
+        clearSession()
         router.push(returnTo ?? '/')
         router.refresh()
       }
@@ -194,6 +271,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         phase2Snapshot: JSON.stringify(phase2),
       }))
     }
+    clearSession()
     router.push('/create-bar?from321=1')
   }
 
@@ -206,6 +284,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (res.error) {
         setError(res.error)
       } else {
+        clearSession()
         router.push('/daemons')
         router.refresh()
       }
@@ -220,6 +299,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         phase2Snapshot: JSON.stringify({ q1: answers.chargeDescription, q3: answers.lifeState, q5: answers.rootCause, alignedAction }),
         outcome: 'skipped',
       })
+      clearSession()
       router.push(returnTo ?? '/')
       router.refresh()
     })
@@ -282,6 +362,32 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   }
 
   if (phase === 'face_3') {
+    const hasInput = answers.chargeDescription.trim() && answers.maskShape.trim()
+    function handleSuggestName() {
+      if (!hasInput) return
+      setError(null)
+      try {
+        const name = deriveShadowName(answers.chargeDescription, answers.maskShape)
+        lastSuggestedNameRef.current = name
+        set('maskName', name)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not suggest name')
+      }
+    }
+    function handleNextWithFeedback() {
+      const suggested = lastSuggestedNameRef.current
+      if (suggested) {
+        const accepted = answers.maskName.trim() === suggested
+        void logShadowNameFeedback({
+          chargeDescription: answers.chargeDescription,
+          maskShape: answers.maskShape,
+          suggestedName: suggested,
+          accepted,
+          editedTo: accepted ? undefined : answers.maskName.trim() || undefined,
+        })
+      }
+      goNext()
+    }
     return (
       <SceneCard
         gmVoice="shaman"
@@ -291,15 +397,28 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         tone="contemplative"
         progress={discoveryProgress}
       >
-        <SceneShortInput
-          value={answers.maskName}
-          onChange={(v) => set('maskName', v)}
-          placeholder="e.g. The Cynic, The Protector, The Perfectionist…"
-          autoFocus
-        />
+        <div className="space-y-2">
+          <SceneShortInput
+            value={answers.maskName}
+            onChange={(v) => set('maskName', v)}
+            placeholder="e.g. The Cynic, The Protector, The Perfectionist…"
+            autoFocus
+          />
+          <button
+            type="button"
+            onClick={handleSuggestName}
+            disabled={!hasInput}
+            className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            ✨ Suggest name
+          </button>
+          {error && (
+            <p className="text-xs text-red-400">{error}</p>
+          )}
+        </div>
         <SceneNav
           onBack={goBack}
-          onNext={goNext}
+          onNext={handleNextWithFeedback}
           nextDisabled={!answers.maskName.trim()}
         />
       </SceneCard>
@@ -567,9 +686,26 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
           onBack={goBack}
           onNext={goNext}
           nextDisabled={!alignedAction}
-          nextLabel="Choose what to do with this →"
+          nextLabel="One more thing →"
         />
       </div>
+    )
+  }
+
+  // ---------------------------------------------------------------------------
+  // Desired Feeling — how would you want to feel?
+  // ---------------------------------------------------------------------------
+
+  if (phase === 'alchemy_feeling') {
+    return (
+      <AlchemyFeelingStep
+        answers={answers}
+        onUpdate={(desiredFeeling, desiredFeelingTags) =>
+          setAnswers((prev) => ({ ...prev, desiredFeeling, desiredFeelingTags }))
+        }
+        onBack={goBack}
+        onNext={goNext}
+      />
     )
   }
 
@@ -653,6 +789,151 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   }
 
   return null
+}
+
+// ---------------------------------------------------------------------------
+// AlchemyFeelingStep — "If you had all that — how would you want to feel?"
+// Researcher pattern: question alone first → quiet input → chips after pause
+// ---------------------------------------------------------------------------
+
+function AlchemyFeelingStep({
+  answers,
+  onUpdate,
+  onBack,
+  onNext,
+}: {
+  answers: Answers
+  onUpdate: (text: string, tags: FeelingChip[]) => void
+  onBack: () => void
+  onNext: () => void
+}) {
+  const [text, setText] = useState(answers.desiredFeeling)
+  const [tags, setTags] = useState<FeelingChip[]>(answers.desiredFeelingTags)
+  const [showChips, setShowChips] = useState(false)
+  const [inputVisible, setInputVisible] = useState(false)
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTyped = useRef<number>(0)
+
+  // Input fades in after 1.5s
+  useEffect(() => {
+    const t = setTimeout(() => setInputVisible(true), 1500)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Chips appear after 5s of no typing
+  useEffect(() => {
+    if (!inputVisible) return
+    if (showChips) return
+    if (idleTimer.current) clearTimeout(idleTimer.current)
+    idleTimer.current = setTimeout(() => setShowChips(true), 5000)
+    return () => { if (idleTimer.current) clearTimeout(idleTimer.current) }
+  }, [text, inputVisible, showChips])
+
+  const handleText = (val: string) => {
+    setText(val)
+    lastTyped.current = Date.now()
+    onUpdate(val, tags)
+    // Reset idle timer on typing
+    if (idleTimer.current) clearTimeout(idleTimer.current)
+    if (!showChips) {
+      idleTimer.current = setTimeout(() => setShowChips(true), 5000)
+    }
+  }
+
+  const toggleChip = (chip: FeelingChip) => {
+    const already = tags.some((t) => t.label === chip.label)
+    let next: FeelingChip[]
+    if (already) {
+      next = tags.filter((t) => t.label !== chip.label)
+    } else if (tags.length < 2) {
+      next = [...tags, chip]
+    } else {
+      // Replace second chip
+      next = [tags[0], chip]
+    }
+    setTags(next)
+    onUpdate(text, next)
+  }
+
+  const name = answers.maskName || 'this presence'
+  const contextual = tags.length > 0
+    ? `What does "${tags.map((t) => t.label).join('" or "')}" feel like for you?`
+    : 'Name the feeling, or a few words…'
+
+  return (
+    <div className="space-y-8">
+      <div className="border-l-2 border-indigo-500/40 pl-4 py-1">
+        <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">Integrator</span>
+        <p className="text-zinc-400 text-sm mt-1 italic">
+          You&apos;ve seen what {name} was reaching for.
+        </p>
+      </div>
+
+      <p className="text-zinc-100 text-xl font-medium leading-relaxed">
+        If you got all of that — how would you want to feel?
+      </p>
+
+      {inputVisible && (
+        <div className="space-y-3 animate-in fade-in duration-700">
+          <textarea
+            value={text}
+            onChange={(e) => handleText(e.target.value)}
+            placeholder={contextual}
+            rows={3}
+            autoFocus
+            className="w-full bg-transparent border-0 border-b border-zinc-800 focus:border-indigo-500/60 outline-none text-zinc-200 text-base resize-none placeholder-zinc-700 pb-2 transition-colors"
+          />
+
+          {!showChips && (
+            <button
+              onClick={() => setShowChips(true)}
+              className="text-xs text-zinc-700 hover:text-zinc-500 transition-colors"
+            >
+              help me find the word →
+            </button>
+          )}
+        </div>
+      )}
+
+      {showChips && (
+        <div className="space-y-3 animate-in fade-in duration-500">
+          <p className="text-xs text-zinc-600 italic">
+            Words others have used at this moment — does anything land?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {FEELING_CHIPS.map((chip) => {
+              const active = tags.some((t) => t.label === chip.label)
+              return (
+                <button
+                  key={chip.label}
+                  onClick={() => toggleChip(chip)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                    active
+                      ? 'bg-indigo-600/30 border border-indigo-500/60 text-indigo-200'
+                      : 'border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              )
+            })}
+          </div>
+          {tags.length > 0 && (
+            <p className="text-[11px] text-zinc-700 italic">
+              Your words still matter most — keep writing if this isn&apos;t quite right.
+            </p>
+          )}
+        </div>
+      )}
+
+      <SceneNav
+        onBack={onBack}
+        onNext={onNext}
+        nextDisabled={!text.trim() && tags.length === 0}
+        nextLabel="Choose what to do with this →"
+      />
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------

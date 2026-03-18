@@ -10,7 +10,7 @@ The same 8 Kotter stages manifest differently per allyship domain. Use this when
 
 | Stage | GATHERING_RESOURCES | SKILLFUL_ORGANIZING | RAISE_AWARENESS | DIRECT_ACTION |
 |-------|---------------------|---------------------|-----------------|---------------|
-| **1. Urgency** | "We need resources" | "We need capacity" | "People need to know" | "What needs doing now?" |
+| **1. Urgency** | Gathering what allows life to unfold (time, attention, skills, presence) | "We need capacity" | "People need to know" | "What needs doing now?" |
 | **2. Coalition** | Who will contribute? | Who are the builders? | Who will spread the message? | Who is with you? |
 | **3. Vision** | Fully resourced looks like… | System complete looks like… | Awareness looks like… | Completion looks like… |
 | **4. Communicate** | Share the need | Share the roadmap | Tell the story | Coordinate action |

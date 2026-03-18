@@ -23,6 +23,14 @@
 - [x] Add "Invite friends" or "Share" button on Event page
 - [x] Copies `{origin}/?ref=bruised-banana` to clipboard (InviteButton updated from /event to /)
 
+## Phase 4: INV-1 + INV-6 — Personal message (GAP_ANALYSIS)
+
+- [x] Add `invitationMessage` to Invite schema
+- [x] Forge form: add "Personal message (optional)" field with placeholder "What do you see in this person that belongs in this world?"
+- [x] Forge action: persist message to Invite.invitationMessage
+- [x] Invite landing page: display forger name + message prominently above sign-up form ("X called you here because..." + blockquote)
+- [x] Fix forge flow: set invitationBarId on Invite when creating BAR (so invitationBar relation resolves)
+
 ## Verification
 
 - Open `/?ref=bruised-banana` → landing shows 4 moves; ref preserved through sign-up

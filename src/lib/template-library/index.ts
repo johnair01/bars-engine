@@ -18,6 +18,55 @@ export interface PassageSlot {
 export interface GenerateOptions {
   title?: string
   slug?: string
+  /** Top-level campaign ref (e.g. bruised-banana). Sets Adventure.campaignRef. */
+  campaignRef?: string
+  /** Subcampaign domain (e.g. DIRECT_ACTION). Sets Adventure.subcampaignDomain. */
+  subcampaignDomain?: string
+}
+
+const FACE_PLACEHOLDER: Record<string, { face: string; guidance: string }> = {
+  context: { face: 'Shaman', guidance: 'Ground the scene. What world does the player stand in?' },
+  anomaly: { face: 'Challenger', guidance: 'Introduce tension. What disrupts or tests the player?' },
+  choice: { face: 'Diplomat', guidance: 'Present options. What paths can the player take?' },
+  response: { face: 'Regent', guidance: 'Resolve the moment. What outcome or ruling emerges?' },
+  artifact: { face: 'Architect', guidance: 'Deliver a takeaway. What does the player carry forward?' },
+}
+
+export const FACE_COLORS: Record<string, { label: string; bg: string; text: string }> = {
+  shaman:     { label: 'Shaman',     bg: 'bg-violet-500/15', text: 'text-violet-300' },
+  challenger: { label: 'Challenger', bg: 'bg-red-500/15',    text: 'text-red-300'    },
+  diplomat:   { label: 'Diplomat',   bg: 'bg-sky-500/15',    text: 'text-sky-300'    },
+  regent:     { label: 'Regent',     bg: 'bg-amber-500/15',  text: 'text-amber-300'  },
+  architect:  { label: 'Architect',  bg: 'bg-emerald-500/15',text: 'text-emerald-300'},
+}
+
+/** Derive the GM face for a passage slot from its nodeId. */
+export function getFaceForNodeId(nodeId: string): { face: string; label: string; bg: string; text: string } {
+  const prefix = nodeId.replace(/_\d+$/, '')
+  const entry = FACE_PLACEHOLDER[prefix] ?? FACE_PLACEHOLDER['artifact']
+  const colors = FACE_COLORS[entry.face.toLowerCase()] ?? FACE_COLORS['architect']
+  return { face: entry.face.toLowerCase(), ...colors }
+}
+
+/** Return true if the passage text is still an unedited placeholder. */
+export function isPlaceholderText(text: string): boolean {
+  return Object.values(FACE_PLACEHOLDER).some(({ face, guidance }) =>
+    text.startsWith(`${face}: ${guidance}`)
+  ) || /^\[Edit: \S+\]$/.test(text.trim())
+}
+
+/** Return the campaign function guidance string for a passage slot (no face prefix). */
+export function getGuidanceForNodeId(nodeId: string): string {
+  const prefix = nodeId.replace(/_\d+$/, '')
+  const entry = FACE_PLACEHOLDER[prefix] ?? FACE_PLACEHOLDER['artifact']
+  return entry.guidance
+}
+
+/** Return face-specific placeholder text for a passage slot. */
+export function getPlaceholderForSlot(nodeId: string): string {
+  const prefix = nodeId.replace(/_\d+$/, '')
+  const entry = FACE_PLACEHOLDER[prefix] ?? FACE_PLACEHOLDER['artifact']
+  return `${entry.face}: ${entry.guidance} [Edit: replace with your content.]`
 }
 
 /** List all templates. */
@@ -40,9 +89,17 @@ export async function generateFromTemplate(
   const slots = JSON.parse(template.passageSlots) as PassageSlot[]
   const sortedSlots = [...slots].sort((a, b) => a.order - b.order)
 
-  const baseSlug = options?.slug ?? `encounter-${Date.now()}`
+  const baseSlug =
+    options?.slug ??
+    (options?.subcampaignDomain
+      ? `${options.campaignRef ?? 'campaign'}-${options.subcampaignDomain.toLowerCase()}-${Date.now()}`
+      : `encounter-${Date.now()}`)
   const slug = await ensureUniqueSlug(baseSlug)
-  const title = options?.title ?? `${template.name} (draft)`
+  const title =
+    options?.title ??
+    (options?.subcampaignDomain
+      ? `${template.name} — ${options.subcampaignDomain.replace(/_/g, ' ')} (draft)`
+      : `${template.name} (draft)`)
 
   const adventure = await db.adventure.create({
     data: {
@@ -51,6 +108,8 @@ export async function generateFromTemplate(
       status: 'DRAFT',
       visibility: 'PRIVATE_QUEST',
       startNodeId: template.startNodeId,
+      campaignRef: options?.campaignRef ?? null,
+      subcampaignDomain: options?.subcampaignDomain ?? null,
     },
   })
 
@@ -66,7 +125,7 @@ export async function generateFromTemplate(
       data: {
         adventureId: adventure.id,
         nodeId: slot.nodeId,
-        text: `[Edit: ${slot.nodeId}]`,
+        text: getPlaceholderForSlot(slot.nodeId),
         choices,
       },
     })
