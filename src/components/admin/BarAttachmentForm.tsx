@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { uploadBarAttachment } from '@/actions/assets'
+import { useState } from 'react'
+import { uploadBarAsset } from '@/lib/asset-upload-client'
 import type { Asset } from '@prisma/client'
 
 const MAX_IMAGE_MB = 5
@@ -16,16 +16,14 @@ type BarAttachmentFormProps = {
 export function BarAttachmentForm({ customBarId, assets, onUploaded }: BarAttachmentFormProps) {
   const [intention, setIntention] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     const form = e.currentTarget
-    const formData = new FormData(form)
-    formData.set('intention', intention)
 
-    const file = formData.get('file') as File | null
+    const file = (form.elements.namedItem('file') as HTMLInputElement)?.files?.[0]
     if (!file || file.size === 0) {
       setError('Please select a file')
       return
@@ -44,16 +42,20 @@ export function BarAttachmentForm({ customBarId, assets, onUploaded }: BarAttach
       return
     }
 
-    startTransition(async () => {
-      const result = await uploadBarAttachment(customBarId, formData)
-      if (result.error) {
-        setError(result.error)
-        return
-      }
+    setIsPending(true)
+    try {
+      await uploadBarAsset(file, {
+        barId: customBarId,
+        intention: intention.trim() || undefined,
+      })
       setIntention('')
       form.reset()
       onUploaded?.()
-    })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (

@@ -25,8 +25,9 @@ async function requirePlayerOrAdmin() {
 }
 
 /**
- * Upload an attachment for a BAR (CustomBar).
- * Creator or admin can upload. Optional intention stored in metadata.
+ * @deprecated Use client-side upload via /api/assets/upload and uploadBarAsset from
+ * @/lib/asset-upload-client. Server actions hit FUNCTION_PAYLOAD_TOO_LARGE for photos.
+ * Kept for programmatic/script use only.
  */
 export async function uploadBarAttachment(
   customBarId: string,

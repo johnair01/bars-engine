@@ -56,6 +56,78 @@ function deriveTitle(content: string): string {
     return firstLine.slice(0, 77) + '...'
 }
 
+/**
+ * Create a BAR without photos. Used when client uploads photos via Vercel Blob
+ * (client-side) to avoid FUNCTION_PAYLOAD_TOO_LARGE. Returns barId for client
+ * to pass to /api/assets/upload.
+ */
+export async function createBarForUpload(data: {
+    content?: string
+    tags?: string
+    socialLinks?: string
+    hasPhotos?: boolean
+}): Promise<{ barId?: string; error?: string }> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const content = (data.content || '').trim()
+    const tags = (data.tags || '').trim()
+    const socialLinksRaw = (data.socialLinks || '').trim()
+    const hasPhotos = !!data.hasPhotos
+
+    if (content.length < 3 && !hasPhotos) {
+        return { error: 'Add some text (at least 3 characters) or a photo' }
+    }
+
+    const title = content.length >= 3 ? deriveTitle(content) : 'Photo'
+    const description = content.length >= 3 ? content : 'Photo'
+
+    try {
+        const bar = await db.customBar.create({
+            data: {
+                creatorId: playerId,
+                title,
+                description,
+                type: 'bar',
+                reward: 0,
+                visibility: 'private',
+                status: 'active',
+                storyContent: tags || null,
+                inputs: '[]',
+                rootId: 'temp',
+            }
+        })
+
+        await db.customBar.update({
+            where: { id: bar.id },
+            data: { rootId: bar.id }
+        })
+
+        const { validateSocialUrl, getMaxLinksPerBar } = await import('@/lib/bar-social-links')
+        const urls = socialLinksRaw
+            .split(/[\n,]+/)
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0)
+            .slice(0, getMaxLinksPerBar())
+        for (let i = 0; i < urls.length; i++) {
+            const result = validateSocialUrl(urls[i])
+            if (result.ok) {
+                await db.barSocialLink.create({
+                    data: { barId: bar.id, platform: result.platform, url: urls[i], sortOrder: i },
+                })
+            }
+        }
+
+        revalidatePath('/bars')
+        revalidatePath('/')
+        return { barId: bar.id }
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        console.error('[BAR] Create failed:', message)
+        return { error: 'Failed to create BAR. Please try again.' }
+    }
+}
+
 export async function createPlayerBar(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
@@ -98,20 +170,10 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
             data: { rootId: bar.id }
         })
 
-        const { uploadBarAttachment } = await import('@/actions/assets')
-        if (photoFront && photoFront.size > 0) {
-            const fd = new FormData()
-            fd.set('file', photoFront)
-            fd.set('side', 'front')
-            const r = await uploadBarAttachment(bar.id, fd)
-            if (!r.success) console.warn('[BAR] Front photo upload failed:', r.error)
-        }
-        if (photoBack && photoBack.size > 0) {
-            const fd = new FormData()
-            fd.set('file', photoBack)
-            fd.set('side', 'back')
-            const r = await uploadBarAttachment(bar.id, fd)
-            if (!r.success) console.warn('[BAR] Back photo upload failed:', r.error)
+        // Photos must be uploaded via client-side Blob (/api/assets/upload), not through
+        // server actions — avoids FUNCTION_PAYLOAD_TOO_LARGE. createBarForUpload + uploadBarAsset.
+        if (photoFront?.size || photoBack?.size) {
+            console.warn('[BAR] createPlayerBar received photos — use createBarForUpload + client upload instead')
         }
 
         const { validateSocialUrl, getMaxLinksPerBar } = await import('@/lib/bar-social-links')

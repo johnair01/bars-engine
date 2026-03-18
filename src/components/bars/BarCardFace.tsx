@@ -15,14 +15,14 @@ export function BarCardFace({
 }) {
   const firstLine = (description || '').trim().split(/\r?\n/)[0]?.trim() || ''
   return (
-    <div className={`rounded-xl border border-zinc-700 overflow-hidden bg-zinc-900/50 ${className}`}>
+    <div className={`rounded-xl border border-zinc-700 overflow-hidden bg-zinc-900/50 min-w-0 ${className}`}>
       {imageUrl && (
         <div className="aspect-[4/3] overflow-hidden">
           <img src={imageUrl} alt="" className="w-full h-full object-cover" />
         </div>
       )}
-      <div className="p-4">
-        <p className="font-mono text-sm text-zinc-300 line-clamp-2">{firstLine || description}</p>
+      <div className="p-4 min-w-0">
+        <p className="font-mono text-sm text-zinc-300 line-clamp-2 break-words">{firstLine || description}</p>
       </div>
     </div>
   )
