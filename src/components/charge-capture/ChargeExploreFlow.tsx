@@ -36,7 +36,7 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
   const [isPending, startTransition] = useTransition()
 
   // Load suggestions on mount
-  useState(() => {
+  useEffect(() => {
     startTransition(async () => {
       const result = await generateQuestSuggestionsFromCharge(barId)
       if ('error' in result) {
@@ -45,7 +45,7 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
       }
       setPhase({ kind: 'suggestions', items: result.quest_suggestions })
     })
-  })
+  }, [barId])
 
   const handleCreateQuest = (index: number) => {
     setCreatingIndex(index)
@@ -125,7 +125,7 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
       <div className="space-y-4 animate-in fade-in">
         <div className="rounded-xl border border-green-800/50 bg-green-950/20 p-5 text-center space-y-2">
           <p className="text-green-400 font-medium">Quest created.</p>
-          <p className="text-zinc-400 text-sm">It's in your Quest Wallet.</p>
+          <p className="text-zinc-400 text-sm">It&apos;s in your Quest Wallet.</p>
         </div>
         <div className="flex gap-3">
           <Link

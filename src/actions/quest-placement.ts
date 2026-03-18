@@ -121,7 +121,7 @@ export type PlacementOptions = {
  * Gameboard slots: slots for active instance with an assigned quest.
  */
 export async function getPlacementOptionsForQuest(
-    questId: string
+    _questId: string
 ): Promise<PlacementOptions | { error: string }> {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
