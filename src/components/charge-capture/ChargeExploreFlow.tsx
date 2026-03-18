@@ -66,6 +66,17 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
     })
   }
 
+  const handleAddToWallet = (questId: string) => {
+    startTransition(async () => {
+      const opts = await getPlacementOptionsForQuest(questId)
+      if ('error' in opts || (opts.threads.length === 0 && opts.gameboardSlots.length === 0)) {
+        setPhase({ kind: 'done', questId })
+      } else {
+        setPhase({ kind: 'placing', questId, options: opts as PlacementOptions })
+      }
+    })
+  }
+
   const handleAddToThread = (threadId: string) => {
     if (phase.kind !== 'placing') return
     const questId = phase.questId
@@ -114,6 +125,37 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
   if (phase.kind === 'loading') {
     return (
       <div className="py-8 text-center text-zinc-500">Loading suggestions...</div>
+    )
+  }
+
+  if (phase.kind === 'what-now') {
+    const { questId } = phase
+    return (
+      <div className="space-y-5 animate-in fade-in">
+        <div className="rounded-xl border border-green-800/50 bg-green-950/20 p-5 space-y-1">
+          <p className="text-green-400 font-semibold">Quest created.</p>
+          <p className="text-zinc-400 text-sm">What would you like to do with it?</p>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => router.push(`/quest/${questId}/unpack`)}
+            className="w-full text-left rounded-xl border border-purple-800/50 bg-purple-950/20 px-5 py-4 hover:bg-purple-900/30 transition group"
+          >
+            <p className="text-white font-semibold group-hover:text-purple-200 transition">Unpack this quest</p>
+            <p className="text-zinc-400 text-sm mt-0.5">Walk through reflection prompts and choose your move — Wake Up, Clean Up, Grow Up, or Show Up.</p>
+          </button>
+
+          <button
+            onClick={() => handleAddToWallet(questId)}
+            disabled={isPending}
+            className="w-full text-left rounded-xl border border-zinc-800 bg-zinc-950/50 px-5 py-4 hover:bg-zinc-900 transition disabled:opacity-50"
+          >
+            <p className="text-white font-semibold">Add to Quest Wallet</p>
+            <p className="text-zinc-400 text-sm mt-0.5">Save it and place it in a thread or gameboard slot when ready.</p>
+          </button>
+        </div>
+      </div>
     )
   }
 
