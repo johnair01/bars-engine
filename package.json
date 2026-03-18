@@ -43,6 +43,7 @@
     "test:onboarding-grammar": "tsx scripts/with-env.ts \"tsx scripts/test-onboarding-grammar.ts\"",
     "test:agent-game-loop": "tsx scripts/with-env.ts \"tsx scripts/test-agent-game-loop.ts\"",
     "seed:simulated-players": "tsx scripts/with-env.ts \"tsx scripts/seed-simulated-players.ts\"",
+    "propose:agent-content": "tsx scripts/with-env.ts \"tsx scripts/propose-agent-content.ts\"",
     "test:creation-quest": "tsx src/lib/creation-quest/__tests__/creationQuest.test.ts",
     "test:transformation-move-registry": "tsx src/lib/transformation-move-registry/__tests__/registry.test.ts",
     "test:transformation-encounter-geometry": "tsx src/lib/transformation-encounter-geometry/__tests__/encounter-geometry.test.ts",

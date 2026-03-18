@@ -18,11 +18,11 @@
 
 ## Phase 3: NPC Content Proposal
 
-- [ ] Agent-facing entry point to BAR/quest pipeline
-- [ ] Persona-driven generation (nation, archetype, goal)
-- [ ] Admin approval gate before publication
-- [ ] Schema: proposedByAgentId on BAR/quest records
-- [ ] Clear provenance on agent-created artifacts
+- [x] Agent-facing entry point to BAR/quest pipeline
+- [x] Persona-driven generation (nation, archetype, goal)
+- [x] Admin approval gate before publication
+- [x] Schema: proposedByAgentId on BAR/quest records
+- [x] Clear provenance on agent-created artifacts
 
 ## Verification
 

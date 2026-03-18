@@ -119,7 +119,8 @@ function VibeBarCard({
         return null
     }
 
-    const isValid = bar.inputs.every(inp => {
+    const inputsSchema = Array.isArray(bar.inputs) ? bar.inputs : (typeof bar.inputs === 'string' ? (() => { try { return JSON.parse(bar.inputs) as BarInput[] } catch { return [] } })() : [])
+    const isValid = inputsSchema.every(inp => {
         if (!inp.required) return true
         if (inp.type === 'multiselect') {
             return Array.isArray(inputs[inp.key]) && inputs[inp.key].length > 0
@@ -239,7 +240,7 @@ function VibeBarCard({
                         </Link>
                     ) : (
                         <>
-                            {bar.inputs.map(renderInput)}
+                            {inputsSchema.map(renderInput)}
                             <button
                                 type="button"
                                 disabled={!isValid}
@@ -452,19 +453,29 @@ export function StarterQuestBoard({
     }
 
     // Convert custom bars to BarDef format
-    const customAsBarDef: (BarDef & { isSystem?: boolean })[] = customBars.map(cb => ({
-        id: cb.id,
-        title: cb.title,
-        description: cb.description,
-        type: cb.type as 'vibe' | 'story',
-        reward: cb.reward,
-        inputs: JSON.parse(cb.inputs || '[]'),
-        unique: false,  // Custom bars are repeatable
-        isCustom: true, // Mark as custom
-        moveType: cb.moveType,
-        isSystem: cb.isSystem ?? false,
-        twineStoryId: cb.twineStoryId ?? null,
-    }))
+    const customAsBarDef: (BarDef & { isSystem?: boolean })[] = customBars.map(cb => {
+        let parsedInputs: BarInput[] = []
+        try {
+            parsedInputs = JSON.parse(cb.inputs || '[]') as BarInput[]
+            if (!Array.isArray(parsedInputs)) parsedInputs = []
+        } catch {
+            parsedInputs = []
+        }
+        return {
+            id: cb.id,
+            title: cb.title,
+            description: cb.description,
+            type: cb.type as 'vibe' | 'story',
+            reward: cb.reward,
+            inputs: parsedInputs,
+            unique: false,
+            isCustom: true,
+            moveType: cb.moveType,
+            isSystem: cb.isSystem ?? false,
+            twineStoryId: cb.twineStoryId ?? null,
+            creatorId: cb.creatorId,
+        }
+    })
 
     // Convert I Ching readings to BarDef format
     const ichingAsBarDef: BarDef[] = ichingBars.map(ib => ({

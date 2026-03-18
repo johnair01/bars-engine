@@ -66,7 +66,7 @@ export default async function BarDetailPage({ params }: { params: Promise<{ id: 
                         ←
                     </Link>
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <span>by {bar.creator.name}</span>
+                        <span>by {bar.creator.name}{bar.proposedByAgentId ? ' (simulated)' : ''}</span>
                         <span>&middot;</span>
                         <span>{new Date(bar.createdAt).toLocaleDateString()}</span>
                         {isOwner && (

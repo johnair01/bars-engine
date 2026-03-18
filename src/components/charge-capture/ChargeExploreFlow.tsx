@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   generateQuestSuggestionsFromCharge,
   createQuestFromSuggestion,
@@ -24,11 +25,13 @@ const MOVE_LABELS: Record<string, string> = {
 type Phase =
   | { kind: 'loading' }
   | { kind: 'suggestions'; items: QuestSuggestion[] }
+  | { kind: 'what-now'; questId: string }
   | { kind: 'placing'; questId: string; options: PlacementOptions }
   | { kind: 'done'; questId: string }
   | { kind: 'error'; message: string }
 
 export function ChargeExploreFlow({ barId }: { barId: string }) {
+  const router = useRouter()
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
   const [creatingIndex, setCreatingIndex] = useState<number | null>(null)
   const [placingId, setPlacingId] = useState<string | null>(null)
@@ -57,14 +60,8 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
         setCreatingIndex(null)
         return
       }
-      // Load placement options
-      const opts = await getPlacementOptionsForQuest(result.questId)
-      if ('error' in opts || (opts.threads.length === 0 && opts.gameboardSlots.length === 0)) {
-        // No placement options — go straight to done
-        setPhase({ kind: 'done', questId: result.questId })
-      } else {
-        setPhase({ kind: 'placing', questId: result.questId, options: opts as PlacementOptions })
-      }
+      // Quest created — let player choose what to do next
+      setPhase({ kind: 'what-now', questId: result.questId })
       setCreatingIndex(null)
     })
   }

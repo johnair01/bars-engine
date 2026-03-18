@@ -70,6 +70,12 @@ export default async function AdminDashboard() {
                     icon="📋"
                 />
                 <DashboardCard
+                    title="Agent Proposals"
+                    value="NPC"
+                    href="/admin/agent-proposals"
+                    icon="🤖"
+                />
+                <DashboardCard
                     title="Backlog"
                     value="Spec Kit"
                     href="/admin/backlog"

@@ -6,6 +6,8 @@
  * Output: .specify/specs/avatar-character-lockstep/PHASE_LAYER_MATRIX.md
  */
 
+import * as fs from 'fs'
+import * as path from 'path'
 import {
   getUnlockedLayersForProgress,
   getUnlockedLayersForNode,
@@ -80,8 +82,6 @@ function main() {
   rows.push('```')
 
   const output = rows.join('\n')
-  const fs = require('fs')
-  const path = require('path')
   const outPath = path.join(process.cwd(), '.specify/specs/avatar-character-lockstep/PHASE_LAYER_MATRIX.md')
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(outPath, output, 'utf8')

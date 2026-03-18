@@ -3,9 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-
-export const FRICTION_TYPES = ['confusion', 'fear', 'overwhelm', 'avoidance', 'other'] as const
-export type FrictionType = (typeof FRICTION_TYPES)[number]
+import { FRICTION_TYPES, type FrictionType } from '@/lib/friction-types'
 
 function isValidFrictionType(value: string): value is FrictionType {
   return FRICTION_TYPES.includes(value as FrictionType)

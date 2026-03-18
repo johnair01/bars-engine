@@ -29,6 +29,7 @@ export function AdminNav() {
         { name: 'Quest Grammar', href: '/admin/quest-grammar', icon: '📝' },
         { name: 'Quest from Context', href: '/admin/quest-from-context', icon: '⚡' },
         { name: 'Quest Proposals', href: '/admin/quest-proposals', icon: '📋' },
+        { name: 'Agent Proposals', href: '/admin/agent-proposals', icon: '🤖' },
         { name: 'Game Lobby', href: '/lobby', icon: '🎂' },
         { name: 'Backlog', href: '/admin/backlog', icon: '📌' },
         { name: 'Library', href: '/admin/library', icon: '📚' },

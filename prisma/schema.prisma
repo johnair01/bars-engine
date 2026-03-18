@@ -229,6 +229,7 @@ model CustomBar {
   evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
   sourceBarId          String?   // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
   source321SessionId   String?   // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
+  proposedByAgentId    String?   // when set, this BAR/quest was proposed by an agent (NPC); requires admin approval before publication
   isKeyUnblocker       Boolean   @default(false) // tetris: completing this subquest unblocks root + siblings
   grantsMoveId         String?   // when set, completing this quest unlocks this NationMove
   questSource          String?   // system | bounty; bounties have stakedPool > 0
