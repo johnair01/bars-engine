@@ -221,8 +221,10 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (res && 'error' in res) {
         setError(res.error)
       } else if (res?.success) {
+        const { toast } = await import('sonner')
+        toast.success('Quest created! Place it in a thread or contribute to the gameboard.')
         clearSession()
-        router.push(returnTo ?? '/')
+        router.push(returnTo ?? `/hand?quest=${res.questId}`)
         router.refresh()
       }
     })
@@ -235,7 +237,9 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       const res = await fuelSystemFrom321(metadata)
       if (res && 'error' in res) {
         setError(res.error)
-      } else {
+      } else if (res?.success) {
+        const { toast } = await import('sonner')
+        toast.success('Charge fueled the system. Your insight was recorded.')
         clearSession()
         router.push(returnTo ?? '/')
         router.refresh()
@@ -261,6 +265,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         phase2Snapshot: JSON.stringify(phase2),
       }))
     }
+    import('sonner').then(({ toast }) => toast.success('Taking you to create your BAR. Your 321 metadata is ready.'))
     clearSession()
     router.push('/create-bar?from321=1')
   }
@@ -274,6 +279,8 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (res.error) {
         setError(res.error)
       } else {
+        const { toast } = await import('sonner')
+        toast.success('Daemon awakened!')
         clearSession()
         router.push('/daemons')
         router.refresh()
@@ -289,6 +296,8 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         phase2Snapshot: JSON.stringify({ q1: answers.chargeDescription, q3: answers.lifeState, q5: answers.rootCause, alignedAction }),
         outcome: 'skipped',
       })
+      const { toast } = await import('sonner')
+      toast.success('321 skipped. Your charge is preserved.')
       clearSession()
       router.push(returnTo ?? '/')
       router.refresh()

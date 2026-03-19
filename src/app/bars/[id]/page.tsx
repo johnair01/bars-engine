@@ -1,16 +1,19 @@
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getBarDetail, getBarRecipients } from '@/actions/bars'
+import { getCampaignInvitationForBar } from '@/actions/campaign-invitation'
 import Link from 'next/link'
 import { SendBarForm } from './SendBarForm'
 import { ShareOutsideForm } from './ShareOutsideForm'
 import { ExternalShareRevokeButton } from './ExternalShareRevokeButton'
 import { BarPhotoForm } from '@/components/bars/BarPhotoForm'
 import { BarDetailClient } from './BarDetailClient'
+import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
+import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 
 export default async function BarDetailPage({
     params,
@@ -44,6 +47,9 @@ export default async function BarDetailPage({
     // Fetch recipients for the send form (only if owner)
     const recipients = isOwner ? await getBarRecipients() : []
 
+    // Pending campaign role invitation for this BAR (if current user is target)
+    const campaignInvitation = await getCampaignInvitationForBar(bar.id, player.id)
+
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
@@ -70,6 +76,11 @@ export default async function BarDetailPage({
                     </div>
                 )}
 
+                {/* Campaign role invitation (recipient only) */}
+                {campaignInvitation && (
+                    <CampaignInvitationAccept invitation={campaignInvitation} />
+                )}
+
                 {/* Back + meta */}
                 <div className="flex items-center gap-4">
                     <Link href="/bars" className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-colors text-sm">
@@ -86,6 +97,11 @@ export default async function BarDetailPage({
                             <span className="bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full">Received</span>
                         )}
                     </div>
+                    {isOwner && (
+                        <div className="ml-auto">
+                            <DeleteBarButton barId={bar.id} />
+                        </div>
+                    )}
                 </div>
 
                 {/* Card: Face | Back */}
@@ -160,8 +176,8 @@ export default async function BarDetailPage({
                     </section>
                 )}
 
-                {/* Grow from this BAR (owner or recipient) */}
-                {(isOwner || isRecipient) && bar.type === 'bar' && (
+                {/* Grow from this BAR (owner or recipient) — bar and charge_capture can become quests */}
+                {(isOwner || isRecipient) && (bar.type === 'bar' || bar.type === 'charge_capture') && (
                     <GrowFromBar barId={bar.id} />
                 )}
 

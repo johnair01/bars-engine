@@ -153,7 +153,20 @@ function VibeBarCard({
                 <div className="flex items-center gap-2">
                     <span className="text-green-400 font-mono text-sm">+{bar.reward} ♦</span>
 
-                    {!isActive && <span className="text-zinc-500 text-xs ml-2 cursor-pointer" onClick={onPickUp}>Pick Up →</span>}
+                    {!isActive && (
+                        <>
+                            {(bar as any).isCustom && (
+                                <Link
+                                    href={`/bars/${bar.id}`}
+                                    className="text-purple-400 hover:text-purple-300 text-xs font-medium"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    View →
+                                </Link>
+                            )}
+                            <span className="text-zinc-500 text-xs ml-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); onPickUp(); }}>Pick Up →</span>
+                        </>
+                    )}
 
                     {isActive && onDelegate && (
                         <div className="relative group ml-2">

@@ -47,6 +47,7 @@ Then exits with code 1.
 | Sage backlog assess | `sage:backlog-assess` |
 | Strand consult (strand system) | `strand:consult` |
 | Strand consult (Admin Agent Forge) | `strand:consult:forge` |
+| Compost strand consults | `compost:strand-consults` (moves consult files from Done specs to `.specify/archive/strand-consults/`) |
 | Conclave analyze | `conclave:analyze` |
 | Gather analyze | `gather:analyze` |
 | Run parallel feature | `run:parallel-feature` |

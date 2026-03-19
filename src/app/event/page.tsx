@@ -1,8 +1,15 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
+import {
+  canInviteToAnyEventOnInstance,
+  listEventArtifactsForInstance,
+} from '@/actions/campaign-invitation'
+import { getWorldVenueEntryForInstance } from '@/actions/spatial-maps'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
+import { InviteToEventButton } from './InviteToEventButton'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
@@ -12,6 +19,11 @@ Your awareness and participation help the collective thrive.`
 
 const DEFAULT_SHOW_UP = `Contribute money (Donate above) or play the game by signing up and choosing your domains.
 This instance runs on quests, BARs, vibeulons, and story clock.`
+
+export const metadata: Metadata = {
+  title: 'Campaign',
+  description: 'Campaign hub — story, events, and ways to contribute.',
+}
 
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
@@ -31,9 +43,9 @@ export default async function EventPage() {
       <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 flex items-center justify-center">
         <div className="max-w-xl w-full space-y-6 text-center">
           <div className="text-4xl">🧩</div>
-          <h1 className="text-2xl font-bold text-white">No active instance</h1>
+          <h1 className="text-2xl font-bold text-white">No active campaign</h1>
           <p className="text-zinc-500">
-            The event page isn’t configured yet.
+            No instance is set as active. Admins can choose one under Admin → Instances → Set Active.
           </p>
           <div className="flex justify-center gap-3">
             <Link href="/" className="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-200">
@@ -52,6 +64,13 @@ export default async function EventPage() {
   const current = instance.currentAmountCents ?? 0
   const pct = goal > 0 ? Math.max(0, Math.min(1, current / goal)) : 0
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
+  const eventArtifacts = await listEventArtifactsForInstance(instance.id)
+  const canSendEventInvites =
+    !!player && (await canInviteToAnyEventOnInstance(player.id, instance.id))
+  const rootEvents = eventArtifacts.filter((e) => !e.parentEventArtifactId)
+  const childrenOf = (parentId: string) =>
+    eventArtifacts.filter((e) => e.parentEventArtifactId === parentId)
+  const worldVenue = await getWorldVenueEntryForInstance(instance.id)
   const wakeUpContent = instance.wakeUpContent ?? DEFAULT_WAKE_UP
   const showUpContent = instance.showUpContent ?? DEFAULT_SHOW_UP
 
@@ -73,6 +92,10 @@ export default async function EventPage() {
             )}
           </div>
           <div className="flex flex-wrap gap-3 items-center">
+            <span className="text-xs uppercase tracking-widest text-zinc-400 font-bold">
+              Campaign
+            </span>
+            <span className="text-xs text-zinc-600">·</span>
             <span className="text-xs uppercase tracking-widest text-zinc-500">
               {instance.domainType}
             </span>
@@ -81,6 +104,9 @@ export default async function EventPage() {
             </span>
           </div>
           <h1 className="text-4xl font-bold text-white">{instance.name}</h1>
+          <p className="text-sm text-zinc-500">
+            Fundraiser &amp; story hub for this instance. Scheduled gatherings are listed below—you can invite people to a specific event once it exists.
+          </p>
           {instance.theme && (
             <div className="text-lg text-purple-300">{instance.theme}</div>
           )}
@@ -121,6 +147,102 @@ export default async function EventPage() {
             </details>
           )}
         </section>
+
+        <section className="bg-amber-950/15 border border-amber-900/35 rounded-2xl p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-white">Events on this campaign</h2>
+              <p className="text-zinc-500 text-sm mt-1">
+                Dated gatherings linked to this instance. Invites attach to one of these rows—not to the whole campaign page.
+              </p>
+            </div>
+          </div>
+
+          {eventArtifacts.length === 0 ? (
+            <div className="rounded-xl bg-black/30 border border-amber-900/20 px-4 py-5 text-sm text-zinc-400">
+              <p>No scheduled events yet.</p>
+              {isAdmin && (
+                <p className="mt-2 text-zinc-500">
+                  Add <span className="text-zinc-400 font-mono text-xs">EventArtifact</span> rows tied to this instance (or its event campaign) in Admin or via seed. Then you can invite guests to a specific event from here.
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <ul className="space-y-3 rounded-xl bg-black/20 border border-amber-900/25 p-3">
+                {(rootEvents.length > 0 ? rootEvents : eventArtifacts).map((ev) => {
+                  const subs = rootEvents.length > 0 ? childrenOf(ev.id) : []
+                  const isRoot = !ev.parentEventArtifactId
+                  return (
+                    <li
+                      key={ev.id}
+                      className={`rounded-lg border border-amber-900/20 bg-black/25 overflow-hidden ${!isRoot ? 'ml-0' : ''}`}
+                    >
+                      <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <span className="font-medium text-amber-100">{ev.title}</span>
+                          {!isRoot && (
+                            <span className="ml-2 text-[10px] uppercase font-mono text-amber-500/90">
+                              pre-production
+                            </span>
+                          )}
+                          {ev.startTime && (
+                            <span className="block sm:inline sm:ml-2 text-sm text-zinc-500">
+                              {new Date(ev.startTime).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {subs.length > 0 && (
+                        <ul className="border-t border-amber-900/20 bg-black/30">
+                          {subs.map((sub) => (
+                            <li key={sub.id} className="px-4 py-2.5 pl-8 text-sm border-b border-amber-900/10 last:border-0">
+                              <span className="text-amber-200/90">{sub.title}</span>
+                              <span className="ml-2 text-[10px] uppercase font-mono text-amber-600">pre-production</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+              {canSendEventInvites && (
+                <div className="pt-1">
+                  <InviteToEventButton
+                    instanceId={instance.id}
+                    instanceName={instance.name}
+                    events={eventArtifacts}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        {(worldVenue || (isAdmin && !worldVenue)) && (
+          <section className="bg-zinc-900/25 border border-zinc-800/80 rounded-2xl p-5 space-y-3">
+            <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-widest">Optional: pixel venue</h2>
+            {worldVenue ? (
+              <>
+                <p className="text-zinc-500 text-sm leading-relaxed">
+                  Walk the map in-app — <span className="text-zinc-400">{worldVenue.mapName}</span>
+                  {worldVenue.roomName ? ` (starts in ${worldVenue.roomName})` : ''}. Separate from invites; you need a game account.
+                </p>
+                <Link
+                  href={worldVenue.href}
+                  className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-sm font-bold border border-zinc-600"
+                >
+                  Enter the space
+                </Link>
+              </>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                No spatial map on this instance. Link one in <span className="text-zinc-400">Admin → Instances</span> if you want a Gather-style room (optional).
+              </p>
+            )}
+          </section>
+        )}
 
         {goal > 0 && instance.isEventMode && (
           <section className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 space-y-4">

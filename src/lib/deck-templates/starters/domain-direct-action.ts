@@ -66,7 +66,7 @@ const deck: DeckTemplate = {
     {
       title: 'Who Acts With You?',
       bodyText:
-        'Direct action is rarely solo. Who needs to be with you in this? Not who should be — who actually can be, right now? Name one person and consider how to bring them in.',
+        'Direct action is rarely solo. Who needs to be with you in this? Not who should be — who actually can be, right now? Name one person and name one concrete step to bring them in. Do it before the end of today.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -79,7 +79,7 @@ const deck: DeckTemplate = {
     {
       title: 'The Action With a Longer Time Horizon',
       bodyText:
-        'What action, taken now, makes the next five actions easier? You are not just solving this moment — you are building the capacity to act. What is the move that compounds?',
+        'What action, taken now, makes the next five actions easier? You are not just solving this moment — you are building the capacity to act. What is the move that compounds? Design the first step. Log the commitment.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -105,7 +105,7 @@ const deck: DeckTemplate = {
     {
       title: 'Make It Visible',
       bodyText:
-        'What did you do? Make it visible to at least one other person — post a BAR, send a message, share the result. Visibility is not vanity. It makes action real in the shared field.',
+        'What did you do? Make it visible to at least one other person — post a BAR, send a message, share the result. Visibility is not vanity. It makes action real in the shared field. Log who saw it and what the visibility made possible.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,

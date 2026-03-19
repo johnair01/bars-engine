@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
   UNPACKING_QUESTIONS,
   EXPERIENCE_OPTIONS,
@@ -72,6 +73,7 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
   const handleImportMetadata = () => {
     const metadata = getMetadata()
     store321SessionForCreateBar()
+    toast.success('Taking you to create your BAR. Your 321 metadata is ready.')
     if (embedded && onComplete) {
       window.open('/create-bar?from321=1', '_blank')
       onComplete(metadata)
@@ -82,6 +84,7 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
 
   const handleCreateBar = () => {
     store321SessionForCreateBar()
+    toast.success('Taking you to create your BAR. Your 321 metadata is ready.')
     if (embedded && onComplete) {
       window.open('/create-bar?from321=1', '_blank')
       onComplete(getMetadata())
@@ -104,11 +107,13 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
       const res = await createQuestFrom321Metadata(metadata, phase2, phase3)
       if (res && 'error' in res) {
         setChargeError(res.error)
+        toast.error(res.error)
       } else if (res?.success) {
+        toast.success('Quest created! Place it in a thread or contribute to the gameboard.')
         if (embedded && onComplete) {
           onComplete(metadata)
         } else {
-          router.push('/')
+          router.push(`/hand?quest=${res.questId}`)
           router.refresh()
         }
       }
@@ -122,12 +127,15 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
       const res = await fuelSystemFrom321(metadata)
       if (res && 'error' in res) {
         setChargeError(res.error)
+        toast.error(res.error)
       } else if (res?.success) {
+        toast.success('Charge fueled the system. Your insight was recorded.')
         if (embedded && onComplete) {
           onComplete(metadata)
+        } else {
+          router.push('/')
+          router.refresh()
         }
-        setChargeError(null)
-        router.refresh()
       }
     })
   }
@@ -142,6 +150,7 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
         phase2Snapshot,
         outcome: 'skipped',
       })
+      toast.success('321 skipped. Your charge is preserved.')
       router.push('/')
       router.refresh()
     })

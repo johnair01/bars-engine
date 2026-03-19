@@ -136,3 +136,39 @@ export async function updateAnchor(anchorId: string, data: Partial<CreateAnchorI
 export async function deleteAnchor(anchorId: string) {
   return dbBase.spatialMapAnchor.delete({ where: { id: anchorId } })
 }
+
+/**
+ * Deep link for Phase 4 “Enter the space” — first room of the instance’s SpatialMap.
+ * Matches `/world/[instanceSlug]/[roomSlug]` (Gather-style tile venue).
+ */
+export async function getWorldVenueEntryForInstance(
+  instanceId: string
+): Promise<{ href: string; mapName: string; roomName: string } | null> {
+  const instance = await dbBase.instance.findUnique({
+    where: { id: instanceId },
+    select: {
+      slug: true,
+      spatialMap: {
+        select: {
+          name: true,
+          rooms: {
+            orderBy: { sortOrder: 'asc' },
+            take: 1,
+            select: { name: true, slug: true },
+          },
+        },
+      },
+    },
+  })
+  const first = instance?.spatialMap?.rooms?.[0]
+  if (!instance || !first) return null
+
+  const roomSlug = first.slug?.trim() ? first.slug : slugify(first.name)
+  if (!roomSlug) return null
+
+  return {
+    href: `/world/${instance.slug}/${roomSlug}`,
+    mapName: instance.spatialMap!.name,
+    roomName: first.name,
+  }
+}

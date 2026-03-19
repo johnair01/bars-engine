@@ -72,7 +72,7 @@ const onboardingDeck: DeckTemplate = {
     {
       title: 'The Perspective You Do Not Have Yet',
       bodyText:
-        'What would you see if you were one level up from where you are standing? What does this situation look like from the perspective you have not taken? Write what you find.',
+        'What would you see if you were one level up from where you are standing? What does this situation look like from the perspective you have not taken? Write what you find. Now use this perspective. What one decision or action does it reveal that you have been avoiding? Commit to it.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -85,7 +85,7 @@ const onboardingDeck: DeckTemplate = {
     {
       title: 'Find the Person Who Has Done This',
       bodyText:
-        'Who has already done the thing this situation is asking of you? Find one person — in your community, in a book, in your memory — who has crossed this threshold. Log what you learn from them.',
+        'Who has already done the thing this situation is asking of you? Find one person — in your community, in a book, in your memory — who has crossed this threshold. Then contact them if you can — not to report, but to learn directly. Log what you learn from them.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -113,7 +113,7 @@ const onboardingDeck: DeckTemplate = {
     {
       title: 'Send the BAR',
       bodyText:
-        'What did you just do? Create a BAR from this action and send it to someone who needs to see it — not to report, but to signal. Your action is a message. Let it travel.',
+        'What did you just do? Create a BAR from this action and send it to someone who needs to see it — not to report, but to signal. Your action is a message. Let it travel. Log who you sent it to and what you signaled by sending it.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,

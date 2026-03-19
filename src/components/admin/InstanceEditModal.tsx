@@ -25,6 +25,9 @@ type Instance = {
   cashappUrl: string | null
   paypalUrl: string | null
   moveIds?: string
+  sourceInstanceId?: string | null
+  parentInstanceId?: string | null
+  linkedInstanceId?: string | null
 }
 
 type PromotedMove = { id: string; key: string; name: string }
@@ -42,10 +45,12 @@ function parseMoveIds(raw: string | undefined): string[] {
 export function InstanceEditModal({
   instance,
   promotedMoves,
+  instances,
   onClose,
 }: {
   instance: Instance | null
   promotedMoves: PromotedMove[]
+  instances: { id: string; slug: string; name: string }[]
   onClose: () => void
 }) {
   if (!instance) return null
@@ -131,6 +136,36 @@ export function InstanceEditModal({
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref</label>
               <input name="campaignRef" defaultValue={instance.campaignRef ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Source instance (fork from)</label>
+              <select name="sourceInstanceId" defaultValue={instance.sourceInstanceId ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+                <option value="">— None —</option>
+                {instances.filter((i) => i.id !== instance.id).map((i) => (
+                  <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Parent instance (sub-campaign of)</label>
+              <select name="parentInstanceId" defaultValue={instance.parentInstanceId ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+                <option value="">— None (top-level) —</option>
+                {instances.filter((i) => i.id !== instance.id).map((i) => (
+                  <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Linked instance (e.g. Fundraising → Bruised Banana)</label>
+              <select name="linkedInstanceId" defaultValue={instance.linkedInstanceId ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+                <option value="">— None —</option>
+                {instances.filter((i) => i.id !== instance.id).map((i) => (
+                  <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+                ))}
+              </select>
             </div>
 
             {promotedMoves.length > 0 && (

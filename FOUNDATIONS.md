@@ -159,6 +159,23 @@ The ritual for metabolizing roadblocks:
 - **Agent Reflection**: The AI agent is taught to verify imports against exports, ensure `"use client"` or `"use server"` where required, and treat build errors as Roadblock Quests—to be completed before any commit.
 - **Principle**: Roadblocks must be metabolized before they manifest in the shared field. Stagnation in the pipeline is allowed privately; the committed branch stays clean.
 
+## UX: Major Flows Cannot Be Interrupted
+
+**Major flows** (Charge → 321 → Quest/BAR/daemon/artifact, Grow from BAR, etc.) must complete with explicit feedback. The user must always know:
+- What work was done
+- What they need to do next
+
+**Completion contract**: Each branch of a major flow must end with either:
+- A clear destination (redirect to the created artifact: /hand?quest=, /daemons, /growth-scene/[id])
+- A success notification (toast or banner) plus redirect
+- Explicit error feedback with retry guidance
+
+**No silent redirects**: Never route the user to the dashboard (or elsewhere) without telling them what happened. If work was saved, say so. If something failed, say so.
+
+**Instrumentation**: We must be able to identify which flows complete and which don't. Lightweight logging at critical decision points supports diagnosis and flow health.
+
+See [.specify/specs/charge-321-flow-interruption/spec.md](.specify/specs/charge-321-flow-interruption/spec.md).
+
 ## The Yellow Brick Road
 
 For any given Point A and Point B — where A is where you are now and B is who you want to become — there is a road made of yellow bricks.

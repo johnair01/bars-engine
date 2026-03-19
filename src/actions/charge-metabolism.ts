@@ -102,13 +102,22 @@ export type Phase3Taxonomic = {
  * Uses extractCreationIntent when phase2 provided for moveType.
  * Assigns to player and links via source321SessionId.
  */
+export type QuestPlacementTarget = {
+  type: 'thread' | 'gameboard'
+  threadId?: string
+  slotQuestId?: string
+}
+
 export async function createQuestFrom321Metadata(
   metadata: Metadata321,
   phase2?: UnpackingAnswers & { alignedAction?: string },
-  phase3?: Phase3Taxonomic
+  phase3?: Phase3Taxonomic,
+  target?: QuestPlacementTarget
 ): Promise<{ success: true; questId: string } | { error: string }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
+
+  console.log('[createQuestFrom321Metadata] entry', { playerId: player.id, hasPhase2: !!phase2, hasPhase3: !!phase3, hasTarget: !!target })
 
   const title = metadata.title || 'Quest from 321'
   const description = metadata.description || ''
@@ -122,6 +131,7 @@ export async function createQuestFrom321Metadata(
     if (intent.moveType) {
       moveType = intent.moveType
     }
+    console.log('[createQuestFrom321Metadata] extractCreationIntent', { moveType: intent.moveType })
   }
 
   const nextAction =
@@ -173,6 +183,19 @@ export async function createQuestFrom321Metadata(
       })
     }
 
+    // Optional: place quest into thread or gameboard immediately
+    if (target) {
+      const { addQuestToThread, addQuestAsSubquestToGameboard } = await import('@/actions/quest-placement')
+      if (target.type === 'thread' && target.threadId) {
+        const placed = await addQuestToThread(quest.id, target.threadId)
+        if ('error' in placed) console.warn('[createQuestFrom321Metadata] placement to thread failed:', placed.error)
+      } else if (target.type === 'gameboard' && target.slotQuestId) {
+        const placed = await addQuestAsSubquestToGameboard(quest.id, target.slotQuestId)
+        if ('error' in placed) console.warn('[createQuestFrom321Metadata] placement to gameboard failed:', placed.error)
+      }
+    }
+
+    console.log('[createQuestFrom321Metadata] success', { questId: quest.id })
     revalidatePath('/')
     revalidatePath('/hand')
     return { success: true, questId: quest.id }

@@ -131,6 +131,9 @@ model Player {
   roomPresences          RoomPresence[]
   lastForgeTimestamp     DateTime?      // Admin Agent Forge: cooldown start
   forgeSessions          ForgeSession[]
+  alignment              PlayerAlignment?
+  carriedWeights         CarriedWeight[]
+  npcProfile             NpcProfile?
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -142,8 +145,20 @@ model Role {
   displayName  String
   description  String
   isForecasted Boolean      @default(false)
+  // Holacracy governance
+  purpose          String?  // what this role pursues or expresses
+  accountabilities String?  // JSON array: ongoing activities the role enacts
+  scope            String   @default("instance") // instance | nation | global
+  // NPC defaults — face/tier that fills this role when no human holds it
+  npcFace      String?      // shaman | challenger | regent | architect | diplomat | sage
+  npcTier      Int          @default(1)
+  // Prerequisite gate: JSON { minBars?, requiredRoleKeys?, alignmentThresholds? }
+  prerequisites         String?
+  // Quest spawned when role is granted to a human player
+  orientationTemplateId String?
   createdAt    DateTime     @default(now())
   players      PlayerRole[]
+  orientationTemplate CustomBar? @relation("RoleOrientationTemplate", fields: [orientationTemplateId], references: [id], onDelete: SetNull)
 
   @@map("roles")
 }
@@ -166,8 +181,15 @@ model PlayerRole {
   grantedByAdminId String?
   grantedAt        DateTime  @default(now())
   expiresAt        DateTime?
+  // Governance scope
+  instanceId       String?   // role is scoped to this campaign instance
+  nationId         String?   // role is scoped to this nation
+  focus            String?   // Holacracy: specific area/context within the role
+  grantedByBarId   String?   // the grantRole face move BAR that created this
+  isFilledByNpc    Boolean   @default(false) // NPC is holding this role (no human yet)
   player           Player    @relation(fields: [playerId], references: [id])
   role             Role      @relation(fields: [roleId], references: [id])
+  grantedByBar     CustomBar? @relation("PlayerRoleGrantBar", fields: [grantedByBarId], references: [id], onDelete: SetNull)
 
   @@unique([playerId, roleId])
   @@map("player_roles")
@@ -244,6 +266,9 @@ model CustomBar {
   inviteId             String?   // when set, this BAR is an invitation BAR linked to that invite
   wateringProgress     String?   // JSON: { shaman, regent, challenger, architect, diplomat, sage } — campaign kernel watering
   wateringContent      String?   // JSON: { shaman: string, regent: string, ... } — stored responses per face
+  intensity            String?   // everyday | capable | skilled | defining — move intensity register (Hearts Blazing-derived)
+  contextLines         String?   // JSON: { solo: string, interpersonal: string, narrative: string } — I/We/Its expressions for group play
+  isExemplar           Boolean   @default(false) // marked by GM faces for cultural substrate distillation pipeline
   invite               Invite?   @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
   promotedInstance     Instance? @relation("CampaignKernel") // Instance.kernelBarId points here when promoted
   invitesAsStarterQuest Invite[] @relation("InviteStarterQuest")
@@ -283,6 +308,10 @@ model CustomBar {
   collapsedFromQuest   CustomBar?  @relation("BarCollapsedFromQuest", fields: [collapsedFromQuestId], references: [id], onDelete: SetNull)
   collapsedFromInstance Instance?  @relation("BarCollapsedFromInstance", fields: [collapsedFromInstanceId], references: [id], onDelete: SetNull)
   barsCollapsedFromQuest CustomBar[] @relation("BarCollapsedFromQuest")
+  campaignInvitation    CampaignInvitation? // one BAR can carry one role invitation
+  carriedWeightResults  CarriedWeight[]     @relation("CarriedWeightBar")
+  roleOrientations      Role[]              @relation("RoleOrientationTemplate")
+  playerRoleGrants      PlayerRole[]        @relation("PlayerRoleGrantBar")
 
   @@map("custom_bars")
 }
@@ -730,8 +759,10 @@ model QuestThread {
   bookId           String?          @unique
   adventureId      String?          @unique
   eventCampaignId  String?          @unique // Event production quest thread
+  instanceId       String?          // Sub-campaign instance (e.g. BB-BANANA for CAMP-BANANA)
   sourceQuestId    String?          // Provenance: upgraded from this CustomBar (quest)
   book             Book?            @relation(fields: [bookId], references: [id])
+  instance         Instance?        @relation(fields: [instanceId], references: [id], onDelete: SetNull)
   eventCampaign    EventCampaign?   @relation(fields: [eventCampaignId], references: [id], onDelete: SetNull)
   adventure        Adventure?       @relation(fields: [adventureId], references: [id], onDelete: SetNull)
   sourceQuest      CustomBar?       @relation("QuestUpgradeProvenance", fields: [sourceQuestId], references: [id])
@@ -1211,12 +1242,19 @@ model Instance {
   vibeData          String?   // JSON: vibe interview answers
   goalData          String?   // JSON: campaign goal interview answers
   sourceInstanceId  String?   // if copied from another instance
+  parentInstanceId  String?   @map("parent_instance_id") // when set, this instance is a sub-campaign of the parent
+  linkedInstanceId  String?   @map("linked_instance_id") // when set, this instance links to another (e.g. Fundraising → Bruised Banana)
   kernelBarId       String?   @unique // when set, this Instance was promoted from this campaign_kernel BAR
   moveIds           String    @default("[]") // JSON array of NationMove ids — campaign move pool (Sage synthesis)
 
+  parentInstance    Instance?  @relation("InstanceChildren", fields: [parentInstanceId], references: [id], onDelete: SetNull)
+  childInstances    Instance[] @relation("InstanceChildren")
+  linkedInstance    Instance?  @relation("InstanceLinkedTo", fields: [linkedInstanceId], references: [id], onDelete: SetNull)
+  instancesLinkedToMe Instance[] @relation("InstanceLinkedTo")
   kernelBar         CustomBar? @relation("CampaignKernel", fields: [kernelBarId], references: [id], onDelete: SetNull)
   gameboardSlots GameboardSlot[]
   eventCampaigns EventCampaign[]
+  eventArtifacts EventArtifact[]
   campaignPlaybook CampaignPlaybook?
   campaignInvitations CampaignInvitation[]
   barDeck BarDeck?
@@ -1232,6 +1270,7 @@ model Instance {
   invites            Invite[]
   barsCollapsedFromInstance CustomBar[] @relation("BarCollapsedFromInstance")
   barShareExternals  BarShareExternal[]
+  questThreads       QuestThread[]
 
   @@map("instances")
 }
@@ -1325,20 +1364,25 @@ model CampaignInvitation {
   targetActorId    String
   invitedRole      String
   acceptedRole     String?
-  invitationType   String    // guiding_coalition | campaign_collaborator | domain_contributor | event_participant | observer
+  invitationType   String    // guiding_coalition | campaign_collaborator | domain_contributor | event_participant | observer | role_invitation
   messageText      String    @db.Text
   status           String    @default("draft") // draft | sent | accepted | declined | expired
   createdByActorId String
   sentAt           DateTime?
   respondedAt      DateTime?
+  barId            String?   @unique // when set, this invitation is delivered via this BAR
+  eventArtifactId  String?   @map("event_artifact_id") // when invitationType=event_participant, links to specific event
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instance       Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  bar             CustomBar?    @relation(fields: [barId], references: [id], onDelete: SetNull)
+  eventArtifact   EventArtifact? @relation(fields: [eventArtifactId], references: [id], onDelete: SetNull)
 
   @@index([instanceId])
   @@index([targetActorId])
   @@index([status])
+  @@index([barId])
   @@map("campaign_invitations")
 }
 
@@ -1392,6 +1436,9 @@ model EventCampaign {
 model EventArtifact {
   id                 String    @id @default(cuid())
   linkedCampaignId   String
+  // When set: sub-event (e.g. pre-production crew) under the parent main event.
+  parentEventArtifactId String? @map("parent_event_artifact_id")
+  instanceId         String?   @map("instance_id") // when set, this artifact is the "live event" for that Instance
   title              String
   description        String    @db.Text
   eventType          String    // workshop | meeting | fundraiser | dance | onboarding_session | discussion | training | ceremony | quest_action | gathering
@@ -1414,12 +1461,18 @@ model EventArtifact {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  campaign           EventCampaign     @relation(fields: [linkedCampaignId], references: [id], onDelete: Cascade)
-  creator            Player            @relation("EventArtifactCreator", fields: [createdByActorId], references: [id])
-  invites            EventInvite[]
-  participants       EventParticipant[]
+  campaign             EventCampaign       @relation(fields: [linkedCampaignId], references: [id], onDelete: Cascade)
+  parentEvent          EventArtifact?      @relation("EventArtifactNested", fields: [parentEventArtifactId], references: [id], onDelete: SetNull)
+  childEvents          EventArtifact[]     @relation("EventArtifactNested")
+  instance             Instance?           @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  creator              Player              @relation("EventArtifactCreator", fields: [createdByActorId], references: [id])
+  invites              EventInvite[]
+  participants         EventParticipant[]
+  campaignInvitations  CampaignInvitation[]
 
   @@index([linkedCampaignId])
+  @@index([instanceId])
+  @@index([parentEventArtifactId])
   @@index([status])
   @@index([startTime])
   @@map("event_artifacts")
@@ -1430,7 +1483,7 @@ model EventParticipant {
   eventId           String
   participantId     String
   participantState  String   // invited | interested | RSVP_yes | attending | attended | declined | no_show
-  functionalRole    String?  // host | co_host | facilitator | steward | participant | observer
+  functionalRole    String?  // host | co_host | facilitator | steward | participant | observer | preproduction
   raciRole          String?  // Responsible | Accountable | Consulted | Informed
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -2189,6 +2242,7 @@ model NpcConstitution {
   reflections   NpcReflection[]
   actions       NpcAction[]
   relationships NpcRelationshipState[]
+  npcProfile    NpcProfile?
 
   @@map("npc_constitutions")
 }
@@ -2378,3 +2432,84 @@ model SpriteAuditLog {
   updatedAt     DateTime @updatedAt
 }
 
+// ── Phase 3: Cultural Substrate Pipeline ─────────────────────────────────────
+
+model PlayerAlignment {
+  id        String   @id @default(cuid())
+  playerId  String   @unique
+  counts    String   @default("{}") // JSON: { [moveType_domain_face_tag]: count }
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@map("player_alignments")
+}
+
+model CarriedWeight {
+  id               String    @id @default(cuid())
+  playerId         String
+  beliefText       String
+  shadowName       String?
+  source           String    // shadow_name_session | voluntary_pickup | face_named
+  status           String    @default("held") // held | in_play | metabolized | set_down
+  loadLevel        Int       @default(1)      // 1 | 2 | 3
+  heldSince        DateTime  @default(now())
+  metabolizedAt    DateTime?
+  metabolizedBarId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  player         Player     @relation(fields: [playerId], references: [id])
+  metabolizedBar CustomBar? @relation("CarriedWeightBar", fields: [metabolizedBarId], references: [id], onDelete: SetNull)
+
+  @@index([playerId, status])
+  @@map("carried_weights")
+}
+
+model DistillationCandidate {
+  id                    String    @id @default(cuid())
+  moveType              String?
+  archetype             String?
+  allyshipDomain        String?
+  nationKey             String?
+  sourceBarIds          String    // JSON array of CustomBar ids
+  clusterSize           Int
+  secondRegisterName    String
+  internalExpr          String
+  interpersonalExpr     String
+  systemicExpr          String
+  episodeTitleCandidate String?
+  aiReasoning           String?
+  status                String    @default("pending") // pending | approved | rejected | edited
+  approvedName          String?
+  reviewedAt            DateTime?
+  reviewedById          String?
+  runId                 String
+  createdAt             DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@map("distillation_candidates")
+}
+
+
+// ── NPC Governance Layer ──────────────────────────────────────────────────────
+
+model NpcProfile {
+  id               String    @id @default(cuid())
+  playerId         String    @unique
+  constitutionId   String?   @unique  // → NpcConstitution (created lazily on first chat)
+  altitude         String    // shaman | challenger | regent | architect | diplomat | sage
+  tier             Int       @default(1)  // 1-4 constitutional depth
+  weeklyBudget     Int       @default(10000) // max tokens per week
+  tokensUsed       Int       @default(0)
+  budgetResetAt    DateTime  @default(now())
+  dormantUntil     DateTime? // set when budget exhausted; NPC unavailable until then
+  sourceInstanceId String?   // origin instance for portability (fork/translate)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  player       Player           @relation(fields: [playerId], references: [id])
+  constitution NpcConstitution? @relation(fields: [constitutionId], references: [id], onDelete: SetNull)
+
+  @@map("npc_profiles")
+}

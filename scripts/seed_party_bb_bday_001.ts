@@ -11,6 +11,11 @@ async function main() {
 
     console.log(`🌱 Seeding Party Instance: ${seedData.instance.name}...`)
 
+    // Prisma CustomBar includes isExemplar; DBs that skipped 20260330000001 need this (idempotent).
+    await db.$executeRawUnsafe(
+        `ALTER TABLE "custom_bars" ADD COLUMN IF NOT EXISTS "isExemplar" BOOLEAN NOT NULL DEFAULT false`
+    )
+
     // 0. Get a valid Creator ID (Admin)
     const adminPlayer = await db.player.findFirst({
         where: { roles: { some: { role: { key: 'admin' } } } }
@@ -46,15 +51,50 @@ async function main() {
     })
     console.log(`✅ Instance UPSERTED: ${instance.name}`)
 
+    // 1b. Create child instances (pre-production crews) for campaigns except CAMP-BDAY
+    const campaignToChildInstance: Record<string, { id: string; name: string }> = {
+        'CAMP-BANANA': { id: 'BB-BANANA', name: 'Banana Bread Crew' },
+        'CAMP-GRILL': { id: 'BB-GRILL', name: 'Sacred Grill Crew' },
+        'CAMP-WHISKEY': { id: 'BB-WHISKEY', name: 'Whiskey & Tea Crew' },
+        'CAMP-RESIDENCY': { id: 'BB-RESIDENCY', name: 'Residency Fund Crew' },
+        'CAMP-ENGINE': { id: 'BB-ENGINE', name: 'Bars Engine Crew' },
+        'CAMP-VIBE': { id: 'BB-VIBE', name: 'Vibe Guard Crew' },
+        'CAMP-OPS': { id: 'BB-OPS', name: 'Setup & Cleanup Crew' },
+    }
+    const parentId = instance.id
+    for (const [campId, child] of Object.entries(campaignToChildInstance)) {
+        await db.instance.upsert({
+            where: { id: child.id },
+            update: {
+                name: child.name,
+                parentInstanceId: parentId,
+                slug: child.id.toLowerCase(),
+                domainType: 'party',
+                isEventMode: true
+            },
+            create: {
+                id: child.id,
+                slug: child.id.toLowerCase(),
+                name: child.name,
+                parentInstanceId: parentId,
+                domainType: 'party',
+                isEventMode: true
+            }
+        })
+        console.log(`✅ Child Instance UPSERTED: ${child.name} (${child.id})`)
+    }
+
     // 2. Upsert Campaigns (QuestThreads)
     const campaignMap = new Map<string, string>()
     for (const camp of seedData.campaigns) {
+        const childInstanceId = campaignToChildInstance[camp.id]?.id ?? null
         const thread = await db.questThread.upsert({
             where: { id: camp.id },
             update: {
                 title: camp.title,
                 description: camp.description,
-                completionReward: camp.baseRewardVibeulons
+                completionReward: camp.baseRewardVibeulons,
+                instanceId: childInstanceId
             },
             create: {
                 id: camp.id,
@@ -62,11 +102,12 @@ async function main() {
                 description: camp.description,
                 completionReward: camp.baseRewardVibeulons,
                 threadType: 'campaign',
-                creatorType: 'system'
+                creatorType: 'system',
+                instanceId: childInstanceId
             }
         })
         campaignMap.set(camp.id, thread.id)
-        console.log(`✅ Campaign UPSERTED: ${thread.title}`)
+        console.log(`✅ Campaign UPSERTED: ${thread.title}${childInstanceId ? ` → ${childInstanceId}` : ''}`)
     }
 
     // Campaign → Allyship Domain (WHERE) mapping

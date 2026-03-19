@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { growQuestFromBar, growDaemonFromBar, growArtifactFromBar } from '@/actions/bars'
 
 export function GrowFromBar({ barId }: { barId: string }) {
@@ -15,10 +16,11 @@ export function GrowFromBar({ barId }: { barId: string }) {
             const result = await growQuestFromBar(barId)
             setPendingAction(null)
             if (result.error) {
-                alert(result.error)
+                toast.error(result.error)
                 return
             }
             if (result.questId) {
+                toast.success('Quest created! View it on your dashboard.')
                 router.push(`/?focusQuest=${result.questId}`)
                 router.refresh()
             }
@@ -31,10 +33,11 @@ export function GrowFromBar({ barId }: { barId: string }) {
             const result = await growDaemonFromBar(barId)
             setPendingAction(null)
             if (result.error) {
-                alert(result.error)
+                toast.error(result.error)
                 return
             }
             if (result.daemonId) {
+                toast.success('Daemon awakened!')
                 router.push('/daemons')
                 router.refresh()
             }
@@ -47,10 +50,11 @@ export function GrowFromBar({ barId }: { barId: string }) {
             const result = await growArtifactFromBar(barId)
             setPendingAction(null)
             if (result.error) {
-                alert(result.error)
+                toast.error(result.error)
                 return
             }
             if (result.sceneId) {
+                toast.success('Artifact created!')
                 router.push(`/growth-scene/${result.sceneId}`)
                 router.refresh()
             }

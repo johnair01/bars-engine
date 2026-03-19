@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { setActiveInstance, updateInstanceKotterStage, updateInstanceFundraise } from '@/actions/instance'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceEditModal } from './InstanceEditModal'
+import { InviteToRoleModal } from './InviteToRoleModal'
 
 type Instance = {
   id: string
@@ -27,9 +28,105 @@ type Instance = {
   cashappUrl: string | null
   paypalUrl: string | null
   moveIds?: string
+  sourceInstanceId?: string | null
+  parentInstanceId?: string | null
+  linkedInstanceId?: string | null
+  childInstances?: Instance[]
 }
 
 type PromotedMove = { id: string; key: string; name: string }
+
+function InstanceCard({
+  inst,
+  activeInstanceId,
+  onEdit,
+  onInvite,
+  onProgress,
+  progressInstance,
+}: {
+  inst: Instance
+  activeInstanceId: string | null
+  onEdit: (i: Instance) => void
+  onInvite: (i: Instance) => void
+  onProgress: (i: Instance | null) => void
+  progressInstance: Instance | null
+}) {
+  return (
+    <div className="bg-zinc-900/20 border border-zinc-800 rounded-lg p-3 flex flex-col gap-3">
+      <div className="min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="font-bold text-white text-sm">{inst.name}</div>
+            {inst.isEventMode && (
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-green-900/30 text-green-300">
+                Event Mode
+              </span>
+            )}
+            {activeInstanceId === inst.id && (
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-purple-900/30 text-purple-300">
+                Active
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-zinc-500 font-mono mt-1 truncate">
+            {inst.slug} • {inst.domainType} • {inst.id}
+          </div>
+          <div className="text-xs text-teal-400 mt-1">
+            Stage {inst.kotterStage ?? 1}: {KOTTER_STAGES[(inst.kotterStage ?? 1) as keyof typeof KOTTER_STAGES]?.name ?? 'Urgency'}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <button
+            type="button"
+            onClick={() => onEdit(inst)}
+            className="px-3 py-1.5 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300 text-xs font-bold border border-emerald-700 min-h-[44px]"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => onInvite(inst)}
+            className="px-3 py-1.5 rounded-lg bg-purple-900/50 hover:bg-purple-800/50 text-purple-300 text-xs font-bold border border-purple-700 min-h-[44px]"
+          >
+            Invite to role
+          </button>
+          <button
+            type="button"
+            onClick={() => onProgress(progressInstance?.id === inst.id ? null : inst)}
+            className="px-3 py-1.5 rounded-lg bg-amber-900/50 hover:bg-amber-800/50 text-amber-300 text-xs font-bold border border-amber-700 min-h-[44px]"
+          >
+            Update $
+          </button>
+          <form action={updateInstanceKotterStage} className="flex items-center gap-2">
+            <input type="hidden" name="instanceId" value={inst.id} />
+            <select name="kotterStage" className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 min-h-[44px]" defaultValue={inst.kotterStage ?? 1}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  {n}. {KOTTER_STAGES[n as keyof typeof KOTTER_STAGES].name}
+                </option>
+              ))}
+            </select>
+            <button type="submit" className="px-2 py-1 rounded bg-teal-900/50 hover:bg-teal-800/50 text-teal-300 text-xs font-bold border border-teal-700 min-h-[44px]">
+              Set Stage
+            </button>
+          </form>
+          <form action={setActiveInstance}>
+            <input type="hidden" name="instanceId" value={inst.id} />
+            <button type="submit" className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold min-h-[44px]">
+              Set Active
+            </button>
+          </form>
+        </div>
+      </div>
+      {progressInstance?.id === inst.id && (
+        <ProgressForm
+          instance={inst}
+          onClose={() => onProgress(null)}
+        />
+      )}
+    </div>
+  )
+}
 
 export function InstanceListWithEdit({
   instances,
@@ -42,6 +139,7 @@ export function InstanceListWithEdit({
 }) {
   const [editingInstance, setEditingInstance] = useState<Instance | null>(null)
   const [progressInstance, setProgressInstance] = useState<Instance | null>(null)
+  const [inviteInstance, setInviteInstance] = useState<Instance | null>(null)
 
   if (instances.length === 0) {
     return (
@@ -51,11 +149,14 @@ export function InstanceListWithEdit({
     )
   }
 
+  const topLevel = instances.filter((i) => !i.parentInstanceId)
+
   return (
     <>
       <div className="space-y-3">
-        {instances.map((inst) => (
-          <div key={inst.id} className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 flex flex-col gap-4">
+        {topLevel.map((inst) => (
+          <div key={inst.id} className="space-y-3">
+            <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 flex flex-col gap-4">
             <div className="min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -85,6 +186,13 @@ export function InstanceListWithEdit({
                 className="px-4 py-2 rounded-lg bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300 text-xs font-bold border border-emerald-700 min-h-[44px]"
               >
                 Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setInviteInstance(inst)}
+                className="px-4 py-2 rounded-lg bg-purple-900/50 hover:bg-purple-800/50 text-purple-300 text-xs font-bold border border-purple-700 min-h-[44px]"
+              >
+                Invite to role
               </button>
               <button
                 type="button"
@@ -127,6 +235,26 @@ export function InstanceListWithEdit({
                 onClose={() => setProgressInstance(null)}
               />
             )}
+            </div>
+
+          {inst.childInstances && inst.childInstances.length > 0 && (
+            <div className="ml-4 pl-4 border-l-2 border-zinc-700 space-y-2">
+              <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                Pre-production crews
+              </div>
+              {inst.childInstances.map((child) => (
+                <InstanceCard
+                  key={child.id}
+                  inst={child}
+                  activeInstanceId={activeInstanceId}
+                  onEdit={setEditingInstance}
+                  onInvite={setInviteInstance}
+                  onProgress={setProgressInstance}
+                  progressInstance={progressInstance}
+                />
+              ))}
+            </div>
+          )}
           </div>
         ))}
       </div>
@@ -135,7 +263,15 @@ export function InstanceListWithEdit({
         <InstanceEditModal
           instance={editingInstance}
           promotedMoves={promotedMoves}
+          instances={instances}
           onClose={() => setEditingInstance(null)}
+        />
+      )}
+
+      {inviteInstance && (
+        <InviteToRoleModal
+          instance={inviteInstance}
+          onClose={() => setInviteInstance(null)}
         />
       )}
     </>

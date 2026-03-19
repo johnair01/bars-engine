@@ -7,8 +7,12 @@ import { FaceMovesSection } from '@/components/hand/FaceMovesSection'
 import Link from 'next/link'
 import { HandQuestActions } from '@/components/hand/HandQuestActions'
 import { ChargeBarCard } from '@/components/hand/ChargeBarCard'
+import { PlacementModal } from '@/components/hand/PlacementModal'
+import { InvitationBarCard } from '@/components/hand/InvitationBarCard'
 
-export default async function HandPage() {
+export default async function HandPage(props: { searchParams: Promise<{ quest?: string }> }) {
+    const searchParams = await props.searchParams
+    const highlightQuestId = searchParams.quest ?? null
     const player = await getCurrentPlayer()
     if (!player) redirect('/conclave/guided')
     if (!isGameAccountReady(player)) redirect('/conclave/guided')
@@ -37,13 +41,13 @@ export default async function HandPage() {
         },
     })
 
-    // Personal quests: created from a BAR (sourceBarId set), not yet a subquest (no parentId),
+    // Personal quests: created from a BAR (sourceBarId) or 321 (source321SessionId), not yet a subquest (no parentId),
     // not already in a thread — unplaced quests ready to be routed.
     const personalQuestsRaw = await db.customBar.findMany({
         where: {
             creatorId: playerId,
             type: 'quest',
-            sourceBarId: { not: null },
+            OR: [{ sourceBarId: { not: null } }, { source321SessionId: { not: null } }],
             parentId: null,
             status: 'active',
         },
@@ -60,6 +64,7 @@ export default async function HandPage() {
     const personalQuests = personalQuestsRaw.filter(q => !inThreadIds.has(q.id))
 
     // Unassigned Private Drafts (Created by me, Private, Unclaimed, not a quest)
+    // Exclude invitation BARs (inviteId set) — those are delivery vehicles for invites, not editable drafts
     const privateDrafts = await db.customBar.findMany({
         where: {
             creatorId: playerId,
@@ -67,8 +72,25 @@ export default async function HandPage() {
             claimedById: null,
             status: 'active',
             type: { not: 'quest' },
+            inviteId: null, // invitation BARs go to Forge Invitation flow, not drafts
         },
         orderBy: { createdAt: 'desc' }
+    })
+
+    // Invitation BARs (inviteId set) — delivery vehicles for invites, not drafts
+    const invitationBars = await db.customBar.findMany({
+        where: {
+            creatorId: playerId,
+            inviteId: { not: null },
+            status: 'active',
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+            id: true,
+            title: true,
+            invite: { select: { token: true } },
+        },
     })
 
     // INV-4: Invitations this player forged that were accepted
@@ -128,7 +150,15 @@ export default async function HandPage() {
                     <p className="text-zinc-500 text-sm">Quests created from your BARs. Place them in a thread or contribute to the campaign gameboard.</p>
                     <div className="space-y-3">
                         {personalQuests.map((quest) => (
-                            <div key={quest.id} className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 space-y-3">
+                            <div
+                                key={quest.id}
+                                id={quest.id === highlightQuestId ? 'quest-highlight' : undefined}
+                                className={`rounded-xl border p-4 space-y-3 transition-colors ${
+                                    quest.id === highlightQuestId
+                                        ? 'border-amber-500/60 bg-amber-950/20 ring-1 ring-amber-500/30'
+                                        : 'border-zinc-800 bg-zinc-950/50'
+                                }`}
+                            >
                                 <div>
                                     {quest.moveType && (
                                         <span className="text-xs uppercase tracking-wider text-purple-400">
@@ -140,7 +170,7 @@ export default async function HandPage() {
                                         <p className="text-zinc-400 text-sm mt-1 line-clamp-2">{quest.description}</p>
                                     )}
                                 </div>
-                                <HandQuestActions questId={quest.id} />
+                                <HandQuestActions questId={quest.id} showPlacement={true} />
                             </div>
                         ))}
                     </div>
@@ -175,6 +205,29 @@ export default async function HandPage() {
 
             <FaceMovesSection />
 
+            {/* Invitations I've forged (pending) */}
+            {invitationBars.length > 0 && (
+                <section className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <div className="h-px bg-zinc-800 flex-1"></div>
+                        <h2 className="text-emerald-500 uppercase tracking-widest text-sm font-bold">Invitations I&apos;ve forged</h2>
+                        <div className="h-px bg-zinc-800 flex-1"></div>
+                    </div>
+                    <p className="text-zinc-500 text-sm">Share these with invitees. Copy the invite or claim URL.</p>
+                    <div className="space-y-3">
+                        {invitationBars.map((bar) => (
+                            <InvitationBarCard
+                                key={bar.id}
+                                barId={bar.id}
+                                title={bar.title}
+                                token={bar.invite?.token ?? ''}
+                                baseUrl={typeof process.env.NEXT_PUBLIC_APP_URL === 'string' ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '') : ''}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {acceptedInvites.length > 0 && (
                 <section className="space-y-6">
                     <div className="flex gap-3 items-center">
@@ -204,6 +257,9 @@ export default async function HandPage() {
                         )}
                     </div>
                 </section>
+            )}
+            {highlightQuestId && personalQuests.some((q) => q.id === highlightQuestId) && (
+                <PlacementModal questId={highlightQuestId} />
             )}
         </div>
     )

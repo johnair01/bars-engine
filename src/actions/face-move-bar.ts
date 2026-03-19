@@ -247,18 +247,30 @@ export async function nameShadowBelief(input: {
   })
 }
 
-/** Regent: Declare period — "We are in Coalition"; focuses quests on a Kotter stage */
+/** Regent: Declare period — "We are in Coalition"; optionally designates a focus move type and domain */
 export async function declarePeriod(input: {
   period: string
   instanceId?: string
   creatorId?: string
+  /** Optional: focal move type for this period (e.g. 'grow_up', 'clean_up', 'show_up') */
+  focusMoveType?: string
+  /** Optional: focal allyship domain (e.g. 'DIRECT_ACTION', 'GATHERING_RESOURCES') */
+  focusDomain?: string
 }): Promise<FaceMoveBarResult | FaceMoveBarError> {
   const title = `We are in ${input.period.trim()}`
+  const focusSuffix =
+    input.focusMoveType || input.focusDomain
+      ? ` [focus: ${[input.focusMoveType, input.focusDomain].filter(Boolean).join(' / ')}]`
+      : ''
   const inputObj: FaceMoveBarInput = {
     title,
-    description: input.period.trim(),
+    description: `${input.period.trim()}${focusSuffix}`,
     barType: 'vibe',
     instanceId: input.instanceId,
+    metadata: {
+      ...(input.focusMoveType ? { focusMoveType: input.focusMoveType } : {}),
+      ...(input.focusDomain ? { focusDomain: input.focusDomain } : {}),
+    },
   }
   if (input.creatorId) {
     return createFaceMoveBarAs(input.creatorId, 'regent', 'declare_period', inputObj)

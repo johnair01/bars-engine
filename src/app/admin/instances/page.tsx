@@ -140,6 +140,36 @@ export default async function AdminInstancesPage({
             <input name="campaignRef" placeholder="bruised-banana" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
           </div>
 
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Source instance (fork from)</label>
+            <select name="sourceInstanceId" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+              <option value="">— None —</option>
+              {instances.map((i) => (
+                <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Parent instance (sub-campaign of)</label>
+            <select name="parentInstanceId" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+              <option value="">— None (top-level) —</option>
+              {instances.map((i) => (
+                <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Linked instance (e.g. Fundraising → Bruised Banana)</label>
+            <select name="linkedInstanceId" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white">
+              <option value="">— None —</option>
+              {instances.map((i) => (
+                <option key={i.id} value={i.id}>{i.name} ({i.slug})</option>
+              ))}
+            </select>
+          </div>
+
           {promotedMoves.length > 0 && (
             <div className="space-y-2 md:col-span-2">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block">

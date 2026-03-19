@@ -26,12 +26,20 @@ export function ChargeBarCard({ bar }: ChargeBarCardProps) {
           {new Date(bar.createdAt).toLocaleDateString()}
         </p>
       </div>
-      <Link
-        href={`/capture/explore?barId=${bar.id}`}
-        className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white transition"
-      >
-        Explore →
-      </Link>
+      <div className="shrink-0 flex gap-2">
+        <Link
+          href={`/bars/${bar.id}`}
+          className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-white transition"
+        >
+          Turn into Quest →
+        </Link>
+        <Link
+          href={`/capture/explore?barId=${bar.id}`}
+          className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white transition"
+        >
+          Explore →
+        </Link>
+      </div>
     </div>
   )
 }

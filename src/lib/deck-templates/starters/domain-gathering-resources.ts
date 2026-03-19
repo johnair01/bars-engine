@@ -20,7 +20,7 @@ const deck: DeckTemplate = {
       nationKey: null,
       moveType: 'wake_up',
       playCost: 1,
-      playEffect: { type: 'bar_create', magnitude: 1, target: 'self' },
+      playEffect: { type: 'charge_generate', magnitude: 1, target: 'self' },
       allyshipDomain: 'GATHERING_RESOURCES',
       faceMoveType: null,
     },
@@ -40,7 +40,7 @@ const deck: DeckTemplate = {
     {
       title: 'The Ask You Have Been Avoiding',
       bodyText:
-        'What resource do you need that requires asking someone for it? Name the ask. Name why you have been avoiding it. Then consider: what is the cost of not asking?',
+        'What resource do you need that requires asking someone for it? Name the ask. Name why you have been avoiding it.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -66,7 +66,7 @@ const deck: DeckTemplate = {
     {
       title: 'Who Has What You Need?',
       bodyText:
-        'Who in your community has the resource, skill, or access you need? You do not need to know them well. You need to know they have it. Name them. Consider what you could offer in return.',
+        'Who in your community has the resource, skill, or access you need? You do not need to know them well. You need to know they have it. Name them. Name what you could offer in return. Commit to reaching out.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -79,7 +79,7 @@ const deck: DeckTemplate = {
     {
       title: 'The Ecosystem of Support',
       bodyText:
-        'What would it look like if gathering resources was a practice of reciprocity, not extraction? Who do you resource? Who resources you? Draw the map. Find where it is thin.',
+        'Draw the map of your resource ecosystem — who do you resource? Who resources you? Find where the map is thin. Name the gap.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,
@@ -105,7 +105,7 @@ const deck: DeckTemplate = {
     {
       title: 'Share What You Found',
       bodyText:
-        'What resource did you gather that someone else in your community also needs? Share it — a link, an introduction, an offer. Create a BAR from the share. Pass it along.',
+        'What resource did you gather that someone else in your community also needs? Share it — a link, an introduction, an offer. Create a BAR from the share. Pass it along. Log who received the resource and what became possible for them.',
       faceKey: null,
       archetypeKey: null,
       nationKey: null,

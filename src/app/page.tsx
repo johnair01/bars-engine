@@ -30,6 +30,8 @@ import { getTodayCheckIn } from '@/actions/alchemy'
 import { SetupRequired } from '@/components/SetupRequired'
 import { listMyCampaignSeeds } from '@/actions/campaign-bar'
 import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
+import { getCampaignsForPlayer } from '@/actions/campaign-overview'
+import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -376,6 +378,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   // Campaign seeds ready to promote (creator's own, complete, unpromoted)
   const myCampaignSeeds = await listMyCampaignSeeds(playerId)
 
+  // Campaigns where player is leader/owner (Phase 3: dashboard overview)
+  const campaignsResponsible = await getCampaignsForPlayer(playerId)
+
   // Derive completed move types for flow checking
   const completedMoveTypes = Array.from(new Set(
     player.quests
@@ -440,6 +445,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         {myCampaignSeeds.some((s) => s.isComplete && !s.promotedInstance) && (
           <CampaignSeedReadyCard seeds={myCampaignSeeds} />
+        )}
+        {campaignsResponsible.length > 0 && (
+          <CampaignsResponsibleSection campaigns={campaignsResponsible} />
         )}
         <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4">
           <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Play the Game</div>

@@ -115,7 +115,8 @@ export async function getInstanceDbReadiness() {
 export async function listInstances() {
   try {
     return await db.instance.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      include: { childInstances: true }
     })
   } catch (e) {
     console.warn('[instance] listInstances failed:', e)
@@ -134,6 +135,9 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const slug = (formData.get('slug') as string | null)?.trim() || ''
     const name = (formData.get('name') as string | null)?.trim() || ''
     const domainType = (formData.get('domainType') as string | null)?.trim() || ''
+    const sourceInstanceId = (formData.get('sourceInstanceId') as string | null)?.trim() || null
+    const parentInstanceId = (formData.get('parentInstanceId') as string | null)?.trim() || null
+    const linkedInstanceId = (formData.get('linkedInstanceId') as string | null)?.trim() || null
     const theme = (formData.get('theme') as string | null)?.trim() || null
     const targetDescription = (formData.get('targetDescription') as string | null)?.trim() || null
     const wakeUpContent = (formData.get('wakeUpContent') as string | null)?.trim() || null
@@ -169,6 +173,12 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     if (!name) throw new Error('Name is required')
     if (!domainType) throw new Error('Domain type is required')
 
+    const hierarchyData = {
+      sourceInstanceId: sourceInstanceId || null,
+      parentInstanceId: parentInstanceId || null,
+      linkedInstanceId: linkedInstanceId || null,
+    }
+
     if (id) {
       await db.instance.update({
         where: { id },
@@ -192,6 +202,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           kotterStage,
           allyshipDomain: validAllyshipDomain,
           moveIds: moveIdsJson,
+          ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         }
       })
@@ -217,6 +228,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           kotterStage,
           allyshipDomain: validAllyshipDomain,
           moveIds: moveIdsJson,
+          ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
         },
         create: {
@@ -240,6 +252,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           allyshipDomain: validAllyshipDomain,
           moveIds: moveIdsJson,
           currentAmountCents: currentAmountCents ?? 0,
+          ...hierarchyData,
         }
       })
     }

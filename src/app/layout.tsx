@@ -35,6 +35,7 @@ export const viewport = {
 }
 
 import { getCurrentPlayerSafe } from "@/lib/auth-safe";
+import { Toaster } from "@/components/Toaster";
 
 export default async function RootLayout({
   children,
@@ -62,6 +63,7 @@ export default async function RootLayout({
 
         {/* Legacy Dev Switcher (Non-production only) */}
         {process.env.NODE_ENV !== 'production' && <DevIdentitySwitcher />}
+        <Toaster />
       </body>
     </html>
   );
