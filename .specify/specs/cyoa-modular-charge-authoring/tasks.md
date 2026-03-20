@@ -11,18 +11,18 @@
 
 ## Phase 1: Vision alignment (post-consult)
 
-- [ ] Add `ADR-cma-v0.md` (or `ARCHITECTURE_NOTE.md`) in this folder: **7 archetypes**, IR sketch `Story{nodes,edges,fragments,...}`, validation pipeline order, `include`/`widget` mapping to IR
-- [ ] Document integration points: [twine-authoring-ir](../twine-authoring-ir/spec.md), [quest-grammar-compiler](../quest-grammar-compiler/spec.md), `validateQuestGraph` / [flow-simulator-cli](../flow-simulator-cli/spec.md) (pick minimal path)
-- [ ] Specify **3 falsification tests** for CI (unreachable End; single-arm Choice; zero End) — see STRAND_OUTPUT Challenger section
+- [x] Add `ADR-cma-v0.md` (or `ARCHITECTURE_NOTE.md`) in this folder: **7 archetypes**, IR sketch `Story{nodes,edges,fragments,...}`, validation pipeline order, `include`/`widget` mapping to IR
+- [x] Document integration points: [twine-authoring-ir](../twine-authoring-ir/spec.md), [quest-grammar-compiler](../quest-grammar-compiler/spec.md), `validateQuestGraph` / [flow-simulator-cli](../flow-simulator-cli/spec.md) (pick minimal path)
+- [x] Specify **3 falsification tests** for CI (unreachable End; single-arm Choice; zero End) — see STRAND_OUTPUT Challenger section; implemented in `src/lib/modular-cyoa-graph/__tests__/validateQuestGraph.test.ts`
 - [x] **MCP gate:** Run `npm run verify:bars-agents-mcp`; enable **bars-agents** in Cursor when using MCP — see `docs/AGENT_WORKFLOWS.md` § MCP availability (HTTP `sage_consult` equivalent: `npx tsx scripts/run-sage-consult-cma.ts`)
 - [x] **Sage** second pass — `POST /api/agents/sage/consult` / MCP `sage_consult`; captured in [STRAND_OUTPUT.md](./STRAND_OUTPUT.md) § Sage (MCP synthesis)
 
 ## Phase 2: Block palette MVP
 
-- [ ] Define node archetypes (5–8) + graph validation rules
-- [ ] Admin UI: palette + structure review (reuse quest grammar where possible)
-- [ ] Compiler path: blocks → IR → Twee export
-- [ ] `npm run build` && `npm run check`
+- [x] Define node archetypes (5–8) + graph validation rules — `ADR-cma-v0.md` + `validateQuestGraph`
+- [x] Admin UI: palette + structure review — **Blocks (CMA)** tab on `/admin/quest-grammar` (`BlockPalettePlayground.tsx`)
+- [x] Compiler path: blocks → Twee export v0 — `cmaStoryToTwee` in `src/lib/modular-cyoa-graph/` (IR/`irToTwee` bridge can follow)
+- [x] `npm run build` && `npm run check` — verified for this slice
 
 ## Phase 3: Library + charge bridge
 

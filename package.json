@@ -40,7 +40,7 @@
     "test:twee-to-flow": "tsx src/lib/twee-to-flow/__tests__/translateTweeToFlow.test.ts",
     "test:twee-serializer": "tsx src/lib/twee-serializer/__tests__/twee-serializer.test.ts",
     "test:twine-authoring-ir": "tsx src/lib/twine-authoring-ir/__tests__/irToTwee.test.ts",
-    "test:modular-cyoa-graph": "tsx src/lib/modular-cyoa-graph/__tests__/validateQuestGraph.test.ts",
+    "test:modular-cyoa-graph": "tsx src/lib/modular-cyoa-graph/__tests__/validateQuestGraph.test.ts && tsx src/lib/modular-cyoa-graph/__tests__/cmaStoryToTwee.test.ts",
     "export:bruised-banana-flow": "tsx scripts/export-bruised-banana-flow.ts",
     "simulate": "tsx scripts/simulate-flow.ts",
     "seed:first-quest-stub": "tsx scripts/seed-first-quest-stub-options.ts",

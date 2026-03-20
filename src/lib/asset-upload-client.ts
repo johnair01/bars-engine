@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Client-side asset upload. Default path for all BAR photo/media uploads.
  * Streams directly to Vercel Blob — never send files through server actions.
