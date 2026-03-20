@@ -5,5 +5,8 @@ export type EventArtifactListItem = {
   title: string
   startTime: Date | null
   endTime: Date | null
+  timezone: string | null
+  capacity: number | null
+  rsvpCount: number
   parentEventArtifactId: string | null
 }

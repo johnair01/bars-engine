@@ -10,6 +10,12 @@ import { getWorldVenueEntryForInstance } from '@/actions/spatial-maps'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
 import { InviteToEventButton } from './InviteToEventButton'
+import {
+  EditEventScheduleButton,
+  formatEventCapacityLine,
+  formatEventScheduleRange,
+} from './EditEventScheduleButton'
+import { EventGuestsPanel } from './EventGuestsPanel'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
@@ -178,27 +184,71 @@ export default async function EventPage() {
                       key={ev.id}
                       className={`rounded-lg border border-amber-900/20 bg-black/25 overflow-hidden ${!isRoot ? 'ml-0' : ''}`}
                     >
-                      <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
+                      <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                        <div className="min-w-0">
                           <span className="font-medium text-amber-100">{ev.title}</span>
                           {!isRoot && (
                             <span className="ml-2 text-[10px] uppercase font-mono text-amber-500/90">
                               pre-production
                             </span>
                           )}
-                          {ev.startTime && (
-                            <span className="block sm:inline sm:ml-2 text-sm text-zinc-500">
-                              {new Date(ev.startTime).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                          <span className="block text-sm text-zinc-500 mt-0.5">
+                            {formatEventScheduleRange(ev)}
+                          </span>
+                          {formatEventCapacityLine(ev) ? (
+                            <span className="block text-xs text-amber-700/90 mt-0.5">
+                              {formatEventCapacityLine(ev)}
                             </span>
-                          )}
+                          ) : null}
+                          {player && ev.startTime ? (
+                            <a
+                              href={`/api/events/${ev.id}/ics`}
+                              className="inline-block mt-1 text-xs text-sky-400 hover:text-sky-300"
+                            >
+                              Add to calendar (.ics)
+                            </a>
+                          ) : null}
+                          {canSendEventInvites ? (
+                            <EventGuestsPanel instanceId={instance.id} eventId={ev.id} />
+                          ) : null}
                         </div>
+                        {canSendEventInvites && (
+                          <EditEventScheduleButton instanceId={instance.id} event={ev} />
+                        )}
                       </div>
                       {subs.length > 0 && (
                         <ul className="border-t border-amber-900/20 bg-black/30">
                           {subs.map((sub) => (
-                            <li key={sub.id} className="px-4 py-2.5 pl-8 text-sm border-b border-amber-900/10 last:border-0">
-                              <span className="text-amber-200/90">{sub.title}</span>
-                              <span className="ml-2 text-[10px] uppercase font-mono text-amber-600">pre-production</span>
+                            <li
+                              key={sub.id}
+                              className="px-4 py-2.5 pl-8 text-sm border-b border-amber-900/10 last:border-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2"
+                            >
+                              <div>
+                                <span className="text-amber-200/90">{sub.title}</span>
+                                <span className="ml-2 text-[10px] uppercase font-mono text-amber-600">pre-production</span>
+                                <span className="block text-xs text-zinc-500 mt-0.5">
+                                  {formatEventScheduleRange(sub)}
+                                </span>
+                                {formatEventCapacityLine(sub) ? (
+                                  <span className="block text-[11px] text-amber-700/85 mt-0.5">
+                                    {formatEventCapacityLine(sub)}
+                                  </span>
+                                ) : null}
+                                {player && sub.startTime ? (
+                                  <a
+                                    href={`/api/events/${sub.id}/ics`}
+                                    className="inline-block mt-1 text-[11px] text-sky-400 hover:text-sky-300"
+                                  >
+                                    Add to calendar (.ics)
+                                  </a>
+                                ) : null}
+                                {canSendEventInvites ? (
+                                  <EventGuestsPanel instanceId={instance.id} eventId={sub.id} />
+                                ) : null}
+                              </div>
+                              {canSendEventInvites && (
+                                <EditEventScheduleButton instanceId={instance.id} event={sub} />
+                              )}
                             </li>
                           ))}
                         </ul>
