@@ -1,0 +1,1115 @@
+
+
+INTEGRAL COMMUNICATION
+By
+ADAM B. LEONARD
+A THESIS PRESENTED TO THE GRADUATE SCHOOL
+OF THE UNIVERSITY OF FLORIDA IN PARTIAL FULFILLMENT
+OF THE REQUIREMENTS FOR THE DEGREE OF
+MASTER OF ARTS IN MASS COMMUNICATIONS
+UNIVERSITY OF FLORIDA
+2004
+
+Copyright 2004
+by
+Adam B. Leonard
+
+iii
+ACKNOWLEDGMENTS
+This thesis would not exist without the open minds of my committee members. Dr.
+Lisa Duke-Cornell, Dr. Linda Hon, and Dr. Sheldon Isenberg allowed me the academic
+freedom to pursue my ideas with passion. I am grateful for the creative space that they
+made possible. Ken Wilber continues to inspire me both intellectually and personally.
+Through Ken’s volumes of writing, our personal conversations, and my resulting
+practices, I have learned much about the human experience and the simple feeling of
+being. I feel honored to call such an extraordinary human being my teacher, colleague,
+and friend. Finally, my mother and father have unflinchingly stood by me throughout the
+adventurous meanderings of my learning journey. The love I feel for these two beautiful
+souls goes beyond words.
+
+iv
+PREFACE
+Anyone tired of disciplinary fragmentation, sick of partisan bickering, and
+exhausted by an endless eclecticism probably desires a more comprehensive framework,
+a more integral vision. To integrate means “to bring together, to join, to link, to embrace.
+Not in the sense of uniformity, and not in the sense of ironing out all the wonderful
+differences, colors, zigs and zags of a rainbow-hued humanity, but in the sense of unity-
+in-diversity, shared commonalties along with our wonderful differences” (Wilber, 2000,
+p. 2). An integral vision would orient the cornucopia of theories and methods, would
+inform purposeful action, would facilitate dialogue among academic disciplines, and
+would offer insight into the very consciousness holding the vision. Articulating such a
+vision is the integral project. Applying it to communication is integral communication.
+Communication might be thought of as mutual understanding within a shared
+intersubjective space. Or, perhaps communication is a transmission of information bits
+from a source to a receiver. What theoretical map embraces them both? The inside of
+communication could be studied qualitatively. Or, the outside of communication could
+be studied quantitatively. What paradigm includes them both? The integral project
+offers some clues to these enigmas. Attempts to answer these questions occupy the first
+three chapters.
+Chapter 1 expresses the need for theoretical integration within communication
+studies. Rich theoretical traditions such as the rhetorical, semiotic, phenomenological,
+systemic, sociopsychological, sociocultural, and critical abound in communication.
+
+v
+Many communication scholars call for a new way to orient the many theoretical
+traditions, so they can develop together rather than in fragmented isolation. Integral
+communication pioneers like Jurgen Habermas and Stephen Littlejohn already have taken
+the first trailblazing steps.
+Chapter 2 introduces the “All Quadrants, All Levels” (AQAL) integral model
+created by the American philosopher Ken Wilber (2000b). The AQAL map has five
+central elements: quadrants, levels, lines, states, and types. A human being can
+experience any phenomenon from perspectives represented by at least these five
+elements. Such awareness helps orient existing theories, reconstruct old ones, and create
+new ones.
+Chapter 3 outlines the challenges of methodological integration. Paradigm wars
+raged for many years among those who held up their method as the only legitimate way
+to enact truth. Some reduced reality to exterior surfaces, and others reduced reality to
+interior depth. Most researchers today admit that the two methods can be used together
+within the same study, but fail to give a theoretical explanation as to why mixing methods
+works. Integral methodological pluralism offers a philosophical justification for
+paradigmatic integration.
+The social sciences—including communication studies—face a crossroads in
+finding the integral balance between the theories and methods of the humanities on the
+left hand, and the theories and methods of the sciences on the right hand. Chapter 4
+begins the transition into applying integral communication as a strategy, by drawing from
+each hand. Social-science research points to a relationship among behaviors, attitudes,
+
+vi
+values, and value systems. Furthermore, none of these communication traits remains
+statically frozen. They develop.
+Chapter 5 surveys the work of several researchers who study the evolution of value
+systems. According to their findings, value systems develop in levels of increasing
+embrace. The general trend moves from egocentric values to ethnocentric values to
+worldcentric values. Within this growth tendency, four specific value systems stand out
+in contemporary American culture.
+Chapter 6 uses these four value systems within an integral communication strategy.
+Target audiences can be vertically segmented using developmental psychographics. The
+postmodern insights of hermeneutics, semiotics, and structuralism shed light on the
+communicative dynamics among developmental segmentations. Translating a message
+into the developmental value language of the intended audience increases the
+effectiveness of the communication.
+Chapter 7 presents an informal case study documenting integral communication in
+action. David Johnston used integral communication to transform the building market in
+Alameda County, California. The strategy fully identified the various stakeholders, and
+helped them understand how sustainable building practices supported their personal value
+systems.
+Finally, Chapter 8 focuses on the transformative applications of integral
+communication. Multiple disciplines—from education to business to medicine to
+politics—are already using integral communication to talk, learn, and grow with each
+other. Furthermore, a transformation strategy and curriculum suggest the possibility of
+using language to prompt developmental growth.
+
+vii
+All this claims to be nothing more than a first stab at articulating an integral
+communication. Many avenues will be left unexplored; much theoretical integration will
+be left undone; numerous strategic applications will be left unsaid. I merely attempt to
+give a general theoretical overview of integral communication as an orientation for future
+work. I extend preemptive praise to those who will locate my inevitable missteps,
+incorporate refinements, and continue the evolution of integral communication.
+The writing style incorporates first-, second-, and third-person perspectives as
+supported by integral philosophy. The tone may shift from casual and conversational, to
+intellectual and technical, depending on the needs of the moment. Also, quotes and
+citations intentionally appear in abundance. They allow the diverse voices of yesterday
+to speak and create a space for an integral vision today. In the following presentation, I
+aspire to express the integral communication project with sincerity, truth, legitimacy, and
+comprehensibility.
+My most basic aim here is to open a dialogue that asks what a more integral
+approach to communication might look like. The dialogue can be challenging.
+Disagreements might arise. New perspectives may be painfully birthed. Yet these
+challenges fuel the dialogue. Communication furthers the evolution of the integral
+project, just as the integral project furthers the evolution of communication. Thus, in the
+spirit of growth, challenges are welcomed here as honored guests, inviting everyone to
+bask in the glorious discourse of ferment. Welcome to the conversation.
+
+viii
+TABLE OF CONTENTS
+page
+ACKNOWLEDGMENTS ................................................................................................. iii
+PREFACE .......................................................................................................................... iv
+LIST OF FIGURES ........................................................................................................... xi
+ABSTRACT...................................................................................................................... xii
+CHAPTER
+1 A CALL FOR THEORETICAL INTEGRATION.......................................................1
+The Zen of Ferment ......................................................................................................1
+Seven Productive Fragments ........................................................................................4
+What Does “Integral” Mean?........................................................................................7
+Beyond Fusion and Eclecticism....................................................................................8
+Two Noteworthy Pioneers ..........................................................................................10
+2 THE ARCHITECTURE OF INTEGRAL RECONSTRUCTION .............................15
+The Master Architect ..................................................................................................15
+Quadrants....................................................................................................................18
+Lines and Levels .........................................................................................................23
+States and Types .........................................................................................................26
+Building Integral Communication ..............................................................................28
+3 WAR AND PEACE AMONG METHODS ...............................................................32
+Paradigm Battles.........................................................................................................32
+External Reductionism................................................................................................35
+Internal Reductionism.................................................................................................39
+Mixing with Pragmatism ............................................................................................41
+The Quans and Quals Meet the Quads .......................................................................44
+4 SOCIAL SCIENCE AT THE CROSSROADS..........................................................51
+Communication Traits as Real....................................................................................51
+Knowing Attitudes......................................................................................................53
+
+ix
+Beyond the Lamppost .................................................................................................55
+Value Systems as Worldviews....................................................................................61
+Dynamics of the Spiral ...............................................................................................64
+5 WORLDVIEW EVOLUTION ...................................................................................69
+Researching Worldviews ............................................................................................69
+Traditional-Mythic (BLUE)........................................................................................75
+Rational-Achievist (ORANGE)..................................................................................79
+Pluralistic-Communitarian (GREEN).........................................................................82
+Integral-Existential (YELLOW).................................................................................86
+6 AN INTEGRAL COMMUNICATION STRATEGY................................................91
+Developmental Psychographics..................................................................................91
+The Postmodern Toolbox ...........................................................................................96
+Semiotics of Spiral Dialectic ....................................................................................100
+Worldview Translation .............................................................................................103
+Flatland Assumptions ...............................................................................................108
+7 APPLICATION—SUSTAINABLE BUILDING ....................................................112
+Sustainable Development in Alameda County .........................................................112
+A Spiral Wizard ........................................................................................................113
+All Quadrant Communication...................................................................................115
+All Level Communication ........................................................................................120
+“It’s Working Like a Champ”...................................................................................126
+8 TRANSFORMATION AND THE COMMUNICATOR.........................................129
+Trans-Disciplinary Discourse ...................................................................................129
+Language for Growth................................................................................................131
+Worldview Accommodation Strategy ......................................................................133
+Pedagogical Reconstruction......................................................................................137
+The Basic Communicative Intuition.........................................................................140
+APPENDIX
+A THE SPIRAL DYNAMICS INTEGRAL MODEL .................................................145
+B THE EIGHT SPIRAL DYNAMICS LEVELS OF INDIVIDUAL,
+ORGANIZATIONAL, AND CULTURAL WORLDVIEW DEVELOPMENT....146
+C COMMON ATTITUDES OF FOUR VALUE SYSTEMS......................................149
+D WORLDVIEW TRANSLATION WITH SPIRAL DYNAMICS............................154
+
+x
+LIST OF REFERENCES.................................................................................................156
+BIOGRAPHICAL SKETCH ...........................................................................................170
+
+xi
+LIST OF FIGURES
+Figure page
+2-1 Communicative Validity Claims of the Quadrants ..................................................19
+2-2 The Four Quadrants Simplified as the Big Three ....................................................22
+2-3 Multiple Lines of Development ...............................................................................24
+6-1 A Developmental Psychograph................................................................................95
+A-1 Spiral Dynamics Integral Model ............................................................................145
+
+xii
+Abstract of Thesis Presented to the Graduate School
+of the University of Florida in Partial Fulfillment of the
+Requirements for the Degree of Master of Arts in Mass Communication
+INTEGRAL COMMUNICATION
+By
+Adam B. Leonard
+May 2004
+Chair: Lisa Duke-Cornell
+Major Department: Journalism and Mass Communications
+Many scholars call for a more integrated approach to communication studies. Ken
+Wilber’s All Quadrants, All Levels integral model attempts to satisfy this desire by its
+ability to locate unity-in-diversity. The integral model finds relationships among the
+various communication theories, research methods, and strategies so they can learn from
+and work with each other instead of functioning as disconnected eclectic fragments.
+Furthermore, the Spiral Dynamics integral model of value systems demonstrates how
+including levels of psychological development can enhance the effectiveness of
+communication strategies. Change-agents (such as David Johnston in Alameda County,
+California) are already using integral communication strategies. Finally, integral
+communication also has been shown to facilitate cross-disciplinary discourse, and has
+special implications for curricular pedagogy.
+
+1
+CHAPTER 1
+A CALL FOR THEORETICAL INTEGRATION
+The Zen of Ferment
+The following Zen story is called “Trading Dialogue for Lodging.”
+Provided he makes and wins an argument about Buddhism with those who live
+there, any wandering monk can remain in a Zen temple. If he is defeated, he has to
+move on.
+In a temple in the northern part of Japan, two brother monks were dwelling
+together. The elder one was learned, but the younger one was stupid and had but
+one eye.
+A wandering monk came and asked for lodging, properly challenging them to a
+debate about the sublime teaching. The elder brother, tired that day from much
+studying, told the younger one to take his place. “Go and request the dialogue in
+silence,” he cautioned.
+So the young monk and the stranger went to the shrine and sat down.
+Shortly afterward the traveler rose and went in to the elder brother and said: “Your
+young brother is a wonderful fellow. He defeated me.”
+“Relate the dialogue to me,” said the elder one.
+“Well,” explained the traveler, “first I held up one finger, representing Buddha, the
+enlightened one. So he held up two fingers, signifying Buddha and his teaching. I
+held up three fingers, representing Buddha, his teaching [Dharma], and his
+followers living the harmonious life [Sangha]. Then he shook his clenched fist in
+my face, indicating that all three come from one realization. Thus he won and so I
+have no right to remain here.” With this, the traveler left.
+“Where is that fellow?” asked the younger one, running in to his elder brother.
+“I understand you won the debate.”
+“Won nothing. I’m going to beat him up.”
+“Tell me the subject of the debate,” asked the elder one.
+
+2
+“Why, the minute he saw me he held up one finger, insulting me by insinuating that
+I have only one eye. Since he was a stranger I thought I would be polite to him, so
+I held up two fingers, congratulating him that he has two eyes. Then the impolite
+wretch held up three fingers, suggesting that between us we only have three eyes.
+So I got mad and started to punch him, but he ran out and that ended it!”
+(Anonymous quoted in Krippendorff, 1989, p. 73).
+How does reflecting on communication help us understand what transpired in the
+story? Apparently, mutual understanding failed to occur between the traveler and the
+young monk. What theory best describes these dynamics?
+The answer is far from clear. A recent analysis of seven communication textbooks
+identified 249 distinct “theories” (Anderson, 1996). Of these theories, 195 (88%)
+appeared in only one of the seven textbooks. Moreover, only 18 of the 249 theories (7%)
+surfaced in more than three books. In an article titled “Why Are There So Many
+Communication Theories?” Robert Craig struggles with this lack of theoretical consensus
+within communication studies (1993).
+The term “ferment” denotes a state of agitation, turbulent change, or development
+(American Heritage, 2000). The Journal of Communications first exposed a “Ferment in
+the Field” in June 1983. At least since this issue, comments Klaus Bruhn Jensen, “there
+has been a recognition within . . . communication research that the diverse theoretical and
+methodological sources of the field, in the social sciences and in the humanities, hold a
+significant potential for consolidation through integration” (2002, p. 1). Karl Erik
+Rosengren contributed to that June issue over 20 years ago, when he hoped “the ferment .
+. . would be replaced by vigorous growth, stemming from both mutual confrontation and
+mutual cooperation between the various schools and traditions of research” (1993, p. 8).
+This ferment—made possible by a differentiation into multiple schools of thought—held
+
+3
+the potential to catapult the field into valuable academic territory that no one school could
+reach on its own. Ferment created the possibility for integration.
+That possibility has yet to manifest. Many communication scholars lament the
+unfulfilled promise of integration. Barbara O’Keefe comments, “It is difficult to
+represent the field well . . . because we have failed as a community to organize our
+contributions in a systematic fashion” (1993, p. 80). Craig agrees, seeing little proof of
+communication theory as a field, because scholars “appear to be operating primarily in
+separate domains. . . . Communication theorists apparently neither agree nor disagree
+about much of anything. . . . There are no common goals that unite them, no contentious
+issues that divide them. For the most part, they simply ignore each other” (1999, p. 119-
+120). Karl Rosengren gives a virtually identical diagnosis: “Adherents of the various
+quasi-paradigms have increasingly avoided both confrontation and cooperation,
+preferring instead to isolate themselves in a number of self-contained enclaves . . . . The
+field today is characterized more by fragmentation than fermentation” (1993, p. 8-9).
+The work of many developmentalists suggests that healthy development moves
+from fusion to differentiation to integration (Kegan, 1994; Cook-Greuter and Miller,
+1994). In contrast, communication scholarship has taken a deviant path, deteriorating
+from differentiation to disassociation. Communication historians Armand Matterlart and
+Michele Matterlart write of the unresolved tensions that result from disassociation.
+The history of theories of communication is a record of these tensions and of the
+varied attempts to articulate—or avoid articulating—the terms of what all too often
+have appeared as dichotomies and binary oppositions rather than levels of analysis.
+In diverse historical contexts and formulated in various ways, these tensions and
+antagonisms have constantly manifested themselves, dividing the field into
+different schools of thought, currents, and tendencies. (1998, p. 1-2)
+
+4
+During a state of disassociation, cooperative interaction slows, and theoretical
+schools either ignore or attempt to conquer each other. Craig explains this breakdown
+using the term “sterile eclecticism” for differentiation and “productive fragmentation” for
+disassociation:
+Each of the fragments of communication research has been productive within its
+own domain, hence my term ‘productive fragmentation.’ As long as the research
+discipline is thus fragmented, the textbooks will continue to be mired in sterile
+eclecticism and there will continue to be more and more communication theories
+but still no field of communication theory. (1999, p. 123)
+Healing the disassociation within communication studies requires integration.
+First, however, the field’s major theoretical traditions must be clearly differentiated.
+Seven Productive Fragments
+One could differentiate the field of communication in many ways. The
+presentation below, representing one possibility, divides communication theories into
+seven broad traditions, adapted from Craig (1999) and Littlejohn (2002). Each tradition
+enjoys a contemporary academic following, and a substantial body of research literature.
+These seven traditions represent the biggest fragments or heaps currently active within
+communication studies.
+1. The Rhetorical Tradition: Originating with the ancient Greeks, the rhetorical
+tradition views communication as a practical art of discourse. Communication, as a
+practical discipline, can improve by learning and practicing a skill. Rhetorical
+studies emphasize the power of words to artfully persuade audiences and the value
+of informed judgment.
+2. The Semiotic Tradition: Intersubjective mediation by signs characterizes the
+semiotic perspective of communication. Misunderstandings occur because of gaps
+among subjective viewpoints that can be imperfectly bridged by using shared sign
+systems such as language. Understanding requires that both parties speak the same
+“language” and have shared referential experience.
+3. The Phenomenological Tradition: The phenomenological tradition theorizes
+communication as experience of self and other in dialogue. Direct and unmediated
+contact with others is a real and necessary human experience. Phenomenologists
+
+5
+aim to cultivate communication practices that enable and sustain authentic human
+relationships, such as seeking genuineness, supportiveness, openness, respecting
+differences, and seeking common ground.
+4. The Systems Tradition: Communication, according to the systems tradition, is
+information processing. Systems theory, cybernetics, cognitive science, artificial
+intelligence, functionalist social theory, and network analysis all fall under the
+systems tradition. Systems theory describes the communication process
+empirically with functionalist terms such as source, receiver, signal, noise, and
+feedback.
+5. The Sociopsychological Tradition: Experimental social psychology accounts for
+much of what is today called “communication science.” This approach regards
+communication as processes by which humans express, interact, and influence each
+other. Psychological factors (e.g., attitudes, values, emotional states, personality
+traits, unconscious conflicts, social cognitions) mediate the communication process.
+6. The Sociocultural Tradition: This tradition studies communication as a symbolic
+process that produces and reproduces shared sociocultural patterns. One the one
+hand, everyday interactions with others depend on preexisting, shared cultural
+meanings and social structures, and these interactions “reproduce” the existing
+sociocultural order. On the other hand, social interaction allows creativity and
+improvisation that “produces” the sociocultural order that makes interaction
+possible in the first place.
+7. The Critical Tradition: With roots in Plato’s conception of Socratic dialectic,
+critical communication theory aspires for mutual understanding through discursive
+reflection. Material and ideological forces impede the emancipatory movement
+towards authentic communication. Social injustices perpetuated by ideological
+distortions can be rectified through communicative practices that enable critical
+reflection, unmask the distortions, and facilitate political action.
+When faced with such theoretical diversity, critics typically react in one of five
+ways, each response plagued with shortcomings, based on the research of Wayne Booth
+(1979) and Donald Levine (1986). First, the polemicist response encourages all
+perspectives to fight it out and welcomes assaults on complacency and conformity.
+Critique: it often generates wasteful and mean spirited exchanges and fosters
+misinterpretation among intellectual opponents. Second, the semanticist response
+believes that disagreements will disappear through intellectual antagonists clarifying their
+terms and removing ambiguities. Critique: the differences among perspectives transcend
+
+6
+trivial semantic ambiguities and cannot be removed through linguistic clarification
+(epistemological differences for example). Third, the monist response deems one
+contending position as correct and portrays all others as wrong, misleading, or
+unimportant. Critique: this response can claim validity only from within its own
+perspective and philosophically cannot justify universal invalidation of all other
+positions. Fourth, the skeptic (or relativist or nihilist) response questions whether any
+perspective can make statements containing truth value. Critique: this claim contains a
+performative contradiction, namely the professed certainty about the impossibility of
+attaining certainty. Fifth, the eclectic response accepts the validity claims of competing
+theories and copes with the apparent incommensurability by chopping up works and
+using the most helpful fragments. Critique: the contextual significance of each
+perspective is lost when fragmented and spliced with other positions.
+An alternative response does exist, which honors each approach as unique and
+valuable. Each theory contains its own strengths and weaknesses. Each theory offers a
+truth, but not the truth. Letting each theory tell its part of the story is essential; letting it
+impose its piece as the whole is disastrous. Given these basic insights, a series of
+questions arise: How can the partial truth of each perspective best be preserved? What
+sort of theoretical space can allow each perspective to respect, value, and utilize the
+others? What sort of map could organize the perspectives to accentuate their
+relationships, patterns, and links? How is constructive dialogue and cooperation among
+the perspectives best facilitated? Put simply, my response is integration.
+The next section introduces integration in a general, conversational manner.
+Playful language and colorful metaphors are intentionally used to introduce some rather
+
+7
+challenging concepts. Since an integral analysis can operate upon any discipline, the
+following discussion could apply equally well to medicine, psychology, education, or
+business.
+What Does “Integral” Mean?
+Consider everything for a moment. . . . Now reflect how much you remembered to
+include. Did you remember atoms? What about political systems? Communication?
+Dreams? The feminine? Dare I even mention consciousness? The question string could
+continue for miles. (Did you remember sex? And ecology? Spirituality? . . .)
+Most people find this thought experiment exceedingly difficult. But there is a trick:
+spaces are easier to remember than particulars. For example, the space “kitchen” is
+simpler to recall than every particular item in a kitchen. Once a person understands the
+space “kitchen,” she will know where the toaster belongs upon encountering it. The same
+applies to everything. Create enough space and nothing is left out.
+“Integral” simply means covering all the bases. To do this, an integral map creates
+enough space to include all the bases in a balanced and comprehensive manner. But
+integral embrace involves more than just recognizing multiple clumps or listing eclectic
+jumbles. It joins, links, and fits together the individual bases by finding underlying
+patterns and interconnections within a common worldspace, territory, or matrix.
+Without an integral map, keeping everything straight proves challenging for
+anyone. The information age launches a relentless barrage of meaning missiles. Some
+inevitably penetrate our minds and set up residence. Bits and pieces drift aimlessly in a
+chaotic bowl of mental soup. Information fragments bounce around the mind, blindly
+bumping into each other—garbled, jumbled, muddled. Integral maps seek to coordinate
+
+8
+this eclectic pluralism, converting “heaps into wholes.” For without coordination,
+information loses much of its pragmatic value.
+Some maps are more inclusive than others, and, in this case, value increases with
+capacity for embrace. For instance, a map of the entire United States is more valuable
+than a Florida map, namely because the USA map includes Florida plus more. An
+integral approach endeavors to erect the largest map possible—an earnest model of
+everything, or at least the spaces in which everything exists. Working with anything less
+than a full map will necessarily entail certain limitations, confusions, and reductionisms.
+With only a Florida map at hand, one might aim for Washington, D.C., yet only make it
+to Tallahassee. Using an integral map, in contrast, drastically improves the possibility of
+success.
+Theoretical integration means discovering the unity-in-diversity, the commonalty
+amidst the difference. The integral project within communication attempts to give a
+comprehensive map of communicative phenomena by including all traditions and
+perspectives. “The important point is the knowledge that all these views, when
+integrated, provide an ‘emergent factor’ that adds value beyond the sum of the
+perspectives” (Paulson, 2002, p. 110). Integral communication models the grand
+cohesion of relationships and developments that creates the possibility space for
+communication to occur.
+Beyond Fusion and Eclecticism
+A growing number of communication scholars possess the will to integrate but lack
+the means. Unrest swells within the academic community to move beyond differentiation
+(or disassociation) towards integration. Many communication professionals are tired of
+
+9
+disciplinary disassociation, eclecticism, or fusion. They want integration, they’re just not
+quite sure how best to do it.
+A difference exists between the desire for integration and the regression from
+differentiation back to orthodox fusion (Giddens, 1989, p. 53). Integration does not mean
+fusion. No integrally oriented social scientist wants a dominating supertheory that
+supersedes and discredits all other theories as null and void. Richard Shweder explains
+that “it is not as if each of the several schools of thought is pressing for that notable
+scientific achievement or crucial experiment in the wake of which the diversity will
+disappear, a unifying paradigm will emerge, and real science will begin” (1986, p. 163).
+Similarly, O’Keefe makes the case against coherence (fusion) and for cohesion
+(integration) (1993, p. 76-80). She argues that “theoretical unification is neither desirable
+nor attainable. . . . Since we [communication scholars] have different viewpoints for good
+reason, imposition of one common theoretical viewpoint would simply mean displacing
+some important work from the field” (1993, p. 76). Craig follows in stating “the goal
+should not be some chimerical, unified theory of communication just over the rainbow.
+Such a unified theory will always be out of reach, and we probably should not want one if
+it were attainable. . . . The goal should not be a state in which we have nothing to argue
+about, but one in which we better understand that we all have something very important
+to argue about” (1999, p. 123-124). Under no circumstances does an integral approach to
+communication mean an end to theoretical diversity.
+Beyond monistic fusion and eclectic pluralism, integration offers a metanarrative,
+field, matrix, or map where basic commonalties and relationships become more apparent
+among the multiplicity of perspectives and traditions in communication studies. Many
+
+10
+communication scholars voice their desire for such an integral map. Craig calls for a
+metatheoretical approach that “cuts across the various disciplinary traditions, substantive
+specialties, methodologies, and schools of thought that presently divide us” (1999, p.
+120). “Perhaps ways can be found by which the various, apparently incompatible or
+unrelated modes of communication theory that now exist can be brought into more
+productive dialogue with one another . . . perhaps communication science can be
+understood as an integrated ‘practical discipline’ in which critical, interpretive, and
+empirical research as well as philosophical reflection and applied work have deeply
+related, essential functions to perform” (Craig, 1993; Craig, 1989). O’Keefe
+acknowledges, “The great opportunity offered by integration is the possibility of making
+a common cause. Rather than competing in separate units, the communication disciplines
+can provide support for each other” (1993, p. 80).
+Many of the theorists mentioned in this section have attempted integral schemes
+that have failed in various ways. No matrix, metamodel, or framework has yet been
+erected that effectively integrates the communication field. Many seem content with
+creating elaborate categorical matrixes of eclecticism. “The time is ripe,” concludes
+Levine, “for articulating a self-conscious pluralist program in the social sciences in which
+the point will be, not to scrap the demarcationist [differentiation] project, but to
+sophisticate it” (1986, p. 282). Craig’s “dialogical-dialectical coherence matrix” serves
+as a fine example of a sophisticated demarcation (1999, p. 133-134). Nevertheless,
+eclectic pluralism of this sort cannot be called integral.
+Two Noteworthy Pioneers
+Acknowledged as one of the greatest thinkers of the twentieth century, Jurgen
+Habermas stands among the most comprehensive and philosophically rigorous of all
+
+11
+communication scholars. His writings display encyclopedic knowledge across a
+plenitude of academic disciplines. He sought to “synthesize [these disciplines] on an
+encompassing scale as grand as that of Hegel or Marx” (Wuthnow, Hunter, Bergesen,
+Kurzweil, 1984, p. 179). Indeed, Habermas’s theoretical framework—featuring a
+horizontal and vertical axis—makes invaluable contributions to the integral project in
+general, and to integral communication specifically.
+Central to his thought is a “universal pragmatics,” marked by a theory of
+“communicative action” (Habermas, 1984; Habermas, 1979). Habermas cites Immanuel
+Kant who differentiated what Max Weber later called the three “cultural value spheres”
+(1996, p. 239). This primary differentiation allowed Habermas to articulate the
+relationship of “speech acts” with the three most primary realities or worldspaces:
+According to this model, language can be conceived as the medium of interrelating
+three worlds; for every successful communicative action there exists a threefold
+relation between the utterance and (a) “the external world” as the totality of
+existing states of affairs, (b) “our social world” as the totality of all normatively
+regulated interpersonal relations that count as legitimate in a given society, and (c)
+“a particular inner world” (of the speaker) as the totality of his intentional
+experiences. (Habermas, 1979, p. 67)
+Returning full circle to the Zen story, recall that the traveler held up three fingers to
+signify these same three realms. Indeed, the “Three Jewels” of Buddhism—Buddha,
+Dharma, and Sangha—respectively signify the worldspaces of subjective understanding,
+objective truth, and intersubjective meaning.
+In any communicative action towards mutual understanding, “validity claims are
+‘always already’ implicitly raised” (Habermas, 1979, p. 97). Each of these three realms,
+insists Habermas, has its own specific validity claim. Validity claims of truth,
+truthfulness (or sincerity), and rightness (or legitimacy) correlate respectively to the
+realms of the objective, the subjective, and the intersubjective. The next chapter covers
+
+12
+these domains in greater detail. For now, simply note that the three validity criteria are
+domain specific. Habermas cautions that the validation method of one domain does not
+validate the others.
+The second major component to Habermas’s work is his developmental
+investigations—the vertical axis. The task, for Habermas, is “to work out a unified
+framework in which the different dimensions of human development are not only
+analytically distinguished [differentiated] but in which their interconnections are also
+systematically taken into account [integration]” (McCarthy, 1979, p. xx). This quote,
+written almost 25 years ago, nicely articulates a key aspect of the integral project.
+Habermas presents a rational reconstruction of “universal, ‘species-wide,’
+competencies and the demonstration that each of them is acquired in an irreversible series
+of distinct and increasingly complex stages that can be hierarchically ordered in a
+developmental logic” (McCarthy, 1979, p. xx). Development occurs within each of the
+three worldspace domains (subjective, intersubjective, and objective). The outcome of
+this multidimentional evolution determines the acquisition of communicative
+competence. The key point to remember: the Big Three reality domains—subjective,
+intersubjective, and objective—evolve together.
+A second, lesser known pioneer, Steven Littlejohn, has consistently supported
+theoretical integration for the past 25 years since the first edition of his widely respected
+textbook Theories of Human Communication. In the 1978 introduction, he expresses the
+belief that “each theory looks at the [communication] process from a different angle, and
+each theory provides insights of its own” (p. 21). He recognizes that “the biggest
+problem of an eclectic approach is integrating parts into a coherent whole” (1978, p.
+
+13
+374). In his concluding chapter titled “A Multitheoretical Integration,” he outlines an
+approach by which “we are able to see patterns and generalizations not apparent from
+narrower perspectives” (1978, p. 374-375).
+In his attempt of a “multitheoretical integration,” Littlejohn also uses a horizontal
+and vertical axis of analysis. For the horizontal, he employs two broad perspectives—
+general systems theory and symbolic interactionalism—to represent the two primary
+perspectives of communication (1978, p. 376). On the one hand, general systems theory
+represents theories that focus on “out there activity” such as behavior, function, and
+utility (Littlejohn, 1983, p. 10). On the other hand, symbolic interaction (including
+semiotics) represents theories that deal with “in here activity” including meaning,
+interpretation, and signs (Littlejohn, 1983, p. 10). The combination of these two general
+perspectives produces a rough framework of the inside and outside of any communicative
+event.
+For his vertical axis, Littlejohn supports the use of hierarchies and levels of
+analysis. He clearly states that communication, as a complex process, “can be analyzed
+hierarchically” (1978, p. 376). He cites four contexts or levels within communication:
+interpersonal, group, organizational, and mass, pointing out that “these levels are not
+mutually exclusive. They should be viewed hierarchically with interpersonal
+communication as the base of all other contexts” (Littlejohn, 1978, p. 378). This
+statement suggests a system relationship in which each level exists both as a whole and as
+a part of a greater whole. For example, group communication is a whole system itself
+and simultaneously a part of the larger system of organizational communication. Finally,
+he implies that the two horizontal dimensions (interior and exterior) operate at each of the
+
+14
+four vertical levels. Any future attempt at theoretical integration will surely want to
+consult and include Littlejohn’s pioneering efforts.
+Perhaps more than any other contemporary American communication theorist,
+Littlejohn has exemplified a career commitment to healthy theoretical pluralism and the
+call for theoretical integration. In the seventh and most recent addition of Theories of
+Human Communication, he reaffirms this commitment by supporting Craig’s search for
+“a metamodel that opens up a conceptual space in which many different theoretical
+models of communication can interact” (Littlejohn, 2002, p. 12; Craig, 1999, p. 126-127).
+The term meta, explains Littlejohn, means “above,” and so a metamodel is a “model of
+models” (2002, p. 12). But even Littlejohn does not believe he possesses the means to
+carry a theoretical integration through to a satisfactory completion. Instead of presenting
+his readers with a revised integral metamodel in his 2002 textbook, he gives this advice:
+“As a student of communication theory . . . if you can find a useful metamodel, you will
+be able to make connections among theories . . . and understand the value of multiple
+perspectives in the field” (p. 12). The next chapter offers a viable means of integration
+by introducing just such a “useful metamodel.”
+
+15
+CHAPTER 2
+THE ARCHITECTURE OF INTEGRAL RECONSTRUCTION
+The Master Architect
+In Communication and the Evolution of Society, Habermas says that
+“reconstruction signifies taking a theory apart and putting it back together again in a new
+form in order to attain more fully the goal it has set for itself. This is the normal way of
+dealing with a theory that needs revision in many respects but whose potential for
+stimulation has still not been exhausted” (1979, p. 95). Far from regression to modernist
+thinking, the reconstructive impulse marks an evolution beyond not only modernity, but
+beyond deconstructive postmodernity as well. One could call it reconstructive
+postmodernism, post-postmodernism, or more simply integral. Robert Kegan writes,
+“What I call ‘reconstructive postmodernism’ . . . seeks not only a differentiation from the
+forms of modernism but their reintegration into a new way of knowing that abjures the
+absolutism of the forms, that does not take the forms as complete, distinct, or prior”
+(1994, p. 329). Regarding communication, Robert Craig asserts, “Our task is not to
+deconstruct communication theory. (What would be the point? It’s already a mess.)
+Rather, we must reconstruct communication theory . . .” (1999, p. 129).
+Respectable thinkers have labored over the reconstructive project only to encounter
+variable degrees of fruition. An easy way to judge the relative success of any given
+integral map is to ask how much space it creates. Does it create enough space to include
+the partial truth of all the theoretical traditions and methods? The present investigation
+strives to assess whether the AQAL (pronounced ah-qwal) integral framework created by
+
+16
+the American philosopher Ken Wilber can credibly answer this question in the
+affirmative.
+Wilber has expanded and refined his work over the past 30 years, passing through
+at least four distinct phases. The 19 books he has either written or edited have been
+translated into more than 30 languages, making Wilber the most translated American
+academic writer alive (Visser, 2003, p. 3). At 23-years-old, he authored his first book,
+which sent ripples into elite academic circles that have yet to settle. “Virtually overnight
+Wilber was acknowledged as a leading thinker in the fields of psychology and
+philosophy, with serious reviews comparing him to Freud, Hegel, even Plato” (Visser,
+2003, p. 25).
+On an intellectual side, Wilber demonstrates an uncanny “capacity to absorb,
+synthesize, categorize, and make sense of vast amounts of information from disparate
+fields” (Schwartz, 1995, p. 342). On a personal side, he has been characterized as
+“patient, generous, funny, insightful, and entertaining” (Schwartz, 1995, p. 341). Having
+personally met with him several times at his Denver residence, I can only agree on both
+accounts. Ken Wilber’s wisdom and compassion inform this entire project of integral
+communication.
+In 1995, Wilber first published the AQAL model in volume one of the Kosmos
+trilogy. He relates how his reconstructive vision grew out of the smoky ruins of
+deconstructive postmodernism:
+One thing was very clear to me as I struggled with how best to proceed in an
+intellectual climate dedicated to deconstructing anything that crossed its path: I
+would have to back up and start at the beginning, and try to create a vocabulary for
+a more constructive philosophy. Beyond pluralistic relativism is universal
+integralism; I therefore sought to outline a philosophy of universal integralism. . .
+an integral philosophy, one that would believably weave together the many
+
+17
+pluralistic contexts of science, morals, aesthetics, Eastern as well as Western
+philosophy, and the world’s great wisdom traditions (2000b, p. x).
+“You cannot do that,” Wilber insists, “as an eclecticism, or a smorgasbord of unrelated
+observations. . . . The integral orientation must be able to tie together an enormous
+number of disciplines into a fairly complete, coherent, plausible, believable vision”
+(Wilber in Visser, 2003, p. 35-36). The remainder of this chapter shows how he did it
+and how it applies to communication.
+Nothing is as practical as a good (meta)theory, but only if it is applied. With this in
+mind, Wilber founded a non-profit organization—The Integral Institute—to apply the
+integral vision. The Integral Institute currently is committed the following four goals (I-I,
+2004):
+1. Integrate the largest amount of research from the largest number of disciplines.
+2. Develop practical products and services from this research.
+3. Apply this integrated knowledge and method of problem solving to critical and
+urgent issues.
+4. Create the world’s first Integral Learning Community.
+Integral Institute recruits top academics and practitioners from around the world to
+collaborate on the integral reconstruction project. The global think tank is divided into
+domains composed of “core teams” who work together to reconstruct their respective
+disciplines with the AQAL model. Core teams include integral business, integral
+ecology, integral art, integral psychology, integral medicine, and integral education to
+name a few. Perhaps in the future integral communication will also be a domain.
+AQAL stands for “all quadrants, all levels,” but also implies lines, states, and types.
+Together these five elements function as the essential theoretical tools of the integral
+map. Remembering them will prove extremely helpful for the task ahead. Try this
+
+18
+pneumonic memory device to help: To learn start loving questions—To (types) Learn
+(lines) Start (states) Loving (levels) Questions (quadrants).
+Quadrants
+The quadrants serve as AQAL’s horizontal axis. They elegantly map the same
+reality domains given by Habermas. Every communication relates to at least four
+worldspaces, each with its own type of condition or validity claim that determines the
+effectiveness of the communication. First, the external world refers to material objects in
+nature. External phenomena can be empirically perceived, measured, and manipulated.
+A communication act is effective in this domain to the degree that it accurately represents
+the objective facts. The validity claim is truth: a communication “counts as true for the
+participants insofar as it represents something in the world” (Habermas, 1979, p. 28).
+Second, the internal world signifies the realm of personal subjectivity. This domain
+includes the values, feelings, and intentions of the person communicating. Effective
+communication occurs when the communicator expresses what she actually thought or
+felt internally. Within this domain, truthfulness (or sincerity) determines the validity of a
+speech act. A communication “counts as truthful insofar as it expresses something
+intended by the speaker” (Habermas, 1979, p. 28).
+A third reality domain, the cultural world, concerns the intersubjective space of
+mutual recognition. When a signing community interacts with mutual understanding it
+shares pre-existing, collective contexts such as cultural norms, symbolic patterns, moral
+expectations, and worldviews. The validity claim here deals with the rightness (or
+legitimacy) of a communicative action in relation to cultural norms. A communication
+“counts as right insofar as it conforms to socially recognized expectations” (Habermas,
+1979, p. 28). Finally, communication takes place within the linguistic world.
+
+19
+Effectiveness depends on the linguistic medium in which a communication is framed. A
+speech act must conform to the external properties of a language system. Grammatical,
+semantic, and syntactical rules must be followed for a communication to reach
+comprehensibility (or functional fit), the fourth validity claim.
+These four communicative “worlds” are the four quadrants. The quadrant model
+makes two basic distinctions: interior/exterior and individual/collective. This creates a
+matrix with four worldspaces or quadrants: the upper-left or interior-individual, the
+upper-right or exterior-individual, the lower-right or exterior-collective, and the lower-
+left or interior-collective.
+Figure 2-1. Communicative Validity Claims of the Quadrants
+
+20
+Notice that everything on the left side of the model refers to interiors and everything on
+right side refers to exteriors. The term “exterior” describes physical forms, systems,
+behaviors, functions, and so on. Exterior phenomena in communication include all
+semiotic signifiers (spoken language, written words), behavioral responses to
+communication stimuli, statistically tabulated survey data, brain neurology, satellites, the
+First Amendment to the Constitution, media distribution systems, sociological
+demographics, the Internet, and the Federal Communications Commission (FCC) to name
+a few. Exteriors have “simple location” and can be seen empirically, objectively, and
+behaviorally (Wilber, 1996, p. 90). They are the material manifestation of every
+phenomenon.
+“Interior” refers to phenomena such as consciousness, meaning, intention, feeling,
+value, and interpretation. Unlike exteriors, interiors lack simple location. One cannot
+empirically point to alienation, meaning, or mind, yet they exist. All psychological and
+cultural “lenses” through which one engages the communicative process are interiors:
+semiotic signifieds (mental perceptions), judgements of newsworthiness, cultural
+contexts, affective relationships, psychological levels of development, hermeneutic
+circles, value systems, and cognitive capacity for example.
+“Left Hand” and “Right Hand” serve as abbreviations for interior and exterior
+phenomena respectively. Recall that Littlejohn used systems theory to signify the Right
+Hand and symbolic interactionalism to signify the Left Hand in his model. Philosophers
+from Spinoza to Leibniz to Schopenhauer to Whitehead agree that every human process
+includes a within and a without, a cognition and an extension, a depth and a surface, a
+subjective and an objective, an internal and an external, a Left Hand and a Right Hand
+
+21
+(Wilber, 2000b, p. 117). Communication, being a human process, is, therefore, no
+exception.
+The quadrants are so fundamental to the human experience that every major
+language recognizes them in the form of first-person, second-person, and third-person
+pronouns (I-I, 2003). First-person means “the person who is speaking,” which includes
+pronouns like I, me, mine (in the singular), and we, us, ours (in the plural). Second-
+person means “the person who is spoken to,” which includes pronouns like you and
+yours. Third-person means “the person or thing being spoken about,” such as he, him,
+she, her, they, them, it, and its.
+If I am speaking to you about my new car, “I” am first person, “you” are second
+person, and the new car (or “it”) is third person. Now, if you and I are talking and
+communicating, we will indicate this by using, for example, the word “we,” as in,
+“We understand each other.” “We” is technically first-person plural, but if you and
+I are communicating, then your second person and my first person are part of this
+extraordinary “we.” Thus second person is sometimes indicated as “you/we,” or
+“thou/we,” or sometimes just “we.” So we can therefore simplify first-, second-,
+and third-person as “I,” “we,” and “it.” (I-I, 2003)
+Hence, the quadrants can be boiled down to I (interior-individual), We (interior-
+collective), and It(s) (exterior-individual and exterior-collective) or, as Wilber calls them,
+the “Big Three.”
+Many great thinkers have recognized the Big Three in their own theories: Plato’s
+the Beautiful (I), the Good (We), and the True (It); Max Weber’s art aesthetic (I),
+religious morals (We), scientific empiricism (It); Sir Karl Popper’s three worlds: the
+subjective (I), the cultural (We), and the objective (It); Immanuel Kant’s The Critique of
+Critical Judgement (I), The Critique of Practical Reason (We), and The Critique of Pure
+Reason (It); and, as already seen, Buddhism’s Buddha (I), Sangha (We), and Dharma (It)
+(Wilber, 2000b, p. 149). The charts below show the same fundamental worldspaces in
+
+22
+two different ways. The chart on the right shows Plato’s formulation of the Big Three
+and the chart on the left shows the languages of the quadrants:
+Figure 2-2. The Four Quadrants Simplified as the Big Three
+The quadrant model integrates the Big Three while preserving the integrity, identity, and
+languages (first-person, second-person, and third-person) of each. At their core the
+quadrants represent “the four fundamental perspectives on any occasion, the four basic
+ways of looking at anything” (I-I, 2003). Hence, communicative action necessarily
+entails all four quadrant domains. In short, communication is always a quadratic affair,
+involving the inside and the outside of the individual and the collective.
+Theoretical integration requires figuring out how much of the quadratic affair each
+communication theory includes. Some theories may cover only one quadrant. The
+systems tradition, for instance, describes the lower-right quadrant of the communication
+process. Other traditions overlap. The critical tradition draws from Marxist sociology
+concerning the relationship of society’s economic base (lower-right quadrant) to culture’s
+superstructure (lower-left quadrant). The phenomenological tradition better addresses an
+
+23
+agent’s conscious experience (upper-left) as she engages an “other” in relationship
+(lower-left). The rhetorical tradition’s emphasis on an individual’s practical speaking
+abilities points to the upper-right quadrant.
+Every theory recognizes at least one of the quadrants. The point is to orient the
+communication theories within the quadrants according to their worldspace focus. Once
+properly oriented, each theory reveals which parts of the story it tells and which parts it
+leaves out. With this knowledge, an integral theorist can then reconstruct a theory, in the
+Habermasian sense, to include additional quadrants. Or, the theory can be combined with
+others that address those quadrants that it leaves out. Either way, the goal is to form a
+more comprehensive picture of any given communication process.
+Lines and Levels
+Everyone can agree that he or she is better at some things than others. Intelligence
+comes in many forms. Howard Gardner’s theory of multiple intelligences outlines seven
+including linguistic (sensitivity to the sounds, rhythms, and meanings of words and the
+different functions of language), musical (ability to produce and appreciate pitch, rhythm,
+and aesthetic-sounding tones), and interpersonal (ability to detect and respond
+appropriately to the moods, temperaments, motivations, and intentions of others)
+(Gardner, 1999). Other intelligences include cognitive (Piaget, 1952), values (Graves,
+1974), emotional (Salovey and Mayer, 1990), psychosexual (Freud, 1989), moral
+(Kohlberg, 1984), and even spiritual (Plotinus, 1991).
+In the present context, these intelligences occur within the interior of an individual,
+which places them in the upper-left quadrant. Incidentally, this chart was adapted from
+the University of Notre Dame’s “Executive Integral Leadership Program” (Notre Dame,
+2004). Notice that some arrows extend farther than others. The variance represents the
+
+24
+fact that we all have unique strengths and weaknesses. Someone’s strength can be
+another’s weakness. Assuming that intelligences are not fixed (as the research indicates),
+then a developmental logic inevitably emerges (Gardner, 1999).
+Figure 2-3. Multiple Lines of Development
+Another word for multiple intelligences is developmental lines, since language
+proficiency, morality, cognition, emotions, and so on all develop through a series of
+qualitatively different stages or levels. The number of levels represented in any
+developmental line does not matter as much as the general developmental pattern. For
+example, the Fahrenheit and Centigrade scales divide temperature differently, but the
+general trend from cold to hot applies to both (I-I, 2003).
+
+25
+Whether the division of levels be two or two hundred, the relationship among the
+levels remains the same. According to the integral perspective, the conceptual key to this
+relationship turns out to be the “holon,” a term coined by Arthur Koestler. In his own
+words, Koestler says a holon “designates these nodes on the hierarchic tree which behave
+partly as wholes or wholly as parts, according to the way you look at them” (1967, p. 48).
+In other words, a holon is a whole that simultaneously is a part of a greater whole. In the
+linguistic realm, Koestler demonstrates “the impossibility of the task of chopping up
+speech into elementary atoms or units, either on the phonetic or on the syntactic level.
+Phonemes, words, phrases, are wholes in their own right, but parts of a larger unit” (1967,
+p. 48). According to Koestler (and Wilber), neither “wholes” nor “parts” exist
+anywhere—only whole/parts or “holons.” A word is a whole, yet simultaneously part of
+a greater whole: a sentence. A whole sentence is also part of a paragraph, which itself is
+a larger whole/part or holon. Each level in an given developmental line is a holon—a
+whole level, yet also part of an even more encompassing level that “transcends and
+includes” it (Wilber, 2000b). In a holarchy, each senior holon transcends its juniors,
+while also including them, a process that can be visually represented as a series of
+concentric circles.
+Holarchies occur in every quadrant. Habermas deals with developmental
+holarchies in all four (1979):
+• Upper-left (interior-individual): cognition, morals, self-sense
+• Upper-right (exterior-individual): biological evolution
+• Lower-right (exterior-collective): social systems, political economy
+• Lower-left (interior-collective): worldviews, normative structures
+Perhaps most relevant and complex of all, for Habermas, concerns the development of
+communicative competence, which involves developmental lines in each quadrant (i.e.,
+
+26
+the four validity claims). Such a conception would show the “fundamental system of
+rules that adult subjects master to the extent that they can fulfill the conditions for a
+happy employment of sentences in utterances . . .” (1979, p. 26). To help put the three
+elements together (quadrants, levels, lines), please see appendix A for a visual
+representation of one particular AQAL model called “Spiral Dynamics integral.”
+An integral theoretical reconstruction might critically examine each tradition
+concerning its incorporation of levels and lines. The integral communication theorist
+must wrestle with how lines of development relate to each of the traditions. A
+developmental reconstruction of the semiotic tradition, for example, is attempted in
+chapter 6.
+States and Types
+A state is “a condition or mode of being” (American Heritage, 2000). Everyone
+experiences the three most obvious and natural states of consciousness: waking,
+dreaming, and deep sleep. These general states contain structures, and those structures
+contain phenomenal states or how one is in this moment (Wilber, 2003a). Phenomenal
+states include any temporary modes of being such as emotions, alertness, and peak
+experiences (Maslow, 1971; Csikszentmihalyi, 1990). States inevitably affect how
+individuals both give and receive communications and the success of mutual
+understanding. Communication dynamics will differ, for instance, depending on whether
+the participants act from a phenomenal state of anger versus love.
+States (like levels and lines) occur not only in the interior-individual quadrant, but
+in all the quadrants. On the Right Hand, for example, the exterior-individual reacts with
+a “fight or flight” adrenaline surge and the exterior-collective exhibits various
+atmospheric and weather states. A threatened culture (internal-collective) may regress to
+
+27
+a lower state of needs, but not a lower level. During a state of war, a culture highly
+developed along Abraham Maslow’s needs holarchy collectively regresses, for a time, to
+a joint need for security. During this particular collective state, communications
+emphasizing security needs often enjoy a warmer reception than during a state of peace.
+States range from playing trivial to decisive roles in any given communicative exchange,
+which is why no integral approach can afford to ignore them.
+“Type” is the fifth element of the AQAL model. Types can be present at virtually
+any state, level, line, or quadrant. They are often characterized as horizontal typologies
+because they exist on the same level of depth. Examples in the upper-left quadrant
+include gender (masculine and feminine), personality (nine types in the Enneagram), and
+sexual orientation (heterosexual and homosexual). Within the line of moral
+developmental, Carol Gilligan shows that both men and women develop through the
+same moral levels, but “in a different voice,” meaning women tend to emphasize care
+while men focus more on justice (Gilligan, 1982). Gender, personality, and sexual
+orientation types all influence the communication process.
+The fields of cross-cultural and intercultural communication (lower-left quadrant)
+address how communication differs based on a culture’s type (Gudykunst, 2003;
+Reynolds and Valentine, 2004). Edward Hall, often referred to as the founder of
+intercultural communication, distinguished between two cultural types—high-context and
+low-context—depending on the amount of meaning found in the context versus in the
+coded message (Hall, 1976). American culture exemplifies a low-context type because
+Americans give more emphasis to the language code, communicating in a more specific,
+explicit, and detailed manner. High-context cultures, in contrast, communicate more
+
+28
+implicitly and meaning appears in contextual cues or internalized in the person. A high-
+context communication may sound deliberately vague to a low-context listener and a
+low-context message may sound too specific to a high-context listener.
+Florence Kluckhohn also discovered a classic cultural typology between “doing”
+and “being” cultures, which loosely correlates to masculine and feminine types
+respectively (Kluchhohn, 1956). Doing-oriented cultures place a premium on actions,
+measurable results, and progress. Conversely, family background, social identity, and
+relationships carry more weight in being-oriented cultures. Whereas a doing culture
+associates words with actions, a being culture links words with social relationships. The
+rich literature of communication types deserves a place within any integral model of
+communication.
+Building Integral Communication
+AQAL is an architecture for integral reconstruction. The integral building stands
+on a radically inclusive framework that embraces all quadrants, all levels, all lines, all
+states, and all types. The quadrants show how any communicative phenomenon can be
+seen from at least four different perspectives: first-person (I), second-person (WE), third-
+person singular (IT), and third-person plural (ITS). Lines show that many different
+intelligences or areas of development exist within each quadrant. These areas each
+evolve through distinct levels of widening embrace, forming holarchies. States,
+particularly phenomenal states, investigate all the ephemeral conditions of the moment
+that influence communication. Finally, types remind us of the different horizontal, same-
+depth voices that communicate in distinct ways. Any communicative phenomenon, no
+matter how small, necessarily involves the five elements of AQAL. Integral
+communication embodies this realization.
+
+29
+Many applications arise from viewing communication from an integral perspective.
+My overall aim is to give a philosophical foundation to help these applications be
+actualized in the future. First, the AQAL model could facilitate the process of theoretical
+integration among the communication traditions. Chapter 1 suggested this application by
+documenting numerous communication scholars calling for a way to integrate the
+multiple communication traditions. Littlejohn gives an early version of an AQAL
+integration by using symbolic interactionalism to represent the Left Hand quadrants and
+systems theory to represent the Right Hand quadrants. He also gives a communication
+holarchy—from interpersonal to group to organizational to mass communication—that
+applies to both Hands. Future theorists of integral communication will expand on such
+early models, using the AQAL map to fill in the gaps. Theoretical integration occurs
+through orienting the traditions on the AQAL map by recognizing the unity-in-diversity
+inherent among them all.
+Second, the integral framework lends much insight into building new
+communication theories. The five elements of AQAL must be taken into account when
+investigating and theorizing about any communication phenomenon. If a communication
+theory fails to consider quadrants, levels, lines, states, and types, it risks ignoring
+important perspectives. For example, since AQAL models the exterior and interior
+worldspace domains in which every human process occurs, and communication is a
+human process, then any communication theory that hopes to be non-reductionistic and
+integral must recognize and include both interiors and exteriors without reducing or
+deriving one from the other.
+
+30
+A third application concerns methodological integration. AQAL gives a
+philosophical justification for mixing research methods. Researchers use two or more
+methods to examine the same phenomenon all the time, but no cogent explanation exists
+to warrant the practical union of two seemingly contradictory epistemologies. I attempt
+to build the case for methodological integration and the dangers of reductionism in
+Chapter 3. This critical assessment does not view specialization in one research method
+as being negative. On the contrary, an integral methodological pluralism acknowledges
+the perspectival truth in all approaches. It endorses studying a communicative event from
+all relevant angles by including the expertise of numerous research specialists.
+Fourth, integral communication can be used as a strategy of communicative action.
+An integral awareness can facilitate communication effectiveness by translating messages
+into a language easier for the receiver to digest. Chapters 4, 5, and 6 lay the theoretical
+groundwork for such a strategy, and Chapter 7 documents the strategy successfully
+applied. An alternative strategy uses an integral understanding to facilitate
+developmental growth in the receiver. Chapter 8 touches upon this strategy of
+transformational communication.
+A fifth way integral communication might be applied is by helping the various
+academic disciplines talk and learn from each other more effectively. Chapter 8 explains
+how integral communication describes a trans-disciplinary language that facilitates cross-
+disciplinary discourse. Since the same AQAL map applies to all disciplines—from
+business to politics to education to art to ecology—it gives each discipline a common
+language to talk with one another. As the Integral Institute puts it, “All of the various
+human activities, previously separated by incommensurate languages and terminologies,
+
+31
+can in fact begin to effectively communicate with each other. . . . We are able to facilitate
+and dramatically accelerate cross-disciplinary and trans-disciplinary knowledge, thus
+creating the worlds’ first truly integral learning community” (I-I, 2003).
+To sum up, integral communication could be applied as a meta-model, a meta-
+method, a strategy, or a cross-disciplinary discourse. Building integral communication
+begins with a few bricks as attempted here. Though they may be uneven at first, I can
+only hope that others will help straighten them so a future edifice might stand.
+
+32
+CHAPTER 3
+WAR AND PEACE AMONG METHODS
+Paradigm Battles
+In the late 1930s, two prominent communication theorists joined forces to study the
+cultural effects of radio music programs. On the Right Hand, Paul Lazarsfeld is ranked
+among the “four fathers” of mass communications research according to the history of
+functionalism (along with Harold Lasswell, Kurt Lewin, and Carl Hovland) (Mattelart
+and Mattelart, 1998, p. 30-31). He specialized in empirical, quantitative methods, which
+he called “administrative research.” On the Left Hand, Theodor Adorno participated in
+the Frankfurt School of critical theory and favored more interpretative, qualitative
+research methods. Lazarsfeld believed his research partnership with Adorno would result
+in “a convergence between European theory and American empiricism” (Lazarsfeld
+quoted in Mattelart and Mattelart, 1998, p. 59). Instead, the partnership quickly soured
+and the joint project ended in 1939 to the frustration of both men.
+Failing to reconcile their epistemological differences, Lazarsfeld and Adorno
+agreed on the incompatibility of their respective research approaches. Adorno
+complained that Lazarsfeld’s administrative research questions deliberately ignored the
+“who,” the “how,” and the “why.” Shortly after the ordeal, Adorno recalled, “When I
+was confronted with the demand to ‘measure culture,’ I reflected that culture might be
+precisely that condition that excludes a mentality capable of measuring it” (1969). Later
+in 1972, Lazarsfeld openly expressed his fears concerning “that strange coalition of
+macro-sociological Marxists and ethnomethodologists who want to explore the ‘real’
+
+33
+existential meaning underlying measurement techniques” (Lazarsfeld quoted in Mattelart
+and Mattelart, 1998, p. 112). Methodological wars like this played out on academic
+battlefields across the continents.
+The relatively brief history of communication research may be read as a rather
+continuous epistemological clash between two methodological titans. Lazarsfeld’s
+position represents exterior approaches such as positivism, functionalism, empiricism,
+systems science, and cybernetics (Right Hand quadrants). Adorno, in contrast,
+symbolizes interior approaches such as constructivism, hermeneutics, phenomenology,
+critical analysis, and semiotics (Left Hand quadrants). A number of dichotomies arise
+out of this simple external/internal split:
+objective versus subjective, seen versus unseen, outer versus inner, public versus
+private, controlled versus free, systematic versus unsystematic, automatic
+(mechanical) versus willed (purposive), prediction versus understanding,
+explained-by-reference-to-causal-law versus understood-by-reference-to-intentions,
+general versus constructed, value-free versus value-saturated, formal versus
+informal, materialist versus idealist, one versus many, instrumental versus
+symbolic, motion versus action, the natural sciences versus the humanities
+(Shweder, 1986, p. 177)
+Jensen summarizes all these dichotomies by saying, “Communication studies have tended
+to take either an external perspective on information as a technical, neutral carrier, or an
+internal perspective on meaning as an always interpreted and interested construct” (2002,
+p. 256). Quantitative methods study the outside of communication and qualitative
+methods study the inside of communication.
+Exterior approaches deal with objective surfaces and interior approaches deal with
+subjective depth. As Wilber points out, “surfaces can be seen, depth must be interpreted”
+(1996, p. 91). Thus, descriptive, experimental, functional, and behavioral analyses
+abound in the exterior approach, all of which could be characterized as quantitative and
+
+34
+“monological.” The core research question of external, quantitative methods asks, “What
+does it do?” (Wilber, 2000b, p. 132). Quantitative methods in communication research
+include surveys, descriptive content analyses, controlled experiments, and statistical data
+analyses (Gunter, 2002, p. 209; Stacks, 2002). Systems theory exemplifies such a model
+that details the external structure and function of the communication process, but remains
+silent on the internal dynamics of meaning creation.
+In contrast, the basic research question of internal, qualitative methods asks, “What
+does it mean?” Meaning cannot be studied through a monological gaze, only through
+dialogical interaction. Researchers investigate interior phenomena with a wide array of
+qualitative methods such as ethnography, interpretive content analysis, interview, case
+study, discourse analysis, focus group, and phenomenological investigation (Thomas,
+2003; Daymon and Holloway, 2002). Hermeneutics (the study of interpretation based on
+grasping the entire network of meaning) and semiotics (the study of signs in their
+intersubjective settings) are examples of traditions that uncover interior (subjective and
+intersubjective) meaning creation processes.
+According to the purists of two decades ago, “these positions do not seem to be
+compatible given our present state of thinking” (Smith, 1983, p. 12). During the war of
+methods, many scholars supported the “incompatibility thesis” and even suggested
+“shutting down” the seemingly incommensurable dialogue between the two camps
+(Smith and Heshusius, 1986). Participants were called “warriors” and “sumo wrestlers
+trying to push each other out of the ring” (Tashakkori and Teddlie, 1998, 6; Datta, 1994,
+p. 53). Littlejohn, a strong advocate of methodological pluralism, remarked, “What is
+particularly unfortunate . . . is the methodological defensiveness that often arises among
+
+35
+theorists in communication. It is a healthy sign when researchers and theorists possess a
+degree of self-respect and confidence in their approaches. But when this confidence turns
+into parochialism of inquiry, then the state of the art is less than healthy” (1978, p. 21).
+Specializing in a particular research method is fine. Claiming that that method uncovers
+the whole truth is not.
+External Reductionism
+Failure to include findings from both internal and external methods when
+formulating a new theory results in a limited and reductionistic theory—limited because it
+leaves out at least half the story and reductionistic because it attempts to cover the gap by
+artificially reducing reality to its favored domain. Both methodological approaches,
+internal and external, succumb to reductionism by ignoring the other approach and
+unsuccessfully stretching its own capacities. External reductionism reached its zenith
+during modernity’s “reflection” or “representational” paradigm, which held that “the
+sensorimotor world is simply given to us in direct experience and that science carefully
+and systematically reports what it there finds” (Wilber, 2000b, p. 208).
+The “myth of the given” lies at the heart of modernity’s reflection paradigm.
+According to this myth, reality is simply given to sensing subjects. Researchers who hold
+this myth of the given deny existence to everything lacking simple location, in other
+words, everything interior. Descriptive behavior and function trump constructed values
+and meaning for the external researcher. Supporters of external reductionism have a
+difficult time accounting for communication among subjective moral agents within an
+intersubjective cultural space. Many terms describe the consequences of external
+reductionism: the disenchantment of nature, the disqualified universe, monological
+nature, and flatland. All of these terms point to a lack of depth, a denial of interiority.
+
+36
+Michel Foucault describes such theoretical extremism as a dehumanization process where
+men and women became “objects of information, never subjects in communication”
+(Foucault in Wilber, 1996, p. 269). Language becomes a tool that merely points to and
+represents an a priori or pregiven objective reality. Like a mirror of nature, language
+transparently and neutrally reflects the world.
+We realize that meaning resides not in messages but in people, but we seem to have
+continuing difficulty accommodating this fact in our models and theories of the human
+communication process. The notion that words or statements ‘refer to’ something in the
+‘real’ world is the most naïve and primitive concept of human communication there is,
+yet in some quarters it is still the guiding paradigm. (Thayer, 1972, p. 102)
+The reflection paradigm flattens the meaning creation process inherent in subject to
+subject communicative exchange into one-dimensional cybernetic information transfers.
+Communication from the Right Hand perspective might appear as “flatland digital bits of
+zeros and ones slammed from one mechanical device to another” (Wilber, 2003a).
+Exterior communication models sacrifice depth for surface, meaning for observation,
+subjective for objective, interior for exterior.
+Systems theory exemplifies a communication tradition that often gives the
+illusionary impression of being comprehensive and integral, yet suffers from massive
+external reductionism. “Today a system approach,” remarks Littlejohn, “is often
+assumed in communication theory. It is often taken for granted in much of the work of
+the field without being labeled as such” (1999, p. 58). The aim of general systems
+theory—founded by the bio

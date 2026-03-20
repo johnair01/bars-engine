@@ -1,0 +1,1468 @@
+
+
+
+
+Actionable Gamification
+Beyond Points, Badges, and Leaderboards
+Yu-kai Chou
+© 2014 - 2017 Yu-kai Chou
+
+Tweet This Book!
+Please help Yu-kai Chou by spreading the word about this book on
+Twitter!
+The suggested tweet for this book is:
+Reading @yukaichou’s book on Octalysis Gamification. My
+journey begins!
+The suggested hashtag for this book is #OctalysisBook.
+Find out what other people are saying about the book by clicking
+on this link to search for this hashtag on Twitter:
+#OctalysisBook
+
+This book is dedicated to those who passionately believe in
+something and have the courage to pursue it in the face of
+circumstantial obstacles. We are surrounded by social and
+economical systems that are designed by others long ago to fulfill
+their own dreams, but some individuals manage to take a leap of
+faith, risk social rejection and even persecution in order to create
+more meaning in their own lives and the lives of those around
+them.
+You inspire the world and move humanity forward. I salute you for
+doing what I continuously strive for but may never fully reach. I
+hope this book will help you on your journey towards making a
+difference.
+
+Contents
+Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . 1
+Chapter 1: When the Surreal Blends into our World . . . 3
+How a Game changed my Life . . . . . . . . . . . . . . 3
+The First Game I Designed . . . . . . . . . . . . . . . . 5
+Why Gamification? . . . . . . . . . . . . . . . . . . . . 6
+Human-Focused Design: The Better Term for Gamification 8
+The Conquests of Gamification . . . . . . . . . . . . . . 10
+Chapter 2: The PBL Fallacy . . . . . . . . . . . . . . . . . . 13
+A Story about Social Media . . . . . . . . . . . . . . . . 13
+An Obsession with Grunt Work . . . . . . . . . . . . . 15
+Secondhand Sushi Making . . . . . . . . . . . . . . . . 17
+A Trojan Horse without Greek Soldiers . . . . . . . . . 19
+The Threat and Opportunities in Gamification . . . . . 20
+The Story of the Good Designer vs. Bad Designer . . . . 21
+Chapter 3: The Octalysis Framework . . . . . . . . . . . . 23
+A Gamification Design Framework for Everyone . . . . 23
+The 8 Core Drives of Gamification . . . . . . . . . . . . 25
+Left Brain (Extrinsic Tendency) vs. Right Brain (Intrinsic
+Tendency) Drives . . . . . . . . . . . . . . . . . . 28
+White Hat vs Black Hat Gamification . . . . . . . . . . 31
+How to Apply Level 1 Octalysis to Actual Systems . . . 34
+Quick Intro to Level II Octalysis and Beyond . . . . . . 39
+
+CONTENTS
+Chapter 4: Putting Gamification in its Place . . . . . . . . 46
+The War on Words . . . . . . . . . . . . . . . . . . . . 47
+Semantics vs. Value . . . . . . . . . . . . . . . . . . . . 48
+Tomato: Fruit or Vegetable . . . . . . . . . . . . . . . . 51
+Explicit Gamification: Games that Fulfill Non-Game
+Purposes . . . . . . . . . . . . . . . . . . . . . . . 52
+Implicit Gamification: Human-Focused Design that Uti-
+lizes Game Elements . . . . . . . . . . . . . . . . 54
+Implicit vs. Explicit Gamification . . . . . . . . . . . . . 55
+4 Application Fields of Gamification . . . . . . . . . . . 55
+Chapter 5: The First Core Drive - Epic Meaning & Calling 64
+The Core Drive High Above . . . . . . . . . . . . . . . 65
+The Encyclopedia that Pwned Me . . . . . . . . . . . . 66
+Newton’s Legacy is Beyond a Fruit . . . . . . . . . . . . 69
+Mjolnir is Not Just a Tool . . . . . . . . . . . . . . . . . 74
+Your Parents are Bigger Than You! . . . . . . . . . . . . 76
+Game Techniques within Epic Meaning & Calling . . . 80
+Core Drive 1: The Bigger Picture . . . . . . . . . . . . . 87
+Chapter 6: The Second Core Drive - Development &
+Accomplishment . . . . . . . . . . . . . . . . . . . . . 89
+Development & Accomplishment in Games . . . . . . . 90
+The First Gamification Site that I was Addicted to . . . 91
+“I overpaid for my product. Take that, suckas!” . . . . . 95
+Never make Users Feel Dumb . . . . . . . . . . . . . . . 100
+Star of Bethlehem - Guiding Users Forward . . . . . . . 103
+Limitations of eBay’s Design . . . . . . . . . . . . . . . 106
+Wait, that’s not new! . . . . . . . . . . . . . . . . . . . 108
+Game Techniques within Development & Accomplish-
+ment . . . . . . . . . . . . . . . . . . . . . . . . . 110
+Core Drive 2: The Bigger Picture . . . . . . . . . . . . . 120
+Chapter 7: The Third Core Drive - Empowerment of
+Creativity & Feedback . . . . . . . . . . . . . . . . . . 123
+
+CONTENTS
+The Computer Game that Became a National Sport . . . 124
+Gamification Fatigue? . . . . . . . . . . . . . . . . . . . 128
+Tic-Tac-Draw . . . . . . . . . . . . . . . . . . . . . . . 129
+The General’s Carrot in Education . . . . . . . . . . . . 134
+Folding into the Crowd . . . . . . . . . . . . . . . . . . 136
+The Elysian Stairs to Health . . . . . . . . . . . . . . . 138
+Empowerment and Creativity in the Corporate Space . 139
+Draw a Gun for Bad Endgame Design . . . . . . . . . . 141
+Game Techniques within Empowerment of Creativity &
+Feedback . . . . . . . . . . . . . . . . . . . . . . 145
+Core Drive 3: The Bigger Picture . . . . . . . . . . . . . 157
+Chapter 8: The Fourth Core Drive - Ownership & Possession 160
+Wait, it’s mine? Hold on, I do care then! . . . . . . . . . 161
+Stamps of Sanity . . . . . . . . . . . . . . . . . . . . . . 162
+How Stoned Can You Be . . . . . . . . . . . . . . . . . 164
+The First Virtual Pet Game . . . . . . . . . . . . . . . . 169
+The Endowment Effect . . . . . . . . . . . . . . . . . . 171
+Identity, Consistency, and Commitments . . . . . . . . 174
+Game Techniques within Ownership & Possession . . . 181
+Core Drive 4: The Bigger Picture . . . . . . . . . . . . . 192
+Chapter 9: The Fifth Core Drive - Social Influence &
+Relatedness . . . . . . . . . . . . . . . . . . . . . . . . 195
+The Mentor that Stole My Life . . . . . . . . . . . . . . 196
+We’re all Pinocchios at Heart . . . . . . . . . . . . . . . 200
+The Average Person is Above Average . . . . . . . . . . 203
+Social Influence vs. Epic Meaning within a Team . . . . 206
+Corporate Competition as an Oxymoron . . . . . . . . 208
+Game Techniques within Social Influence & Relatedness 212
+Core Drive 5: The Bigger Picture . . . . . . . . . . . . . 228
+Chapter 10: The Sixth Core Drive: Scarcity & Impatience . 230
+The Lure of being Exclusively Pointless . . . . . . . . . 231
+The Value of Rare Pixels . . . . . . . . . . . . . . . . . 234
+
+CONTENTS
+The Leftovers aren’t all that’s Left Over . . . . . . . . . 238
+Persuasively Inconvenient . . . . . . . . . . . . . . . . 239
+Curves are better than Cups in Economics . . . . . . . . 241
+“This guy’s not expensive enough.” . . . . . . . . . . . . 245
+“I Don’t Feel Good When My Pocket Is Too Full After A
+Purchase” . . . . . . . . . . . . . . . . . . . . . . 246
+Game Techniques within Scarcity & Impatience . . . . . 249
+Great! So now what? . . . . . . . . . . . . . . . . . . . 266
+Core Drive 6: The Bigger Picture . . . . . . . . . . . . . 267
+Chapter 11: The Seventh Core Drive - Unpredictability &
+Curiosity . . . . . . . . . . . . . . . . . . . . . . . . . 269
+And, Now it’s Fun . . . . . . . . . . . . . . . . . . . . . 270
+The Core Drive in a Skinner Box . . . . . . . . . . . . . 271
+Sweepstakes and Raffles . . . . . . . . . . . . . . . . . 273
+A Lucky Day with Lucky Diem . . . . . . . . . . . . . 278
+Suspense and Mystery in a Blender . . . . . . . . . . . 284
+Faking your Way to Virality . . . . . . . . . . . . . . . 286
+Google’s Curious Second Button . . . . . . . . . . . . . 288
+Woot! Creates Midnight Cinderella’s . . . . . . . . . . . 291
+Game Techniques within Unpredictability & Curiosity . 293
+Core Drive 7: The Bigger Picture . . . . . . . . . . . . . 304
+Chapter 12: The Eighth Core Drive - Loss & Avoidance . . 307
+Cropping your Losses . . . . . . . . . . . . . . . . . . . 308
+Affection Held Hostage . . . . . . . . . . . . . . . . . . 311
+“Why don’t you take all my money?” in Poker . . . . . 315
+The Good Chasing the Bad . . . . . . . . . . . . . . . . 318
+Zombies Make you Skinnier . . . . . . . . . . . . . . . 319
+Flipping other Core Drives Off . . . . . . . . . . . . . . 320
+Ultimate Loss vs Executable Loss . . . . . . . . . . . . . 321
+A Caveat: Avoiding the Avoidance . . . . . . . . . . . . 324
+Game Techniques in Loss and Avoidance . . . . . . . . 325
+Core Drive 8: The Big Picture . . . . . . . . . . . . . . . 336
+
+CONTENTS
+Chapter 13: Left Brain vs Right Brain Core Drives . . . . 339
+Using Octalysis in the Real World . . . . . . . . . . . . 339
+Left Brain vs. Right Brain Core Drives . . . . . . . . . . 341
+Extrinsic vs Intrinsic Motivation . . . . . . . . . . . . . 342
+Slight Semantic Differences with the Self-Determination
+Theory . . . . . . . . . . . . . . . . . . . . . . . . 344
+Motivation Traps in Gamification Campaigns . . . . . . 346
+The Problem with Educational Systems . . . . . . . . . 348
+Pay to Not Play . . . . . . . . . . . . . . . . . . . . . . 351
+How Market Settings Reverse Social Settings . . . . . . 355
+The Advantages of Extrinsic Motivation Design . . . . . 358
+How to Make an Experience More Intrinsic . . . . . . . 360
+Left Brain vs Right Brain Core Drives: the Bigger Picture 367
+Chapter 14: The Mysteries of White Hat and Black Hat
+Gamification . . . . . . . . . . . . . . . . . . . . . . . 370
+Origins of the Theory . . . . . . . . . . . . . . . . . . . 371
+The Nature of White Hat vs Black Hat Core Drives . . . 373
+Zynga and Black Hat Gamification . . . . . . . . . . . . 375
+Black Hat with a Clear Conscious . . . . . . . . . . . . 377
+Gamification, Manipulation, and Ethics . . . . . . . . . 380
+When to Use White Hat Gamification Design . . . . . . 382
+Careful Transitioning between White Hat and Black Hat 390
+No Buyer’s Remorse from TOMS . . . . . . . . . . . . . 392
+What about Core Drives 4 and 5? . . . . . . . . . . . . 393
+Chapter 15: Understanding Other Gamification and Be-
+havioral Frameworks with Octalysis . . . . . . . . . . 397
+Scientific Research and Game Studies . . . . . . . . . . 398
+Octalysis View of Self-Determination Theory . . . . . . 402
+Richard Bartle’s Four Player Types . . . . . . . . . . . . 405
+Nicole Lazzaro’s 4 Keys To Fun . . . . . . . . . . . . . . 412
+Mihaly Csikszentmihalyi’s Flow Theory . . . . . . . . . 415
+Fogg Behavior Model . . . . . . . . . . . . . . . . . . . 420
+Jane McGonigal’s Theories . . . . . . . . . . . . . . . . 426
+
+CONTENTS
+The World is Your Playground . . . . . . . . . . . . . . 428
+Chapter 16: Level I Octalysis in Action . . . . . . . . . . . 431
+Octalysis Review of Facebook . . . . . . . . . . . . . . 431
+The Score is a Smoke Screen . . . . . . . . . . . . . . . 436
+Octalysis of the Speed Camera Lottery . . . . . . . . . . 439
+Octalysis of the Waze Navigation App . . . . . . . . . . 443
+The Endgame Phase of Waze . . . . . . . . . . . . . . . 450
+The Next Step: Identify Potential Improvements for Waze 452
+Chapter 17: Designing a project from scratch with Octalysis 460
+Redesigning Yukaichou.com . . . . . . . . . . . . . . . 460
+The Octalysis Strategy Dashboard . . . . . . . . . . . . 462
+Level I Octalysis Ideation Process . . . . . . . . . . . . 470
+Core Drive 1: Epic Meaning & Calling . . . . . . . . . . 471
+Repeating the Octalysis Process . . . . . . . . . . . . . 478
+Summary of Level 1 Octalysis in Action . . . . . . . . . 480
+Chapter 18: The Journey Goes On . . . . . . . . . . . . . . 483
+Wall of Gratitude . . . . . . . . . . . . . . . . . . . . . . . 488
+Those who directly contributed to the book . . . . . . . 488
+Those who impacted who I am today . . . . . . . . . . 489
+
+Introduction
+This book is not about why gamification is amazing. It is not about
+how gamification is the future and how inspiring life could be
+with it. It is not necessarily for the late adopters who are simply
+curious about what gamification is. It also does not focus on what
+the gamification industry is doing as a whole, especially when
+that is continuously changing every month. Rather, this book is
+about implementing good gamification design into your products,
+workplace, and lifestyle.
+It is a deep exploration into what makes a game fun and how
+to apply those fun and engaging elements in real-life productive
+activities. It is about how you can use gamification and scientifically
+proven methods to improve your company, your life, and the lives
+of those around you.
+Effective gamification is a combination of game design, game
+dynamics, behavioral economics, motivational psychology, UX/UI
+(User Experience and User Interface), neurobiology, technology
+platforms, as well as ROI-driving business implementations. This
+book explores the interplay between these disciplines to capture the
+core principles that contribute to good gamification design. I will be
+sharing my observations in multiple industries and sectors based on
+my 12-year journey of passionately and relentlessly pursuing the
+craft of Gamification.
+Chapters in this book tend to build on previous chapters, so skipping
+around is not suggested. That said, if you have been an avid reader
+of my work and viewer of my videos, you might already have a firm
+grasp of the 8 Core Drives within the Octalysis Framework. In that
+case, feel free to skip to a section that you want to home in on.
+If you are extremely busy and aren’t sure if you want to commit to
+
+Introduction 2
+this book, I recommend starting off with Chapters 3, 5, 10, 14, and
+15 to decide whether you would like to read the entire book.
+Within the book, there will be many everyday scenarios to illustrate
+the potential of these Core Drives and the flexibility of their
+applications beyond traditional “gamification” examples. I myself
+still constantly gain new insights and revelations when I reflect
+and speculate upon the various possibilities contained in the 8 Core
+Drives. I hope you do too.
+As this book is titled “Actionable Gamification,” my goal is for it
+to become a strategy guide in helping my readers master the games
+that truly make a difference in their lives. If you absorb the contents
+of this book, you will have literally obtained what many companies
+pay tens of thousands of dollars to acquire.
+My ultimate aim is to enable the widespread adoption of good
+gamification and human-focused design in all types of industries.
+I care deeply about creating a world that is sustainably more
+enjoyable and productive. In that world, there no longer will be a
+great divide between what people have to do and what they want to
+do - our lives become better as we spend time enjoying everything
+we do.
+I’m excited for you to dive into the contents of this book so that we
+can start to build a world that harnesses the power of play together.
+Let’s begin.
+Yu-kai Chou
+
+Chapter 1: When the
+Surreal Blends into our
+World
+How a Game changed my Life
+On a seemingly regular morning in 2003, I woke up feeling different.
+I felt utterly unenthusiastic about the new day. There was nothing to
+look forward to – no demons to slay, no gears to perfect, no drops to
+loot and no Excel spreadsheets to strategize on. That was the first
+morning after I decided to quit Diablo II, a computer based role-
+play-game (RPG) developed by Blizzard Entertainment.
+And I felt extremely empty.
+Little did I know that I was going through one of the most treacher-
+ous effects stemming from black hat game design. Something I now
+call the “Sunk Cost Prison.”
+But it was that morning, that I also had the most impactful epiphany
+in my life, something that propelled me from a slightly-above-
+average student, to go on to start my first business during my first
+year of college at UCLA; to become a guest lecturer at Stanford
+University by twenty-three, raise over $1 million a year later, and
+finally become an international keynote speaker and recognized
+consultant in the field of gamification by my late twenties.
+More importantly, this deep revelation ensured that I would become
+passionate and excited about my work every single day since.
+I am sharing this with you not to sound conceited (after all, you
+are already reading my book), but because I truly believe if anyone
+was to take what I have learned during this epiphany to heart, they
+
+Chapter 1: When the Surreal Blends into our World 4
+would likely do even better in a shorter amount of time, without all
+the fumbling and stumbling I went through.
+Diablo II: my Epiphany
+In 2003, like many students of my generation, I was a heavy gamer.
+In each game I played, I was very competitive and always strived to
+obtain the highest score. I was almost incapable of playing a game
+casually. It was either all or nothing.
+As part of my obsession, I would generate complex spreadsheets
+to help me determine the exact combos I would need for playing
+optimally. (In Chapter 7 we will explore how many gamers do
+this.) I would read strategy guides while in the restroom and post
+regularly on forums, becoming a known leader within various
+gaming communities. Once I even broke into my college buddy, Jun
+Loayza’s apartment while he was still in class, entering through the
+window after removing the screen, just to practice a game he owned
+called “Super Smash Bros Melee.” (Eventually, Jun and I became Co-
+Founders of many exciting projects in the years to come). As you
+can see, I was fairly obsessed with gaming.
+Back then however, most of my time was heavily invested in
+playing Diablo II. My friends and I would spend hours every day
+leveling up. I had more than 5 characters above Level 90 and a
+couple above level 96. In the game world this means I’ve likely
+logged over a thousand hours on this one game. If I played for
+two hours every single day for two straight years, it would still just
+barely exceed fourteen hundred hours. Quite intense, I know.
+But at one point, as most gamers do, my friends began to quit
+playing Diablo II and moved on to other new games. Eventually
+I decided to quit as well since I didn’t want to play alone. It was
+during this transition that a sudden sense of ennui (or weariness)
+caught me by surprise.
+
+Chapter 1: When the Surreal Blends into our World 5
+I felt depressingly empty. I thought to myself, “I’ve spent thousands
+upon thousands of hours getting more experience, leveling up,
+accumulating more gold, collecting better gear…and now I end up
+with nothing.” Was there really no meaning to all the hours I had
+spent playing in the past few years? What if I had spent all this time
+learning a new language, or playing the violin instead? I would be
+“high level” in real life, instead of in some digital world of escapism.
+This emptiness brought a rude, but important awakening. How
+could I instead, play a game that everyone is playing but the
+outcomes would actually mean something in the real world?
+The First Game I Designed
+I realized the game I was looking for was simply life itself.
+If I were my own role-playing game character, I would never just
+stay in town, be idle and do nothing – the real life equivalent of
+watching TV, “hanging out” and leaving dreams unfulfilled. Of
+course not! I would go out into the wilderness, defeat monsters,
+gain experience, learn new skills, accumulate resources, ally myself
+with those who have complementary skills, learn from those who
+were of a higher level than I, and seek to conquer exciting quests.
+The only problem is, unlike most games with a computer interface,
+life does not have clear objectives, visual cues to tell me what to do,
+or feedback mechanics to show me how I have advanced in it. I had
+to design my own game, along with clear goals, meaningful quests,
+and creative feedback systems. Effectively, I had to transform life
+into an entire adventure where I, the player, could advance and
+grow in.
+This realization started my journey of personal growth and en-
+trepreneurial pursuits. My life became my game and I was deter-
+mined to become a high-level player in it. Despite being young, I
+
+Chapter 1: When the Surreal Blends into our World 6
+felt my years as a competitive gamer had taught me how to master
+this new game of life.
+Designing my life then became a decade long journey of addressing
+two intriguing design questions:
+1. How to make games more meaningful?
+2. How to make life more fun?
+Little did I know back then that this lonely passion from 2003 would
+become one of the hottest new industries and buzzwords that people
+now commonly throw around as the term “Gamification.”
+Why Gamification?
+Gamification, or the act of making something game-like, is certainly
+not something new. Throughout history, humans have tried to make
+existing tasks more intriguing, motivating, and even “fun.” When
+a small group of people casually decide to compete against each
+other in hunting and gathering, or simply start keeping score of their
+activities and comparing it to their past records, they are adopting
+principles that are prevalent in modern games to make tasks more
+engaging.
+One of the earlier works done on adapting gameplay practices
+within the workplace can be traced back to 1984, when Charles
+Coonradt explored the value of adding game-play elements at work
+through his book The Game of Work. 
+1
+Coonradt addressed the question, “Why would people pay for the
+privilege of working harder at their chosen sport or recreational
+pursuit than they would work at a job where they were being paid?”
+1
+Charles Coonradt. The Game of Work. Paperback. Gibbs Smith. Layton, Utah.
+07/01/2012.
+
+Chapter 1: When the Surreal Blends into our World 7
+He then boiled it down to five conclusions that led to hobbies being
+more preferable to work.
+• Clearly defined goals
+• Better scorekeeping and scorecards
+• More frequent feedback
+• A higher degree of personal choice of methods
+• Consistent coaching
+As we dive deeper into our journey together, we will learn about
+how these factors boil down to specific motivation Core Drives that
+can be intently designed for.
+On the other hand, some early forms of marketing gamification can
+also be seen in the form of (regrettably) “shoot the duck” banner
+ads on websites, where an image ad tempts users to click on it
+by displaying a duck flying around. These tactics have probably
+tricked many people, myself included, into clicking on them once
+or twice upon seeing them. Later on, eCommerce sites like eBay
+and Woot.com all adapted sound gamification principles to become
+hugely popular examples of how game mechanics and dynamics
+can really make a process fun and engaging (in later chapters, we
+will examine how both eBay and Woot.com utilize great gamifica-
+tion design to make purchases exciting and urgent).
+Of course, as “games” evolved throughout the centuries, the art of
+“making things game-like” naturally evolved too. Through the ad-
+vent of the Internet, Big Data, pluggable frameworks, and stronger
+graphics, our ability to design and implement better gamification
+experiences has drastically improved to the point where we can now
+bring sophisticated and subtle game-like experiences into every
+aspect of our lives.
+In recent years, the term “gamification” became a buzzword because
+the gaming industry shifted from making simple games that only
+target young boys, to social and mobile games like Farmville and
+
+Chapter 1: When the Surreal Blends into our World 8
+Angry Birds that also appeal to middle-aged executives as well as
+senior retirees alike.
+As people discover that everyone from their nieces to their grand-
+mas are playing games, while companies like Zynga, King, and
+Glu Mobile are having impressive Initial Public Offerings (IPOs),
+they begin to see the social power of gamification. At the same
+time, gamification has also been damaged by the lack of sustaining
+success from companies like Zynga, largely due to bad design,
+which we will examine closely in Chapter 14 on White Hat vs Black
+Hat Gamification.
+The term “gamification” rose to prominence when organizations
+such as Bunchball and Gamification.co branded their services with
+the exotic word, which spurred a whole new industry: one that
+gives managers, marketers, and product designers tools for creating
+engagement and loyalty in their experiences.
+Human-Focused Design: The Better
+Term for Gamification
+In my own view, gamification is the craft of deriving fun and
+engaging elements found typically in games and thoughtfully ap-
+plying them to real-world or productive activities. This process is
+what I call “Human-Focused Design,” in opposition to what we
+normally find in society as “Function-Focused Design.” Human-
+Focused Design optimizes for human motivation in a system as
+opposed to optimizing for pure functional efficiency within the
+system.
+Most systems are inherently “function-focused,” that is, designed
+to get the job done quickly. This is like a factory that assumes its
+workers will do their jobs because they are required to, not because
+they necessarily want to perform the associated tasks. However,
+
+Chapter 1: When the Surreal Blends into our World 9
+at its core, Human-Focused Design emphasizes that people aren’t
+rudimentary cogs in a system.
+We have feelings, ambitions, insecurities, and reasons for whether
+or not we want to do certain things. Human-Focused Design
+optimizes for these feelings, motivations, and engagement as the
+basic foundation for designing the overall system as well as its
+functions. (Note: I originally created the term “Human-Focused
+Design” to contrast with “Function-Focused Design” in 2012, but it
+should not be confused with “Human Centered Design
+2
+,” or “User-
+Centric Design” by IDEO
+3
+.)
+The reason we call this design discipline “Gamification” is because
+the gaming industry was the first to master Human-Focused De-
+sign.
+Games have no other purpose than to please the humans playing
+them. Yes, there are often “objectives” in games, such as killing a
+dragon or saving the princess. But those are all excuses to simply
+keep the player happily entertained inside the system, further
+engaging them enough to stay committed to the game.
+The harsh reality of game designers is that, no one ever has to play
+a game. They have to go to work, do their taxes, and pay medical
+bills, but they don’t have to play a game. The moment a game is
+no longer fun, users leave the game and play another game or find
+other things to do.
+Since game designers have spent decades learning how to keep
+people consistently engaged with repetitive activity loops towards
+“purposeless” goals, games are a great source of insight and under-
+standing into Human-Focused Design. Indeed, depending on how
+you qualify a game (think of chess, hide-and-seek, and Monopoly),
+2
+Wikipedia Entry “User-Centered Design”: http://en.wikipedia.org/wiki/User-cen-
+tered_design
+3
+Human Centered Design Tookit by IDEO. URL: http://www.ideo.com/work/human-
+centered-design-toolkit/
+
+Chapter 1: When the Surreal Blends into our World 10
+you could stretch back centuries to learn what game designers can
+teach us on creating compelling, playful experiences.
+Through gamification, we can look through the lens of games to un-
+derstand how to combine different game mechanics and techniques
+to form desired and joyful experiences for everyone.
+The Conquests of Gamification
+Games have the amazing ability to keep people engaged for long
+periods of time, build meaningful relationships between people, and
+develop their creative potential. Unfortunately, most games these
+days are simply focused on escapism – wasting your life away on
+something that does not improve your own life nor the lives of
+others - besides the game makers of course.
+Now imagine if there is a truly addictive game, where the more
+time you spend on it, the more productive you become. You would
+be playing and enjoying it all day. Your career would improve as
+your income increased, you would experience better relationships
+with your family, create value for your community, and solve the
+world’s most challenging problems. That is the promise I believe
+Gamification can fulfill, and it is the vision I continuously strive for
+throughout my life.
+In a few short years, gamification has reached a social tipping
+point and is starting to creep into every aspect of our lives - from
+education, work, marketing, parenting, sustainability, all the way
+to healthcare and scientific research:
+• The U.S. Armed Forces now spends more money on recruit-
+ment games than any other marketing platform.
+• Volkswagen generated 33 million web visits and 119,000 new
+ideas through its People’s Car Project to design the “perfect
+car”.
+
+Chapter 1: When the Surreal Blends into our World 11
+• Nike used gamified feedback to drive over 5,000,000 users to
+beat their personal fitness goals every day of the year.
+• With Beat the GMAT, students increased the time they spent
+on the website improving their test scores by 370% through a
+gamified platform.
+• In 10 days, Foldit gamers solved an AIDS virus protein
+problem that had confounded researchers for 15-years.
+• According to the Entertainment Software Association, 70% of
+major employers are already using gamification to enhance
+performance and training at their companies.
+• In a similar report, the market research firm Gartner pre-
+dicted that 70% of Fortune 500 firms would use Gamification
+by the end of 2014.
+The list goes on and on. In fact, I have compiled a list of over
+“90 Gamification Case Studies with ROI Stats” from reputable and
+“serious” firms like SAP and Cisco on my blog YukaiChou.com.
+This list has been one of my most viewed pages to date because
+enthusiasts and practitioners are constantly looking for actual met-
+rics that prove that gamification can create a return beyond simple
+aesthetics. The page can be accessed at YukaiChou.com/ROI.
+In my own experience, I also see the trend on the rise too. Just a few
+years ago, only a handful of people approached me to talk about
+gamification. Nowadays, I am starting to get invitations to speak or
+consult in a variety of verticals and industries from every continent
+except Antarctica.
+Unfortunately, in the same report, Gartner also predicted that 80%
+of those gamified efforts will fail due to bad design, which we will
+also explore in depth in this book.
+So the question still remains: what exactly can gamification do?
+Does it actually create value and return measurable results, or is it
+just a new gimmicky fad without lasting impact? More importantly,
+how can my own company improve our metrics just like all those
+
+Chapter 1: When the Surreal Blends into our World 12
+case studies mentioned above, instead of failing miserably like the
+80% predicted by Gartner?
+As stated in the Introduction, this book is not about explaining
+why gamification is valuable and why you should use it. I won’t
+be devoting much time in explaining its validity because there are
+enough books out there that already do that quite well. My goal
+is to explain exactly how to be successful in applying gamification
+principles and techniques to real world situations. I aim to address
+these pressing questions and help you design experiences that
+actually motivate behavior, instead of simply adding some “game
+shells” on top of a failed idea in the hopes of a miracle. Life is too
+short to waste on playing bad games.
+On that fateful day in 2003 when I decided to quit playing computer
+games, I never would have guessed that I would end up devoting
+my life’s work to studying it so many years later. The value games
+can provide us far exceeds simply killing time. Now is the time to
+harness that value and make the most out of our time.
+The journey begins here.
+
+Chapter 2: The PBL Fallacy
+A Story about Social Media
+The landscape of gamification development must be viewed within
+a historical context to see why gamification mechanics themselves
+don’t ultimately lead to effective design. Let’s start by taking a look
+at social media
+4
+.
+Google Trends search for “Social Media”
+Due to the proliferation of blogs, Facebook, and Twitter, the versa-
+tile term “social media” overtook “social networking” in 2007 and
+became a new buzzword. When enough interest and excitement
+in an industry hits critical mass, there will always be people and
+agencies proclaiming themselves as experts, to capitalize on the
+trending buzz. It really doesn’t matter what the new buzzword is
+– SEO, SaaS, Cloud, Big Data, you name it - the terms are so new
+that while no one can truly be an expert, everyone is in the running
+to be considered as one.
+And so these “experts” saw the growth in “social media” platforms
+and services as heralding the dawn of a new era in technology, busi-
+4
+Google Trends search, “social media”, accessed 12/15/2014.
+
+Chapter 2: The PBL Fallacy 14
+ness, and culture. They made sure to demonstrate the importance
+of its influence through viral growth models and by collecting case
+studies that show companies obtaining huge successes due to their
+social media savviness. “Everyone is now a publisher” became the
+motto, and how companies leveraged the phenomenon became the
+focus. The pitch was very inspiring and logical.
+Unfortunately, being an “expert” only went so far. When companies
+actually hired these social media services to run their marketing
+campaigns, they found that all these “experts” could do was create
+Twitter profiles and Facebook Fan Pages (I’ve even seen services
+that charge thousands of dollars just to create these accounts).
+However, the real question wasn’t how to publish but what to
+publish. Content strategy was still a mystery in the early days of
+the social media revolution. For content, the “experts” would simply
+ask their companies to send them worthy updates for posting.
+Every once in a while they might even provide some customer
+support using the companies’ Twitter accounts or share pictures
+on their Facebook Fan Pages. But overall, the industry felt a little
+disillusioned by this new “fad,” as the miracle they were expecting
+in ROI (Return on Investments) just wasn’t being realized.
+What most people didn’t recognize then was that social media is
+much deeper than simply possessing and posting on profile ac-
+counts. That’s just the outer shell of its influence and impact. Today,
+we know that great social media campaigns focus on how to create
+value for the audience by sharing information that is insightful and
+engaging, has a personal voice, engages and sincerely interacts with
+each potential customer, and much, much more. In essence, the
+beauty of social media was in how you designed and implemented a
+campaign, not in the bells and whistles you used. It was the informal
+and formal dialogue you had with your community that ultimately
+taps into the platform’s unique possibilities.
+Having knowledge of good social media principles does not nec-
+essarily mean someone can execute them correctly. Take pop-
+
+Chapter 2: The PBL Fallacy 15
+ularity for example. Most people know the principles of being
+a“popular” person – be outgoing, funny, confident, in some cases
+compassionate, etc. But when you look around your community or
+network, you find that there are still only a few people who are
+truly “popular,” while some may even appear to be sleazy as they
+try. Helping a brand become popular is exactly what true social
+media experts would be doing if both principles and execution were
+aligned.
+Fortunately, social media does have the power to make a company
+radically successful and the trend stuck around. (There are still
+dozens of successful social media case studies appearing on a
+monthly basis.) Today, most companies now subscribe to the belief
+of, “If your company doesn’t have a social strategy, it will become
+irrelevant.”
+What connection does this have with gamification? We will soon
+see that the early days of social media almost completely mirror the
+gamification industry today.
+An Obsession with Grunt Work
+As I mentioned in the last chapter, games have the amazing ability
+to keep people engaged for a long time, build relationships and
+communities among players, and cultivate their creative potential.
+Still people often ask, “Do games really have the power to motivate
+people?” Consider this: many feel that children today do not have
+strong work ethics. They complain that kids nowadays don’t have
+discipline, are easily distracted, and don’t show persistence when
+encountering challenges.
+But when it comes to playing games, these same kids have what
+most people would consider amazing work ethics. Many of them
+wake up secretly behind their parents’ back at 3AM in the morning,
+just to play a game and level up their fictional characters.
+
+Chapter 2: The PBL Fallacy 16
+What’s the motivation behind this? If you have ever played RPGs
+(Role-Playing Games) before, you would know that the act of
+“leveling up” often requires defeating the same monsters over and
+over again in the same stage for hours on end. Even mobile games
+like Candy Crush or Angry Birds require the same repetitive action
+(bird-throwing and gem-matching) for weeks or months in order
+to level up and progress. In the gaming world, this is appropriately
+called “grinding,” and it is fun and addictive for children and adults
+alike.
+In the real world, this is often defined as “grunt work.” Generally,
+no one likes to do grunt work, and it requires strong work ethic
+and will power to complete it. But kids, who again are assumed to
+have no discipline or work ethic, are somehow sacrificing sleep and
+risking punishment to complete seemingly pointless grunt work for
+fun.
+Why? Because they are excited about leveling their character up.
+They want to get that extra +5 strength and gain a new game skill to
+beat a challenging boss that they couldn’t defeat until they reached
+a high enough level. They do it because they see the big picture, the
+“why” they are doing it. They like that sense of accomplishment,
+as well as the use of their creativity in developing and optimizing
+certain strategies. They desire these feelings so much that anything
+that stands in the way, be it grunt work or otherwise, is worth doing
+and doing urgently.
+Now, imagine a world where there is no longer a divide between
+what you need to do and what you want to do. Where everything is
+fun and engaging, and you actually want to wake up each morning
+to tackle the challenges ahead. Grunt work takes on a new meaning
+when understood as an affect of powerful motivational factors. This
+is the promise and vision that good gamification design can create.
+
+Chapter 2: The PBL Fallacy 17
+Secondhand Sushi Making
+Despite the many case studies on gamification that demonstrate the
+potential and promise of its great impact in the world, there are
+still many more examples of poor practices, failed attempts, and
+misconceptions. When I started my gamification career in 2003, it
+was a topic that no one really understood or believed in. People
+thought I was just creating more excuses to play video games
+Fast-forward twelve years and gamification is now a leading de-
+sign methodology for industries across the globe. Though it gives
+me great pleasure to see that my once lonely passion became
+mainstream, it troubled me that experts who were working in
+gamification didn’t seem to understand games very much. Yes,
+they might have played Candy Crush a little, or even Angry Birds
+and Fruit Ninja. But if you ask them what games have they been
+completely immersed in and obsessed with for long periods of time,
+you get very short answers.
+As with social media, once gamification became a buzzword, it
+attracted many who saw it as an opportunity to corner an emerging
+industry. I’m a firm believer that you should immerse yourself in an
+experience in order to best understand it. Yes, you can derive insight
+by closely observing those who are going through the experience.
+But that is like watching someone eat sushi and asking them to
+take a survey about it, rather than eating the sushi yourself. You’re
+not going to get the same findings, and if you try to replicate that
+experience simply based on the survey, you’re going to impart a
+“superficial sushi taste” to the product you’re designing.
+As a result, many gamification professionals focus only on devel-
+oping the superficial layer of games. I call this the shell of a game
+experience. This is most often manifested in the form of what we
+call the PBLs: Points, Badges, and Leaderboards. Many gamification
+professionals seem to believe that if you put points on something
+boring, add some badges, and provide a competitive leaderboard,
+
+Chapter 2: The PBL Fallacy 18
+that once boring product will automatically become exciting.
+Of course that’s also what a lot of gamification platforms specialize
+in: adding PBLs into various products in a scalable manner. And
+as a result, many people who are less informed but curious about
+gamification start to believe that the sum total of gamification
+methodology and philosophy is merely the process of adding points,
+badges, and leaderboards to products. Justifiably, this leads them to
+believe that gamification is a shallow fad and not very impactful.
+This has also generated a backlash from the game development
+community, as they claim that gamification is a bastardization of
+the true essence intrinsic to good gaming. And who can blame
+them? Foursquare seems to be nothing more than points, badges,
+and leaderboards based on going to places, while Nike+ seems to
+be the same thing based on running. Is this as deep as gamification
+goes?
+Of course, points, badges, and leaderboards do have a place in game
+design. That’s why you see them in so many different games. They
+have the ability to motivate behavior and push people towards
+certain actions. But gamification is so much more than PBLs. Many
+gamification professionals are only familiar with how to implement
+PBL mechanics and even though these do create value, most of them
+completely miss the point of engaging the user. It is not unusual for
+users to feel insulted by shallow shell mechanics.
+If you ask any gamer what makes a game fun, they will not tell
+you that it is because of the PBLs. They play it because there are
+elements of strategy and great ways to spend time with friends, or
+they want to challenge themselves to overcome difficult obstacles.
+The points and badges are often an added bonus that’s nice to have
+depending on the context. This is the difference between extrinsic
+motivation, where you are engaged because of a goal or reward, and
+intrinsic motivation, where the activity itself is fun and exciting,
+with or without a reward. We’ll dive deeper into these distinctions
+in Chapter 13 on Left Brain vs Right Brain Motivations.
+
+Chapter 2: The PBL Fallacy 19
+A Trojan Horse without Greek Soldiers
+Generic game mechanics and poorly constructed game elements
+such as levels, boss fights, or quests often fall into the same
+hole as PBLs. Simply put, applying traditional “game elements”
+ubiquitous in popular gameplay without diving deeper into user
+motivation contributes to shallow user experience: it’s all flash and
+no bang. An almost humorous example of this is when people I
+meet call something a “quest” instead of a “task” thinking that this
+automatically makes the same original actions fun and engaging.
+Sure, having a playful attitude can make a big difference, but it
+only goes so far, especially when your customers and employees
+may already distrust your motives.
+The truth is, simply incorporating game mechanics and game
+elements does not make a game fun.
+Games aren’t necessarily fun because of high quality graphics or
+flashy animations either. There are many unpopular, poor-selling
+games with state-of-the-art 3D high- resolution graphics. There are
+also games with very basic graphics such as Minecraft, or even no
+graphics, such as the purely text-based multi-user dungeon games
+(MUDs), that have large communities of players addicted to them.
+Clearly, there are more to games than “meets the eye.”
+Unfortunately, a lot of people who work in gamification incorrectly
+think that applying game mechanics like points, badges, and leader-
+boards – elements that you can also find in boring and unsuccessful
+games - will automatically make the product or experience fun and
+engaging. Unfortunately, it’s not just what game elements you put
+in - it’s how, when, and most importantly, why these game elements
+appear.
+It would be foolish for a modern army commander to say, “Hey!
+The Greeks sent a big wooden horse to the Trojans and won the
+war. Lets send our enemies a big wooden horse too!” In this case, he
+clearly doesn’t understand the true design behind the Trojan Horse,
+
+Chapter 2: The PBL Fallacy 20
+but he only copied the outer shell of it. Instead, it would be much
+more effective if he created a virus that pretended to be a normal
+file to corrupt enemy computers. Learn from the design; don’t copy
+the shell.
+The Threat and Opportunities in
+Gamification
+Even though gamification has become accepted in the mainstream,
+poorly designed applications threaten its long-term viability and
+impact development. I am genuinely afraid that in a few years,
+companies will look at gamification and say, “Hey, we tried the
+points stuff and it didn’t work out. I guess gamification was just a
+short-term fad.”
+That would be a huge loss for the world.
+Based on my years of research, observation, and design in gam-
+ification, I am a hundred percent certain that good gamification
+design can unlock tremendous potential and improve many lives in
+the process. There are hundreds of case studies that illustrate this
+also. And so it is my job (and hopefully yours one day) to continue
+protecting and innovating the core essence and the promise of
+gamification.
+In the long run, the term “gamification” might actually fade and
+eventually disappear. Currently, no one describes a website’s design
+as being “so Web 2.0!” Gamification may just become the normal
+way we design, implement, and interact with the world around us.
+It’s my hope that the principles that optimize for human motivation
+becomes the standard for good design across the board.
+Fortunately, there are enough good gamification examples that
+continue to show how thoughtful design can improve core business
+metrics and inspire new ways of thinking and execution. Besides the
+90+ Gamification Case Studies listed on my site, as mentioned in the
+
+Chapter 2: The PBL Fallacy 21
+last chapter, it is interesting to note that some of the best historical
+examples of gamification, such as eBay or Woot.com, have not been
+categorized as gamification by most people in the industry. There
+are dozens, if not hundreds of companies that became extremely
+successful because, regardless of what it was called, they applied
+great game mechanics and gameplay dynamics to their processes.
+Some of these examples are illustrated in the following chapters.
+Because of these success stories, I believe that gamification will
+continue to evolve and meet real needs if practitioners and the
+general gamification community also evolve in their understanding
+of its principles and practice.
+So if “game mechanics” alone are not the true reason why games
+are so engaging and sometimes addictive, then what is?
+The Story of the Good Designer vs. Bad
+Designer
+To understand the core of good gamification design, let’s start with
+an example of how a bad game designer might design a game.
+In designing a game, a bad designer might start off thinking, “Okay,
+what popular game mechanics and game elements should I use?
+Well, of course we need monsters in the game. We also need swords
+so where should I place those? How about crops that friends can
+fertilize? What about some birds that show a lot of attitude? I’m
+sure people will love it!”
+As you can see from the exaggerated depiction above, a game might
+have all the “right game elements” but still be incredibly boring
+or stupid if they do not focus on their users’ motivations first. It
+is worth remembering that every single game in the market has
+what we call game mechanics and game elements. However, most
+are still boring and are financial losers. Only a few well-designed
+games become engaging and even addictive. Are you designing
+
+Chapter 2: The PBL Fallacy 22
+your experience to be the failing game or the successful game? How
+would you know?
+So let us look at how a good game designer might tackle the
+problem. Instead of starting with what game elements and game
+mechanics to use, the good game designer may begin by thinking,
+“Okay, how do I want my users to feel? Do I want them to feel
+inspired? Do I want them to feel proud? Should they be scared?
+Anxious? What’s my goal for their intended experience?
+Once the designer understands how she wants her users to feel,
+then she begins to think, “Okay, what kind of game elements and
+mechanics can help me accomplish my goals of ensuring players
+feel this way.” The solution may lie in swords, plants, or perhaps
+word puzzles, but the whole point here is that game elements are
+just a means to an end, instead of an end in itself. Game elements
+are simply there to push and pull on their users’ behavioral core
+drives.
+As a result, in order to further explore, systemize, and scale methods
+of combining game mechanics with our motivational core drives, in
+2012 I decided to share my original gamification design framework
+called Octalysis to the world. The Octalysis Framework embodies
+my life’s work, and the majority of this book will be about how
+to use Octalysis to design experiences that are fun, engaging, and
+rewarding.
+
+Chapter 3: The Octalysis
+Framework
+A Gamification Design Framework for
+Everyone
+Because of the issues discussed in the last chapter, I spent the
+past decade working to create a complete framework to analyze
+and build strategies around the various systems that make games
+engaging. I saw that almost every successful game appeals to certain
+Core Drives within us and motivates us towards a variety of
+decisions and activities. I also noticed that different types of game
+techniques push us forward differently; some through inspiration
+
+Chapter 3: The Octalysis Framework 24
+and empowerment, some through manipulation and obsession. I
+drilled down to find what differentiates one type of motivation from
+another. The end result is a gamification design framework called
+Octalysis, which derives its name from an octagonal shape with 8
+Core Drives representing each side.
+Octalysis with only 8 Core Drives Present
+In the past decade, I have been blessed in many more ways than I
+could anticipate. My lonely passion in gamification became some-
+thing that various industries paid attention to. I could have easily
+stumbled upon a passion that remained a desert land throughout
+my life. Similarly, when I published the Octalysis Framework on
+my blog YukaiChou.com, it was also extremely well-received by
+the industry. Many brilliant pieces of work remain unnoticed or
+unappreciated for most of the creator’s life, let alone a design
+framework I simply put up on my personal blog. To my delight,
+within a year the Octalysis Framework was organically translated
+into over fourteen different languages - I had to stumble upon most
+
+Chapter 3: The Octalysis Framework 25
+of them one at a time. I quickly received many opportunities to
+speak, teach, and consult globally.
+Through many years of experiments and adjustments, I realized
+that everything we do is based on one or more of the 8 Core Drives
+within Octalysis. This is important to keep in mind because it also
+suggests that if there are none of these Core Drives behind a Desired
+Action, there is no motivation, and no behavior happens.
+Let us quickly examine what these 8 Core Drives are.
+The 8 Core Drives of Gamification
+Core Drive 1: Epic Meaning & Calling
+Epic Meaning & Calling is the Core Drive that is in play when a
+person believes they are doing something greater than themselves
+and/or were “chosen” to take that action. An example of this is
+when a player devotes a lot of their time to contribute to projects
+such as Wikipedia. We are familiar with the fact that people don’t
+contribute to Wikipedia to make money, but they don’t even do
+it to pad their resumes. People contribute to Wikipedia because
+they believe they are protecting humanity’s knowledge – something
+much bigger than themselves. This also comes into play when
+someone has “Beginner’s Luck” – an effect where people believe
+they have some type of gift that others don’t or believe they are
+“lucky” getting that amazing sword at the very beginning of the
+game.
+Core Drive 2: Development & Accomplishment
+Development & Accomplishment is our internal drive for making
+progress, developing skills, achieving mastery, and eventually over-
+coming challenges. The word “challenge” here is very important,
+
+Chapter 3: The Octalysis Framework 26
+as a badge or trophy without a challenge is not meaningful at all.
+This is also the core drive that is the easiest to design for and,
+coincidently, is where the majority of the PBLs: points, badges,
+leaderboards mostly focus on.
+Core Drive 3: Empowerment of Creativity &
+Feedback
+Empowerment of Creativity & Feedback is expressed when users
+are engaged in a creative process where they repeatedly figure
+new things out and try different combinations. People not only
+need ways to express their creativity, but they need to see the
+results of their creativity, receive feedback, and adjust in turn. This
+is why playing with Legos and making art is intrinsically fun. If
+these techniques are properly designed and integrated to empower
+users to be creative, they often become Evergreen Mechanics: where
+a game designer no longer needs to continuously add additional
+content to keep the activity fresh and engaging. The brain simply
+entertains itself.
+Core Drive 4: Ownership & Possession
+Ownership & Possession is where users are motivated because
+they feel like they own or control something. When a person feels
+ownership over something, they innately want to increase and
+improve what they own. Besides being the major core drive for
+the desire to accumulate wealth, it deals with many virtual goods
+or virtual currencies within systems. Also, if a person spends a lot
+of time customizing their profile or avatar, they automatically feel
+more ownership towards it also. Finally, this drive is also expressed
+when the user feels ownership over a process, project, and/or the
+organization.
+
+Chapter 3: The Octalysis Framework 27
+Core Drive 5: Social Influence & Relatedness
+Social Influence & Relatedness incorporates all the social elements
+that motivate people, including: mentorship, social acceptance,
+social feedback, companionship, and even competition and envy.
+When you see a friend that is amazing at some skill or owns
+something extraordinary, you become driven to attain the same.
+This is further expressed in how we naturally draw closer to people,
+places, or events that we can relate to. If you see a product that
+reminds you of your childhood, the sense of nostalgia would likely
+increase the odds of you buying the product.
+Core Drive 6: Scarcity & Impatience
+Scarcity & Impatience is the Core Drive of wanting something
+simply because it is extremely rare, exclusive, or immediately
+unattainable. Many games have Appointment Dynamics or Torture
+Breaks within them (come back 2 hours later to get your reward) –
+the fact that people can’t get something right now motivates them
+to think about it all day long. As a result, they return to the product
+every chance they get. This drive was well utilized by Facebook
+when it launched: at first it was just for Harvard students, then
+it opened up to a few other prestigious schools, and eventually
+all colleges. When it finally opened up to everyone, many people
+wanted to join simply because they previously couldn’t get in.
+Core Drive 7: Unpredictability & Curiosity
+Unpredictability is the Core Drive of constantly being engaged
+because you don’t know what is going to happen next. When some-
+thing does not fall into your regular pattern recognition cycles, your
+brain kicks into high gear and pays attention to the unexpected. This
+is obviously the primary Core Drive behind gambling addictions,
+but it is also present in every sweepstake or lottery program that
+
+Chapter 3: The Octalysis Framework 28
+companies run. On a lighter level, many people watch movies or
+read novels because of this Core Drive. The very controversial
+Skinner Box experiments, where an animal irrationally presses a
+lever frequently because of unpredictable results, are exclusively re-
+ferring to the core drive of Unpredictability & Curiosity - although
+many have misunderstood it as the driver behind points, badges,
+and leaderboard mechanics in general.
+5
+Core Drive 8: Loss & Avoidance
+This Core Drive should come as no surprise – it’s the motivation
+to avoid something negative from happening. On a small scale, it
+could be to avoid losing previous work or changing one’s behavior.
+On a larger scale, it could be to avoid admitting that everything you
+did up to this point was useless because you are now quitting. Also,
+opportunities that are fading away have a strong utilization of this
+Core Drive, because people feel if they didn’t act immediately, they
+would lose the opportunity to act forever (e.g. “Special offer for a
+limited time only!”)
+Left Brain (Extrinsic Tendency) vs. Right
+Brain (Intrinsic Tendency) Drives
+I will repeat multiple times in this book that, because everything
+you do is based on one or more of these 8 Core Drives, when there
+are none of these 8 Core Drives behind a Desired Action, there is
+zero motivation and no action takes place. In addition, each of these
+8 Core Drives have different natures within them. Some make the
+user feel powerful, but do not create urgency, while others create
+urgency, obsession, and even addiction, but make the user feel
+5
+Skinner, B. F. (1983). A Matter of Consequences. p116, 164. Alfred A. Knopf, Inc. New
+York, NY.
+
+Chapter 3: The Octalysis Framework 29
+bad. Some are more short-term extrinsically focused, while some
+are more long-term intrinsically focused. As a result, these 8 Core
+Drives are charted on an Octagon not simply for aesthetic purposes,
+but because the placement determines the nature of the motivation.
+Left Brain vs Right Brain Core Drives
+The Octalysis Framework is arranged so that the Core Drives
+that focus on creativity, self-expression, and social dynamics are
+organized on the right side of the octagon. In my framework, I
+call them Right Brain Core Drives. The Core Drives that are most
+commonly associated with logic, analytical thought, and ownership
+are graphed on the left side of the Octagon and are termed Left Brain
+Core Drives.
+It is worth noting (especially for the “sciencey” readers who are
+now shaking their heads) that the Left Brain and Right Brain
+references are not literal in terms of actual brain geography but
+merely a symbolic differentiation between two distinct functions
+of the brain.
+
+Chapter 3: The Octalysis Framework 30
+Interestingly, Left Brain Core Drives tend to rely on Extrinsic Moti-
+vation – you are motivated because you want to obtain something,
+whether it be a goal, a good, or anything you cannot obtain. On
+the other hand, Right Brain Core Drives are mostly associated
+with Intrinsic Motivations – you don’t need a goal or reward to
+use your creativity, hangout with friends, or feel the suspense of
+unpredictability – the activity itself is rewarding on its own.
+This is important, because many companies emphasize designing
+for Extrinsic Motivators, such as providing users a reward when
+they complete a task. However, many studies have shown that
+extrinsic motivation impairs intrinsic motivation. Why? Because
+once the companies stop offering the extrinsic motivator, user
+motivation will often plummet to a level much lower than when
+the extrinsic motivator was first introduced. We will examine this
+tendency, termed the overjustification effect, in Chapter 13.
+It is much better for companies to design experiences that motivate
+the Right Brain Core Drives, making something in of itself fun
+and rewarding so users can continuously enjoy and engage in the
+activity. Motivation is often better when it sticks.
+
+Chapter 3: The Octalysis Framework 31
+White Hat vs Black Hat Gamification
+White Hat vs Black Hat Core Drives
+Another factor to note within the Octalysis Framework is that
+the top Core Drives in the octagon are considered very positive
+motivations, while the bottom Core Drives are considered to be
+more negative. I call techniques that heavily use the top Core Drives
+“White Hat Gamification,” while techniques that utilize the bottom
+Core Drives are called “Black Hat Gamification.”
+If something is engaging because it lets you express your creativity,
+makes you feel successful through skill mastery, and gives you a
+higher sense of meaning, it makes you feel very good and powerful.
+On the other hand, if you are always doing something because
+
+Chapter 3: The Octalysis Framework 32
+you don’t know what will happen next, you are constantly in fear
+of losing something, or because you’re struggling to attain things
+you can’t have, the experience will often leave a bad taste in your
+mouth- even if you are consistently motivated to take these actions.
+From an Octalysis perspective, the problem with Zynga games (his-
+torically) is that they have been very successful with implementing
+many Black Hat Game Techniques. Of course, they don’t have the
+framework to understand it as “black hat,” but they refer to it as
+“Data Driven Design.”
+6 
+Because of the Black Hat Motivation, for a
+long period of time their games drove great numbers off each user in
+terms of retention, addiction, and monetization. However, because
+most Zynga games do not make users feel good when playing, when
+the user is finally able to wean themselves from the system, they
+will.
+This is similar to the situation with gambling addictions - they
+don’t feel like they are in control of themselves, and when they
+quit they actually feel empowered. In recent years, Zynga further
+validated my theories based on Octalysis by “double-downing” on a
+suite of gambling games such as the Slot Machine Game Treasures
+of Olympus, which further draws their design methodology away
+from White Hat Core Drives. 
+7
+It’s important to note that just because something is called Black
+Hat doesn’t necessarily mean it is bad. These are just motivators
+and they can also be used for productive and healthy results. Many
+people voluntarily submit themselves to Black Hat Gamification in
+order to go to the gym more often, eat healthier, or avoid hitting
+the snooze button on their alarm clock every morning. We will
+talk about the ethics and positive Black Hat Gamification Design
+in Chapter 14.
+6
+Mike Williams. GameIndustry.biz. “Zynga’s high-speed, data-driven design vs console
+development”. Posted 08/06/2012
+7
+Vikas Shukla. Valuewalk.com. “Zynga Inc (ZNGA) Unveils ‘Riches of Olympus’ Slots
+Game”. Posted 02/07/2014.
+
+Chapter 3: The Octalysis Framework 33
+Based on the Octalysis Framework, a good Gamification practi-
+tioner should consider all 8 Core Drives in promoting positive and
+productive activities so that everyone ends up happier and healthier
+afterwards.
+The Hidden Ninth Core Drive: Sensation
+Beyond the 8 Core Drives that will be explored in depth within this
+book, there is in fact a hidden ninth Core Drive called “Sensation,”
+which is the physical pleasure one obtains from taking an action.
+People do drugs, get massages, or have sex (hopefully along with
+many other Core Drives) because of the sensation Core Drive. If
+you choose one food over another, it is often merely because one
+tastes better than the other, which is primarily sensation. They
+key differentiation here compared to other Core Drives is that
+sensation deals with physical feelings that bring pleasure to our
+touch, hearing, sight, smell, and even taste. The other Core Drives
+bring pleasure to us through psychological means - the meaning
+and context behind what we see, hear, or taste.
+The reason why I don’t have it included in the main set of the
+framework is that the Octalysis Framework primarily focuses on
+psychological motivators instead of physical ones. For instance, in
+most cases I cannot design an interactive experience where the
+user gets the feeling of physical acceleration while being on a
+roller coaster. Massages can be designed as rewards or feedback
+mechanics within the Octalysis Strategy Dashboard (covered in
+Chapter 16), but the behaviors will usually be motivated through
+Core Drives such as Scarcity, Accomplishment, and Ownership.
+Even though we don’t include sensation as part of the 8 Core
+Drives of Octalysis, we recognize its presence and understand how
+certain behaviors are driven by it. However, sensation by itself
+also has limitations without the 8 Core Drives accompanying it.
+Even pleasurable activities such as sex, when lacking curiosity,
+
+Chapter 3: The Octalysis Framework 34
+relatedness, creativity, and scarcity, can potentially become rather
+unappealing.
+How to Apply Level 1 Octalysis to Actual
+Systems
+Now that we have the Octalysis Framework laid out, the next step
+is to determine how to utilize it. Since everything a person does is
+based on one or more of the Core Drives, generally any engaging
+product or system will have at least one of the Core Drives listed
+above. If none of the Core Drives are present within a system, there
+is no motivation, and users will drop out.
+The first application of Octalysis is to use it in analyzing the
+strengths and weaknesses of various products and experiences with
+respect to motivation. The key here is to start thinking about how
+that product or experience utilizes each of the 8 Core Drives, and
+identify all the game mechanics and techniques that are used to
+activate them.
+A few Gamification examples with Octalysis
+Here’s an Octalysis done for a few games and online products:
+
+Chapter 3: The Octalysis Framework 35
+As you can see from the chart, Facebook is very strong in many of
+the 8 Core Drives, but rather weak on Core Drive 1: Epic Meaning
+& Calling - there is generally no higher purpose on using Facebook
+unless you are one of the few who are actively contributing to a
+cause on Facebook.
+It is also weak on Core Drive 6: Scarcity & Impatience, as these days
+there are very few things that users want to do on Facebook but are
+barred from doing it.
+The illustration tells us that Facebook mostly focuses on Right Brain
+Core Drives, which focus on Intrinsic Motivation. It also trends
+more into the Black Hat zone, which means that it is more prone to
+drive obsessive behavior that encourages users to return on a daily
+basis.
+Among the Left Brain Core Drives, we see that people are extrin-
+sically motivated on Facebook, not so much to feel accomplished
+or gain exclusivity, but because of Core Drive 4: Ownership &
+Possession - to collect, customize, and improve what is theirs.
+
+Chapter 3: The Octalysis Framework 36
+Here we see a couple game examples that contrast against each
+other.
+Like Facebook, Farmville and Candy Crush also lack Core Drive 1:
+Epic Meaning & Calling within, but Farmville also lacks Core Drive
+7: Unpredictability & Curiosity - there are not that many surprises
+in the game. You go back on Farmville simply to harvest the crops
+that you planted a few hours earlier. Candy Crush is a little more
+balanced, but a little skewed towards the Right Brain Core Drives.
+Previously, I crafted each Octalysis shape by hand on Keynote.
+Fortunately, a fan of Octalysis, Ron Bentata from Israel, graciously
+offered to build an easier Octalysis Tool for everyone.
+
+Chapter 3: The Octalysis Framework 37
+(Accessed from www.yukaichou.com/octalysis-tool)
+With the Octalysis Tool, let’s see a few more examples with Octal-
+ysis.
+
+Chapter 3: The Octalysis Framework 38
+
+Chapter 3: The Octalysis Framework 39
+Here we can see that Twitter is also fairly well balanced but skews
+more towards Right Brain Core Drives. In contrast, LinkedIn is
+heavily focused on the Left Brain Core Drives, with a White Hat
+emphasis. This makes sense, because LinkedIn is all about your
+career, your life, your accomplishment. Those are very extrinsic
+goals, and as a result, everyone feels like they need to have a
+LinkedIn Account. However, because it lacks Right Brain (intrinsic
+tendency) Core Drives, there’s not a lot of enjoyable activities on
+LinkedIn. And this has been the challenge that they have been faced
+with for many years. Users create their profiles, and then there is
+nothing left to do on LinkedIn. The account just sits there.
+In the past couple of years, LinkedIn has been working very hard to
+increase engagement on the site, especially on Core Drive 5: Social
+Influence & Relatedness through Game Techniques such as Social
+Prods and Social Treasures - we will talk about how LinkedIn uses
+these Game Techniques in Chapter 9. However, through the Octal-
+ysis Framework we can see that LinkedIn could benefit massively if
+they put more effort into Core Drive 3: Empowerment of Creativity
+& Feedback, as well as Core Drive 7: Unpredictability & Curiosity.
+Quick Intro to Level II Octalysis and
+Beyond
+Ten years of Gamification study and implementations result in
+a fairly robust framework that can become actionable towards
+driving better motivation and metrics. As you can see, creating
+a rich gamified experience is much more than simply slapping
+on various game-mechanics to existing products. It is a craft that
+requires a nontrivial amount of analysis, thinking, testing, and
+adjusting.
+As you become more and more advanced in Octalysis beyond the
+contents of this book, you will start to learn the higher levels
+
+Chapter 3: The Octalysis Framework 40
+of Octalysis design. (Up to five levels. There are only a handful
+of people in the world who know what is Level IV and above).
+These advanced levels incorporate much more sophisticated design
+principles and in-depth analysis.
+Once one has achieved mastery in Level I Octalysis, they can then
+apply it to Level II Octalysis, where we try to optimize experiences
+throughout all four phases of the player/user journey. These phases
+are: Discovery (why people would even want to try out the experi-
+ence), Onboarding (where users learn the rules and tools to play the
+game), Scaffolding (the regular journey of repeated actions towards
+a goal) and Endgame (how do you retain your veterans).
+Level II Octalysis: Factoring in the 4 Phases of a Player’s Journey
+Most people treat their product as one experience, which seems
+reasonable. But in terms of motivation, I believe this is a mistake
+because the reason you are using a product on Day 1 is often very
+different from that of Day 100. Since everything you do is because
+of one of these 8 Core Drives (besides the 9th hidden Core Drive -
+
+Chapter 3: The Octalysis Framework 41
+Sensation), if at any phase none of the 8 Core Drives are present,
+there is no reason for the user to move on to the next phase, and the
+user simply drops out.
+Sensing the pulse of what players feel across the journey
+In the above illustration, you can evaluate how different Core
+Drives are more prominent during each Experience Phase of the
+player’s journey - whether it would be unpredictability, accom-
+plishment, or social influence. For instance, most people Discover
+a product because of Core Drive 7: Unpredictability & Curiosity –
+they read about it on the news or hear others talking about it.
+During Onboarding, they might be motivated by Core Drive 2:
+Development & Accomplishment – feeling smart and competent
+during the early stages. During the Scaffodling Phase, they might
+be motivated because of the social dynamic (Core Drive 5) as well
+as trying to go after the goal they could not reach yet (Core Drive
+6: Scarcity & Impatience). In the Endgame, they might continue
+to be engaged because they don’t want to lose their status and
+
+Chapter 3: The Octalysis Framework 42
+achievements (Core Drive 8: Loss & Avoidance).
+How you design for all four Experience Phases through the 8
+Core Drives will strongly demonstrate your ability as an Octalysis
+Gamification Designer. Of course, never forget to design for the
+proper nature of the Core Drives, understanding when you want to
+have more Black Hat, when to have more White Hat, and when to
+use Extrinsic/Intrinsic motivators.
+Once you have mastered Level II Octalysis, you can then push on
+to Level III and factor in the different player types. This will allow
+you to see how different types of people are motivated at different
+stages of the experience.
+Pushing up a level further: Level 3 Octalysis with Bartle’s Player Types
+In the above diagram, I applied Richard Bartle’s Four Player Types
+(Achievers, Socializers, Explorers, and Killers) to Level III Octalysis
+primarily because it is the most recognized model in game design.
+However, Level III Octalysis does not need to use Bartle’s Player
+
+Chapter 3: The Octalysis Framework 43
+Types
+8
+. In fact, Richard Bartle himself claims that his Four Player
+Types may not be suitable for gamification environments
+9
+. It could
+be Sales vs. Marketing Staff, Male vs. Female, Loyal Customers vs.
+Nonchalant Customers vs. New Customers etc. The point here is
+that different types of people are motivated differently, so Level
+III Octalysis allows the designer to understand and design for how
+everyone is feeling at different stages. We will also examine Richard
+Bartle’s Four Player Types with Octalysis in Chapter 15.
+Sensing how each Player Type is motivated at each Experience Phase
+It is incredibly difficult to design something that pleases everyone.
+But with this framework, you can start to identify where the
+weaknesses are within your system and work on improving for
+motivation at various points. Once you become familiar with Level
+III Octalysis, you can almost feel how motivation moves within
+8
+Richard Bartle, “Hearts, Clubs, Diamonds, Spades: Players Who suit MUDs”. 04/1996.
+9
+Gabe Zichermann. Slideshare: “A game designer’s view of gamification” by Richard
+Bartle. Posted 06/24/2012.
+
+Chapter 3: The Octalysis Framework 44
+your system and recognize where motivation is lacking or whether
+there is too much Black Hat or Extrinsic Motivation in the system.
+For instance, through Level III Octalysis, one can reach conclusions
+such as, “Looks like the Achievers start the experience in Discovery
+well, Onboarding is fine, but in Scaffolding they lose motivation
+and drop out. The Explorers will try out the product because of
+Core Drive 7: Unpredictability & Curiosity, but during Onboarding
+they feel confused and would leave. Socializers wouldn’t even
+try out the experience because there is no Core Drive 5: Social
+Influence & Relatedness advertised in the product. Finally, the
+Killers seem to be the ones in this case to stay through Discovery,
+Onboarding, Scaffolding, and Endgame - possibly showing off to
+the new players.”
+While there are five levels of Octalysis in total, Level I is often
+sufficient for the majority of companies seeking to understand why
+their products are not engaging their users. Higher-level Octalysis
+processes are useful for organizations that are truly committed to
+making sure that they push their metrics in the right direction and
+improve the longevity of a gamified system. Many games are only
+popular for three to eight months, but ones that have impeccable
+Endgame design can last over decades — or even centuries.
+This book will be about examining the 8 Core Drives, how to design
+for them, and how they all come together to create a phenomenal
+experience for any user. If the above does not interest you so far,
+it is safe for you to put the book down and do better things with
+your time. But if the above excites you and you choose to go on,
+I promise you there will be an exhilarating journey of discovery,
+empowerment and awakening ahead. I’m even feeling excited just
+thinking about it.
+
+Chapter 3: The Octalysis Framework 45
+To get the most out of the book, Choose only
+ONE of the below options to do right now:
+Easy: Think of a game that you have enjoyed playing for a very
+long time. Can you identify which of the 8 Core Drives are present
+in the game?
+Medium: Think about why you are reading this book. What Core
+Drives have motivated you to read this book over other activities?
+Share what you come up with on Twitter or your preferred
+social network with the hashtag #OctalysisBook and see what
+ideas other people have.
+
+Chapter 4: Putting
+Gamification in its Place
+Before we jump further into deeper experience and engagement
+design through the 8 Core Drives, I’d like to take a moment to
+resolve some pressing questions regarding the various forms of
+gamification campaigns.
+While the topic of Gamification is exciting and productive, many
+people new to the industry have a hard time figuring out what
+gamification means and how to categorize it.
+What if our employees don’t want to play games? Is calling some-
+thing a quest considered gamification? Is the gamification BlendTech
+uses to promote its blenders the same as the gamification that eBay
+uses to make its platform addictive? How do I know what type of
+gamification works for my company?
+All this can be quite confusing to the average reader (which of
+course, you are not). As Gamification is such an all-encompassing
+umbrella term for “making things game-like” (by the way, the
+popular Wikipedia definition is, “the use of game thinking and
+game mechanics in non-game contexts”
+10
+), there are almost no
+bounds for what it can or cannot be. This allows gamification to
+be far reaching into all sorts of fields and industries. However, it
+also invites many critics who are upset about how broad the term
+can be. They especially criticize that, due to the broad nature of
+the term, gamification enthusiasts are claiming everything good,
+fun, motivating, or immersive as something they perform on a
+professional level.
+10
+Wikipedia Article: “Gamification”, accessed 12/13/2014. URL:
+http://en.wikipedia.org/wiki/Gamification
+
+Chapter 4: Putting Gamification in its Place 47
+Before you read on, I want to make a disclaimer that this chapter
+does not teach you how to gamify an experience towards better
+results but merely addresses some issues on the language and
+semantics within the field and my own opinion on the matter. I
+can’t promise you a definitive conclusion to the debate over what
+is and what isn’t gamification, but I do hope you leave the chapter
+with a more rounded understanding of the field.
+There are many more fascinating topics on human behavior and
+good design that excite me more in the chapters to come. Even
+though it breaks my heart to spend precious time writing about this
+non-productive topic, I don’t want my readers to be unaware of the
+greater “Gamification World.”
+The War on Words
+Back in 2011, gamification notables Gabe Zichermann and Sebas-
+tian Deterding had a public debate on gamification concepts.
+Some background info: Gabe Zichermann is a brilliant marketer,
+speaker, CEO of the largest Gamification conference in the industry,
+the GSummit, and is one of the leading evangelists of Gamification
+and its commercial use.
+Sebastian Deterding is the Ph.D. academic that studies the deep
+theories and motivations of game design and Gamification. He is
+considered one of the most respected thought leaders in the space.
+In this debate of epic proportions, Sebastian Deterding publicly
+examined each chapter of Gabe Zichermann’s book Gamification
+by Design, and explained why he considered each chapter to be
+flawed and/or inaccurate
+11
+. Hyperbolically speaking, his blog post
+on the subject was almost longer than the book itself.
+11
+Deterding, Sebastion. “A Quick Buck by Copy and Paste”, Gamification Research
+Network, Posted 09/15/2011.
+
+Chapter 4: Putting Gamification in its Place 48
+One of Deterding’s critiques was that, contrary to what Zichermann
+states in Gamification by Design, serious games and advergames
+should not be considered examples of Gamification. For those
+who are unfamiliar with these terms, Wikipedia defines serious
+games as, “a game designed for a primary purpose other than pure
+entertainment.” In other words, games that are generally built for
+a productive purpose, such as training, education, healthcare, and
+the like (Hence, the term “serious”).
+12
+.
+BusinessDictionary.com defines advergames as, “A video ga

@@ -1,0 +1,1400 @@
+
+
+
+
+A Game By
+Jon Gilmour & Doug Levandowski
+Art By
+Heather Vaughan, JJ Moore, Monica Magaña, Andy Gruba
+Copyeditors
+S Gavis-Hughson, Nick Sauer, & Dustin Schwartz
+Graphic Design & Layout
+Matthias Bonnici
+
+KIDS ON BIKES - DELUXE EDITION
+Game Creators: Jon Gilmour & Doug Levandowski
+Illustrator: Heather Vaughan, JJ Moore, Monica Magaña, Andy Gruba
+Graphic Design & Layout: Matthias Bonnici
+Lead Copyeditor: Dustin Schwartz
+Copyeditors: S Gavis-Hughson & Nick Sauer
+Renegade Game Studios - San Diego, California
+Hunters Entertainment - Burbank, California
+All text and artwork in this book are
+©2018 Hunters Entertainment LLC. All rights reserved
+www.renegadegames.com
+Facebook: facebook.com/PlayRGS
+Twitter: @PlayRenegade
+Instagram: @renegade_game_studios
+RGS4808
+ISBN-13: 978-0-9998548-0-8
+10 9 8 7 6 5 4 3 2 1
+Made in China
+www.huntersbooks.com
+facebook.com/HuntersEntertainment
+@OutbreakUndead
+
+Deluxe Edition
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Table of Contents
+SETTING BOUNDARIES
+PAGE 3
+WORLD BUILDING
+PAGE 5
+CHARACTER CREATION
+PAGE 9
+PLAYING THE GAME
+PAGE 27
+POWERED CHARACTERS
+PAGE 41
+INFORMATION FOR THE GM
+PAGE 47
+APPENDIX A - RELATIONSHIP QUESTIONS
+PAGE 56
+APPENDIX B - STRENGTHS
+PAGE 59
+APPENDIX C - FLAWS
+PAGE 61
+APPENDIX D - POSSIBLE ASPECTS FOR POWERED CHARACTERS
+PAGE 62
+APPENDIX E - TROPES
+PAGE 66
+APPENDIX F - DIFFICULTY RATINGS AND CONSEQUENCES
+PAGE 72
+BLANK CHARACTER SHEET
+PAGE 75
+Deluxe Edition Adventure Modules
+PAGE 77
+
+Kids on Bikes
+The door to the old house creaks open,
+the rust on the hinges groaning as you
+see the dust floating like spores in the air
+inside. By the faint light of your cheap flash-
+lights, you see the stairs to the upper floor,
+its railings gnarled and broken like crooked
+teeth. Their curve makes the stairs seem
+almost like a hungry grin, and you wonder if
+their age will support your weight. Still, you
+must go in.
+The only question is who will go first?
+In Kids on Bikes, you’ll take on the roles of
+everyday people grappling with strange,
+terrifying, and exceptionally powerful forces
+that they cannot defeat, control, or even fully
+understand. The only way to face them is to
+work together, use your strengths, and know
+when you just have to run as fast as you can.
+NOTE: Most of this book is written with players in mind
+and directed toward them. GMs, all of this information
+will be pertinent to you, too, and we’ve included
+more information for you at the end
+of the book, starting on page 47.
+
+
+
+- Setting Boundaries -
+Before starting to create your characters, you and the gamemaster (GM)
+should address the kinds of things that the players want to see in the game
+and the things they don’t want to see. You’ll already have agreed on the over-
+all tone you want the game to have, but it’s important to know what narrative
+elements might upset players so the group can avoid them. Doing so will
+make the game more enjoyable for everyone. To start this process, the GM
+will ask whether the players would like to discuss these boundaries or simply
+give the GM lists.
+If players agree to have a discussion, everyone will talk about what they’re
+okay with and what they want to avoid. During this discussion, don’t ask
+others to explain why they don’t want certain elements in the game; take
+their requests at face value and respect them. However, do feel free to ask
+for clarification.
+If players would rather give the GM lists, they’ll each write down the topics
+they’d like to avoid, and the GM will compile that list anonymously. As with
+the other method, there shouldn’t be discussion of why players don’t want to
+address certain topics.
+In addition to the group’s comfort, another factor to consider while estab-
+lishing boundaries is where you’re playing the game. If you’re playing in the
+privacy of your own home or in a conference room at a convention, you
+only need to consider the players’ preferences. However, if you’re in a public
+place, if you’re around younger people, or if there are other factors beyond
+the preferences of the group, you should consider them when establishing
+boundaries. In general, you should be playing the game in a way that will
+be comfortable for everyone who may hear it. For example, your group may
+be comfortable addressing issues of race in ’50s suburbia — but if you’re in
+public, everyone who overhears you might not be. Try to keep this in mind
+and be respectful to anyone who might overhear your game.
+If, during the game, someone accidentally brings up one of the topics that
+should be avoided — or if anything that is part of the story is making you
+uncomfortable — simply knock quickly and lightly on the table. Whoever is
+currently narrating should simply rewind and proceed down a different path.
+There is no need to discuss your request to go in a different direction; the
+group will just move on with the story in another direction.
+PAGE 3
+
+
+
+PAGE 5
+- World Building -
+Kids on Bikes should probably be set in a small town at any point in history
+before everyone had a video camera in their pocket at all times. It should
+probably be a place remote enough that the rest of the world just doesn’t
+care about it but close enough that black helicopters can be there within
+hours. Everyone in the town probably knows everyone else — for better
+or for worse. People look out for each other, but rumor also travels fast.
+Ultimately, though, this is all up to you.
+We recommend letting the players work together to craft the town, possibly in
+a short session prior to playing, or even during the same session if the players
+are okay with the GM thinking on their feet.
+For groups who aren’t comfortable creating their world together or for
+groups who want to dive right into the gameplay, the GM can also create a
+setting for the group instead, answering the questions below ahead of time
+and then sharing the answers with the group to start the game.
+Collaborative Creation
+If you choose to collaboratively build the world, players should first agree
+on the tone they want the game to take — whether that’s serious, goofy, or
+somewhere in the middle. This decision will help guide the decisions you’ll
+make when creating the town. As with the rest of the game, there are no
+wrong answers here! It’s whatever you want the game to be.
+Second, all players should discuss the era in which you want the adventure
+to take place. Early ’80s? Mid ’60s? Present day? Since the time period will
+have such a strong impact on the course of the game, make this decision as
+a group, with as much discussion as you need.
+If you choose to build the world together, answer the following questions to
+create the location, adapting the number of questions asked, as indicated
+below, so that each player is answering the same number of questions about
+the town.
+1. Our adventure takes place in… (name of town and state)
+2. The industry our location is best known for is…
+3. Our town is famous for…
+4. Our town is infamous for...
+5. Economically, our town is… (prospering, floundering, stagnant, etc.)
+6. A notable local organization is… (Duplicate in a five-player game.)
+7. A notable local landmark is… (Duplicate in a three-player game or
+five-player game.)
+8. Our school’s sports team is called…
+After constructing the town, each player shares one rumor about the town.
+
+PAGE 6
+Especially in a small town, rumors drive a lot of what goes on. The GM writes
+these rumors down, keeping them in mind so that they can influence the
+upcoming game — though there may be sources for the rumor that the|
+players can’t even imagine. Also, not all rumors have any truth to them.
+Finally, keep in mind that as long as you’re within the bounds of what the
+group has agreed to include in the game, there are no wrong answers.
+For Example: Carlos goes first and says that they’re in a town called
+Perkins, Colorado. Yasmin follows and says that the town is best known
+for mining. Emily then says that the town is famous for its candles,
+which it has made and sold to the world for years. Carlos then says that
+the town is infamous for a mining accident that trapped twelve miners
+underground a decade ago. Yasmin decides that the town is econom-
+ically floundering as people move away from coal energy. Emily says
+that a notable local organization is the Elks, an organization that most
+of the adult men in the town belong to. Carlos says that one notable
+local landmark is the closed mine that no one is allowed to go near.
+Yasmin adds that another notable landmark is the diving cliff, a place
+where teens often jump into the river that surges during the late spring
+thaw. Emily rounds out the answers by saying that the high school’s
+sports team is called the Mountain Lions.
+As they move into the rumors, Carlos says that he heard that the Elks
+is really a front for a devil-worshipping cult. Yasmin says that she heard
+that Mr. Worthy, the principal of the high school, is carrying on an affair
+with Mrs. Yates, the principal of the middle school. Finally, Emily says
+that she heard that when they found the bodies of the trapped miners,
+two were missing — and that the ten that were recovered seemed to
+have been attacked by some sort of animal.
+Gautier, the GM, should abide by the elements that the players created
+for the town. But over the course of the game, the GM and the players
+can decide together whether any — or all — of those rumors are true.
+Our Suggestions
+We suggest that the game takes place in a town where children can ride their
+bicycles from one side of town to the other relatively quickly, probably in
+under an hour — so a town that’s no more than ten miles across. A town
+this size also allows non-player characters (NPCs) to spread information and
+rumors more quickly — and for NPCs who are important to the characters to
+hear about these rumors just as quickly. And, more frighteningly, it prevents the
+characters from having a lot of places to hide. It’s also important that there
+will be parts of town that are empty, especially at night. In a place like New
+York City, nothing could happen without at least a few people seeing it…
+
+A note about historical accuracy: While avoiding anachronisms makes the
+experience more realistic, nobody likes that person at the table who says,
+“Well, actually, the Millennium Falcon toy in question wasn’t released until
+1978!” Just roll with it — unless a person in 1973 whips out a smartphone. In
+general, leave it to the GM to correct any necessary anachronisms.
+Multiple Sessions
+We hope that you’ll enjoy Kids on Bikes enough to play it over multiple
+sessions, developing and growing your characters and the world around
+them. Assuming that time has elapsed in the world of the game between
+sessions, before you start a new session, each player should explain one thing
+that has changed in the town between then and now — big or small. Perhaps
+it’s a new rumor that’s floating around. Perhaps in the time between the last
+adventure and the new one, things have changed about the town, like the mill
+that was struggling finally closed, or the school mysteriously burned down.
+These new events can help to drive the narrative of the new game — and give
+the players some control over where the story goes.
+For Example: In the story, the characters go into the mine to see if
+there’s any truth to the rumors. They find another body down there,
+another one of the miners, but it has been very badly attacked... by
+what seem like human teeth. And they swear that they hear something
+down there with them, but it is too dark to really see. At the start of their
+next game, Emily says that she heard that some of the livestock around
+town have started to go missing — victims of strange, midnight attacks.
+Yasmin says that one change to the town is that government agents
+have come in to investigate the mine further after the group’s discovery.
+Carlos says that a new restaurant has opened up, and the food isn’t
+very good — but all of the Elks seem to always be there. Again, the
+rumors may be true or they may not be. But the changes to the town
+(in this case, the arrival of government agents and the opening of a new
+restaurant) should be taken as fact.
+PAGE 7
+
+
+
+- Character Creation -
+The core of any RPG is the character you’ll be embodying. You and your GM
+should work together to agree upon a character you’ll be excited to play. One
+who reminds you of yourself in important ways — but who also is different
+enough from you to be an escape from the real world.
+If there are boundaries that you want the characters to have or modifications
+that you want to make to the creation process, as a player or GM, please do!
+The core of the game is the experience that the players will have, and
+anything you want to do to augment that experience is great.
+Process Overview
+When creating your character, you’ll move through the following steps, likely
+in this order:
+1. Select a trope from the Playbook and take the appropriate
+character sheet.
+2. Make trope selections for your character: age, strengths, flaws,
+first name.
+3. Introduce your character to the rest of the group.
+4. Answer questions about your character’s relationship with the
+other characters in the game.
+5. Complete the finishing touches for your character: motivations,
+fears, backpacks, last name, trope-specific questions.
+Selecting a Trope
+To streamline the character creation process, we’ve created a set of tropes
+that you can use at the start of game to get into character more quickly. These
+tropes, which fall into categories like Loner Weirdo, Stoic Professional, or
+Brilliant Mathlete, will determine your character’s stat dice and streamline
+some choices for you. Tropes can be found in the Playbook, which is available
+at huntersbooks.com/downloads-kidsonbikes. Alternatively, you can find the
+information for these tropes in Appendix E on page 66.
+Choose the trope that you’re most interested in playing. There’s no right or
+wrong answers here, and your GM will work with you to make sure that, what-
+ever character you choose, you’ll be central to the story of the game. And re-
+member, selecting a trope does not mean that you’ll be forced into a certain
+style of play. True, the Brutish Jock isn’t going to be as charming as the Pop-
+ular Kid, but, as in life, be careful not to assume too much about a personality
+based on only a few descriptors.
+If you don’t find a trope that fits your sense of your character, feel free to
+work with the GM to create your character from the ground up! This will take
+more time, but for players who already have a clear vision of who they want
+their character to be — or for players who don’t want their character to fit
+into one trope or another — this might be the most satisfying way to create
+a character. (For more details on this process, refer to “Creating a Character
+from Scratch” on page 24.)
+PAGE 9
+
+In the bottom right corner of your trope sheet, you’ll find two questions
+specific to your trope and, likely, your age. These will help you flesh out who
+you are. You don’t need to answer these out loud, but by the end of the
+character creation process, you should know what your answers are.
+Character Stats
+The trope you choose will determine how you assign dice to your six stats.
+The higher the possible value on a die, the better your character is with that
+stat. The six stats are:
+Brains: This stat determines how book-smart a character is. This will
+determine how well they understand problems, how well they did or
+are doing in school, and how quickly they’re able to solve academic
+problems.
+Brawn: This stat determines how much brute strength a character has.
+It does not determine how well they can fight — just how well they
+can lift things and how much physical damage they can take. It also
+determines how physically intimidating a character is.
+Fight: This stat determines how good a combatant a character is with
+whatever weapons or fighting skills you decide your character knows.
+While a character with a high Fight stat won’t be able to pick up a gun
+and use it effectively if they have never fired one before, this stat will
+make them good with weapons that they do have experience with. Also,
+they’ll be able to learn how to use new weapons and fighting skills more
+easily, if given proper training.
+Flight: This stat determines how fast a character is — as well as how
+skilled they are at evading their problems (both literally and figura-
+tively). Characters with a high Flight stat will be fast and tough to trap
+both physically and verbally.
+Charm: This stat determines how socially adept a character is and
+how good they are at reading the emotions of another person or
+group of people. Characters with a high Charm stat will be able to talk
+themselves out of tough situations and into good ones with relative
+ease — within reason.
+Grit: This stat determines how hard it is to break a character emotion-
+ally or physically. Characters with a high Grit stat will be able to keep
+a level head in the worst of situations and will be able to keep their
+cool even when pushed hard. Finally, this stat also determines how
+street-smart a character is.
+The higher a stat is, the better a character is at skills involving that stat — and
+the more likely they are to succeed when using that stat. While there’s no
+guarantee that you’ll roll your maximum, generally, characters will be better
+able to pass checks with their higher dice.
+PAGE 10
+
+Die Brief Explanation
+d20
+Superb — Even upon first meeting you, anyone would be able
+to readily tell that this is a strength of yours. You are remarkably
+good with respect to this stat.
+d12
+Impressive — People who know you would say that you’re pretty
+good with respect to this stat, but it wouldn’t be something
+that’s obvious during a first encounter.
+d10 
+Above Average — You aren’t remarkably good in terms of this
+stat, but you’re slightly above average.
+d8
+Below Average — You aren’t too bad in terms of this stat, but
+you’re certainly not good, either. You’re just slightly worse
+than average.
+d6
+Bad — People who know you would say that you’re pretty bad
+with respect to this stat, but it wouldn’t be something that’s
+obvious during a first encounter.
+d4
+Terrible — Upon first meeting you, people would immediately
+be able to tell that this is a weakness of yours. You are remark-
+ably bad with respect to this stat.
+When creating your character, think carefully about how your d20 stat and
+your d4 stat balance each other out. If your character has a d20 in Charm and
+a d4 in Flight, consider what that means for your character. Have they always
+talked their way out of their problems instead of having to run from them —
+including gym class? Or were they always so slow that they had to use humor
+and kindness to compensate for their inability to escape? Think about how
+your other stats relate to this balance, too.
+Stats will also be used to resolve skill checks and combat, which we’ll address
+in “Stat Checks” on page 27 and “Combat Encounters” on page 34.
+Character Ages
+For some of the tropes, you’ll also need to pick your character’s age: child,
+teen, or adult. Groups of characters can certainly be a mixture of all three
+ages. The GM and the players will just need to establish early on what draws
+their characters together for their first adventure. For future adventures, you’ll
+be linked by the events of the first session. The age of the characters has
+implications throughout the character creation process and during gameplay.
+The rules will discuss these implications as they become important.
+At the start of the character creation process, the character’s age determines
+what strengths each character gets for free — and what modifiers they have
+to roll with their stat dice.
+Children automatically receive the Quick Healing strength, and they cannot
+take the Rebellious strength. When rolling stat checks (described in the “Stat
+PAGE 11
+
+Checks” section, starting on page 27), children add +1 to their Flight and
+Charm checks, as they’re fast and likeable.
+Teens automatically receive the Rebellious strength. When rolling stat checks,
+teens add +1 to their Fight and Brawn checks, as they’re pugnacious and in
+their prime.
+Adults automatically receive the Skilled at ___ strength. This skill will corre-
+spond to their profession — either legal or illegal. When rolling stat checks,
+adults add +1 to their Brains and Grit checks. Even if they aren’t always
+geniuses, they’ve seen enough of the world to know what it’s about and to
+not get shaken by much.
+Selecting Strengths and Flaws
+Once you’ve selected your trope and age, choose from the strengths and
+flaws associated with that character. Strengths are mechanical advantages
+that your character will have when playing the game. Flaws are not mechan-
+ical, but they’ll help you develop your character’s personality. Choose two
+strengths and two flaws from those associated with your character’s trope.
+Or, if you want to draw from the larger list when deciding, you may. The full
+lists can be found in Appendix B: Strengths (page 59) and Appendix C: Flaws
+(page 61).
+Once you have done this, give your character a first name — or a nickname
+that they go by. Hold off on a last name for now just in case you find out, as
+you’re introducing your characters, that they’re related to another character.
+Including Characters Who Are Disabled or Neuroatypical
+For some players, a traditionally “able-bodied” or “neurotypical” character
+might not fit their vision of their character. Instead, a player may want to play
+a character who is physically disabled or whose brain functions differently. As
+long as the players and the GM agree that you will be appropriately sensitive
+in playing the character, you can play any kind of character you want to play.
+When embracing these differences, keep in mind all of the likely consequenc-
+es, both positive and negative. Fleshing out these traits will help you play
+your character better.
+For Example: If Helene’s character has been using crutches to get
+around for most of her life, she won’t be quite as mobile, but her upper
+body might be accordingly stronger. If Raj is deaf, he may have picked
+up the ability to read lips. Also, think about what your character needs
+to do in response to their difference. If Hana is on the autism spectrum,
+she might need time after experiencing sensory overload before she
+can focus again, and she might have a process that helps her refocus
+more quickly.
+Remember that the limitations that accompany these differences should
+consistently develop the role-playing experience. Some differences may
+present situations that require more complex problem solving — or may lead
+PAGE 12
+
+to easier solutions to others. Remember, the GM and player should both
+carefully consider whether or not a player is ready to embrace this role-playing
+respectfully before agreeing — and you should make sure that everyone at
+the table is comfortable with the direction of the character.
+Also, remember that things that would make a character disabled or
+neuroatypical are almost always on a spectrum, not a binary. To the casual
+observer, a character with autism, for example, might be indistinguishable
+from other members of the party — or that character may be non-verbal. If
+the character is hearing-impaired, they might be able to hear normally with
+hearing aids — or they may be completely deaf. It’s up to you where you put
+your character along any spectrum.
+Two words of caution about these changes, though: First, make sure that
+you’re playing them in order to develop the character and the story, not for
+jokes or for novelty. Second, the GM should take care to not consistently
+exclude characters from events based on any agreed-upon changes.
+As stated before, playing a character with limitations provides you with an
+opportunity to problem-solve or think about a situation that you may not have
+considered. How would Raj problem-solve in a scenario where he couldn’t
+see the lips of a person who is trying to communicate with him? How would
+Helene problem-solve if the only way of a situation is to run away? As in real
+life, differing abilities provide an opportunity for what could be considered
+non-traditional problem solving.
+There may be a few moments when a character who is confined to a wheel-
+chair might not be able to stay with the group. However, since the GM agreed
+to a player’s modifications to their character, they should take care not to
+make these moments frequent. And the GM should encourage players to feel
+good about the choices they made for their characters, especially if they
+made those choices to deepen the role-playing in the game.
+PAGE 13
+
+For Example: Priya chooses to create a character named Becky, who is
+on the autism spectrum. All of the players and the GM agree that they’re
+comfortable with Priya’s ability to play this character thoughtfully. Priya
+decides that Becky is a Scout who knows quite a lot about the great
+outdoors. She can identify all local vegetation by sight, knows which
+plants are edible and which are poisonous, knows when they flower, and
+can vividly describe all of these plants from memory. One of Becky’s fa-
+vorite things is to be outside, away from lots of people and loud noises,
+both of which make her very uncomfortable. Sometimes, Becky gets
+overwhelmed if too much is going on around her, and as a consequence,
+she has learned every inch of the wilderness in and around Perkins.
+When Becky gets overstimulated, which often happens if she’s around
+too many people or if it gets too noisy, she starts to have trouble fo-
+cusing. She needs to go to a quiet place and, if possible, spend time
+grounding herself by looking at plants and studying their details for a
+few minutes. That’s usually enough to help her feel like herself again.
+Race, Ethnicity, Gender, and Sexuality
+When creating your character, carefully consider their race, ethnicity, gender,
+and sexuality. These parts of your own identity are important to who you are
+— and they will be important to who your character is, too.
+As a group, you will need to decide to what extent historical accuracy influ-
+ences the treatment of different races, non-local ethnicities, and LGBTQIA
+people within your game. However, keep in mind that historical accuracy
+is not an excuse to be horrible. “But this is how people would have talked
+back then” doesn’t go far when you’ve established boundaries. If paranormal
+events can happen regularly in the town, then a mining town in the 1950s can
+be accepting of all people.
+If handled appropriately, race, ethnicity, gender, and sexuality contribute
+quite meaningfully to your sense of the character and to narrative elements
+in the game. As long as your group agrees on the way these elements will be
+addressed and everyone is comfortable with these decisions — and as long
+as you are addressing these issues seriously and compassionately — you’ll be
+playing within the spirit of the game.
+For Example: Dale creates Harper, a gender-queer character who is out
+to their closest friends and their family, but not to the town at large. As
+with Priya’s character Becky, all of the players and the GM agree that
+they’re comfortable with Dale’s ability to portray this character well.
+Based on the ground rules that they set — during which they agreed
+that there would be no slurs related to, or mistreatment of, LGBTQIA
+people — they agree that they aren’t going to make Harper’s gender
+identity something that non-player characters really take much note of.
+The players and the GM agree that it won’t be something that non-player
+characters address unless Harper brings it up.
+PAGE 14
+
+Introductions and Questions
+Now that you have the basics of your character sketched out, think about
+how they’re related to the other characters at the table. We encourage you
+to make these decisions based on what the players tell you about their char-
+acters. While it probably wouldn’t make much sense for every character in a
+five-player game to know every other character at the table well, each char-
+acter should have at least one meaningful connection to another character.
+This will give your GM ways to bring your characters together in the narrative.
+If you’re feeling stuck, some possible relationships include parents and
+children; siblings, step-siblings, and half-siblings; cousins; classmates, teach-
+ers and students; best friends or worst enemies; neighbors; mentors and
+mentees; bosses and employees; and significant others or spouses.
+This is a good time to start talking as your character would: “We know each
+other from back when we were in high school” rather than “My character
+dated their character for a few years.”
+For Example: Oswald, Isabella, and Yoon are talking about how
+they know each other. Oswald is a teen with the Lone Weirdo trope,
+Isabella is a teen with the Wannabe trope, and Yoon is an adult with the
+Blue-Collar Worker trope. Isabella says that she and Oswald used to be
+close friends, since they’re neighbors, but when she started trying to
+be one of the cool kids a few years ago, she stopped hanging out with
+Oswald completely and quite suddenly. Oswald adds that since they
+started out as friends because they’re neighbors, he wasn’t all that hurt
+when they stopped hanging out. He just kind of shifted to hanging out
+with other people, and it was fine.
+Yoon says that she knows Oswald because he’s friends with her son,
+Daniel, who’s also not that popular in school. She says that Oswald often
+sleeps over, so she knows him well enough to know what he likes on his
+pizza. Oswald adds that he feels comfortable talking to Yoon — more-
+so than his parents sometimes, so he often confides in her. Yoon and
+Isabella agree that they don’t know each other well. Since it’s a small
+town, though, they know each other by sight. Everyone in their small
+town knows everyone else in their small town by sight.
+Having broadly established how you know and don’t know each other, each
+player will answer questions about the other characters. You’ll do this one
+at a time, passing the list of questions around the table and collaborating to
+make the established relationships more complex and to hint at information
+about who you don’t know. This process will make the story of the game
+richer, even before the strange events start happening.
+Depending on the length of time that you have for character creation, you
+could take one of three approaches to answering the questions: quick start,
+one sided, or complete.
+PAGE 15
+
+Quick Start Questions (2 minutes per player)
+In the shortest version of setup, each player will answer one question about
+the character clockwise from them at the table. Before answering the ques-
+tions, you should move so that you are sitting next to someone you have a
+close relationship with.
+We do not recommend this setup — though if you’re trying to get a group up
+and running for a demo of the game, this can cut down on the time needed
+to start playing.
+For a character you know:
+• Decide whether your relationship with that character is mostly positive or
+mostly negative.
+• Roll a d20 and answer the corresponding question from the “Character
+You Know - Positive” list on page 56 in Appendix A or the “Character You
+Know - Negative” list on page 57 in Appendix A. (If the question doesn’t
+fit the relationship that you have in mind or if the question you roll has
+already been answered, you may answer a question above or below the
+one you rolled that hasn’t been answered yet or reroll.)
+• Cross out that question.
+For a character you don’t know:
+• Roll a d20 and answer the corresponding question from the “Character You
+Don’t Know” list on page 58 in Appendix A. (If the question doesn’t fit the
+concept of that character that you have in mind or if the question you roll
+has already been answered, you may answer a question above or below the
+one you rolled that hasn’t been answered yet or reroll.)
+• Cross out that question.
+Once each player has answered a question about the person to their left, this
+part of the setup is complete.
+For Example: Yoon, Isabella, and Oswald are answering the Quick Start
+Questions about each other. Oswald goes first and feels mostly positive
+about Yoon and rolls a 15: “What do you and this character have a
+mutual, weird love of?” He decides that they both really like fantasy novels.
+Yoon was reading The Hobbit when he was over at Daniel’s house a few
+years ago, and he borrowed it, read it, and couldn’t get enough fantasy
+novels. In Arkansas in the early ’80s, where the game takes place, there
+aren’t that many people who read those kinds of books.
+Next, Yoon rolls for Isabella, whom she doesn’t know. She rolls a 6: “Why
+is this character’s family so important in town?” Yoon tells the group
+that Isabella’s mom is the sheriff in town and her dad owns the grocery
+store, so both of them are pillars of the community. They’re both good
+people, and they’re well respected in town.
+PAGE 16
+
+Finally, Isabella feels more negative than positive about Oswald and
+rolls a 20: “How did this character betray you the last time you confided
+in them?” Isabella and Oswald agree that he’s not the type to betray
+people easily, and Oswald pointed out earlier that he’d have to want
+something pretty badly to betray her — so Isabella decides that it was
+unintentional. A few years ago, Isabella told Oswald about how much
+pressure her parents were putting on her, and Oswald talked to Daniel
+about it. A few of the cool kids overheard, and they made fun of Isabella
+for even talking to Oswald.
+One-Sided Questions (5 minutes per player)
+In the mid-range version of the setup, each of you will answer a question
+about each other character. Seating arrangement is not important for this
+version of character questions.
+We recommend this approach if you want to jump into the game, especially
+if you are running a one-off session of the game.
+For a character you know:
+• If you feel mostly positive about them, roll a d20 and answer the corre-
+sponding question from the “Character You Know - Positive” list on page
+56 in Appendix A. (If the question doesn’t fit the relationship that you
+have in mind or if the question you roll has already been answered, you
+may answer a question above or below the one you rolled that hasn’t
+been answered yet or reroll.)
+• If you feel mostly negative about them, roll a d20 and answer the
+corresponding question from the “Character You Know - Negative” list on
+page 57 in Appendix A. (If the question doesn’t fit the relationship that
+you have in mind or if the question you roll has already been answered,
+you may answer a question above or below the one you rolled that hasn’t
+been answered yet or reroll.)
+• Cross out that question.
+• Now have them answer a question about you from the other list: Negative
+if you answered a Positive question about them, or vice versa.
+• Cross out that question.
+For a character you don’t know:
+• Roll a d20 and answer the appropriate question from the “Character You
+Don’t Know” list on page 58 in Appendix A. (If the question doesn’t fit the
+concept of that character that you have in mind or if the question you roll
+has already been answered, you may answer a question above or below
+the one you rolled that hasn’t been answered yet or reroll.)
+• Cross out that question.
+• Now have them answer a question about you from the same list.
+• Cross out that question.
+Once each player has answered one question about each other character at
+the table, this part of the setup is complete.
+PAGE 17
+
+For Example: Yoon, Isabella, and Oswald are answering the One-Sided
+Questions about each other. Oswald goes first, since he knows both
+characters well. He starts with Isabella and a positive question and rolls
+a 5: “Why do you care about this character more than they care about
+you?” He decides that Isabella really seems to have forgotten about
+him, and he misses hanging out with her — but his few overtures to her
+have been misinterpreted, he thinks.
+Isabella then rolls for a negative question about Oswald (since he rolled
+a positive one for her) and gets a 16: “What would losing this character
+mean to you?” Isabella says that she and Oswald don’t have much of
+a relationship anymore, but that Oswald reminds her of her past. Even
+though she wants to be a cool kid, every once in awhile she wants to go
+back to not caring about what other people think about her. Hanging
+out with Oswald would definitely be that.
+Next, Oswald rolls for a positive question about Yoon and gets a 15:
+“What do you and this character have a mutual, weird love of?” He de-
+cides that they both really, really like fantasy novels. Yoon was reading
+The Hobbit when he was over at Daniel’s house a few years ago, and he
+borrowed it, read it, and couldn’t get enough fantasy novels. In Arkan-
+sas in the early ’80s, where the game takes place, there aren’t that many
+people who read those kinds of books.
+Yoon then rolls a negative question for Oswald, and gets an 18: “You hurt
+this character years ago. Why can’t you apologize?” Yoon decides that,
+about a year ago, Yoon and Oswald’s father nearly had an affair. Though
+nothing more than a few kisses happened, it caused serious tension
+between Oswald’s parents. Yoon doesn’t know if Oswald’s mother
+knows or if Yoon just projected the concerns. She’s fairly sure that
+Oswald has no idea even though he has said that things have been
+weird between his parents. (This would be something that the player
+controlling Oswald would know but, in the game, Oswald would not.)
+Because he doesn’t know, she can’t apologize to him for what she
+assumes is her role in that tension.
+Next, Yoon rolls for Isabella, whom she doesn’t know. She gets a 6: “Why
+is this character’s family so important in town?” Yoon tells the group
+that Isabella’s mom is the sheriff in town and her dad owns the grocery
+store, so both of them are pillars of the community. They’re both good
+people, and they’re well respected in town.
+As a final question, Isabella rolls an 18 for her question about Yoon,
+whom she doesn’t know well: “What is this character doing to threaten
+their family’s reputation?” Since Yoon is a first-generation immigrant,
+her family doesn’t have a reputation in the town, so she rerolls and
+PAGE 18
+
+gets a 14: “Who does this character have a very public feud with?”
+Isabella asks Yoon what she did before she moved to America, and Yoon
+tells her that she was training to be a pharmacist. Isabella decides that,
+some years ago, Mr. Talbot the local pharmacist was giving bad advice
+to people about what’s dangerous for children. Yoon heard about it
+and warned parents. Though she was right, Mr. Talbot said some unkind
+things about her, both about her level of training and her race. Mr. Talbot
+isn’t a particularly good person, Isabella says — and most people think
+he’s wrong on this one.
+PAGE 19
+
+Complete Questions (8 minutes per player)
+In the long version of the setup, each player will answer two questions about
+each character they know at the table and one question about each character
+they do not know.
+For multi-session plays of Kids on Bikes, this is the approach we recommend.
+It takes a while, but it helps you to develop rich, interesting relationships with
+each other, and it can lead to good directions for the story to take as you play.
+To foster this, while others are establishing their relationships, start thinking
+about how you could insert yourself into their dramas. For example, if Hector
+thinks Esme stole his bicycle even though she didn’t, perhaps you were the
+one who actually did. Or, if Hank cheated on Morris, perhaps you were the
+other man... or you know who was.
+Remember, this is a big part of the world building of the game. As long as
+you’re within the bounds of what everyone wants from the game, there are
+no wrong answers here. Create the game you want to play by answering
+these questions!
+For a character you know:
+• Roll a d20 and answer the appropriate question from the “Character You
+Know - Positive” list on page 56 in Appendix or the “Character You Know
+- Negative” list on page 57 in Appendix A. (If the question doesn’t fit the
+relationship you have in mind or if the question you roll has already been
+answered, you may answer a question above or below the one you rolled
+that hasn’t been answered yet or reroll.)
+• Cross out that question.
+• Roll a d20 and answer the appropriate question from the “Character You
+Know - Negatives” list in Appendix A. (Same caveats as above.)
+• Cross out that question.
+For a character you don’t know:
+• Roll a d20 and answer the corresponding question from the “Character You
+Don’t Know” list on page 58 in Appendix A. (If the question doesn’t fit the
+concept of that character that you have in mind or if the question you roll
+has already been answered, you may answer a question above or below the
+one you rolled that hasn’t been answered yet or reroll.)
+• Cross out that question.
+Once you answer questions about all other characters, pass the sheets to
+your left, and that player repeats the process until every player has answered
+questions about all other characters.
+For Example: Yoon, Isabella, and Oswald are answering the questions
+about each other. Oswald goes first, since he knows both characters
+well. He starts with Isabella and a positive question and rolls a 5: “Why
+do you care about this character more than they care about you?” He
+decides that Isabella really seems to have forgotten about him, and he
+PAGE 20
+
+misses hanging out with her — but his few overtures to her have been
+misinterpreted, he thinks.
+Next, he rolls for a negative question about her and gets a 3: “What
+could make you betray this character?” He decides that he’s feeling kind
+of disconnected from her, so it wouldn’t take much. The last time he
+tried to talk to her at school, she was really nasty to him, so if it would
+get him something he wanted, he’d betray her — but not in a major way.
+Next, he rolls for a positive question about Yoon and gets a 15: “What do
+you and this character have a mutual, weird love of?” He decides that
+they both really, really like fantasy novels. Yoon was reading The Hobbit
+when he was over at Daniel’s house a few years ago, and he borrowed
+it, read it, and couldn’t get enough fantasy novels. In Arkansas in the
+early ’80s, where the game takes place, there aren’t that many people
+who read those kinds of books. Then he rolls a negative question
+about her and gets an 11: “What does this character do that makes you
+immediately lose your temper?” Oswald decides that doesn’t really
+fit their relationship and rerolls, getting a 15: “What insanity has this
+character shown warning signs of?” Oswald has seen Yoon be a little bit
+too fastidious and worries that she might be tending toward compul-
+sive behavior — but he’s a teen and doesn’t necessarily know what all of
+the warning signs are.
+Next, Yoon rolls for Isabella, whom she doesn’t know. She gets a 6: “Why
+is this character’s family so important in town?” Yoon tells the group
+that Isabella’s mom is the sheriff in town and her dad owns the grocery
+store, so both of them are pillars of the community. They’re both good
+people, and they’re well respected in town.
+Yoon then rolls a positive question for Oswald, a 10: “What is this
+character sacrificing to protect you?” She decides that it isn’t protecting
+her, per se, but Oswald is always willing to talk to Yoon about what’s
+going on at the high school, something that her son isn’t usually willing
+to do. He’s giving up some of his time to let her know what’s going on.
+Yoon then rolls a negative question for Oswald, and gets an 18: “You hurt
+this character years ago. Why can’t you apologize?” Yoon decides that,
+about a year ago, Yoon and Oswald’s father nearly had an affair. Though
+nothing more than a few kisses happened, it caused serious tension
+between Oswald’s parents. Yoon doesn’t know if Oswald’s mother
+knows or if Yoon just projected the concerns. She’s fairly sure that
+Oswald has no idea even though he has said that things have been
+weird between his parents. (This would be something that the player
+controlling Oswald would know but, in the game, Oswald would not.)
+Because he doesn’t know, she can’t apologize to him for what she
+assumes is her role in that tension.
+PAGE 21
+
+Lastly, Isabella rolls a positive question for Oswald, a 16: “What would
+losing this character mean to you?” Isabella says that she and Oswald
+don’t have much of a relationship anymore, but that Oswald reminds
+her of her past. Even though she wants to be a cool kid, every once in a
+while she wants to go back to not caring about what other people think
+about her. Hanging out with Oswald would definitely be that.
+She then rolls a 20 for the negative question about him: “How did this
+character betray you the last time you confided in them?” Isabella and
+Oswald agree that he’s not the type to betray people easily, and Oswald
+pointed out earlier that he hadn’t betrayed her yet — so Isabella decides
+that it was unintentional. A few years ago, Isabella told Oswald about
+how much pressure her parents were putting on her, and Oswald talked
+to Daniel about it. A few of the cool kids overheard, and they made fun
+of Isabella for even talking to Oswald.
+As a final question, Isabella rolls an 18 for her question about Yoon,
+whom she doesn’t know well: “What is this character doing to threaten
+their family’s reputation?” Since Yoon is a first-generation immigrant,
+her family doesn’t have a reputation in the town, so she rerolls and
+gets a 14: “Who does this character have a very public feud with?”
+Isabella asks Yoon what she did before she moved to America, and Yoon
+tells her that she was training to be a pharmacist. Isabella decides that,
+some years ago, Mr. Talbot the local pharmacist was giving bad advice
+to people about what’s dangerous for children. Yoon heard about it
+and warned parents. Though she was right, Mr. Talbot said some unkind
+things about her, both about her level of training and her race. Mr. Talbot
+isn’t a particularly good person, Isabella says — and most people think
+he’s wrong on this one.
+Finishing Touches
+Full Name: Now that you’ve fleshed out your character and your relationship
+with the other characters, you’ll add the finishing touches. If you were waiting
+to complete your name, do that now, keeping in mind that relatives proba-
+bly have the same last name — but maybe not. Remember, try to keep your
+name in line with the tone that you and the other players have agreed to for
+the game.
+Motivation: Write down something that strongly motivates you. It might not
+be the thing that drives all of your decisions, but it should certainly drive most
+of them — and especially the big decisions. It could be a specific motivation
+(e.g., “find my son no matter what it costs me” or “impress Tom so that he’ll
+go out with me”), it could be more general (e.g., “look cool” or “learn”), or it
+could have to do with concealing some information (e.g., “don’t let the others
+find out that my business is failing” or “don’t let my children learn that I killed
+their father”). If appropriate, share these with other players — but most likely,
+you’ll just be sharing this motivation with the GM.
+PAGE 22
+
+Typically, children will be motivated by their curiosity. Teens will often be
+motivated by social factors like fitting in or finding and maintaining a romantic
+relationship. Adults will be motivated by holding onto or protecting what
+they have, whether that’s a business or family. And all ages can be motivated
+by something or someone that they’ve lost.
+Fears: Think about what it is that scares you. There will be some mechanical
+implications for this fear that will be addressed in “Planned Actions and Snap
+Decisions” on page 29. In terms of role-playing the fears, you will, of course,
+want to avoid your fears, and when faced with them, you’ll behave more
+irrationally. Ultimately, what you fear in the game is up to you.
+Children usually fear things that, rationally, they shouldn’t fear — and don’t
+fear things that they ought to. They’re more likely to walk up to a stranger
+covered in blood to make sure they’re okay than they are to open up their
+closets in the middle of the night. Generally, children fear the unknown and
+what they can’t see. Children are also generally not ashamed of their fears;
+they’ll gladly declare them to friends and strangers alike.
+Teens are all over the place. Some teens are still scared of the things that
+scared them as children, but they’ll tend to be very tight-lipped about these
+fears. No teen wants to admit that they’re still scared of the dark. Often,
+though, teens are more scared of social isolation, losing friends, or embar-
+rassing themselves. But sometimes, more mature teens — or ones whose lives
+have been rough — will have fears more like an adult’s.
+Few adults have the fears that children have — and most of them aren’t
+worried about the kinds of social things that concern teens. Rather, they’re
+typically afraid of things being taken from them, whether that’s their families,
+their homes, or their livelihoods. Some adults also fear realistic things going
+wrong — and there’s nothing saying that an adult can’t be afraid of some-
+thing that most adults aren’t.
+Backpack: The final finishing touch is indicating what you have in your
+backpack, literally and figuratively. What items are you never without? For
+children or teens, these might literally be in their backpack. For adults, these
+might be in the trunk of their car. Ultimately, though, they’re wherever would
+make the most sense for you.
+Figuratively speaking, the backpack is also a good place to list advantages
+that you have over other people. While this doesn’t have to consider all of
+the ways in which you are privileged, it would be a good place to think about
+the more intangible resources you have at your disposal. For example, Azra’s
+backpack might indicate that her parents are exceptionally supportive and
+do everything they can to give her the resources to succeed at school.
+Adewale’s backpack, on the other hand, might indicate that his bad relation-
+ship with his parents has given him a strong sense of self-reliance and ability
+to do for himself. The intangible resources in your backpack won’t have a
+PAGE 23
+
+mechanical impact on the game, but they should give you places to turn if
+you need help in getting out of a problem — or create tension if that resource
+is suddenly not available.
+Trope-Specific Questions: Each trope sheet in the Playbook has two questions
+about your character that should be answered at some point during the
+character creation process. So, if you haven’t yet answered them, make sure
+to do so now!
+The answers to these questions do not need to be shared with the other
+players at the table — but they can be if you would like to. Certainly, though,
+your responses should be shared with the GM.
+Now, you’re ready to start your adventure in Kids on Bikes!
+Creating a Character from Scratch
+Some players may wish to create their character entirely from scratch
+rather than beginning with a trope. Doing so takes longer, but it allows for
+truly unique characters that don’t fit into any specific mold. If this is a route
+you’re interested in, we encourage you to take it!
+Using the blank character sheet in the Playbook (huntersbooks.com/down-
+loads-kidsonbikes) or on page 75 of this rulebook, begin by assigning the
+dice that you’ll use for your stats. The best way to do this is to assign your
+d20 stat and d4 stat, then think about how those stats complement each
+other. Then, assign the other dice to the other stats.
+Next, select your age: child, teen, or adult. Remember to give yourself the
+appropriate bonuses based on your age. Children get +1 to Charm and Flight
+and get Quick Healing for free. Teens get +1 to Brawn and Fight and get
+Rebellious for free. Adults get +1 to Brains and Grit and Skilled at ___ for free.
+Then, select your other two strengths. Referring to the list in Appendix B on
+page 59, select two that fit with your vision for your character. Then, select
+your flaws. You may select any two from the list in Appendix C on page 61.
+Finally, give your character a first name. From this point on, character creation
+continues as normal. Refer to the section titled “Introductions and Questions”
+on page 15.
+Changes to Your Character Across Multiple Sessions
+While it’s unlikely that characters will change much over the course of a single
+game, in the case of longer campaigns, there might be changes to a character
+based on what happens during play. A character who nearly drowns might
+develop a fear of water — just as a character who manages to overcome their
+fear of water in a critical moment might find that they aren’t as afraid of it
+PAGE 24
+
+PAGE 25
+anymore. At the end of each session, the GM and players should discuss the
+ways in which the characters grew — or regressed — over the course of the
+game. Each time you play, you should learn more about your character. They
+should never be static. These changes will likely come in the form of new
+skills, new fears or flaws, or changed answers to the trope-specific questions.
+Except in extreme cases, losses should be counterbalanced by gains. A char-
+acter who conquered their fear of dogs at a critical moment might become
+boastful, which could cause tension with friends who previously appreciated
+their humility. The players and the GM should decide collaboratively what
+gains and losses occur at the end of one game or before the next one. Again,
+though, except in the strangest cases, there should always be a balance of
+what is lost and what is gained.
+For Example: In the first game, Yoon, Isabella, and Oswald work together
+to go looking for Yoon’s son, Daniel, who disappeared before the game
+began. They were able to find him, but he’s currently in a coma, and
+doctors aren’t sure if he’ll recover. As a result of seeing the measures
+that Oswald and even Isabella went to in order to save her son, Yoon has
+gained the “Protective” strength when it comes to those two; however,
+because she found her son covered in some kind of strange webbing,
+she has added “Spiders” as a fear. Oswald and the GM agree that not
+much has changed for him. Isabella and the GM agree that she’s feeling
+closer to Oswald again and remembers why she valued him as a friend
+when they were younger — but there aren’t any mechanical changes for
+her, either.
+
+
+
+- Playing the Game -
+The game will take the form of a story that you, the other players, and the GM
+tell together. The GM will help guide the action of the story and will make the
+“big picture” stuff happen, but you’ll have a lot of control over what you do
+and how you face the situations the GM throws in your way.
+You’ll even have control over which parts you skip over. If your characters
+are going to have a pretty run-of-the-mill day at school, you don’t need to
+tell the story of all nine periods. Think of the game as the important scenes
+that will carry the narrative forward. Focus on the parts that promote action,
+excitement, and intrigue.
+Stat Checks
+While you’re playing, any time you do something that runs the risk of failure,
+the GM will set a numerical difficulty for the action. You will then roll the
+appropriate stat die and check the value of that die against the difficulty. If
+you roll the maximum value of the die and that isn’t enough to succeed at
+the check, your die will “explode” — meaning that you reroll the die and add
+the maximum value that you rolled the first time to the new roll. Your die may
+explode multiple times on a check — but once you succeed at that check,
+your die no longer explodes for that check.
+Keep in mind that the most you can roll (without the luck of exploding a die)
+is 20, and that number is extraordinarily unlikely. However, that doesn’t mean
+that the difficulty can’t be higher than 20 in cases where a feat seems truly
+impossible for mere mortals.
+Choosing a Stat for the Check
+As in life, there are always multiple ways to solve a problem. If a character is
+being confronted by bullies, it may seem like they have to start swinging and
+hope it goes well (Fight) or turn heel and run and hope they’re faster than
+the bullies (Flight). But depending on who the character is, they might use
+other stats instead.
+A character with high Charm might convince the bullies that he’ll show them
+a secret entrance into the movie theater if they don’t beat him up. A character
+with high Grit might tell them that she has taken worse beatings before
+breakfast and make it not seem worth their time. A character with high
+Brains might talk the bullies in circles until they let her go because they’re too
+confused to throw a punch. A character with high Brawn might physically
+intimidate their aggressors to get them to back down. There are always
+multiple ways you can solve your problems.
+When you’re not sure what kind of check something will call for, you can
+always just describe what you’re doing and the GM will tell you what check to
+make. For things like deceit and lying, it’s probably going to be Charm.
+PAGE 27
+
+Difficulty Explanation & Example
+20
+A task at which only the most incredible could even possibly succeed
+— but if they succeed, it will be one of the most impressive things a
+character has ever done. This is a nearly guaranteed failure.
+Examples: Lifting a car off of someone trapped under it; solving a
+nearly impossible math problem just by glancing at it.
+17-19
+A task for which success would be incredible and impressive. This,
+too, is a nearly guaranteed failure.
+Examples: Talking a police officer out of arresting you when you
+have clearly broken the law and have no relationship with the
+officer; breaking a school record in track.
+13-16
+A task where success is extraordinary — but decidedly possible for
+characters who are truly skilled at it.
+Examples: A lucky character finding the right item on the first try;
+someone trained in espionage withstanding police interrogation.
+10-12
+A task where success is impressive — but completely expected for
+characters skilled at it.
+Examples: A strong person prying open a heavy, locked door; a
+computer whiz repairing a computer quickly under pressure.
+7-9
+A task where success is certain for characters who are very skilled at
+it — but not for those who aren’t.
+Examples: Convincing the principal that it wasn’t you and your
+friends who started the cafeteria food fight; running a message
+from one end of a building to the other in a very short time.
+3-6
+A task where success is likely for all characters except those who
+aren’t skilled or who have a low stat in that field.
+Examples: A lucky person drawing a non-face card from a deck; a
+character silently withstanding a verbal berating.
+1-2
+A task where success is guaranteed, except in extreme cases.
+Examples: A character lifting a 10-pound weight over their head; a
+character reciting a multiplication table.
+PAGE 28
+
+But if you’re throwing around a lot of science-y words to convince the sheriff
+that the mine shaft where you’re actually hiding the half-goat, half-child
+creature is structurally unsound so he should stay away, that might be Brains.
+Or if you’re threatening your way into a secure area past a young, scared
+guard, that might be Brawn — or Fight if you’re describing what you’ll do to
+him if he doesn’t step aside. The bottom line is that the stats are here to help
+guide your storytelling and help you have fun. If you aren’t sure what to do,
+ask the table — and if they aren’t sure, go with your gut.
+For Example: Ana has been cornered while she was snooping around
+an abandoned warehouse that she and her friends noticed a lot of the
+town’s adults going to. The three deranged members of a cult who
+cornered her seem intent on sacrificing her to the elder god they
+worship, and they’re all brandishing really big knives. Ana is a child
+with the Bully trope, so Fight is her best stat. However, the GM tells her
+that to fight her way out of this situation would be a very tough Fight
+check, a difficulty of 14. It’s not impossible, but Ana doesn’t feel good
+about her odds there. Since the cult members are completely deranged,
+intimidating them with Brawn (Ana’s d12 stat) is a difficulty of 22.
+Similarly, charming them would also be a 22, and since Charm is Ana’s d4
+stat, that’s unlikely to work. The cult members, though, are on the older
+side and thus a bit slower than children. The GM tells Ana that a Flight
+check would be a difficulty of 7. Ana decides that her chances are best if
+she goes with that — especially since she gets +1 to her Flight checks
+as a child and she has a few Adversity Tokens to spend if need be.
+Planned Actions and Snap Decisions
+Although the GM always sets a numerical difficulty, there are two distinct
+kinds of stat checks: Planned Actions and Snap Decisions. Planned Actions
+are stat checks when you have time to think about the best course of action
+and, perhaps, work with your friends. If the characters are sitting at a kitchen
+table trying to break a coded message that someone left for them and have
+all night to do it, that’s definitely a Planned Action. If your character needs to
+climb up a wall to sneak into an abandoned factory and has the cover of night
+and no one in pursuit, that’s a Planned Action. In short, Planned Actions are
+when the conditions are relatively optimal to achieve something.
+Snap Decisions, on the other hand, are choices that have to be made quickly
+under bad conditions — and are thus more chaotic and unpredictable. If your
+character is being chased through a cave, stat checks they make while fleeing
+in panic will definitely be Snap Decisions. If your character is under any kind
+of great pressure, that would likely be a Snap Decision, too.
+Ultimately, it’s the GM’s call whether something is a Planned Action or a Snap
+Decision. Players, though, should feel free to try to convince the GM of how
+they can get a moment of calm to make a Planned Action in a setting that
+would seem to call for a Snap Decision.
+PAGE 29
+
+In order to make a check for a Planned Action, do the following steps:
+• Once you decide to resolve a problem with a particular stat, the GM sets
+a numerical difficulty. For example, if you are trying to crack a safe in the
+privacy of your own home with the right tools, you might try to muscle
+your way in (Brawn), crack the safe (Brains), or sweet talk a buddy of
+yours to apply their safe-cracking skills (Charm).
+• Either roll the appropriate die or, because you have time to think and
+react calmly, take half the value of that stat’s die. For example, if you have
+a d20 in Flight, you may choose to take a score of 10 for Planned Actions
+involving Flight instead of risking a roll.
+• If the value of the first die rolled is the maximum value of the die, but still
+below the difficulty level, the roll “explodes.” Roll the same die again, adding
+both values together. This may be repeated as many times as you roll the
+maximum, though you must stop as soon as you succeed at the check.
+• After determining whether the roll explodes, add any age bonuses to the
+roll. Age bonuses cannot cause a roll to explode.
+• Children: +1 Charm, +1 Flight
+• Teens: +1 Brawn, +1 Fight
+• Adults: +1 Grit, +1 Brains
+• You may also spend Adversity Tokens (earned from failed checks), with
+each token adding +1 to the roll. As with age bonuses, Adversity Tokens
+cannot cause a roll to explode.
+• Other players may also spend Adversity Tokens to help you, with each
+token adding +1 to the roll, though they must also narrate how their
+actions are also helping your cause. This is at the GM’s discretion.
+• If the total roll is greater than or equal to the difficulty level, you have
+succeeded. You and the GM will narrate the success collaboratively.
+• If not, you have failed. The GM will direct the narration with minimal
+input from you (the greater the failure, the less input from you). The more
+you miss by, the worse the failure. You also receive one Adversity Token,
+which can be used on future rolls.
+
+When things are dicier and you’re under more duress and stress, you’ll have
+to make a Snap Decision. In most ways, the process works as with Planned
+Actions but with the following changes:
+• First, you cannot take half of the value of the appropriate die. You must roll
+to see if you succeed since this is a rushed attempt that you cannot plan.
+• Second, although you may spend Adversity Tokens to help yourself, other
+players cannot spend Adversity Tokens to help you. There’s no time for
+the kind of planning that collaboration requires.
+• Third, the GM should make the consequences for failing a Snap Decision
+less weighty than failing a Planned Action, though you may still gain an
+Adversity Token. Narratively, when everything’s on the line, the tension
+is already there, and you aren’t doing something stupid — you’re just in
+a bad spot. (On the other hand, when you have time to plan and still fail,
+that usually means you’ve decided to take a risk.)
+For Example: Two characters have been captured by government forces
+and are being aggressively interrogated in different cells to try to
+get information out of them. Certainly, this is a Snap Decision — the
+characters are under pressure, and the interrogators aren’t going to wait
+patiently while the characters plan their responses. The GM might
+decide that in order to withstand this level of interrogation, each
+character will need a score of 12.
+Rebecca, one of the characters, has a Grit stat of d20. She has seen
+some rough things in her life, and nothing scares her. She rolls a 13,
+succeeding. The GM and the player controlling Rebecca narrate
+her success at holding up under questioning. She just barely held
+up, though, so there won’t be any benefits beyond the fact that she
+did succeed.
+The other character, Tricia, has a Grit stat of d6. She rolls a 3, failing by
+9 points — fairly badly, but not a complete disaster. Perhaps Tricia gives
+
+up more information than the interrogator even knew she had. Perhaps
+she breaks quickly, giving them time to act on that information and
+prevent other characters from being able to do what they need to do,
+forcing them to scramble to come up with another way to get done
+what they need to get done. Perhaps she gives them more information
+than she should have, revealing the identity of her accomplices.
+Ultimately, this will be up to the GM with minimal input from the player.
+Failing a Roll
+Remember, in Kids on Bikes, failing a roll isn’t all bad. First and foremost, it
+gives you an Adversity Token, which you can use to succeed when you really
+need it — especially if you pool it with other Adversity Tokens — or to activate
+your character’s strengths. Adversity Tokens give you more options later on,
+so failing a few times at the beginning is actually a good thing.
+Second, failure can and should push the narrative forward. A failed roll means
+that what the character wants to happen doesn’t happen — but that doesn’t
+mean that what happens is bad for the story. For example, if the characters
+try to hack a computer but aren’t able to, it might mean that they have to
+seek out an NPC to help them with it. That character might, in turn, inadver-
+tently give them a clue that helps them puzzle out a mystery. Or, if a character
+tries to escape on foot from government forces pursuing her, she might be
+brought to a facility that holds the secret to the next part of the game.
+So, while failures won’t be what your character wants, they should almost
+always feel good for the story — and should give the group more directions
+to take the narrative you’re building together.
+For Example: Tricia rolls a 3 when trying to hold up against the interro-
+gation, but she needed a 12. The result is bad — but not a disaster. As
+the agent starts applying verbal pressure to her, she cracks and tells
+the agent everything: where her friends are hiding and enough details
+about the strange animal she and her friends found in the forest to let
+the agent know that they’re indeed the children that the government
+agents are looking for. That agent quickly tells his supervisor, but in his
+rush to tell the others what’s happening, Tricia manages to not tell him
+that the animal seems to be able to teleport short distances. Thus, when
+the agents arrive at the house of Tricia’s friend, the strange animal is
+able to get to safety.
+When deciding on the consequences of a stat check, the GM should consult
+the following guide:
+PAGE 32
+
+Roll - Target
+(with applicable modifiers) 
+Guidelines for Failure or Success
++10 or higher
+The character succeeds smoothly and easily. Likely, it
+looks like the character is just showing off, or that the task
+is done so readily that it happens without any effort at all.
+At the GM’s discretion (and certainly not necessarily), there
+could be some unexpected positive results from a success
+of this degree.
++5 to +9
+The character succeeds quite impressively. At the GM’s
+discretion, the character might have some additional
+benefits beyond the success, but these will be slight — and
+only if important for pushing the game forward.
++1 to +4 
+The character succeeds, but not impressively. Any benefits
+the character gains above and beyond the success should
+be quite limited — if present at all.
+0 
+The character succeeds, but just barely. Decidedly,
+nothing surprising happens — and the player and the GM
+should make this success as skin-of-the-teeth as possible.
+-1 to -4
+The character fails, but not too badly. There might be
+some very, very minor short-term consequences, but these
+won’t shift the story for more than a minute or two. The
+character has tried and almost succeeded.
+-5 to -9
+The failure is bad, but not a disaster. There will be some
+short-term consequences that might lead to some
+immediate difficulties — but nothing that the character
+can’t handle if they focus on them. The character has tried
+to do or has been forced to do something beyond their
+capabilities. And, not surprisingly, they’ve failed.
+-10 to -14
+The failure is profound. There will be consequences for
+this failure, likely in keeping with what would be expected,
+but that doesn’t mean that those consequences won’t be
+very bad. These consequences may strongly influence the
+course of the current play session. Generally, though, a
+character will only find themself failing this badly when
+they bite off more than they can probably chew — or
+because of the cruelty of the GM.
+-15 or lower
+The failure is staggering and catastrophic. There will be
+both immediate and long-term consequences for this
+failure, above and beyond what might be expected. These
+consequences might lead to serious changes in the course
+of the long-term arc of the story — especially because
+the character should only find themselves failing this
+badly through total recklessness or because the GM has
+purposefully put them in a staggeringly difficult situation.
+PAGE 33
+
+Exploding Rolls and Narrative
+When you roll the highest value of the die and thus roll again (when the roll
+“explodes”), the narrative should reflect that you have done something
+beyond what you could accomplish on your own. As the GM works with a player
+to narrate an “exploding” roll, the outcome should be influnced, in part, by
+external forces.
+For Example: Take Tricia from the previous example, the character being
+interrogated. She has a Grit stat of d6 and needs a 12. Since her maximum
+possible Grit roll is a 6, she will need external forces to intercede for her to
+succeed. Instead of the 3 she rolled in the previous example, she rolled
+a 6 on her first roll. She rolls again, getting a 5, and adds that roll to the
+first result, making her total 11. She only fails by 1, meaning that there are
+very, very minor short-term consequences. Tricia holds out long enough
+to give her friends time to do what they need to do — but the govern-
+ment agents show up just as they’re finishing. Tricia’s friends then have
+to flee quickly, making checks to ensure that they escape. Narratively,
+you could say that Tricia holds up as well as she possibly could, and there
+is something else that happens to prevent her from failing badly. Just as
+Tricia reaches her limit and is about to tell the agent what he wants to
+know, that agent gets called out of the room by a supervisor, buying Tri-
+cia some time to collect herself.
+Or perhaps it’s Penelope who is trying to run away from a group of
+government agents who are pursuing her on foot. She has a Flight stat of
+d8, and the GM sets the difficulty at 12: impressive, but certainly possible
+for someone skilled. She rolls an 8 on her first roll, then 6 on her next roll
+for a total of 14 — a success! Perhaps, as she’s running from the agents, a
+gate comes down, separating them. Perhaps as she’s running she knocks
+over and spills a container of motor oil, on which the pursuing agents
+then slip and fall, allowing her to escape. Whatever the outcome, it’s not
+that Penelope simply outruns them.
+Combat Encounters
+Combat in this game functions in the same way as other stat checks, though
+sometimes you will be rolling against another character to determine success
+or failure.
+As with the other checks in the game, combat can be resolved in multiple
+ways. Suppose you are about to be physically attacked. You could stand firm
+and take the hit (Brawn check). You could attack first and hope to be a better
+fighter (Fight check). You could try to talk the attacker out of it before the
+punches start flying (very difficult Charm check). You could try to intimidate
+the attacker from carrying out the assault (Brawn check or very difficult Grit
+check). You could run (Flight check) or stand your ground and dodge the
+punches (difficult Flight check).
+For combat between two player characters, the GM must confirm that both
+players are comfortable with their characters combating each other. Because
+of the possible consequences of in-game physical violence, if both players do
+not agree to it, the story will need to take a different direction.
+PAGE 34
+
+Physical Damage: Physical attacks are more direct combat, either a fistfight or,
+if things have gotten really bad, knives and bats.
+Roll the attacker’s Fight against the defender’s Brawn (if they’re planning to
+stay and fight back) or Flight (if they’re planning to dodge or flee). Presumably,
+in a physical fight, both characters will be attacking each other, and assuming
+that’s the case, roll separate attack and defense for each character.
+At the GM’s discretion, weapons like knives, baseball bats, and so forth might
+lead to successful hand-to-hand hit being treated like a projectile hit — or
+a slingshot or thrown object might be treated like a hand-to-hand hit. Still,
+whether the hit occurs or not should be calculated the same way.
+Remember, there are no safe fights in this game. Any time physical conflict
+occurs, a character might die. Once players decide to attack each other, a
+misplaced blow could hit a temple or a throat. There are no “pulled punches”
+or “called shots.” Every fight could be fatal. That said, of course the GM should
+allow a playful (or even somewhat aggressive) shove or a nuggie — or even
+somewhat hostile wrestling — without risk of anything serious.
+Projectile Damage: Most of the time in the game, projectiles will take the form
+of guns, which are terribly dangerous for all characters. But, children some-
+times throw rocks or have bows and arrows, which could land just right and
+be bad — but most likely won’t be all that bad. Keep in mind, though, that all
+projectile weapons are potentially lethal.
+When projectile combat occurs, roll the attacker’s Fight against the defender’s
+appropriate stat (likely Flight or Brawn, depending on whether the character
+is diving out of the way or taking the shot). If both characters are shooting or
+throwing at each other, roll separate attack and defense for each character.
+Remember, high differences between attack and defense with projectiles are
+much more dangerous than the same difference for physical combat.
+Injuries & Death
+During the course of the game, one or more of the characters will likely be
+injured. In this game, there are no hit points — but none of you are immortal.
+Far from it. Compared to the forces you will probably come into contact with,
+you’re exceptionally fragile. A well-aimed bullet from a government agent, the
+quick flick of a monster’s jaws, or a telekinetic character could end things in a
+moment.
+In this game, violence should never be without consequence. Rather than
+trading blow after blow, stat rolls and applicable skill rolls should determine
+the outcome of a fight before it starts. Players and the GM should then narrate
+the outcome. The difference between the rolls (and applicable modifications)
+should determine the amount of damage that a player sustains (refer to chart
+below) and who gains narrative control over the encounter.
+PAGE 35
+
+Result of Rolls
+(with applicable modifiers) 
+Narrative Result
+defender’s roll
+is greater than
+or equal to
+attacker’s roll
+Narrative Control: The defender narrates the outcome.
+Effect: The defender is uninjured; the projectiles miss
+or the blows don’t land or hurt them enough to matter.
+attacker’s roll
+is greater by
+1 to 3
+Narrative Control: The attacker explains how they
+attack, and the defender narrates what they do to
+mitigate the harm to them.
+Effect: The defender is hurt, but only temporarily; the
+bullet grazes them, but they’re okay; the punch stuns
+them, but they can shake it off.
+attacker’s roll
+is greater by
+4 to 6
+Narrative Control: The attacker explains their attack,
+and the defender explains how they respond. The
+attacker then explains how this barely mitigates the
+harm.
+Effect: The defender is fairly hurt; the bullet hits them
+and they need medical attention soon to prevent it
+from causing permanent damage; they’re dazed and
+likely concussed, but they can keep going; their ribs are
+going to hurt for a few days and breathing might sting
+for a few hours.
+attacker’s roll
+is greater by
+7 to 9
+Narrative Control: The attacker explains their at-
+tack, and the defender explains how they respond.
+The attacker can alter any of these details as the
+defender explains them. Then, the attacker explains
+how this response fails to prevent harm.
+Effect: The defender is badly hurt; the bullet hits them
+dead on, and they’re losing a lot of blood and need
+professional care immediately or they’ll die; they’re
+unconscious and will be badly concussed when they
+wake up; the bone is broken.
+attacker’s roll
+is greater by
+10 or more
+Narrative Control: The attacker has full control over
+the narrative. They explain what the defender does
+in response to the attack — and how ineffective this
+response is.
+Effect: The defender is dead or quite nearly dead;
+the bullet hits them between the eyes and nothing
+can save them; they’re beaten so badly that only
+immediate medical attention can help — but there will
+be permanent effects.
+PAGE 36
+
+For Example: Elena and Jordan get into a physical fight over the car
+keys, since Elena thinks that they need to drive away and Jordan thinks
+that they need to stay and wait for their friends to get back. Both players
+agree that they’re comfortable with physical combat and that Jordan is
+going to attack Elena to try to take the keys from her. Jordan rolls their
+Fight (d12) and gets a 7. In response, Elena rolls her Brawn (d8) to see
+how bad the damage is to her. She rolls a 6, a difference of 1. Elena will
+be injured, but not badly. Since the fighting is mutual, Elena rolls her
+Fight (d10) and gets a 3. Jordan rolls their Brawn (d20), since they’re
+taking the hit, and gets a 9. Jordan won’t be injured, since their roll is
+greater than Elena’s attack roll.
+At this point, they narrate what happens. Jordan describes that they
+try to sucker-punch Elena, but Elena says that she notices at the last
+second and moves her head to avoid taking too much of a hit. She then
+says that she swings back, but because Elena was startled, Jordan, the
+better fighter, is able to easily deflect the blow and land a few shots to
+Elena’s ribs, causing her to drop the key. While Elena is stunned, Jordan
+takes the key a
