@@ -1,7 +1,11 @@
 #!/usr/bin/env npx tsx
 /**
- * Flow simulator CLI. Run: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]
+ * Flow simulator CLI (DT / flow-simulator-cli).
+ * Run: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]
+ * Optional subcommand: npm run simulate -- flow <path>  (same as without "flow")
  * Validate only: npm run simulate -- validate <path-to-flow.json>
+ *
+ * @see .specify/specs/flow-simulator-cli/spec.md
  */
 
 import * as fs from 'fs'
@@ -9,6 +13,7 @@ import * as path from 'path'
 import { simulateFlow } from '../src/lib/simulation/simulateFlow'
 import { getSimulatedActorRole } from '../src/lib/simulation/actors'
 import { validateFlowSchema } from '../src/lib/simulation/validateFlowSchema'
+import { SIMULATE_SUBCOMMANDS } from '../src/lib/simulation/integrationContract'
 import type { FlowJSON } from '../src/lib/simulation/types'
 
 const DEFAULT_ACTOR_CAPS: Record<string, string[]> = {
@@ -29,14 +34,20 @@ function loadFlow(filePath: string): FlowJSON {
 }
 
 function parseArgs(args: string[]) {
-  const jsonMode = args.includes('--json')
-  const verboseMode = args.includes('--verbose')
-  const actorIdx = args.indexOf('--actor')
-  const actorId = actorIdx >= 0 ? args[actorIdx + 1] : 'default'
-  const seedIdx = args.indexOf('--seed')
-  const seed = seedIdx >= 0 && args[seedIdx + 1] ? parseInt(args[seedIdx + 1], 10) : undefined
-  const validateOnly = args[0] === 'validate'
-  const positional = args.filter((a, i) => {
+  let rest = [...args]
+  // Optional unified subcommand: `flow` (explicit no-op alias for tooling that passes subcommands)
+  if (rest[0] === 'flow' && rest[1] !== undefined && !rest[1].startsWith('--')) {
+    rest = rest.slice(1)
+  }
+
+  const jsonMode = rest.includes('--json')
+  const verboseMode = rest.includes('--verbose')
+  const actorIdx = rest.indexOf('--actor')
+  const actorId = actorIdx >= 0 ? rest[actorIdx + 1] : 'default'
+  const seedIdx = rest.indexOf('--seed')
+  const seed = seedIdx >= 0 && rest[seedIdx + 1] ? parseInt(rest[seedIdx + 1], 10) : undefined
+  const validateOnly = rest[0] === 'validate'
+  const positional = rest.filter((a, i) => {
     if (a.startsWith('--')) return false
     if (actorIdx >= 0 && i === actorIdx + 1) return false
     if (seedIdx >= 0 && i === seedIdx + 1) return false
@@ -51,9 +62,11 @@ function main() {
   const { jsonMode, verboseMode, actorId, seed, validateOnly, paths } = parseArgs(args)
 
   if (paths.length === 0) {
-    console.error('Usage: npm run simulate -- [validate] <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]')
+    console.error('Usage: npm run simulate -- [flow] [validate] <path-to-flow.json> ... [--verbose] [--json] [--actor <id>] [--seed <n>]')
     console.error('Example: npm run simulate -- fixtures/flows/orientation_linear_minimal.json --verbose')
-    console.error('Validate: npm run simulate -- validate fixtures/onboarding/bruised-banana/campaign_intro.json')
+    console.error('Example: npm run simulate -- flow fixtures/onboarding/bruised-banana/campaign_intro.json --json')
+    console.error('Validate schema: npm run simulate -- validate fixtures/onboarding/bruised-banana/campaign_intro.json')
+    console.error(`Shared subcommands (integration contract): ${SIMULATE_SUBCOMMANDS.join(', ')}`)
     process.exit(1)
   }
 
@@ -113,22 +126,21 @@ function main() {
       const status = result.status.toUpperCase()
       console.log(`${path.basename(p)}: ${status}`)
     } catch (err) {
-      console.error(`${p}: ERROR ${err instanceof Error ? err.message : String(err)}`)
-      if (jsonMode) {
-        results.push({
-          path: p,
-          result: {
-            status: 'fail',
-            flow_id: '',
-            visited_nodes: [],
-            events_emitted: [],
-            state_changes: [],
-            warnings: [],
-            errors: [err instanceof Error ? err.message : String(err)],
-            completion_reached: false,
-          },
-        })
-      }
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`${p}: ERROR ${msg}`)
+      results.push({
+        path: p,
+        result: {
+          status: 'fail',
+          flow_id: '',
+          visited_nodes: [],
+          events_emitted: [],
+          state_changes: [],
+          warnings: [],
+          errors: [msg],
+          completion_reached: false,
+        },
+      })
     }
   }
 

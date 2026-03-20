@@ -12,11 +12,11 @@ Bars-engine needs a lightweight simulation environment for quest flows and onboa
 
 ## Checklist
 
-- [ ] Phase 1: Flow simulator core (simulateFlow, CLI, flags)
-- [ ] Phase 2: Bruised Banana fixtures (3 JSON files, all pass)
-- [ ] Phase 3: Bounded actor scaffold (roles, getSimulatedActorRole)
-- [ ] Phase 4: Tests (fixtures pass, failure cases, actor constraints)
-- [ ] npm run build and npm run check
+- [x] Phase 1: Flow simulator core (simulateFlow, CLI, flags)
+- [x] Phase 2: Bruised Banana fixtures (3 JSON files, all pass)
+- [x] Phase 3: Bounded actor scaffold (roles, getSimulatedActorRole)
+- [x] Phase 4: Tests (fixtures pass, failure cases, actor constraints)
+- [x] Run `npm run test:simulation`; use `npm run check` when changing app code
 
 ## Reference
 

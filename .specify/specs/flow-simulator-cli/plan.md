@@ -47,21 +47,23 @@ Implement a CLI tool for simulating quest flows and fixtures; add Bruised Banana
 - **Sandbox isolation**: When used by agents, simulator uses in-memory or isolated DB; never production.
 - **Integration contract**: Define shared protocol with transformation-simulation-harness and npc-agent-game-loop; unified CLI subcommands or shared config.
 
-## File Impacts
+## File Impacts (implemented)
 
-| File | Action |
-|------|--------|
-| `src/features/simulation/core/simulateFlow.ts` | New — simulation engine |
-| `src/features/simulation/cli/index.ts` | New — CLI entry |
-| `src/features/simulation/actors/roles.ts` | New — role definitions |
-| `src/features/simulation/types/index.ts` | New — shared types |
-| `fixtures/onboarding/bruised-banana/*.json` | New — fixtures |
-| `scripts/simulate-flow.ts` | New — CLI script |
-| `package.json` | Add `simulate` script |
-| `docs/simulation/flow-json-schema.md` | New (Phase 5) — fixture schema contract |
-| `fixtures/onboarding/bruised-banana/bar_creation.json` | New (Phase 5) — BAR creation flow |
-| `fixtures/onboarding/bruised-banana/quest_completion.json` | New (Phase 5) — quest completion flow |
-| `src/lib/simulation/sandbox.ts` | New (Phase 5) — sandbox isolation for agents |
+| Location | Purpose |
+|----------|---------|
+| `src/lib/simulation/simulateFlow.ts` | Simulation engine |
+| `src/lib/simulation/types.ts` | FlowJSON, SimulationResult, inputs |
+| `src/lib/simulation/actors.ts` | `getSimulatedActorRole` — Librarian, Collaborator, Witness |
+| `src/lib/simulation/simulateFlowWithActors.ts` | Level-2 scaffold |
+| `src/lib/simulation/proposeActorAction.ts` | Bounded proposals |
+| `src/lib/simulation/validateFlowSchema.ts` | Pre-run fixture validation |
+| `src/lib/simulation/integrationContract.ts` | Shared subcommand / config contract |
+| `src/lib/simulation/sandbox.ts` | Agent isolation notes / helpers |
+| `scripts/simulate-flow.ts` | CLI — `npm run simulate` |
+| `fixtures/onboarding/bruised-banana/*.json` | BB golden paths + bar_creation / quest_completion |
+| `fixtures/flows/*.json` | Orientation / handoff fixtures |
+| `docs/simulation/flow-json-schema.md` | Fixture schema |
+| `docs/architecture/flow-simulator-cli.md` | CLI documentation |
 
 ## Dependencies
 
@@ -69,3 +71,9 @@ Implement a CLI tool for simulating quest flows and fixtures; add Bruised Banana
 - quest-bar-flow-grammar (existing)
 - orientation-golden-paths (existing)
 - [STRAND_CONSULT.md](./STRAND_CONSULT.md) — run `npm run strand:consult:dq` to refresh
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-03-20 | **DT closed in repo:** tasks aligned to `src/lib/simulation/`; CLI documents `SIMULATE_SUBCOMMANDS`; simulation errors always yield exit code 1; optional `flow` subcommand on CLI. |

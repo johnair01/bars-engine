@@ -16,15 +16,20 @@ The CLI allows a developer to run flows and inspect whether they:
 
 ## Initial CLI Commands
 
+This repo uses **`npm run simulate`** (see `scripts/simulate-flow.ts`). Equivalent: `make simulate FILE=<path>`.
+
 | Command | Description |
 |---------|-------------|
-| `bars simulate <path-to-flow-json>` | Simulate one flow |
-| `bars simulate fixtures/onboarding/bruised-banana/*` | Simulate multiple fixtures |
-| `bars simulate <path> --actor human_participant` | Simulate with actor context |
-| `bars simulate <path> --verbose` | Verbose output (traversal log) |
-| `bars simulate <path> --json` | Emit JSON report for CI/tooling |
+| `npm run simulate -- <path-to-flow-json>` | Simulate one flow |
+| `npm run simulate -- flow <path>` | Same as above (explicit subcommand for unified CLI tooling) |
+| `npm run simulate:bb` | Run all three Bruised Banana onboarding fixtures |
+| `npm run simulate -- <a.json> <b.json>` | Simulate multiple fixtures |
+| `npm run simulate -- <path> --actor librarian` | Simulate with bounded role capabilities (`librarian`, `collaborator`, `witness`, …) |
+| `npm run simulate -- <path> --verbose` | Verbose output (traversal log) |
+| `npm run simulate -- <path> --json` | Emit JSON report for CI/tooling |
+| `npm run simulate -- validate <path>` | Validate flow JSON schema only |
 
-If the project uses a different CLI entry (e.g. `npm run simulate`), adapt accordingly.
+Legacy/doc name `bars simulate` maps to the same script if you add a shell alias.
 
 ## Simulator Inputs
 

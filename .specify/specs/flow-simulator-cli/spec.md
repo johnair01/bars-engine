@@ -218,6 +218,10 @@ Adapt if project structure differs (e.g. `src/lib/simulation/`).
 - Build complex memory systems
 - Build rich personality engines
 
+## Implementation status
+
+**Shipped in repo (Backlog DT, March 2026).** Engine: `src/lib/simulation/simulateFlow.ts`; CLI: `npm run simulate` → `scripts/simulate-flow.ts`; Bruised Banana fixtures under `fixtures/onboarding/bruised-banana/`; roles in `actors.ts`. See `tasks.md` (all phases complete). Future: wire `quest` / `agent` / `campaign` subcommands when transformation-simulation-harness and npc-agent-game-loop CLIs land.
+
 ## References
 
 - [STRAND_CONSULT.md](./STRAND_CONSULT.md) — Game Master consultation; run `npm run strand:consult:dq` to refresh

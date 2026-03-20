@@ -1,4 +1,4 @@
-.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed seed-sync
+.PHONY: help dev dev-local dev-vercel switch-local switch-vercel db-local db-seed smoke check build seed seed-sync simulate
 
 # Default: show help
 help:
@@ -20,6 +20,10 @@ help:
 	@echo "📦 Build & Check:"
 	@echo "  make check           Lint + type check"
 	@echo "  make build           Production build"
+	@echo ""
+	@echo "🧪 Flow simulator (DT):"
+	@echo "  make simulate FILE=fixtures/flows/orientation_linear_minimal.json"
+	@echo "  (same as npm run simulate -- \$\$FILE)"
 	@echo ""
 	@echo "🌱 Ouroboros Seeds:"
 	@echo "  make seed-sync SPEC=<feature>   Copy latest seed into .specify/specs/<feature>/seed.yaml"
@@ -69,6 +73,11 @@ check:
 
 build:
 	npm run build
+
+# Flow simulator CLI — requires FILE=path/to/flow.json
+simulate:
+	@if [ -z "$(FILE)" ]; then echo "Usage: make simulate FILE=fixtures/flows/orientation_linear_minimal.json"; exit 1; fi
+	npm run simulate -- "$(FILE)"
 
 # 🌱 Ouroboros Seeds
 # Usage: make seed-sync SPEC=my-feature-name

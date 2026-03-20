@@ -28,7 +28,7 @@ High-leverage items aligned with app direction:
 3. **EJ** — Admin Agent Forge. 3-2-1 Forge, distortion gate, vibeulon routing. No deps.
 4. **EM** — CYOA Certification Quests. Quality gate for onboarding.
 5. **DL** — Campaign Map Phase 1. Extends gameboard; Layer 1–3.
-6. **DT** — Flow Simulator CLI. Bruised Banana fixtures; simulation harness (folded former DQ).
+6. **DT** — Flow Simulator CLI — **[x] Done** (March 2026): `npm run simulate`, BB fixtures, actor roles; see `flow-simulator-cli/tasks.md`.
 
 ## Watch Out
 
