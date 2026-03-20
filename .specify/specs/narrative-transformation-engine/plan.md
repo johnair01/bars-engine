@@ -1,67 +1,46 @@
 # Plan: Narrative Transformation Engine v0
 
+**Strategy:** [STRATEGIC_ALIGNMENT.md](./STRATEGIC_ALIGNMENT.md) — registry owns moves + `assembleQuestSeed`; ED is text → `ParsedNarrative` → registry.
+
 ## Overview
 
-Implement a bounded transformation pipeline: Narrative Input → Parse → Boundary Detection → Transformation Move Generation → Emotional Alchemy Link → Quest Seed. Use heuristic parsing and a small move catalog. Integrate with Emotional First Aid, 321 Shadow, and quest grammar without overbuilding.
+Bounded pipeline: **raw text → parse + lock** (ED) → **move selection + quest seed** ([transformation-move-registry](../transformation-move-registry/spec.md)). No second move catalog.
 
 ## Phases
 
-### Phase 1: Foundation (Parse + Lock Detection)
+### Phase 1 — Parse + lock *(done)*
 
-- Add `src/lib/narrative-transformation/` module.
-- Implement heuristic parser: extract actor, state, object from patterns like "I am X of Y", "I can't X", "I'm just this way".
-- Implement lock detector: identity, emotional, action, possibility.
-- Define types: `ParsedNarrative`, `LockType`.
-- Unit tests for parse and lock detection.
+- `src/lib/narrative-transformation/`: `parse.ts`, `lockDetection.ts`, `types.ts`, tests.
 
-### Phase 2: Transformation Moves
+### Phase 2 — Registry glue
 
-- Define move catalog: Perspective Shift, Boundary Disruption, Energy Reallocation.
-- Implement move generator: given parsed narrative + lock type, return candidate moves.
-- Define `TransformationMove` type.
-- Unit tests for move generation.
+- **`moves.ts` (thin):** Map `NarrativeParseResult` + optional overrides → default **registry `move_id` bundle** (wake/clean/grow/show/integrate) using `getMovesByLockType` / `getMovesByStageAndLock` — not new named moves.
+- **`seedFromNarrative.ts` (or `questSeed.ts`):** Call `assembleQuestSeed` from `@/lib/transformation-move-registry` with parsed narrative + lock + bundle; re-export or narrow type for callers.
+- Unit tests: selection + seed shape (deterministic fixtures).
 
-### Phase 3: Emotional Alchemy + 3-2-1 Link
+### Phase 3 — Hints + HTTP *(shipped; optional for product)*
 
-- Map state → emotional channel (fear, shame, anger, confusion).
-- Generate alchemy prompts (felt sense, somatic, WAVE).
-- Generate optional 3-2-1 prompts (3rd/2nd/1st person).
-- Integrate with existing `emotional-alchemy.ts` and 321 tool.
+- **`alchemyHints.ts`:** emotion channel, `deriveMovementPerNode`, 321-style person triad; registry `assembleQuestSeed(..., { renderContext })` for template placeholders.
+- **API:** `POST /api/narrative-transformations/parse` | `/full`.
+- **Docs:** `docs/architecture/narrative-transformation-engine.md` (includes example).
 
-### Phase 4: Quest Seed Generation
-
-- Implement quest seed generator: reflection, alchemy, action experiment, BAR prompt.
-- Ensure output compatible with quest grammar and BAR creation.
-- Define `QuestSeed` type.
-
-### Phase 5: API + Integration
-
-- Add server actions or API routes: parse, moves, quest-seed, full.
-- Wire into Emotional First Aid intake (optional: suggest transformation pathway when issueText present).
-- Documentation: architecture, API, examples.
-
-## Implementation Layout
+## Layout (target)
 
 ```
 src/lib/narrative-transformation/
   index.ts
+  types.ts
   parse.ts
   lockDetection.ts
-  moves.ts
-  alchemyLink.ts
-  quest321.ts
-  questSeed.ts
-  types.ts
+  moves.ts              # default move-id selection → registry
+  seedFromNarrative.ts  # assembleQuestSeed wrapper
+  alchemyHints.ts       # channel + movement + 321 triad
+  fullPipeline.ts       # parse + hints + seed (API)
   __tests__/
-    parse.test.ts
-    lockDetection.test.ts
-    moves.test.ts
-    questSeed.test.ts
 ```
 
-## Out of Scope (v0)
+## Out of scope
 
-- Full NLP or linguistic theory.
-- Conversational agent or multi-turn inference.
-- Rich therapy dialogue.
-- Massive ontology of psychological states.
+- Duplicate WCGS / “Perspective Shift” catalogs in ED.
+- Full NLP, multi-turn dialogue, therapy UX.
+- Campaign automation, NPC turn logic, deck state (other specs).

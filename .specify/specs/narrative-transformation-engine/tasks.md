@@ -1,33 +1,29 @@
 # Tasks: Narrative Transformation Engine v0
 
-## Phase 1: Foundation
+**Rule:** Moves and quest-arc assembly = [transformation-move-registry](../transformation-move-registry/spec.md) only. ED adds **text → parsed narrative → registry inputs**.
 
-- [ ] **T1.1** Create `src/lib/narrative-transformation/types.ts` with `ParsedNarrative`, `LockType`, `TransformationMove`, `QuestSeed`.
-- [ ] **T1.2** Implement `parse.ts` heuristic parser (actor, state, object).
-- [ ] **T1.3** Implement `lockDetection.ts` (identity, emotional, action, possibility).
-- [ ] **T1.4** Add `__tests__/parse.test.ts` and `__tests__/lockDetection.test.ts`.
+## Phase 1: Parse + lock
 
-## Phase 2: Transformation Moves
+- [x] **T1.1** `types.ts` — narrative types + re-export registry `ParsedNarrative` / `LockType`; slim API types for moves/seed.
+- [x] **T1.2** `parse.ts` — heuristic parser.
+- [x] **T1.3** `lockDetection.ts` — lock heuristics (registry `*_lock` types).
+- [x] **T1.4** `__tests__/parse.test.ts`, `lockDetection.test.ts`.
 
-- [ ] **T2.1** Implement `moves.ts` with move catalog (Perspective Shift, Boundary Disruption, Energy Reallocation).
-- [ ] **T2.2** Implement move generator: `generateMoves(parsed, moveTypes?)`.
-- [ ] **T2.3** Add `__tests__/moves.test.ts`.
+## Phase 2: Registry glue (quest seed from text)
 
-## Phase 3: Emotional Alchemy + 3-2-1
+- [x] **T2.1** `moves.ts` — `selectDefaultMoveIds(parsed: NarrativeParseResult, opts?)` using registry filters (`getMovesByLockType`, etc.); stable defaults when lock missing.
+- [x] **T2.2** `seedFromNarrative.ts` — `buildQuestSeedFromText(rawText, opts?)` → parse → lock → `selectDefaultMoveIds` → `assembleQuestSeed`.
+- [x] **T2.3** `__tests__/seedFromNarrative.test.ts` — golden assertions on seed shape / move IDs for fixed inputs.
+- [x] **T2.4** Export pipeline from `index.ts`; `npm run test:narrative-transformation` runs new tests.
 
-- [ ] **T3.1** Implement `alchemyLink.ts`: state → channel, alchemy prompts.
-- [ ] **T3.2** Implement `quest321.ts`: 3rd/2nd/1st person prompts.
-- [ ] **T3.3** Ensure compatibility with `emotional-alchemy.ts` and 321 tool.
+## Phase 3: Optional / future *(not v0 blockers)*
 
-## Phase 4: Quest Seed
+- [x] **T3.1** Alchemy / 321 hints — `alchemyHints.ts`: `inferEmotionChannel`, `buildTransformationHints` (`deriveMovementPerNode` + 321 triad); `assembleQuestSeed` gains optional `renderContext` in registry.
+- [x] **T3.2** `POST /api/narrative-transformations/parse` and `/full` (JSON in/out; no auth v0).
+- [x] **T3.3** `docs/architecture/narrative-transformation-engine.md`.
+- [x] **T3.4** Example section in that doc (no OpenAPI until product needs it).
 
-- [ ] **T4.1** Implement `questSeed.ts`: reflection, alchemy, action experiment, BAR prompt.
-- [ ] **T4.2** Add `__tests__/questSeed.test.ts`.
+## Removed / superseded *(do not implement as written)*
 
-## Phase 5: API + Docs
-
-- [ ] **T5.1** Add server actions in `src/actions/narrative-transformation.ts` (or API routes).
-- [ ] **T5.2** Create `docs/architecture/narrative-transformation-engine.md`.
-- [ ] **T5.3** Create `docs/architecture/narrative-transformation-api.md`.
-- [ ] **T5.4** Create `docs/examples/narrative-transformation-example.md` and `transformation-quest-example.md`.
-- [ ] **T5.5** Optional: wire into Emotional First Aid intake for transformation pathway suggestion.
+- ~~Separate ED move catalog~~ → use **CANONICAL_MOVES** + `assembleQuestSeed`.
+- ~~Standalone `questSeed.ts` duplicating registry arc~~ → **`seedFromNarrative.ts`** wraps registry only.

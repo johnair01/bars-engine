@@ -1,222 +1,60 @@
-# Narrative Transformation Engine v0
+# Narrative Transformation Engine
 
-## Purpose
-
-The engine converts a player's stuck narrative into a playable transformation loop. It parses structure, detects lock types, generates transformation moves, links to Emotional Alchemy and 3-2-1, and produces quest seeds. Bounded psychotech—not a therapy engine.
+**Spec:** [.specify/specs/narrative-transformation-engine/spec.md](../../.specify/specs/narrative-transformation-engine/spec.md)  
+**Strategy:** [.specify/specs/narrative-transformation-engine/STRATEGIC_ALIGNMENT.md](../../.specify/specs/narrative-transformation-engine/STRATEGIC_ALIGNMENT.md)
 
 ## Pipeline
 
-```mermaid
-flowchart LR
-    Input[Narrative Input] --> Parse[Narrative Parse]
-    Parse --> Boundary[Boundary Detection]
-    Boundary --> Moves[Transformation Move Generation]
-    Moves --> Alchemy[Emotional Alchemy Link]
-    Alchemy --> Quest[Quest/Action Generation]
+```text
+rawText
+  → parseNarrative (actor, state, object, negations, lock_type)
+  → selectDefaultMoveIds (WCGS slots → registry move_id)
+  → assembleQuestSeed (transformation-move-registry)
 ```
 
----
+Optional enrichments (Phase 3):
 
-## Part 1: Narrative Structure Model
+- **`buildTransformationHints`** — registry `EmotionChannel` (keyword heuristic), `deriveMovementPerNode` from [emotional-alchemy.ts](../../src/lib/quest-grammar/emotional-alchemy.ts), and a **321-style person triad** (third / second / first) for UI copy — not a full 321 session.
+- **`renderContext`** on `assembleQuestSeed` — fills `{emotion_channel}`, `{nation_name}`, `{archetype_name}` in move prompt templates.
 
-### Minimal Structure
+## Code
 
-A stuck narrative is parsed into:
+| Module | Role |
+|--------|------|
+| `src/lib/narrative-transformation/parse.ts` | Heuristic parse |
+| `src/lib/narrative-transformation/lockDetection.ts` | Lock type |
+| `src/lib/narrative-transformation/moves.ts` | Default move IDs |
+| `src/lib/narrative-transformation/seedFromNarrative.ts` | `buildQuestSeedFromText` |
+| `src/lib/narrative-transformation/alchemyHints.ts` | Channel + movement + 321 strings |
+| `src/lib/narrative-transformation/fullPipeline.ts` | `runNarrativeTransformationFull` |
 
-| Field | Description |
-|-------|-------------|
-| **actor** | Who the statement is about (usually "I") |
-| **state** | Emotion, condition, or identity position |
-| **object** | What the state is attached to |
-| **negations** | Optional negation markers |
-| **confidence** | Parse confidence (0–1) |
+**Canonical moves:** [transformation-move-registry](../../src/lib/transformation-move-registry/) — ED does not duplicate the catalog.
 
-### Example
+## HTTP (optional)
 
-```
-Input: I am afraid of failing
-actor = I
-state = afraid
-object = failing
-```
+| Method | Path | Body | Response |
+|--------|------|------|----------|
+| `POST` | `/api/narrative-transformations/parse` | `{ "rawText": string }` | `{ parse }` |
+| `POST` | `/api/narrative-transformations/full` | `{ "rawText": string, "archetypeKey"?: string, ... }` | `{ parse, hints, questSeed }` |
 
-### Parsed Object Contract
+No auth in v0; call from server or lock down behind admin when exposing publicly.
 
-```json
-{
-  "raw_text": "I am afraid of failing",
-  "actor": "I",
-  "state": "afraid",
-  "object": "failing",
-  "negations": [],
-  "confidence": 0.78
-}
+## Tests
+
+```bash
+npm run test:narrative-transformation
 ```
 
-v0 uses heuristic parsing, not full NLP.
+## Example (library)
 
----
+```ts
+import { runNarrativeTransformationFull } from '@/lib/narrative-transformation/fullPipeline'
 
-## Part 2: Boundary / Lock Detection
-
-### Lock Conditions
-
-- Actor fused with state
-- State fused with object
-- Certainty framing
-- Repeated identity claim
-- Inability claim
-- Problem described as fixed reality
-
-### Lock Types
-
-| Type | Example |
-|------|---------|
-| **identity** | "I'm just this way" |
-| **emotional** | "I am afraid of failing" |
-| **action** | "I can't change jobs" |
-| **possibility** | "There's no way out" |
-
----
-
-## Part 3: Transformation Moves
-
-### 1. Perspective Shift
-
-Change viewpoint or pronoun position.
-
-- Third-person observation
-- Second-person dialogue
-- First-person reintegration
-- Actor/object inversion
-
-### 2. Boundary Disruption
-
-Challenge or loosen the fixed structure.
-
-- Inversion
-- Negation
-- Contradiction
-- Alternate framing
-- Reframing question
-
-### 3. Energy Reallocation
-
-Translate the locked state into emotional movement.
-
-- fear → curiosity
-- shame → protection
-- anger → boundary signal
-- confusion → possibility
-
-### Move Output Contract
-
-```json
-{
-  "move_id": "perspective_shift_01",
-  "move_type": "perspective_shift",
-  "prompt": "What is failure afraid of that is not you?",
-  "target_effect": "loosen actor-object fusion",
-  "source_parse_id": "parse_123"
-}
+const { parse, hints, questSeed } = runNarrativeTransformationFull(
+  "I'm afraid I'll disappoint everyone.",
+  { archetypeKey: 'truth-seer' }
+)
+// hints.emotion_channel → 'fear'
+// hints.movement_per_node →  six-beat translate/transcend hint
+// questSeed.arc → wake/clean/grow/show/integrate prompts
 ```
-
-Each move has: move_id, move_type, purpose, input requirements, output pattern, safety constraints.
-
----
-
-## Part 4: Emotional Alchemy Link
-
-Map narrative state into emotional processing prompts.
-
-| Narrative | State | Alchemy Prompt |
-|-----------|-------|----------------|
-| I am afraid of failing | fear | Where do you feel the fear in your body? |
-| I can't ask for help | shame | What does shame protect you from? |
-| I'm stuck | confusion | Where is the stuckness located? |
-
-Compatible with existing Emotional Alchemy system (translate/transcend, satisfaction/dissatisfaction). Invites WAVE and somatic metabolization.
-
----
-
-## Part 5: 3-2-1 / Shadow Work Link
-
-Optional pathway. Convert parsed narrative into 3-2-1 prompts:
-
-| Person | Purpose |
-|--------|---------|
-| **3rd** | Describe the feared object or shadowed figure |
-| **2nd** | Dialogue with it |
-| **1st** | Become it / reintegrate it |
-
-Example:
-
-```
-Raw: I am afraid of failing
-
-3: Failure is always watching me
-2: Failure, what are you trying to show me?
-1: I am the part that fears collapse and wants protection
-```
-
----
-
-## Part 6: Quest Generation Link
-
-Output shape:
-
-```json
-{
-  "quest_seed_type": "narrative_transformation",
-  "reflection_prompt": "What does failure protect you from?",
-  "alchemy_prompt": "Where do you feel fear in your body?",
-  "action_experiment": "Do one small action where imperfect completion is allowed.",
-  "bar_prompt": "Capture what you learned from taking this imperfect step."
-}
-```
-
-v0 produces quest seeds/templates, not full campaign quests.
-
----
-
-## Part 7: Safety / Scope Boundaries
-
-### Should
-
-- Help generate reflection and action structures
-- Support gameplay and personal development use cases
-- Remain bounded and inspectable
-
-### Should Not
-
-- Claim diagnostic authority
-- Auto-generate high-stakes mental health interventions
-- Force one interpretation of a player's narrative
-- Mutate player state invisibly
-
-### Favor
-
-- Prompts, options, structured quests, visible transformation steps
-
-### Avoid
-
-- Black-box psychoanalysis, hidden scoring, overstated certainty
-
----
-
-## Part 8: Constraints
-
-v0 should:
-
-- Use a small number of transformation moves
-- Prefer explicit structures over deep linguistic cleverness
-- Support quest seed generation, not full autonomous quest authoring
-- Integrate with BAR creation and Emotional Alchemy
-- Remain compatible with future template extraction
-
-Do not build:
-
-- Full conversational agent
-- Rich freeform therapy dialogue
-- Massive ontology of psychological states
-- Dynamic multi-turn inference engine

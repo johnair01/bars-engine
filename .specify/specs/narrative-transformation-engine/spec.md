@@ -1,5 +1,7 @@
 # Spec: Narrative Transformation Engine v0
 
+**Strategy:** How ED fits campaign automation, NPC moves, and decks vs registry overlap — see [STRATEGIC_ALIGNMENT.md](./STRATEGIC_ALIGNMENT.md).
+
 ## Purpose
 
 Add a bounded subsystem that converts a player's stuck narrative into a playable transformation loop. The engine parses narrative structure, detects lock types, generates transformation moves, links to Emotional Alchemy / 3-2-1, and produces quest seeds. Not a therapy engine—a psychotech gameplay layer for turning narrative rigidity into structured movement.
