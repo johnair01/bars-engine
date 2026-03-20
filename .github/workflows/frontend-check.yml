@@ -1,0 +1,29 @@
+# Lint, Prisma validate, type-check — same ritual as npm run check (strand: build-reliability).
+name: Frontend check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # prisma validate requires DATABASE_URL; does not need a running Postgres
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Check (generate + verify + lint + tsc)
+        run: npm run check
