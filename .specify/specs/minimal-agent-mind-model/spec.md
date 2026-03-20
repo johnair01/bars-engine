@@ -192,6 +192,10 @@ Agents request quests through the same pipeline used by players.
 - [canonical-archetypes](../../src/lib/canonical-archetypes.ts)
 - [game/nations](../../src/lib/game/nations.ts)
 
+## Implementation status
+
+**Shipped (March 2026):** Library at `src/lib/agent-mind/` — `createAgent`, narrative/action helpers, `simulateQuestForAgent` → transformation harness. Archetype field on state stores **playbook slug** (e.g. `truth-seer`) for pipeline compatibility; nation stores **display name** from `NATIONS`.
+
 ## References
 
 - [src/lib/simulation/actors.ts](../../src/lib/simulation/actors.ts) — bounded actor roles

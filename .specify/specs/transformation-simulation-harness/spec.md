@@ -115,11 +115,9 @@ bars simulate
 ### Examples
 
 ```bash
-bars simulate quest --narrative "I am afraid of failing"
-bars simulate quest --narrative "I'm overwhelmed by work"
-bars simulate agent --steps 10
-bars simulate campaign --agents 5 --steps 50
-bars simulate onboarding --campaign bruised-banana
+npm run simulate -- quest --narrative "I am afraid of failing"
+npm run simulate -- quest --narrative "I'm overwhelmed by work" --nation argyra --json
+# Planned: agent / campaign / onboarding subcommands
 ```
 
 ### Output
@@ -236,11 +234,16 @@ Log structure:
 - [transformation-move-registry](../transformation-move-registry/spec.md)
 - [transformation-encounter-geometry](../transformation-encounter-geometry/spec.md)
 - [archetype-influence-overlay](../archetype-influence-overlay/spec.md)
-- [minimal-agent-mind-model](../minimal-agent-mind-model/spec.md) (Phase 2+)
+- [minimal-agent-mind-model](../minimal-agent-mind-model/spec.md) — `simulateQuestForAgent` (library); CLI agent loop TBD
+
+## Implementation status
+
+**Quest mode (March 2026):** `src/lib/transformation-simulation/simulateQuest.ts`, CLI `npm run simulate -- quest ...`, optional `--log` → `simulation-logs/`. Agent / campaign / onboarding CLI modes not built yet.
 
 ## References
 
 - [src/lib/simulation/](../../src/lib/simulation/)
+- [src/lib/transformation-simulation/](../../src/lib/transformation-simulation/)
 - [src/lib/transformation-move-registry/](../../src/lib/transformation-move-registry/)
 - [src/lib/transformation-encounter-geometry/](../../src/lib/transformation-encounter-geometry/)
 - [scripts/simulate-flow.ts](../../scripts/simulate-flow.ts)

@@ -58,162 +58,27 @@ function userSafeError(error: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// Metal Nation MVP content (idempotent upsert)
+// Book extraction / library: metal nation anchor for NationMove rows
 // ---------------------------------------------------------------------------
 
-const METAL_NATION_NAME = 'Metal'
-
-export async function ensureMetalNationMoves() {
-  // Make this all-or-nothing: if the move tables don't exist yet (schema drift during deploy),
-  // we don't want to partially seed "Metal" into nations without the supporting tables.
-  return db.$transaction(async (tx) => {
-    // name is no longer @unique — find global (instanceId=null) Metal nation, upsert by id
-    let metalNation = await tx.nation.findFirst({
-      where: { name: METAL_NATION_NAME, instanceId: null },
-    })
-    if (metalNation) {
-      metalNation = await tx.nation.update({
-        where: { id: metalNation.id },
-        data: { description: 'Metal Nation. Standards, craft, clarity, recycling.' },
-      })
-    } else {
-      metalNation = await tx.nation.create({
-        data: {
-          name: METAL_NATION_NAME,
-          description: 'Metal Nation. Standards, craft, clarity, recycling.',
-          wakeUp: 'Call the Standard: Define the clarity BAR for what "good" means.',
-          cleanUp: 'Cut the Noise: Remove distraction and return to signal.',
-          growUp: 'Forge a Template: Turn craft into reusable form.',
-          showUp: 'Highlight the Craft: Name the prestige BAR and deliver it.',
-        },
-      })
-    }
-
-    const clarity = await tx.polarity.upsert({
-      where: { key: 'clarity' },
-      update: { name: 'Clarity', icon: 'compass' },
-      create: { key: 'clarity', name: 'Clarity', description: 'Reduce ambiguity into a standard.', icon: 'compass' }
-    })
-
-    const prestige = await tx.polarity.upsert({
-      where: { key: 'prestige' },
-      update: { name: 'Prestige', icon: 'medal' },
-      create: { key: 'prestige', name: 'Prestige', description: 'Highlight craft and raise the bar.', icon: 'medal' }
-    })
-
-    const framework = await tx.polarity.upsert({
-      where: { key: 'framework' },
-      update: { name: 'Framework', icon: 'tools' },
-      create: { key: 'framework', name: 'Framework', description: 'Turn lessons into reusable templates.', icon: 'tools' }
-    })
-
-  const emptyReq: RequirementsSchemaV1 = { version: 1, fields: [] }
-
-  const reforgeReq: RequirementsSchemaV1 = {
-    version: 1,
-    fields: [
-      { key: 'objectiveRewrite', label: 'Objective rewrite', type: 'string', required: true, minLength: 3, maxLength: 500 },
-      { key: 'collaboratorId', label: 'Collaborator', type: 'player_id', required: true },
-    ]
-  }
-
-  const moves: Array<{
-    key: string
-    name: string
-    description: string
-    isStartingUnlocked: boolean
-    appliesToStatus: string[]
-    requirementsSchema: RequirementsSchemaV1
-    effectsSchema: EffectsSchemaV1
-    polarityId: string
-    sortOrder: number
-  }> = [
-    {
-      key: 'metal_call_the_standard',
-      name: 'Call the Standard',
-      description: 'Generate a Clarity BAR: define the standard and reduce ambiguity.',
-      isStartingUnlocked: true,
-      appliesToStatus: ['active'],
-      requirementsSchema: emptyReq,
-      effectsSchema: { version: 1, barKind: 'clarity' },
-      polarityId: clarity.id,
-      sortOrder: 10,
-    },
-    {
-      key: 'metal_highlight_the_craft',
-      name: 'Highlight the Craft',
-      description: 'Generate a Prestige BAR: spotlight the craft and raise the bar.',
-      isStartingUnlocked: true,
-      appliesToStatus: ['active'],
-      requirementsSchema: emptyReq,
-      effectsSchema: { version: 1, barKind: 'prestige' },
-      polarityId: prestige.id,
-      sortOrder: 20,
-    },
-    {
-      key: 'metal_forge_a_template',
-      name: 'Forge a Template',
-      description: 'Generate a Framework BAR: turn craft into reusable template. (Locked by default in MVP.)',
-      isStartingUnlocked: false,
-      appliesToStatus: ['active'],
-      requirementsSchema: emptyReq,
-      effectsSchema: { version: 1, barKind: 'framework' },
-      polarityId: framework.id,
-      sortOrder: 30,
-    },
-    {
-      key: 'metal_reforge_the_relic',
-      name: 'Reforge the Relic',
-      description: 'Recycle a dormant quest back to ACTIVE with an objective rewrite and a collaborator.',
-      isStartingUnlocked: true, // MVP: keep unlocked to ensure recycling works
-      appliesToStatus: ['dormant'],
-      requirementsSchema: reforgeReq,
-      effectsSchema: { version: 1, setQuestStatus: 'active', barKind: 'framework' },
-      polarityId: framework.id,
-      sortOrder: 90,
-    },
-  ]
-
-    for (const m of moves) {
-      await tx.nationMove.upsert({
-        where: { key: m.key },
-        update: {
-          nationId: metalNation.id,
-          polarityId: m.polarityId,
-          name: m.name,
-          description: m.description,
-          isStartingUnlocked: m.isStartingUnlocked,
-          appliesToStatus: JSON.stringify(m.appliesToStatus),
-          requirementsSchema: JSON.stringify(m.requirementsSchema),
-          effectsSchema: JSON.stringify(m.effectsSchema),
-          sortOrder: m.sortOrder,
-        },
-        create: {
-          key: m.key,
-          nationId: metalNation.id,
-          polarityId: m.polarityId,
-          name: m.name,
-          description: m.description,
-          isStartingUnlocked: m.isStartingUnlocked,
-          appliesToStatus: JSON.stringify(m.appliesToStatus),
-          requirementsSchema: JSON.stringify(m.requirementsSchema),
-          effectsSchema: JSON.stringify(m.effectsSchema),
-          sortOrder: m.sortOrder,
-        }
-      })
-    }
-
-    // Archetype pool: link Forge a Template to The Bold Heart playbook (craft/initiative)
-    const boldHeart = await tx.archetype.findFirst({ where: { name: 'The Bold Heart', instanceId: null }, select: { id: true } })
-    if (boldHeart) {
-      await tx.nationMove.updateMany({
-        where: { key: 'metal_forge_a_template' },
-        data: { archetypeId: boldHeart.id }
-      })
-    }
-
-    return metalNation
+/**
+ * Resolve the canonical **metal** nation (Argyra) for book-derived moves and pools.
+ * Does not mutate; callers use returned `id` as `NationMove.nationId`.
+ */
+export async function ensureMetalNationMoves(): Promise<{ id: string }> {
+  const byElement = await db.nation.findFirst({
+    where: { element: 'metal', archived: false },
+    select: { id: true },
   })
+  if (byElement) return byElement
+  const byName = await db.nation.findFirst({
+    where: { name: 'Argyra', archived: false },
+    select: { id: true },
+  })
+  if (byName) return byName
+  throw new Error(
+    'ensureMetalNationMoves: no metal nation found — seed nations (expect Argyra / element metal)'
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -222,9 +87,6 @@ export async function ensureMetalNationMoves() {
 
 export async function getNationMovePanelData(questId: string): Promise<NationMovePanelData> {
   try {
-    // Seed Metal Nation content (MVP reference implementation).
-    await ensureMetalNationMoves()
-
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
     if (!player.nationId) return { error: 'Profile incomplete: nation missing' }
@@ -515,8 +377,6 @@ function buildBarFromMove(opts: {
 
 export async function applyNationMoveWithState(_prev: ApplyNationMoveState | null, formData: FormData): Promise<ApplyNationMoveState> {
   try {
-    await ensureMetalNationMoves()
-
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not logged in' }
     if (!player.nationId) return { error: 'Profile incomplete: nation missing' }

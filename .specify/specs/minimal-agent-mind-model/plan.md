@@ -32,14 +32,24 @@ Implement minimal agent state and decision logic for simulated agents. Six core 
 
 | File | Action |
 |------|--------|
-| `src/lib/simulation/agentMind.ts` | New — AgentMindState, createAgent, updateAgentNarrative, selectAgentAction, integrateAgentResult |
-| `src/lib/simulation/agentNarrative.ts` | New — generateNarrativeLock, triggers |
-| `src/lib/simulation/types.ts` | Extend — AgentMindState |
-| `src/lib/simulation/__tests__/agentMind.test.ts` | New — tests |
+| `src/lib/agent-mind/types.ts` | AgentMindState, inputs |
+| `src/lib/agent-mind/validation.ts` | Nation + archetype resolution |
+| `src/lib/agent-mind/createAgent.ts` | createAgent |
+| `src/lib/agent-mind/actions.ts` | updateAgentNarrative, selectAgentAction, integrateAgentResult |
+| `src/lib/agent-mind/narrativeTriggers.ts` | generateNarrativeLock |
+| `src/lib/agent-mind/simulationBridge.ts` | simulateQuestForAgent → FN |
+| `src/lib/agent-mind/index.ts` | Public exports |
+| `src/lib/agent-mind/__tests__/agentMind.test.ts` | Tests |
+| `package.json` | `test:agent-mind` |
 
 ## Dependencies
 
-- transformation-move-registry
-- archetype-influence-overlay
-- canonical-archetypes
+- transformation-move-registry (indirect via simulateQuest)
+- archetype-influence-overlay / narrative-transformation (archetype resolution)
 - game/nations
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-03-20 | **v0 library** under `src/lib/agent-mind/`; bridge to `simulateQuest`. |

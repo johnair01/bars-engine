@@ -40,6 +40,9 @@ yarn-error.log*
 # feedback logs (user-submitted, agent-pulled)
 .feedback/
 
+# Transformation simulation harness CLI output (FN)
+/simulation-logs/
+
 # Backlog API fetch output (generated)
 .specify/backlog/items.json
 

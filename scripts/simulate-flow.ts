@@ -6,6 +6,7 @@
  * Validate only: npm run simulate -- validate <path-to-flow.json>
  *
  * @see .specify/specs/flow-simulator-cli/spec.md
+ * @see .specify/specs/transformation-simulation-harness/spec.md — quest subcommand
  */
 
 import * as fs from 'fs'
@@ -14,6 +15,7 @@ import { simulateFlow } from '../src/lib/simulation/simulateFlow'
 import { getSimulatedActorRole } from '../src/lib/simulation/actors'
 import { validateFlowSchema } from '../src/lib/simulation/validateFlowSchema'
 import { SIMULATE_SUBCOMMANDS } from '../src/lib/simulation/integrationContract'
+import { simulateQuest } from '../src/lib/transformation-simulation/simulateQuest'
 import type { FlowJSON } from '../src/lib/simulation/types'
 
 const DEFAULT_ACTOR_CAPS: Record<string, string[]> = {
@@ -57,17 +59,112 @@ function parseArgs(args: string[]) {
   return { jsonMode, verboseMode, actorId, seed, validateOnly, paths }
 }
 
+type QuestCliArgs = {
+  narrative: string
+  nation?: string
+  archetype?: string
+  seed?: number
+  json: boolean
+  verbose: boolean
+  log: boolean
+}
+
+function parseQuestCliArgs(raw: string[]): QuestCliArgs {
+  const out: QuestCliArgs = {
+    narrative: '',
+    json: raw.includes('--json'),
+    verbose: raw.includes('--verbose'),
+    log: raw.includes('--log'),
+  }
+  const positional: string[] = []
+  for (let i = 0; i < raw.length; i++) {
+    const a = raw[i]
+    if (a === '--json' || a === '--verbose' || a === '--log') continue
+    if (a === '--narrative' && raw[i + 1]) {
+      out.narrative = raw[++i]
+      continue
+    }
+    if (a === '--nation' && raw[i + 1]) {
+      out.nation = raw[++i]
+      continue
+    }
+    if (a === '--archetype' && raw[i + 1]) {
+      out.archetype = raw[++i]
+      continue
+    }
+    if (a === '--seed' && raw[i + 1]) {
+      out.seed = parseInt(raw[i + 1], 10)
+      i++
+      continue
+    }
+    if (!a.startsWith('--')) positional.push(a)
+  }
+  if (!out.narrative && positional.length) out.narrative = positional.join(' ').trim()
+  return out
+}
+
+function writeQuestLog(result: ReturnType<typeof simulateQuest>): string {
+  const dir = path.join(process.cwd(), 'simulation-logs')
+  fs.mkdirSync(dir, { recursive: true })
+  const file = path.join(dir, `${result.simulation_id}.json`)
+  fs.writeFileSync(file, JSON.stringify({ mode: 'quest', at: new Date().toISOString(), ...result }, null, 2), 'utf-8')
+  return file
+}
+
+function runQuestMode(raw: string[]) {
+  const q = parseQuestCliArgs(raw)
+  if (!q.narrative) {
+    console.error('Usage: npm run simulate -- quest --narrative "..." [--nation argyra] [--archetype truth-seer] [--seed N] [--json] [--verbose] [--log]')
+    console.error('Or: npm run simulate -- quest "I am afraid of failing" --json')
+    process.exit(1)
+  }
+  try {
+    const result = simulateQuest(q.narrative, {
+      nationId: q.nation ?? null,
+      archetypeKey: q.archetype ?? null,
+      seed: q.seed,
+    })
+    if (q.log) {
+      const f = writeQuestLog(result)
+      if (!q.json && q.verbose) console.error(`Wrote ${f}`)
+    }
+    if (q.json) {
+      console.log(JSON.stringify(result, null, 2))
+    } else {
+      console.log(`simulation_id: ${result.simulation_id}`)
+      console.log(`lock: ${result.lock_type} | moves: ${result.moves_selected.join(', ')}`)
+      if (q.verbose) {
+        console.log('top encounter:', result.encounter_geometry.ranked_encounters[0]?.name ?? '(none)')
+        console.log('prompts:', Object.keys(result.generated_prompts).join(', '))
+      }
+    }
+    process.exit(0)
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e))
+    process.exit(1)
+  }
+}
+
+function printUsageAndExit(): never {
+  console.error('Usage: npm run simulate -- [flow] [validate] [quest] ...')
+  console.error('  Flow: npm run simulate -- <path-to-flow.json> [--verbose] [--json] [--actor <id>] [--seed <n>]')
+  console.error('  Quest: npm run simulate -- quest --narrative "..." [--nation id] [--archetype slug] [--seed N] [--json] [--log]')
+  console.error('  Validate: npm run simulate -- validate <path-to-flow.json>')
+  console.error(`  Subcommands: ${SIMULATE_SUBCOMMANDS.join(', ')}`)
+  process.exit(1)
+}
+
 function main() {
   const args = process.argv.slice(2)
+  if (args[0] === 'quest') {
+    runQuestMode(args.slice(1))
+    return
+  }
+
   const { jsonMode, verboseMode, actorId, seed, validateOnly, paths } = parseArgs(args)
 
   if (paths.length === 0) {
-    console.error('Usage: npm run simulate -- [flow] [validate] <path-to-flow.json> ... [--verbose] [--json] [--actor <id>] [--seed <n>]')
-    console.error('Example: npm run simulate -- fixtures/flows/orientation_linear_minimal.json --verbose')
-    console.error('Example: npm run simulate -- flow fixtures/onboarding/bruised-banana/campaign_intro.json --json')
-    console.error('Validate schema: npm run simulate -- validate fixtures/onboarding/bruised-banana/campaign_intro.json')
-    console.error(`Shared subcommands (integration contract): ${SIMULATE_SUBCOMMANDS.join(', ')}`)
-    process.exit(1)
+    printUsageAndExit()
   }
 
   if (validateOnly) {

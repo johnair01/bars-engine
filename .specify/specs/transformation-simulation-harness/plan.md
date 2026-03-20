@@ -43,14 +43,13 @@ Implement a CLI-based simulation harness for the transformation engine. Four mod
 
 | File | Action |
 |------|--------|
-| `scripts/simulate-flow.ts` | Extend with subcommands (quest, agent, campaign, onboarding) |
-| `src/lib/simulation/simulateQuest.ts` | New — quest pipeline simulation |
-| `src/lib/simulation/simulateAgent.ts` | New — agent loop (depends on Minimal Agent Mind Model) |
-| `src/lib/simulation/simulateCampaign.ts` | New — multi-agent simulation |
-| `src/lib/simulation/simulateOnboarding.ts` | New — onboarding validation |
-| `src/lib/simulation/types.ts` | Extend — SimulationConfig, SimulationResult |
-| `simulation-logs/` | New — log output directory |
-| `package.json` | Ensure `simulate` script supports subcommands |
+| `scripts/simulate-flow.ts` | `quest` subcommand (+ existing flow / validate) |
+| `src/lib/transformation-simulation/simulateQuest.ts` | Quest pipeline simulation |
+| `src/lib/transformation-simulation/index.ts` | Public exports |
+| `simulation-logs/` | JSON logs when `--log` (gitignored) |
+| `package.json` | `test:transformation-sim` |
+
+Future: `simulateAgent` / `simulateCampaign` / `simulateOnboarding` modules + CLI wiring.
 
 ## Dependencies
 
@@ -58,4 +57,12 @@ Implement a CLI-based simulation harness for the transformation engine. Four mod
 - transformation-move-registry (existing)
 - transformation-encounter-geometry (existing)
 - archetype-influence-overlay (existing)
-- minimal-agent-mind-model (Phase 2+)
+- narrative-transformation-engine (existing)
+- minimal-agent-mind-model (agent bridge: `simulateQuestForAgent`)
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-03-20 | **Phase quest v0:** `simulateQuest`, CLI `quest`, `simulation-logs`, tests. |
+
