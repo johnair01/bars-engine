@@ -13,11 +13,15 @@ import { channelToElement } from './elements'
 import { getArchetypePrimaryWave } from './archetype-wave'
 import { buildChoicePrivilegingContext } from './choice-privileging-context'
 import { getMovesForLens } from './lens-moves'
+import { applyArchetypeOverlay } from '@/lib/archetype-influence-overlay'
+import type { ArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay/types'
+import type { QuestSeed, QuestSeedArc } from '@/lib/transformation-move-registry/types'
 import type { ElementKey } from './elements'
 import type {
   QuestCompileInput,
   QuestPacket,
   EmotionalAlchemySignature,
+  PersonalMoveType,
 } from './types'
 
 /** Optional player-facing unpacking (Phase 5b2) */
@@ -57,6 +61,41 @@ export interface BuildQuestPromptContextInput extends QuestCompileInput {
   adminFeedback?: string
   /** Include Bruised Banana onboarding draft structure as reference (corpus/template) */
   includeOnboardingFlowReference?: boolean
+  /** When set, run applyArchetypeOverlay and inject shaped beats into the AI prompt (IE-4). */
+  archetypeInfluenceProfile?: ArchetypeInfluenceProfile | null
+}
+
+function personalMoveTypeToWcgsId(mt: PersonalMoveType | undefined): string {
+  switch (mt ?? 'showUp') {
+    case 'wakeUp':
+      return 'wake_up'
+    case 'cleanUp':
+      return 'clean_up'
+    case 'growUp':
+      return 'grow_up'
+    case 'showUp':
+      return 'show_up'
+    default:
+      return 'show_up'
+  }
+}
+
+function buildGrammarQuestSeedForOverlay(
+  input: BuildQuestPromptContextInput,
+  pkt: QuestPacket
+): QuestSeed {
+  const mt = input.moveType ?? pkt.signature.moveType ?? 'showUp'
+  const moveId = personalMoveTypeToWcgsId(mt)
+  const arc: QuestSeedArc = {
+    show: { move_id: moveId, prompt: input.alignedAction, output_type: 'action' },
+    integrate: { move_id: moveId, bar_prompt: input.unpackingAnswers.q5, bar_type: 'insight' },
+  }
+  return {
+    quest_seed_id: 'quest-grammar-compile',
+    source_narrative: [input.unpackingAnswers.q1, input.alignedAction].filter(Boolean).join(' — '),
+    lock_type: 'emotional_lock',
+    arc,
+  }
 }
 
 /** Compact Voice Style Guide summary for AI prompts */
@@ -114,6 +153,22 @@ export async function buildQuestPromptContext(
 - Q6 (reservations): ${toText(unpackingAnswers.q6)}${unpackingAnswers.q6Context ? ` — Context: ${unpackingAnswers.q6Context}` : ''}
 - Aligned action: ${alignedAction}
 - Segment: ${segment}`)
+
+  // Archetype overlay — shape action + reflection beats for AI (Individuation Engine IE-4)
+  const archeProfile = input.archetypeInfluenceProfile
+  if (archeProfile) {
+    try {
+      const baseSeed = buildGrammarQuestSeedForOverlay(input, pkt)
+      const overlaid = applyArchetypeOverlay(baseSeed, archeProfile)
+      const actionBeat = overlaid.arc.show?.prompt ?? input.alignedAction
+      const reflectionBeat = overlaid.arc.integrate?.bar_prompt ?? input.unpackingAnswers.q5
+      sections.push(`## Archetype influence (apply to prose; ${archeProfile.archetype_name})
+- Shaped action / show beat: ${actionBeat}
+- Shaped integration / reflection beat: ${reflectionBeat}`)
+    } catch (e) {
+      console.warn('[buildQuestPromptContext] archetype overlay skipped', e)
+    }
+  }
 
   // Player POV (optional)
   if (playerPOV && Object.values(playerPOV).some(Boolean)) {

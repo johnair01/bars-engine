@@ -31,7 +31,7 @@ export const ELEMENTS: Record<ElementKey, ElementDef> = {
   wood: {
     key: 'wood',
     channel: 'Joy',
-    lesson: 'Vitality detected.',
+    lesson: 'Vitality detected. Player keyword: Delight — the love of the game, aliveness, jouissance.',
   },
   fire: {
     key: 'fire',

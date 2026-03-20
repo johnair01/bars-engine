@@ -10,7 +10,16 @@ export const EXPERIENCE_OPTIONS = [
 ] as const
 
 export const SATISFACTION_OPTIONS = [
-  'triumphant', 'peaceful', 'energized', 'proud', 'blissful', 'poignant', 'fulfilled', 'free', 'excited', 'relieved',
+  // Wood/Joy: delight, aliveness, love of the game (jouissance in EK terms)
+  'delighted', 'energized', 'free',
+  // Fire/Anger resolved: triumph (anger + justice as boundary honored)
+  'triumphant', 'proud',
+  // Earth/Neutrality: settled, whole-system
+  'peaceful', 'fulfilled',
+  // Metal/Fear resolved: excitement as opportunity seized
+  'excited', 'relieved',
+  // Water/Sadness resolved: meaning restored
+  'poignant', 'blissful',
 ]
 
 export const DISSATISFACTION_OPTIONS = [
