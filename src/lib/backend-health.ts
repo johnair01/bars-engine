@@ -55,27 +55,74 @@ export function startBackendInBackground(): void {
 export interface EnsureOptions {
   url?: string
   autoStart?: boolean
+  /** When true, do not warn if /api/health reports openai_configured: false (e.g. CI). Default: warn. */
+  skipOpenAIWarning?: boolean
+  /**
+   * When true, never write to stdout (only stderr for real errors).
+   * Required for MCP stdio: anything on stdout before the real MCP server speaks breaks JSON-RPC.
+   */
+  quiet?: boolean
 }
 
 const NO_AUTO_START_MSG = (url: string) =>
   `Backend not reachable at ${url}. Start it with: npm run dev:backend. Or omit --no-auto-start to have the script start it automatically.`
 
+const AGENT_OPENAI_DOC =
+  'docs/AGENT_WORKFLOWS.md (section "OPENAI_API_KEY and backend")'
+
+/**
+ * After /api/health returns OK: warn if the Python backend has no OPENAI_API_KEY
+ * (agents will use deterministic fallbacks). No-op on fetch/parse errors.
+ */
+export async function warnIfOpenAINotConfigured(baseUrl: string): Promise<void> {
+  const healthUrl = baseUrl.replace(/\/$/, '') + HEALTH_PATH
+  try {
+    const res = await fetch(healthUrl, { signal: AbortSignal.timeout(3000) })
+    if (!res.ok) return
+    const data = (await res.json()) as { openai_configured?: boolean }
+    if (data.openai_configured === true) return
+    console.warn(
+      [
+        '\n⚠ Agent backend: openai_configured is false — OPENAI_API_KEY is not loaded in Python settings.',
+        '  Sage / strand / GM tools will use deterministic fallbacks until this is fixed.',
+        '  Fix: add OPENAI_API_KEY to repo .env.local or .env (or backend/.env); restart: npm run dev:backend',
+        '  Verify: curl -s ' + baseUrl.replace(/\/$/, '') + HEALTH_PATH,
+        '  Doc: ' + AGENT_OPENAI_DOC,
+      ].join('\n')
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Ensure backend is ready. If down and autoStart is true, starts it and polls.
  * Returns the backend URL when ready. Throws if not ready after timeout or when autoStart is false.
+ * When healthy, logs a one-time warning if OpenAI is not configured (unless skipOpenAIWarning).
  */
 export async function ensureBackendReady(options?: EnsureOptions): Promise<string> {
   const url = options?.url ?? getBackendUrl()
   const autoStart = options?.autoStart !== false
+  const skipOpenAIWarning = options?.skipOpenAIWarning === true
+  const quiet = options?.quiet === true
+
+  const logInfo = (...args: unknown[]) => {
+    if (!quiet) console.log(...args)
+  }
+
+  const finish = async (u: string): Promise<string> => {
+    if (!skipOpenAIWarning) await warnIfOpenAINotConfigured(u)
+    return u
+  }
 
   const initial = await checkBackendHealth(url)
-  if (initial.ok) return url
+  if (initial.ok) return finish(url)
 
   if (!autoStart) {
     throw new Error(NO_AUTO_START_MSG(url))
   }
 
-  console.log('Backend not running. Starting it in background...')
+  logInfo('Backend not running. Starting it in background...')
   startBackendInBackground()
 
   const deadline = Date.now() + POLL_TIMEOUT_MS
@@ -83,8 +130,8 @@ export async function ensureBackendReady(options?: EnsureOptions): Promise<strin
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
     const check = await checkBackendHealth(url)
     if (check.ok) {
-      console.log('Backend ready.')
-      return url
+      logInfo('Backend ready.')
+      return finish(url)
     }
   }
 

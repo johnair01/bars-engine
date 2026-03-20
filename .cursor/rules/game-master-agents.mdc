@@ -11,6 +11,16 @@ The six Game Master faces are: **shaman**, **regent**, **challenger**, **archite
 
 **Sage = integration agent** — synthesis, meta, coordination, cross-cutting. For integration work, use `sage_consult` (bars-agents MCP) or `mcp_task` with subagent_type `evaluator`.
 
+## MCP must be available (do not skip)
+
+When the user requires **bars-agents**, **sage_consult**, or **strand** synthesis via MCP:
+
+1. Run **`npm run verify:bars-agents-mcp`** and fix failures before treating MCP as unavailable.
+2. Confirm **Cursor → Settings → MCP → bars-agents** is enabled; **Reload Window** if the server does not show.
+3. **Do not** substitute inline “Sage” prose instead of calling **`sage_consult`** if the workflow explicitly depends on MCP.
+
+See `docs/AGENT_WORKFLOWS.md` § **MCP availability (do not skip)**.
+
 ## bars-agents as orchestrators, Cursor subagents as tools
 
 When delegating via `mcp_task`, use the Sage's mapping:

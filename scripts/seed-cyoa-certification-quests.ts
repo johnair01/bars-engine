@@ -36,7 +36,8 @@ const CERT_QUEST_IDS = [
     'cert-ouroboros-character-interview-v1',
     'cert-daemons-discovery-v1',
     'cert-template-library-v1',
-    'cert-game-loop-tighten-v1'
+    'cert-game-loop-tighten-v1',
+    'cert-campaign-map-phase-1-v1'
 ]
 
 async function seed() {
@@ -3233,31 +3234,48 @@ async function seed() {
         { name: 'STEP_4', pid: '5', text: '### Step 4: Feedback and regenerate\n\nEnter feedback in the feedback field (e.g. "Make the first choice more emotional"), then click **Regenerate**. Confirm the output updates to reflect your feedback.', cleanText: 'Enter feedback and regenerate.', links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
         { name: 'STEP_5', pid: '6', text: '### Step 5: Validate structure\n\nConfirm the generated quest output is structurally valid: it has nodes, at least one choice, and a reachable completion node.', cleanText: 'Confirm the quest structure is valid.', links: [{ label: 'Next', target: 'STEP_6' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
         { name: 'STEP_6', pid: '7', text: '### Step 6: Publish or export\n\nPublish the quest to a Campaign, or export it as a **.twee** file. Confirm the action completes without error.', cleanText: 'Publish or export the quest.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
-        { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething isn\'t working? Use the **Report Issue** button next to any error message, then return to the step where you got stuck.', cleanText: 'Report an Issue.', links: [{ label: 'Back to start', target: 'START' }], tags: ['feedback'] },
-        { name: 'END_SUCCESS', pid: '9', text: 'Onboarding quest generation verified. The I Ching step, feedback/regenerate loop, skeleton-first flow, and publish path are all working. Complete this quest to receive your reward.', cleanText: 'Verification complete.', links: [] },
+        { name: 'FEEDBACK', pid: '8', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered. Use your browser **Back** to return to the cert step.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
+        { name: 'END_SUCCESS', pid: '9', text: 'Onboarding quest generation verified. The I Ching step, feedback/regenerate loop, skeleton-first flow, and publish path are all working. Complete this quest to receive your vibeulon reward.', cleanText: 'Verification complete.', links: [] },
     ]
+    const dkTitle = 'Certification: Onboarding Quest Generation Unblock V1'
+    const dkParsedJson = JSON.stringify({
+        title: dkTitle,
+        startPassage: 'START',
+        passages: dkPassages,
+    })
     const dkStory = await db.twineStory.upsert({
         where: { slug: dkSlug },
-        update: { title: 'Certification: Onboarding Quest Generation Unblock V1', parsedJson: JSON.stringify({ startPassage: 'START', passages: dkPassages }), isPublished: true },
+        update: { title: dkTitle, parsedJson: dkParsedJson, isPublished: true },
         create: {
-            title: 'Certification: Onboarding Quest Generation Unblock V1',
+            title: dkTitle,
             slug: dkSlug,
             sourceType: 'manual_seed',
             sourceText: 'Onboarding Quest Generation Unblock certification quest (seed-cyoa-certification-quests.ts)',
-            parsedJson: JSON.stringify({ startPassage: 'START', passages: dkPassages }),
+            parsedJson: dkParsedJson,
             isPublished: true,
             createdById,
         },
     })
     await db.customBar.upsert({
         where: { id: dkSlug },
-        update: { title: 'Certification: Onboarding Quest Generation Unblock V1', description: 'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.', twineStoryId: dkStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/onboarding-quest-generation-unblock/spec.md' },
+        update: {
+            title: dkTitle,
+            description:
+                'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.',
+            reward: 1,
+            twineStoryId: dkStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/onboarding-quest-generation-unblock/spec.md',
+        },
         create: {
             id: dkSlug,
-            title: 'Certification: Onboarding Quest Generation Unblock V1',
-            description: 'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.',
+            title: dkTitle,
+            description:
+                'Walk through the full onboarding quest generation flow — I Ching step, feedback/regenerate, skeleton-first, publish.',
             creatorId: createdById,
-            reward: 50,
+            reward: 1,
             twineStoryId: dkStory.id,
             status: 'active',
             visibility: 'public',
@@ -3337,6 +3355,117 @@ async function seed() {
         create: { id: templateLibSlug, title: 'Certification: Template Library V1', description: 'Verify Template Library: generate draft, edit passage, promote to Active.', creatorId: createdById, reward: 1, twineStoryId: templateLibStory.id, status: 'active', visibility: 'public', isSystem: true, backlogPromptPath: '.specify/specs/template-library-draft-adventure/spec.md' }
     })
     console.log(`✅ Quest seeded: cert-template-library-v1`)
+
+    // --- Certification: Campaign Map Phase 1 (DL) ---
+    const campaignMapTitle = 'Certification: Campaign Map Phase 1 V1'
+    const campaignMapSlug = 'cert-campaign-map-phase-1-v1'
+    const campaignMapPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify Campaign Map Phase 1 on the gameboard: phase header, domain regions, field activity, and filtering slots by domain.',
+            cleanText: 'Campaign Map Phase 1 verification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open Campaign Map\n\n[Open /campaign/board?ref=bruised-banana](/campaign/board?ref=bruised-banana) (adjust ref if your instance differs).',
+            cleanText: 'Open campaign board.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Layer 1 — Phase header\n\nConfirm you see the **campaign name**, **Phase: Opening Momentum**, and the phase description paragraph.',
+            cleanText: 'Confirm phase header.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Layer 2 — Domain regions\n\nConfirm **four regions** (Gather Resources, Skillful Organizing, Raise Awareness, Direct Action) with quest counts and active player counts.',
+            cleanText: 'Confirm domain regions.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Layer 3 — Field activity\n\nConfirm **Field activity** shows campaign BAR count, quest completions, and active players (informational only). If metrics warrant it, an optional **Signal:** line may appear beneath — informational only.',
+            cleanText: 'Confirm field activity.',
+            links: [{ label: 'Next', target: 'STEP_5' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_5',
+            pid: '6',
+            text: '### Step 5: Filter by domain\n\nClick a **domain region**. Confirm the gameboard filters to show only matching quests (empty slots may still appear). Click **All regions** to clear.',
+            cleanText: 'Filter by domain.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Campaign Map Phase 1 verified. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+    const campaignMapParsedJson = JSON.stringify({
+        title: campaignMapTitle,
+        startPassage: 'START',
+        passages: campaignMapPassages
+    })
+    const campaignMapStory = await db.twineStory.upsert({
+        where: { slug: campaignMapSlug },
+        update: {
+            title: campaignMapTitle,
+            parsedJson: campaignMapParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: campaignMapTitle,
+            slug: campaignMapSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Campaign Map Phase 1 certification (seed-cyoa-certification-quests.ts)',
+            parsedJson: campaignMapParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+    await db.customBar.upsert({
+        where: { id: campaignMapSlug },
+        update: {
+            title: campaignMapTitle,
+            description: 'Verify Campaign Map Phase 1: phase header, domains, field activity, domain filter.',
+            reward: 1,
+            twineStoryId: campaignMapStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-map-phase-1/spec.md'
+        },
+        create: {
+            id: campaignMapSlug,
+            title: campaignMapTitle,
+            description: 'Verify Campaign Map Phase 1: phase header, domains, field activity, domain filter.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: campaignMapStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-map-phase-1/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${campaignMapSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

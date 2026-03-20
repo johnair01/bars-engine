@@ -24,6 +24,11 @@ import { QuestOutlineReview } from '@/components/admin/QuestOutlineReview'
 import { logPrePublishFeedback } from '@/actions/narrative-quality-feedback'
 import type { SerializableQuestPacket } from '@/lib/quest-grammar/types'
 import type { GameboardUnpacking } from '@/actions/gameboard'
+import type { AllyshipDomain } from '@/lib/kotter'
+import {
+  CAMPAIGN_MAP_DOMAIN_LABEL,
+  defaultAllyshipDomainForQuest,
+} from '@/lib/campaign-map-shared'
 
 function HexagramLines({ id }: { id: number }) {
   const lines: boolean[] = []
@@ -86,6 +91,7 @@ type Slot = {
     title: string
     description: string
     parentId: string | null
+    allyshipDomain?: string | null
   } | null
   steward: { id: string; name: string } | null
   bids?: Bid[]
@@ -119,12 +125,15 @@ export function GameboardClient({
   isAdmin = false,
   playerId,
   declinedOffers = [],
+  domainFilter = null,
 }: {
   slots: Slot[]
   campaignRef: string
   isAdmin?: boolean
   playerId?: string
   declinedOffers?: DeclinedOffer[]
+  /** When set, only show slots whose quest matches this allyship domain (empty slots still shown). */
+  domainFilter?: AllyshipDomain | null
 }) {
   const router = useRouter()
   const [completing, setCompleting] = useState<string | null>(null)
@@ -482,6 +491,14 @@ export function GameboardClient({
     )
   })
 
+  const slotsForGrid =
+    domainFilter != null
+      ? filledSlots.filter((slot) => {
+          if (!slot.quest) return true
+          return defaultAllyshipDomainForQuest(slot.quest.allyshipDomain) === domainFilter
+        })
+      : filledSlots
+
   const isSteward = (slot: Slot) =>
     slot.stewardId && playerId && slot.stewardId === playerId
   const canComplete = (slot: Slot) =>
@@ -517,8 +534,15 @@ export function GameboardClient({
           </div>
         </div>
       )}
+      {domainFilter != null && (
+        <p className="text-zinc-500 text-xs mb-2">
+          Filtering board to{' '}
+          <span className="text-zinc-300">{CAMPAIGN_MAP_DOMAIN_LABEL[domainFilter]}</span> —
+          empty slots still shown.
+        </p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {filledSlots.map((slot) => (
+      {slotsForGrid.map((slot) => (
         <div
           key={slot.id}
           className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex flex-col min-h-[140px]"

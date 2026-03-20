@@ -46,6 +46,8 @@ Extend the gameboard at `/campaign/board` into a Campaign Map with three layers:
 | `src/app/campaign/board/page.tsx` | Add Campaign Map layout; fetch phase header, domain counts, field indicators |
 | `src/app/campaign/board/GameboardClient.tsx` | Integrate domain regions; optional slot filtering by domain |
 | `src/lib/campaign-map.ts` | Create — getCampaignPhaseHeader, getDomainRegionCounts, getFieldActivityIndicators |
+| `src/lib/campaign-map-shared.ts` | Shared labels/types (client-safe, no DB) |
+| `src/app/campaign/board/CampaignMapChrome.tsx` | Client — domain regions + passes domain filter to gameboard |
 | `src/actions/config.ts` | Extend getDashboardRedirectForPlayer or add postOnboardingRedirect |
 | `scripts/seed-cyoa-certification-quests.ts` | Add cert-campaign-map-phase-1-v1 |
 

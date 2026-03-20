@@ -34,5 +34,5 @@
 
 ## Verification
 
-- [ ] Add cert-onboarding-quest-generation-unblock-v1 to seed-cyoa-certification-quests.ts — see [cert-onboarding-quest-generation-unblock](../cert-onboarding-quest-generation-unblock/spec.md)
-- [ ] Run cert quest; confirm flow works
+- [x] Add cert-onboarding-quest-generation-unblock-v1 to seed-cyoa-certification-quests.ts — see [cert-onboarding-quest-generation-unblock](../cert-onboarding-quest-generation-unblock/spec.md)
+- [x] Run `npm run seed:cert:cyoa` when DB is up; run cert quest manually to confirm flow (maintainer)

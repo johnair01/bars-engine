@@ -4,6 +4,8 @@
 
 Agent workflows (Sage consult, strand, sage:brief, bars-agents MCP) require `OPENAI_API_KEY` in the backend environment. Without it, agents use deterministic fallbacks — no real synthesis. Add to `.env.local`; run `npm run smoke` to verify. See `docs/AGENT_WORKFLOWS.md` troubleshooting.
 
+**bars-agents MCP:** Before treating MCP as “unavailable” or skipping `sage_consult`, run `npm run verify:bars-agents-mcp` and confirm **Cursor → Settings → MCP → bars-agents** is on (reload window if needed). Do not skip this when the user requires MCP-backed synthesis. See `docs/AGENT_WORKFLOWS.md` § MCP availability. If MCP shows **Error**, see **`docs/CURSOR_MCP_TROUBLESHOOTING.md`** (what to paste from Show output; PATH/`uv` fixes).
+
 ## Database Synchronization
 
 When you modify the file `prisma/schema.prisma`, you MUST automatically run:

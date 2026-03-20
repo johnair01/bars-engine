@@ -152,7 +152,10 @@ function getFieldActivityIndicators(campaignRef: string): Promise<{
 
 ## References
 
+- [INTEGRATION.md](./INTEGRATION.md) — how the map sits in the larger system (routes, keys, redirect config)
 - [src/app/campaign/board/page.tsx](../../src/app/campaign/board/page.tsx)
 - [src/app/campaign/board/GameboardClient.tsx](../../src/app/campaign/board/GameboardClient.tsx)
+- [src/lib/campaign-map.ts](../../src/lib/campaign-map.ts)
+- [src/lib/campaign-map-shared.ts](../../src/lib/campaign-map-shared.ts)
 - [src/lib/gameboard.ts](../../src/lib/gameboard.ts)
 - [.specify/memory/allyship-domain-definitions.md](../../.specify/memory/allyship-domain-definitions.md)

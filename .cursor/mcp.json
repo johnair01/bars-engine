@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "bars-agents": {
-      "command": "npx",
-      "args": ["tsx", "scripts/mcp-serve-with-backend.ts"],
+      "command": "bash",
+      "args": ["scripts/run-bars-agents-mcp.sh"],
       "cwd": "${workspaceFolder}"
     }
   }
