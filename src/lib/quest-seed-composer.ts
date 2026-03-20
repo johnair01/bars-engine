@@ -9,7 +9,7 @@ import { db } from '@/lib/db'
 import { getArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay'
 import type { ArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay/types'
 import { getActiveInstance } from '@/actions/instance'
-import { getActiveDaemonState } from '@/actions/daemons'
+import { queryActiveDaemonChannelAltitude } from '@/lib/daemon-active-state'
 
 export type SceneType = 'transcend' | 'generate' | 'control'
 
@@ -44,19 +44,28 @@ export async function buildQuestSeedInput(
     chargeBarId: barId,
   }
 
-  // Archetype profile
+  // Archetype profile — prefer immutable stamp on charge BAR (IE-10), else player playbook
   try {
-    const player = await db.player.findUnique({
-      where: { id: playerId },
-      select: { archetypeId: true },
+    const barRow = await db.customBar.findUnique({
+      where: { id: barId },
+      select: { archetypeKey: true },
     })
-    if (player?.archetypeId) {
-      const archetype = await db.archetype.findUnique({
-        where: { id: player.archetypeId },
-        select: { name: true },
+    const stamped = barRow?.archetypeKey?.trim()
+    if (stamped) {
+      context.archetypeProfile = getArchetypeInfluenceProfile(stamped) ?? null
+    } else {
+      const player = await db.player.findUnique({
+        where: { id: playerId },
+        select: { archetypeId: true },
       })
-      if (archetype?.name) {
-        context.archetypeProfile = getArchetypeInfluenceProfile(archetype.name) ?? null
+      if (player?.archetypeId) {
+        const archetype = await db.archetype.findUnique({
+          where: { id: player.archetypeId },
+          select: { name: true },
+        })
+        if (archetype?.name) {
+          context.archetypeProfile = getArchetypeInfluenceProfile(archetype.name) ?? null
+        }
       }
     }
   } catch (e) {
@@ -65,7 +74,7 @@ export async function buildQuestSeedInput(
 
   // Daemon state
   try {
-    const daemon = await getActiveDaemonState(playerId)
+    const daemon = await queryActiveDaemonChannelAltitude(playerId)
     if (daemon) {
       context.daemonChannel = daemon.channel
       context.daemonAltitude = daemon.altitude

@@ -34,7 +34,7 @@ export function ChargeBarCard({ bar }: ChargeBarCardProps) {
           Turn into Quest →
         </Link>
         <Link
-          href={`/capture/explore?barId=${bar.id}`}
+          href={`/capture/explore/${bar.id}`}
           className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-500 text-white transition"
         >
           Explore →

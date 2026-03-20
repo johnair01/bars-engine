@@ -120,5 +120,6 @@ Server actions:
 - `createQuestFrom321Metadata()` — turns session into quest
 - `fuelSystemFrom321()` — routes charge to collective field
 - `persist321Session()` — saves session without dispatch
-- `discoverDaemon()` — names mask as daemon (source: '321_wake_up')
+- `awakenDaemonFrom321()` — full 321 completion → daemon with `Shadow321Session` lineage (`source: '321_wake_up'`)
+- `discoverDaemon()` — school/bar paths (optional session metadata); not the primary 321 daemon path
 - BAR creation: sessionStorage handoff → `/create-bar?from321=1`

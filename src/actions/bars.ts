@@ -642,13 +642,16 @@ export async function getBarDetail(barId: string) {
     })
 
     if (!bar) return { error: 'BAR not found' }
-    // Allow type 'bar' for owner/recipient; allow any type when public (Library discovery)
-    const isPublic = bar.visibility === 'public'
-    if (!isPublic && bar.type !== 'bar') return { error: 'Not a BAR' }
 
     // Access check: owner, or has a share addressed to them, or public
+    const isPublic = bar.visibility === 'public'
     const isOwner = bar.creatorId === playerId
     const isRecipient = bar.shares.some(s => s.toUserId === playerId)
+
+    // Type guard: public BARs are always viewable; owners can view charge_capture type;
+    // otherwise only 'bar' type is accessible via this route
+    const allowedType = bar.type === 'bar' || (isOwner && bar.type === 'charge_capture')
+    if (!isPublic && !allowedType) return { error: 'Not a BAR' }
     // Share through which current user received this BAR (most recent if multiple)
     const recipientShare = isRecipient
         ? bar.shares.filter(s => s.toUserId === playerId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]

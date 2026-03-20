@@ -7,6 +7,7 @@ import { getLatestFirstAidQuestLensForPlayer } from '@/actions/emotional-first-a
 import { getQuestGeneratorMode } from '@/lib/mvp-flags'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { persist321Session } from '@/actions/charge-metabolism'
+import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
 import { extractNationArchetypeFromText } from '@/actions/extract-321-taxonomy'
 
 function parseTags(raw: string | null) {
@@ -64,6 +65,25 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
     const phase3Snapshot = (formData.get('phase3Snapshot') as string)?.trim() || null
     const phase2Snapshot = (formData.get('phase2Snapshot') as string)?.trim() || null
+    const shadow321NameRaw = (formData.get('shadow321Name') as string)?.trim() || null
+    let shadow321Name: Shadow321NameFields | undefined
+    if (shadow321NameRaw) {
+        try {
+            const parsed = JSON.parse(shadow321NameRaw) as unknown
+            if (
+                parsed &&
+                typeof parsed === 'object' &&
+                !Array.isArray(parsed) &&
+                'finalShadowName' in parsed &&
+                'nameResolution' in parsed &&
+                'suggestionCount' in parsed
+            ) {
+                shadow321Name = parsed as Shadow321NameFields
+            }
+        } catch {
+            /* ignore */
+        }
+    }
 
     // Extract nation/archetype from 321 identityFreeText when present
     let extractedAllowedNations = allowedNations
@@ -258,6 +278,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                 phase2Snapshot,
                 outcome: 'bar_created',
                 linkedBarId: result.id,
+                shadow321Name: shadow321Name ?? undefined,
             })
         }
 

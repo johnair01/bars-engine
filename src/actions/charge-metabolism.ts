@@ -8,13 +8,19 @@ import type { UnpackingAnswers } from '@/lib/quest-grammar'
 import { extractCreationIntent } from '@/lib/creation-quest'
 import { createFaceMoveBar } from '@/actions/face-move-bar'
 import { unlockBlessedObject } from '@/lib/blessed-objects'
+import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
+import { merge321NameIntoMatchingNpcs } from '@/actions/npc321-inner-work-merge'
+import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
+import { appendDaemonEvolutionLog } from '@/lib/daemon-evolution'
 
 export type Shadow321SessionInput = {
   phase3Snapshot: string
   phase2Snapshot: string
-  outcome: 'bar_created' | 'quest_created' | 'fueled_system' | 'skipped'
+  outcome: 'bar_created' | 'quest_created' | 'fueled_system' | 'skipped' | 'daemon_awakened'
   linkedBarId?: string | null
   linkedQuestId?: string | null
+  /** When set, persisted on Shadow321Session (321 name step / Phase 6). */
+  shadow321Name?: Shadow321NameFields | null
 }
 
 /**
@@ -36,6 +42,13 @@ export async function persist321Session(
         outcome: data.outcome,
         linkedBarId: data.linkedBarId ?? null,
         linkedQuestId: data.linkedQuestId ?? null,
+        ...(data.shadow321Name
+          ? {
+              finalShadowName: data.shadow321Name.finalShadowName,
+              nameResolution: data.shadow321Name.nameResolution,
+              suggestionCount: data.shadow321Name.suggestionCount,
+            }
+          : {}),
       },
     })
 
@@ -78,7 +91,52 @@ export async function persist321Session(
     }
 
     // PF: Unlock blessed object for 321 Shadow Process (standalone flow, not via EFA)
-    await unlockBlessedObject(player.id, '321', { loreBarId: session.id })
+    const daemonIdForBless = await queryActiveSummonedDaemonId(player.id)
+    await unlockBlessedObject(player.id, '321', {
+      loreBarId: session.id,
+      ...(daemonIdForBless ? { daemonId: daemonIdForBless } : {}),
+    })
+
+    if (daemonIdForBless) {
+      try {
+        const d = await db.daemon.findUnique({
+          where: { id: daemonIdForBless },
+          select: { channel: true, altitude: true },
+        })
+        if (d) {
+          await appendDaemonEvolutionLog(daemonIdForBless, {
+            event: '321_blessed_unlock',
+            channelBefore: d.channel,
+            channelAfter: d.channel,
+            altitudeBefore: d.altitude,
+            altitudeAfter: d.altitude,
+            sessionId: session.id,
+          })
+        }
+      } catch (evoErr) {
+        console.warn('[persist321Session] daemon evolution skipped', evoErr)
+      }
+    }
+
+    // Phase 7: teach matching NPCs (agent players with same nation + archetype)
+    if (data.shadow321Name) {
+      try {
+        const { merged } = await merge321NameIntoMatchingNpcs({
+          humanPlayerId: player.id,
+          shadow321SessionId: session.id,
+          shadow321Name: data.shadow321Name,
+          phase2Snapshot: data.phase2Snapshot,
+          phase3Snapshot: data.phase3Snapshot,
+          humanNationId: player.nationId,
+          humanArchetypeId: player.archetypeId,
+        })
+        if (process.env.NODE_ENV !== 'production' && merged > 0) {
+          console.debug('[persist321Session] npc321 merges', { merged, sessionId: session.id })
+        }
+      } catch (mergeErr) {
+        console.warn('[persist321Session] npc321 merge failed (non-blocking):', mergeErr)
+      }
+    }
 
     return { success: true, sessionId: session.id }
   } catch (e: unknown) {
@@ -112,7 +170,8 @@ export async function createQuestFrom321Metadata(
   metadata: Metadata321,
   phase2?: UnpackingAnswers & { alignedAction?: string },
   phase3?: Phase3Taxonomic,
-  target?: QuestPlacementTarget
+  target?: QuestPlacementTarget,
+  shadow321Name?: Shadow321NameFields | null
 ): Promise<{ success: true; questId: string } | { error: string }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -174,6 +233,7 @@ export async function createQuestFrom321Metadata(
       phase2Snapshot,
       outcome: 'quest_created',
       linkedQuestId: quest.id,
+      shadow321Name: shadow321Name ?? undefined,
     })
 
     if ('success' in persistResult && persistResult.success) {
@@ -213,7 +273,8 @@ export async function createQuestFrom321Metadata(
  */
 export async function fuelSystemFrom321(
   metadata: Metadata321,
-  _context?: { isAdmin?: boolean }
+  _context?: { isAdmin?: boolean },
+  shadow321Name?: Shadow321NameFields | null
 ): Promise<{ success: true; sessionId?: string } | { error: string }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -229,6 +290,7 @@ export async function fuelSystemFrom321(
     phase3Snapshot,
     phase2Snapshot,
     outcome: 'fueled_system',
+    shadow321Name: shadow321Name ?? undefined,
   })
 
   if ('success' in result && result.success) {

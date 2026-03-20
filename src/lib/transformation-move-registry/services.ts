@@ -75,21 +75,32 @@ export function renderMovePrompt(
   return renderPromptTemplate(template.template_text, narrative, context)
 }
 
+export type AssembleQuestSeedRenderContext = {
+  emotion_channel?: string
+  nation_name?: string
+  archetype_name?: string
+}
+
 /** Assemble a standard quest seed from selected moves and parsed narrative. */
 export function assembleQuestSeed(
   narrative: ParsedNarrative,
   lockType: LockType,
   moveIds: { wake: string; clean: string; grow: string; show: string; integrate: string },
-  options?: { archetypeKey?: string | null }
+  options?: {
+    archetypeKey?: string | null
+    /** Substitutions for `{emotion_channel}`, `{nation_name}`, `{archetype_name}` in move templates. */
+    renderContext?: AssembleQuestSeedRenderContext
+  }
 ): QuestSeed {
   const arc: QuestSeedArc = {}
   const seedId = `gen_${Date.now().toString(36)}`
+  const ctx = options?.renderContext
 
   const wakeMove = getMoveById(moveIds.wake)
   if (wakeMove) {
     arc.wake = {
       move_id: wakeMove.move_id,
-      prompt: renderMovePrompt(wakeMove, narrative),
+      prompt: renderMovePrompt(wakeMove, narrative, 0, ctx),
       output_type: wakeMove.typical_output_type,
     }
   }
@@ -98,7 +109,7 @@ export function assembleQuestSeed(
   if (cleanMove) {
     arc.clean = {
       move_id: cleanMove.move_id,
-      prompt: renderMovePrompt(cleanMove, narrative),
+      prompt: renderMovePrompt(cleanMove, narrative, 0, ctx),
       output_type: cleanMove.typical_output_type,
     }
   }
@@ -107,7 +118,7 @@ export function assembleQuestSeed(
   if (growMove) {
     arc.grow = {
       move_id: growMove.move_id,
-      prompt: renderMovePrompt(growMove, narrative),
+      prompt: renderMovePrompt(growMove, narrative, 0, ctx),
       output_type: growMove.typical_output_type,
     }
   }
@@ -116,7 +127,7 @@ export function assembleQuestSeed(
   if (showMove) {
     arc.show = {
       move_id: showMove.move_id,
-      prompt: renderMovePrompt(showMove, narrative),
+      prompt: renderMovePrompt(showMove, narrative, 0, ctx),
       output_type: showMove.typical_output_type,
     }
   }

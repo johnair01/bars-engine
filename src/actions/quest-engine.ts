@@ -12,6 +12,8 @@ import { revalidatePath } from 'next/cache'
 import { mintVibulon } from '@/actions/economy'
 import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { enqueueSpriteGeneration } from '@/lib/sprite-queue'
+import { appendDaemonEvolutionLog } from '@/lib/daemon-evolution'
+import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -470,6 +472,31 @@ export async function completeQuestForPlayer(
             where: { linkedQuestId: questId },
             data: { questCompletedAt: new Date() },
         })
+    }
+
+    // IE-14: append daemon evolution when an active summon exists (non-blocking)
+    if (result && !('error' in result)) {
+        try {
+            const summonerDaemonId = await queryActiveSummonedDaemonId(playerId)
+            if (summonerDaemonId) {
+                const d = await db.daemon.findUnique({
+                    where: { id: summonerDaemonId },
+                    select: { channel: true, altitude: true },
+                })
+                if (d) {
+                    await appendDaemonEvolutionLog(summonerDaemonId, {
+                        event: 'quest_completed',
+                        channelBefore: d.channel,
+                        channelAfter: d.channel,
+                        altitudeBefore: d.altitude,
+                        altitudeAfter: d.altitude,
+                        questId,
+                    })
+                }
+            }
+        } catch (e) {
+            console.warn('[QuestEngine] daemon evolution log skipped', e)
+        }
     }
 
     // Unlock hook: when player completes campaign quest (admin capacity signal)

@@ -3,6 +3,7 @@ import { selectScene } from '@/lib/alchemy/select-scene'
 import { resolveMoveDestination } from '@/lib/alchemy/wuxing'
 import type { SceneDsl, SceneChoice, SceneCard, SceneType } from '@/lib/growth-scene/types'
 import type { AlchemyAltitude, EmotionChannel } from '@/lib/alchemy/types'
+import { getActiveInstance } from '@/actions/instance'
 
 export interface GenerateSceneOpts {
   archetypeSlug?: string
@@ -13,6 +14,10 @@ export interface GenerateSceneOpts {
   daemonChannel?: string
   /** Active daemon altitude for scene scoring (IE-6) */
   daemonAltitude?: string
+  /** Kotter stage for template bias (IE-16) */
+  kotterStage?: number
+  /** GM face key for campaignFrontBias (IE-16; Phase 3 NationFaceEra) */
+  activeFaceKey?: string | null
 }
 
 /**
@@ -38,6 +43,9 @@ export async function generateScene(playerId: string, opts: GenerateSceneOpts = 
   const resolution = resolveMoveDestination(channel, altitudeFrom, sceneType)
   const { targetChannel, targetAltitude: altitudeTo, vector } = resolution
 
+  const instance = await getActiveInstance()
+  const kotterStage = opts.kotterStage ?? instance?.kotterStage ?? 1
+
   const template = await selectScene(playerId, {
     archetypeSlug: opts.archetypeSlug,
     nationSlug: opts.nationSlug,
@@ -47,6 +55,8 @@ export async function generateScene(playerId: string, opts: GenerateSceneOpts = 
     altitudeFrom,
     daemonChannel: opts.daemonChannel,
     daemonAltitude: opts.daemonAltitude,
+    kotterStage,
+    activeFaceKey: opts.activeFaceKey ?? null,
   })
   if (!template) {
     return { error: `No scene template available for ${vector}` }

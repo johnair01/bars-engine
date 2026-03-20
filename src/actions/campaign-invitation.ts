@@ -94,6 +94,185 @@ export async function canInviteToAnyEventOnInstance(
   return false
 }
 
+/** Logged-in player may fetch .ics for this event (host/steward or any participant). */
+export async function playerCanAccessEventCalendar(playerId: string, eventArtifactId: string): Promise<boolean> {
+  const ev = await db.eventArtifact.findUnique({
+    where: { id: eventArtifactId },
+    select: {
+      instanceId: true,
+      campaign: { select: { instanceId: true } },
+    },
+  })
+  if (!ev) return false
+  const inst = ev.instanceId ?? ev.campaign?.instanceId
+  if (!inst) return false
+  if (await canInviteToAnyEventOnInstance(playerId, inst)) return true
+  const row = await db.eventParticipant.findUnique({
+    where: { eventId_participantId: { eventId: eventArtifactId, participantId: playerId } },
+    select: { id: true },
+  })
+  return !!row
+}
+
+async function withRsvpCounts(
+  rows: Array<{
+    id: string
+    title: string
+    startTime: Date | null
+    endTime: Date | null
+    timezone: string | null
+    capacity: number | null
+    parentEventArtifactId: string | null
+  }>
+): Promise<EventArtifactListItem[]> {
+  if (rows.length === 0) return []
+  const ids = rows.map((r) => r.id)
+  const agg = await dbBase.eventParticipant.groupBy({
+    by: ['eventId'],
+    where: {
+      eventId: { in: ids },
+      participantState: { in: ['RSVP_yes', 'attending', 'attended'] },
+    },
+    _count: { _all: true },
+  })
+  const map = new Map(agg.map((a) => [a.eventId, a._count._all]))
+  return rows.map((r) => ({
+    ...r,
+    rsvpCount: map.get(r.id) ?? 0,
+  }))
+}
+
+export type EventParticipantRow = {
+  id: string
+  participantId: string
+  name: string
+  participantState: string
+  functionalRole: string | null
+}
+
+export async function listEventParticipantsForManage(
+  instanceId: string,
+  eventArtifactId: string
+): Promise<{ error: string } | { participants: EventParticipantRow[] }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to view this list' }
+  }
+  const exists = await db.eventArtifact.findFirst({
+    where: {
+      id: eventArtifactId,
+      OR: [{ instanceId }, { campaign: { instanceId } }],
+    },
+    select: { id: true },
+  })
+  if (!exists) return { error: 'Event not found' }
+
+  const rows = await db.eventParticipant.findMany({
+    where: { eventId: eventArtifactId },
+    orderBy: { createdAt: 'asc' },
+    include: { participant: { select: { id: true, name: true } } },
+  })
+  return {
+    participants: rows.map((r) => ({
+      id: r.id,
+      participantId: r.participantId,
+      name: r.participant.name ?? 'Player',
+      participantState: r.participantState,
+      functionalRole: r.functionalRole ?? null,
+    })),
+  }
+}
+
+export async function markEventParticipantAttended(
+  instanceId: string,
+  eventArtifactId: string,
+  eventParticipantId: string
+): Promise<{ success: true } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to check in guests' }
+  }
+  const row = await db.eventParticipant.findFirst({
+    where: { id: eventParticipantId, eventId: eventArtifactId },
+  })
+  if (!row) return { error: 'Participant not found' }
+  if (!['RSVP_yes', 'attending'].includes(row.participantState)) {
+    return { error: 'Only guests who RSVPed can be checked in' }
+  }
+  await db.eventParticipant.update({
+    where: { id: eventParticipantId },
+    data: { participantState: 'attended' },
+  })
+  revalidatePath('/event')
+  return { success: true }
+}
+
+function parseLocalDatetimeInput(raw: string): Date | null {
+  const t = raw?.trim()
+  if (!t) return null
+  const d = new Date(t)
+  if (Number.isNaN(d.getTime())) return null
+  return d
+}
+
+/**
+ * Update start/end (and optional timezone / capacity) for an EventArtifact.
+ * Same permission as sending event invites: admin / steward / owner OR campaign host.
+ */
+export async function updateEventArtifactSchedule(
+  instanceId: string,
+  eventArtifactId: string,
+  startTimeLocal: string,
+  endTimeLocal: string,
+  timezoneInput: string,
+  capacityInput: string
+): Promise<{ success: true } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to edit this event schedule' }
+  }
+
+  const artifact = await db.eventArtifact.findFirst({
+    where: {
+      id: eventArtifactId,
+      OR: [{ instanceId }, { campaign: { instanceId } }],
+    },
+    select: { id: true },
+  })
+  if (!artifact) return { error: 'Event not found on this campaign' }
+
+  const start = parseLocalDatetimeInput(startTimeLocal)
+  const end = parseLocalDatetimeInput(endTimeLocal)
+  if (startTimeLocal.trim() && !start) return { error: 'Invalid start date/time' }
+  if (endTimeLocal.trim() && !end) return { error: 'Invalid end date/time' }
+  if (start && end && end < start) return { error: 'End must be on or after start' }
+
+  const tz = timezoneInput?.trim() || null
+
+  let capacity: number | null = null
+  const capRaw = capacityInput?.trim()
+  if (capRaw) {
+    const n = Number.parseInt(capRaw, 10)
+    if (!Number.isFinite(n) || n < 1) return { error: 'Capacity must be a positive number or empty' }
+    capacity = n
+  }
+
+  await db.eventArtifact.update({
+    where: { id: eventArtifactId },
+    data: {
+      startTime: start,
+      endTime: end,
+      timezone: tz,
+      capacity,
+    },
+  })
+
+  revalidatePath('/event')
+  return { success: true }
+}
 
 export type CreateCampaignRoleInvitationResult =
   | { success: true; barId: string; invitationId: string }
@@ -315,12 +494,24 @@ export async function declineCampaignRoleInvitation(invitationId: string): Promi
  * `EventArtifactWhereInput.instanceId` (PrismaClientValidationError: Unknown argument `instanceId`).
  */
 export async function listEventArtifactsForInstance(instanceId: string): Promise<EventArtifactListItem[]> {
+  type Row = {
+    id: string
+    title: string
+    startTime: Date | null
+    endTime: Date | null
+    timezone: string | null
+    capacity: number | null
+    parentEventArtifactId: string | null
+  }
+
   try {
-    return await dbBase.$queryRaw<EventArtifactListItem[]>(Prisma.sql`
+    const raw = await dbBase.$queryRaw<Row[]>(Prisma.sql`
       SELECT ea.id,
              ea.title,
              ea."startTime",
              ea."endTime",
+             ea.timezone,
+             ea.capacity,
              ea.parent_event_artifact_id AS "parentEventArtifactId"
       FROM event_artifacts ea
       LEFT JOIN event_campaigns ec ON ec.id = ea."linkedCampaignId"
@@ -329,6 +520,7 @@ export async function listEventArtifactsForInstance(instanceId: string): Promise
       ORDER BY (ea.parent_event_artifact_id IS NOT NULL) ASC,
                ea."startTime" ASC NULLS LAST
     `)
+    return withRsvpCounts(raw)
   } catch (e) {
     console.warn(
       '[campaign-invitation] listEventArtifactsForInstance raw SQL failed; try ORM fallback:',
@@ -336,20 +528,26 @@ export async function listEventArtifactsForInstance(instanceId: string): Promise
     )
     try {
       const rows = await dbBase.eventArtifact.findMany({
-        where: { campaign: { instanceId } },
+        where: {
+          OR: [{ instanceId }, { campaign: { instanceId } }],
+        },
         select: {
           id: true,
           title: true,
           startTime: true,
           endTime: true,
+          timezone: true,
+          capacity: true,
           parentEventArtifactId: true,
         },
-        orderBy: { startTime: 'asc' },
+        orderBy: [{ parentEventArtifactId: 'asc' }, { startTime: 'asc' }],
       })
-      return rows.map((r) => ({
+      const normalized: Row[] = rows.map((r) => ({
         ...r,
+        capacity: r.capacity ?? null,
         parentEventArtifactId: r.parentEventArtifactId ?? null,
       }))
+      return withRsvpCounts(normalized)
     } catch (e2) {
       console.warn('[campaign-invitation] listEventArtifactsForInstance fallback failed:', e2)
       return []
@@ -535,9 +733,36 @@ export async function acceptEventInvitation(invitationId: string): Promise<Accep
 
   const artifactMeta = await dbBase.eventArtifact.findUnique({
     where: { id: invitation.eventArtifactId },
-    select: { parentEventArtifactId: true },
+    select: { parentEventArtifactId: true, capacity: true },
   })
   const preproductionRole = artifactMeta?.parentEventArtifactId ? 'preproduction' : null
+
+  const existingRsvp = await db.eventParticipant.findUnique({
+    where: {
+      eventId_participantId: { eventId: invitation.eventArtifactId, participantId: playerId },
+    },
+    select: { participantState: true },
+  })
+  const alreadyGoing =
+    existingRsvp?.participantState === 'RSVP_yes' ||
+    existingRsvp?.participantState === 'attending' ||
+    existingRsvp?.participantState === 'attended'
+
+  if (
+    !alreadyGoing &&
+    artifactMeta?.capacity != null &&
+    artifactMeta.capacity > 0
+  ) {
+    const cnt = await db.eventParticipant.count({
+      where: {
+        eventId: invitation.eventArtifactId,
+        participantState: { in: ['RSVP_yes', 'attending', 'attended'] },
+      },
+    })
+    if (cnt >= artifactMeta.capacity) {
+      return { error: 'This event is at capacity' }
+    }
+  }
 
   try {
     await db.eventParticipant.upsert({

@@ -12,6 +12,7 @@ export function AdminNav() {
         { name: 'Dashboard', href: '/admin', icon: '🏠' },
         { name: 'Onboarding', href: '/admin/onboarding', icon: '✨' },
         { name: 'Instances', href: '/admin/instances', icon: '🧩' },
+        { name: 'Governance', href: '/admin/governance', icon: '🏛️' },
         { name: 'Campaign Seeds', href: '/admin/campaign-seeds', icon: '🌱' },
         { name: 'Journeys', href: '/admin/journeys', icon: '📜' },
         { name: 'Quests', href: '/admin/quests', icon: '⚔️' },

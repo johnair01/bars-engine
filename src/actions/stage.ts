@@ -3,10 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { KOTTER_STAGES, KotterStage } from '@/lib/kotter'
-
-// Re-export for convenience (only types/consts that don't violate 'use server')
-export type { KotterStage } from '@/lib/kotter'
+import { KOTTER_STAGES, type KotterStage } from '@/lib/kotter'
 
 /**
  * Get the current stage info for a quest

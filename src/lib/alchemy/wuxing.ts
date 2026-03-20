@@ -5,12 +5,16 @@
  *   生 shēng (generation) — the nourishing/produce cycle → translate UPWARD
  *   克 kè (control/destruction) — the overcoming cycle → translate DOWNWARD
  *
- * Element mapping:
- *   Wood  (木) = anger
- *   Fire  (火) = joy
- *   Earth (土) = neutrality
- *   Metal (金) = sadness
- *   Water (水) = fear
+ * Element mapping (canonical — matches src/lib/quest-grammar/elements.ts):
+ *   Wood  (木) = joy / delight ("love of the game"; vitality; jouissance)
+ *   Fire  (火) = anger (obstacle present OR boundary violated)
+ *   Earth (土) = neutrality (whole-system perspective)
+ *   Metal (金) = fear (risk/opportunity detected; excitement = fear as opportunity)
+ *   Water (水) = sadness (something I care about is distant or misaligned)
+ *
+ * Note: Metal=fear, Water=sadness is an intentional departure from traditional
+ * Chinese medicine mapping (which has Metal=grief, Water=fear). This system
+ * uses the Emotional Alchemy ontology, not the TCM convention.
  */
 
 import type { EmotionChannel } from './types'
@@ -18,22 +22,26 @@ import type { AlchemyAltitude } from './types'
 
 export type SceneType = 'transcend' | 'generate' | 'control'
 
-// Generation cycle: Wood→Fire→Earth→Metal→Water→Wood
+// Generation (shēng 生) cycle: Wood→Fire→Earth→Metal→Water→Wood
+// In Emotional Alchemy channels (see elements.ts):
+//   joy(Wood) → anger(Fire) → neutrality(Earth) → fear(Metal) → sadness(Water) → joy(Wood)
 const SHENG_CYCLE: Record<EmotionChannel, EmotionChannel> = {
-  anger:      'joy',
-  joy:        'neutrality',
-  neutrality: 'sadness',
-  sadness:    'fear',
-  fear:       'anger',
-}
-
-// Control/destruction cycle: Wood→Earth→Water→Fire→Metal→Wood
-const KE_CYCLE: Record<EmotionChannel, EmotionChannel> = {
+  joy:        'anger',
   anger:      'neutrality',
   neutrality: 'fear',
-  fear:       'joy',
-  joy:        'sadness',
+  fear:       'sadness',
+  sadness:    'joy',
+}
+
+// Control/destruction (kè 克) cycle: Wood→Earth→Water→Fire→Metal→Wood
+// In Emotional Alchemy channels:
+//   joy(Wood) → neutrality(Earth) → sadness(Water) → anger(Fire) → fear(Metal) → joy(Wood)
+const KE_CYCLE: Record<EmotionChannel, EmotionChannel> = {
+  joy:        'neutrality',
+  neutrality: 'sadness',
   sadness:    'anger',
+  anger:      'fear',
+  fear:       'joy',
 }
 
 const ALTITUDE_ORDER: AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']

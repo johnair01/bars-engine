@@ -3,6 +3,14 @@ import { StoryClockTimeline } from '@/components/StoryClockTimeline'
 import { AdminClockControls } from '@/components/admin/AdminClockControls'
 import Link from 'next/link'
 
+/**
+ * Story Clock reads live DB state (GlobalState, quests, archetypes). It must not be
+ * statically generated at `next build` — that runs Prisma during prerender and fails
+ * when DATABASE_URL / Accelerate is unreachable (P6008) or breaks CI without a DB.
+ * @see https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering
+ */
+export const dynamic = 'force-dynamic'
+
 export default async function StoryClockPage() {
     const clockData = await getStoryClockData()
     const { currentPeriod, storyClock, isPaused, questsByPeriod } = clockData

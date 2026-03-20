@@ -16,6 +16,8 @@ export type UnlockMetadata = {
   kotterStage?: number
   questId?: string
   loreBarId?: string
+  /** IE-13: provenance for daemon-linked unlocks (metadata only; no FK in Phase 2) */
+  daemonId?: string
   [key: string]: unknown
 }
 

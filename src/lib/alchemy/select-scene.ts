@@ -6,15 +6,26 @@ export interface SelectSceneOpts {
   nationSlug?: string
   campaignPhase?: string
   sceneType?: string // 'transcend' | 'generate' | 'control'
-  channel?: string   // override: use targetChannel for generate/control
+  channel?: string // override: use targetChannel for generate/control
   altitudeFrom?: string // override: caller computes via wuxing
   /** Active daemon's wuxing channel — low-weight (3) scoring signal. IE-5 */
   daemonChannel?: string
   /** Active daemon's altitude — informational, not scored directly. IE-5 */
   daemonAltitude?: string
+  /** Kotter stage from active instance (IE-16) */
+  kotterStage?: number
+  /** GM face key — NationFaceEra Phase 3; optional bias signal */
+  activeFaceKey?: string | null
 }
 
 type SceneResult = AlchemySceneTemplateRow | null
+
+type TemplateScoreRow = {
+  archetypeBias: string | null
+  nationBias: string | null
+  kotterStageBias: string | null
+  campaignFrontBias: string | null
+}
 
 const selectFields = {
   id: true,
@@ -26,40 +37,70 @@ const selectFields = {
   advice: true,
   archetypeBias: true,
   nationBias: true,
+  kotterStageBias: true,
+  campaignFrontBias: true,
 } as const
 
-function scoreCandidate(
-  row: { archetypeBias: string | null; nationBias: string | null },
-  opts: SelectSceneOpts
-): number {
+function scoreCandidate(row: TemplateScoreRow, opts: SelectSceneOpts): number {
   let score = 0
   if (opts.archetypeSlug && row.archetypeBias) {
     try {
       const slugs: string[] = JSON.parse(row.archetypeBias)
       if (slugs.includes(opts.archetypeSlug)) score += 10
-    } catch { /* malformed JSON */ }
+    } catch {
+      /* malformed JSON */
+    }
   }
   if (opts.nationSlug && row.nationBias) {
     try {
       const slugs: string[] = JSON.parse(row.nationBias)
       if (slugs.includes(opts.nationSlug)) score += 5
-    } catch { /* malformed JSON */ }
+    } catch {
+      /* malformed JSON */
+    }
   }
   // Daemon channel: low-weight signal from active summoned daemon (IE-5)
   if (opts.daemonChannel && row.archetypeBias) {
     try {
       const slugs: string[] = JSON.parse(row.archetypeBias)
       if (slugs.includes(opts.daemonChannel.toLowerCase())) score += 3
-    } catch { /* malformed JSON */ }
+    } catch {
+      /* malformed JSON */
+    }
+  }
+  // IE-16: scene template biases
+  if (opts.kotterStage != null && row.kotterStageBias) {
+    try {
+      const stages = JSON.parse(row.kotterStageBias) as unknown
+      if (Array.isArray(stages) && stages.includes(opts.kotterStage)) score += 5
+    } catch {
+      /* malformed JSON */
+    }
+  }
+  if (opts.activeFaceKey && row.campaignFrontBias) {
+    try {
+      const faces = JSON.parse(row.campaignFrontBias) as unknown
+      if (Array.isArray(faces) && faces.includes(opts.activeFaceKey)) score += 5
+    } catch {
+      /* malformed JSON */
+    }
   }
   return score
 }
 
 function pickBest(
   candidates: Array<{
-    id: string; title: string; situation: string; friction: string
-    invitation: string; choices: string; advice: string | null
-    archetypeBias: string | null; nationBias: string | null
+    id: string
+    title: string
+    situation: string
+    friction: string
+    invitation: string
+    choices: string
+    advice: string | null
+    archetypeBias: string | null
+    nationBias: string | null
+    kotterStageBias: string | null
+    campaignFrontBias: string | null
   }>,
   opts: SelectSceneOpts
 ): SceneResult {
@@ -68,9 +109,20 @@ function pickBest(
   let bestScore = scoreCandidate(best, opts)
   for (let i = 1; i < candidates.length; i++) {
     const s = scoreCandidate(candidates[i], opts)
-    if (s > bestScore) { best = candidates[i]; bestScore = s }
+    if (s > bestScore) {
+      best = candidates[i]
+      bestScore = s
+    }
   }
-  return { id: best.id, title: best.title, situation: best.situation, friction: best.friction, invitation: best.invitation, choices: best.choices, advice: best.advice }
+  return {
+    id: best.id,
+    title: best.title,
+    situation: best.situation,
+    friction: best.friction,
+    invitation: best.invitation,
+    choices: best.choices,
+    advice: best.advice,
+  }
 }
 
 /**

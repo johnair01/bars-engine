@@ -2,17 +2,24 @@
 
 import { useState, useEffect, useActionState } from 'react'
 import { createCustomBar, getActivePlayers, getLinkableQuests, getGatingOptions } from '@/actions/create-bar'
-import { useRouter } from 'next/navigation'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
+import { usePostActionRouter } from '@/hooks/usePostActionRouter'
+import { NAV } from '@/lib/navigation-contract'
 
 type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
 
 export type CreateBarPrefill = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
-export type CreateBar321Session = { phase3Snapshot?: string; phase2Snapshot?: string }
+export type CreateBar321Session = {
+  phase3Snapshot?: string
+  phase2Snapshot?: string
+  shadow321Name?: Shadow321NameFields
+}
 
 export function CreateBarForm({ setup, prefill, session321 }: { setup?: boolean; prefill?: CreateBarPrefill; session321?: CreateBar321Session }) {
-    const router = useRouter()
+    const privateRouter = usePostActionRouter(NAV['create_bar_private'])
+    const publicRouter = usePostActionRouter(NAV['create_bar_public'])
     const [isOpen, setIsOpen] = useState(setup || !!prefill || false)
     const [players, setPlayers] = useState<Player[]>([])
     const [linkableQuests, setLinkableQuests] = useState<LinkableQuest[]>([])
@@ -44,12 +51,12 @@ export function CreateBarForm({ setup, prefill, session321 }: { setup?: boolean;
             setIsOpen(false)
             const finalVisibility = state.visibility || visibility
             if (finalVisibility === 'private') {
-                router.push('/hand')
+                privateRouter.navigate({ barId: state.barId })
             } else {
-                router.push('/bars/available')
+                publicRouter.navigate({ barId: state.barId })
             }
         }
-    }, [state, router, visibility])
+    }, [state, visibility]) // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!isOpen) {
         return (
@@ -88,6 +95,9 @@ export function CreateBarForm({ setup, prefill, session321 }: { setup?: boolean;
                 )}
                 {session321?.phase2Snapshot && (
                     <input type="hidden" name="phase2Snapshot" value={session321.phase2Snapshot} />
+                )}
+                {session321?.shadow321Name && (
+                    <input type="hidden" name="shadow321Name" value={JSON.stringify(session321.shadow321Name)} />
                 )}
                 <div className="space-y-2">
                     <label className="text-xs uppercase text-zinc-500">Title</label>

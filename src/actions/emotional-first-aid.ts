@@ -14,6 +14,7 @@ import {
     VIBES_EMERGENCY_OPTIONS,
     VibesEmergencyTag,
 } from '@/lib/emotional-first-aid'
+import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
 
 type SessionSummary = {
     id: string
@@ -327,6 +328,10 @@ export async function completeEmotionalFirstAidSession(input: {
 
         let barDraft: { id: string; nextAction: string; contextQuestId?: string | null } | undefined
 
+        const blessedDaemonId = await queryActiveSummonedDaemonId(player.id)
+        const blessedMetadata =
+            blessedDaemonId != null ? ({ daemonId: blessedDaemonId } as const) : undefined
+
         await db.$transaction(async (tx) => {
             await tx.emotionalFirstAidSession.update({
                 where: { id: session.id },
@@ -353,6 +358,7 @@ export async function completeEmotionalFirstAidSession(input: {
                     data: {
                         playerId: player.id,
                         source: 'efa',
+                        metadata: blessedMetadata ?? undefined,
                     },
                 })
             }
@@ -391,6 +397,7 @@ export async function completeEmotionalFirstAidSession(input: {
                         data: {
                             playerId: player.id,
                             source: '321',
+                            metadata: blessedMetadata ?? undefined,
                         },
                     })
                 }
@@ -441,6 +448,27 @@ export async function completeEmotionalFirstAidSession(input: {
                 barDraft = { id: bar.id, nextAction, contextQuestId: session.contextQuestId }
             }
         })
+
+        if (blessedDaemonId) {
+            try {
+                const d = await db.daemon.findUnique({
+                    where: { id: blessedDaemonId },
+                    select: { channel: true, altitude: true },
+                })
+                if (d) {
+                    const { appendDaemonEvolutionLog } = await import('@/lib/daemon-evolution')
+                    await appendDaemonEvolutionLog(blessedDaemonId, {
+                        event: is321Completion ? 'efa_321_tool_completed' : 'efa_session_completed',
+                        channelBefore: d.channel,
+                        channelAfter: d.channel,
+                        altitudeBefore: d.altitude,
+                        altitudeAfter: d.altitude,
+                    })
+                }
+            } catch (e) {
+                console.warn('[emotional-first-aid] daemon evolution skipped', e)
+            }
+        }
 
         revalidatePath('/')
         revalidatePath('/wallet')

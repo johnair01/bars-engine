@@ -104,21 +104,38 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <header>
-                <Link href="/" className="text-zinc-500 hover:text-white text-sm">← Back to Dashboard</Link>
-                <h1 className="text-3xl font-bold text-white mt-2">Quest Wallet</h1>
-                <p className="text-zinc-400">Organize your active quests and private drafts.</p>
-                <div className="flex flex-wrap gap-3 mt-3">
-                    <Link href="/hand/deck" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-purple-400 hover:text-purple-300 hover:border-purple-800/50 transition-colors">
-                        🃏 Daily Hand
+                <h1 className="text-3xl font-bold text-white">Vault</h1>
+                <p className="text-zinc-400 mt-1">Everything you&apos;ve built.</p>
+
+                {/* Primary objects — what lives here */}
+                <div className="flex flex-wrap gap-2 mt-4">
+                    <Link href="/hand" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-800/50 bg-amber-950/20 text-sm text-amber-400 hover:text-amber-300 hover:border-amber-700/60 transition-colors">
+                        Quests
                     </Link>
-                    <Link href="/hand/moves" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-amber-400 hover:text-amber-300 hover:border-amber-800/50 transition-colors">
-                        ⚔️ Moves Library
+                    <Link href="/bars" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-800/50 bg-purple-950/20 text-sm text-purple-400 hover:text-purple-300 hover:border-purple-700/60 transition-colors">
+                        BARs
                     </Link>
-                    <Link href="/hand/forge-invitation" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-emerald-400 hover:text-emerald-300 hover:border-emerald-800/50 transition-colors">
+                    <Link href="/daemons" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-indigo-800/50 bg-indigo-950/20 text-sm text-indigo-400 hover:text-indigo-300 hover:border-indigo-700/60 transition-colors">
+                        Daemons
+                    </Link>
+                    <Link href="/wallet" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-700/50 bg-zinc-900/40 text-sm text-zinc-400 hover:text-zinc-300 hover:border-zinc-600/60 transition-colors">
+                        Vibeulons
+                    </Link>
+                    <Link href="/bars/available" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-700/50 bg-zinc-900/40 text-sm text-zinc-400 hover:text-zinc-300 hover:border-zinc-600/60 transition-colors">
+                        Browse BARs
+                    </Link>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                    <Link href="/capture" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-800/50 bg-rose-950/20 text-sm text-rose-400 hover:text-rose-300 hover:border-rose-700/60 transition-colors">
+                        ⚡ Capture Charge
+                    </Link>
+                    <Link href="/hand/forge-invitation" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-sm text-emerald-400 hover:text-emerald-300 hover:border-emerald-700/60 transition-colors">
                         ✨ Forge Invitation
                     </Link>
-                    <Link href="/capture" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-rose-400 hover:text-rose-300 hover:border-rose-800/50 transition-colors">
-                        ⚡ Capture Charge
+                    <Link href="/hand/moves" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                        Moves Reference
                     </Link>
                 </div>
             </header>

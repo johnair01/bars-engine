@@ -165,7 +165,8 @@ export async function consultShaman(
 
 export async function suggestShadowName(
   chargeDescription: string,
-  maskShape: string
+  maskShape: string,
+  attempt: number = 0
 ): Promise<{ suggested_name: string; deterministic?: boolean }> {
   const url = `${AGENT_BASE}/api/agents/shaman/suggest-shadow-name`
   const opts: RequestInit = {
@@ -175,6 +176,7 @@ export async function suggestShadowName(
     body: JSON.stringify({
       charge_description: chargeDescription,
       mask_shape: maskShape,
+      attempt: Math.max(0, Math.floor(attempt)),
     }),
     signal: AbortSignal.timeout(15_000),
   }

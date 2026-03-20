@@ -7,6 +7,10 @@ import { revalidatePath } from 'next/cache'
 import { generateQuestSuggestions } from '@/lib/charge-quest-generator'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
 import { buildQuestSeedInput } from '@/lib/quest-seed-composer'
+import { applyArchetypeToChargeSuggestions } from '@/lib/charge-suggestion-archetype-overlay'
+import { getArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay'
+import { slugifyName } from '@/lib/avatar-utils'
+import type { SceneType } from '@/lib/alchemy/wuxing'
 
 export type CreateChargeBarPayload = {
   summary: string
@@ -86,11 +90,24 @@ export async function createChargeBar(
       ? `${summary}\n\n${payload.context_note}`
       : summary
 
+    const sceneType: SceneType = 'transcend'
+    const playerWithArch = await db.player.findUnique({
+      where: { id: player.id },
+      select: { archetype: { select: { name: true } } },
+    })
+    let archetypeKey: string | null = null
+    if (playerWithArch?.archetype?.name) {
+      const prof = getArchetypeInfluenceProfile(playerWithArch.archetype.name)
+      const slug = slugifyName(playerWithArch.archetype.name)
+      archetypeKey = prof?.archetype_id ?? (slug || null)
+    }
+
     const inputs = JSON.stringify({
       emotion_channel: payload.emotion_channel ?? null,
       intensity: payload.intensity ?? null,
       satisfaction: payload.satisfaction ?? null,
       context_note: payload.context_note ?? null,
+      sceneType,
     })
 
     const bar = await db.customBar.create({
@@ -103,6 +120,7 @@ export async function createChargeBar(
         inputs,
         visibility: 'private',
         status: 'active',
+        archetypeKey,
       },
     })
 
@@ -277,6 +295,11 @@ export async function run321FromCharge(
   }
 }
 
+export type ChargeExploreCeremony = {
+  sceneType: string
+  kotterStage: number
+}
+
 /**
  * Generate quest suggestions from a charge BAR.
  * Spec: Charge → Quest Generator API — generateQuestSuggestionsFromCharge
@@ -284,7 +307,7 @@ export async function run321FromCharge(
 export async function generateQuestSuggestionsFromCharge(
   barId: string
 ): Promise<
-  | { success: true; bar_id: string; quest_suggestions: QuestSuggestion[] }
+  | { success: true; bar_id: string; quest_suggestions: QuestSuggestion[]; ceremony: ChargeExploreCeremony }
   | { error: string }
 > {
   const player = await getCurrentPlayer()
@@ -326,25 +349,31 @@ export async function generateQuestSuggestionsFromCharge(
     context_note,
   })
 
-  // Apply archetype flavor to quest summaries (IE-3)
+  // IE-3: compose context + applyArchetypeOverlay via QuestSeed mapping (overlay failure never blocks)
   let flavored = suggestions
+  let ceremony: ChargeExploreCeremony = { sceneType: 'transcend', kotterStage: 1 }
   try {
     const context = await buildQuestSeedInput(player.id, bar.id)
-    if (context.archetypeProfile?.quest_style_modifiers?.[0]) {
-      const modifier = context.archetypeProfile.quest_style_modifiers[0]
-      flavored = suggestions.map((s) => ({
-        ...s,
-        quest_summary: `${s.quest_summary} ${modifier}`.trim(),
-      }))
+    ceremony = {
+      sceneType: context.sceneType ?? 'transcend',
+      kotterStage: context.kotterStage,
     }
-  } catch {
-    // overlay failure never blocks generation
+    if (context.archetypeProfile) {
+      flavored = applyArchetypeToChargeSuggestions(
+        suggestions,
+        context.archetypeProfile,
+        bar.title || bar.description || ''
+      )
+    }
+  } catch (e) {
+    console.warn('[generateQuestSuggestionsFromCharge] archetype overlay skipped', e)
   }
 
   return {
     success: true,
     bar_id: bar.id,
     quest_suggestions: flavored,
+    ceremony,
   }
 }
 

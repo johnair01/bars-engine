@@ -8,7 +8,8 @@ import {
   generateQuestSuggestionsFromCharge,
   createQuestFromSuggestion,
 } from '@/actions/charge-capture'
-import type { CreateChargeBarPayload } from '@/actions/charge-capture'
+import type { CreateChargeBarPayload, ChargeExploreCeremony } from '@/actions/charge-capture'
+import { TransitionCeremony } from '@/components/charge-capture/TransitionCeremony'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
 
 const EMOTION_OPTIONS: Array<{ value: CreateChargeBarPayload['emotion_channel']; label: string }> = [
@@ -68,6 +69,8 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
   const [captured, setCaptured] = useState<CapturedCharge[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<QuestSuggestion[] | null>(null)
+  const [ceremony, setCeremony] = useState<ChargeExploreCeremony | null>(null)
+  const [pendingSuggestions, setPendingSuggestions] = useState<QuestSuggestion[] | null>(null)
   const [creatingIndex, setCreatingIndex] = useState<number | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,7 +108,8 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
         return
       }
       setActiveId(barId)
-      setSuggestions(result.quest_suggestions)
+      setCeremony(result.ceremony)
+      setPendingSuggestions(result.quest_suggestions)
     })
   }
 
@@ -122,6 +126,21 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
       }
       router.push(`/wallet?quest=${result.questId}`)
     })
+  }
+
+  // Transition ceremony (IE-19) before quest suggestions
+  if (ceremony && pendingSuggestions && activeId && !suggestions) {
+    return (
+      <TransitionCeremony
+        sceneType={ceremony.sceneType}
+        kotterStage={ceremony.kotterStage}
+        onComplete={() => {
+          setSuggestions(pendingSuggestions)
+          setCeremony(null)
+          setPendingSuggestions(null)
+        }}
+      />
+    )
   }
 
   // Suggestions view
@@ -149,7 +168,12 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
         </div>
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
-          onClick={() => { setSuggestions(null); setActiveId(null) }}
+          onClick={() => {
+            setSuggestions(null)
+            setActiveId(null)
+            setCeremony(null)
+            setPendingSuggestions(null)
+          }}
           className="text-sm text-zinc-500 hover:text-zinc-300"
         >
           ← Back

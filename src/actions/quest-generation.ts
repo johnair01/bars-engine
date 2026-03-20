@@ -15,6 +15,7 @@ import type { SerializableQuestPacket } from '@/lib/quest-grammar'
 import { getActiveInstance } from '@/actions/instance'
 import { getStageAction } from '@/lib/kotter'
 import type { AllyshipDomain } from '@/lib/kotter'
+import { getArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
@@ -131,6 +132,10 @@ export async function generateQuestFromContext(
       ? buildGameboardContext(parentQuest, period, instance, input.campaignRef)
       : undefined
 
+  const archetypeInfluenceProfile = playerWithRoles.archetype?.name
+    ? getArchetypeInfluenceProfile(playerWithRoles.archetype.name) ?? null
+    : null
+
   const compileResult = await compileQuestWithAI({
     unpackingAnswers,
     alignedAction,
@@ -138,6 +143,7 @@ export async function generateQuestFromContext(
     targetArchetypeId: playerWithRoles.archetypeId ?? undefined,
     moveType: (input.moveType ?? moveType) as import('@/lib/quest-grammar/types').PersonalMoveType | undefined,
     gameboardContext,
+    archetypeInfluenceProfile,
   })
 
   if ('error' in compileResult) {

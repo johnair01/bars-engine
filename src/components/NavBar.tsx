@@ -11,9 +11,13 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
         let active: boolean
         if (path === '/') {
             active = pathname === '/'
-        } else if (path === '/bars') {
-            // /bars but NOT /bars/available
-            active = pathname === '/bars' || (pathname.startsWith('/bars/') && !pathname.startsWith('/bars/available'))
+        } else if (path === '/hand') {
+            // VAULT: active across all player-possession routes
+            active = pathname.startsWith('/hand') ||
+                     pathname.startsWith('/bars') ||
+                     pathname.startsWith('/wallet') ||
+                     pathname.startsWith('/daemons') ||
+                     pathname.startsWith('/capture')
         } else {
             active = pathname === path || pathname.startsWith(`${path}/`)
         }
@@ -26,19 +30,10 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 {isAuthenticated && (
                     <>
                         <Link href="/" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/')}`}>
-                            HOME
+                            NOW
                         </Link>
-                        <Link href="/bars" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars')}`}>
-                            BARS
-                        </Link>
-                        <Link href="/bars/available" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/available')}`}>
-                            MARKET
-                        </Link>
-                        <Link href="/wallet" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/wallet')}`}>
-                            WALLET
-                        </Link>
-                        <Link href="/hand/moves" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand/moves')}`}>
-                            MOVES
+                        <Link href="/hand" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand')}`}>
+                            VAULT
                         </Link>
                         <Link href="/adventures" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/adventures')}`}>
                             PLAY

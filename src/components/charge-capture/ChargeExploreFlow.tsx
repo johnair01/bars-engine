@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import {
   generateQuestSuggestionsFromCharge,
   createQuestFromSuggestion,
+  type ChargeExploreCeremony,
 } from '@/actions/charge-capture'
+import { TransitionCeremony } from '@/components/charge-capture/TransitionCeremony'
 import {
   getPlacementOptionsForQuest,
   addQuestToThread,
@@ -24,6 +26,7 @@ const MOVE_LABELS: Record<string, string> = {
 
 type Phase =
   | { kind: 'loading' }
+  | { kind: 'ceremony'; ceremony: ChargeExploreCeremony; items: QuestSuggestion[] }
   | { kind: 'suggestions'; items: QuestSuggestion[] }
   | { kind: 'what-now'; questId: string }
   | { kind: 'placing'; questId: string; options: PlacementOptions }
@@ -46,7 +49,11 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
         setPhase({ kind: 'error', message: result.error })
         return
       }
-      setPhase({ kind: 'suggestions', items: result.quest_suggestions })
+      setPhase({
+        kind: 'ceremony',
+        ceremony: result.ceremony,
+        items: result.quest_suggestions,
+      })
     })
   }, [barId])
 
@@ -125,6 +132,16 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
   if (phase.kind === 'loading') {
     return (
       <div className="py-8 text-center text-zinc-500">Loading suggestions...</div>
+    )
+  }
+
+  if (phase.kind === 'ceremony') {
+    return (
+      <TransitionCeremony
+        sceneType={phase.ceremony.sceneType}
+        kotterStage={phase.ceremony.kotterStage}
+        onComplete={() => setPhase({ kind: 'suggestions', items: phase.items })}
+      />
     )
   }
 

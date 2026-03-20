@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { generateScene } from '@/lib/growth-scene/generator'
 import type { SceneType } from '@/lib/growth-scene/types'
+import { queryActiveDaemonChannelAltitude } from '@/lib/daemon-active-state'
 
 export async function POST(request: Request) {
   const cookieStore = await cookies()
@@ -22,7 +23,13 @@ export async function POST(request: Request) {
 
   let result: Awaited<ReturnType<typeof generateScene>>
   try {
-    result = await generateScene(playerId, { ...opts, sceneType: opts.sceneType as SceneType | undefined })
+    const daemon = await queryActiveDaemonChannelAltitude(playerId)
+    result = await generateScene(playerId, {
+      ...opts,
+      sceneType: opts.sceneType as SceneType | undefined,
+      daemonChannel: daemon?.channel ?? undefined,
+      daemonAltitude: daemon?.altitude ?? undefined,
+    })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[growth-scenes/generate]', msg)

@@ -1,15 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CreateBarForm, type CreateBarPrefill } from './CreateBarForm'
+import { CreateBarForm, type CreateBarPrefill, type CreateBar321Session } from './CreateBarForm'
 
 const STORAGE_KEY = 'shadow321_metadata'
 const STORAGE_SESSION_KEY = 'shadow321_session'
-
-export type CreateBar321Session = {
-    phase3Snapshot?: string
-    phase2Snapshot?: string
-}
 
 export function CreateBarPageClient({ setup, from321 }: { setup?: boolean; from321?: boolean }) {
     const [prefill, setPrefill] = useState<CreateBarPrefill | undefined>(undefined)

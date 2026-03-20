@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { growQuestFromBar, growDaemonFromBar, growArtifactFromBar } from '@/actions/bars'
+import { usePostActionRouter } from '@/hooks/usePostActionRouter'
+import { NAV } from '@/lib/navigation-contract'
 
 export function GrowFromBar({ barId }: { barId: string }) {
-    const router = useRouter()
+    const questRouter = usePostActionRouter(NAV['grow_quest'])
+    const daemonRouter = usePostActionRouter(NAV['grow_daemon'])
+    const artifactRouter = usePostActionRouter(NAV['grow_artifact'])
     const [pending, startTransition] = useTransition()
     const [pendingAction, setPendingAction] = useState<'quest' | 'daemon' | 'artifact' | null>(null)
 
@@ -20,9 +23,8 @@ export function GrowFromBar({ barId }: { barId: string }) {
                 return
             }
             if (result.questId) {
-                toast.success('Quest created! View it on your dashboard.')
-                router.push(`/?focusQuest=${result.questId}`)
-                router.refresh()
+                toast.success('Quest created!')
+                questRouter.navigate({ questId: result.questId })
             }
         })
     }
@@ -38,8 +40,7 @@ export function GrowFromBar({ barId }: { barId: string }) {
             }
             if (result.daemonId) {
                 toast.success('Daemon awakened!')
-                router.push('/daemons')
-                router.refresh()
+                daemonRouter.navigate({})
             }
         })
     }
@@ -55,8 +56,7 @@ export function GrowFromBar({ barId }: { barId: string }) {
             }
             if (result.sceneId) {
                 toast.success('Artifact created!')
-                router.push(`/growth-scene/${result.sceneId}`)
-                router.refresh()
+                artifactRouter.navigate({ sceneId: result.sceneId })
             }
         })
     }

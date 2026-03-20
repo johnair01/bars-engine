@@ -213,6 +213,46 @@ export async function getRecentAuditLogs(limit = 10) {
     })
 }
 
+export type PostOnboardingRedirectTarget = 'dashboard' | 'campaign-map'
+
+/**
+ * After onboarding, where to send players when they would otherwise land on `/` (dashboard home).
+ * Stored in AppConfig.features JSON: `{ "postOnboardingRedirect": "campaign-map" }`.
+ * Default: dashboard (`/`).
+ */
+export async function getPostOnboardingRedirect(): Promise<PostOnboardingRedirectTarget> {
+    try {
+        const config = await db.appConfig.findUnique({
+            where: { id: 'singleton' },
+            select: { features: true },
+        })
+        const features = config?.features
+            ? (JSON.parse(config.features) as Record<string, unknown>)
+            : {}
+        const raw = features.postOnboardingRedirect
+        if (raw === 'campaign-map' || raw === 'dashboard') return raw
+        return 'dashboard'
+    } catch {
+        return 'dashboard'
+    }
+}
+
+async function resolvePostOnboardingBoardPath(): Promise<string> {
+    const cfg = await db.appConfig.findUnique({
+        where: { id: 'singleton' },
+        select: { activeInstanceId: true },
+    })
+    if (cfg?.activeInstanceId) {
+        const inst = await db.instance.findUnique({
+            where: { id: cfg.activeInstanceId },
+            select: { campaignRef: true, slug: true },
+        })
+        const ref = inst?.campaignRef ?? inst?.slug ?? 'bruised-banana'
+        return `/campaign/board?ref=${encodeURIComponent(ref)}`
+    }
+    return '/campaign/board?ref=bruised-banana'
+}
+
 /**
  * Get post-signup redirect target. Configurable per instance.
  * Default 'dashboard' for new campaign model; 'conclave' for legacy Party flow.
@@ -233,9 +273,17 @@ export async function getPostSignupRedirect(): Promise<'conclave' | 'dashboard'>
 
 /**
  * Compute dashboard redirect URL for a player with orientation progress.
- * Returns /?focusQuest={questId} when there is a current orientation quest, else /.
+ * Returns /?focusQuest={questId} when there is a current orientation quest, else `/` or
+ * `/campaign/board?ref=…` when `features.postOnboardingRedirect` is `campaign-map`.
  */
 export async function getDashboardRedirectForPlayer(playerId: string): Promise<string> {
+    const applyHomePreference = async (path: string): Promise<string> => {
+        if (path !== '/' && path !== '') return path
+        const prefer = await getPostOnboardingRedirect()
+        if (prefer === 'campaign-map') return resolvePostOnboardingBoardPath()
+        return '/'
+    }
+
     const progress = await db.threadProgress.findFirst({
         where: {
             playerId,
@@ -253,10 +301,10 @@ export async function getDashboardRedirectForPlayer(playerId: string): Promise<s
             }
         }
     })
-    if (!progress) return '/'
+    if (!progress) return applyHomePreference('/')
     const currentThreadQuest = progress.thread.quests.find(
         q => q.position === progress.currentPosition
     )
-    if (!currentThreadQuest) return '/'
+    if (!currentThreadQuest) return applyHomePreference('/')
     return `/?focusQuest=${currentThreadQuest.questId}`
 }
