@@ -46,6 +46,25 @@ Faces must not leave their domains except with counsel from the Sage. When a fac
 
 The **Architect Game Master** is a virtual sys-admin teacher who helps players in that school steward the collective backlog with honor and amusement. BARs Engine can be understood as "if Jira could interface with GitHub via a procedurally generated choose-your-own-adventure game." The Architect sect teaches version management, fork-on-decline, and backlog stewardship — turning work items into legible, playful narrative. See [docs/JIRA_GITHUB_CYOA_METAPHOR.md](../../docs/JIRA_GITHUB_CYOA_METAPHOR.md).
 
+## Spiral Dynamics Correspondence (NOW CONSCIOUS CONTEXT)
+
+The 6 faces ARE the Spiral Dynamics developmental levels made playable. This mapping was intentionally kept hidden from the Diplomat face because the Diplomat (Green) struggles most with hierarchy and developmental models. It is now conscious context.
+
+| Spiral Dynamics Level | SD Color | Integral Color | GM Face |
+|---|---|---|---|
+| Magical/tribal — ritual, belonging | Purple | Magenta | **Shaman** |
+| Egocentric — power, courage, action | Red | Red | **Challenger** |
+| Order — rules, roles, hierarchy, duty | Blue | **Amber** | **Regent** |
+| Rational — strategy, achievement, optimization | Orange | Orange | **Architect** |
+| Pluralistic — care, inclusion, relational field | Green | Green | **Diplomat** |
+| Integral — systems, synthesis, meta-view | Yellow/Teal | Yellow/Teal | **Sage** |
+
+**Critical note**: Blue (Spiral Dynamics original naming) and Amber (Integral/AQAL naming) are the **same level** — both point to Regent. Use Amber as the canonical name in code and documentation.
+
+**Why the Sage synthesizes**: The Sage (Yellow/Teal) can see and speak from ALL prior levels. This is why the Sage can run as any face as a mask — Integral consciousness includes and transcends all preceding stages.
+
+**Why the Diplomat couldn't see it**: Green (Diplomat) often rejects developmental hierarchies as elitist. The Diplomat can now be invited to see the map as *care applied at different scales* rather than a ranking system.
+
 ## Reference
 
 - Spec: [.specify/specs/iching-alignment-game-master-sects/spec.md](../../.specify/specs/iching-alignment-game-master-sects/spec.md)

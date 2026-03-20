@@ -167,6 +167,15 @@ Completed and superseded items, preserved for posterity. The main [BACKLOG.md](B
 | 1.20 | GL | [Dashboard Header: Explore, Character, Campaign](.specify/specs/dashboard-header-explore-character-campaign/spec.md) (3 sections; remove Act 1/2; campaign stage button; modals with full-page links) | UI | [x] Done | BQ |
 | 1.21 | GM | [Dashboard Section Modal Buttons](.specify/specs/dashboard-section-modal-buttons/spec.md) (Explore/Character/Campaign as buttons; modals contain existing actions + full-page link) | UI | [x] Done | GL |
 | 1.22 | GN | [Dashboard Header Row + Play the Game Box](.specify/specs/dashboard-header-row-and-play-box/spec.md) (identity + vibeulons in one row; Explore/Character/Campaign in labeled box) | UI | [x] Done | GM |
+| 1.28.1 | BES | [BAR External Sharing](.specify/specs/bar-external-sharing/spec.md) (share BAR to external recipient; login/signup; campaign-BAR → onboarding first; iOS Open Graph preview) | UI/Infra | [x] Done | GP-INV |
+| 1.28.4 | BSP | [BAR Share Full Preview](.specify/specs/bar-share-full-preview/spec.md) (shared link shows photos + inspiration links; full BAR experience before auth) | UI | [x] Done | BES |
+| 40.12 | DW | [Quest Library Wave Routing](.specify/specs/quest-library-wave-routing/spec.md) (route book quests by moveType; pools; Phases 1–5 — **Phase 6 model quests** deferred in `tasks.md`) | UI/Infra | [x] Done | AZ, BN |
+| 0.57 | PU | [Prisma P6009 Response Size Fix](.specify/specs/prisma-p6009-response-size-fix/spec.md) (listBooks `select`; exclude `extractedText`; `prisma-errors`) | Infra | [x] Done | AZ |
+| 1.04 | FQ | [Book Quest Targeted Extraction v0](.specify/specs/book-quest-targeted-extraction/spec.md) (TOC + section hints; filtered chunk analysis; token savings) | Infra | [x] Done | AZ, BN |
+| 0.40 | DC | [Branched Path Orientation](.specify/specs/branched-path-orientation/spec.md) (2–4 choices; `generateBranchedPath`, `BranchedQuestPacket`; Phase 3 AI token integration deferred) | UI/Infra | [x] Done | CE |
+| 0.65 | ED | [Narrative Transformation Engine v0](.specify/specs/narrative-transformation-engine/spec.md) (parse→lock→registry seed; alchemy hints; `/api/narrative-transformations/*`) | Infra | [x] Done | CM, BY |
+| 0.98 | FK | [Transformation Move Registry v0](.specify/specs/transformation-move-registry/spec.md) (canonical 8 moves; `assembleQuestSeed`, renderContext) | Infra | [x] Done | - |
+| 0.99 | FL | [Transformation Encounter Geometry v0](.specify/specs/transformation-encounter-geometry/spec.md) (8 encounter types; services + tests) | Infra | [x] Done | FK |
 
 ---
-*161 items archived. Run `npm run compost:backlog` to re-compost after adding new Done/Superseded items.*
+*170 items archived. Run `npm run compost:backlog` to re-compost after adding new Done/Superseded items.*

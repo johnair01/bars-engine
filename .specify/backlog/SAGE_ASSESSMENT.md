@@ -1,6 +1,6 @@
 # Sage Backlog Assessment
 
-**Date**: Monday, March 16, 2026
+**Date**: Thursday, March 19, 2026
 
 ## App Direction (Summary)
 
@@ -28,7 +28,7 @@ High-leverage items aligned with app direction:
 3. **EJ** — Admin Agent Forge. 3-2-1 Forge, distortion gate, vibeulon routing. No deps.
 4. **EM** — CYOA Certification Quests. Quality gate for onboarding.
 5. **DL** — Campaign Map Phase 1. Extends gameboard; Layer 1–3.
-6. **DQ/DT** — Flow Simulator CLI. Bruised Banana fixtures; simulation harness.
+6. **DT** — Flow Simulator CLI. Bruised Banana fixtures; simulation harness (folded former DQ).
 
 ## Watch Out
 

@@ -20,6 +20,9 @@ config({ path: '.env' })
 
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
+import { ensureBackendReady } from '../src/lib/backend-health'
+
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 const backendIdx = process.argv.indexOf('--backend')
 const next = process.argv[backendIdx + 1]
@@ -165,14 +168,8 @@ async function main() {
   console.log('Strand: Invitation gap analysis + player user stories\n')
   console.log(`Backend: ${BACKEND_URL}\n`)
 
-  try {
-    const health = await fetch(`${BACKEND_URL}/api/health`)
-    if (!health.ok) throw new Error('Health check failed')
-    console.log('✓ Backend reachable\n')
-  } catch {
-    console.error('❌ Backend not reachable. Start with: npm run dev:backend')
-    process.exit(1)
-  }
+  await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
+  console.log('✓ Backend reachable\n')
 
   console.log('1. Consulting Shaman (player belonging + entry experience)...')
   const shamanResult = await faceTask('shaman', SHAMAN_TASK)

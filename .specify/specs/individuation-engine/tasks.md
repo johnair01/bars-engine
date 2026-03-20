@@ -2,29 +2,29 @@
 
 ## Phase 1: Wire Existing Infrastructure (no migrations)
 
-- [ ] IE-1: Create `/src/lib/quest-seed-composer.ts` with `buildQuestSeedInput()` and `QuestSeedContext` interface
-- [ ] IE-2: Add `getActiveDaemonState()` to `/src/actions/daemons.ts`
-- [ ] IE-3: Wire `buildQuestSeedInput()` + `applyArchetypeOverlay()` into `generateQuestSuggestionsFromCharge()` in `/src/actions/charge-capture.ts`
-- [ ] IE-4: Wire `applyArchetypeOverlay()` into quest compilation in `/src/actions/quest-generation.ts`
-- [ ] IE-5: Extend `SelectSceneOpts` with `daemonChannel`/`daemonAltitude`; update `scoreCandidate()` in `/src/lib/alchemy/select-scene.ts`
-- [ ] IE-6: Pass Daemon state to `selectScene()` at call site in `/src/actions/alchemy.ts`
-- [ ] IE-7: `npm run build` + `npm run check` pass
+- [x] IE-1: Create `/src/lib/quest-seed-composer.ts` with `buildQuestSeedInput()` and `QuestSeedContext` interface
+- [x] IE-2: Add `getActiveDaemonState()` to `/src/actions/daemons.ts` (uses `queryActiveDaemonChannelAltitude` in `/src/lib/daemon-active-state.ts` for lib-safe reads)
+- [x] IE-3: Wire `buildQuestSeedInput()` + `applyArchetypeOverlay()` into `generateQuestSuggestionsFromCharge()` (`/src/lib/charge-suggestion-archetype-overlay.ts` + `/src/actions/charge-capture.ts`)
+- [x] IE-4: Wire `applyArchetypeOverlay()` into quest compilation via `archetypeInfluenceProfile` on `BuildQuestPromptContextInput` (`buildQuestPromptContext.ts`) + `quest-generation.ts` → `compileQuestWithAI`
+- [x] IE-5: Extend `SelectSceneOpts` with `daemonChannel`/`daemonAltitude`; update `scoreCandidate()` in `/src/lib/alchemy/select-scene.ts`
+- [x] IE-6: Pass Daemon state to `selectScene()` at `growArtifactFromBar` (`bars.ts`), `generateScene` API (`/api/growth-scenes/generate`), and growth-scene generator opts (spec referenced `alchemy.ts`; call sites consolidated here)
+- [x] IE-7: `npm run build` + `npm run check` pass
 
 ## Phase 2: Schema Migrations + Daemon Codex
 
-- [ ] IE-8: Migration `add_individuation_engine_daemon_codex` — add voice/desire/fear/shadow/evolutionLog to Daemon
-- [ ] IE-9: Migration `add_individuation_engine_scene_biases` — add kotterStageBias/campaignFrontBias to AlchemySceneTemplate
-- [ ] IE-10: Migration `add_individuation_engine_charge_archetype` — add archetypeKey to CustomBar
-- [ ] IE-11: Run `npm run db:sync` after migrations
-- [ ] IE-12: Add `updateDaemonCodex()` and `appendDaemonEvolution()` to `/src/actions/daemons.ts`
-- [ ] IE-13: Extend `unlockBlessedObject()` to accept + store `daemonId` in metadata
-- [ ] IE-14: Call `appendDaemonEvolution()` from quest completion and 321/EFA unlock paths
-- [ ] IE-15: Stamp `archetypeKey` on `CustomBar` at charge capture in `/src/actions/charge-capture.ts`
-- [ ] IE-16: Extend `scoreCandidate()` to score `kotterStageBias` and `campaignFrontBias`
-- [ ] IE-17: Create `/src/app/daemons/[id]/codex/page.tsx` with codex form + evolution log
-- [ ] IE-18: Create `<TransitionCeremony />` component in `/src/components/charge-capture/`
-- [ ] IE-19: Wire `<TransitionCeremony />` into charge capture flow
-- [ ] IE-20: `npm run build` + `npm run check` pass
+- [x] IE-8: Migration `add_individuation_engine_daemon_codex` — add voice/desire/fear/shadow/evolutionLog to Daemon
+- [x] IE-9: Migration `add_individuation_engine_scene_biases` — add kotterStageBias/campaignFrontBias to AlchemySceneTemplate
+- [x] IE-10: Migration `add_individuation_engine_charge_archetype` — add archetypeKey to CustomBar
+- [x] IE-11: Apply migration `20260422120000_add_individuation_engine_phase2` (`npm run db:sync` / `prisma migrate deploy`)
+- [x] IE-12: `updateDaemonCodex()` + `getDaemonCodexForPlayer()` in `daemons.ts`; append via `appendDaemonEvolutionLog()` in `/src/lib/daemon-evolution.ts`
+- [x] IE-13: `UnlockMetadata.daemonId` + callers pass metadata into `unlockBlessedObject` / EFA blessed creates
+- [x] IE-14: `appendDaemonEvolutionLog` from `quest-engine`, `persist321Session`, `emotional-first-aid` completion
+- [x] IE-15: Stamp `archetypeKey` on charge `createChargeBar`; `buildQuestSeedInput` prefers bar stamp over player archetype
+- [x] IE-16: `selectScene` / `scoreCandidate` scores `kotterStage` + `activeFaceKey` against template biases; `generateScene` passes Kotter stage from instance
+- [x] IE-17: `/daemons/[id]/codex` page + `DaemonCodexForm`; list links to Codex
+- [x] IE-18: `TransitionCeremony.tsx`
+- [x] IE-19: Wired in `ChargeCaptureForm` + `ChargeExploreFlow`; `generateQuestSuggestionsFromCharge` returns `ceremony`
+- [x] IE-20: `npm run build` + `npm run check` pass
 
 ## Phase 3: NationFaceEra + Full Ecology
 

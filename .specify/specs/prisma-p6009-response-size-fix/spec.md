@@ -1,5 +1,7 @@
 # Spec: Prisma P6009 Response Size + Anti-Fragile Data Queries
 
+**Backlog ID**: **PU** (priority 0.57). The short code `DU` was duplicate with *Deftness Uplevel* in `BACKLOG.md`; archived entries use **PU**.
+
 ## Purpose
 
 Fix the `/admin/books` crash when `listBooks()` triggers Prisma P6009 (response size exceeded 5MB). Make the system increasingly anti-fragile to large-query errors so pages degrade gracefully instead of crashing.

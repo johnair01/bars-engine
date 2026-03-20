@@ -15,6 +15,9 @@ config({ path: '.env' })
 
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
+import { ensureBackendReady } from '../src/lib/backend-health'
+
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 const backendIdx = process.argv.indexOf('--backend')
 const next = process.argv[backendIdx + 1]
@@ -35,13 +38,7 @@ async function main() {
   console.log('Consulting Sage on 321 Suggest Name...\n')
   console.log(`Backend: ${backendArg}`)
 
-  try {
-    const health = await fetch(`${backendArg}/api/health`)
-    if (!health.ok) throw new Error('Health check failed')
-  } catch {
-    console.error('\n❌ Backend not reachable. Start with: npm run dev:backend')
-    process.exit(1)
-  }
+  await ensureBackendReady({ url: backendArg, autoStart: !NO_AUTO_START })
 
   const res = await fetch(`${backendArg}/api/agents/sage/consult`, {
     method: 'POST',

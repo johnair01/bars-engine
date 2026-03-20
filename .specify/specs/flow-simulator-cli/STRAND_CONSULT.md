@@ -1,4 +1,4 @@
-# Strand Consultation — Flow Simulator DQ
+# Strand Consultation — Flow Simulator (DT; backlog **DQ** folded into **DT**)
 
 **Date**: 2026-03-18
 **Source**: `npm run strand:consult:dq`

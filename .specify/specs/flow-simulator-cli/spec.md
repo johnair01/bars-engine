@@ -1,5 +1,7 @@
 # Spec: Flow Simulator CLI + Bounded Simulated Actor Roles
 
+**Backlog ID**: **DT** (priority `0.56`). A duplicate row **`DQ` (`0.45.1`)** pointed at this same spec; it was **folded into DT** (March 2026). Use **DT** in dependencies and docs.
+
 ## Purpose
 
 Add a lightweight simulation environment for quest flows and onboarding flows, with optional support for bounded simulated actor roles. Supports fixture validation, onboarding debugging, quest execution testing, and event/state inspection. Lays groundwork for future single-player mode with simulated collaborators and **autonomous agent testing and content creation**.

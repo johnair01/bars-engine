@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Consult Game Master agents on DQ (Flow Simulator CLI) — extending utility and
+ * Consult Game Master agents on Flow Simulator CLI (**backlog DT**; historical tag DQ) — extending utility and
  * blockers for autonomous agents testing features and creating content.
  *
  * Usage:
@@ -18,6 +18,9 @@ config({ path: '.env' })
 
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
+import { ensureBackendReady } from '../src/lib/backend-health'
+
+const NO_AUTO_START = process.argv.includes('--no-auto-start')
 
 const backendIdx = process.argv.indexOf('--backend')
 const next = process.argv[backendIdx + 1]
@@ -139,13 +142,7 @@ async function main() {
   console.log('Consulting Game Master on Flow Simulator DQ...\n')
   console.log(`Backend: ${BACKEND_URL}`)
 
-  try {
-    const health = await fetch(`${BACKEND_URL}/api/health`)
-    if (!health.ok) throw new Error('Health check failed')
-  } catch (e) {
-    console.error('\n❌ Backend not reachable. Start with: npm run dev:backend')
-    process.exit(1)
-  }
+  await ensureBackendReady({ url: BACKEND_URL, autoStart: !NO_AUTO_START })
 
   console.log('1. Consulting Sage (routes to Architect + Regent)...')
   const sageResult = await sageConsult()

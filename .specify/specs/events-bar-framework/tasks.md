@@ -35,4 +35,12 @@
 - [x] EventArtifact parent/child (`parentEventArtifactId`); invites to child crews → `functionalRole: preproduction` on accept
 - [x] Event hosts (`EventCampaign.hostActorIds`) can send event invitations
 - [x] `/event` tree: main event + pre-production rows; invite modal groups main vs crews
-- [ ] Capacity, check-in, recurrence, calendar sync (still deferred)
+- [x] Edit event schedule in-app (`updateEventArtifactSchedule`, **Edit** for hosts/admins) — `startTime`, `endTime`, optional IANA `timezone`, optional **capacity**
+
+## Phase 6: Event operations (partial)
+
+- [x] Schema: `EventArtifact.capacity`, `recurrenceRule` (DB placeholder for future RRULE)
+- [x] List shows RSVP count; optional capacity; enforce on `acceptEventInvitation` when full
+- [x] **Guests & check-in** panel (hosts); `markEventParticipantAttended`
+- [x] **Add to calendar (.ics)** — `GET /api/events/[eventId]/ics` (host or participant, logged in)
+- [ ] Recurrence UI + iCal RRULE / subscription feed (deferred)

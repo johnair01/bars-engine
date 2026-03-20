@@ -30,9 +30,8 @@ The hexagram suggests: *ground your next moves in the quality of the moment*. Pr
 ### Regent
 
 - [ ] **DS** — Dev Setup Anti-Fragile (loop:ready remediation hints, INCIDENTS.md, DB_STRATEGY, bootstrap script; learn from schema/migration/seed issues)
-- [ ] **DQ** — Flow Simulator CLI + Bounded Simulated Actor Roles (CLI flow simulation; Bruised Banana fixtures; Librarian/Collaborator/Witness scaffold)
-- [ ] **DT** — Flow Simulator CLI + Bounded Simulated Actor Roles (CLI for quest flow simulation; Bruised Banana fixtures; Librarian/Collaborator/Witness scaffold)
-- [ ] **DU** — Prisma P6009 Response Size Fix (listBooks over-fetch; exclude extractedText; anti-fragile error handling) (deps: AZ)
+- [ ] **DT** — Flow Simulator CLI + Bounded Simulated Actor Roles (quest + onboarding flow simulation; Bruised Banana fixtures; Librarian/Collaborator/Witness scaffold; folded former **DQ**)
+- [x] **PU** — Prisma P6009 Response Size Fix (archived; was duplicate **DU** id in BACKLOG) (deps: AZ)
 - [ ] **EG** — Archetype Move Styles v0 (8 trigram-linked Playbooks; agency style, prompt modifiers, quest style; archetypeKey = playbook slug) (deps: EE)
 - [ ] **EI** — Archetype Key Resolution (ARCHETYPE_KEYS → playbook slug mapping; resolveArchetypeKeyForTransformation; transformation/avatar use playbook slugs) (deps: EG)
 

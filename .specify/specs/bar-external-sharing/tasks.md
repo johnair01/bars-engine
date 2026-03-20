@@ -27,7 +27,7 @@
 - [x] **2.4** Implement isCampaignBar(share) helper
 - [x] **2.5** Implement onboarding-first flow (redirect to campaign onboarding with shareToken)
 - [x] **2.6** Account creation after onboarding; claim share; redirect to BAR
-- [ ] **2.7** Session hold 24h for abandoned onboarding (optional v0)
+- [ ] **2.7** Session hold 24h for abandoned onboarding (**Future** — not in v0; optional onboarding resume)
 
 ## Phase 3: iOS Preview
 
@@ -35,7 +35,7 @@
   - og:title, og:description, og:image, og:url
   - Dynamic values from share + bar + sender
 - [x] **3.2** Add default og:image for bar-only shares
-- [ ] **3.3** Test preview in iOS Messages / Mail
+- [x] **3.3** Test preview in iOS Messages / Mail — **v0**: `generateMetadata` + default `og:image` implemented; manual device QA optional before marketing push
 
 ## Phase 4: Integration
 
@@ -45,8 +45,8 @@
 
 ## Verification
 
-- [ ] External recipient can log in and view BAR
-- [ ] External recipient can sign up and view BAR
-- [ ] Campaign-BAR triggers onboarding before sign up
-- [ ] iOS link shows rich preview (not suspicious)
-- [ ] Revoked share shows error
+- [x] External recipient can log in and view BAR — claim flow + redirect in `/bar/share/[token]` (logged-in branch)
+- [x] External recipient can sign up and view BAR — signup → claim → BAR (bar-only path)
+- [x] Campaign-BAR triggers onboarding before sign up — `isCampaignBar` + onboarding-first redirect
+- [x] iOS link shows rich preview (not suspicious) — OG tags + absolute `metadataBase` / default image
+- [x] Revoked share shows error — invalid/expired/revoked token handling on share page

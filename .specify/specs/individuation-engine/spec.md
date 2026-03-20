@@ -2,7 +2,7 @@
 
 **Slug**: `individuation-engine`
 **Ambiguity**: 0.16
-**Status**: Ready for Phase 1 implementation
+**Status**: Phase 1–2 implemented (see `tasks.md`); Phase 3 (NationFaceEra) pending
 **Synthesized**: 2026-03-17 via strand (Shaman → Diplomat → Sage) + Socratic interview pass
 
 ---

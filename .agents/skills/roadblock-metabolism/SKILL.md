@@ -57,12 +57,19 @@ When the agent catches its own error during the reflection phase:
 ## Pre-Commit Ritual
 
 The project has a pre-commit hook that runs:
+- `npm run db:generate`
+- `npm run verify:build-reliability` (server-action type re-exports + `prisma validate`)
 - `npm run build:type-check` (tsc --noEmit)
-- Optionally: `npm run validate-manifest` (checks "use client" for hooks)
+- `npm run validate-manifest`
 
-If the hook fails, the commit is rejected. The agent should run these locally before suggesting commit, or remind the user to run them.
+If the hook fails, the commit is rejected. Run `npm run check` for the full lint + type-check pipeline. See [docs/BUILD_RELIABILITY.md](../../../docs/BUILD_RELIABILITY.md).
+
+### Server actions + types
+
+Do **not** add `export type { X } from '…'` or `export { type X }` in `"use server"` files — Turbopack can treat them as missing runtime exports. Put shared types in `src/lib/*` and `import type` there.
 
 ## Reference
 
-- Spec: [.specify/specs/roadblock-metabolism/spec.md](../../.specify/specs/roadblock-metabolism/spec.md)
+- Spec: [.specify/specs/roadblock-metabolism/spec.md](../../../.specify/specs/roadblock-metabolism/spec.md)
+- Build playbook: [.specify/specs/build-reliability/STRAND_CONSULT.md](../../../.specify/specs/build-reliability/STRAND_CONSULT.md)
 - FOUNDATIONS.md: Metabolism of Roadblocks section

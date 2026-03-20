@@ -24,7 +24,7 @@
 
 ## Verification
 
-- [ ] Unauthenticated recipient sees BAR photos on shared link
-- [ ] Unauthenticated recipient sees and can click inspiration links
-- [ ] Claim/Login/Signup CTAs remain below preview
-- [ ] Mobile layout correct
+- [x] Unauthenticated recipient sees BAR photos on shared link — `page.tsx` loads `bar.assets`; `SharePreview` uses `BarFaceBackTabs` with `isOwner={false}` (no edit)
+- [x] Unauthenticated recipient sees and can click inspiration links — `BarSocialLinks` without `onRemove`; external `target="_blank"`
+- [x] Claim/Login/Signup CTAs remain below preview — `ClaimShareForm` / login + campaign links follow `<SharePreview />` in both branches
+- [x] Mobile layout correct — stacked `max-w-md` container; tabs + lists use responsive Tailwind patterns consistent with BAR detail

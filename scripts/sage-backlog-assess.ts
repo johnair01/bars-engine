@@ -100,6 +100,42 @@ async function callSage(prompt: string): Promise<string | null> {
   }
 }
 
+/** Why Sage might return no synthesis — surfaces openai_configured from /api/health */
+async function explainSageFallback(): Promise<void> {
+  const base = BACKEND_URL.replace(/\/$/, '')
+  try {
+    const res = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(3000) })
+    if (!res.ok) {
+      console.warn(
+        '\n⚠ Sage consult failed: /api/health not OK — check backend logs and route errors.'
+      )
+      return
+    }
+    const data = (await res.json()) as { openai_configured?: boolean }
+    if (data.openai_configured === true) {
+      console.warn(
+        '\n⚠ Sage consult returned no synthesis but openai_configured is true — check /api/agents/sage/consult logs, timeouts, or model errors.'
+      )
+      return
+    }
+    console.warn(
+      [
+        '\n⚠ Sage consult skipped — backend reports openai_configured: false.',
+        '  Fix (pick one):',
+        '    • Add OPENAI_API_KEY=sk-... to repo .env.local (recommended) or repo .env',
+        '    • Optional: backend/backend/.env for backend-only secrets',
+        '    • Restart backend: npm run dev:backend',
+        '  Verify: curl -s ' + base + '/api/health | grep openai',
+        '  Doc: docs/AGENT_WORKFLOWS.md (section "OPENAI_API_KEY and backend")',
+      ].join('\n')
+    )
+  } catch {
+    console.warn(
+      '\n⚠ Could not reach ' + base + '/api/health to diagnose Sage fallback.'
+    )
+  }
+}
+
 function synthesizeLocalAssessment(
   ready: BacklogItem[],
   superseded: BacklogItem[],
@@ -144,7 +180,7 @@ function synthesizeLocalAssessment(
     '3. **EJ** — Admin Agent Forge. 3-2-1 Forge, distortion gate, vibeulon routing. No deps.',
     '4. **EM** — CYOA Certification Quests. Quality gate for onboarding.',
     '5. **DL** — Campaign Map Phase 1. Extends gameboard; Layer 1–3.',
-    '6. **DQ/DT** — Flow Simulator CLI. Bruised Banana fixtures; simulation harness.',
+    '6. **DT** — Flow Simulator CLI. Bruised Banana fixtures; simulation harness (folded former DQ).',
     '',
     '## Watch Out',
     '',
@@ -218,8 +254,11 @@ Be concise. Reference backlog IDs.`
     ].join('\n')
     console.log('✓ Sage consulted')
   } else {
+    await explainSageFallback()
     content = synthesizeLocalAssessment(ready, superseded, appDirection)
-    console.log('✓ Local synthesis (Sage backend not available — start with: npm run dev:backend)')
+    console.log(
+      '✓ Wrote local synthesis (deterministic template). For live Sage: fix OPENAI above, then re-run.'
+    )
   }
 
   writeFileSync(outPath, content)

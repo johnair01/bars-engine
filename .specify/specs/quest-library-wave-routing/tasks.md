@@ -28,7 +28,7 @@
 
 - [x] Create cert-quest-library-wave-routing-v1 Twine story
 - [x] Add to scripts/seed-cyoa-certification-quests.ts
-- [ ] npm run build and npm run check
+- [x] npm run build and npm run check
 
 ## Phase 6: Model quests and suggestions (deferred)
 

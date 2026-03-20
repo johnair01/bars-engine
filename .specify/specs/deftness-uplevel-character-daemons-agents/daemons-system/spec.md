@@ -68,7 +68,7 @@ model DaemonSummon {
 
 **As a player**, I want to discover daemons by doing a Wake Up variant of the 321 process, so I can extend my moves through inner work.
 
-**Acceptance**: "321 Wake Up" flow exists (distinct from standard 321). On completion, daemon discovered; created with `source: "321_wake_up"`.
+**Acceptance**: "321 Wake Up" lives at `/shadow/321` (`Shadow321Runner`). On completion, daemon is created via `awakenDaemonFrom321` with `source: "321_wake_up"` and session lineage.
 
 ### P2: Leveling via Grow Up school
 
@@ -96,10 +96,16 @@ model DaemonSummon {
 
 ## API Contracts
 
+### awakenDaemonFrom321({ playerId, phase2Snapshot, phase3Snapshot, daemonName, shadow321Name? })
+
+**Input**: snapshots + name from `Shadow321Runner` completion.  
+**Output**: `{ daemonId, sessionId, name, moveIds }` — persists `Shadow321Session` (`daemon_awakened`).
+
 ### discoverDaemon(playerId, source, metadata)
 
-**Input**: `playerId`, `source: "321_wake_up" | "school"`, `metadata`  
-**Output**: `{ daemonId, name, moveIds }`
+**Input**: `playerId`, `source: "321_wake_up" | "school" | "bar"`, `metadata`  
+**Output**: `{ daemonId, name, moveIds }`  
+**Note**: Prefer `awakenDaemonFrom321` for the `/shadow/321` path; `discoverDaemon` covers school/bar and legacy hooks.
 
 ### summonDaemon(playerId, daemonId, ritualInput?)
 

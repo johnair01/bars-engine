@@ -117,7 +117,8 @@ ${consultedAgents?.length ? `**Consulted:** ${consultedAgents.join(', ')}\n` : '
 }
 
 async function main() {
-  const { path: docsPath } = parseArgs()
+  const { path: docsPath, backend, noAutoStart } = parseArgs()
+  await ensureBackendReady({ url: backend, autoStart: !noAutoStart })
   console.log(`Reading Conclave docs from: ${docsPath}`)
   const docs = readDocs(docsPath)
   if (docs.length === 0) {

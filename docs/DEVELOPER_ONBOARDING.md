@@ -120,9 +120,11 @@ Run each command and fix any failure before proceeding.
 | Command | Purpose |
 |---------|---------|
 | `npm run smoke` | Checks `DATABASE_URL` and database connectivity |
-| `npm run check` | Lint + TypeScript type-check |
+| `npm run check` | `prisma generate` → server-action / Prisma validate checks → **lint** → **TypeScript** (see [docs/BUILD_RELIABILITY.md](BUILD_RELIABILITY.md)) |
 | `npm run build` | Next.js build. With `DATABASE_URL` set: runs migrate deploy + build. Without: skips migrate, runs generate + build (for type-check/compile verification). |
 | `npm run test:quest-grammar` | Quest grammar unit tests (if applicable) |
+
+**Server actions:** Do not use `export type { X } from '…'` in files with `"use server"` — import shared types from `src/lib/*` instead. Husky pre-commit runs `verify:build-reliability` (plus generate, type-check, validate-manifest).
 
 ### Example verification flow
 

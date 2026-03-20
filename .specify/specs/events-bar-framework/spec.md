@@ -10,7 +10,19 @@ Fold event management into the BAR framework: event invites via BAR, EventArtifa
 - **Phase 2** (EventArtifact ↔ Instance): Implemented (April 5th EventArtifact seed remains backlog)
 - **Phase 3** (Pre-production sub-campaigns): Implemented
 - **Phase 4** (Event venue entry): Implemented — see `POPSPACE_EVALUATION.md`
-- **Phase 5**: Deferred
+- **Phase 5** (partial): Nested pre-production events + host invites; in-app **Edit schedule & capacity** for `EventArtifact` (hosts/admins).
+- **Phase 6** (partial): **Capacity** (optional max + RSVP counts + enforce on accept), **check-in** (hosts → `attended`), **calendar** (.ics download for hosts/participants). **Recurrence** (`recurrenceRule` column only; UI later).
+
+## Phase 6 — Capacity, check-in, calendar
+
+- **As a host**, I see **N / M going** when capacity is set, can edit capacity in the event editor, and RSVPs cannot exceed capacity when someone accepts an invitation.
+- **As a host**, I can expand **Guests & check-in**, see participants, and mark **Check in** for those who RSVPed.
+- **As a host or invited participant**, I can download **Add to calendar (.ics)** for an event that has a start time (login required; access same as visibility rules in action).
+- **Recurrence:** `recurrenceRule` reserved in DB; no product UI in Phase 6.
+
+## Phase 5 — Edit event schedule (in-app)
+
+- **As a campaign host or steward**, I can open **Edit time** on `/event` for any listed event (including pre-production rows) and set start, optional end, and optional IANA timezone; saves to `EventArtifact` and refreshes the page.
 
 ## Phase 4: Event Venue (Gather-style)
 
