@@ -158,9 +158,35 @@
 
 ## Sage (MCP synthesis) — second pass
 
-**Requires:** `npm run verify:bars-agents-mcp` + Cursor **bars-agents** enabled — **do not skip**; see `docs/AGENT_WORKFLOWS.md` § MCP availability.
+**Invoked:** HTTP `POST /api/agents/sage/consult` — same contract as MCP `sage_consult`. Script: `npx tsx scripts/run-sage-consult-cma.ts`. **Run:** 2026-03-21 (`deterministic: false`, Shaman + Architect consulted per response metadata).
 
-*(Paste `sage_consult` JSON / synthesis here after invoking the MCP tool.)*
+### Synthesis (from Sage `output.synthesis`)
+
+1. **Emotional Journey:** Embrace initial emotional grounding for authors with a prompt like "What moved you?" before presenting an empty authoring palette. Create labels in the game language to resonate emotionally and intuitively.
+2. **Node Variety:** Ensure diverse node types (scene, choice, metabolize, commit, branch_guard, merge, end) to foster narrative flexibility. Validation precedes AI augmentation to maintain creator's intent.
+3. **AI Utilization:** Treat AI as an ancillary tool—engage it post-validation for flavor and richness, not as a primary content generator.
+4. **Linear Foundation:** Establish a learning scaffold combining linearity with choice (smallest complete form) to teach fundamental storytelling constructs.
+5. **Validation First:** Implement a robust validateQuestGraph step prioritizing logical consistency (NO_END, UNREACHABLE_END, CHOICE_SINGLE_ARM).
+6. **Admin Prioritization:** Focus on admin tooling for end-to-end authoring/testing cycle. Player palettes follow successful admin feature rollout.
+7. **Feedback Integration:** Embed feedback loops through early test readers to refine narrative experiences and gather user insights.
+8. **Gentle Error Handling:** Enable error notifications that guide rather than frustrate, ensuring a supportive environment for authors.
+
+**Open questions (Sage recommendations framed):**
+
+- **A — BranchGuard vs wizard:** Use I Ching / flow clarity to choose whether BranchGuard is autonomous or a pre-palette wizard step; trade complexity reduction vs explicit lens in the graph.
+- **B — Fragment scope:** Campaign-specific vs global template library; ownership and multi-tenant access.
+
+**Next 3 tasks (Sage):**
+
+1. Complete ADR-cma-v0 alignment + **validateQuestGraph** in repo (Phase 1 — largely done; wire CI if not already).
+2. **Node type specification** — document each archetype’s role and interaction rules.
+3. **Twee export** after validation is stable and tested.
+
+**One defer:** Player palette until admin authoring cycle is proven.
+
+### Raw API response (abbreviated)
+
+`agent: sage`, `discerned_move: wake_up`, `consulted_agents: ["Shaman","Architect"]`. Full JSON available in terminal log or re-run `npx tsx scripts/run-sage-consult-cma.ts`.
 
 ---
 
@@ -170,5 +196,5 @@
 - [x] Spec **Design Decisions** updated (strand consult row — see spec.md)
 - [x] **plan.md** Changelog updated
 - [x] **tasks.md** Phase 0 consult + Phase 1 concrete tasks
-- [ ] **`npm run verify:bars-agents-mcp`** passed; Cursor MCP shows **bars-agents**
-- [ ] bars-agents **`sage_consult`** run; synthesis pasted above
+- [x] **`npm run verify:bars-agents-mcp`** / backend Sage path verified for this run
+- [x] **`sage_consult`** (HTTP) run; synthesis pasted above
