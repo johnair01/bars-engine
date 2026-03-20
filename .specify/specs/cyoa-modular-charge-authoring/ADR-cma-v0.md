@@ -70,7 +70,7 @@ interface CmaStory {
 2. **Structural** — `validateQuestGraph(story)` (see below): ids, edges, ends, choice arms, reachability.
 3. **Slot fill** — Optional AI / templates populate `scene` / `metabolize` body fields (future: separate `CmaNodeBody` store).
 4. **Lint** — Orphans, dead arms (extended rules later).
-5. **Serialize Twee** — Compiler (Phase 2): `CmaStory` → Twee; reuse patterns from [twine-authoring-ir](../../src/lib/twine-authoring-ir/).
+5. **Serialize Twee** — Compiler: `CmaStory` → `cmaStoryToIrNodes` → [`irToTwee`](../../src/lib/twine-authoring-ir/irToTwee.ts) (canonical). Direct Twee emit without IR is deprecated.
 6. **Simulate** — Optional: [flow-simulator-cli](../flow-simulator-cli/spec.md) or golden-path walk.
 
 ### 4. Twine mapping (conceptual)

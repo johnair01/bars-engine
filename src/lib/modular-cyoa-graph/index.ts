@@ -17,3 +17,11 @@ export type {
 } from './validateQuestGraph'
 export { validateQuestGraph } from './validateQuestGraph'
 export { cmaStoryToTwee } from './cmaStoryToTwee'
+export { cmaStoryToIrNodes, cmaNodeToIrBody } from './cmaStoryToIr'
+export { suggestBlocksFromCharge } from './suggestBlocksFromCharge'
+export type { ChargeBlockSuggestions, ChargeLike } from './suggestBlocksFromCharge'
+export {
+  CMA_KIND_LABELS,
+  CMA_MVP_KINDS,
+  cmaKindsForAdminPalette,
+} from './cmaPaletteLabels'

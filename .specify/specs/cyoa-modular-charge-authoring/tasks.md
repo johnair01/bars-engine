@@ -21,15 +21,15 @@
 
 - [x] Define node archetypes (5–8) + graph validation rules — `ADR-cma-v0.md` + `validateQuestGraph`
 - [x] Admin UI: palette + structure review — **Blocks (CMA)** tab on `/admin/quest-grammar` (`BlockPalettePlayground.tsx`)
-- [x] Compiler path: blocks → Twee export v0 — `cmaStoryToTwee` in `src/lib/modular-cyoa-graph/` (IR/`irToTwee` bridge can follow)
+- [x] Compiler path: blocks → Twee export v0 — `cmaStoryToTwee` → `cmaStoryToIrNodes` + `irToTwee` (canonical)
 - [x] `npm run build` && `npm run check` — verified for this slice
 
 ## Phase 3: Library + charge bridge
 
-- [ ] Persist template subgraphs + provenance (BAR/quest ids)
-- [ ] Charge fields → block suggestions (non-mandatory)
+- [x] Persist template subgraphs + provenance (BAR/quest ids) — **browser MVP:** `src/app/admin/quest-grammar/cmaClientStorage.ts` (localStorage); optional fields in Blocks UI; DB later if cross-device
+- [x] Charge fields → block suggestions (non-mandatory) — `suggestBlocksFromCharge.ts` + **Charge → block hints** panel in `BlockPalettePlayground`
 
 ## Phase 4: Pedagogy & gating
 
-- [ ] Progressive block unlock + tutorial copy
-- [ ] Dual-track: AI-assisted vs structure-only path verified
+- [x] Progressive block unlock + tutorial copy — **Unlock all archetypes** checkbox (`cmaClientStorage.ts` + `cmaKindsForAdminPalette` in `cmaPaletteLabels.ts`) + collapsible tutorial `<details>` on Blocks tab
+- [x] Dual-track: AI-assisted vs structure-only path verified — **Structure-only mode** toggle (authoring stance; no AI wired yet — documents non-AI path as first-class)

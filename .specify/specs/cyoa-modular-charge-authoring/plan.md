@@ -55,3 +55,4 @@ Move from research ([docs/CYOA_MODULAR_AUTHORING_RESEARCH.md](../../../docs/CYOA
 |------|--------|
 | 2026-03-20 | Initial spec kit + STRAND_CONSULT_SIX_FACES |
 | 2026-03-20 | **Strand consult pass 1** — [STRAND_OUTPUT.md](./STRAND_OUTPUT.md): six-face research; v0 archetypes; validation order; gates; Diplomat copy principles; Sage synthesis + deferred scope |
+| 2026-03-20 | Phases **2–4** MVP: `cmaStoryToIr` + `irToTwee`; Blocks UI templates (localStorage), charge hints, palette unlock, tutorial, structure-only toggle — see `tasks.md` |
