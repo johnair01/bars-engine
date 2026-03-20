@@ -134,6 +134,9 @@ model Player {
   alignment              PlayerAlignment?
   carriedWeights         CarriedWeight[]
   npcProfile             NpcProfile?
+  npc321InnerWorkMergesAsHuman Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeHuman")
+  npc321InnerWorkMergesAsNpc   Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeNpc")
+  daemonPromotedFrom           Daemon[]                  @relation("DaemonPromotedToNpc")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -263,6 +266,8 @@ model CustomBar {
   agentMetadata        String?   // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
   strandMetadata       String?   // JSON: { agent_sequence, phase_temperature, output_thread_links, audit_trail, branch_reference, thread_linkage? } when type=strand
   questPool            String?   // efa | dojo | discovery | gameboard — wave routing for book-derived quests
+  /// Playbook slug at charge capture (IE-10); immutable once set; null = no archetype stamp
+  archetypeKey         String?
   inviteId             String?   // when set, this BAR is an invitation BAR linked to that invite
   wateringProgress     String?   // JSON: { shaman, regent, challenger, architect, diplomat, sage } — campaign kernel watering
   wateringContent      String?   // JSON: { shaman: string, regent: string, ... } — stored responses per face
@@ -338,16 +343,50 @@ model Shadow321Session {
   createdAt        DateTime  @default(now())
   phase3Snapshot   String    // JSON: archetypeName, nationName, developmentalLens, genderOfCharge
   phase2Snapshot   String    // JSON: q1, q5, alignedAction, moveType
-  outcome          String    // bar_created | quest_created | fueled_system | skipped
+  outcome          String    // bar_created | quest_created | fueled_system | skipped | daemon_awakened
   linkedBarId      String?
   linkedQuestId    String?
   questCompletedAt DateTime?
+  /// Final shadow name when the player completed / preserved the naming step (321 Face It name field).
+  finalShadowName  String?
+  /// suggested_accepted | edited | typed_no_suggest — how the final name relates to suggest-name clicks.
+  nameResolution   String?
+  /// Number of times the player clicked "Suggest name" before resolving (0 = typed without using suggest).
+  suggestionCount  Int?
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  npc321InnerWorkMerges Npc321InnerWorkMerge[]
+  daemons               Daemon[]
 
   @@index([playerId])
   @@index([outcome])
   @@map("shadow_321_sessions")
+}
+
+/// Append-only log: human 321 name resolution teaches matching NPCs (creatorType agent) by nation + archetype.
+model Npc321InnerWorkMerge {
+  id                   String            @id @default(cuid())
+  createdAt            DateTime          @default(now())
+  humanPlayerId       String
+  npcPlayerId         String
+  shadow321SessionId  String
+  finalShadowName     String
+  /// suggested_accepted | edited | typed_no_suggest (matches Shadow321Session.nameResolution)
+  nameResolution      String
+  suggestionCount     Int?
+  metadataKeys        Json              // { nationId, archetypeId, alignedAction? }
+  chargeExcerpt       String?           @db.Text
+
+  humanPlayer        Player             @relation("Npc321InnerWorkMergeHuman", fields: [humanPlayerId], references: [id], onDelete: Cascade)
+  npcPlayer          Player             @relation("Npc321InnerWorkMergeNpc", fields: [npcPlayerId], references: [id], onDelete: Cascade)
+  shadow321Session   Shadow321Session  @relation(fields: [shadow321SessionId], references: [id], onDelete: Cascade)
+
+  @@unique([shadow321SessionId, npcPlayerId])
+  @@index([npcPlayerId, createdAt])
+  @@index([humanPlayerId, createdAt])
+  @@index([shadow321SessionId])
+  @@map("npc_321_inner_work_merges")
 }
 
 model ForgeSession {
@@ -441,6 +480,20 @@ model Daemon {
   level        Int      @default(1)
   moveIds      String   @default("[]") // JSON array of NationMove ids
   discoveredAt DateTime @default(now())
+  /// When set, this daemon was awakened from a full 321 flow with persisted session (SN Phase 8).
+  shadow321SessionId String?
+  /// Bounded JSON: v, finalShadowName, nameResolution, suggestionCount, identityExcerpt, etc.
+  innerWorkDigest    Json?
+  /// Set when daemon graduates to an NPC (`Player` creatorType agent) at promotion level.
+  promotedToPlayerId String? @unique
+
+  // --- Individuation Engine / Daemon Codex (IE-8) ---
+  voice         String?  @db.Text
+  desire        String?  @db.Text
+  fear          String?  @db.Text
+  shadow        String?  @db.Text
+  /// JSON array of evolution entries (append-only). See lib/daemon-evolution.ts
+  evolutionLog  String   @default("[]")
 
   // --- Daemon Move System (DMS-1) ---
   channel        String   @default("METAL")        // WOOD | FIRE | EARTH | METAL | WATER
@@ -448,11 +501,14 @@ model Daemon {
   collective     Boolean  @default(false)
   communityScope String?  // null = individual; instanceId = community scope
 
-  player         Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  summons        DaemonSummon[]
-  moveCreations  DaemonMoveCreation[]
+  player           Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  shadow321Session Shadow321Session?   @relation(fields: [shadow321SessionId], references: [id], onDelete: SetNull)
+  promotedToPlayer Player?             @relation("DaemonPromotedToNpc", fields: [promotedToPlayerId], references: [id], onDelete: SetNull)
+  summons          DaemonSummon[]
+  moveCreations    DaemonMoveCreation[]
 
   @@index([playerId])
+  @@index([shadow321SessionId])
   @@map("daemons")
 }
 
@@ -1454,6 +1510,8 @@ model EventArtifact {
   startTime          DateTime?
   endTime            DateTime?
   timezone           String?
+  capacity           Int?      // max attendees; null = unlimited
+  recurrenceRule     String?   @map("recurrence_rule") // optional RRULE (Phase 6+); not wired in UI yet
   visibility         String    @default("campaign_visible") // private | campaign_visible | public
   status             String    @default("draft") // draft | scheduled | live | completed | recorded | archived
   recordingUrl       String?
@@ -2110,6 +2168,10 @@ model AlchemySceneTemplate {
   advice        String?
   archetypeBias String? // JSON: archetype slugs that prefer this template
   nationBias    String? // JSON: nation slugs
+  /// JSON array of Kotter stage ints, e.g. [1,2,3] — IE-9 scene bias
+  kotterStageBias    String?
+  /// JSON array of GM face keys, e.g. ["challenger","regent"] — IE-9
+  campaignFrontBias String?
   status        String  @default("active") // active | draft (draft = awaiting GM review)
 
   @@index([channel, altitudeFrom, sceneType])
