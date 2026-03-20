@@ -21,6 +21,13 @@
 /build
 
 # misc
+# Typo artifact from bad path (use .specify/ only)
+/..specify/
+# Python (FastAPI backend)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
 .DS_Store
 *.pem
 

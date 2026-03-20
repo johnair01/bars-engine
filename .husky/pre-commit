@@ -1,2 +1,2 @@
 #!/bin/sh
-npm run build:type-check && npm run validate-manifest
+npm run db:generate && npm run verify:build-reliability && npm run build:type-check && npm run validate-manifest
