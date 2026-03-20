@@ -42,8 +42,14 @@ class Settings(BaseSettings):
         """Sync URL for tools that require a non-async driver (e.g. psycopg2)."""
         return self.database_url.replace("+asyncpg", "")
 
+    # Load order: later files override earlier. Include repo `.env` so keys aren’t stuck only in
+    # Next.js-visible files — many devs use `.env` without `.env.local` for OPENAI_API_KEY.
     model_config = {
-        "env_file": (str(_BACKEND_ROOT / ".env"), str(_REPO_ROOT / ".env.local")),
+        "env_file": (
+            str(_BACKEND_ROOT / ".env"),
+            str(_REPO_ROOT / ".env"),
+            str(_REPO_ROOT / ".env.local"),
+        ),
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }

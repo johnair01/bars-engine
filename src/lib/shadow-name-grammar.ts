@@ -1,7 +1,12 @@
 /**
  * Deterministic 6-face shadow name grammar for 321 Shadow Work.
  * Zero tokens at suggest time — hash + lookup only.
- * Same input always yields same name.
+ * Same `(charge, mask, attempt)` always yields the same name.
+ *
+ * **Attempt**: `0` uses the legacy hash (pre–Phase 5) so the first suggestion matches
+ * prior behavior and `ShadowNameFeedback` hashes stay aligned. `attempt >= 1` mixes
+ * `\0` + decimal attempt into the hash so repeated "Suggest name" clicks produce
+ * different candidates.
  *
  * Faces map to the 6 Game Master sects:
  *   0 Shaman   — mystery, divination, threshold
@@ -79,15 +84,27 @@ function normalize(text: string): string {
     .trim()
 }
 
+/** Input string for djb2 before face/role/descriptor/pattern selection. */
+export function shadowNameHashPayload(combinedNormalized: string, attempt: number): string {
+  const a = Math.max(0, Math.floor(Number(attempt)) || 0)
+  if (a === 0) return combinedNormalized
+  return `${combinedNormalized}\0${String(a)}`
+}
+
 /**
  * Derive a deterministic evocative name from 321 charge + mask shape.
+ * @param attempt — 0 = first suggestion (legacy hash); increment for new candidates.
  * Hash bits: [0–7] face, [8–15] role, [16–23] descriptor, [24–31] pattern
  */
-export function deriveShadowName(chargeDescription: string, maskShape: string): string {
+export function deriveShadowName(
+  chargeDescription: string,
+  maskShape: string,
+  attempt: number = 0
+): string {
   const combined = normalize(chargeDescription + ' ' + maskShape)
   if (!combined) return 'The Unnamed Presence'
 
-  const h = hash(combined)
+  const h = hash(shadowNameHashPayload(combined, attempt))
   const faces = SHADOW_NAME_VOCAB.faces
   const patterns = SHADOW_NAME_VOCAB.patterns
 

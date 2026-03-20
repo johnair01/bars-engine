@@ -15,6 +15,7 @@ import {
 import type { UnpackingAnswers, Metadata321 } from '@/lib/quest-grammar'
 import type { Phase3Taxonomic, Phase1Identification } from '@/lib/quest-grammar'
 import { createQuestFrom321Metadata, fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
+import { computeShadow321NameFields } from '@/lib/shadow321-name-resolution'
 
 const STORAGE_KEY = 'shadow321_metadata'
 const STORAGE_SESSION_KEY = 'shadow321_session'
@@ -58,14 +59,19 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
     contextQuestId ?? undefined
   )
 
+  const shadow321NameFromForm = () =>
+    computeShadow321NameFields(phase1.identification ?? '', null, 0)
+
   const store321SessionForCreateBar = () => {
     if (typeof window !== 'undefined') {
       const metadata = getMetadata()
       const phase2 = { ...answers, q6Context: q6Context || undefined, alignedAction }
+      const sn = shadow321NameFromForm()
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(metadata))
       sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
         phase3Snapshot: JSON.stringify(phase3),
         phase2Snapshot: JSON.stringify(phase2),
+        ...(sn ? { shadow321Name: sn } : {}),
       }))
     }
   }
@@ -104,7 +110,13 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
     startTransition(async () => {
       const metadata = getMetadata()
       const phase2 = { ...answers, q6Context: q6Context || undefined, alignedAction }
-      const res = await createQuestFrom321Metadata(metadata, phase2, phase3)
+      const res = await createQuestFrom321Metadata(
+        metadata,
+        phase2,
+        phase3,
+        undefined,
+        shadow321NameFromForm()
+      )
       if (res && 'error' in res) {
         setChargeError(res.error)
         toast.error(res.error)
@@ -149,6 +161,7 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
         phase3Snapshot,
         phase2Snapshot,
         outcome: 'skipped',
+        shadow321Name: shadow321NameFromForm(),
       })
       toast.success('321 skipped. Your charge is preserved.')
       router.push('/')

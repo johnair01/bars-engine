@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { summonDaemon, dismissDaemonSummon } from '@/actions/daemons'
 
 type DaemonItem = {
@@ -68,7 +69,13 @@ export function DaemonListClient({
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/daemons/${p.id}/codex`}
+                className="px-4 py-2 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-300 text-sm text-center"
+              >
+                Codex
+              </Link>
               {isActive && activeSummon ? (
                 <button
                   type="button"

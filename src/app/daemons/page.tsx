@@ -28,7 +28,7 @@ export default async function DaemonsPage() {
         </div>
 
         <Link
-          href="/daemons/321-wake-up"
+          href="/shadow/321"
           className="block p-4 rounded-xl border border-purple-500/50 bg-purple-900/20 hover:bg-purple-900/30 transition-colors"
         >
           <div className="font-medium text-purple-300">321 Wake Up</div>

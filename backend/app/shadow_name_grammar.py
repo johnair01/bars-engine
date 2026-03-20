@@ -1,6 +1,9 @@
 """Deterministic 6-face shadow name grammar for 321 Shadow Work.
 Zero tokens at suggest time — hash + lookup only.
-Same input always yields same name (djb2 hash, same as TS port).
+Same (charge, mask, attempt) always yields the same name (djb2 hash, same as TS port).
+
+attempt: 0 uses legacy hash (pre–Phase 5). attempt >= 1 appends "\\0" + str(attempt)
+before hashing so repeated suggestions differ.
 
 Faces map to the 6 Game Master sects:
   0 shaman     — mystery, divination, threshold
@@ -68,7 +71,15 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^\w\s]", " ", text.lower())).strip()
 
 
-def derive_shadow_name(charge_description: str, mask_shape: str) -> str:
+def shadow_name_hash_payload(combined_normalized: str, attempt: int) -> str:
+    """Must match TS `shadowNameHashPayload` byte-for-byte for the same logical input."""
+    a = max(0, int(attempt))
+    if a == 0:
+        return combined_normalized
+    return combined_normalized + "\0" + str(a)
+
+
+def derive_shadow_name(charge_description: str, mask_shape: str, attempt: int = 0) -> str:
     """Derive a deterministic evocative name from 321 charge + mask shape.
     Hash bits: [0-7] face, [8-15] role, [16-23] descriptor, [24-31] pattern
     """
@@ -76,7 +87,7 @@ def derive_shadow_name(charge_description: str, mask_shape: str) -> str:
     if not combined:
         return "The Unnamed Presence"
 
-    h = _hash(combined)
+    h = _hash(shadow_name_hash_payload(combined, attempt))
     faces = SHADOW_NAME_VOCAB["faces"]
     patterns = SHADOW_NAME_VOCAB["patterns"]
 

@@ -684,7 +684,7 @@ async def diplomat_refine_copy(
 @router.post("/shaman/suggest-shadow-name")
 async def shaman_suggest_shadow_name(body: ShamanSuggestShadowNameRequest):
     """Suggest an evocative name using deterministic 6-face grammar. No AI; instant response."""
-    name = derive_shadow_name(body.charge_description, body.mask_shape)
+    name = derive_shadow_name(body.charge_description, body.mask_shape, body.attempt)
     return {"suggested_name": name, "deterministic": True}
 
 

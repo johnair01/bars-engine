@@ -1,8 +1,8 @@
 goal: >
   Implement the Daemon Move System for BARs Engine — a witnessed, tiered move
   taxonomy that binds daemons to Wuxing elements, enables player-authored moves
-  to grow into canonical status through community witnessing, corrects the 321
-  WakeUp form with embodiment + witness return steps, and closes the loop
+  to grow into canonical status through community witnessing, and unifies daemon
+  discovery with Shadow321Runner at /shadow/321 (scene-card grammar), closing the loop
   between shadow work and gameplay obstacle clearing.
 
 constraints:
@@ -17,7 +17,7 @@ constraints:
   - Custom moves are daemon-scoped with tier CUSTOM and never enter CANONICAL without Regent nomination
 
 acceptance_criteria:
-  - WakeUp321Form has Embody step (player speaks as daemon using I-statements) and Witness Return step before aligned action prompt
+  - Shadow321Runner (/shadow/321) carries Face / Talk / Be and alchemy steps per scene-card grammar before daemon awakening
   - Every Daemon record has channel (WuxingElement) and altitude (Altitude) fields set at discovery
   - NationMove has tier (EPHEMERAL | CUSTOM | CANDIDATE | CANONICAL), origin (GM_AUTHORED | PLAYER_NAMED | AI_PROPOSED), channel (WuxingElement), and moveFamilyId fields
   - QuestMoveLog has outcome field (ABANDONED | COMPLETED | BAR_WRITTEN | TAUGHT_BACK)
@@ -108,7 +108,7 @@ exit_conditions:
   - name: vow_loop_functional
     description: Full shadow-work → gameplay loop operates end-to-end
     criteria: >
-      Player completes: WakeUp321Form (with Embody + Witness steps) → daemon discovery with channel/altitude →
+      Player completes: Shadow321Runner at /shadow/321 → daemon discovery (awakenDaemonFrom321) with channel/altitude →
       summon with somatic gate → apply channel-appropriate move → BAR completion →
       Vow declaration → daemon relationship update — without error
   - name: governance_gate_functional

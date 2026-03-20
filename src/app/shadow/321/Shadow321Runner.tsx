@@ -4,10 +4,14 @@ import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { SceneCard, SceneInput, SceneShortInput, SceneNav } from '@/components/scene-card/SceneCard'
 import { createQuestFrom321Metadata, fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
-import { discoverDaemon } from '@/actions/daemons'
+import { awakenDaemonFrom321 } from '@/actions/daemons'
 import { deriveShadowName } from '@/lib/shadow-name-grammar'
+import { computeShadow321NameFields } from '@/lib/shadow321-name-resolution'
 import { deriveMetadata321 } from '@/lib/quest-grammar'
 import { logShadowNameFeedback } from '@/actions/shadow-name-feedback'
+import { usePostActionRouter } from '@/hooks/usePostActionRouter'
+import { NAV } from '@/lib/navigation-contract'
+import { ArtifactCeremony } from '@/components/shadow/ArtifactCeremony'
 // ---------------------------------------------------------------------------
 // Feeling chip vocabulary — Wuxing neutral + satisfied
 // ---------------------------------------------------------------------------
@@ -123,10 +127,22 @@ function clearSession() {
 
 export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   const router = useRouter()
+  const contextualReturn = returnTo ?? '/'
+  const questRouter = usePostActionRouter(NAV['321_quest'], contextualReturn)
+  const daemonRouter = usePostActionRouter(NAV['321_daemon'], contextualReturn)
+  const fuelRouter = usePostActionRouter(NAV['321_fuel'], contextualReturn)
+  const witnessRouter = usePostActionRouter(NAV['321_witness'], contextualReturn)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [ceremony, setCeremony] = useState<{
+    type: 'quest' | 'daemon' | 'fuel' | 'witness'
+    name?: string
+    onContinue: () => void
+  } | null>(null)
   // Tracks the last name produced by "Suggest name" — used for feedback (accepted vs edited)
   const lastSuggestedNameRef = useRef<string | null>(null)
+  /** Next index for deriveShadowName attempt (0 = legacy first suggestion; incremented after each click). */
+  const suggestionAttemptRef = useRef(0)
 
   // Restore from sessionStorage on mount if available
   const saved = typeof window !== 'undefined' ? loadSession() : null
@@ -158,6 +174,11 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
     }
   }, [phase, alignedAction, answers])
 
+  // Reset multi-suggest counter when charge or mask source text changes (user went back and edited)
+  useEffect(() => {
+    suggestionAttemptRef.current = 0
+  }, [answers.chargeDescription, answers.maskShape])
+
   // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
@@ -179,6 +200,15 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   const discoveryProgress = DISCOVERY_PHASES.includes(phase)
     ? { current: DISCOVERY_PHASES.indexOf(phase), total: DISCOVERY_PHASES.length }
     : undefined
+
+  /** Persisted on Shadow321Session when present (Phase 6). Uses refs + mask field at call time. */
+  function shadow321NameForPersist() {
+    return computeShadow321NameFields(
+      answers.maskName,
+      lastSuggestedNameRef.current,
+      suggestionAttemptRef.current
+    )
+  }
 
   function buildMetadata() {
     return deriveMetadata321(
@@ -217,15 +247,16 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         alignedAction: alignedAction || undefined,
       }
       const phase3 = { identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }
-      const res = await createQuestFrom321Metadata(metadata, phase2, phase3)
+      const res = await createQuestFrom321Metadata(metadata, phase2, phase3, undefined, shadow321NameForPersist())
       if (res && 'error' in res) {
         setError(res.error)
       } else if (res?.success) {
-        const { toast } = await import('sonner')
-        toast.success('Quest created! Place it in a thread or contribute to the gameboard.')
         clearSession()
-        router.push(returnTo ?? `/hand?quest=${res.questId}`)
-        router.refresh()
+        setCeremony({
+          type: 'quest',
+          name: answers.maskName || undefined,
+          onContinue: () => questRouter.navigate({ questId: res.questId }),
+        })
       }
     })
   }
@@ -234,15 +265,15 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
     setError(null)
     startTransition(async () => {
       const metadata = buildMetadata()
-      const res = await fuelSystemFrom321(metadata)
+      const res = await fuelSystemFrom321(metadata, undefined, shadow321NameForPersist())
       if (res && 'error' in res) {
         setError(res.error)
       } else if (res?.success) {
-        const { toast } = await import('sonner')
-        toast.success('Charge fueled the system. Your insight was recorded.')
         clearSession()
-        router.push(returnTo ?? '/')
-        router.refresh()
+        setCeremony({
+          type: 'fuel',
+          onContinue: () => fuelRouter.navigate({}),
+        })
       }
     })
   }
@@ -267,23 +298,36 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
     }
     import('sonner').then(({ toast }) => toast.success('Taking you to create your BAR. Your 321 metadata is ready.'))
     clearSession()
-    router.push('/create-bar?from321=1')
+    router.push('/create-bar?from321=1') // intermediate: BAR not yet created; /create-bar picks up sessionStorage
   }
 
   function handleDiscoverDaemon() {
     setError(null)
     startTransition(async () => {
-      const res = await discoverDaemon(playerId, '321_wake_up', {
-        name: answers.maskName || `From: ${answers.chargeDescription.slice(0, 30)}`,
+      const phase2 = {
+        q1: answers.chargeDescription,
+        q3: answers.lifeState,
+        q5: answers.rootCause,
+        alignedAction: alignedAction || undefined,
+      }
+      const res = await awakenDaemonFrom321({
+        playerId,
+        phase2Snapshot: JSON.stringify(phase2),
+        phase3Snapshot: JSON.stringify({
+          identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — '),
+        }),
+        daemonName: answers.maskName || `From: ${answers.chargeDescription.slice(0, 30)}`,
+        shadow321Name: shadow321NameForPersist(),
       })
       if (res.error) {
         setError(res.error)
       } else {
-        const { toast } = await import('sonner')
-        toast.success('Daemon awakened!')
         clearSession()
-        router.push('/daemons')
-        router.refresh()
+        setCeremony({
+          type: 'daemon',
+          name: answers.maskName || undefined,
+          onContinue: () => daemonRouter.navigate({}),
+        })
       }
     })
   }
@@ -295,18 +339,29 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         phase3Snapshot: JSON.stringify({ identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }),
         phase2Snapshot: JSON.stringify({ q1: answers.chargeDescription, q3: answers.lifeState, q5: answers.rootCause, alignedAction }),
         outcome: 'skipped',
+        shadow321Name: shadow321NameForPersist(),
       })
-      const { toast } = await import('sonner')
-      toast.success('321 skipped. Your charge is preserved.')
       clearSession()
-      router.push(returnTo ?? '/')
-      router.refresh()
+      setCeremony({
+        type: 'witness',
+        onContinue: () => witnessRouter.navigate({}),
+      })
     })
   }
 
   // -------------------------------------------------------------------------
   // Render — scene cards
   // -------------------------------------------------------------------------
+
+  if (ceremony) {
+    return (
+      <ArtifactCeremony
+        artifactType={ceremony.type}
+        artifactName={ceremony.name}
+        onContinue={ceremony.onContinue}
+      />
+    )
+  }
 
   if (phase === 'face_1') {
     // TODO: subtext should append a privacy policy link once /privacy exists (Sage-authored, teal frame)
@@ -366,9 +421,11 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       if (!hasInput) return
       setError(null)
       try {
-        const name = deriveShadowName(answers.chargeDescription, answers.maskShape)
+        const attempt = suggestionAttemptRef.current
+        const name = deriveShadowName(answers.chargeDescription, answers.maskShape, attempt)
         lastSuggestedNameRef.current = name
         set('maskName', name)
+        suggestionAttemptRef.current = attempt + 1
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not suggest name')
       }

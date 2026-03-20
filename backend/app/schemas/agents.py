@@ -216,6 +216,11 @@ class ShamanSuggestShadowNameRequest(BaseModel):
 
     charge_description: str = Field(description="What the user is carrying (321 phase 3)")
     mask_shape: str = Field(description="If it were a presence, it would be… (321 phase 3)")
+    attempt: int = Field(
+        default=0,
+        ge=0,
+        description="Suggestion variant index; 0 = legacy first hash, higher = different deterministic names",
+    )
 
 
 # ---------------------------------------------------------------------------
