@@ -50,9 +50,10 @@ const moveExtractionSchema = z.object({
       name: z.string().describe('Short, memorable move name (e.g. "Cut the Noise", "Call the Standard")'),
       description: z.string().describe('What this move does and when to use it'),
       moveType: z.enum(MOVE_TYPES).describe('Which of the 4 moves: wakeUp, cleanUp, growUp, showUp'),
-      barKind: z.enum(['clarity', 'prestige', 'framework']).nullable().optional().describe('What kind of BAR this produces. clarity=reduce ambiguity; prestige=spotlight craft; framework=reusable template. Null if unclear.'),
-      requirementsHint: z.string().nullable().optional().describe('Optional: what inputs the move might need (e.g. "objective rewrite, collaborator")'),
-      nation: z.enum(NATIONS).nullable().optional().describe('Thematic nation alignment. Null if unclear.'),
+      // No .optional() — OpenAI structured outputs require every `properties` key in `required`; use null instead.
+      barKind: z.enum(['clarity', 'prestige', 'framework']).nullable().describe('What kind of BAR this produces. clarity=reduce ambiguity; prestige=spotlight craft; framework=reusable template. Null if unclear.'),
+      requirementsHint: z.string().nullable().describe('What inputs the move might need (e.g. "objective rewrite, collaborator"). Null if none.'),
+      nation: z.enum(NATIONS).nullable().describe('Thematic nation alignment. Null if unclear.'),
     })
   ),
 })
@@ -81,10 +82,10 @@ const analysisSchema = z.object({
       description: z.string().describe('Quest instructions or narrative'),
       moveType: z.enum(MOVE_TYPES).describe('Which of the 4 moves: Wake Up, Clean Up, Grow Up, Show Up'),
       allyshipDomain: z.enum(ALLYSHIP_DOMAINS).nullable().describe('Essential domain (WHERE). When multiple apply, choose the primary one. Null if purely individual with no clear collective context.'),
-      nation: z.enum(NATIONS).nullable().optional().describe('Thematic nation alignment (Argyra=clarity, Pyrakanth=passion, Lamenth=emotion, Meridia=balance, Virelune=growth). Null if unclear.'),
-      archetype: z.string().nullable().optional().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
-      kotterStage: z.number().min(1).max(8).optional().describe('Kotter change stage 1-8. Default 1 if unclear.'),
-      lockType: z.enum(LOCK_TYPES).nullable().optional().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
+      nation: z.enum(NATIONS).nullable().describe('Thematic nation alignment (Argyra=clarity, Pyrakanth=passion, Lamenth=emotion, Meridia=balance, Virelune=growth). Null if unclear.'),
+      archetype: z.string().nullable().describe('Thematic archetype (Bold Heart, Danger Walker, Truth Seer, etc.). Null if unclear.'),
+      kotterStage: z.number().min(1).max(8).nullable().describe('Kotter change stage 1-8. Null if unclear (downstream defaults to 1).'),
+      lockType: z.enum(LOCK_TYPES).nullable().describe('Transformation lock: identity_lock, emotional_lock, action, possibility. Null if unclear.'),
     })
   ),
 })
@@ -96,7 +97,7 @@ type QuestResult = {
   allyshipDomain?: string | null
   nation?: string | null
   archetype?: string | null
-  kotterStage?: number
+  kotterStage?: number | null
   lockType?: string | null
 }
 
@@ -302,7 +303,7 @@ async function createQuestsFromAnalysis(
         allyshipDomain: q.allyshipDomain ?? null,
         nation: q.nation ?? null,
         archetype: q.archetype ?? null,
-        kotterStage: q.kotterStage ?? 1,
+        kotterStage: q.kotterStage != null ? q.kotterStage : 1,
         lockType: q.lockType ?? null,
         completionEffects: JSON.stringify({ source: 'library', bookId }),
         inputs: JSON.stringify([
