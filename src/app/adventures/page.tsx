@@ -2,96 +2,219 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 import { redirect } from 'next/navigation'
 import { listPublishedStories } from '@/actions/twine'
+import { getPlayerThreads } from '@/actions/quest-thread'
+import { getPlayerDaemons } from '@/actions/daemons'
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { CustomBar, PlayerQuest } from '@prisma/client'
+import type { CustomBar, PlayerQuest } from '@prisma/client'
 import { AdventureRestartButton } from '@/components/AdventureRestartButton'
 
-export default async function AdventuresPage() {
-    const player = await getCurrentPlayer()
-    if (!player) redirect('/login')
+export default async function PlayPage() {
+  const player = await getCurrentPlayer()
+  if (!player) redirect('/login')
 
-    const { isAdmin } = await getCurrentPlayerSafe({ includeRoles: true })
+  const { isAdmin } = await getCurrentPlayerSafe({ includeRoles: true })
 
-    const stories = await listPublishedStories()
+  const [threads, daemons, stories] = await Promise.all([
+    getPlayerThreads(),
+    getPlayerDaemons(player.id),
+    listPublishedStories(),
+  ])
 
-    // Fetch associated quests for these stories to see if they are "Certification Quests"
-    const storyQuests = await db.customBar.findMany({
-        where: { twineStoryId: { in: stories.map(s => s.id) } },
-        include: { assignments: { where: { playerId: player.id } } }
-    })
+  // Campaigns: check if player is in any active campaign instance
+  const campaignMembership = await db.instanceMembership.findFirst({
+    where: { playerId: player.id },
+    include: { instance: { select: { id: true, name: true, campaignRef: true } } },
+  })
+  const activeCampaign = campaignMembership?.instance ?? null
 
-    // Certification quests (isSystem) are only visible to admins
-    const certStoryIds = new Set(
-        storyQuests.filter((q: CustomBar) => q.isSystem).map((q: CustomBar) => q.twineStoryId)
-    )
-    const visibleStories = isAdmin ? stories : stories.filter(s => !certStoryIds.has(s.id))
+  // Active threads (not archived, not completed)
+  const activeThreads = threads.filter(
+    t => !t.playerProgress?.completedAt && !(t.playerProgress as { isArchived?: boolean } | null)?.isArchived
+  )
 
-    return (
-        <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
-            <div className="max-w-3xl mx-auto space-y-8">
-                <div>
-                    <Link href="/" className="text-sm text-zinc-500 hover:text-white transition">← Dashboard</Link>
-                    <h1 className="text-3xl font-bold text-white mt-1">Adventures</h1>
-                    <p className="text-zinc-500 text-sm">Interactive stories that may unlock quests and BARs.</p>
-                </div>
+  // Daemons that have been summoned (active summon) or are in progress
+  const activeDaemons = daemons.filter(d => d.summons.length > 0)
 
-                {visibleStories.length === 0 ? (
-                    <div className="text-center py-16 border border-dashed border-zinc-800 rounded-xl">
-                        <div className="text-4xl mb-3">📖</div>
-                        <p className="text-zinc-500">No adventures available yet.</p>
-                        <p className="text-zinc-600 text-sm mt-1">Check back soon!</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {visibleStories.map(story => {
-                            const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)
-                            const assignment = quest?.assignments?.[0] as PlayerQuest | undefined
-                            const isCompleted = assignment?.status === 'completed'
-                            const isCertCompleted = quest?.isSystem && isCompleted
+  // Adventures (Twine stories)
+  const storyQuests = await db.customBar.findMany({
+    where: { twineStoryId: { in: stories.map(s => s.id) } },
+    include: { assignments: { where: { playerId: player.id } } },
+  })
+  const certStoryIds = new Set(
+    storyQuests.filter((q: CustomBar) => q.isSystem).map((q: CustomBar) => q.twineStoryId)
+  )
+  const visibleStories = isAdmin ? stories : stories.filter(s => !certStoryIds.has(s.id))
 
-                            const cardContent = (
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors h-full flex flex-col">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="text-3xl">📖</div>
-                                        {quest?.isSystem && (
-                                            <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded font-mono uppercase">Certification</span>
-                                        )}
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{story.title}</h3>
-                                    <div className="mt-auto pt-4 flex items-center justify-between">
-                                        <p className="text-xs text-zinc-500">
-                                            Added {new Date(story.createdAt).toLocaleDateString()}
-                                        </p>
-                                        {isCompleted && (
-                                            <span className="text-[10px] font-bold text-green-500 uppercase">Completed</span>
-                                        )}
-                                    </div>
-                                </div>
-                            )
+  return (
+    <div className="min-h-screen bg-black text-zinc-200 font-sans">
+      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12 space-y-10">
 
-                            return (
-                                <div key={story.id} className={`group block ${isCompleted ? 'opacity-50' : ''}`}>
-                                    {isCertCompleted && isAdmin ? (
-                                        <AdventureRestartButton questId={quest!.id} storyId={story.id} className="block">
-                                            {cardContent}
-                                        </AdventureRestartButton>
-                                    ) : isCertCompleted ? (
-                                        <Link href="/bars/available" className="block">
-                                            {cardContent}
-                                            <p className="text-[10px] text-zinc-500 mt-2">Restore in Market to re-run</p>
-                                        </Link>
-                                    ) : (
-                                        <Link href={quest ? `/adventures/${story.id}/play?questId=${quest.id}` : `/adventures/${story.id}/play`}>
-                                            {cardContent}
-                                        </Link>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
+        <header>
+          <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1">Play</div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Moves you can make right now</h1>
+        </header>
+
+        {/* ── Shadow Work ─────────────────────────────────────────── */}
+        <section className="space-y-3">
+          <div className="text-[10px] uppercase tracking-widest text-zinc-500">Shadow Work</div>
+          <Link
+            href="/shadow/321"
+            className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-purple-600/60 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+          >
+            <div>
+              <div className="font-semibold text-white group-hover:text-purple-200 transition-colors">321 Process</div>
+              <div className="text-sm text-zinc-500 mt-0.5">Face it. Talk to it. Be it.</div>
             </div>
-        </div>
-    )
+            <div className="text-zinc-600 group-hover:text-purple-400 transition-colors text-lg">→</div>
+          </Link>
+        </section>
+
+        {/* ── Active Journeys ──────────────────────────────────────── */}
+        {activeThreads.length > 0 && (
+          <section className="space-y-3">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Journeys</div>
+            <div className="space-y-2">
+              {activeThreads.map(thread => {
+                const currentQuest = thread.currentQuest
+                const progress = thread.playerProgress
+                const position = (progress?.currentPosition ?? 1)
+                const total = thread.totalQuests
+
+                return (
+                  <Link
+                    key={thread.id}
+                    href={currentQuest ? `/quest/${currentQuest.quest.id}` : `/hand`}
+                    className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-amber-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-white group-hover:text-amber-200 transition-colors truncate">
+                        {thread.title}
+                      </div>
+                      {currentQuest && (
+                        <div className="text-sm text-zinc-500 mt-0.5 truncate">
+                          Next: {currentQuest.quest.title}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 ml-4 shrink-0">
+                      {total > 1 && (
+                        <div className="text-xs text-zinc-600 font-mono">{position}/{total}</div>
+                      )}
+                      <div className="text-zinc-600 group-hover:text-amber-400 transition-colors text-lg">→</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Daemon Work ──────────────────────────────────────────── */}
+        {activeDaemons.length > 0 && (
+          <section className="space-y-3">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Daemon Work</div>
+            <div className="space-y-2">
+              {activeDaemons.map(daemon => (
+                <Link
+                  key={daemon.id}
+                  href={`/daemons/${daemon.id}`}
+                  className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-emerald-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-white group-hover:text-emerald-200 transition-colors truncate">
+                      {daemon.name}
+                    </div>
+                    <div className="text-sm text-zinc-500 mt-0.5">
+                      {daemon.summons.length > 0 ? 'Summoned — work in progress' : 'Awaiting attention'}
+                    </div>
+                  </div>
+                  <div className="text-zinc-600 group-hover:text-emerald-400 transition-colors text-lg ml-4">→</div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Campaign Board ───────────────────────────────────────── */}
+        {activeCampaign && (
+          <section className="space-y-3">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Campaign</div>
+            <Link
+              href={`/campaign/board?ref=${activeCampaign.campaignRef ?? ''}`}
+              className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-teal-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+            >
+              <div>
+                <div className="font-semibold text-white group-hover:text-teal-200 transition-colors">
+                  {activeCampaign.name}
+                </div>
+                <div className="text-sm text-zinc-500 mt-0.5">Campaign board</div>
+              </div>
+              <div className="text-zinc-600 group-hover:text-teal-400 transition-colors text-lg">→</div>
+            </Link>
+          </section>
+        )}
+
+        {/* ── Adventures (Twine) ───────────────────────────────────── */}
+        {visibleStories.length > 0 && (
+          <section className="space-y-3">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Adventures</div>
+            <div className="space-y-2">
+              {visibleStories.map(story => {
+                const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)
+                const assignment = quest?.assignments?.[0] as PlayerQuest | undefined
+                const isCompleted = assignment?.status === 'completed'
+                const isCertCompleted = quest?.isSystem && isCompleted
+
+                const inner = (
+                  <div className={`flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group ${isCompleted ? 'opacity-40' : ''}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-white group-hover:text-zinc-100 transition-colors truncate">
+                        {story.title}
+                      </div>
+                      <div className="text-sm text-zinc-500 mt-0.5 flex items-center gap-2">
+                        {quest?.isSystem && (
+                          <span className="text-[10px] bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded font-mono uppercase tracking-wide">Certification</span>
+                        )}
+                        {isCompleted && <span className="text-green-600 text-[10px] uppercase font-bold">Complete</span>}
+                        {!isCompleted && <span>Interactive story</span>}
+                      </div>
+                    </div>
+                    <div className="text-zinc-600 group-hover:text-zinc-400 transition-colors text-lg ml-4">→</div>
+                  </div>
+                )
+
+                if (isCertCompleted && isAdmin) {
+                  return (
+                    <AdventureRestartButton key={story.id} questId={quest!.id} storyId={story.id} className="block w-full">
+                      {inner}
+                    </AdventureRestartButton>
+                  )
+                }
+                return (
+                  <Link
+                    key={story.id}
+                    href={quest ? `/adventures/${story.id}/play?questId=${quest.id}` : `/adventures/${story.id}/play`}
+                    className="block"
+                  >
+                    {inner}
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Empty state ──────────────────────────────────────────── */}
+        {activeThreads.length === 0 && activeDaemons.length === 0 && !activeCampaign && visibleStories.length === 0 && (
+          <div className="text-center py-16 border border-dashed border-zinc-800 rounded-2xl space-y-3">
+            <div className="text-3xl text-zinc-700">◯</div>
+            <p className="text-zinc-500">No active moves yet.</p>
+            <p className="text-zinc-600 text-sm">Start with the 321 process above — it will generate your first quest.</p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
 }

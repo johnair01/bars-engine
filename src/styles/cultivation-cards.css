@@ -1,0 +1,232 @@
+/**
+ * BARS ENGINE — Cultivation Card Aesthetics
+ *
+ * This file owns all game-aesthetic visual effects.
+ * Layout is Tailwind's domain. This file does NOT do layout.
+ *
+ * AI: Do NOT express card aesthetics as Tailwind arbitrary values.
+ *     Use these classes. Arbitrary values will be silently mangled.
+ *
+ * Requires CSS custom properties set on the card root:
+ *   --element-frame   (from card-tokens.ts elementCssVars)
+ *   --element-glow    (from card-tokens.ts elementCssVars)
+ *   --element-gem     (from card-tokens.ts elementCssVars)
+ *   --glow-radius     (from card-tokens.ts altitudeCssVars)
+ */
+
+/* ─── Base Card ──────────────────────────────────────────────────────────────
+   The inset 0 1px 0 highlight is the single most important trick
+   for making a flat dark card feel like a physical object.
+   Do not remove it. ────────────────────────────────────────────────────────── */
+
+.cultivation-card {
+  background-color: #1a1a18;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 var(--glow-radius, 0px) 2px var(--element-glow, transparent);
+  transition:
+    box-shadow 200ms ease-out,
+    transform 150ms ease-out,
+    opacity 200ms ease-out;
+  will-change: auto; /* Do NOT set will-change:transform globally — only during gesture */
+}
+
+/* ─── Hover State ────────────────────────────────────────────────────────────── */
+
+.cultivation-card:hover {
+  transform: scale(1.02);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 calc(var(--glow-radius, 0px) + 4px) 3px var(--element-glow, transparent);
+}
+
+/* ─── Active (press) State ───────────────────────────────────────────────────── */
+
+.cultivation-card:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 0 2px var(--element-frame, #3f3f46);
+}
+
+/* ─── Focus State (keyboard navigation) ─────────────────────────────────────── */
+
+.cultivation-card:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
+/* ─── Selected State ─────────────────────────────────────────────────────────── */
+
+.cultivation-card--selected {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 16px 4px var(--element-glow, transparent);
+  animation: cultivation-card-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cultivation-card-pulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 2px var(--element-frame, #3f3f46), 0 0 16px 4px var(--element-glow, transparent); }
+  50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 2px var(--element-frame, #3f3f46), 0 0 24px 6px var(--element-glow, transparent); }
+}
+
+/* ─── Disabled State ─────────────────────────────────────────────────────────── */
+
+.cultivation-card--disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 0 0 1px #3f3f46;
+}
+
+/* ─── Loading State ──────────────────────────────────────────────────────────── */
+
+.cultivation-card--loading .card-art-window {
+  position: relative;
+  overflow: hidden;
+}
+
+.cultivation-card--loading .card-art-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
+  );
+  animation: cultivation-shimmer 1.5s linear infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes cultivation-shimmer {
+  to { transform: translateX(200%); }
+}
+
+/* ─── Ritual State (alchemical moments) ─────────────────────────────────────── */
+
+.cultivation-card--ritual {
+  transform: scale(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 24px 8px var(--element-glow, transparent),
+    0 0 48px 16px color-mix(in srgb, var(--element-glow, transparent) 40%, transparent);
+  transition: all 300ms ease-out;
+}
+
+/* ─── Entry Animation ────────────────────────────────────────────────────────── */
+
+.cultivation-card-enter {
+  animation: card-entry 300ms ease-out forwards;
+}
+
+@keyframes card-entry {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Idle Float ─────────────────────────────────────────────────────────────── */
+/* Applied to active/selected cards. NOT all cards — static cards don't breathe. */
+
+.cultivation-card-float {
+  animation: card-float var(--float-period, 4s) ease-in-out infinite;
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+/* ─── Composted Overlay ──────────────────────────────────────────────────────── */
+/* Crosshatch texture for composted stage cards */
+
+.cultivation-card--composted::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.015) 0px,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.015) 0px,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+  z-index: 1;
+}
+
+/* ─── Card Frame Gradient Layer ──────────────────────────────────────────────── */
+/* Applied to an absolutely-positioned child div inside the card */
+
+.card-frame-gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at top left, var(--grad-from, #18181b) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--grad-from, #18181b) 60%, transparent) 0%, transparent 50%),
+    linear-gradient(160deg, var(--grad-to, #09090b) 0%, #0a0908 100%);
+}
+
+/* ─── Card Corner Glow Node ──────────────────────────────────────────────────── */
+/* Soft radial light at top-left corner — element aura */
+
+.card-corner-glow {
+  position: absolute;
+  top: -32px;
+  left: -32px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  filter: blur(24px);
+  background: color-mix(in srgb, var(--element-glow, transparent) 12%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Reduced Motion Overrides ────────────────────────────────────────────────
+   All animations pause. Haptic / audio are non-motion and still fire. ──────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .cultivation-card,
+  .cultivation-card:hover,
+  .cultivation-card:active,
+  .cultivation-card--selected,
+  .cultivation-card-enter,
+  .cultivation-card-float,
+  .cultivation-card--ritual {
+    animation: none !important;
+    transition: opacity 200ms ease-out !important;
+    transform: none !important;
+  }
+
+  .cultivation-card--loading .card-art-window::after {
+    animation: none !important;
+  }
+}

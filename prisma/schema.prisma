@@ -31,8 +31,35 @@ model Invite {
   instance               Instance?   @relation(fields: [instanceId], references: [id], onDelete: SetNull)
   starterQuest           CustomBar?  @relation("InviteStarterQuest", fields: [starterQuestId], references: [id], onDelete: SetNull)
   invitationBar          CustomBar?  @relation("InviteInvitationBar", fields: [invitationBarId], references: [id], onDelete: SetNull)
+  demoOrientationLinks   DemoOrientationLink[]
 
   @@map("invites")
+}
+
+/// Shareable pre-signup orientation slice (DOP). See .specify/specs/demo-orientation-preview/spec.md
+model DemoOrientationLink {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  publicSlug  String?   @unique
+  adventureId String
+  startNodeId String
+  campaignRef String?
+  instanceId  String?
+  inviteId    String?
+  maxSteps    Int?
+  endNodeId   String?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  label       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  adventure Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+  instance  Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  invite    Invite?   @relation(fields: [inviteId], references: [id], onDelete: SetNull)
+
+  @@index([adventureId])
+  @@map("demo_orientation_links")
 }
 
 model Player {
@@ -273,6 +300,8 @@ model CustomBar {
   wateringContent      String?   // JSON: { shaman: string, regent: string, ... } — stored responses per face
   intensity            String?   // everyday | capable | skilled | defining — move intensity register (Hearts Blazing-derived)
   contextLines         String?   // JSON: { solo: string, interpersonal: string, narrative: string } — I/We/Its expressions for group play
+  /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
+  seedMetabolization   String?
   isExemplar           Boolean   @default(false) // marked by GM faces for cultural substrate distillation pipeline
   invite               Invite?   @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
   promotedInstance     Instance? @relation("CampaignKernel") // Instance.kernelBarId points here when promoted
@@ -1324,6 +1353,7 @@ model Instance {
   schoolsAdventureId String?    // FK to Adventure: 6-face schools CYOA (Grow Up from room)
   schoolsAdventure   Adventure?  @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
   invites            Invite[]
+  demoOrientationLinks DemoOrientationLink[]
   barsCollapsedFromInstance CustomBar[] @relation("BarCollapsedFromInstance")
   barShareExternals  BarShareExternal[]
   questThreads       QuestThread[]
@@ -1814,6 +1844,7 @@ model Adventure {
   playerPlaybooks  PlayerPlaybook[]
   instancesAsPortal Instance[] @relation("InstancePortalAdventure")
   instancesAsSchools Instance[] @relation("InstanceSchoolsAdventure")
+  demoOrientationLinks DemoOrientationLink[]
 
   @@map("adventures")
 }

@@ -11,27 +11,27 @@ import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
 import Link from 'next/link'
-import { DashboardSectionButtons } from '@/components/dashboard/DashboardSectionButtons'
 import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
 import { DashboardActionButtons } from '@/components/dashboard/DashboardActionButtons'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen'
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist'
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { IntentionDisplay } from '@/components/IntentionDisplay'
-import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
+// DashboardAvatarWithModal is now internal to DashboardHeader
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
 import { getTodayCharge, getChargeArchive } from '@/actions/charge-capture'
 import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
-import { DailyCheckInQuest } from '@/components/dashboard/DailyCheckInQuest'
 import { getTodayCheckIn } from '@/actions/alchemy'
 import { SetupRequired } from '@/components/SetupRequired'
 import { listMyCampaignSeeds } from '@/actions/campaign-bar'
 import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
 import { getCampaignsForPlayer } from '@/actions/campaign-overview'
 import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
+import { ThroughputLanesSection } from '@/components/dashboard/ThroughputLanesSection'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -423,25 +423,25 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
-        <div className="flex flex-row justify-between items-center gap-4 w-full">
-          <div className="flex items-center gap-3 min-w-0 flex-shrink">
-            <DashboardAvatarWithModal player={{ name: player.name, avatarConfig: player.avatarConfig, pronouns: player.pronouns }} />
-            <div className="space-y-0.5 min-w-0">
-              <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight truncate">{player.name}</h1>
-              <div className="text-zinc-400 text-sm font-mono truncate">{player.contactValue}</div>
-              {player.invitedBy && (
-                <div className="text-zinc-500 text-xs truncate">
-                  Invited by <span className="text-zinc-400">{player.invitedBy.name}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Link href="/wallet" className="shrink-0 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 block hover:bg-zinc-800 transition min-w-[90px] max-w-[120px]">
-            <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Vibeulons</div>
-            <div className="text-xl sm:text-2xl font-mono text-green-400 truncate">{vibulons} ♦</div>
-          </Link>
-        </div>
+        <DashboardHeader
+          player={{
+            name: player.name,
+            avatarConfig: player.avatarConfig,
+            pronouns: player.pronouns,
+            nation: player.nation ? { name: player.nation.name, element: player.nation.element } : null,
+            archetype: player.archetype ? { name: player.archetype.name } : null,
+          }}
+          vibulons={vibulons}
+          todayCheckIn={todayCheckIn ? {
+            sceneId: todayCheckIn.sceneId ?? null,
+            thresholdEncounterId: todayCheckIn.thresholdEncounterId ?? null,
+            channel: todayCheckIn.channel,
+            altitude: todayCheckIn.altitude,
+            sceneTypeChosen: todayCheckIn.sceneTypeChosen ?? null,
+          } : null}
+          playerId={playerId}
+          questCount={completedBars.length}
+        />
 
         {myCampaignSeeds.some((s) => s.isComplete && !s.promotedInstance) && (
           <CampaignSeedReadyCard seeds={myCampaignSeeds} />
@@ -449,33 +449,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         {campaignsResponsible.length > 0 && (
           <CampaignsResponsibleSection campaigns={campaignsResponsible} />
         )}
-        <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4">
-          <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-3">Play the Game</div>
-          <DashboardSectionButtons
-          player={{
-            nation: player.nation ? { id: player.nation.id, name: player.nation.name, description: player.nation.description } : null,
-            archetype: player.archetype ? { name: player.archetype.name, description: player.archetype.description, wakeUp: player.archetype.wakeUp } : null,
-            roles: player.roles,
-          }}
-          globalStage={globalStage}
-          campaignEntry={
-            showCampaignEntry && bbThread
-              ? {
-                  nation: player.nation ? { id: player.nation.id, name: player.nation.name } : null,
-                  archetype: player.archetype ? { id: player.archetype.id, name: player.archetype.name } : null,
-                  intendedImpact: intendedImpactLabels,
-                  starterQuests: (bbThread as { quests?: { quest: { id: string; title: string } }[] }).quests?.map((tq) => ({ id: tq.quest.id, title: tq.quest.title })) ?? [],
-                }
-              : null
-          }
-          activeInstance={activeInstance}
-          eventGoal={eventGoal}
-          eventCurrent={eventCurrent}
-          eventPct={eventPct}
-          formattedEventCurrent={formatUsdCents(eventCurrent)}
-          formattedEventGoal={formatUsdCents(eventGoal)}
-          />
-        </div>
 
         {/* Appreciations received */}
         {appreciations.length > 0 && (
@@ -485,6 +458,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         {/* Today's Charge + Archive */}
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
+        <ThroughputLanesSection activeInstanceId={activeInstance?.id ?? null} />
+
         {/* Player Intention */}
         {intention && (
           <IntentionDisplay
@@ -493,19 +468,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           />
         )}
 
-        {/* Daily Alchemy Check-in Quest */}
-        <DailyCheckInQuest
-          playerId={playerId}
-          todayCheckIn={todayCheckIn ? {
-            sceneId: todayCheckIn.sceneId ?? null,
-            thresholdEncounterId: todayCheckIn.thresholdEncounterId ?? null,
-            channel: todayCheckIn.channel,
-            altitude: todayCheckIn.altitude,
-            sceneTypeChosen: todayCheckIn.sceneTypeChosen ?? null,
-          } : null}
-        />
-
-      </header >
+      </header>
 
       {/* RITUAL SUCCESS BANNER */}
       {ritualComplete && (

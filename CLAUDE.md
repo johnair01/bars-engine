@@ -2,6 +2,13 @@
 
 Auto-generated from all feature plans. Last updated: 2026-03-08
 
+## UI Work — Read First
+
+**Before any UI work:** Read [`UI_COVENANT.md`](UI_COVENANT.md) at the start of every session.
+
+Session-start prompt for AI UI work:
+> "Read `UI_COVENANT.md` before writing any UI code. Apply the three-channel encoding system (element=color, altitude=border, stage=density). Use CSS classes from `src/styles/cultivation-cards.css` for all game aesthetic. Use Tailwind only for layout. Reference `src/lib/ui/card-tokens.ts` for all color values."
+
 ## Project Ethos
 
 BARs Engine is built on **Integral Theory** (AQAL). This gives the project a moral center strong enough to navigate the tensions of AI-augmented creative work. If you are ever unsure about a design or implementation choice, check it against the four quadrants (I/We/It/Its) and the developmental stages.
