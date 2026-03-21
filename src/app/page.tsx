@@ -32,6 +32,7 @@ import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyC
 import { getCampaignsForPlayer } from '@/actions/campaign-overview'
 import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
 import { ThroughputLanesSection } from '@/components/dashboard/ThroughputLanesSection'
+import { NationProvider } from '@/lib/ui/nation-provider'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -419,6 +420,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   }
 
   return (
+    <NationProvider element={player.nation?.element ?? null} archetypeName={player.archetype?.name ?? null}>
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
       {/* 1. HEADER & IDENTITY */}
@@ -651,5 +653,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         </div>
       </div>
     </div >
+    </NationProvider>
   )
 }

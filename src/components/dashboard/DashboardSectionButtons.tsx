@@ -14,7 +14,7 @@ type CampaignEntryData = {
 
 type DashboardSectionButtonsProps = {
     player: {
-        nation?: { id: string; name: string; description: string } | null
+        nation?: { id: string; name: string; description: string; element?: string } | null
         archetype?: { name: string; description?: string | null; wakeUp?: string | null } | null
         roles: { id: string; role: { key: string } }[]
     }

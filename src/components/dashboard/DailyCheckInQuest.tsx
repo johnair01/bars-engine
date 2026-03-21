@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createDailyCheckIn } from '@/actions/alchemy'
 import { linkCheckInToEncounter } from '@/actions/threshold-encounter'
 import type { EmotionChannel, AlchemyAltitude } from '@/lib/alchemy/types'
+import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { CultivationCard } from '@/components/ui/CultivationCard'
+import { useNation } from '@/lib/ui/nation-provider'
 
 // Inlined from wuxing.ts — avoids pulling server-only imports into client bundle
 const SHENG_CYCLE: Record<string, string> = {
@@ -14,12 +17,33 @@ const KE_CYCLE: Record<string, string> = {
   anger: 'neutrality', neutrality: 'fear', fear: 'joy', joy: 'sadness', sadness: 'anger',
 }
 
-const CHANNEL_META: Record<string, { label: string; element: string; color: string; bg: string; border: string }> = {
-  anger:     { label: 'Anger',     element: 'Wood (木)', color: 'text-red-300',    bg: 'bg-red-900/20',    border: 'border-red-700/40' },
-  joy:       { label: 'Joy',       element: 'Fire (火)', color: 'text-yellow-300', bg: 'bg-yellow-900/20', border: 'border-yellow-700/40' },
-  neutrality:{ label: 'Neutrality',element: 'Earth (土)',color: 'text-zinc-300',   bg: 'bg-zinc-900/20',   border: 'border-zinc-700/40' },
-  sadness:   { label: 'Sadness',   element: 'Metal (金)',color: 'text-blue-300',   bg: 'bg-blue-900/20',   border: 'border-blue-700/40' },
-  fear:      { label: 'Fear',      element: 'Water (水)',color: 'text-violet-300', bg: 'bg-violet-900/20', border: 'border-violet-700/40' },
+// Canonical channel → element mapping (matches wuxing.ts ontology)
+// anger=fire, joy=wood, neutrality=earth, fear=metal, sadness=water
+const CHANNEL_TO_ELEMENT: Record<string, ElementKey> = {
+  anger:      'fire',
+  joy:        'wood',
+  neutrality: 'earth',
+  fear:       'metal',
+  sadness:    'water',
+}
+
+// ─── CHANNEL_META removed — use ELEMENT_TOKENS instead ────────────────────────
+// Channel labels derive directly from ELEMENT_TOKENS (single source of truth):
+//   display name  → capitalize(channelKey)    e.g. 'anger' → 'Anger'
+//   element label → elementDisplayLabel(el)   e.g. 'fire'  → 'Fire (火)'
+//
+// ELEMENT_TOKENS[el].sigil carries the hanzi character for each element;
+// no duplicate string literals are needed here.
+
+function capitalize(s: string): string {
+  return s.length === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+/** Derives a human-readable element label from ELEMENT_TOKENS.
+ *  e.g. 'fire' → 'Fire (火)',  'wood' → 'Wood (木)'
+ */
+function elementDisplayLabel(el: ElementKey): string {
+  return `${capitalize(el)} (${ELEMENT_TOKENS[el].sigil})`
 }
 
 const ALTITUDE_META: Record<string, { label: string; hint: Record<string, string> }> = {
@@ -37,7 +61,7 @@ const ALTITUDE_META: Record<string, { label: string; hint: Record<string, string
   },
 }
 
-const CHANNELS = Object.keys(CHANNEL_META) as EmotionChannel[]
+const CHANNELS = Object.keys(CHANNEL_TO_ELEMENT) as EmotionChannel[]
 const ALTITUDES = ['dissatisfied', 'neutral', 'satisfied'] as AlchemyAltitude[]
 
 type Step = 'entry' | 'stuckness' | 'channel' | 'altitude' | 'move_type' | 'launching' | 'done'
@@ -57,6 +81,7 @@ interface Props {
 
 export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
   const router = useRouter()
+  const { element: playerElement } = useNation()
   const [step, setStep] = useState<Step>('entry')
   const [stuckness, setStuckness] = useState(5)
   const [channel, setChannel] = useState<EmotionChannel | null>(null)
@@ -67,35 +92,38 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
 
   // Already done today — show completion
   if (todayCheckIn) {
-    const meta = channel ? CHANNEL_META[todayCheckIn.channel] : CHANNEL_META[todayCheckIn.channel]
+    const doneElement: ElementKey = CHANNEL_TO_ELEMENT[todayCheckIn.channel] ?? 'earth'
+    const doneTokens = ELEMENT_TOKENS[doneElement]
     return (
-      <div className={`rounded-xl border p-4 ${meta?.border ?? 'border-zinc-800'} ${meta?.bg ?? 'bg-zinc-900/20'} space-y-2`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-0.5">Daily Alchemy Quest</p>
-            <p className="text-sm text-zinc-300 font-medium">Check-in complete ✓</p>
+      <CultivationCard element={doneElement} altitude="satisfied" stage="seed" className="p-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-0.5">Daily Alchemy Quest</p>
+              <p className={`text-sm font-medium ${doneTokens.textAccent}`}>Check-in complete ✓</p>
+            </div>
+            <div className={`text-xs ${doneTokens.textAccent} opacity-70 capitalize`}>
+              {todayCheckIn.channel} · {todayCheckIn.altitude}
+            </div>
           </div>
-          <div className={`text-xs ${meta?.color ?? 'text-zinc-400'} opacity-70 capitalize`}>
-            {todayCheckIn.channel} · {todayCheckIn.altitude}
-          </div>
+          {(todayCheckIn.thresholdEncounterId || todayCheckIn.sceneId) ? (
+            <button
+              onClick={() => {
+                if (todayCheckIn.thresholdEncounterId) {
+                  router.push(`/threshold-encounter/${todayCheckIn.thresholdEncounterId}`)
+                } else {
+                  router.push(`/growth-scene/${todayCheckIn.sceneId}`)
+                }
+              }}
+              className="w-full text-xs py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+            >
+              Resume scene →
+            </button>
+          ) : (
+            <p className="text-xs text-zinc-600 italic">Scene completed. Come back tomorrow.</p>
+          )}
         </div>
-        {(todayCheckIn.thresholdEncounterId || todayCheckIn.sceneId) ? (
-          <button
-            onClick={() => {
-              if (todayCheckIn.thresholdEncounterId) {
-                router.push(`/threshold-encounter/${todayCheckIn.thresholdEncounterId}`)
-              } else {
-                router.push(`/growth-scene/${todayCheckIn.sceneId}`)
-              }
-            }}
-            className="w-full text-xs py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
-          >
-            Resume scene →
-          </button>
-        ) : (
-          <p className="text-xs text-zinc-600 italic">Scene completed. Come back tomorrow.</p>
-        )}
-      </div>
+      </CultivationCard>
     )
   }
 
@@ -138,22 +166,27 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
   }
 
   if (step === 'entry') {
+    // Use player's nation element for the entry step
+    const entryElement: ElementKey = playerElement ?? 'earth'
+    const entryTokens = ELEMENT_TOKENS[entryElement]
     return (
-      <div className="rounded-xl border border-emerald-800/50 bg-emerald-900/10 p-4 space-y-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-emerald-600 mb-0.5">Daily Quest</p>
-          <h3 className="text-sm font-semibold text-emerald-300">Alchemy Check-in</h3>
-          <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-            Name where you&apos;re stuck. Choose your move. Enter the scene.
-          </p>
+      <CultivationCard element={entryElement} altitude="neutral" stage="seed" className="p-4">
+        <div className="space-y-3">
+          <div>
+            <p className={`text-[10px] uppercase tracking-widest mb-0.5 ${entryTokens.textAccent} opacity-70`}>Daily Quest</p>
+            <h3 className={`text-sm font-semibold ${entryTokens.textAccent}`}>Alchemy Check-in</h3>
+            <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              Name where you&apos;re stuck. Choose your move. Enter the scene.
+            </p>
+          </div>
+          <button
+            onClick={() => setStep('stuckness')}
+            className={`w-full py-2.5 rounded-lg ${entryTokens.badgeBg} hover:opacity-90 border ${entryTokens.border} ${entryTokens.textAccent} text-sm font-medium transition`}
+          >
+            Begin check-in →
+          </button>
         </div>
-        <button
-          onClick={() => setStep('stuckness')}
-          className="w-full py-2.5 rounded-lg bg-emerald-800/30 hover:bg-emerald-800/50 border border-emerald-700/40 text-emerald-300 text-sm font-medium transition"
-        >
-          Begin check-in →
-        </button>
-      </div>
+      </CultivationCard>
     )
   }
 
@@ -199,15 +232,16 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
         </div>
         <div className="grid grid-cols-1 gap-2">
           {CHANNELS.map((ch) => {
-            const m = CHANNEL_META[ch]
+            const el: ElementKey = CHANNEL_TO_ELEMENT[ch] ?? 'earth'
+            const t = ELEMENT_TOKENS[el]
             return (
               <button
                 key={ch}
                 onClick={() => { setChannel(ch); setStep('altitude') }}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-left transition ${m.border} ${m.bg} hover:opacity-90`}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-left transition ${t.border} ${t.bg} hover:opacity-90`}
               >
-                <span className={`text-sm font-medium ${m.color}`}>{m.label}</span>
-                <span className="text-xs text-zinc-500">{m.element}</span>
+                <span className={`text-sm font-medium ${t.textAccent}`}>{capitalize(ch)}</span>
+                <span className="text-xs text-zinc-500">{elementDisplayLabel(el)}</span>
               </button>
             )
           })}
@@ -217,13 +251,14 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
   }
 
   if (step === 'altitude') {
-    const meta = channel ? CHANNEL_META[channel] : null
+    const activeEl: ElementKey = channel ? (CHANNEL_TO_ELEMENT[channel] ?? 'earth') : 'earth'
+    const activeTokens = ELEMENT_TOKENS[activeEl]
     return (
       <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4 space-y-3">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Step 3 of 4</p>
           <h3 className="text-sm font-semibold text-zinc-200">How far through it are you?</h3>
-          {channel && <p className={`text-xs ${meta?.color ?? 'text-zinc-400'} mt-0.5 capitalize`}>{meta?.label} channel</p>}
+          {channel && <p className={`text-xs ${activeTokens.textAccent} mt-0.5 capitalize`}>{capitalize(channel)} channel</p>}
         </div>
         <div className="grid grid-cols-1 gap-2">
           {ALTITUDES.map((alt) => {
@@ -246,11 +281,12 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
   }
 
   if (step === 'move_type') {
-    const cMeta = channel ? CHANNEL_META[channel] : null
+    const activeEl: ElementKey = channel ? (CHANNEL_TO_ELEMENT[channel] ?? 'earth') : 'earth'
+    const activeTokens = ELEMENT_TOKENS[activeEl]
     const shengTarget = channel ? SHENG_CYCLE[channel] : null
     const keTarget = channel ? KE_CYCLE[channel] : null
-    const shengLabel = shengTarget ? CHANNEL_META[shengTarget]?.label : null
-    const keLabel = keTarget ? CHANNEL_META[keTarget]?.label : null
+    const shengLabel = shengTarget ? capitalize(shengTarget) : null
+    const keLabel = keTarget ? capitalize(keTarget) : null
 
     return (
       <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 p-4 space-y-3">
@@ -259,7 +295,7 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
           <h3 className="text-sm font-semibold text-zinc-200">Choose your move type</h3>
           {channel && altitude && (
             <p className="text-xs text-zinc-500 mt-0.5 capitalize">
-              {cMeta?.label} · {ALTITUDE_META[altitude]?.hint[channel] ?? altitude}
+              {capitalize(channel)} · {ALTITUDE_META[altitude]?.hint[channel] ?? altitude}
             </p>
           )}
         </div>
@@ -267,20 +303,20 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
         <div className="grid grid-cols-1 gap-2">
           <button
             onClick={() => { setSceneType('transcend'); }}
-            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'transcend' ? 'border-emerald-500 bg-emerald-900/20' : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
+            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'transcend' ? `${ELEMENT_TOKENS.wood.border} ${ELEMENT_TOKENS.wood.bg}` : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-zinc-100">Transcend ↑</span>
               <span className="text-[10px] text-zinc-500 uppercase tracking-wider">rise within</span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-              Stay in {cMeta?.label ?? 'this'} — deepen your relationship with this energy until it transforms.
+              Stay in {channel ? capitalize(channel) : 'this'} — deepen your relationship with this energy until it transforms.
             </p>
           </button>
 
           <button
             onClick={() => { setSceneType('generate'); }}
-            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'generate' ? 'border-yellow-500 bg-yellow-900/20' : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
+            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'generate' ? `${ELEMENT_TOKENS.fire.border} ${ELEMENT_TOKENS.fire.bg}` : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-zinc-100">Generate →↑</span>
@@ -293,7 +329,7 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
 
           <button
             onClick={() => { setSceneType('control'); }}
-            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'control' ? 'border-red-500 bg-red-900/20' : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
+            className={`text-left px-3 py-3 rounded-lg border transition ${sceneType === 'control' ? `${ELEMENT_TOKENS.water.border} ${ELEMENT_TOKENS.water.bg}` : 'border-zinc-700 bg-zinc-800/30 hover:bg-zinc-800'}`}
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-zinc-100">Control →↓</span>
@@ -310,7 +346,7 @@ export function DailyCheckInQuest({ playerId, todayCheckIn }: Props) {
         <button
           onClick={handleLaunch}
           disabled={!sceneType || isPending}
-          className="w-full py-2.5 rounded-lg bg-emerald-800/40 hover:bg-emerald-700/40 border border-emerald-700/50 text-emerald-300 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`w-full py-2.5 rounded-lg ${activeTokens.badgeBg} hover:opacity-90 border ${activeTokens.border} ${activeTokens.textAccent} text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {isPending ? 'Opening scene…' : 'Enter scene →'}
         </button>

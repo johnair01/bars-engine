@@ -9,7 +9,7 @@ type CharacterModalProps = {
     open: boolean
     onClose: () => void
     player: {
-        nation?: { id: string; name: string; description: string } | null
+        nation?: { id: string; name: string; description: string; element?: string } | null
         archetype?: { name: string; description?: string | null; wakeUp?: string | null } | null
         roles: { id: string; role: { key: string } }[]
     }
@@ -57,7 +57,7 @@ export function CharacterModal({ open, onClose, player }: CharacterModalProps) {
                 <h2 className="text-xl font-bold text-white mb-4">Character</h2>
                 <div className="flex flex-wrap gap-2 sm:gap-4 mb-6">
                     {player.nation && (
-                        <NationCardWithModal nation={{ id: player.nation.id, name: player.nation.name, description: player.nation.description }} />
+                        <NationCardWithModal nation={{ id: player.nation.id, name: player.nation.name, description: player.nation.description }} element={player.nation.element} />
                     )}
                     {player.archetype && (
                         <ArchetypeCardWithModal archetype={{ name: player.archetype.name, description: player.archetype.description, wakeUp: player.archetype.wakeUp }} />

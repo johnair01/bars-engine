@@ -6,25 +6,11 @@ import Link from 'next/link'
 import { Avatar } from '@/components/Avatar'
 import { AvatarModal } from '@/components/AvatarModal'
 import { DailyCheckInQuest } from './DailyCheckInQuest'
+import { CultivationCard } from '@/components/ui/CultivationCard'
+import { type CardStage } from '@/lib/ui/card-tokens'
+import { useNation } from '@/lib/ui/nation-provider'
 
-// Nation element → visual palette
-const NATION_PALETTE: Record<string, {
-  sigil: string
-  charged: string
-  chargedBg: string
-  uncharged: string
-  unchargedBg: string
-  accentText: string
-  dot: string
-}> = {
-  fire:  { sigil: '火', charged: 'border-orange-600/60', chargedBg: 'bg-gradient-to-br from-orange-950/50 to-red-950/40',    uncharged: 'border-zinc-800', unchargedBg: 'bg-zinc-900/40', accentText: 'text-orange-400', dot: 'bg-orange-500' },
-  water: { sigil: '水', charged: 'border-teal-600/60',   chargedBg: 'bg-gradient-to-br from-indigo-950/50 to-teal-950/40',  uncharged: 'border-zinc-800', unchargedBg: 'bg-zinc-900/40', accentText: 'text-teal-400',   dot: 'bg-teal-500'   },
-  metal: { sigil: '金', charged: 'border-slate-500/60',  chargedBg: 'bg-gradient-to-br from-slate-900/60 to-zinc-800/50',   uncharged: 'border-zinc-800', unchargedBg: 'bg-zinc-900/40', accentText: 'text-slate-300',  dot: 'bg-slate-400'  },
-  wood:  { sigil: '木', charged: 'border-green-700/60',  chargedBg: 'bg-gradient-to-br from-green-950/50 to-emerald-950/40', uncharged: 'border-zinc-800', unchargedBg: 'bg-zinc-900/40', accentText: 'text-green-400',  dot: 'bg-green-500'  },
-  earth: { sigil: '土', charged: 'border-amber-700/60',  chargedBg: 'bg-gradient-to-br from-amber-950/50 to-yellow-950/40', uncharged: 'border-zinc-800', unchargedBg: 'bg-zinc-900/40', accentText: 'text-amber-400',  dot: 'bg-amber-500'  },
-}
-
-// Check-in channel → ring accent overlay
+// Check-in channel → ring accent overlay (ring utility classes, layout concern — covenant allows)
 const CHANNEL_RING: Record<string, string> = {
   anger:      'ring-red-600/25',
   joy:        'ring-yellow-500/25',
@@ -33,7 +19,7 @@ const CHANNEL_RING: Record<string, string> = {
   fear:       'ring-violet-500/25',
 }
 
-function getMaturity(questCount: number): 'seed' | 'growing' | 'composted' {
+function getMaturity(questCount: number): CardStage {
   if (questCount < 5) return 'seed'
   if (questCount < 15) return 'growing'
   return 'composted'
@@ -66,25 +52,27 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
   const [checkInModalOpen, setCheckInModalOpen] = useState(false)
 
-  const element = player.nation?.element ?? 'earth'
-  const palette = NATION_PALETTE[element] ?? NATION_PALETTE.earth
+  const { element, tokens } = useNation()
+  const resolvedElement = element ?? 'earth'
   const maturity = getMaturity(questCount)
   const isCharged = !!todayCheckIn
   const channelRing = todayCheckIn ? (CHANNEL_RING[todayCheckIn.channel] ?? '') : ''
-
-  const maturityOpacity = maturity === 'seed' ? 'opacity-75' : 'opacity-100'
-  const cardBorder = isCharged ? palette.charged : palette.uncharged
-  const cardBg = isCharged ? palette.chargedBg : palette.unchargedBg
   const ringClass = isCharged && channelRing ? `ring-1 ${channelRing}` : ''
+  const maturityOpacity = maturity === 'seed' ? 'opacity-75' : 'opacity-100'
 
   return (
     <>
-      <div className={`rounded-2xl border p-4 transition-all duration-300 ${cardBorder} ${cardBg} ${maturityOpacity} ${ringClass}`}>
+      <CultivationCard
+        element={resolvedElement}
+        altitude={isCharged ? 'satisfied' : 'dissatisfied'}
+        stage={maturity}
+        className={`p-4 transition-all duration-300 ${maturityOpacity} ${ringClass}`}
+      >
 
         {/* Single-row identity */}
         <div className="flex items-center gap-3">
 
-          {/* Avatar — opens CharacterModal */}
+          {/* Avatar — opens AvatarModal */}
           <button
             type="button"
             onClick={() => setAvatarModalOpen(true)}
@@ -98,10 +86,10 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
           <div className="flex-1 min-w-0">
             {player.nation && (
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className={`text-base leading-none ${palette.accentText} ${isCharged ? '' : 'opacity-30'}`}>
-                  {palette.sigil}
+                <span className={`text-base leading-none ${tokens?.textAccent ?? 'text-zinc-400'} ${isCharged ? '' : 'opacity-30'}`}>
+                  {tokens?.sigil ?? '◇'}
                 </span>
-                <span className={`text-[10px] uppercase tracking-widest font-mono truncate ${isCharged ? palette.accentText : 'text-zinc-600'}`}>
+                <span className={`text-[10px] uppercase tracking-widest font-mono truncate ${isCharged ? (tokens?.textAccent ?? 'text-zinc-400') : 'text-zinc-600'}`}>
                   {player.nation.name}
                 </span>
               </div>
@@ -110,7 +98,7 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
               {player.name}
             </h1>
             {player.archetype && (
-              <div className={`text-[10px] mt-0.5 font-mono uppercase tracking-wide truncate ${isCharged ? palette.accentText : 'text-zinc-600'} opacity-70`}>
+              <div className={`text-[10px] mt-0.5 font-mono uppercase tracking-wide truncate ${isCharged ? (tokens?.textAccent ?? 'text-zinc-400') : 'text-zinc-600'} opacity-70`}>
                 {player.archetype.name}
               </div>
             )}
@@ -125,7 +113,7 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
             <div className="text-[10px] text-zinc-600 uppercase tracking-widest mb-0.5 group-hover:text-zinc-500 transition">
               Vibulon
             </div>
-            <div className={`text-lg font-mono transition ${isCharged ? palette.accentText : 'text-zinc-600'} group-hover:opacity-80`}>
+            <div className={`text-lg font-mono transition ${isCharged ? (tokens?.textAccent ?? 'text-zinc-400') : 'text-zinc-600'} group-hover:opacity-80`}>
               {vibulons} ♦
             </div>
           </Link>
@@ -134,7 +122,10 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
         {/* Field state bar */}
         {isCharged ? (
           <div className="mt-3 flex items-center gap-2 min-w-0">
-            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${palette.dot} animate-pulse`} />
+            <div
+              className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+              style={{ backgroundColor: tokens?.gem ?? '#6b6965' }}
+            />
             <span className="text-[10px] uppercase tracking-widest text-zinc-500 truncate">
               Field active · {todayCheckIn!.channel} · {todayCheckIn!.altitude}
             </span>
@@ -164,11 +155,11 @@ export function DashboardHeader({ player, vibulons, todayCheckIn, playerId, ques
 
         {/* Maturity hint (composted only — subtle) */}
         {maturity === 'composted' && (
-          <div className={`mt-2 text-[9px] uppercase tracking-widest ${palette.accentText} opacity-30`}>
+          <div className={`mt-2 text-[9px] uppercase tracking-widest ${tokens?.textAccent ?? 'text-zinc-400'} opacity-30`}>
             composted
           </div>
         )}
-      </div>
+      </CultivationCard>
 
       {/* Avatar modal */}
       <AvatarModal
