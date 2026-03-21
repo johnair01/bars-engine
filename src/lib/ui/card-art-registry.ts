@@ -596,6 +596,44 @@ export function countGeneratedArt(): number {
 /** Total expected entries: 5 nations × 8 playbooks */
 export const TOTAL_CARD_ART_COUNT = 40
 
+// ─── Ideogram Palette Hints ───────────────────────────────────────────────────
+// Used by generate-card-art.ts --custom path.
+// Derived from ELEMENT_TOKENS — locked to card-tokens.ts values.
+// Each member: { color_hex, color_weight } for Ideogram's color_palette API param.
+
+export const ELEMENT_PALETTE_HINTS = {
+  fire: [
+    { color_hex: '#1a1a18', color_weight: 0.40 },
+    { color_hex: '#c1392b', color_weight: 0.25 },
+    { color_hex: '#e8671a', color_weight: 0.20 },
+    { color_hex: '#e74c3c', color_weight: 0.15 },
+  ],
+  water: [
+    { color_hex: '#1a1a18', color_weight: 0.40 },
+    { color_hex: '#1a3a5c', color_weight: 0.25 },
+    { color_hex: '#1a7a8a', color_weight: 0.20 },
+    { color_hex: '#2980b9', color_weight: 0.15 },
+  ],
+  wood: [
+    { color_hex: '#1a1a18', color_weight: 0.40 },
+    { color_hex: '#4a7c59', color_weight: 0.25 },
+    { color_hex: '#27ae60', color_weight: 0.20 },
+    { color_hex: '#2ecc71', color_weight: 0.15 },
+  ],
+  metal: [
+    { color_hex: '#1a1a18', color_weight: 0.40 },
+    { color_hex: '#8e9aab', color_weight: 0.25 },
+    { color_hex: '#bdc3c7', color_weight: 0.25 },
+    { color_hex: '#0d1017', color_weight: 0.10 },
+  ],
+  earth: [
+    { color_hex: '#1a1a18', color_weight: 0.40 },
+    { color_hex: '#b5651d', color_weight: 0.25 },
+    { color_hex: '#d4a017', color_weight: 0.20 },
+    { color_hex: '#451a03', color_weight: 0.15 },
+  ],
+} as const satisfies Record<ElementKey, { color_hex: string; color_weight: number }[]>
+
 // ─── Invariant check ──────────────────────────────────────────────────────────
 // Verified at module load: all 40 pairings present. Throws if registry is broken.
 
