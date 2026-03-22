@@ -9,6 +9,14 @@ import { createRequestId, logActionError } from '@/lib/mvp-observability'
 import { persist321Session } from '@/actions/charge-metabolism'
 import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
 import { extractNationArchetypeFromText } from '@/actions/extract-321-taxonomy'
+import { applySceneGridBindingInTx } from '@/actions/scene-grid-deck'
+import { sceneAtlasDailyBindBlocked } from '@/lib/scene-atlas-daily'
+import {
+    SCENE_ATLAS_BAR_TEMPLATE_KEY,
+    SCENE_ATLAS_BAR_TEMPLATE_VERSION,
+    type SceneAtlasBarTemplateMeta,
+} from '@/lib/creator-scene-grid-deck/bar-template'
+import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
 function parseTags(raw: string | null) {
     if (!raw) return []
@@ -61,8 +69,16 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     const allowedNations = formData.get('allowedNations') as string || null
     const allowedTrigrams = formData.get('allowedTrigrams') as string || null
     const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
-    const campaignRef = (formData.get('campaignRef') as string)?.trim() || null
+    let campaignRef = (formData.get('campaignRef') as string)?.trim() || null
     const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
+    const sceneGridInstanceId = (formData.get('sceneGridInstanceId') as string)?.trim() || ''
+    const sceneGridCardId = (formData.get('sceneGridCardId') as string)?.trim() || ''
+    const sceneGridInstanceSlug = (formData.get('sceneGridInstanceSlug') as string)?.trim() || ''
+    const sceneGridSuit = (formData.get('sceneGridSuit') as string)?.trim() || ''
+    const sceneGridRankRaw = (formData.get('sceneGridRank') as string)?.trim() || ''
+    const sceneGridRankParsed = sceneGridRankRaw ? Number.parseInt(sceneGridRankRaw, 10) : NaN
+    const sceneGridRank = Number.isFinite(sceneGridRankParsed) ? sceneGridRankParsed : null
+    const sceneGridActive = !!(sceneGridInstanceId && sceneGridCardId && sceneGridInstanceSlug)
     const phase3Snapshot = (formData.get('phase3Snapshot') as string)?.trim() || null
     const phase2Snapshot = (formData.get('phase2Snapshot') as string)?.trim() || null
     const shadow321NameRaw = (formData.get('shadow321Name') as string)?.trim() || null
@@ -112,11 +128,22 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     try {
         const creator = await db.player.findUnique({
             where: { id: playerId },
-            select: { id: true, nationId: true, archetypeId: true }
+            select: { id: true, nationId: true, archetypeId: true, storyProgress: true },
         })
         if (!creator) return { error: 'Player not found' }
         if (!creator.nationId || !creator.archetypeId) {
             return { error: 'Please choose both nation and archetype before creating BARs.' }
+        }
+
+        if (sceneGridActive) {
+            const dailyBlock = sceneAtlasDailyBindBlocked(creator.storyProgress)
+            if (dailyBlock) return { error: dailyBlock }
+            const cardOk = await db.barDeckCard.findFirst({
+                where: { id: sceneGridCardId, deck: { instanceId: sceneGridInstanceId } },
+                select: { id: true },
+            })
+            if (!cardOk) return { error: 'Scene Atlas card not found for this deck.' }
+            campaignRef = sceneGridInstanceSlug
         }
 
         let linkedQuest: { id: string, rootId: string | null, title: string } | null = null
@@ -156,17 +183,41 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
             ? targetPlayerId  // Private assigned quests go to claimed
             : null            // Public assigned quests stay available but show as "for you"
 
+        if (effectiveVisibility === 'private' && !claimedById) {
+            const cap = await assertCanCreatePrivateDraft(playerId)
+            if (!cap.ok) return { error: cap.error }
+        }
+
+        if (sceneGridActive && claimedById) {
+            return { error: 'Scene Atlas placement needs an unassigned BAR — clear “Assign to player”.' }
+        }
+
         let warning: string | null = null
         const rootIdSeed = linkedQuest?.rootId || linkedQuest?.id || 'temp'
-        const completionEffects = JSON.stringify({
+        const completionEffectsPayload: Record<string, unknown> = {
             mvpMeta: {
                 linkedQuestId: linkedQuest?.id || null,
                 linkedQuestTitle: linkedQuest?.title || null,
                 tags,
                 requestId,
                 createdAt: new Date().toISOString(),
+            },
+        }
+        if (sceneGridActive) {
+            completionEffectsPayload.sceneGridDeck = {
+                instanceId: sceneGridInstanceId,
+                cardId: sceneGridCardId,
+                instanceSlug: sceneGridInstanceSlug,
             }
-        })
+            const barTemplate: SceneAtlasBarTemplateMeta = {
+                key: SCENE_ATLAS_BAR_TEMPLATE_KEY,
+                version: SCENE_ATLAS_BAR_TEMPLATE_VERSION,
+                suit: sceneGridSuit || null,
+                rank: sceneGridRank,
+            }
+            completionEffectsPayload.barTemplate = barTemplate
+        }
+        const completionEffects = JSON.stringify(completionEffectsPayload)
 
         // TRANSACTION: If public, burn token. Then create bar.
         const result = await db.$transaction(async (tx) => {
@@ -269,6 +320,19 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                 })
             }
 
+            if (sceneGridActive) {
+                await applySceneGridBindingInTx(tx, {
+                    playerId,
+                    barId: newBar.id,
+                    instanceId: sceneGridInstanceId,
+                    cardId: sceneGridCardId,
+                    instanceSlug: sceneGridInstanceSlug,
+                })
+                await tx.sceneAtlasGuidedDraft.deleteMany({
+                    where: { playerId, cardId: sceneGridCardId },
+                })
+            }
+
             return newBar
         })
 
@@ -285,6 +349,10 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         revalidatePath('/')
         revalidatePath('/hand')
         revalidatePath('/bars/available')
+        if (sceneGridActive) {
+            revalidatePath('/creator-scene-deck')
+            revalidatePath(`/creator-scene-deck/${sceneGridInstanceSlug}`)
+        }
         return { success: true, barId: result.id, visibility: effectiveVisibility, warning }
 
     } catch (error: unknown) {
@@ -356,8 +424,36 @@ export async function createQuestFromWizard(data: any) {
             allowedNations, allowedTrigrams, allyshipDomain,
             campaignRef: dataCampaignRef, campaignGoal: dataCampaignGoal,
             barTypeOnCompletion,
-            isBounty, stakeAmount, maxCompletions, rewardPerCompletion
-        } = data
+            isBounty, stakeAmount, maxCompletions, rewardPerCompletion,
+            source321,
+        } = data as {
+            title?: string
+            description?: string
+            successCriteria?: string
+            category?: string
+            visibility?: string
+            reward?: number
+            inputs?: unknown
+            lifecycleFraming?: string
+            moveType?: string
+            approach?: string
+            applyFirstAidLens?: boolean
+            allowedNations?: string[]
+            allowedTrigrams?: string[]
+            allyshipDomain?: string
+            campaignRef?: string
+            campaignGoal?: string
+            barTypeOnCompletion?: string
+            isBounty?: boolean
+            stakeAmount?: number
+            maxCompletions?: number
+            rewardPerCompletion?: number
+            source321?: {
+                phase2Snapshot: string
+                phase3Snapshot: string
+                shadow321Name?: Shadow321NameFields | null
+            }
+        }
 
         const creator = await db.player.findUnique({
             where: { id: playerId },
@@ -388,6 +484,14 @@ export async function createQuestFromWizard(data: any) {
         const generatorMode = getQuestGeneratorMode()
         const requestedVisibility = visibility === 'public' ? 'public' : 'private'
         let effectiveVisibility: 'public' | 'private' = requestedVisibility
+
+        const questTypeFromCategory = (category || 'custom').toLowerCase()
+        const willLink321 = !!(source321?.phase2Snapshot && source321?.phase3Snapshot)
+        if (effectiveVisibility === 'private' && (questTypeFromCategory === 'quest' || willLink321)) {
+            const cap = await assertCanCreateUnplacedVaultQuest(playerId)
+            if (!cap.ok) return { error: cap.error }
+        }
+
         const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16)
         const placeholderTitle = `MVP Quest • ${creator.nation?.name || 'Nation'} × ${creator.archetype?.name || 'Archetype'} • ${timestamp}`
         const finalTitle = (title as string || '').trim() || placeholderTitle
@@ -428,7 +532,23 @@ export async function createQuestFromWizard(data: any) {
         if (barTypeOnCompletion && (barTypeOnCompletion === 'insight' || barTypeOnCompletion === 'vibe')) {
             completionEffectsObj.barTypeOnCompletion = barTypeOnCompletion
         }
+        if (source321?.phase2Snapshot) {
+            completionEffectsObj.source321Wizard = true
+        }
         const completionEffects = JSON.stringify(completionEffectsObj)
+
+        let agentMeta321: string | null = null
+        if (source321?.phase2Snapshot) {
+            try {
+                const p2 = JSON.parse(source321.phase2Snapshot) as { alignedAction?: string }
+                const nextAction = p2?.alignedAction?.trim()
+                    ? `Take one ${p2.alignedAction} step. What is the next smallest honest action?`
+                    : 'What is the next smallest honest action?'
+                agentMeta321 = JSON.stringify({ sourceType: '321', nextAction, via: 'quest_wizard' })
+            } catch {
+                agentMeta321 = JSON.stringify({ sourceType: '321', via: 'quest_wizard' })
+            }
+        }
 
         const isBountyMode = !!isBounty && effectiveVisibility === 'public'
         const stake = Math.max(0, Number(stakeAmount) || 0)
@@ -489,7 +609,8 @@ export async function createQuestFromWizard(data: any) {
                     campaignGoal: (dataCampaignGoal as string) || null,
                     questSource: isBountyMode ? 'bounty' : null,
                     stakedPool: isBountyMode ? stake : 0,
-                    maxAssignments: isBountyMode ? maxComp : 1
+                    maxAssignments: isBountyMode ? maxComp : 1,
+                    agentMetadata: agentMeta321 ?? undefined,
                 }
             })
 
@@ -538,6 +659,22 @@ export async function createQuestFromWizard(data: any) {
             await completeOnboardingStep('firstCreate')
         }
 
+        if (source321?.phase2Snapshot && source321?.phase3Snapshot) {
+            const persistResult = await persist321Session({
+                phase2Snapshot: source321.phase2Snapshot,
+                phase3Snapshot: source321.phase3Snapshot,
+                outcome: 'quest_created',
+                linkedQuestId: newBar.id,
+                shadow321Name: source321.shadow321Name ?? undefined,
+            })
+            if ('success' in persistResult && persistResult.success) {
+                await db.customBar.update({
+                    where: { id: newBar.id },
+                    data: { source321SessionId: persistResult.sessionId },
+                })
+            }
+        }
+
         revalidatePath('/')
         revalidatePath('/hand')
         revalidatePath('/bars/available')
@@ -552,6 +689,10 @@ export async function createQuestFromWizard(data: any) {
     }
 }
 
+/**
+ * Gating labels for quests/BARs. `archetypeKeys` are the first token of each archetype display name
+ * (e.g. "Fire" from "Fire (Li)…") — same strings stored in `allowedTrigrams` JSON for legacy compatibility.
+ */
 export async function getGatingOptions() {
     const [nations, archetypes] = await Promise.all([
         db.nation.findMany({ where: { archived: false }, select: { id: true, name: true } }),
@@ -560,6 +701,6 @@ export async function getGatingOptions() {
 
     return {
         nations: nations.map(n => n.name),
-        trigrams: Array.from(new Set(archetypes.map(p => p.name.split(' ')[0])))
+        archetypeKeys: Array.from(new Set(archetypes.map(p => p.name.split(' ')[0])))
     }
 }

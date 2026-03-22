@@ -25,7 +25,7 @@ const ZONES = [
     tag: 'text-emerald-500',
   },
   {
-    label: 'Quest Wallet',
+    label: 'Vault',
     description: 'Your active quests, private drafts, and face moves.',
     href: '/hand',
     accent: 'border-amber-700/50 hover:border-amber-600/60',

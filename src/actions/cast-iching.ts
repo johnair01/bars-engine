@@ -8,6 +8,11 @@ import { getAlignmentContext, drawAlignedHexagram, scoreHexagramAlignment } from
 import { GAME_MASTER_FACES } from '@/lib/quest-grammar/types'
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
 import { createFaceMoveBar } from '@/actions/face-move-bar'
+import {
+  appendIChingReadingToStoryProgress,
+  hasIChingCastContext,
+  type IChingCastContext,
+} from '@/lib/iching-cast-context'
 
 /** Line-to-face mapping: line 1 (bottom) = Shaman, 2 = Challenger, 3 = Regent, 4 = Architect, 5 = Diplomat, 6 = Sage */
 const LINE_TO_FACE: GameMasterFace[] = ['shaman', 'challenger', 'regent', 'architect', 'diplomat', 'sage']
@@ -28,6 +33,10 @@ export async function castIChingTraditional(opts?: {
   adventureId?: string
   nodeId?: string
   returnTargetId?: string
+  /** Optional campaign / collective context (persisted via `persistHexagramContext`). */
+  instanceId?: string | null
+  campaignRef?: string | null
+  threadId?: string | null
   /** 6 line values: 0=yin, 1=yang. When omitted, server simulates. */
   lines?: number[]
   /** Which line indices (0–5) are changing. When omitted, 0–2 random. */
@@ -89,7 +98,8 @@ export async function castIChingTraditional(opts?: {
 
 /** Persist hexagram context to player storyProgress for in-quest flow. */
 export async function persistHexagramContext(
-  hexagramContext: CastIChingTraditionalResult
+  hexagramContext: CastIChingTraditionalResult,
+  castContext?: IChingCastContext | null
 ): Promise<{ success: boolean; error?: string }> {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
@@ -100,12 +110,22 @@ export async function persistHexagramContext(
     const player = await db.player.findUnique({ where: { id: playerId } })
     if (!player) return { success: false, error: 'Player not found' }
 
-    const parsed = (player.storyProgress ? JSON.parse(player.storyProgress) : {}) as { state?: Record<string, unknown> }
+    const parsed = (player.storyProgress ? JSON.parse(player.storyProgress) : {}) as {
+      state?: Record<string, unknown>
+    }
     const state = parsed?.state ?? {}
     state.hexagramId = hexagramContext.hexagramId
     state.transformedHexagramId = hexagramContext.transformedHexagramId
     state.changingLines = hexagramContext.changingLines
     state.hexagramFaceMapping = hexagramContext.faceMapping
+    if (hasIChingCastContext(castContext)) {
+      state.ichingCastContext = {
+        instanceId: castContext?.instanceId ?? null,
+        campaignRef: castContext?.campaignRef ?? null,
+        threadId: castContext?.threadId ?? null,
+        instanceName: castContext?.instanceName ?? null,
+      }
+    }
 
     await db.player.update({
       where: { id: playerId },
@@ -118,12 +138,16 @@ export async function persistHexagramContext(
   }
 }
 
-export async function castIChing() {
+export async function castIChing(opts?: { context?: IChingCastContext | null }) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
     if (!playerId) {
         return { error: 'Not logged in' }
+    }
+
+    if (opts?.context && process.env.NODE_ENV === 'development') {
+        console.debug('[castIChing] collective context', opts.context)
     }
 
     try {
@@ -160,14 +184,17 @@ export async function castIChing() {
     }
 }
 
-export async function acceptReading(hexagramId: number) {
-    const cookieStore = await cookies()
-    const playerId = cookieStore.get('bars_player_id')?.value
-
-    if (!playerId) {
-        return { error: 'Not logged in' }
-    }
-
+/**
+ * Shared persistence for aligned I Ching acceptance: PlayerBar, Sage face move, `storyProgress.ichingReadings`,
+ * starterPack `iching_*` id, and `ICHING_CAST` trigger when starterPack exists.
+ * Used by `acceptReading` and grammatic quest generation from a reading.
+ */
+export async function persistIChingReadingForPlayer(
+    playerId: string,
+    hexagramId: number,
+    castContext: IChingCastContext | null | undefined,
+    notesExtraLine: string | null | undefined
+): Promise<{ success: true; hexagramName: string } | { error: string }> {
     try {
         const hexagram = await db.bar.findUnique({
             where: { id: hexagramId }
@@ -177,27 +204,61 @@ export async function acceptReading(hexagramId: number) {
             return { error: 'Hexagram not found' }
         }
 
-        // Record this reading as a PlayerBar
+        const dateLine = `Cast on ${new Date().toLocaleDateString()}`
+        const ctxParts: string[] = []
+        if (castContext?.instanceName?.trim()) ctxParts.push(`Instance: ${castContext.instanceName.trim()}`)
+        if (castContext?.campaignRef?.trim()) ctxParts.push(`Campaign: ${castContext.campaignRef.trim()}`)
+        if (castContext?.threadId?.trim()) ctxParts.push(`Thread: ${castContext.threadId.trim()}`)
+        let notes =
+            ctxParts.length > 0 ? `${dateLine}\n${ctxParts.join(' · ')}` : dateLine
+        if (notesExtraLine?.trim()) {
+            notes = `${notes}\n${notesExtraLine.trim()}`
+        }
+
         await db.playerBar.create({
             data: {
                 playerId,
                 barId: hexagramId,
                 source: 'iching',
-                notes: `Cast on ${new Date().toLocaleDateString()}`
-            }
+                notes,
+            },
         })
 
-        // Create face move BAR (Sage: Cast hexagram) — every face move produces a BAR
+        const meta: Record<string, unknown> = { hexagramId }
+        if (hasIChingCastContext(castContext)) {
+            meta.ichingContext = {
+                instanceId: castContext?.instanceId ?? null,
+                campaignRef: castContext?.campaignRef ?? null,
+                threadId: castContext?.threadId ?? null,
+                instanceName: castContext?.instanceName ?? null,
+            }
+        }
+
         await createFaceMoveBar('sage', 'cast_hexagram', {
             title: `I Ching: ${hexagram.name}`,
             description: hexagram.tone
                 ? `${hexagram.tone}\n\n${hexagram.text ?? ''}`
                 : hexagram.text ?? '',
             barType: 'vibe',
-            metadata: { hexagramId },
+            metadata: meta,
         })
 
-        // Also add to starterPack activeBars for dashboard display
+        const player = await db.player.findUnique({
+            where: { id: playerId },
+            select: { storyProgress: true },
+        })
+        const nextProgress = appendIChingReadingToStoryProgress(player?.storyProgress, {
+            hexagramId,
+            instanceId: castContext?.instanceId ?? null,
+            campaignRef: castContext?.campaignRef ?? null,
+            threadId: castContext?.threadId ?? null,
+            instanceName: castContext?.instanceName ?? null,
+        })
+        await db.player.update({
+            where: { id: playerId },
+            data: { storyProgress: nextProgress },
+        })
+
         const starterPack = await db.starterPack.findUnique({
             where: { playerId }
         })
@@ -210,7 +271,6 @@ export async function acceptReading(hexagramId: number) {
 
             if (!data.activeBars) data.activeBars = []
 
-            // Add with iching_ prefix to distinguish
             const ichingBarId = `iching_${hexagramId}`
             if (!data.activeBars.includes(ichingBarId)) {
                 data.activeBars.push(ichingBarId)
@@ -221,20 +281,35 @@ export async function acceptReading(hexagramId: number) {
                 data: { data: JSON.stringify(data) }
             })
 
-            // Fire orientation quest trigger
             await fireTrigger('ICHING_CAST')
         }
 
-        revalidatePath('/')
-        revalidatePath('/iching')
-
-        return {
-            success: true,
-            message: `${hexagram.name} has been added to your active quests.`
-        }
-
+        return { success: true, hexagramName: hexagram.name }
     } catch (e: unknown) {
-        console.error("Accept reading failed:", e instanceof Error ? e.message : String(e))
-        return { error: 'Failed to accept reading' }
+        console.error('[persistIChingReadingForPlayer]', e instanceof Error ? e.message : String(e))
+        return { error: e instanceof Error ? e.message : 'Failed to persist reading' }
+    }
+}
+
+export async function acceptReading(hexagramId: number, castContext?: IChingCastContext | null) {
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+
+    if (!playerId) {
+        return { error: 'Not logged in' }
+    }
+
+    const result = await persistIChingReadingForPlayer(playerId, hexagramId, castContext ?? null, null)
+    if ('error' in result) {
+        return { error: result.error }
+    }
+
+    revalidatePath('/')
+    revalidatePath('/iching')
+    revalidatePath('/campaign/board')
+
+    return {
+        success: true,
+        message: `${result.hexagramName} has been added to your active quests.`
     }
 }

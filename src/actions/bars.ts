@@ -4,6 +4,13 @@ import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import {
+    effectiveMaturity,
+    parseSeedMetabolization,
+    type MaturityPhase,
+    type SoilKind,
+} from '@/lib/bar-seed-metabolization'
+import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -460,6 +467,61 @@ export async function listMyBars() {
     })
 }
 
+export type BarGardenFilters = {
+    soil?: SoilKind | 'all'
+    maturity?: MaturityPhase | 'all'
+    /** When true, include soft-archived (composted) seeds. */
+    includeComposted?: boolean
+}
+
+/** BSM nursery list: optional filters on soil / maturity; can include composted seeds. */
+export async function listMyBarsForGarden(filters: BarGardenFilters = {}) {
+    const playerId = await getPlayerId()
+    if (!playerId) return []
+
+    const includeComposted = filters.includeComposted === true
+
+    const bars = await db.customBar.findMany({
+        where: {
+            creatorId: playerId,
+            type: { in: ['bar', 'charge_capture'] },
+            status: 'active',
+            ...(includeComposted ? {} : { archivedAt: null }),
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            shares: {
+                select: {
+                    id: true,
+                    toUserId: true,
+                    toUser: { select: { name: true } },
+                    createdAt: true,
+                },
+            },
+            assets: {
+                where: { type: 'bar_attachment' },
+                orderBy: { createdAt: 'asc' },
+                take: 2,
+                select: { id: true, url: true, mimeType: true, metadataJson: true },
+            },
+        },
+    })
+
+    const soilF = filters.soil
+    const matF = filters.maturity
+
+    return bars.filter((b) => {
+        const meta = parseSeedMetabolization(b.seedMetabolization)
+        if (soilF && soilF !== 'all') {
+            if (meta.soilKind !== soilF) return false
+        }
+        if (matF && matF !== 'all') {
+            if (effectiveMaturity(meta) !== matF) return false
+        }
+        return true
+    })
+}
+
 // ---------------------------------------------------------------------------
 // LIST: Received BARs (shared to me)
 // ---------------------------------------------------------------------------
@@ -701,6 +763,9 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
 
     const title = (bar.title || 'Quest from BAR').trim().slice(0, 200)
     const description = (bar.description || '').trim() || title
+
+    const cap = await assertCanCreateUnplacedVaultQuest(playerId)
+    if (!cap.ok) return { error: cap.error }
 
     try {
         const quest = await db.customBar.create({

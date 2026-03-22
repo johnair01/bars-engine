@@ -30,6 +30,10 @@ export interface InterpretBarInput {
   campaignRef: string | null
   type?: string
   moveType?: string | null
+  /** From Instance.kotterStage when campaign-linked; default 1. */
+  kotterStage?: number
+  /** Stable phase key from `kotterStageToCampaignPhaseKey` (campaign-phase.ts). */
+  campaignPhaseKey?: string
 }
 
 /**
@@ -58,6 +62,21 @@ export function interpretBarForQuestGeneration(bar: InterpretBarInput): BarInter
 
   const desiredOutcomeTags: string[] = [questType, `domain:${domain}`]
 
+  const kotterStage =
+    bar.kotterStage != null && Number.isFinite(bar.kotterStage)
+      ? Math.max(1, Math.min(8, Math.round(bar.kotterStage)))
+      : undefined
+  const campaignPhaseKey = bar.campaignPhaseKey
+
+  if (kotterStage != null) {
+    sourceContextTags.push(`kotter:${kotterStage}`)
+    desiredOutcomeTags.push(`kotter_stage:${kotterStage}`)
+  }
+  if (campaignPhaseKey) {
+    sourceContextTags.push(`phase:${campaignPhaseKey}`)
+    desiredOutcomeTags.push(`phase:${campaignPhaseKey}`)
+  }
+
   // Suggested title: use BAR title, cleaned
   const suggestedTitle = title || 'Generated Quest'
 
@@ -73,6 +92,9 @@ export function interpretBarForQuestGeneration(bar: InterpretBarInput): BarInter
   const reviewNotes: string[] = []
   if (!bar.allyshipDomain) reviewNotes.push('Domain inferred from defaults')
   if (description.length < 30) reviewNotes.push('Short description; consider expanding')
+  if (kotterStage != null && campaignPhaseKey) {
+    reviewNotes.push(`Campaign phase: ${campaignPhaseKey} (Kotter stage ${kotterStage})`)
+  }
 
   return {
     barId: bar.id,
@@ -85,5 +107,7 @@ export function interpretBarForQuestGeneration(bar: InterpretBarInput): BarInter
     suggestedPrompt,
     confidenceScore,
     reviewNotes,
+    ...(kotterStage != null ? { campaignKotterStage: kotterStage } : {}),
+    ...(campaignPhaseKey ? { campaignPhaseKey } : {}),
   }
 }

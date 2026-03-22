@@ -4,7 +4,6 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { completeQuest } from '@/actions/quest-engine'
-import { fireTrigger } from '@/actions/quest-engine'
 import { getAlignmentContext } from '@/lib/iching-alignment'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { getHexagramStructure } from '@/lib/iching-struct'
@@ -12,10 +11,12 @@ import { generateRandomUnpacking, getArchetypePrimaryWave } from '@/lib/quest-gr
 import { compileQuestWithAI, publishIChingQuestToPlayer } from '@/actions/quest-grammar'
 import type { IChingContext } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
+import { persistIChingReadingForPlayer } from '@/actions/cast-iching'
+import type { IChingCastContext } from '@/lib/iching-cast-context'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
-export async function generateQuestFromReading(hexagramId: number) {
+export async function generateQuestFromReading(hexagramId: number, castContext?: IChingCastContext | null) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -23,7 +24,7 @@ export async function generateQuestFromReading(hexagramId: number) {
         return { error: 'Not logged in' }
     }
 
-    const result = await generateGrammaticQuestFromReading(playerId, hexagramId)
+    const result = await generateGrammaticQuestFromReading(playerId, hexagramId, castContext ?? null)
 
     // Complete orientation-quest-3 regardless of result
     const threadQuest = await db.threadQuest.findFirst({
@@ -58,7 +59,11 @@ export async function generateQuestFromReading(hexagramId: number) {
 /**
  * Generate grammatic quest from I Ching: random unpacking + hexagram context → compileQuestWithAI → publish.
  */
-export async function generateGrammaticQuestFromReading(playerId: string, hexagramId: number): Promise<
+export async function generateGrammaticQuestFromReading(
+    playerId: string,
+    hexagramId: number,
+    castContext?: IChingCastContext | null
+): Promise<
     | { success: true; quest: { title: string; description?: string }; adventureId?: string; questId?: string; threadId?: string }
     | { error: string }
 > {
@@ -139,17 +144,18 @@ export async function generateGrammaticQuestFromReading(playerId: string, hexagr
             return { error: publishResult.error }
         }
 
-        // Record hexagram as played (for unplayed-preference)
-        await db.playerBar.create({
-            data: {
-                playerId,
-                barId: hexagramId,
-                source: 'iching',
-                notes: `Grammatic quest on ${new Date().toLocaleDateString()}`
-            }
-        })
+        const persist = await persistIChingReadingForPlayer(
+            playerId,
+            hexagramId,
+            castContext ?? null,
+            'Grammatic quest generated'
+        )
+        if ('error' in persist) {
+            return { error: persist.error }
+        }
 
-        await fireTrigger('ICHING_CAST')
+        revalidatePath('/iching')
+        revalidatePath('/campaign/board')
 
         return {
             success: true,

@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { castIChingTraditional, persistHexagramContext } from '@/actions/cast-iching'
+import type { IChingCastContext } from '@/lib/iching-cast-context'
 
 interface CastIChingModalProps {
   isOpen: boolean
   onClose: () => void
   onComplete: (targetNodeId: string) => void
   targetNodeId: string
+  /** Optional collective context (e.g. campaign) — merged into `storyProgress.state.ichingCastContext`. */
+  castContext?: IChingCastContext | null
 }
 
 export function CastIChingModal({
@@ -15,6 +18,7 @@ export function CastIChingModal({
   onClose,
   onComplete,
   targetNodeId,
+  castContext = null,
 }: CastIChingModalProps) {
   const [phase, setPhase] = useState<'ready' | 'casting' | 'revealed' | 'accepted'>('ready')
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +29,11 @@ export function CastIChingModal({
 
     await new Promise((r) => setTimeout(r, 1500))
 
-    const result = await castIChingTraditional()
+    const result = await castIChingTraditional({
+      instanceId: castContext?.instanceId ?? undefined,
+      campaignRef: castContext?.campaignRef ?? undefined,
+      threadId: castContext?.threadId ?? undefined,
+    })
 
     if ('error' in result) {
       setError(result.error)
@@ -33,7 +41,7 @@ export function CastIChingModal({
       return
     }
 
-    const persist = await persistHexagramContext(result)
+    const persist = await persistHexagramContext(result, castContext ?? undefined)
     if (!persist.success) {
       setError(persist.error ?? 'Failed to save')
       setPhase('ready')

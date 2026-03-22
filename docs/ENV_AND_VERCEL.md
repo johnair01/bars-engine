@@ -94,6 +94,19 @@ AI features (Book analysis, I Ching quest generation) require `OPENAI_API_KEY`. 
 3. **Verify**: Run `npm run smoke` — it checks for `OPENAI_API_KEY` presence.
 4. **Key format**: Valid keys start with `sk-` or `sk-proj-`. If rotated or expired, create a new key and update env.
 
+### Vault inventory caps (optional)
+
+Per [.specify/specs/vault-page-experience/spec.md](../.specify/specs/vault-page-experience/spec.md) **Phase B**, creation of private draft BARs and unplaced personal quests can be limited:
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `VAULT_MAX_PRIVATE_DRAFTS` | `100` | Max active **private, unclaimed, non-invite** non-quest BARs per player (same filter as Vault “drafts” + charge captures). Set to `0` or a negative number to **disable** the cap. |
+| `VAULT_MAX_UNPLACED_QUESTS` | `50` | Max **unplaced** personal quests (BAR/321-sourced, not in a thread). Set to `0` or negative to **disable**. |
+
+Unset or empty env uses the default. Invalid values fall back to the default.
+
+**Vault Compost (Phase C):** Player flow at **`/hand/compost`** — salvage lines are stored on `CompostLedger`; eligible items are private drafts and unplaced personal quests (see `src/lib/vault-queries.ts` `compostEligibleWhere`). Batch size cap is `COMPOST_MAX_SOURCES` in `src/lib/vault-compost.ts` (not env in v1).
+
 ## GitHub Codespaces
 
 In GitHub Codespaces, run `vercel link` then `npm run env:pull` once to populate `.env.local`. If you don't have Vercel access, copy `.env.example` to `.env` and add `DATABASE_URL` from your team.

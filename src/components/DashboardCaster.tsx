@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CastingRitual } from './CastingRitual'
 import { generateQuestFromReading } from '@/actions/generate-quest'
+import type { IChingCastContext } from '@/lib/iching-cast-context'
 import { useRouter } from 'next/navigation'
 
 export function DashboardCaster() {
@@ -10,8 +11,8 @@ export function DashboardCaster() {
     const [isOpen, setIsOpen] = useState(false)
     const [generatedQuest, setGeneratedQuest] = useState<{ title: string, description: string } | null>(null)
 
-    const handleComplete = async (hexagramId: number) => {
-        const result = await generateQuestFromReading(hexagramId)
+    const handleComplete = async (hexagramId: number, ctx: IChingCastContext | null) => {
+        const result = await generateQuestFromReading(hexagramId, ctx ?? undefined)
 
         if ('error' in result) {
             throw new Error(result.error)

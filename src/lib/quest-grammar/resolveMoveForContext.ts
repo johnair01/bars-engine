@@ -29,12 +29,13 @@ export interface ResolveMoveForContextParams {
 }
 
 /**
- * Resolve canonical move from domain + optional lens.
- * When lens present and is a GM face, intersects domain preference with lens moves.
- * Otherwise returns first move from domain preference.
+ * Resolve canonical move from domain + optional lens + optional campaign Kotter stage (1–8).
+ * `campaignPhase` rotates which domain-preferred move is chosen as stages advance (T4.1).
+ * When lens present and is a GM face, intersects domain preference with lens moves; if multiple
+ * candidates, uses the same phase index to pick among them.
  */
 export function resolveMoveForContext(params: ResolveMoveForContextParams): CanonicalMove | null {
-  const { allyshipDomain, lens } = params
+  const { allyshipDomain, lens, campaignPhase } = params
   const domain = allyshipDomain.toUpperCase()
   const domainMoveIds = DOMAIN_MOVE_IDS[domain]
   if (!domainMoveIds) return null
@@ -44,15 +45,22 @@ export function resolveMoveForContext(params: ResolveMoveForContextParams): Cano
     .filter((m): m is CanonicalMove => m != null)
   if (domainMoves.length === 0) return null
 
+  const stage = campaignPhase != null && Number.isFinite(campaignPhase) ? Math.round(campaignPhase) : 1
+  const clampedStage = Math.max(1, Math.min(8, stage))
+  const phaseIndex = (clampedStage - 1) % domainMoves.length
+
   if (lens && typeof lens === 'string') {
     const lensKey = lens.toLowerCase()
     if ((LENS_KEYS as readonly string[]).includes(lensKey)) {
       const lensMoves = getMovesForLens(lens)
       const lensIds = new Set(lensMoves.map((m) => m.id))
-      const intersection = domainMoves.find((m) => lensIds.has(m.id))
-      if (intersection) return intersection
+      const candidates = domainMoves.filter((m) => lensIds.has(m.id))
+      if (candidates.length > 0) {
+        const pick = candidates[phaseIndex % candidates.length]
+        return pick
+      }
     }
   }
 
-  return domainMoves[0]
+  return domainMoves[phaseIndex]
 }

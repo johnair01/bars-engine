@@ -5,6 +5,13 @@ import { DashboardCaster } from '@/components/DashboardCaster'
 
 const ACTIONS = [
   {
+    href: '/shadow/321',
+    label: '321 Shadow Process',
+    description: 'Face it, talk to it, be it — then turn it into a quest',
+    color: 'yellow',
+    icon: '◐',
+  },
+  {
     href: '/bars/create',
     label: 'Create BAR',
     description: 'Share an insight or story',

@@ -7,11 +7,18 @@ import { createQuestFromWizard, getGatingOptions } from '@/actions/create-bar'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { listPublishedStories } from '@/actions/twine'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { consumeQuestWizardPrefillFrom321 } from '@/lib/quest-wizard-prefill'
+import type { QuestWizard321DisplayHints } from '@/lib/quest-wizard-prefill'
+import { extractCreationIntent } from '@/lib/creation-quest'
 
 export function QuestWizard({
     gameboardContext,
+    wizardSource,
 }: {
     gameboardContext?: { questId: string; slotId: string; campaignRef: string }
+    /** When set from `/quest/create?from=321`, 321 payload was stashed in sessionStorage */
+    wizardSource?: '321' | null
 }) {
     const router = useRouter()
 
@@ -22,7 +29,7 @@ export function QuestWizard({
         { key: 'showUp', label: 'Show Up', desc: 'Action & Impact' },
     ] as const
 
-    // State: 1: Move+Domain+Template, 2: Details, 3: Settings, 4: Preview
+    // 1 Template+move+domain → 2 Template inputs note → 3 Settings → 4 Quest identity (title/desc/success) → 5 Preview
     const [step, setStep] = useState<number>(1)
     const [templates, setTemplates] = useState<QuestTemplate[]>([])
     const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
@@ -30,10 +37,16 @@ export function QuestWizard({
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [twineStories, setTwineStories] = useState<{ id: string; title: string }[]>([])
-    const [gatingOptions, setGatingOptions] = useState<{ nations: string[], trigrams: string[] }>({ nations: [], trigrams: [] })
+    const [gatingOptions, setGatingOptions] = useState<{ nations: string[]; archetypeKeys: string[] }>({
+        nations: [],
+        archetypeKeys: [],
+    })
     const [selectedNations, setSelectedNations] = useState<string[]>([])
-    const [selectedTrigrams, setSelectedTrigrams] = useState<string[]>([])
+    /** First token of archetype names — stored as `allowedTrigrams` JSON for engine compatibility */
+    const [selectedArchetypeKeys, setSelectedArchetypeKeys] = useState<string[]>([])
     const [allyshipDomain, setAllyshipDomain] = useState<string | null>(null)
+    const [from321Banner, setFrom321Banner] = useState(false)
+    const [hints321, setHints321] = useState<QuestWizard321DisplayHints | null>(null)
 
     // Load templates + twine stories on mount
     useEffect(() => {
@@ -41,6 +54,43 @@ export function QuestWizard({
         listPublishedStories().then(stories => setTwineStories(stories))
         getGatingOptions().then(setGatingOptions)
     }, [])
+
+    // 321 → Wizard: only engine routing (move, domain, session linkage). Title/description/success: step 4, written for the game.
+    useEffect(() => {
+        if (wizardSource !== '321') return
+        const prefill = consumeQuestWizardPrefillFrom321()
+        if (!prefill) return
+        setFrom321Banner(true)
+        if (prefill.displayHints) {
+            setHints321(prefill.displayHints)
+        }
+        const intent = extractCreationIntent(prefill.phase2 as unknown as Record<string, unknown>)
+        let domain: string | null = null
+        if (intent.domain && ALLYSHIP_DOMAINS.some((d) => d.key === intent.domain)) {
+            domain = intent.domain as string
+        } else {
+            for (const tag of prefill.metadata.tags || []) {
+                const upper = tag.toUpperCase().replace(/-/g, '_')
+                const found = ALLYSHIP_DOMAINS.find((d) => d.key === upper)
+                if (found) {
+                    domain = found.key
+                    break
+                }
+            }
+        }
+        setFormData((prev: Record<string, unknown>) => ({
+            ...prev,
+            moveType: intent.moveType || prev.moveType,
+            source321: {
+                phase2Snapshot: JSON.stringify(prefill.phase2),
+                phase3Snapshot: JSON.stringify(prefill.phase3),
+                shadow321Name: prefill.shadow321Name ?? null,
+            },
+        }))
+        if (domain) {
+            setAllyshipDomain(domain)
+        }
+    }, [wizardSource])
 
     // Handlers
     const handleTemplateSelect = (template: QuestTemplate) => {
@@ -57,13 +107,17 @@ export function QuestWizard({
         setFormData({ ...formData, [key]: value })
     }
 
-    const handleNext = async () => {
+    const handleNext = () => {
         if (step === 2) {
-            // Validate basic details
-            if (!formData.title && !selectedTemplate?.id) return
+            if (!selectedTemplate?.id) return
             setStep(3)
-        } else if (step === 3) {
-            setStep(4)
+        } else if (step === 4) {
+            if (!String(formData.title || '').trim()) {
+                setError('Give your quest a short title.')
+                return
+            }
+            setError(null)
+            setStep(5)
         }
     }
 
@@ -98,7 +152,7 @@ export function QuestWizard({
                 inputs,
                 applyFirstAidLens: !!formData.applyFirstAidLens,
                 allowedNations: selectedNations,
-                allowedTrigrams: selectedTrigrams,
+                allowedTrigrams: selectedArchetypeKeys,
                 moveType: formData.moveType || formData.lifecycleFraming,
                 allyshipDomain,
                 barTypeOnCompletion: formData.barTypeOnCompletion || null,
@@ -109,6 +163,9 @@ export function QuestWizard({
                 ...(gameboardContext && {
                     campaignRef: gameboardContext.campaignRef,
                     campaignGoal: formData.campaignGoal || 'gameboard subquest',
+                }),
+                ...(formData.source321 && {
+                    source321: formData.source321,
                 }),
             })
 
@@ -135,6 +192,12 @@ export function QuestWizard({
     if (step === 1) {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                {from321Banner && (
+                    <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-600/40 text-amber-100 text-sm">
+                        <strong>From your 321</strong> — move and domain are suggested from your aligned action. After settings you&apos;ll{' '}
+                        <strong>name the quest for the game</strong> (separate from shadow-work notes). Your 321 session links on publish.
+                    </div>
+                )}
                 {gameboardContext && (
                     <div className="p-4 rounded-xl bg-purple-900/20 border border-purple-800/50 text-purple-200 text-sm">
                         Creating quest for gameboard. After creation you&apos;ll return to the campaign board.
@@ -243,56 +306,39 @@ export function QuestWizard({
                     ← Back to templates
                 </button>
 
-                <h2 className="text-2xl font-bold text-white">Quest Details</h2>
+                <h2 className="text-2xl font-bold text-white">Template &amp; prompts</h2>
+                <p className="text-sm text-zinc-500">
+                    You&apos;ll set the <strong className="text-zinc-300">quest title, instructions, and success signal</strong> after scope and
+                    settings — so they fit the game, not your raw process notes.
+                </p>
 
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm text-zinc-400 mb-1">Quest Title</label>
-                        <input
-                            type="text"
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
-                            placeholder={selectedTemplate?.title}
-                            value={formData.title || ''}
-                            onChange={(e) => handleInputChange('title', e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-zinc-400 mb-1">Description / Instructions</label>
-                        <textarea
-                            rows={4}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
-                            placeholder={selectedTemplate?.description || "Give players some guidance."}
-                            value={formData.description || ''}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm text-zinc-400 mb-1">What does success look like?</label>
-                        <textarea
-                            rows={2}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
-                            placeholder="Describe how a player knows they've completed this quest."
-                            value={formData.successCriteria || ''}
-                            onChange={(e) => handleInputChange('successCriteria', e.target.value)}
-                        />
-                    </div>
-
-                    {selectedTemplate?.inputs.map((input) => (
-                        <div key={input.key} className="p-4 bg-zinc-900/30 rounded-lg border border-zinc-800">
-                            <h4 className="text-sm font-bold text-zinc-300 mb-2">Player Input: {input.label}</h4>
-                            <p className="text-xs text-zinc-500">Players will be asked to provide this when completing the quest.</p>
-                        </div>
-                    ))}
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+                    <div className="text-xs uppercase tracking-widest text-purple-400">Selected template</div>
+                    <h3 className="text-lg font-semibold text-white">{selectedTemplate?.title}</h3>
+                    <p className="text-sm text-zinc-400">{selectedTemplate?.description}</p>
                 </div>
+
+                {selectedTemplate?.inputs && selectedTemplate.inputs.length > 0 ? (
+                    <div className="space-y-3">
+                        <p className="text-xs text-zinc-500">Players will be asked for:</p>
+                        {selectedTemplate.inputs.map((input) => (
+                            <div key={input.key} className="p-4 bg-zinc-900/30 rounded-lg border border-zinc-800">
+                                <h4 className="text-sm font-bold text-zinc-300 mb-1">{input.label}</h4>
+                                <p className="text-xs text-zinc-500">Collected when they complete the quest.</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-zinc-600">No extra player prompts for this template.</p>
+                )}
 
                 <div className="flex justify-end pt-4">
                     <button
+                        type="button"
                         onClick={handleNext}
                         className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-zinc-200 transition"
                     >
-                        Next Step →
+                        Next: Settings →
                     </button>
                 </div>
             </div>
@@ -493,25 +539,53 @@ export function QuestWizard({
                     </div>
                 )}
 
-                {/* Twine Adventure (Optional) */}
-                {twineStories.length > 0 && (
-                    <div className="space-y-3 pt-4 border-t border-zinc-800">
-                        <label className="text-xs uppercase text-zinc-500">Twine Adventure (Optional)</label>
-                        <select
-                            value={(formData.twineStoryId as string) || ''}
-                            onChange={(e) => handleInputChange('twineStoryId', e.target.value || null)}
-                            className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm outline-none"
-                        >
-                            <option value="">None (standard quest)</option>
-                            {twineStories.map(s => (
-                                <option key={s.id} value={s.id}>{s.title}</option>
-                            ))}
-                        </select>
-                        <p className="text-[10px] text-zinc-600">Attach a Twine story. Players complete the quest by playing through it.</p>
+                {/* Twine: author first (templates / building blocks), then attach */}
+                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                    <div className="text-xs uppercase text-zinc-500">Twine story (optional)</div>
+                    <div className="rounded-xl border border-violet-900/40 bg-violet-950/20 p-4 space-y-3">
+                        <p className="text-sm text-zinc-300">
+                            Twine adventures are built from <strong className="text-violet-200">templates and authoring blocks</strong> — create
+                            and publish a story first, then attach it here.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Link
+                                href="/admin/twine"
+                                className="inline-flex items-center gap-2 rounded-lg bg-violet-600/90 hover:bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition"
+                            >
+                                Twine library &amp; templates (admin) →
+                            </Link>
+                            <Link
+                                href="/wiki/player-guides"
+                                className="text-sm text-violet-400/90 hover:text-violet-300 underline underline-offset-2"
+                            >
+                                Player guides
+                            </Link>
+                        </div>
+                        <p className="text-[10px] text-zinc-500">
+                            Authors use the admin library to upload, fork from a template, or use the IR editor to compose passages. Not an admin?
+                            Work with a steward to publish a story, then select it below when it appears.
+                        </p>
                     </div>
-                )}
+                    {twineStories.length > 0 && (
+                        <>
+                            <label className="text-xs uppercase text-zinc-500 block pt-2">Attach published story</label>
+                            <select
+                                value={(formData.twineStoryId as string) || ''}
+                                onChange={(e) => handleInputChange('twineStoryId', e.target.value || null)}
+                                className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm outline-none"
+                            >
+                                <option value="">None (standard quest)</option>
+                                {twineStories.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </>
+                    )}
+                </div>
 
-                {/* Nation & Trigram Gating */}
+                {/* Nation & archetype gating */}
                 <div className="space-y-4 pt-4 border-t border-zinc-800">
                     <div className="space-y-2">
                         <label className="text-xs uppercase text-zinc-500 block">Restrict to Nations (Optional)</label>
@@ -534,20 +608,27 @@ export function QuestWizard({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs uppercase text-zinc-500 block">Restrict to Trigrams (Optional)</label>
+                        <label className="text-xs uppercase text-zinc-500 block">Restrict to archetypes (optional)</label>
+                        <p className="text-[10px] text-zinc-600">
+                            Only players whose <strong className="text-zinc-400">playbook archetype</strong> matches one of these can take this
+                            quest. Labels are the short names from each archetype (same as your nation/playbook pick).
+                        </p>
                         <div className="flex flex-wrap gap-2">
-                            {gatingOptions.trigrams.map(trigram => (
+                            {gatingOptions.archetypeKeys.map((key) => (
                                 <button
-                                    key={trigram}
-                                    onClick={() => setSelectedTrigrams(prev =>
-                                        prev.includes(trigram) ? prev.filter(t => t !== trigram) : [...prev, trigram]
-                                    )}
-                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedTrigrams.includes(trigram)
+                                    key={key}
+                                    type="button"
+                                    onClick={() =>
+                                        setSelectedArchetypeKeys((prev) =>
+                                            prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]
+                                        )
+                                    }
+                                    className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedArchetypeKeys.includes(key)
                                         ? 'bg-purple-900/20 border-purple-500/50 text-purple-300'
                                         : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700'
                                         }`}
                                 >
-                                    {trigram}
+                                    {key}
                                 </button>
                             ))}
                         </div>
@@ -628,22 +709,152 @@ export function QuestWizard({
 
                 <div className="flex justify-end pt-4">
                     <button
-                        onClick={handleNext}
+                        type="button"
+                        onClick={() => setStep(4)}
                         className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-zinc-200 transition"
                     >
-                        Review & Publish →
+                        Next: Name your quest →
                     </button>
                 </div>
             </div>
         )
     }
 
-    // Step 4: Preview
+    // Step 4: Quest identity (title / description / success) — after settings; 321 hints are reference only
     if (step === 4) {
+        const append321ToDescription = () => {
+            if (!hints321) return
+            const block = [
+                hints321.chargeLine && `Charge: ${hints321.chargeLine}`,
+                hints321.maskPresence && `Presence: ${hints321.maskPresence}`,
+                hints321.alignedAction && `Aligned move: ${hints321.alignedAction}`,
+                hints321.integrationShift && `Shift: ${hints321.integrationShift}`,
+            ]
+                .filter(Boolean)
+                .join('\n')
+            const appendix = `\n\n— From 321 —\n${block}`
+            setFormData((prev: Record<string, unknown>) => ({
+                ...prev,
+                description: String(prev.description || '') + appendix,
+            }))
+        }
+
         return (
             <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-right-8">
-                <button onClick={() => setStep(3)} className="text-sm text-zinc-500 hover:text-white">
+                <button type="button" onClick={() => setStep(3)} className="text-sm text-zinc-500 hover:text-white">
                     ← Back to settings
+                </button>
+
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Quest identity</h2>
+                    <p className="text-sm text-zinc-500 mt-1">
+                        These three fields are what the <strong className="text-zinc-300">game</strong> stores and shows. Write them for the quest, not
+                        as therapy notes — use your 321 panel as a reminder.
+                    </p>
+                </div>
+
+                {hints321 && (
+                    <details className="rounded-xl border border-amber-900/40 bg-amber-950/20 p-4 text-sm open:border-amber-700/50">
+                        <summary className="cursor-pointer font-medium text-amber-100/90">
+                            Your 321 (reference — optional to paste into description)
+                        </summary>
+                        <dl className="mt-3 space-y-2 text-zinc-400">
+                            {hints321.chargeLine ? (
+                                <div>
+                                    <dt className="text-[10px] uppercase tracking-widest text-zinc-600">Charge</dt>
+                                    <dd className="text-zinc-300 whitespace-pre-wrap">{hints321.chargeLine}</dd>
+                                </div>
+                            ) : null}
+                            {hints321.maskPresence ? (
+                                <div>
+                                    <dt className="text-[10px] uppercase tracking-widest text-zinc-600">Presence</dt>
+                                    <dd className="text-zinc-300">{hints321.maskPresence}</dd>
+                                </div>
+                            ) : null}
+                            {hints321.alignedAction ? (
+                                <div>
+                                    <dt className="text-[10px] uppercase tracking-widest text-zinc-600">Aligned move</dt>
+                                    <dd className="text-amber-200/90">{hints321.alignedAction}</dd>
+                                </div>
+                            ) : null}
+                            {hints321.integrationShift ? (
+                                <div>
+                                    <dt className="text-[10px] uppercase tracking-widest text-zinc-600">Shift</dt>
+                                    <dd className="text-zinc-300 whitespace-pre-wrap">{hints321.integrationShift}</dd>
+                                </div>
+                            ) : null}
+                        </dl>
+                        <button
+                            type="button"
+                            onClick={append321ToDescription}
+                            className="mt-3 text-xs text-amber-400 hover:text-amber-300 underline underline-offset-2"
+                        >
+                            Append 321 summary to description
+                        </button>
+                    </details>
+                )}
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm text-zinc-300 mb-1">Title</label>
+                        <p className="text-[10px] text-zinc-600 mb-2">Short name for this quest in the Conclave (not the same as your &ldquo;situation&rdquo; line from 321).</p>
+                        <input
+                            type="text"
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                            placeholder={selectedTemplate?.title || 'e.g. One honest Clean Up step this week'}
+                            value={formData.title || ''}
+                            onChange={(e) => handleInputChange('title', e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-zinc-300 mb-1">What the player does</label>
+                        <p className="text-[10px] text-zinc-600 mb-2">Instructions: what to try, notice, or complete for this quest.</p>
+                        <textarea
+                            rows={5}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                            placeholder={selectedTemplate?.description || 'Concrete steps or focus for the player.'}
+                            value={formData.description || ''}
+                            onChange={(e) => handleInputChange('description', e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-zinc-300 mb-1">Done means</label>
+                        <p className="text-[10px] text-zinc-600 mb-2">Observable signal that the quest is complete (closest to &ldquo;measure of success&rdquo;).</p>
+                        <textarea
+                            rows={3}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                            placeholder="e.g. I sent the message / I logged one honest action / I named the pattern out loud."
+                            value={formData.successCriteria || ''}
+                            onChange={(e) => handleInputChange('successCriteria', e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="bg-red-900/20 border border-red-800 text-red-300 p-4 rounded-lg text-sm">{error}</div>
+                )}
+
+                <div className="flex justify-end pt-4">
+                    <button
+                        type="button"
+                        onClick={handleNext}
+                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-zinc-200 transition"
+                    >
+                        Review →
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // Step 5: Preview
+    if (step === 5) {
+        return (
+            <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-right-8">
+                <button type="button" onClick={() => setStep(4)} className="text-sm text-zinc-500 hover:text-white">
+                    ← Back to quest identity
                 </button>
 
                 <div className="text-center">
@@ -669,6 +880,12 @@ export function QuestWizard({
                         <div className="prose prose-invert prose-sm">
                             <p className="whitespace-pre-wrap text-zinc-300">{formData.description}</p>
                         </div>
+                        {formData.successCriteria && (
+                            <div className="pt-2 border-t border-zinc-800/80">
+                                <span className="text-xs uppercase tracking-widest text-zinc-500">Done means</span>
+                                <p className="text-sm text-emerald-200/90 whitespace-pre-wrap mt-1">{formData.successCriteria}</p>
+                            </div>
+                        )}
 
                         <div className="flex flex-wrap gap-4 pt-4 border-t border-zinc-800 text-sm">
                             <div className="text-zinc-500">

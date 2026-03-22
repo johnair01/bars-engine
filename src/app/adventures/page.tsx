@@ -53,6 +53,7 @@ export default async function PlayPage() {
         <header>
           <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1">Play</div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Moves you can make right now</h1>
+          <p className="text-sm text-zinc-500 mt-1">Shadow work, quest arcs, I Ching — pick a container and go.</p>
         </header>
 
         {/* ── Shadow Work ─────────────────────────────────────────── */}

@@ -1,15 +1,25 @@
 ---
 name: deftness-development
-description: Applies spec kit discipline, API-first design, and scaling robustness during implementation. Includes generative dependencies—organizing backlog so solving one item eliminates the need for others. Ontology: integral theory—holocratic stewardship, generative movement, effective composting, tight UI-to-component loops. Vibes layer: I Ching wisdom included without extra energy to weave in. Thesis: gamification increases deftness in RPG dev/production software. Builds in-game artifacts (e.g. Bruised Banana + Six Faces) so the game creates the game. Use when building features with persistence, UI, or external surface; when adding uploads, AI, or large payloads; when organizing backlog; or when the user mentions spec kit, API-first, scaling, token efficiency, deftness, or generative dependencies.
+description: Deftness in app development = ship rising complexity with fewer tokens by reducing rework tax—one-shot design passes that surface options, then align and integrate one path. Integral theory + I Ching vibes + in-game process artifacts remain; spec kit and API-first bound wrong foundations. Use when building features, organizing backlog, or when the user mentions deftness, token economy, one-shot, or generative dependencies.
 ---
 
 # Skill: Deftness Development
 
-Teaches the agent to apply spec kit discipline, API-first design, and scaling robustness during implementation—reducing tokens, time-to-implement, and time-to-test.
+Teaches the agent to apply spec kit discipline, API-first design, and scaling robustness during implementation—reducing tokens, time-to-implement, and **rework after first ship**.
 
 ## Ontology
 
-Deftness relies on **integral theory** as its ontological foundation. This level stewards an ecosystem in a holocratic way: it moves generatively and productively, composts itself effectively (reusing patterns, retiring obsolete paths), and produces tight UI-to-component loops. The skill encodes that stance—intentional, adaptive, ecosystem-aware—into implementation discipline.
+### Product of the practice (BARs / this codebase)
+
+**Deftness** here means: **ship increasingly complex features with fewer tokens**—not merely “keep moving,” but **lower the cost curve** of getting to a **correct-enough** integrated solution.
+
+- **One-shot thinking**: In each phase, produce a **complete slice** (design or code) as if it were the only pass—then **stop treating that slice as sacred**. The next move is **selection**, not endless triage.
+- **Choose and integrate**: Generate or compare **options that feel aligned** (fit spec, fit ontology, fit player truth); **integrate what is most useful** in **one** coherent path. Avoid stacking patches on a mis-chosen foundation when **ontology has shifted**—**replacing** or **rebuilding the thin slice** is often cheaper than renovating the wrong abstraction.
+- **Anti-pattern**: “Forward momentum” without **selection criteria** or **contract bounds** → first implementation becomes **load-bearing**, then **expensive renovation**. Deftness **measures** momentum **after** rework and thrash, not before.
+
+### Holistic layer (Integral + game)
+
+Deftness still relies on **integral theory** as ontological foundation for the **product**: holocratic stewardship, generative movement, effective composting, tight UI-to-component loops. The **development** definition above is **how we build** that product without burning tokens on edits that should have been **re-choices**.
 
 **Vibes layer**: Deftness uses the wisdom of the **I Ching** as a built-in vibes layer—the emergent wisdom of the sage is included in the game without spending additional energy to weave it in. The hexagram system (quest gen, cast-iching) carries that wisdom; leverage it rather than re-implementing.
 
@@ -32,6 +42,7 @@ Whenever possible, build an artifact that can be interfaced with the user **insi
 - **Shortcut**: If a backlog prompt or spec exists at `.specify/specs/` or `.specify/backlog/prompts/`, implement from it. Do not improvise.
 - **Token economy**: Link to existing spec with `[spec](path)`; do not re-explain content.
 - **Authority**: Spec Kit is implementation authority. See [Spec Kit Translator](../spec-kit-translator/SKILL.md).
+- **Bridge to one-shot**: The spec is the **smallest whole** that bounds the solution space—so the first code pass is **aimed**, not random. If the spec is wrong, **revise the spec** (or supersede it) before deep renovation of code **unless** the slice is trivially small.
 
 ## API-First Development
 

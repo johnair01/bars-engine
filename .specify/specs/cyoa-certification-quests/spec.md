@@ -21,6 +21,9 @@ Testers and admins verifying the CYOA onboarding reveal and quest handoff.
 - Seed script safe to run multiple times (upsert by slug / id).
 
 ## Reference
+
+- Tasks / verification: [tasks.md](./tasks.md)
 - Certification badge: [src/app/adventures/page.tsx](src/app/adventures/page.tsx) — quests with `isSystem: true` show "Certification".
 - Twine shape: [src/lib/schemas.ts](src/lib/schemas.ts) ParsedTwineSchema / CanonicalTwineStory.
+- Seed: [scripts/seed-cyoa-certification-quests.ts](scripts/seed-cyoa-certification-quests.ts) — `npm run seed:cert:cyoa`
 - Existing pattern: [scripts/seed-validation-quest.ts](scripts/seed-validation-quest.ts), [scripts/seed-admin-tests.ts](scripts/seed-admin-tests.ts).

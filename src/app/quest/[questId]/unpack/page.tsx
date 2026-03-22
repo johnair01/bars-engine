@@ -36,13 +36,17 @@ export default async function UnpackQuestPage({
       <div className="max-w-lg mx-auto px-4 py-12 space-y-8">
         <header className="space-y-1">
           <Link href="/hand" className="text-xs text-zinc-600 hover:text-zinc-400 transition">
-            ← Quest Wallet
+            ← Vault
           </Link>
           <p className="text-[10px] uppercase tracking-widest text-purple-500 mt-2">Unpack</p>
           <h1 className="text-xl font-bold text-white leading-snug">{quest.title}</h1>
           {quest.description && (
             <p className="text-zinc-400 text-sm pt-1 line-clamp-3">{quest.description}</p>
           )}
+          <p className="text-zinc-600 text-xs leading-relaxed pt-1">
+            Notice what the quest stirs in you right now — not what you think about it, but what
+            you feel about it. That quality is the developmental signal.
+          </p>
         </header>
 
         <UnpackQuestFlow

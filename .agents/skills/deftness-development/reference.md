@@ -13,7 +13,9 @@ When drafting or reviewing specs for persistence, UI, or API features:
 
 Template: [.specify/spec-template.md](../../../../.specify/spec-template.md)
 
-**Ontology**: Integral theory—holocratic stewardship of the ecosystem, generative and productive movement, effective composting (reuse patterns, retire obsolete paths), tight UI-to-component loops.
+**Ontology (product)**: Integral theory—holocratic stewardship, generative movement, effective composting, tight UI-to-component loops.
+
+**Ontology (development, BARs codebase)**: Deftness = ship more complexity per token by cutting **rework tax**—one-shot slices, then **choose aligned options** and **integrate one path**; when the foundation mismatches shifted ontology, prefer **replace/rebuild of the thin slice** over layered renovation. Spec kit bounds first implementation so it is not load-bearing wrong work.
 
 **Vibes layer**: The I Ching (hexagram system, cast-iching, quest gen) is a built-in vibes layer—emergent wisdom of the sage is included without spending additional energy to weave it in. Leverage it.
 

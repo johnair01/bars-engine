@@ -38,6 +38,10 @@ export interface BarInterpretation {
   suggestedPrompt: string
   confidenceScore: number
   reviewNotes: string[]
+  /** Kotter 1–8 from linked Instance when BAR has campaignRef; else 1 (personal). */
+  campaignKotterStage?: number
+  /** e.g. phase_1_opening_momentum, kotter_stage_3_vision */
+  campaignPhaseKey?: string
 }
 
 /** Emotional alchemy resolution result for proposal */

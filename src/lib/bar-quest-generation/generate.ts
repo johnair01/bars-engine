@@ -4,6 +4,7 @@
  */
 
 import { db } from '@/lib/db'
+import { getKotterStageForCampaignRef, kotterStageToCampaignPhaseKey } from './campaign-phase'
 import { checkBarEligibilityForQuestGeneration } from './eligibility'
 import { interpretBarForQuestGeneration } from './interpretation'
 import { resolveEmotionalAlchemyForBar } from './emotional-alchemy'
@@ -51,6 +52,9 @@ export async function generateQuestProposalFromBar(
     return { success: false, reason: 'BAR not found' }
   }
 
+  const kotterStage = await getKotterStageForCampaignRef(bar.campaignRef)
+  const campaignPhaseKey = kotterStageToCampaignPhaseKey(kotterStage)
+
   const interpretation = interpretBarForQuestGeneration({
     id: bar.id,
     title: bar.title,
@@ -59,12 +63,14 @@ export async function generateQuestProposalFromBar(
     campaignRef: bar.campaignRef,
     type: bar.type,
     moveType: bar.moveType,
+    kotterStage,
+    campaignPhaseKey,
   })
 
   const emotionalAlchemy = await resolveEmotionalAlchemyForBar({
     allyshipDomain: interpretation.domain,
     playerId: bar.creatorId,
-    campaignPhase: 1, // phase_1_opening_momentum
+    campaignPhase: kotterStage,
   })
 
   const { proposalId } = await buildQuestProposalFromInterpretation({
@@ -73,6 +79,7 @@ export async function generateQuestProposalFromBar(
     barId: bar.id,
     playerId: bar.creatorId,
     campaignRef: bar.campaignRef,
+    campaignPhaseContext: { kotterStage, phaseKey: campaignPhaseKey },
   })
 
   return {

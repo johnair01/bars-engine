@@ -18,6 +18,7 @@ import {
 import { createFaceMoveBar } from '@/actions/face-move-bar'
 import type { AllyshipDomain } from '@/lib/kotter'
 import { getActiveInstance } from '@/actions/instance'
+import { assertCanCreatePrivateDraft } from '@/lib/vault-limits'
 import { generateRandomUnpacking, getArchetypePrimaryWave } from '@/lib/quest-grammar'
 import { compileQuestWithAI, publishGameboardAlignedQuestToPlayer } from '@/actions/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
@@ -680,6 +681,9 @@ export async function forkQuestPrivately(questId: string) {
     },
   })
   if (!original) return { error: 'Quest not found' }
+
+  const draftCap = await assertCanCreatePrivateDraft(player.id)
+  if (!draftCap.ok) return { error: draftCap.error }
 
   const fork = await db.customBar.create({
     data: {

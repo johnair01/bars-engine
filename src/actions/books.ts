@@ -222,6 +222,28 @@ export async function extractBookToc(bookId: string) {
 }
 
 /**
+ * Update praxis pillar metadata on a book's metadataJson without wiping other keys.
+ * Spec: .specify/specs/library-praxis-three-pillars/spec.md (FR1–FR3)
+ */
+export async function updateBookPraxisMetadata(
+  bookId: string,
+  updates: import('@/lib/books/praxisMetadata').BookPraxisMetadata
+) {
+  try {
+    await requireAdmin()
+    const { mergePraxisMetadata } = await import('@/lib/books/praxisMetadata')
+    const book = await db.book.findUnique({ where: { id: bookId }, select: { metadataJson: true } })
+    if (!book) return { error: 'Book not found' }
+    const merged = mergePraxisMetadata(book.metadataJson, updates)
+    await db.book.update({ where: { id: bookId }, data: { metadataJson: merged } })
+    revalidatePath('/admin/books')
+    return { success: true }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Update failed' }
+  }
+}
+
+/**
  * List all books for admin.
  * Excludes extractedText to avoid P6009 (response size > 5MB) with Prisma Accelerate.
  */

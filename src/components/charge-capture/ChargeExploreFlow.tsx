@@ -168,7 +168,7 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
             disabled={isPending}
             className="w-full text-left rounded-xl border border-zinc-800 bg-zinc-950/50 px-5 py-4 hover:bg-zinc-900 transition disabled:opacity-50"
           >
-            <p className="text-white font-semibold">Add to Quest Wallet</p>
+            <p className="text-white font-semibold">Add to Vault</p>
             <p className="text-zinc-400 text-sm mt-0.5">Save it and place it in a thread or gameboard slot when ready.</p>
           </button>
         </div>
@@ -181,14 +181,14 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
       <div className="space-y-4 animate-in fade-in">
         <div className="rounded-xl border border-green-800/50 bg-green-950/20 p-5 text-center space-y-2">
           <p className="text-green-400 font-medium">Quest created.</p>
-          <p className="text-zinc-400 text-sm">It&apos;s in your Quest Wallet.</p>
+          <p className="text-zinc-400 text-sm">It&apos;s in your Vault.</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/hand"
             className="flex-1 text-center py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition"
           >
-            Go to Quest Wallet →
+            Go to Vault →
           </Link>
           <Link
             href="/"

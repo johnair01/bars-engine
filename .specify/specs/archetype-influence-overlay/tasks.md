@@ -6,5 +6,5 @@
 - [x] Create `applyArchetypeOverlay(questSeed, profile)` in overlay.ts
 - [x] Integrate overlay into quest generation pipeline (assembleQuestSeed options.archetypeKey)
 - [x] Add tests: overlay modifies experiment/integration; nation+archetype distinct outputs
-- [ ] Run `npm run build` and `npm run check`
+- [x] Run `npm run build` and `npm run check`
 - [x] Document superpower separation in spec

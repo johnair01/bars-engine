@@ -37,6 +37,10 @@ export default async function Shadow321Page(props: {
             3rd person → 2nd person → 1st person
           </p>
           <h1 className="text-2xl font-bold text-white">Shadow Work</h1>
+          <p className="text-zinc-600 text-xs leading-relaxed pt-1">
+            This process works at the pace of felt sense — the bodily knowing that arrives before words do.
+            Move slowly. Let something form rather than reaching for the first answer.
+          </p>
         </div>
 
         <Shadow321Runner

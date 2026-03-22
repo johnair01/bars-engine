@@ -19,6 +19,8 @@ export default async function CreateQuestPage(props: {
           }
         : undefined
 
+    const wizardSource = searchParams.from === '321' ? ('321' as const) : null
+
     const isSetupIncomplete = !player.nationId || !player.archetypeId
 
     if (isSetupIncomplete) {
@@ -59,7 +61,7 @@ export default async function CreateQuestPage(props: {
 
             {/* Main Content */}
             <main className="p-4 sm:p-6 max-w-4xl mx-auto pb-20">
-                <QuestWizard gameboardContext={gameboardContext} />
+                <QuestWizard gameboardContext={gameboardContext} wizardSource={wizardSource} />
             </main>
         </div>
     )

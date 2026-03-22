@@ -31,6 +31,12 @@ Re-run `npm run seed:cert:cyoa` after adding new certification quests to the see
 
 ---
 
+## Deploy to production
+
+Before merging to `main` / Vercel: **[DEPLOY_RUNBOOK.md](./DEPLOY_RUNBOOK.md)** (build, lint, smoke, post-deploy checks).
+
+---
+
 ## 0) Pre-Flight (2-3 min)
 
 - [ ] On correct branch and latest code is pushed

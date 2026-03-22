@@ -20,41 +20,29 @@ When diagnostic recommends an archetype or BindingForm emits a signal, the value
 | Resolution | Add `resolveArchetypeKeyForTransformation(key)` — accepts either format, returns playbook slug or null |
 | Mapping | Define ARCHETYPE_KEY_TO_PLAYBOOK_SLUG in a single config module |
 
-## Mapping (To Be Defined)
+## Mapping (implemented)
 
-The exact mapping from ARCHETYPE_KEYS to playbook slugs requires product/lore input. Proposed structure:
+Canonical map: **`ARCHETYPE_KEY_TO_PLAYBOOK_SLUG`** in [`src/lib/narrative-transformation/moves/archetype-profiles.ts`](../../../src/lib/narrative-transformation/moves/archetype-profiles.ts).  
+(`void_dancer` → `still-point` — differs from some early drafts; treat code + reconciliation doc as source of truth.)
 
-```ts
-// ARCHETYPE_KEYS (diagnostic) → playbook slug (transformation/avatar)
-const ARCHETYPE_KEY_TO_PLAYBOOK_SLUG: Record<string, string> = {
-  truth_seer: 'truth-seer',
-  shadow_walker: 'danger-walker',    // verify with lore
-  bridge_builder: 'joyful-connector', // verify with lore
-  flame_keeper: 'bold-heart',        // verify with lore
-  dream_weaver: 'subtle-influence',  // verify with lore
-  story_teller: 'truth-seer',        // or subtle-influence; verify
-  root_tender: 'devoted-guardian',   // verify with lore
-  void_dancer: 'decisive-storm',     // verify with lore
-}
-```
-
-Implementation must validate mapping against PLAYBOOK_TRIGRAM and seed data. Some ARCHETYPE_KEYS may map to the same playbook; some playbooks may have no ARCHETYPE_KEYS equivalent. Adjust during implementation.
+Product/lore may adjust entries via PR; validate against the eight playbook slugs in `ARCHETYPE_MOVE_PROFILES`.
 
 ## Resolution API
 
+Implemented in [`src/lib/narrative-transformation/moves/archetype-profiles.ts`](../../../src/lib/narrative-transformation/moves/archetype-profiles.ts), re-exported from [`src/lib/archetype-keys.ts`](../../../src/lib/archetype-keys.ts).
+
 ```ts
-/**
- * Resolve an archetype key to playbook slug for transformation/avatar/quest use.
- * Accepts: ARCHETYPE_KEYS format (truth_seer) or playbook slug (truth-seer).
- * Returns: playbook slug, or null if unresolvable.
- */
-function resolveArchetypeKeyForTransformation(key: string): string | null
+/** Playbook slug or null if unresolvable. */
+function resolveArchetypeKeyForTransformation(key: string | null | undefined): string | null
+
+/** Same resolution; returns undefined instead of null (legacy callers). */
+function resolvePlaybookArchetypeKey(key: string | null | undefined): string | undefined
 ```
 
 ## Functional Requirements
 
-- **FR1**: Create `src/lib/archetype-keys.ts` (or extend nations.ts) with ARCHETYPE_KEY_TO_PLAYBOOK_SLUG mapping.
-- **FR2**: Implement resolveArchetypeKeyForTransformation(key).
+- **FR1**: `ARCHETYPE_KEY_TO_PLAYBOOK_SLUG` in `archetype-profiles.ts` (+ barrel `archetype-keys.ts`).
+- **FR2**: `resolveArchetypeKeyForTransformation` implemented.
 - **FR3**: Mapping validated against PLAYBOOK_TRIGRAM and Playbook seed; document any gaps.
 - **FR4**: Callers that pass archetype to transformation/avatar use the resolver when input may be ARCHETYPE_KEYS format.
 - **FR5**: Update [archetype-key-reconciliation.md](../../../docs/architecture/archetype-key-reconciliation.md) with resolution behavior.

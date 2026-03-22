@@ -4,6 +4,10 @@ import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 const SECTIONS = [
   {
+    title: 'Player guides',
+    links: [{ href: '/wiki/player-guides', label: 'How features work (hub)' }],
+  },
+  {
     title: 'Getting Started',
     links: [
       { href: '/wiki/bars-guide', label: 'What Are BARs & How to Create Them' },
@@ -33,6 +37,8 @@ const SECTIONS = [
       { href: '/wiki/domains', label: 'Allyship Domains (WHERE)' },
       { href: '/wiki/emotional-alchemy', label: 'Emotional Alchemy (Quest Design)' },
       { href: '/wiki/glossary', label: 'Glossary (Vibeulons, BAR, Kotter)' },
+      { href: '/wiki/grid-deck', label: 'Scene Atlas (52-card compass deck)' },
+      { href: '/wiki/values-and-polarities', label: 'Values & polarities (footnote)' },
     ],
   },
   {

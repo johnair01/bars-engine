@@ -40,6 +40,9 @@ function testGetArchetypeInfluenceProfile() {
   const unknown = getArchetypeInfluenceProfile('unknown-archetype')
   assert(unknown === undefined, 'Unknown returns undefined')
 
+  const fromDiagnostic = getArchetypeInfluenceProfile('truth_seer')
+  assert(fromDiagnostic?.archetype_id === 'truth-seer', 'ARCHETYPE_KEYS resolve to profile')
+
   console.log('✓ testGetArchetypeInfluenceProfile')
 }
 
@@ -119,6 +122,23 @@ function testAssembleQuestSeedWithArchetypeOption() {
   assert(
     seedWithUnknown.arc.show!.prompt === seedWithout.arc.show!.prompt,
     'Unknown archetype leaves seed unchanged'
+  )
+
+  const seedDiagnostic = assembleQuestSeed(
+    narrative,
+    'emotional_lock',
+    {
+      wake: 'observe',
+      clean: 'feel',
+      grow: 'invert',
+      show: 'experiment',
+      integrate: 'integrate',
+    },
+    { archetypeKey: 'truth_seer' }
+  )
+  assert(
+    seedDiagnostic.arc.show!.prompt.includes('What truth is asking'),
+    'Diagnostic archetype key applies Truth Seer overlay'
   )
 
   console.log('✓ testAssembleQuestSeedWithArchetypeOption')

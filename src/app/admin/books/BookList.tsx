@@ -6,6 +6,7 @@ import { createThreadFromBook } from '@/actions/book-to-thread'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { BookPraxisBadge, BookPraxisPanel } from './BookPraxisPanel'
 
 const MOVE_OPTIONS = [
   { value: 'wakeUp', label: 'Wake Up' },
@@ -312,6 +313,7 @@ export function BookList({ books }: { books: Book[] }) {
               )}
               <div className="flex items-center gap-2 mt-2">
                 {statusBadge(book.status)}
+                <BookPraxisBadge metadataJson={book.metadataJson} />
                 {meta?.pageCount && (
                   <span className="text-xs text-zinc-500">
                     {meta.pageCount} pages
@@ -351,6 +353,7 @@ export function BookList({ books }: { books: Book[] }) {
               {tocResult?.id === book.id && (
                 <p className="text-sm text-green-400 mt-1">{tocResult.msg}</p>
               )}
+              <BookPraxisPanel bookId={book.id} metadataJson={book.metadataJson} />
             </div>
             <div className="flex gap-2 shrink-0">
               {book.sourcePdfUrl && (

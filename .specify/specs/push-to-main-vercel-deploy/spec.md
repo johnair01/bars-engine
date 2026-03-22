@@ -19,6 +19,8 @@ Define the process for safely pushing today's changes to `main` and deploying to
 
 ## Reference
 
+- **Runbook:** [docs/DEPLOY_RUNBOOK.md](../../../docs/DEPLOY_RUNBOOK.md) — checklist entry point
 - Plan: [plan.md](./plan.md)
+- Tasks: [tasks.md](./tasks.md)
 - Loop readiness: [docs/LOOP_READINESS_CHECKLIST.md](../../../docs/LOOP_READINESS_CHECKLIST.md)
 - Env & Vercel: [docs/ENV_AND_VERCEL.md](../../../docs/ENV_AND_VERCEL.md)

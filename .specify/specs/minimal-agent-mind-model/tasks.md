@@ -5,7 +5,7 @@
 - [x] Define `AgentMindState` type (`src/lib/agent-mind/types.ts`)
 - [x] Implement `createAgent(config)` (`createAgent.ts`)
 - [x] Validate nation against canonical list (`NATIONS` / `resolveNationOrThrow`)
-- [x] Validate archetype against playbook slugs + signal keys (`resolveArchetypeOrThrow` / `resolvePlaybookArchetypeKey`)
+- [x] Validate archetype against playbook slugs + signal keys (`resolveArchetypeOrThrow` / `resolveArchetypeKeyForTransformation` / `resolvePlaybookArchetypeKey`)
 
 ## Phase 2: Narrative and action
 

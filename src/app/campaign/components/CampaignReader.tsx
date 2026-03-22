@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { CampaignAuthForm } from './CampaignAuthForm'
 import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
@@ -21,6 +22,15 @@ interface CampaignNode {
     totalSteps?: number
 }
 
+/** Pre-signup demo orientation (DOP) — step cap + handoff fields for signup JSON */
+export type DemoHandoffConfig = {
+    maxSteps: number | null
+    endNodeId: string | null
+    demoToken: string
+    campaignRef: string | null
+    inviteId: string | null
+}
+
 interface CampaignReaderProps {
     initialNode: CampaignNode
     adventureSlug?: string
@@ -29,6 +39,8 @@ interface CampaignReaderProps {
     flowId?: string
     /** When present: after signup redirect to /bar/share/[token] to claim BAR share */
     shareToken?: string
+    /** Bounded anonymous preview — see /demo/orientation */
+    demoHandoff?: DemoHandoffConfig | null
 }
 
 // Helper to evaluate SugarCube-like <<if>> conditions against state
@@ -150,7 +162,15 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
     return { cleanText, updates }
 }
 
-export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaignRef, isAdmin = false, flowId, shareToken }: CampaignReaderProps) {
+export function CampaignReader({
+    initialNode,
+    adventureSlug = 'wake-up',
+    campaignRef,
+    isAdmin = false,
+    flowId,
+    shareToken,
+    demoHandoff,
+}: CampaignReaderProps) {
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
@@ -179,6 +199,21 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
     const [availableChoices, setAvailableChoices] = useState(initialNode.choices)
     const [slideIndex, setSlideIndex] = useState(0)
     const [editModalOpen, setEditModalOpen] = useState(false)
+    const [demoEnded, setDemoEnded] = useState(false)
+    const [demoStepsUsed, setDemoStepsUsed] = useState(0)
+
+    const enrichedCampaignState = useMemo(
+        () => ({
+            ...campaignState,
+            ...(demoHandoff && {
+                demoOrientation: true,
+                demoOrientationToken: demoHandoff.demoToken,
+                ref: demoHandoff.campaignRef,
+                inviteId: demoHandoff.inviteId,
+            }),
+        }),
+        [campaignState, demoHandoff]
+    )
 
     const fetchNode = async (nodeId: string) => {
         setLoading(true)
@@ -225,17 +260,53 @@ export function CampaignReader({ initialNode, adventureSlug = 'wake-up', campaig
         fetchNode(initialNode.id)
     }, [])
 
+    useEffect(() => {
+        if (!demoHandoff?.endNodeId || !currentNode) return
+        if (currentNode.id === demoHandoff.endNodeId) {
+            setDemoEnded(true)
+        }
+    }, [currentNode?.id, demoHandoff?.endNodeId])
+
     const handleChoice = (choice: CampaignChoice) => {
         if (choice.targetId === 'Game_Login' || choice.targetId === 'signup') {
             setCurrentNode({ id: 'signup', text: '', choices: [] })
             return
         }
 
+        if (demoHandoff) {
+            const nextStep = demoStepsUsed + 1
+            if (demoHandoff.maxSteps != null && nextStep > demoHandoff.maxSteps) {
+                setDemoEnded(true)
+                return
+            }
+            setDemoStepsUsed(nextStep)
+        }
+
         fetchNode(choice.targetId)
     }
 
+    if (demoEnded && demoHandoff) {
+        return (
+            <div className="w-full max-w-2xl mx-auto space-y-6 p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl">
+                <h2 className="text-xl font-bold text-white text-center">Preview complete</h2>
+                <p className="text-zinc-400 text-sm text-center leading-relaxed">
+                    Create an account to continue your path and unlock quests, BARs, and the full Conclave.
+                </p>
+                <CampaignAuthForm campaignState={enrichedCampaignState} />
+                <div className="flex flex-wrap justify-center gap-4 text-sm pt-2">
+                    <Link href="/event/donate" className="text-green-400 hover:text-green-300">
+                        Support the campaign →
+                    </Link>
+                    <Link href="/" className="text-zinc-500 hover:text-zinc-300">
+                        Home
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
     if (currentNode?.id === 'signup') {
-        return <CampaignAuthForm campaignState={campaignState} />
+        return <CampaignAuthForm campaignState={demoHandoff ? enrichedCampaignState : campaignState} />
     }
 
     if (fetchError && !loading) {

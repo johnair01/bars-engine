@@ -32,6 +32,9 @@ import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyC
 import { getCampaignsForPlayer } from '@/actions/campaign-overview'
 import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
 import { ThroughputLanesSection } from '@/components/dashboard/ThroughputLanesSection'
+import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
+import { DiscoverStrip } from '@/components/dashboard/DiscoverStrip'
+import { getLibraryQuestsForMove } from '@/actions/library-discover'
 import { NationProvider } from '@/lib/ui/nation-provider'
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
@@ -389,6 +392,26 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       .map(q => q.quest.moveType as string)
   ))
 
+  // Orientation compass inputs
+  const compassProps = {
+    completedMoveTypes,
+    isFirstSession: player.quests.length === 0,
+    hasChargeToday: !!todayCharge,
+    activeQuestCount: activeBars.length,
+    isSetupIncomplete: !player.nationId || !player.archetypeId,
+  }
+
+  // Derive recommended move type for library discover strip
+  const recommendedMoveType = (() => {
+    if (!player.nationId || !player.archetypeId || player.quests.length === 0) return 'wakeUp'
+    if (!!todayCharge && !completedMoveTypes.includes('cleanUp')) return 'cleanUp'
+    if (completedMoveTypes.includes('cleanUp') && !completedMoveTypes.includes('growUp')) return 'growUp'
+    if (activeBars.length > 0) return 'showUp'
+    return 'wakeUp'
+  })()
+
+  const discoverQuests = await getLibraryQuestsForMove(recommendedMoveType)
+
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
   // Campaign Entry: show when player has bruised-banana thread and hasn't dismissed
@@ -425,6 +448,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
       {/* 1. HEADER & IDENTITY */}
       <header className="space-y-6">
+        <p className="text-xs text-zinc-600">Check in · capture what&apos;s charged · follow the compass to your next move</p>
         <DashboardHeader
           player={{
             name: player.name,
@@ -461,6 +485,12 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
         <ThroughputLanesSection activeInstanceId={activeInstance?.id ?? null} />
+
+        {/* Orientation Compass — where are you in your journey */}
+        <OrientationCompass {...compassProps} />
+
+        {/* Library Discover strip — 1-2 quests from books matching current move */}
+        <DiscoverStrip moveType={recommendedMoveType} quests={discoverQuests} />
 
         {/* Player Intention */}
         {intention && (
@@ -601,7 +631,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                   href="/hand"
                   className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 font-medium"
                 >
-                  View Quest Wallet →
+                  View Vault →
                 </Link>
                 <p className="text-xs text-zinc-500 mt-1">Organize and manage your active quests</p>
               </div>

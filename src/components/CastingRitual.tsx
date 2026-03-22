@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { castIChing, acceptReading } from '@/actions/cast-iching'
+import type { IChingCastContext } from '@/lib/iching-cast-context'
 import { useRouter } from 'next/navigation'
 
 type Hexagram = {
@@ -13,8 +14,11 @@ type Hexagram = {
 
 interface CastingRitualProps {
     mode?: 'page' | 'modal'
-    onComplete?: (hexagramId: number) => Promise<void>
+    /** Second arg matches `castingContext` (for grammatic quest + persistence). */
+    onComplete?: (hexagramId: number, castingContext: IChingCastContext | null) => Promise<void>
     onCancel?: () => void
+    /** When set (e.g. from `/iching?instanceId=`), persisted on accept and shown in UI. */
+    castingContext?: IChingCastContext | null
 }
 
 // Simple hexagram line visualization
@@ -49,7 +53,7 @@ function HexagramLines({ id, animate }: { id: number, animate: boolean }) {
     )
 }
 
-export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRitualProps) {
+export function CastingRitual({ mode = 'page', onComplete, onCancel, castingContext = null }: CastingRitualProps) {
     const router = useRouter()
     const [phase, setPhase] = useState<'ready' | 'casting' | 'revealed' | 'accepted'>('ready')
     const [hexagram, setHexagram] = useState<Hexagram | null>(null)
@@ -64,7 +68,7 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
         // Dramatic pause
         await new Promise(r => setTimeout(r, 2000))
 
-        const result = await castIChing()
+        const result = await castIChing({ context: castingContext ?? undefined })
 
         if (result.error) {
             setError(result.error)
@@ -85,10 +89,10 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
         try {
             if (onComplete) {
                 // If external handler provided (e.g., for AI generation), use it
-                await onComplete(hexagram.id)
+                await onComplete(hexagram.id, castingContext ?? null)
             } else {
                 // Default behavior: Add to active bars
-                const result = await acceptReading(hexagram.id)
+                const result = await acceptReading(hexagram.id, castingContext ?? undefined)
                 if (result.error) throw new Error(result.error)
                 setMessage(result.message || 'Reading accepted!')
             }
@@ -119,6 +123,22 @@ export function CastingRitual({ mode = 'page', onComplete, onCancel }: CastingRi
                 <div className="text-center space-y-8">
                     <div className="space-y-4">
                         {mode === 'page' && <h2 className="text-3xl font-bold text-white">The I Ching Awaits</h2>}
+                        {castingContext?.instanceName?.trim() ? (
+                            <p className="text-amber-400/95 text-sm font-medium max-w-md mx-auto">
+                                Cast for <span className="text-amber-200">{castingContext.instanceName.trim()}</span>
+                                {castingContext.campaignRef?.trim() ? (
+                                    <span className="text-zinc-500 font-normal">
+                                        {' '}
+                                        · campaign <span className="text-zinc-400">{castingContext.campaignRef.trim()}</span>
+                                    </span>
+                                ) : null}
+                            </p>
+                        ) : castingContext?.campaignRef?.trim() ? (
+                            <p className="text-amber-400/95 text-sm font-medium max-w-md mx-auto">
+                                Cast for campaign{' '}
+                                <span className="text-amber-200">{castingContext.campaignRef.trim()}</span>
+                            </p>
+                        ) : null}
                         <p className="text-zinc-500 max-w-md mx-auto">
                             Cast the yarrow stalks to receive guidance. The hexagram will illuminate your path.
                         </p>

@@ -3,7 +3,8 @@
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { SceneCard, SceneInput, SceneShortInput, SceneNav } from '@/components/scene-card/SceneCard'
-import { createQuestFrom321Metadata, fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
+import { fuelSystemFrom321, persist321Session } from '@/actions/charge-metabolism'
+import { stashQuestWizardPrefillFrom321 } from '@/lib/quest-wizard-prefill'
 import { awakenDaemonFrom321 } from '@/actions/daemons'
 import { deriveShadowName } from '@/lib/shadow-name-grammar'
 import { computeShadow321NameFields } from '@/lib/shadow321-name-resolution'
@@ -128,7 +129,6 @@ function clearSession() {
 export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   const router = useRouter()
   const contextualReturn = returnTo ?? '/'
-  const questRouter = usePostActionRouter(NAV['321_quest'], contextualReturn)
   const daemonRouter = usePostActionRouter(NAV['321_daemon'], contextualReturn)
   const fuelRouter = usePostActionRouter(NAV['321_fuel'], contextualReturn)
   const witnessRouter = usePostActionRouter(NAV['321_witness'], contextualReturn)
@@ -235,30 +235,33 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
 
   function handleTurnIntoQuest() {
     setError(null)
-    startTransition(async () => {
-      const metadata = buildMetadata()
-      const phase2 = {
-        q1: answers.chargeDescription,
-        q2: [] as string[],
-        q3: answers.lifeState,
-        q4: [] as string[],
-        q5: answers.rootCause,
-        q6: [] as string[],
-        alignedAction: alignedAction || undefined,
-      }
-      const phase3 = { identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }
-      const res = await createQuestFrom321Metadata(metadata, phase2, phase3, undefined, shadow321NameForPersist())
-      if (res && 'error' in res) {
-        setError(res.error)
-      } else if (res?.success) {
-        clearSession()
-        setCeremony({
-          type: 'quest',
-          name: answers.maskName || undefined,
-          onContinue: () => questRouter.navigate({ questId: res.questId }),
-        })
-      }
+    const metadata = buildMetadata()
+    const phase2 = {
+      q1: answers.chargeDescription,
+      q2: [] as string[],
+      q3: answers.lifeState,
+      q4: [] as string[],
+      q5: answers.rootCause,
+      q6: [] as string[],
+      alignedAction: alignedAction || undefined,
+    }
+    const phase3 = { identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }
+    stashQuestWizardPrefillFrom321({
+      version: 1,
+      metadata,
+      phase2,
+      phase3,
+      shadow321Name: shadow321NameForPersist(),
+      displayHints: {
+        chargeLine: answers.chargeDescription?.trim() || '',
+        maskPresence: [answers.maskShape, answers.maskName].filter(Boolean).join(' — '),
+        alignedAction: alignedAction || '',
+        integrationShift: answers.integrationShift?.trim() || undefined,
+      },
     })
+    clearSession()
+    import('sonner').then(({ toast }) => toast.success('Opening Quest Wizard with your 321…'))
+    router.push('/quest/create?from=321')
   }
 
   function handleFuelSystem() {
@@ -796,10 +799,10 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ArtifactChoice
             title="Turn into Quest"
-            description="Convert this charge into a playable quest in the game."
+            description="Open the Quest Wizard with your 321 prefilled — publish a metabolizable quest."
             color="amber"
             onClick={handleTurnIntoQuest}
-            loading={isPending}
+            loading={false}
           />
           <ArtifactChoice
             title="Create a BAR"

@@ -29,6 +29,20 @@ export default function UIStyleGuidePage() {
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Vault (`/hand`)</h2>
+        <ul className="list-disc list-inside space-y-1 text-zinc-300 text-sm">
+          <li><strong className="text-zinc-200">At a glance</strong> strip shows counts (charges, unplaced quests, drafts) and long-idle hints.</li>
+          <li>Major sections use <strong className="text-zinc-200">count badges</strong> and are <strong className="text-zinc-200">collapsible</strong> when a section has more than five items.</li>
+          <li>Dense lists use <strong className="text-zinc-200">Load more</strong> (five at a time) instead of infinite scroll.</li>
+          <li>
+            <strong className="text-zinc-200">Depth:</strong> the Vault is a <strong className="text-zinc-200">place</strong> — a lobby at{' '}
+            <code className="text-zinc-500">/hand</code> plus <strong className="text-zinc-200">rooms</strong> (nested routes) for charges, quests, drafts, and invitations. Each room should surface the{' '}
+            <strong className="text-zinc-200">four throughput moves</strong> (Wake Up, Clean Up, Grow Up, Show Up) as actionable affordances, not wiki-only links.
+          </li>
+        </ul>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-400">Dashboard</h2>
         <ul className="list-disc list-inside space-y-1 text-zinc-300 text-sm">
           <li><strong className="text-zinc-200">Active Quests</strong> and <strong className="text-zinc-200">Journeys</strong> sections should be collapsible. Default state: collapsed when the player has many items; expanded when few.</li>
@@ -52,6 +66,30 @@ export default function UIStyleGuidePage() {
         <ul className="list-disc list-inside space-y-1 text-zinc-300 text-sm">
           <li>Modals should not cascade; one modal at a time.</li>
           <li>Dense content inside modals should use tabs, accordions, or step wizards rather than a single long scroll.</li>
+        </ul>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Scene Atlas (`/creator-scene-deck`)</h2>
+        <p className="text-zinc-300 text-sm leading-relaxed">
+          The 52-cell creator grid follows the same principles:{' '}
+          <strong className="text-zinc-200">progressive disclosure</strong> (suit rows collapsed with filled/total summaries),{' '}
+          <strong className="text-zinc-200">one modal</strong> per cell with a path chooser (attach / guided / full vault),{' '}
+          and <strong className="text-zinc-200">no long single-scroll vault</strong> in Scene Atlas mode (tabbed Core / Layers / Advanced).
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-zinc-300 text-sm">
+          <li>
+            <Link href="/wiki/grid-deck" className="text-amber-400 hover:text-amber-300">
+              Wiki: Scene Atlas (grid deck)
+            </Link>{' '}
+            — player-facing how-to
+          </li>
+          <li>
+            Spec kit:{' '}
+            <code className="text-zinc-500">.specify/specs/creator-scene-grid-deck/</code>
+            {' · '}
+            P0 audit: <code className="text-zinc-500">UI_STYLE_SELF_AUDIT_P0.md</code>
+          </li>
         </ul>
       </section>
 

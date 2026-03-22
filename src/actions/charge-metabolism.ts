@@ -12,6 +12,7 @@ import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
 import { merge321NameIntoMatchingNpcs } from '@/actions/npc321-inner-work-merge'
 import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
 import { appendDaemonEvolutionLog } from '@/lib/daemon-evolution'
+import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
 export type Shadow321SessionInput = {
   phase3Snapshot: string
@@ -177,6 +178,9 @@ export async function createQuestFrom321Metadata(
   if (!player) return { error: 'Not logged in' }
 
   console.log('[createQuestFrom321Metadata] entry', { playerId: player.id, hasPhase2: !!phase2, hasPhase3: !!phase3, hasTarget: !!target })
+
+  const cap = await assertCanCreateUnplacedVaultQuest(player.id)
+  if (!cap.ok) return { error: cap.error }
 
   const title = metadata.title || 'Quest from 321'
   const description = metadata.description || ''

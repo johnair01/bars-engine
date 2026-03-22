@@ -28,7 +28,7 @@ export default async function ForgeInvitationPage() {
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             <header className="space-y-2">
                 <Link href="/hand" className="text-zinc-500 hover:text-white text-sm">
-                    ← Back to Quest Wallet
+                    ← Back to Vault
                 </Link>
                 <h1 className="text-3xl font-bold text-white">Forge an Invitation</h1>
                 <p className="text-zinc-400 text-sm">

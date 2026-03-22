@@ -24,7 +24,7 @@ Implement a governed pipeline that converts BARs (player inspiration) into struc
 
 ### Phase 4: Optional
 - [ ] Twine IR publication bridge
-- [ ] Campaign phase awareness (phase_1_opening_momentum bias)
+- [x] Campaign phase awareness (Kotter stage from Instance; `phase_1_opening_momentum` for stage 1)
 
 ## Dependencies
 

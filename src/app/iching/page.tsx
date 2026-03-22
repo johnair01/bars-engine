@@ -2,13 +2,36 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { CastingRitual } from '@/components/CastingRitual'
 import Link from 'next/link'
+import { db } from '@/lib/db'
+import type { IChingCastContext } from '@/lib/iching-cast-context'
 
-export default async function IChingPage() {
+export default async function IChingPage(props: {
+    searchParams: Promise<{ instanceId?: string; campaignRef?: string; threadId?: string }>
+}) {
     const player = await getCurrentPlayer()
 
     if (!player) {
         redirect('/')
     }
+
+    const sp = await props.searchParams
+    const instanceId = sp.instanceId?.trim() || null
+    const campaignRef = sp.campaignRef?.trim() || null
+    const threadId = sp.threadId?.trim() || null
+
+    let instanceName: string | null = null
+    if (instanceId) {
+        const inst = await db.instance.findUnique({
+            where: { id: instanceId },
+            select: { name: true },
+        })
+        instanceName = inst?.name ?? null
+    }
+
+    const castingContext: IChingCastContext | null =
+        instanceId || campaignRef || threadId
+            ? { instanceId, campaignRef, threadId, instanceName }
+            : null
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -25,7 +48,7 @@ export default async function IChingPage() {
                 </header>
 
                 {/* Casting Ritual */}
-                <CastingRitual />
+                <CastingRitual castingContext={castingContext} />
 
                 {/* Info Footer */}
                 <footer className="mt-16 text-center text-xs text-zinc-700 space-y-2">

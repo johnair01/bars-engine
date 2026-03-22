@@ -11,6 +11,7 @@ import { applyArchetypeToChargeSuggestions } from '@/lib/charge-suggestion-arche
 import { getArchetypeInfluenceProfile } from '@/lib/archetype-influence-overlay'
 import { slugifyName } from '@/lib/avatar-utils'
 import type { SceneType } from '@/lib/alchemy/wuxing'
+import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
 export type CreateChargeBarPayload = {
   summary: string
@@ -83,6 +84,9 @@ export async function createChargeBar(
   if (existingToday) {
     return { error: "You've already captured today's charge. Come back tomorrow." }
   }
+
+  const draftCap = await assertCanCreatePrivateDraft(player.id)
+  if (!draftCap.ok) return { error: draftCap.error }
 
   try {
     const title = summary.length > 80 ? summary.slice(0, 77) + '...' : summary
@@ -394,6 +398,9 @@ export async function createQuestFromSuggestion(
   const suggestions = result.quest_suggestions
   const suggestion = suggestions[suggestionIndex]
   if (!suggestion) return { error: 'Invalid suggestion index' }
+
+  const cap = await assertCanCreateUnplacedVaultQuest(player.id)
+  if (!cap.ok) return { error: cap.error }
 
   try {
     const quest = await db.customBar.create({

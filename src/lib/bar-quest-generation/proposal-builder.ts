@@ -12,6 +12,8 @@ export interface BuildProposalInput {
   barId: string
   playerId: string
   campaignRef: string | null
+  /** Persisted inside emotionalAlchemy JSON for admin (FM T4.1). */
+  campaignPhaseContext?: { kotterStage: number; phaseKey: string }
 }
 
 /**
@@ -21,7 +23,7 @@ export interface BuildProposalInput {
 export async function buildQuestProposalFromInterpretation(
   input: BuildProposalInput
 ): Promise<{ proposalId: string }> {
-  const { interpretation, emotionalAlchemy, barId, playerId, campaignRef } = input
+  const { interpretation, emotionalAlchemy, barId, playerId, campaignRef, campaignPhaseContext } = input
 
   const completionConditions = [
     `Complete the ${interpretation.questType} quest`,
@@ -34,6 +36,12 @@ export async function buildQuestProposalFromInterpretation(
     moveName: emotionalAlchemy.moveName,
     prompt: emotionalAlchemy.prompt,
     completionReflection: emotionalAlchemy.completionReflection,
+    ...(campaignPhaseContext
+      ? {
+            kotterStage: campaignPhaseContext.kotterStage,
+            campaignPhaseKey: campaignPhaseContext.phaseKey,
+        }
+      : {}),
   })
 
   const proposal = await db.questProposal.create({

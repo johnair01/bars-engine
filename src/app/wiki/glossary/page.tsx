@@ -106,6 +106,19 @@ export default function GlossaryPage() {
         <Link href="/wiki/rules/bar-format" className="text-xs text-amber-400 hover:text-amber-300">→ BAR Format</Link>
       </section>
 
+      <section id="values-vs-polarities" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
+        <h2 className="text-lg font-bold text-white">Values vs polarities</h2>
+        <p className="text-zinc-300 text-sm">
+          <strong className="text-zinc-200">Value systems</strong> (developmental / worldview — akin to Spiral Dynamics
+          vMemes) are not the same as <strong className="text-zinc-200">tension pairs</strong> on Scene Atlas or
+          in polarity-thinking maps. <strong className="text-zinc-200">Move polarity</strong> in the database is a third
+          channel: nation move tags.
+        </p>
+        <Link href="/wiki/values-and-polarities#footnote" className="text-xs text-amber-400 hover:text-amber-300">
+          → Values & polarities (wiki footnote)
+        </Link>
+      </section>
+
       <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
         <Link href="/wiki" className="hover:text-zinc-300">← Back to index</Link>
         <Link href="/wiki/rules/glossary" className="hover:text-zinc-300">Rules Glossary</Link>

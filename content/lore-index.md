@@ -76,6 +76,14 @@ Canonical index of proper nouns used in the Event Page, CYOA onboarding, and kno
 |------|------|-----------|
 | Vibeulons | vibeulons | /wiki/glossary#vibeulon |
 
+## Scene Atlas (52-card lab)
+
+| Term | Slug | Wiki Path |
+|------|------|-----------|
+| Scene Atlas | scene-atlas | /wiki/grid-deck |
+| Creator lab instance (technical) | creator-scene-grid | /creator-scene-deck/creator-scene-grid |
+| Values vs polarities (footnote) | values-and-polarities | /wiki/values-and-polarities#footnote |
+
 ## Kernel
 
 | Term | Slug | Wiki Path |

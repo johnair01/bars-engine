@@ -4,6 +4,7 @@
  */
 
 import { slugifyName } from '@/lib/avatar-utils'
+import { resolvePlaybookArchetypeKey } from '@/lib/archetype-keys'
 import { ARCHETYPE_PROFILES } from './profiles'
 import { applyArchetypeOverlay } from './overlay'
 import type { ArchetypeInfluenceProfile } from './types'
@@ -13,24 +14,22 @@ export type { ArchetypeInfluenceProfile } from './types'
 export { applyArchetypeOverlay } from './overlay'
 export { ARCHETYPE_PROFILES } from './profiles'
 
-/** Resolve archetype key from name or slug. */
-function resolveArchetypeKey(keyOrName: string): string {
-  const trimmed = keyOrName.trim()
-  if (!trimmed) return ''
-  if (trimmed.includes(' ')) return slugifyName(trimmed)
-  return trimmed.toLowerCase()
-}
-
 /**
  * Returns the archetype influence profile for a canonical archetype.
- * Accepts archetype key (bold-heart) or name (The Bold Heart).
+ * Accepts playbook slug (`bold-heart`), display name (`The Bold Heart`), or diagnostic keys (`truth_seer`)
+ * per {@link resolvePlaybookArchetypeKey}.
  */
 export function getArchetypeInfluenceProfile(
   archetypeKeyOrName: string
 ): ArchetypeInfluenceProfile | undefined {
-  const key = resolveArchetypeKey(archetypeKeyOrName)
-  if (!key) return undefined
-  return ARCHETYPE_PROFILES.find((p) => p.archetype_id === key)
+  const trimmed = archetypeKeyOrName.trim()
+  if (!trimmed) return undefined
+
+  const slug =
+    resolvePlaybookArchetypeKey(trimmed) ?? resolvePlaybookArchetypeKey(slugifyName(trimmed))
+
+  if (!slug) return undefined
+  return ARCHETYPE_PROFILES.find((p) => p.archetype_id === slug)
 }
 
 /**

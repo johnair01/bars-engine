@@ -32,7 +32,7 @@ export default function HandMovesPage() {
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
       <header className="space-y-2">
         <Link href="/hand" className="text-zinc-500 hover:text-white text-sm">
-          ← Back to Quest Wallet
+          ← Back to Vault
         </Link>
         <h1 className="text-3xl font-bold text-white">Moves Library</h1>
         <p className="text-zinc-400 text-sm">
@@ -54,7 +54,7 @@ export default function HandMovesPage() {
 
       <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
         <Link href="/hand" className="hover:text-zinc-300">
-          ← Quest Wallet
+          ← Vault
         </Link>
         <Link href="/wiki/moves" className="hover:text-zinc-300">
           Wiki: The 4 Moves

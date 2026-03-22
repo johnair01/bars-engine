@@ -184,7 +184,7 @@ export function UnpackQuestFlow({
           href="/hand"
           className="block w-full text-center py-3 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 transition"
         >
-          Done &mdash; go to Quest Wallet
+          Done &mdash; go to Vault
         </Link>
       </div>
 

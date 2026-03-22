@@ -37,6 +37,12 @@ export default async function GameboardPage(props: {
 
   const { slots, period, message } = result
 
+  const firstInstanceId = slots[0]?.instanceId ?? null
+  const ichingParams = new URLSearchParams()
+  if (firstInstanceId) ichingParams.set('instanceId', firstInstanceId)
+  ichingParams.set('campaignRef', campaignRef)
+  const ichingCampaignHref = `/iching?${ichingParams.toString()}`
+
   const [phaseHeader, domainRegions, fieldActivity] = await Promise.all([
     getCampaignPhaseHeader(campaignRef),
     getDomainRegionCounts(campaignRef, period),
@@ -71,6 +77,12 @@ export default async function GameboardPage(props: {
               className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
             >
               Campaign story
+            </Link>
+            <Link
+              href={ichingCampaignHref}
+              className="text-sm text-zinc-500 hover:text-amber-400 transition-colors"
+            >
+              Cast I Ching for this field →
             </Link>
           </div>
         </div>

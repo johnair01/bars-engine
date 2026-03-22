@@ -201,8 +201,12 @@ async function main() {
         completionEffects: JSON.stringify({
             questSource: 'onboarding',
             effects: [
-                { type: 'markOnboardingComplete' }
-            ]
+                {
+                    type: 'commitDerivedSceneAtlasAxes',
+                    adventureSlug: 'onboarding-send-signal',
+                },
+                { type: 'markOnboardingComplete' },
+            ],
         })
     })
 

@@ -59,6 +59,21 @@ function testSourceContextTags() {
   assert(result.sourceContextTags.includes('showUp'), 'moveType in tags')
 }
 
+function testCampaignPhaseTags() {
+  const result = interpretBarForQuestGeneration({
+    id: 'bar-phase',
+    title: 'Stage-aware',
+    description: 'Description long enough for the test to pass validation.',
+    allyshipDomain: 'GATHERING_RESOURCES',
+    campaignRef: 'bruised-banana',
+    kotterStage: 1,
+    campaignPhaseKey: 'phase_1_opening_momentum',
+  })
+  assert(result.sourceContextTags.some((t) => t.startsWith('kotter:1')), 'kotter tag')
+  assert(result.sourceContextTags.some((t) => t.includes('phase_1_opening_momentum')), 'phase key tag')
+  assert(result.campaignPhaseKey === 'phase_1_opening_momentum', 'interpretation carries phase key')
+}
+
 function testConfidenceScore() {
   const short = interpretBarForQuestGeneration({
     id: 'bar-5',
@@ -82,6 +97,7 @@ function run() {
   testKeywordOverride()
   testAwarenessDomain()
   testSourceContextTags()
+  testCampaignPhaseTags()
   testConfidenceScore()
   console.log('✓ All interpretation tests passed')
 }

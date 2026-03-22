@@ -39,6 +39,12 @@ export const NAV: Record<string, NavigationContract> = {
     onCancel: '/',
     onError: 'stay',
   },
+  /** 321 completed → Quest Wizard → quest created */
+  '321_quest_wizard': {
+    onSuccess: (r) => `/hand?quest=${r.questId}`,
+    onCancel: '/shadow/321',
+    onError: 'stay',
+  },
   '321_bar': {
     onSuccess: (r) => `/bars/${r.barId}`,
     onCancel: '/',

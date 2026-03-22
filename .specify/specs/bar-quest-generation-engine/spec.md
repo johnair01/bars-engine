@@ -64,6 +64,10 @@ A BAR is eligible when:
 - [Starter Quest Generator](../starter-quest-generator/spec.md)
 - Emotional Alchemy / First Aid tooling
 
+## Campaign phase (T4.1)
+
+When a BAR has `campaignRef`, the engine resolves **`Instance.kotterStage`** (1–8) by matching `Instance.slug` or `Instance.campaignRef`. Personal BARs (no ref) use stage **1**. Stage **1** maps to the stable key **`phase_1_opening_momentum`** (Kotter “Urgency” / opening momentum). Emotional move resolution uses `resolveMoveForContext` with `campaignPhase` = Kotter stage so later stages rotate among domain-preferred moves. Proposal JSON stores `kotterStage` and `campaignPhaseKey` under the emotional-alchemy blob for admin review.
+
 ## Non-Goals (v0)
 
 - Full autonomous publication without admin review

@@ -164,9 +164,29 @@ model Player {
   npc321InnerWorkMergesAsHuman Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeHuman")
   npc321InnerWorkMergesAsNpc   Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeNpc")
   daemonPromotedFrom           Daemon[]                  @relation("DaemonPromotedToNpc")
+  compostLedgers               CompostLedger[]
+  sceneAtlasGuidedDrafts       SceneAtlasGuidedDraft[]
+  playerPromptHand             PlayerPromptHand?
+  promptDeckCycles             PromptDeckCycle[]
 
   @@unique([contactType, contactValue])
   @@map("players")
+}
+
+/// Vault compost sessions — salvage payload for future “hard compost” organizer (see .specify/specs/vault-page-experience/spec.md)
+model CompostLedger {
+  id             String   @id @default(cuid())
+  playerId       String
+  createdAt      DateTime @default(now())
+  /// JSON array of CustomBar ids composted in this session
+  sourceIdsJson  String   @map("source_ids") @db.Text
+  /// JSON: VaultSalvagePayload (salvageLines, tags, releaseNote)
+  salvagePayload String   @map("salvage_payload") @db.Text
+  outcome        String   @default("composted") // composted
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@map("compost_ledgers")
 }
 
 model Role {
@@ -1385,6 +1405,7 @@ model BarDeck {
 
   instance Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
   cards    BarDeckCard[]
+  promptDeckCycles PromptDeckCycle[]
 
   @@map("bar_decks")
 }
@@ -1403,6 +1424,7 @@ model BarDeckCard {
 
   deck    BarDeck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   bindings BarBinding[]
+  guidedDrafts SceneAtlasGuidedDraft[]
 
   @@unique([deckId, suit, rank])
   @@index([deckId])
@@ -1425,6 +1447,55 @@ model BarBinding {
   @@index([cardId])
   @@index([barId])
   @@map("bar_bindings")
+}
+
+/// P2 Scene Atlas: persisted CYOA-style guided answers per player × deck card (resume across sessions).
+model SceneAtlasGuidedDraft {
+  id         String   @id @default(cuid())
+  playerId   String
+  cardId     String
+  instanceId String
+  payload    Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  player Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  card   BarDeckCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, cardId])
+  @@index([playerId, instanceId])
+  @@map("scene_atlas_guided_drafts")
+}
+
+/// Prompt deck play cycle (draw / discard) per player × BarDeck — orthogonal to BarBinding / grid.
+/// Global hand: `PlayerPromptHand.handCardIds` (max 5 across all decks). See prompt-deck-draw-hand spec.
+model PlayerPromptHand {
+  id          String   @id @default(cuid())
+  playerId    String   @unique
+  handCardIds String   @default("[]") @db.Text // JSON: BarDeckCard ids, max 5
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("player_prompt_hands")
+}
+
+model PromptDeckCycle {
+  id             String   @id @default(cuid())
+  playerId       String
+  deckId         String
+  drawCardIds    String   @default("[]") @db.Text // JSON array
+  discardCardIds String   @default("[]") @db.Text // JSON array
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  deck   BarDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, deckId])
+  @@index([playerId])
+  @@map("prompt_deck_cycles")
 }
 
 model ActorDeckState {

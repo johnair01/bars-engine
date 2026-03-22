@@ -24,6 +24,8 @@ import {
     type IRStory,
 } from '@/lib/twine-authoring-ir'
 import { parseTwee } from '@/lib/twee-parser'
+import { resolveArchetypeKeyForTransformation } from '@/lib/archetype-keys'
+import { slugifyName } from '@/lib/avatar-utils'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -987,14 +989,23 @@ async function executeBindingsForPassage(
             } else if (binding.actionType === 'CONFIRM_ARCHETYPE') {
                 const archetypeKey = diagState.recommendedArchetype || payload.archetypeId
                 if (archetypeKey) {
-                    const playbook = await db.archetype.findFirst({
+                    const raw = String(archetypeKey)
+                    const playbookSlug = resolveArchetypeKeyForTransformation(raw)
+                    let playbook = await db.archetype.findFirst({
                         where: {
                             OR: [
-                                { id: archetypeKey },
-                                { name: { equals: archetypeKey, mode: 'insensitive' } },
+                                { id: raw },
+                                { name: { equals: raw, mode: 'insensitive' } },
                             ]
                         }
                     })
+                    if (!playbook && playbookSlug) {
+                        const candidates = await db.archetype.findMany({
+                            where: { instanceId: null },
+                        })
+                        playbook =
+                            candidates.find((a) => slugifyName(a.name) === playbookSlug) ?? null
+                    }
                     if (playbook) {
                         await db.player.update({
                             where: { id: playerId },

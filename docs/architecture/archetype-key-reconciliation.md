@@ -41,16 +41,28 @@ Clarify the difference between two archetype key systems in the codebase and whi
 | Diagnostic engine, signal validation | ARCHETYPE_KEYS |
 | Twine BindingForm archetype options | ARCHETYPE_KEYS |
 
+**Twine `CONFIRM_ARCHETYPE`:** When the player confirms a diagnostic recommendation, the key may be `ARCHETYPE_KEYS` form (`truth_seer`, …). [`twine.ts`](../../src/actions/twine.ts) resolves via `resolveArchetypeKeyForTransformation` and matches the `Archetype` row by `slugifyName(name)` if id/name lookup fails.
+
 ## Resolution
 
-When the transformation engine receives `archetypeKey`:
+When the transformation engine receives an **archetype** key:
 
-- If it matches a playbook slug (bold-heart, devoted-guardian, etc.), use directly.
-- If it is a playbookId, resolve Playbook.name → slugify → archetypeKey.
-- If it is from ARCHETYPE_KEYS (truth_seer, etc.), a mapping layer may be needed to translate to playbook slug when both systems coexist. Document any such mapping when implemented.
+- If it matches a playbook slug (`bold-heart`, `truth-seer`, etc.), use directly.
+- If it is a playbook row from the DB, resolve `Playbook.name` → `slugifyName` → slug.
+- If it is from **`ARCHETYPE_KEYS`** (`truth_seer`, `shadow_walker`, …), map via **`ARCHETYPE_KEY_TO_PLAYBOOK_SLUG`** (see below).
+
+**API (use these names, not “playlist”):**
+
+| Export | Module | Returns |
+|--------|--------|---------|
+| `resolveArchetypeKeyForTransformation(key)` | `@/lib/archetype-keys` or `archetype-profiles` | Playbook slug or `null` |
+| `resolvePlaybookArchetypeKey(key)` | same | Playbook slug or `undefined` |
+
+Mapping table: **`ARCHETYPE_KEY_TO_PLAYBOOK_SLUG`** in [`archetype-profiles.ts`](../../src/lib/narrative-transformation/moves/archetype-profiles.ts). Barrel: [`archetype-keys.ts`](../../src/lib/archetype-keys.ts).
 
 ## References
 
+- [archetype-key-resolution spec](../../.specify/specs/archetype-key-resolution/spec.md)
 - [archetype-move-styles spec](../../.specify/specs/archetype-move-styles/spec.md)
 - [transformation-move-library spec](../../.specify/specs/transformation-move-library/spec.md)
 - [nations.ts](../../src/lib/game/nations.ts) — ARCHETYPE_KEYS

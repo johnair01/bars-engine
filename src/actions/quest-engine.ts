@@ -14,6 +14,10 @@ import { deriveAvatarConfig } from '@/lib/avatar-utils'
 import { enqueueSpriteGeneration } from '@/lib/sprite-queue'
 import { appendDaemonEvolutionLog } from '@/lib/daemon-evolution'
 import { queryActiveSummonedDaemonId } from '@/lib/daemon-active-state'
+import {
+    derivePolaritiesFromNationArchetype,
+    mergeStoryProgressGridPolarities,
+} from '@/lib/creator-scene-grid-deck/polarities'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -525,6 +529,7 @@ export async function completeQuestForPlayer(
 
     if (!options?.skipRevalidate) {
         revalidatePath('/')
+        revalidatePath('/creator-scene-deck')
     }
 
     // Golden Path: Visible Impact — add campaignImpact and nextQuestId to success response
@@ -587,13 +592,30 @@ function parseStoryQuestMeta(raw: string | null) {
 // ============================================================
 
 interface CompletionEffect {
-    type: 'setNation' | 'setPlaybook' | 'markOnboardingComplete' | 'grantVibeulons' | 'setPlayerName' | 'deriveAvatarFromExisting' | 'strengthenResidency' | 'forgeInvitationBar' | 'advanceCampaignWatering'
+    type:
+        | 'setNation'
+        | 'setPlaybook'
+        | 'markOnboardingComplete'
+        | 'grantVibeulons'
+        | 'setPlayerName'
+        | 'deriveAvatarFromExisting'
+        | 'strengthenResidency'
+        | 'forgeInvitationBar'
+        | 'advanceCampaignWatering'
+        | 'mergeGridPolarities'
+        | 'commitDerivedSceneAtlasAxes'
     value?: string   // nationId, playbookId, targetId, face, etc.
     amount?: number  // for grantVibeulons
     fromInput?: string // key in quest inputs to read the value from
     targetType?: 'nation' | 'school' // for forgeInvitationBar
     face?: string    // for advanceCampaignWatering: shaman | regent | challenger | architect | diplomat | sage
     campaignBarId?: string // for advanceCampaignWatering: optional specific bar
+    /** Scene Atlas: explicit axis poles (mergeGridPolarities) */
+    pair1?: { negativeLabel: string; positiveLabel: string }
+    pair2?: { negativeLabel: string; positiveLabel: string }
+    /** Stored in storyProgress.gridPolarities.source — use `oriented` for commitDerivedSceneAtlasAxes */
+    gridPolaritiesSource?: string
+    adventureSlug?: string
 }
 
 /**
@@ -612,6 +634,10 @@ interface CompletionEffect {
  *     { "type": "markOnboardingComplete" }
  *   ]
  * }
+ *
+ * Scene Atlas (`storyProgress.gridPolarities`):
+ * - `commitDerivedSceneAtlasAxes` — after nation+playbook are set, writes **derived** pair1/pair2 and marks source `oriented` (frozen at onboarding).
+ * - `mergeGridPolarities` — set explicit poles from `fromInput` (object or JSON string with pair1/pair2) or inline `pair1`/`pair2` on the effect; optional `gridPolaritiesSource` (default `adventure`).
  */
 /** Forge an invitation BAR inside a transaction. Used by strengthenResidency and forgeInvitationBar effects. */
 async function _forgeInvitationBarInTx(
@@ -848,6 +874,116 @@ async function processCompletionEffects(
                         await advanceCampaignWatering(tx, playerId, face as import('@/actions/campaign-bar').WateringFace, campaignBarId, response)
                         console.log(`[CompletionEffects] advanceCampaignWatering: ${face} for player ${playerId}`)
                     }
+                    break
+                }
+                case 'mergeGridPolarities': {
+                    let pair1: { negativeLabel: string; positiveLabel: string } | undefined
+                    let pair2: { negativeLabel: string; positiveLabel: string } | undefined
+                    if (effect.fromInput) {
+                        const raw = inputs[effect.fromInput]
+                        let obj: Record<string, unknown> | null = null
+                        if (raw != null && typeof raw === 'object' && !Array.isArray(raw)) {
+                            obj = raw as Record<string, unknown>
+                        } else if (typeof raw === 'string' && raw.trim()) {
+                            try {
+                                const p = JSON.parse(raw) as unknown
+                                if (p && typeof p === 'object' && !Array.isArray(p)) obj = p as Record<string, unknown>
+                            } catch {
+                                obj = null
+                            }
+                        }
+                        if (obj) {
+                            const p1 = obj.pair1 as Record<string, unknown> | undefined
+                            const p2 = obj.pair2 as Record<string, unknown> | undefined
+                            if (p1 && p2) {
+                                pair1 = {
+                                    negativeLabel: String(p1.negativeLabel ?? '').trim(),
+                                    positiveLabel: String(p1.positiveLabel ?? '').trim(),
+                                }
+                                pair2 = {
+                                    negativeLabel: String(p2.negativeLabel ?? '').trim(),
+                                    positiveLabel: String(p2.positiveLabel ?? '').trim(),
+                                }
+                            }
+                        }
+                    } else if (effect.pair1 && effect.pair2) {
+                        pair1 = {
+                            negativeLabel: String(effect.pair1.negativeLabel).trim(),
+                            positiveLabel: String(effect.pair1.positiveLabel).trim(),
+                        }
+                        pair2 = {
+                            negativeLabel: String(effect.pair2.negativeLabel).trim(),
+                            positiveLabel: String(effect.pair2.positiveLabel).trim(),
+                        }
+                    }
+                    if (
+                        !pair1 ||
+                        !pair2 ||
+                        !pair1.negativeLabel ||
+                        !pair1.positiveLabel ||
+                        !pair2.negativeLabel ||
+                        !pair2.positiveLabel
+                    ) {
+                        console.warn('[CompletionEffects] mergeGridPolarities: invalid or missing pair1/pair2')
+                        break
+                    }
+                    const row = await tx.player.findUnique({
+                        where: { id: playerId },
+                        select: { storyProgress: true },
+                    })
+                    const merged = mergeStoryProgressGridPolarities(row?.storyProgress, {
+                        pair1,
+                        pair2,
+                        source: effect.gridPolaritiesSource ?? 'adventure',
+                        adventureSlug: effect.adventureSlug ?? quest.id,
+                    })
+                    await tx.player.update({
+                        where: { id: playerId },
+                        data: { storyProgress: merged },
+                    })
+                    console.log(`[CompletionEffects] mergeGridPolarities for player ${playerId}`)
+                    break
+                }
+                case 'commitDerivedSceneAtlasAxes': {
+                    const row = await tx.player.findUnique({
+                        where: { id: playerId },
+                        select: {
+                            storyProgress: true,
+                            nation: { select: { name: true, element: true } },
+                            archetype: {
+                                select: { name: true, description: true, primaryWaveStage: true },
+                            },
+                        },
+                    })
+                    if (!row?.nation || !row?.archetype) {
+                        console.warn(
+                            '[CompletionEffects] commitDerivedSceneAtlasAxes: missing nation or archetype'
+                        )
+                        break
+                    }
+                    const derived = derivePolaritiesFromNationArchetype(
+                        { name: row.nation.name, element: row.nation.element },
+                        {
+                            name: row.archetype.name,
+                            description: row.archetype.description,
+                            primaryWaveStage: row.archetype.primaryWaveStage,
+                        }
+                    )
+                    if (!derived) {
+                        console.warn('[CompletionEffects] commitDerivedSceneAtlasAxes: derive returned null')
+                        break
+                    }
+                    const merged = mergeStoryProgressGridPolarities(row.storyProgress, {
+                        pair1: derived.pair1,
+                        pair2: derived.pair2,
+                        source: 'oriented',
+                        adventureSlug: effect.adventureSlug ?? quest.id,
+                    })
+                    await tx.player.update({
+                        where: { id: playerId },
+                        data: { storyProgress: merged },
+                    })
+                    console.log(`[CompletionEffects] commitDerivedSceneAtlasAxes for player ${playerId}`)
                     break
                 }
                 default:

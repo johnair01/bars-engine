@@ -6,8 +6,8 @@
 import { assembleQuestSeed } from '@/lib/transformation-move-registry/services'
 import type { LockType, ParsedNarrative, QuestSeed } from '@/lib/transformation-move-registry/types'
 import { buildTransformationHints } from './alchemyHints'
-import type { DefaultMoveIdBundle } from './moves'
-import { selectDefaultMoveIds } from './moves'
+import type { DefaultMoveIdBundle } from './moves/selectMoves'
+import { selectDefaultMoveIds } from './moves/selectMoves'
 import { parseNarrative } from './parse'
 import type { NarrativeParseResult } from './types'
 
@@ -15,6 +15,8 @@ const DEFAULT_LOCK: LockType = 'emotional_lock'
 
 /** Options for `buildQuestSeedFromParsed` / `buildQuestSeedFromText`. */
 export type BuildQuestSeedOptions = {
+  /** Nation id (e.g. `argyra`) — biases move selection via nation profiles */
+  nationId?: string | null
   archetypeKey?: string | null
   moveOverrides?: Partial<DefaultMoveIdBundle>
   useAlchemyChannelInSeed?: boolean
@@ -39,7 +41,11 @@ export function buildQuestSeedFromParsed(
 ): QuestSeed {
   const lock = parsed.lock_type ?? DEFAULT_LOCK
   const narrative = toRegistryParsedNarrative(parsed)
-  const moveIds = selectDefaultMoveIds(parsed, { overrides: opts?.moveOverrides })
+  const moveIds = selectDefaultMoveIds(parsed, {
+    overrides: opts?.moveOverrides,
+    nationId: opts?.nationId ?? null,
+    archetypeKey: opts?.archetypeKey ?? null,
+  })
   const useChannel = opts?.useAlchemyChannelInSeed !== false
   const hints = useChannel ? buildTransformationHints(narrative) : null
   return assembleQuestSeed(narrative, lock, moveIds, {

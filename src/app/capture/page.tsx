@@ -26,6 +26,10 @@ export default async function CapturePage() {
           <p className="text-zinc-500 text-sm">
             Something feels charged. Name it before it fades.
           </p>
+          <p className="text-zinc-600 text-xs mt-1 leading-relaxed">
+            Before you type — pause for a moment. Notice where in your body the charge lives.
+            That location is the signal; the words are how you carry it forward.
+          </p>
         </header>
         <ChargeCaptureForm hasChargedToday={!!todayCharge} todayCharge={todayCharge} />
       </div>

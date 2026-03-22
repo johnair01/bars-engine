@@ -1056,8 +1056,11 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                     <h4 className="text-center text-yellow-500 font-bold mb-4 uppercase tracking-[0.2em] text-xs">Consult the Oracle</h4>
                                     <CastingRitual
                                         mode="modal"
-                                        onComplete={async (hexagramId) => {
-                                            const result = await generateQuestFromReading(hexagramId)
+                                        castingContext={
+                                            context?.threadId ? { threadId: context.threadId } : null
+                                        }
+                                        onComplete={async (hexagramId, ctx) => {
+                                            const result = await generateQuestFromReading(hexagramId, ctx ?? undefined)
                                             if ('adventureId' in result && result.adventureId && result.questId && result.threadId) {
                                                 onClose()
                                                 router.refresh()
