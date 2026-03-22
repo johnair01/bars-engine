@@ -12,6 +12,8 @@
  *   --element-glow    (from card-tokens.ts elementCssVars)
  *   --element-gem     (from card-tokens.ts elementCssVars)
  *   --glow-radius     (from card-tokens.ts altitudeCssVars)
+ *   --border-width    (from card-tokens.ts altitudeCssVars)
+ *   --border-opacity  (from card-tokens.ts altitudeCssVars)
  */
 
 /* ─── Base Card ──────────────────────────────────────────────────────────────
@@ -24,7 +26,7 @@
   border-radius: 12px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 0 var(--border-width, 2px) color-mix(in srgb, var(--element-frame, #3f3f46) calc(var(--border-opacity, 0.7) * 100%), transparent),
     0 0 var(--glow-radius, 0px) 2px var(--element-glow, transparent);
   transition:
     box-shadow 200ms ease-out,
@@ -39,7 +41,7 @@
   transform: scale(1.02);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46),
     0 0 calc(var(--glow-radius, 0px) + 4px) 3px var(--element-glow, transparent);
 }
 
@@ -51,7 +53,7 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 2px 4px rgba(0, 0, 0, 0.4),
-    0 0 0 2px var(--element-frame, #3f3f46);
+    0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46);
 }
 
 /* ─── Focus State (keyboard navigation) ─────────────────────────────────────── */
@@ -66,14 +68,14 @@
 .cultivation-card--selected {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46),
     0 0 16px 4px var(--element-glow, transparent);
   animation: cultivation-card-pulse 2s ease-in-out infinite;
 }
 
 @keyframes cultivation-card-pulse {
-  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 2px var(--element-frame, #3f3f46), 0 0 16px 4px var(--element-glow, transparent); }
-  50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 2px var(--element-frame, #3f3f46), 0 0 24px 6px var(--element-glow, transparent); }
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46), 0 0 16px 4px var(--element-glow, transparent); }
+  50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46), 0 0 24px 6px var(--element-glow, transparent); }
 }
 
 /* ─── Disabled State ─────────────────────────────────────────────────────────── */
@@ -117,7 +119,7 @@
   transform: scale(1.05);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 2px var(--element-frame, #3f3f46),
+    0 0 0 var(--border-width, 2px) var(--element-frame, #3f3f46),
     0 0 24px 8px var(--element-glow, transparent),
     0 0 48px 16px color-mix(in srgb, var(--element-glow, transparent) 40%, transparent);
   transition: all 300ms ease-out;
@@ -177,6 +179,14 @@
       transparent 6px
     );
   z-index: 1;
+}
+
+/* ─── Card Art Window ────────────────────────────────────────────────────────── */
+/* Inset element-colored border frames the art inside the card.                   */
+/* Opacity scales with altitude via --border-opacity.                             */
+
+.card-art-window {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--element-frame, #3f3f46) calc(var(--border-opacity, 0.7) * 100%), transparent);
 }
 
 /* ─── Card Frame Gradient Layer ──────────────────────────────────────────────── */

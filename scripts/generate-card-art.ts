@@ -50,7 +50,13 @@ import fs from 'fs'
 import path from 'path'
 import https from 'https'
 import http from 'http'
-import { CARD_ART_REGISTRY, ELEMENT_PALETTE_HINTS } from '../src/lib/ui/card-art-registry'
+import {
+  CARD_ART_REGISTRY,
+  CARD_ART_NEGATIVE_PROMPT,
+  PLAYBOOK_NEGATIVE_OVERRIDES,
+  ELEMENT_PALETTE_HINTS,
+  QUARANTINED_CARD_KEYS,
+} from '../src/lib/ui/card-art-registry'
 import type { CardArtEntry } from '../src/lib/ui/card-art-registry'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -193,6 +199,24 @@ function downloadUrl(url: string): Promise<Buffer> {
       })
       .on('error', reject)
   })
+}
+
+/**
+ * Validates that a PNG buffer meets the minimum dimension requirement.
+ * PNG header: bytes 16-23 contain width and height as big-endian uint32.
+ * Throws if the image is below 512×512 — catches undersized outputs like lamenth-still-point.
+ */
+function validateImageDimensions(buf: Buffer, key: string): void {
+  const MIN_DIM = 512
+  if (buf.length < 24) return // not a valid PNG — will fail at write time
+  const sig = buf.slice(0, 8)
+  const isPng = sig[0] === 0x89 && sig[1] === 0x50 && sig[2] === 0x4e && sig[3] === 0x47
+  if (!isPng) return // not a PNG — skip dimension check
+  const width  = buf.readUInt32BE(16)
+  const height = buf.readUInt32BE(20)
+  if (width < MIN_DIM || height < MIN_DIM) {
+    throw new Error(`Image too small: ${width}×${height}px (minimum ${MIN_DIM}×${MIN_DIM}) for ${key}`)
+  }
 }
 
 function filterEntries(entries: ReadonlyArray<CardArtEntry>): CardArtEntry[] {
@@ -450,9 +474,9 @@ async function runTrainLora(falKey: string): Promise<void> {
         if (lastLog) process.stdout.write(`   [${update.status}] ${lastLog.message}\n`)
       }
     },
-  }) as { diffusers_lora_file?: { url: string } }
+  }) as { data?: { diffusers_lora_file?: { url: string } }; diffusers_lora_file?: { url: string } }
 
-  const loraUrl = result?.diffusers_lora_file?.url
+  const loraUrl = result?.data?.diffusers_lora_file?.url ?? result?.diffusers_lora_file?.url
   if (!loraUrl) {
     console.error(`\n❌ Training completed but no LoRA URL returned. Result:`, result)
     process.exit(1)
@@ -501,7 +525,10 @@ async function runGenerate(falKey: string, loraUrl: string, entries: CardArtEntr
     process.stdout.write(`     Playbook: ${entry.playbookLabel}\n`)
     process.stdout.write(`     Output: ${entry.outputPath}\n`)
 
-    if (fs.existsSync(outPath) && !isForce) {
+    if (QUARANTINED_CARD_KEYS.has(entry.key)) {
+      process.stdout.write(`     🚫 QUARANTINED — watermark detected in previous generation. Regenerating with fixed prompts...\n`)
+      // Fall through to regenerate — quarantined cards always regenerate regardless of --force
+    } else if (fs.existsSync(outPath) && !isForce) {
       process.stdout.write(`     ⏭  Skipping — exists (use --force to regenerate)\n`)
       skipped++; continue
     }
@@ -513,6 +540,10 @@ async function runGenerate(falKey: string, loraUrl: string, entries: CardArtEntr
       const result = await fal.subscribe(FAL_MODEL, {
         input: {
           prompt: `bars_engine_card ${entry.dallePrompt}`,
+          negative_prompt: [
+            CARD_ART_NEGATIVE_PROMPT,
+            PLAYBOOK_NEGATIVE_OVERRIDES[entry.playbookKey] ?? '',
+          ].filter(Boolean).join(', '),
           seed,
           loras: [{ path: loraUrl, scale: FAL_LORA_SCALE }],
           num_inference_steps: FAL_STEPS,
@@ -520,12 +551,13 @@ async function runGenerate(falKey: string, loraUrl: string, entries: CardArtEntr
           image_size: FAL_IMAGE_SIZE,
           output_format: 'png',
         },
-      }) as { images?: { url: string }[] }
+      }) as { data?: { images?: { url: string }[] }; images?: { url: string }[] }
 
-      const imageUrl = result?.images?.[0]?.url
+      const imageUrl = result?.data?.images?.[0]?.url ?? result?.images?.[0]?.url
       if (!imageUrl) throw new Error('No image URL in fal.ai response')
 
       const buf = await downloadUrl(imageUrl)
+      validateImageDimensions(buf, entry.key)
       fs.writeFileSync(outPath, buf)
 
       const elapsed = ((Date.now() - t0) / 1000).toFixed(1)

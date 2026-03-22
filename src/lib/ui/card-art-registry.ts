@@ -155,23 +155,87 @@ const PLAYBOOKS: Array<{
 
 // ─── Shared Prompt Preamble ───────────────────────────────────────────────────
 
-/** Style directive anchored to UI_COVENANT aesthetic — prepended to every channel prompt. */
+/**
+ * Style directive anchored to UI_COVENANT aesthetic — prepended to every channel prompt.
+ * Pixel-art enforcement terms are mandatory — they prevent smooth vector output from Flux.
+ * See docs/card-art-prompt-template.md for full governance spec.
+ */
 const STYLE_PREAMBLE = [
+  `Pixel art, 16-bit RPG aesthetic, hard pixel edges, dithering pattern, retro game sprite style, no smooth gradients.`,
   `Flat graphic illustration for a dark Taoist cultivation card game.`,
   `Style: 8-bit pixel art meets Wes Anderson — symmetric composition, symmetric framing,`,
   `crisp pixel detail, muted desaturated palette.`,
   `Background: deep near-black #1a1a18.`,
   `No text, no words, no UI chrome — pure illustration only.`,
-  `Aspect ratio 1:1. Portrait orientation.`,
+  `Aspect ratio 1:1. Square. Portrait orientation.`,
 ].join(' ')
+
+/**
+ * Negative prompt terms — prevents smooth illustration, watermarks, non-pixel rendering.
+ * Injected by the generation script into the negative_prompt field (not the main prompt).
+ */
+export const CARD_ART_NEGATIVE_PROMPT = [
+  `smooth illustration, vector art, concept art, painted, soft gradients,`,
+  `anti-aliased edges, photography, watermark, signature, copyright notice,`,
+  `text overlay, UI chrome, logo, words, letters`,
+].join(' ')
+
+/**
+ * Per-playbook negative prompt overrides — merged with CARD_ART_NEGATIVE_PROMPT at generation time.
+ * Only defined for playbooks that have structural conflicts with the universal negative prompt.
+ */
+export const PLAYBOOK_NEGATIVE_OVERRIDES: Partial<Record<PlaybookKey, string>> = {
+  'joyful-connector': `solitary figure, lone figure, single figure, isolated, alone, one person only`,
+  'decisive-storm':   `calm water, still water, mirror reflection, flat surface, peaceful, tranquil, serene, vertical reflection streak, reflected lightning, water reflection column`,
+}
+
+/**
+ * Playbook compositional modifiers — encode each archetype's energy into the composition.
+ * Injected into every prompt after the element grammar. Without these, all 8 playbooks
+ * within a nation look identical. See docs/card-art-prompt-template.md for rationale.
+ */
+const PLAYBOOK_COMPOSITIONAL_MODIFIERS: Record<PlaybookKey, string> = {
+  'bold-heart':
+    `Compositional archetype: the figure faces the light source directly, arms open or raised — courageous, forward-moving. Ascending diagonal energy in the scene.`,
+  'devoted-guardian':
+    `Compositional archetype: figure in protective stance, slightly turned, one arm extended as a ward or shield. A threshold or boundary is visible behind them.`,
+  'decisive-storm':
+    `Compositional archetype: figure in dynamic motion — diagonal composition, implied velocity, lightning or sudden illumination. Not centered: movement toward a point. The scene is mid-action. OVERRIDE the element's default stillness: water in storm is turbulent, not reflective. NO still surface, NO mirror reflection, NO bilateral symmetry from calm water. Instead: crashing waves, diagonal rain, churning spray, lightning above turbulent water.`,
+  'danger-walker':
+    `Compositional archetype: figure at a threshold or crossing — one foot forward into the unknown. Above/below split: sky or light above, void or depth below. Liminal space.`,
+  'still-point':
+    `Compositional archetype: figure seated or deeply rooted — not standing. Radial or mandala composition, concentric rings emanating from the still center. Receptive, grounded posture.`,
+  'subtle-influence':
+    `Compositional archetype: figure partially concealed — off-center, at the edge of frame, or in shadow. Indirect light. The environment responds to the figure rather than the figure commanding it.`,
+  'truth-seer':
+    `Compositional archetype: rare frontal composition — the figure faces the viewer. Eyes or face illuminated. A veil lifts or a shadow recedes, revealing what was hidden beneath the surface.`,
+  'joyful-connector':
+    `Compositional archetype: OVERRIDE the lone figure anchor — this card requires multiple cultivators or a cultivator in visible relationship with other beings. DO NOT render a single isolated figure. Two or more robed figures facing each other, or a central figure surrounded by other humans in close proximity. Warmth, gathering, visible relationship between beings. The scene must show community, not solitude. Bright warm energy — this is the most joyful card in the set.`,
+}
+
+/**
+ * Figure anchor — required for every card.
+ * Three cards from Pass 1 were missing this (virelune-subtle-influence,
+ * argyra-truth-seer, meridia-bold-heart). This anchor prevents figural absence.
+ */
+const FIGURE_ANCHOR = `Lone robed cultivator figure, centered in frame, silhouetted against the elemental light source. Figure occupies one-third of frame height. Back-facing unless the playbook composition specifies otherwise.`
 
 /** Composition and mood rules from UI_COVENANT — appended to every channel prompt. */
 const COMPOSITION_SUFFIX = [
-  `Card art window: a single symbolic figure or scene, centered, bilaterally symmetric.`,
+  FIGURE_ANCHOR,
   `The figure embodies both the nation's elemental nature and the archetype's energy simultaneously.`,
   `Mood: contemplative cultivation, quiet power, long-game patience.`,
   `Saturation is deliberately low — cultivation is a long game, not a spectacle.`,
 ].join(' ')
+
+/**
+ * Cards with confirmed third-party watermarks — do not serve in UI, regenerate before shipping.
+ * See docs/card-art-prompt-template.md for LoRA audit instructions.
+ */
+export const QUARANTINED_CARD_KEYS = new Set<string>([
+  'argyra-truth-seer',        // ©Rudfren.com watermark visible
+  'pyrakanth-joyful-connector', // BQ×Kahuna watermark visible
+])
 
 // ─── Per-Channel Prompt Builders ──────────────────────────────────────────────
 //
@@ -209,15 +273,18 @@ export function buildFirePrompt(nation: NationArg, playbook: PlaybookArg): strin
 
     // Palette injection — hex values from ELEMENT_TOKENS.fire
     `Wuxing channel: FIRE 火.`,
-    `Frame border color: ${t.frame} (cinnabar). Edge vignette: deep cinnabar fading to near-black.`,
+    `Scene color accent: cinnabar ${t.frame} — used in material surfaces and edge vignette, not as a painted border.`,
     `Core light source: ${t.glow} (ember-ochre) — backlighting erupts from behind the central figure.`,
     `Accent sparks and gem highlights: ${t.gem} (bright ember) at focal point apex.`,
 
     // Fire-specific visual grammar
     `Compositional motion: ascending — the figure or scene reaches upward, mid-transformation.`,
-    `Lighting model: chiaroscuro — brilliant ember-ochre core (${t.glow}) against deep near-black periphery.`,
-    `Atmospheric signature: heat distortion shimmer at upper edge, implied forge or crucible environment.`,
+    `Lighting model: chiaroscuro — brilliant ember-ochre core (${t.glow}) against deep near-black interior.`,
+    `Atmospheric signature: heat distortion shimmer in the upper interior of the scene.`,
     `Material qualities: scorched bronze, volcanic glass, charred wood with glowing seams.`,
+
+    // Playbook compositional modifier — encodes archetype energy into composition
+    PLAYBOOK_COMPOSITIONAL_MODIFIERS[playbook.key],
 
     // Nation lore
     `Nation: ${nation.label} — ${nation.lore}.`,
@@ -253,7 +320,7 @@ export function buildWaterPrompt(nation: NationArg, playbook: PlaybookArg): stri
 
     // Palette injection — hex values from ELEMENT_TOKENS.water
     `Wuxing channel: WATER 水.`,
-    `Frame border color: ${t.frame} (deep navy). Scene enclosed in deep navy like cave walls around a hidden pool.`,
+    `Scene color accent: deep navy ${t.frame} — used in cave-wall framing and depth haze, not as a painted border.`,
     `Core light source: ${t.glow} (deep teal) — phosphorescent glow from beneath the still surface, not from above.`,
     `Surface accent and gem highlights: ${t.gem} (ocean blue) where the reflection catches the light.`,
 
@@ -263,6 +330,9 @@ export function buildWaterPrompt(nation: NationArg, playbook: PlaybookArg): stri
     `Bilateral symmetry achieved via perfect water reflection at a horizontal midline.`,
     `Atmospheric signature: still surface mist at outer edges, depth-haze at the bottom.`,
     `Material qualities: obsidian, polished lapis, dark pearl, wet stone with teal veins.`,
+
+    // Playbook compositional modifier — encodes archetype energy into composition
+    PLAYBOOK_COMPOSITIONAL_MODIFIERS[playbook.key],
 
     // Nation lore
     `Nation: ${nation.label} — ${nation.lore}.`,
@@ -298,7 +368,7 @@ export function buildWoodPrompt(nation: NationArg, playbook: PlaybookArg): strin
 
     // Palette injection — hex values from ELEMENT_TOKENS.wood
     `Wuxing channel: WOOD 木.`,
-    `Frame border color: ${t.frame} (muted sage/forest). Ground planes and outer borders in desaturated forest green.`,
+    `Scene color accent: muted sage ${t.frame} — used in ground planes and canopy shadow, not as a painted border.`,
     `Core light source: ${t.glow} (jade) — light filters through an organic network, dappled and alive.`,
     `Growth tip accents and gem highlights: ${t.gem} (emerald) at the tips of branches, veins, or growth nodes.`,
 
@@ -308,6 +378,9 @@ export function buildWoodPrompt(nation: NationArg, playbook: PlaybookArg): strin
     `Structural motif: branching tree, root system, mycelial network, or leaf-vein lattice.`,
     `Atmospheric signature: forest cathedral quiet, living texture in every surface.`,
     `Material qualities: aged bark, living wood, jade stone, moss, emerald glass veins.`,
+
+    // Playbook compositional modifier — encodes archetype energy into composition
+    PLAYBOOK_COMPOSITIONAL_MODIFIERS[playbook.key],
 
     // Nation lore
     `Nation: ${nation.label} — ${nation.lore}.`,
@@ -344,7 +417,7 @@ export function buildMetalPrompt(nation: NationArg, playbook: PlaybookArg): stri
 
     // Palette injection — hex values from ELEMENT_TOKENS.metal
     `Wuxing channel: METAL 金.`,
-    `Frame border color: ${t.frame} (silver-slate). Architectural, precise border — no warmth, no organic curve.`,
+    `Scene color accent: silver-slate ${t.frame} — used in architectural surfaces and mirror planes, not as a painted border.`,
     `Core light source: ${t.glow} (chrome) — cold overhead light catches geometric surfaces.`,
     `Focal accent and gem highlights: ${t.gem} (pale chrome) at the sharpest point of the composition.`,
 
@@ -354,6 +427,9 @@ export function buildMetalPrompt(nation: NationArg, playbook: PlaybookArg): stri
     `Structural motif: crystalline lattice, polished blade, angular facets, geometric mirror planes.`,
     `Atmospheric signature: cold clarity, the silence of a precision instrument, negative space as meaning.`,
     `Material qualities: polished silver, quartz crystal, mirror-finish obsidian, chrome alloy.`,
+
+    // Playbook compositional modifier — encodes archetype energy into composition
+    PLAYBOOK_COMPOSITIONAL_MODIFIERS[playbook.key],
 
     // Nation lore
     `Nation: ${nation.label} — ${nation.lore}.`,
@@ -389,7 +465,7 @@ export function buildEarthPrompt(nation: NationArg, playbook: PlaybookArg): stri
 
     // Palette injection — hex values from ELEMENT_TOKENS.earth
     `Wuxing channel: EARTH 土.`,
-    `Frame border color: ${t.frame} (terracotta). Warm earthy borders like fired clay at the scene's edge.`,
+    `Scene color accent: terracotta ${t.frame} — used in fired-clay terrain and root textures, not as a painted border.`,
     `Core light source: ${t.glow} (ochre-amber) — low-angle harvest light from the horizon, long warm shadows.`,
     `Focal accent and gem highlights: ${t.gem} (warm gold) at the composition's still center.`,
 
@@ -399,6 +475,9 @@ export function buildEarthPrompt(nation: NationArg, playbook: PlaybookArg): stri
     `Structural motif: concentric terrain rings, visible root system below the surface plane, harvest fields.`,
     `Atmospheric signature: patient seasonal warmth, the certainty of soil, ancient endurance.`,
     `Material qualities: terracotta clay, fired earth, warm sandstone, root-wood, amber resin.`,
+
+    // Playbook compositional modifier — encodes archetype energy into composition
+    PLAYBOOK_COMPOSITIONAL_MODIFIERS[playbook.key],
 
     // Nation lore
     `Nation: ${nation.label} — ${nation.lore}.`,

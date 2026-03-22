@@ -206,7 +206,10 @@ export function elementCssVars(element: ElementKey): Record<string, string> {
 }
 
 export function altitudeCssVars(altitude: CardAltitude): Record<string, string> {
+  const t = ALTITUDE_TOKENS[altitude]
   return {
-    '--glow-radius': ALTITUDE_TOKENS[altitude].glowRadius,
+    '--glow-radius':     t.glowRadius,
+    '--border-width':    t.borderWidth,
+    '--border-opacity':  String(t.borderOpacity),
   }
 }
