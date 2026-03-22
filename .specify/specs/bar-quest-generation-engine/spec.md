@@ -64,6 +64,10 @@ A BAR is eligible when:
 - [Starter Quest Generator](../starter-quest-generator/spec.md)
 - Emotional Alchemy / First Aid tooling
 
+## Twine IR bridge (T4.2)
+
+When an approved proposal is **published**, the engine builds a minimal **Twine Authoring IR** story (intro → reflect → epilogue with `[BIND quest_complete=<questId>]`), compiles with **`irToTwee`**, persists **`MicroTwineModule`** (`canonicalJson` envelope `twine_ir_v1` + `story_nodes`), and links a **`TwineStory`** on the created quest (same end state as MicroTwine compile). If IR compile or persist fails, the quest row still exists; the failure is logged.
+
 ## Campaign phase (T4.1)
 
 When a BAR has `campaignRef`, the engine resolves **`Instance.kotterStage`** (1–8) by matching `Instance.slug` or `Instance.campaignRef`. Personal BARs (no ref) use stage **1**. Stage **1** maps to the stable key **`phase_1_opening_momentum`** (Kotter “Urgency” / opening momentum). Emotional move resolution uses `resolveMoveForContext` with `campaignPhase` = Kotter stage so later stages rotate among domain-preferred moves. Proposal JSON stores `kotterStage` and `campaignPhaseKey` under the emotional-alchemy blob for admin review.

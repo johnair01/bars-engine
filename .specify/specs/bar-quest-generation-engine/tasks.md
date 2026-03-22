@@ -25,4 +25,4 @@
 ## Phase 4: Optional
 
 - [x] **T4.1** Campaign phase awareness (phase_1_opening_momentum) — `getKotterStageForCampaignRef` + `kotterStageToCampaignPhaseKey`; `resolveMoveForContext` rotates domain move by Kotter stage; proposal `emotionalAlchemy` JSON includes `kotterStage` + `campaignPhaseKey`.
-- [ ] **T4.2** Twine IR bridge for approved quests
+- [x] **T4.2** Twine IR bridge for approved quests — `compileQuestProposalIrToTwee` + `persistQuestTweeModule` (`src/lib/micro-twine-persist.ts`); on publish, IR → Twee → MicroTwineModule + TwineStory linked on quest.

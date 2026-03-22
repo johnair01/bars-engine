@@ -1,0 +1,431 @@
+seed_id: bar-lobby-world
+version: "0.1.0"
+created: "2026-03-22"
+ambiguity_score: 0.14
+
+goal: >
+  Build a mobile-first 8-bit walkable BAR lobby system — 4 nation homerooms
+  (Pyrakanth/Lamenth/Virelune/Argyra) + shared Card Club trading floor — where
+  players discover, craft, and distribute BARs through spatial encounter and
+  give-one-get-one trade. Pokémon TCG GBC aesthetic. Meridia players wander all
+  rooms as the bridge nation. Target: April 4 dance event, all rooms playable.
+
+aesthetic_reference: >
+  Pokémon Trading Card Game (GBC, 2000). Club rooms, walking up to players,
+  card trading, Card Pop. Interface is the phone. 32px tile grid, pixel art
+  assets, element-palette backgrounds per nation, virtual D-pad on mobile.
+
+loop: "Enter room → encounter Intent Agent → trade BAR → ceremony → Vault"
+
+existing_infrastructure:
+  do_not_replace:
+    - seed-spatial-world.yaml  # Pixi.js RoomRenderer, SpatialMap schema, anchor system
+    - card-art-registry.ts     # 40 committed card art images, Flux+LoRA pipeline
+    - ELEMENT_TOKENS            # card-tokens.ts — all color values
+    - VaultFourMovesStrip       # move-labeling pattern; BAR lands in Vault after trade
+    - JRPG composable sprite system (avatar sprites)
+  extend:
+    - RoomRenderer (pixi-room.ts) — add touch events, virtual D-pad, trade overlay
+    - IntentAgentPanel — add give-one-get-one trade flow + ceremony animation
+    - anchor system — add: crafting_forge, librarian_npc, nation_embassy anchor types
+    - SpatialMap schema — add room_type: nation_room | trading_floor | embassy
+
+constraints:
+  - Builds on seed-spatial-world.yaml — do not replace Pixi.js RoomRenderer or SpatialMap schema
+  - Mobile-first: tap-to-move (pathfind) + virtual D-pad overlay + WASD on desktop
+  - No real-time WebSockets — async/snapshot presence (existing RoomPresence pattern)
+  - Trade economy: give one BAR from hand, receive one BAR — fully reciprocal; no bypass
+  - Meridia (earth) has no homeroom — spawns in a random nation room on entry
+  - Starter BAR gifted to player with empty hand on room entry (one-time per room per session)
+  - Asset pipeline: Flux+LoRA (same model/style as card art) for nation room backgrounds
+  - April 4 hard deadline — full map (all rooms) must be traversable and demo-stable
+  - npm run build + npm run check must pass with 0 new errors
+
+rooms:
+  nation_rooms:
+    - key: pyrakanth
+      element: fire
+      slug: pyrakanth-forge
+      aesthetic: "volcanic forge, scorched bronze, ember-ochre lighting, ascending smoke"
+    - key: lamenth
+      element: water
+      slug: lamenth-tide-hall
+      aesthetic: "tidal stone hall, bioluminescent blue, bilateral water-reflection symmetry"
+    - key: virelune
+      element: wood
+      slug: virelune-grove
+      aesthetic: "root-threaded grove, jade-green canopy light, organic curves, growth energy"
+    - key: argyra
+      element: metal
+      slug: argyra-crystal-chamber
+      aesthetic: "crystalline silver chamber, refractive light, geometric precision, cool moonlight"
+  wanderer:
+    nation: meridia
+    element: earth
+    homeroom: null  # spawns randomly in other nations' rooms
+    narrative: "Earth is the center of the Wuxing cycle — Meridia bridges all nations"
+    visual: "ochre/sand tones read neutrally in any room's palette"
+  trading_floor:
+    slug: card-club
+    aesthetic: "neutral stone hall, all five element color accents, card tables, warm lantern light"
+    anchors:
+      - librarian_npc    # Regent face GM NPC — gives starter BARs, explains rules
+      - giacomo_npc      # villain NPC in corner (from ANC seed)
+      - bar_table        # cross-nation BAR pool (full Salad Bowl)
+      - nation_embassies # 4 doors showing each nation's featured BARs this week
+
+mechanics:
+  encounter:
+    trigger: "Walk within 1 tile of Intent Agent → tap → panel opens"
+    agent_source: "Recent RoomPresence records — deterministic seeded position"
+    panel_shows: "Agent name, nation element ring, their public BARs (1-3)"
+  trade:
+    model: "Give one BAR from hand → receive one BAR from agent"
+    new_player_gate: "If player hand is empty → starter BAR gifted on room entry"
+    starter_bar: "System-prompted template BAR, one-time per room per session"
+    closure:
+      animation: "Card flip + element spark (element of received BAR)"
+      result: "Received BAR lands in player Vault (hand/charges)"
+      ceremony_duration: "~1.5 seconds, then room resumes"
+  navigation:
+    mobile: "Tap-to-move (A* pathfind) + virtual D-pad overlay (bottom-left)"
+    desktop: "WASD + click-to-move (existing)"
+    d_pad_trigger: "Always visible on touch devices; hides on desktop"
+  portals:
+    pattern: "Each nation room has a portal to the Card Club trading floor"
+    transition: "Fade to black → load new room → fade in"
+
+asset_pipeline:
+  method: "Flux+LoRA (same model as card art — fal-ai/flux/dev + pytorch_lora_weights)"
+  outputs:
+    - type: nation_room_background
+      count: 4  # one per nation room (Meridia has none)
+      size: "320x320px (10×10 tiles at 32px)"
+      style: "8-bit pixel art meets Wes Anderson — same style preamble as card art"
+    - type: trading_floor_background
+      count: 1
+      size: "480x320px (15×10 tiles)"
+    - type: anchor_object_tiles
+      count: 6  # bar_table, crafting_forge, librarian_npc, giacomo_npc, portal, nation_embassy
+      size: "32x32px, nation-tinted variants"
+    - type: animated_walk_sprites
+      count: 8  # 4 directions × 2 frames, base character
+      size: "16x24px per frame"
+      note: "Extends JRPG composable sprite system"
+  reference_images: "docs/card-art-references/ (already committed)"
+  lora_url: "FAL_LORA_URL from .env.local (trained in card art Phase 2)"
+
+ontology:
+  name: BARLobbyWorld
+  description: >
+    Spatial BAR trading world — rooms, trades, starter BARs, NPC anchors,
+    nation embassies, ceremony state. Extends SpatialMap + RoomPresence schema.
+  fields:
+    - name: LobbyRoom
+      type: object
+      description: >
+        Nation room or trading floor. Fields: slug, room_type
+        (nation_room|trading_floor), element, background_url, anchor_layout,
+        walkable_tilemap.
+    - name: TradeTransaction
+      type: object
+      description: >
+        Give-one-get-one BAR exchange. Fields: offeredBarId, receivedBarId,
+        initiatorPlayerId, agentPlayerId, roomSlug, completedAt.
+    - name: StarterBAR
+      type: object
+      description: >
+        System-generated BAR given to players with empty hand on room entry.
+        Fields: playerId, roomSlug, grantedAt, barId. One per room per session.
+    - name: IntentAgentSlot
+      type: object
+      description: >
+        Deterministic placement of an offline player's avatar. Fields: presenceId,
+        playerId, tileX, tileY, publicBarIds (array), nationElement.
+    - name: AnchorType
+      type: string
+      description: >
+        bar_table | crafting_forge | librarian_npc | giacomo_npc | portal |
+        nation_embassy. Extends existing anchor_type enum.
+    - name: WandererSpawn
+      type: object
+      description: >
+        Meridia player spawn record. Fields: playerId, assignedRoomSlug,
+        sessionId. Re-randomized on each room entry.
+    - name: CeremonyState
+      type: object
+      description: >
+        Client-side animation state for trade closure. Fields: phase
+        (idle|flip|spark|complete), receivedBarId, elementKey, startedAt.
+    - name: NationEmbassy
+      type: object
+      description: >
+        Embassy anchor on trading floor. Fields: nationKey, featuredBarIds
+        (array, up to 5), weekOf. Featured BARs curated by Librarian NPC.
+
+phases:
+  - id: LW-1
+    name: Asset generation — nation room backgrounds + anchor tiles
+    description: >
+      Run Flux+LoRA generation for 4 nation room backgrounds + trading floor +
+      6 anchor object tiles. Commit to public/lobby-art/. Extend
+      generate-card-art.ts with --lobby mode or create generate-lobby-art.ts.
+    files:
+      - create: scripts/generate-lobby-art.ts
+      - create: public/lobby-art/ (5 backgrounds + 6 anchor tiles)
+      - create: docs/lobby-art-prompt-template.md
+
+  - id: LW-2
+    name: Schema + room seeding
+    description: >
+      Extend SpatialMap schema for room_type, nation_key, background_url.
+      Add TradeTransaction model. Add StarterBAR model. Seed all 5 rooms
+      (4 nation + trading floor) + Card Club anchors.
+    migrations: [add_lobby_world_rooms_and_trades]
+    files:
+      - edit: prisma/schema.prisma
+      - create: scripts/seed-bar-lobby-world.ts
+
+  - id: LW-3
+    name: Mobile input — tap-to-move + virtual D-pad
+    description: >
+      Extend RoomRenderer (pixi-room.ts) with A* pathfinding for tap-to-move.
+      Add virtual D-pad React overlay component (bottom-left, touch-only).
+    files:
+      - edit: src/lib/spatial-world/pixi-room.ts
+      - create: src/components/world/DPadOverlay.tsx
+      - edit: src/app/world/[instanceSlug]/[roomSlug]/RoomCanvas.tsx
+
+  - id: LW-4
+    name: Trade mechanic — give one, get one
+    description: >
+      Extend IntentAgentPanel with trade flow: select BAR from hand → confirm →
+      trade action → ceremony animation → BAR lands in Vault. Starter BAR grant
+      on room entry when hand is empty.
+    files:
+      - edit: src/components/world/IntentAgentPanel.tsx
+      - create: src/components/world/TradePanel.tsx
+      - create: src/components/world/TradeCeremony.tsx
+      - create: src/actions/bar-trade.ts
+      - edit: src/actions/room-presence.ts  # add starter BAR grant on enterRoom
+
+  - id: LW-5
+    name: Librarian NPC + nation embassies
+    description: >
+      Implement librarian_npc anchor: static NPC with Regent face dialogue,
+      starter BAR distribution, rules explanation. Implement nation_embassy
+      anchor: shows featured BARs for that nation (5 max, curated weekly).
+      Seed Giacomo as npc_slot in Card Club corner.
+    files:
+      - create: src/components/world/LibrarianPanel.tsx
+      - create: src/components/world/NationEmbassyPanel.tsx
+      - edit: src/components/world/AnchorModal.tsx  # add librarian + embassy cases
+
+  - id: LW-6
+    name: Meridia wanderer + portal transitions
+    description: >
+      On room entry for Meridia players: deterministic random nation room
+      assignment (seeded by playerId + date). Portal anchor: fade-out/in
+      room transition between nation rooms and Card Club.
+    files:
+      - create: src/lib/spatial-world/wanderer-spawn.ts
+      - edit: src/lib/spatial-world/pixi-room.ts  # add portal transition
+      - edit: src/actions/room-presence.ts  # Meridia spawn logic
+
+  - id: LW-7
+    name: Walkable sprite translation layer + element ring name tags
+    description: >
+      Implement the walkable sprite translation layer: a resolver that takes the
+      existing AvatarConfig (nationKey + archetypeKey + genderKey) and produces a
+      WalkableSpriteConfig for Pixi.js compositing. The same build-a-bear approach
+      used by the portrait avatar (Avatar.tsx) extends to walkable sprites — each
+      layer is an RGBA sprite sheet (512×64px, 8 frames: 4 dirs × 2 frames) stacked
+      in the same order as the portrait layers.
+
+      Industry standard (LPC / RPG Maker character generator): all layers are the
+      same canvas dimensions, RGBA, pixel-perfect registration, composited in order
+      via drawImage() (canvas) or source-over stacking (CSS / Pixi). No offsets,
+      no scaling at composite time. Our CSS stacking in Avatar.tsx is architecturally
+      identical — the walkable extension uses Pixi Sprite stacking instead.
+
+      Asset generation targets (replaces vague "generate base walk cycle"):
+        - public/sprites/walkable/base/{genderKey}.png (4 files)
+            Format: 512×64 RGBA, 8 frames (4 dirs × 2 each), neutral body in motion
+            Directions: down(0-1) left(2-3) right(4-5) up(6-7)
+        - public/sprites/walkable/nation/{nationKey}.png (5 files)
+            Format: 512×64 RGBA, same frame layout, nation color overlay
+            Derived: hue/saturation from ELEMENT_TOKENS[element] — no AI generation
+        - public/sprites/walkable/archetype/{archetypeKey}.png (8 files)
+            Format: 512×64 RGBA, same frame layout, archetype silhouette overlay
+            Sufficient shape differentiation at 16×24px display size
+
+      Translation resolver (new function alongside getWalkableSpriteUrl):
+        resolveWalkableSprite(config: AvatarConfig): WalkableSpriteConfig
+          → baseSheet: '/sprites/walkable/base/{genderKey}.png'
+          → nationSheet: '/sprites/walkable/nation/{nationKey}.png'
+          → archetypeSheet: '/sprites/walkable/archetype/{archetypeKey}.png'
+          → frameLayout: { dirs: 4, framesPerDir: 2, frameW: 64, frameH: 64 }
+
+      Pixi compositing (in pixi-room.ts):
+        Container
+          └── Sprite(baseSheet) + frame animation
+          └── Sprite(nationSheet) + same frame, same position
+          └── Sprite(archetypeSheet) + same frame, same position
+
+      One AvatarConfig → three renderers, zero new config:
+        Avatar.tsx (portrait)     → getAvatarPartSpecs(config)     → CSS layers
+        pixi-room.ts (walkable)   → resolveWalkableSprite(config)   → Pixi layers
+        card corner (provenance)  → resolveProvenanceStamp(config)  → sigil + mark
+
+    files:
+      - edit: src/lib/avatar-utils.ts              # add resolveWalkableSprite()
+      - create: public/sprites/walkable/base/       # 4 RGBA sprite sheets
+      - create: public/sprites/walkable/nation/     # 5 RGBA color overlay sheets
+      - create: public/sprites/walkable/archetype/  # 8 RGBA silhouette sheets
+      - edit: src/lib/spatial-world/pixi-room.ts   # Pixi layer compositing + element ring name tags
+
+  - id: LW-9
+    name: Portrait sprite pipeline fix + asset validation
+    description: >
+      Fix the broken portrait sprite compositor. Root cause identified: two files
+      were exported as RGB (no alpha channel) instead of RGBA, causing them to
+      render as fully opaque rectangles that block all layers beneath.
+
+      Broken files (must regenerate as RGBA):
+        - public/sprites/parts/playbook_outfit/bold-heart.png  ← RGB, should be RGBA
+        - public/sprites/parts/playbook_accent/bold-heart.png  ← RGB, should be RGBA
+      All other 26 layer files are correctly RGBA 64×64.
+
+      Production rule (prevents recurrence):
+        Every PNG in public/sprites/parts/ MUST be:
+          - RGBA (8-bit/color RGBA) — not RGB, not grayscale
+          - 64×64px exactly
+          - Transparent outside the character region (no solid backgrounds)
+        Validation one-liner:
+          file public/sprites/parts/**/*.png | grep -v RGBA
+          → any output = invalid file, must regenerate
+
+      Add a validation script (scripts/validate-sprite-layers.ts) that:
+        1. Reads all PNGs in public/sprites/parts/ and public/sprites/walkable/
+        2. Asserts RGBA color mode and correct dimensions (64×64 portrait, 512×64 walkable)
+        3. Exits non-zero on failure — can be added to npm run check or pre-commit hook
+        4. Reports which files fail and what the actual vs expected format is
+
+      Regeneration approach for bold-heart:
+        Use the same tool/process that generated the other 7 archetype outfit/accent files.
+        Re-export with alpha channel (RGBA). The pixel art content does not change —
+        only the channel format. Verify with: file bold-heart.png | grep RGBA
+
+    files:
+      - regenerate: public/sprites/parts/playbook_outfit/bold-heart.png  # RGB → RGBA
+      - regenerate: public/sprites/parts/playbook_accent/bold-heart.png  # RGB → RGBA
+      - create: scripts/validate-sprite-layers.ts
+
+  - id: LW-8
+    name: World index + dashboard entry point
+    description: >
+      /world page: routes to player's nation room (or random for Meridia).
+      Add World entry point to dashboard ThroughputLanesSection. Add to NavBar
+      if appropriate.
+    files:
+      - edit: src/app/world/page.tsx
+      - edit: src/components/dashboard/ThroughputLanesSection.tsx
+
+acceptance_criteria:
+  phase_1:
+    - "4 nation room backgrounds + trading floor background committed to public/lobby-art/"
+    - "6 anchor object tiles committed (bar_table, crafting_forge, librarian_npc, giacomo_npc, portal, nation_embassy)"
+    - "All assets maintain element palette consistency with card art (same Flux+LoRA style)"
+
+  phase_2:
+    - "SpatialMap schema has room_type, nation_key, background_url fields"
+    - "TradeTransaction model exists in schema"
+    - "All 5 rooms seeded (4 nation + card-club trading floor)"
+    - "npm run db:sync passes"
+
+  phase_3:
+    - "Tap anywhere on map → avatar pathfinds to tile (A* or equivalent)"
+    - "Virtual D-pad visible on touch devices, hidden on desktop"
+    - "WASD still works on desktop"
+
+  phase_4:
+    - "Player with BARs in hand can open Intent Agent panel, select a BAR, and trade"
+    - "Trade completion triggers ceremony animation (~1.5s card flip + element spark)"
+    - "Received BAR appears in player Vault after ceremony"
+    - "Player with empty hand receives starter BAR on room entry"
+    - "Second trade attempt does not grant another starter BAR in same session"
+
+  phase_5:
+    - "Librarian NPC anchor opens LibrarianPanel with Regent face dialogue"
+    - "Nation embassy anchor shows up to 5 featured BARs for that nation"
+    - "Giacomo npc_slot seeded in Card Club corner"
+
+  phase_6:
+    - "Meridia player entering /world gets assigned a random nation room (not card-club)"
+    - "Portal anchor triggers fade-out → room load → fade-in"
+    - "All 4 nation rooms and Card Club are traversable via portals"
+
+  phase_7:
+    - "resolveWalkableSprite(config) exists in avatar-utils.ts and returns correct sheet paths"
+    - "Base walk cycle sheets committed to public/sprites/walkable/base/ (4 RGBA files)"
+    - "Nation overlay sheets committed to public/sprites/walkable/nation/ (5 RGBA files)"
+    - "Archetype silhouette sheets committed to public/sprites/walkable/archetype/ (8 RGBA files)"
+    - "Player avatar in lobby animates from AvatarConfig — nation color and archetype silhouette visible"
+    - "Intent Agent name tags show element color ring"
+
+  phase_9:
+    - "bold-heart outfit and accent PNGs are RGBA — portrait compositor works for all 8 archetypes"
+    - "scripts/validate-sprite-layers.ts passes for all files in public/sprites/parts/"
+    - "validate-sprite-layers catches any future RGB (no-alpha) export before it reaches the app"
+
+  phase_8:
+    - "/world routes player to their nation room (or random for Meridia)"
+    - "Dashboard has World entry point"
+
+  overall:
+    - "npm run build passes with 0 new errors"
+    - "Full demo loop (enter room → encounter → trade → ceremony → vault) completable on mobile"
+    - "All 4 nation rooms + Card Club traversable before April 4"
+
+evaluation_principles:
+  - name: GBC Spatial Fidelity
+    description: >
+      Does walking through the room feel like Pokémon TCG GBC? Tile grid,
+      proximity encounter, character sprite, panel-based interaction.
+    weight: 0.35
+  - name: Trade Economy Health
+    description: >
+      Is give-one-get-one enforced? Do starter BARs prevent empty-hand
+      dead ends without being exploited?
+    weight: 0.25
+  - name: Mobile Playability
+    description: >
+      Can a player complete a full trade on mobile (enter → encounter → trade →
+      ceremony) with tap-to-move + D-pad, without frustration?
+    weight: 0.25
+  - name: Asset Consistency
+    description: >
+      Do generated backgrounds and tiles maintain the same 8-bit pixel art
+      style as the committed card art (Flux+LoRA style preamble)?
+    weight: 0.15
+
+exit_conditions:
+  - name: April 4 Ship
+    description: All 5 rooms traversable + trade economy working + mobile input functional
+    criteria: "All acceptance criteria for LW-1 through LW-6 pass before April 4"
+  - name: Asset Pipeline Failure
+    description: >
+      If Flux+LoRA produces inconsistent room art after 2 attempts,
+      fall back to procedural pixel CSS tiles (element palette from card-tokens.ts)
+    criteria: "Style drift > 30% from card art reference on visual inspection"
+  - name: Scope Gate
+    description: >
+      Any feature not in this seed (real-time WebSockets, non-BAR trading,
+      deck building, player-vs-player mechanics) is deferred to v2
+    criteria: "Feature not listed in phases LW-1 through LW-9"
+
+related_seeds:
+  - seed-spatial-world.yaml          # Pixi.js infrastructure — do not replace
+  - seed-agentic-npc-constitution.yaml  # Giacomo NPC → Card Club corner
+  - seed-deck-card-move-grammar.yaml    # BAR→Card grammar; cards traded in lobby
+  - seed-bar-lobby-world.yaml           # this file

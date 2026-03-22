@@ -29,6 +29,12 @@ export {
   kotterStageToCampaignPhaseKey,
 } from './campaign-phase'
 
+export {
+  buildIrNodesFromQuestProposal,
+  compileQuestProposalIrToTwee,
+} from './twine-ir-bridge'
+export type { QuestProposalTwineInput, QuestProposalIrCompileResult } from './twine-ir-bridge'
+
 export type {
   BarEligibilityInput,
   BarInterpretation,

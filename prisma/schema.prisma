@@ -168,6 +168,10 @@ model Player {
   sceneAtlasGuidedDrafts       SceneAtlasGuidedDraft[]
   playerPromptHand             PlayerPromptHand?
   promptDeckCycles             PromptDeckCycle[]
+  // BAR Lobby World (LW-2)
+  tradesInitiated              TradeTransaction[] @relation("TradeInitiator")
+  tradesAsAgent                TradeTransaction[] @relation("TradeAgent")
+  starterBARsGranted           StarterBAR[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -306,6 +310,9 @@ model CustomBar {
   sourceBarId          String?   // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
   source321SessionId   String?   // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
   proposedByAgentId    String?   // when set, this BAR/quest was proposed by an agent (NPC); requires admin approval before publication
+  // Provenance Stamp fields (PSS) — set at creation, immutable; persists through trades
+  creatorNationKey     String?   @map("creator_nation_key")     // nationKey of the creating player
+  creatorArchetypeKey  String?   @map("creator_archetype_key")  // archetypeKey of the creating player
   isKeyUnblocker       Boolean   @default(false) // tetris: completing this subquest unblocks root + siblings
   grantsMoveId         String?   // when set, completing this quest unlocks this NationMove
   questSource          String?   // system | bounty; bounties have stakedPool > 0
@@ -1370,6 +1377,8 @@ model Instance {
   spatialMap        SpatialMap? @relation("InstanceSpatialMap", fields: [spatialMapId], references: [id], onDelete: SetNull)
   portalAdventureId String?     // FK to Adventure: 8 portal entries + 8 room passages per campaign
   portalAdventure   Adventure?  @relation("InstancePortalAdventure", fields: [portalAdventureId], references: [id], onDelete: SetNull)
+  /// v1 JSON: { v, kotterStage, spokes: [{ hexagramId, changingLines, primaryFace }], updatedAt } — one draw per Kotter stage (campaign hub)
+  campaignHubState  Json?
   schoolsAdventureId String?    // FK to Adventure: 6-face schools CYOA (Grow Up from room)
   schoolsAdventure   Adventure?  @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
   invites            Invite[]
@@ -2529,17 +2538,23 @@ model PlayerMapPresence {
 }
 
 model MapRoom {
-  id          String     @id @default(cuid())
-  mapId       String     @map("map_id")
-  map         SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
-  name        String
-  slug        String     @default("") @map("slug")
-  tilemap     String     // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
-  graphNodeId String?    @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
-  channelId   String?    @map("channel_id")    // For video chat if used later
-  sortOrder   Int        @default(0) @map("sort_order")
-  anchors     SpatialMapAnchor[]
-  presences   RoomPresence[]
+  id            String     @id @default(cuid())
+  mapId         String     @map("map_id")
+  map           SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  name          String
+  slug          String     @default("") @map("slug")
+  tilemap       String     // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
+  graphNodeId   String?    @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
+  channelId     String?    @map("channel_id")    // For video chat if used later
+  sortOrder     Int        @default(0) @map("sort_order")
+  // BAR Lobby World fields (LW-2)
+  roomType      String?    @map("room_type")      // nation_room | trading_floor | embassy
+  nationKey     String?    @map("nation_key")     // pyrakanth | lamenth | virelune | argyra | meridia | null (trading floor)
+  backgroundUrl String?    @map("background_url") // public/lobby-art/{slug}.png
+  anchors       SpatialMapAnchor[]
+  presences     RoomPresence[]
+  tradeTransactions TradeTransaction[]
+  starterBARs   StarterBAR[]
 
   @@unique([mapId, slug])
   @@index([mapId])
@@ -2676,4 +2691,44 @@ model NpcProfile {
   constitution NpcConstitution? @relation(fields: [constitutionId], references: [id], onDelete: SetNull)
 
   @@map("npc_profiles")
+}
+
+
+// ── BAR Lobby World (LW-2) ────────────────────────────────────────────────────
+
+model TradeTransaction {
+  id               String   @id @default(cuid())
+  initiatorId      String   @map("initiator_id")    // player who offered
+  agentId          String   @map("agent_id")         // player whose BAR was received
+  offeredBarId     String   @map("offered_bar_id")
+  receivedBarId    String   @map("received_bar_id")
+  roomId           String   @map("room_id")
+  roomSlug         String   @map("room_slug")
+  completedAt      DateTime @default(now()) @map("completed_at")
+
+  initiator Player  @relation("TradeInitiator", fields: [initiatorId], references: [id])
+  agent     Player  @relation("TradeAgent",     fields: [agentId],     references: [id])
+  room      MapRoom @relation(fields: [roomId], references: [id])
+
+  @@index([initiatorId, completedAt])
+  @@index([roomId, completedAt])
+  @@map("trade_transactions")
+}
+
+model StarterBAR {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  roomId    String   @map("room_id")
+  roomSlug  String   @map("room_slug")
+  barId     String   @map("bar_id")        // the CustomBar granted
+  grantedAt DateTime @default(now()) @map("granted_at")
+
+  player Player  @relation(fields: [playerId], references: [id])
+  room   MapRoom @relation(fields: [roomId], references: [id])
+
+  // One starter BAR per player per room per session — enforced at application layer;
+  // unique constraint per player+room prevents double-grant across sessions.
+  @@unique([playerId, roomId])
+  @@index([playerId])
+  @@map("starter_bars")
 }

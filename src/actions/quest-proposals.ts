@@ -110,5 +110,8 @@ export async function publishProposal(proposalId: string) {
   const result = await publishQuestProposal(proposalId)
   revalidatePath('/admin/quest-proposals')
   revalidatePath('/admin/quests')
+  if (result.success) {
+    revalidatePath(`/admin/world/quest/${result.questId}`)
+  }
   return result
 }

@@ -1,4 +1,4 @@
-# Strand output: CYOA Modular Charge Authoring
+npx tsx scripts/generate-card-art.ts --dry-run# Strand output: CYOA Modular Charge Authoring
 
 **Consult run:** 2026-03-20 (Cursor agent — six-face pass per [STRAND_CONSULT_SIX_FACES.md](./STRAND_CONSULT_SIX_FACES.md))  
 **Subject:** Lego-robotics UX for modular CYOA; charge → typed blocks → Twee; grammar-owned topology vs AI prose.

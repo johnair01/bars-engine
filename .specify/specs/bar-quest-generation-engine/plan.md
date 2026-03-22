@@ -23,7 +23,7 @@ Implement a governed pipeline that converts BARs (player inspiration) into struc
 - [ ] Publication: create CustomBar quest, link to campaign
 
 ### Phase 4: Optional
-- [ ] Twine IR publication bridge
+- [x] Twine IR publication bridge (IR → Twee → MicroTwine + TwineStory on publish)
 - [x] Campaign phase awareness (Kotter stage from Instance; `phase_1_opening_momentum` for stage 1)
 
 ## Dependencies

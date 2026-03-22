@@ -2,9 +2,9 @@ import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { loadVaultCoreData } from '@/lib/vault-queries'
 import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
+import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultPersonalQuestsBlock } from '@/components/hand/VaultPersonalQuestsBlock'
 import { PlacementModal } from '@/components/hand/PlacementModal'
-import Link from 'next/link'
 
 export default async function HandQuestsRoomPage(props: { searchParams: Promise<{ quest?: string }> }) {
     const searchParams = await props.searchParams
@@ -23,16 +23,32 @@ export default async function HandQuestsRoomPage(props: { searchParams: Promise<
                 description="Unplaced quests from your BARs or 321 — place them in a thread or on the campaign gameboard."
             />
 
-            <p className="text-xs text-zinc-500">
-                <Link href="/hand" className="text-zinc-400 hover:text-zinc-300">
-                    ← Vault lobby
-                </Link>
-                {' · '}
-                <Link href="/hand/moves" className="text-zinc-400 hover:text-zinc-300">
-                    4 Moves reference
-                </Link>
-            </p>
+            <VaultFourMovesStrip
+                moves={{
+                    wakeUp: {
+                        label: 'Survey unplaced quests',
+                        note: 'All your unplaced personal quests are listed below.',
+                        href: '#quest-list',
+                    },
+                    cleanUp: {
+                        label: 'Compost stale quests',
+                        note: "Release quests you no longer need — salvage what's useful.",
+                        href: '/hand/compost',
+                    },
+                    growUp: {
+                        label: 'Unpack a quest deeper',
+                        note: 'Adventures and inner work tools to deepen a quest.',
+                        href: '/adventures',
+                    },
+                    showUp: {
+                        label: 'Place a quest',
+                        note: 'Pick a quest below and use "Place" to add it to a thread or gameboard.',
+                        href: '#quest-list',
+                    },
+                }}
+            />
 
+            <div id="quest-list" />
             {data.unplacedQuestCount === 0 ? (
                 <div className="text-center py-16 border border-dashed border-zinc-800 rounded-xl text-zinc-500 text-sm">
                     No unplaced personal quests right now. Create from a BAR or 321, then return here.

@@ -1,9 +1,10 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { loadVaultCoreData } from '@/lib/vault-queries'
 import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
+import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultChargeList } from '@/components/hand/VaultChargeList'
-import Link from 'next/link'
 
 export default async function HandChargesRoomPage() {
     const player = await getCurrentPlayer()
@@ -19,16 +20,32 @@ export default async function HandChargesRoomPage() {
                 description="Felt charges you captured — turn into quests, explore, or metabolize. This room shows your full in-vault list (up to the server limit)."
             />
 
-            <p className="text-xs text-zinc-500">
-                <Link href="/capture" className="text-rose-400 hover:text-rose-300">
-                    Capture a new charge
-                </Link>
-                {' · '}
-                <Link href="/hand/moves" className="text-zinc-400 hover:text-zinc-300">
-                    4 Moves reference
-                </Link>
-            </p>
+            <VaultFourMovesStrip
+                moves={{
+                    wakeUp: {
+                        label: "See what's charged",
+                        note: 'All captures below, sorted newest first.',
+                        href: '#charge-list',
+                    },
+                    cleanUp: {
+                        label: '321 Shadow Work',
+                        note: 'Metabolize a charge with structured shadow process.',
+                        href: '/shadow/321',
+                    },
+                    growUp: {
+                        label: 'Emotional First Aid',
+                        note: 'Stuck or flooded? EFA helps unblock before exploring.',
+                        href: '/adventures',
+                    },
+                    showUp: {
+                        label: 'Capture a new charge',
+                        note: "Record what's alive in you right now.",
+                        href: '/capture',
+                    },
+                }}
+            />
 
+            <div id="charge-list" />
             {data.chargeCount === 0 ? (
                 <div className="text-center py-16 border border-dashed border-zinc-800 rounded-xl text-zinc-500 text-sm">
                     No charge captures yet.{' '}

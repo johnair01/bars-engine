@@ -4,6 +4,8 @@
  */
 
 import { db } from '@/lib/db'
+import { persistQuestTweeModule } from '@/lib/micro-twine-persist'
+import { compileQuestProposalIrToTwee } from './twine-ir-bridge'
 
 export interface PublishResult {
   success: true
@@ -68,6 +70,28 @@ export async function publishQuestProposal(
       isSystem: true,
     },
   })
+
+  try {
+    const { tweeSource, canonicalJson } = compileQuestProposalIrToTwee(
+      {
+        title: proposal.title,
+        description: proposal.description,
+        questType: proposal.questType,
+        domain: proposal.domain,
+        emotionalAlchemy: proposal.emotionalAlchemy,
+      },
+      quest.id
+    )
+    await persistQuestTweeModule({
+      questId: quest.id,
+      creatorId: proposal.playerId,
+      questTitle: quest.title,
+      tweeSource,
+      canonicalJson,
+    })
+  } catch (err) {
+    console.error('[publishQuestProposal] Twine IR bridge (T4.2) failed:', err)
+  }
 
   await db.questProposal.update({
     where: { id: proposalId },
