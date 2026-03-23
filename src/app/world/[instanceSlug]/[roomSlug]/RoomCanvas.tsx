@@ -9,6 +9,7 @@ import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
 import { MapAvatarGate } from '@/components/world/MapAvatarGate'
+import { DPadOverlay } from '@/components/world/DPadOverlay'
 
 type RoomCanvasProps = {
   player: {
@@ -21,7 +22,7 @@ type RoomCanvasProps = {
     id: string
     name: string
     tilemap: Record<string, { floor?: string; impassable?: boolean; object?: string }>
-    anchors: AnchorData[]
+    anchors: AnchorData[]  // AnchorData includes config?: string | null
   }
   allRooms: { id: string; name: string; slug: string }[]
   instanceSlug: string
@@ -47,6 +48,56 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
   const posRef = useRef(playerPos)
   posRef.current = playerPos
+  const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const cancelWalk = useCallback(() => {
+    if (walkIntervalRef.current !== null) {
+      clearInterval(walkIntervalRef.current)
+      walkIntervalRef.current = null
+    }
+  }, [])
+
+  const walkPath = useCallback((path: { x: number; y: number }[]) => {
+    cancelWalk()
+    let i = 0
+    walkIntervalRef.current = setInterval(() => {
+      if (i >= path.length) { cancelWalk(); return }
+      const step = path[i]!
+      let dir: 'north' | 'south' | 'east' | 'west' = 'south'
+      if (i > 0) {
+        const prev = path[i - 1]!
+        if (step.x > prev.x) dir = 'east'
+        else if (step.x < prev.x) dir = 'west'
+        else if (step.y < prev.y) dir = 'north'
+        else dir = 'south'
+      }
+      setLastMoveDirection(dir)
+      setPlayerPos(step)
+      i++
+    }, 150)
+  }, [cancelWalk])
+
+  // Tap-to-move: click/tap on canvas → BFS to tile
+  const handleCanvasTap = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!rendererRef.current || !containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0]!.clientX : (e as MouseEvent).clientX
+    const clientY = 'touches' in e ? e.touches[0]!.clientY : (e as MouseEvent).clientY
+    const tileX = Math.floor((clientX - rect.left) / 32)
+    const tileY = Math.floor((clientY - rect.top) / 32)
+    const path = rendererRef.current.findPath(posRef.current.x, posRef.current.y, tileX, tileY)
+    if (path.length > 1) walkPath(path.slice(1))
+  }, [walkPath])
+
+  // D-pad: single step move
+  const handleDPadMove = useCallback((dx: number, dy: number, dir: 'north' | 'south' | 'east' | 'west') => {
+    cancelWalk()
+    const next = { x: posRef.current.x + dx, y: posRef.current.y + dy }
+    if (rendererRef.current?.isWalkable(next.x, next.y)) {
+      setLastMoveDirection(dir)
+      setPlayerPos(next)
+    }
+  }, [cancelWalk])
 
   // Init Pixi
   useEffect(() => {
@@ -73,6 +124,7 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
     return () => {
       mountedRef.current = false
+      cancelWalk()
       appRef.current?.destroy(true, { children: true })
       appRef.current = null
       rendererRef.current = null
@@ -93,6 +145,18 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     rendererRef.current?.setIntentAgents(agents)
   }, [agents])
 
+  // Tap-to-move listener
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el || !spriteReady) return
+    el.addEventListener('click', handleCanvasTap as EventListener)
+    el.addEventListener('touchstart', handleCanvasTap as EventListener, { passive: true })
+    return () => {
+      el.removeEventListener('click', handleCanvasTap as EventListener)
+      el.removeEventListener('touchstart', handleCanvasTap as EventListener)
+    }
+  }, [spriteReady, handleCanvasTap])
+
   // WASD movement
   useEffect(() => {
     const DELTAS: Record<string, { dx: number; dy: number; dir: 'north' | 'south' | 'east' | 'west' }> = {
@@ -104,6 +168,7 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     const handler = (e: KeyboardEvent) => {
       const delta = DELTAS[e.key]
       if (!delta || !rendererRef.current) return
+      cancelWalk()
       const next = { x: posRef.current.x + delta.dx, y: posRef.current.y + delta.dy }
       if (rendererRef.current.isWalkable(next.x, next.y)) {
         setLastMoveDirection(delta.dir)
@@ -112,7 +177,7 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [cancelWalk])
 
   // Enter room + heartbeat
   useEffect(() => {
@@ -132,7 +197,13 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
   const handleAnchorClick = useCallback(() => {
     if (!proximateAnchor) return
     if (proximateAnchor.anchorType === 'portal') {
-      const target = allRooms.find(r => r.id === proximateAnchor.linkedId)
+      let target = allRooms.find(r => r.id === proximateAnchor.linkedId)
+      if (!target && proximateAnchor.config) {
+        try {
+          const cfg = JSON.parse(proximateAnchor.config) as { targetSlug?: string }
+          if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
+        } catch { /* ignore */ }
+      }
       if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
       return
     }
@@ -178,8 +249,10 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
         />
       )}
 
+      <DPadOverlay onMove={handleDPadMove} />
+
       <div className="absolute top-4 left-4 z-10 text-xs text-zinc-500">
-        {room.name} · {instanceSlug} · WASD to move
+        {room.name} · {instanceSlug}
       </div>
     </div>
   )

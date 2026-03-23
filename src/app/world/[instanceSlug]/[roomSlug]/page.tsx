@@ -38,7 +38,7 @@ export default async function WorldRoomPage({
   }
 
   const rooms = instance.spatialMap.rooms
-  const room = rooms.find(r => slugify(r.name) === roomSlug)
+  const room = rooms.find(r => (r.slug ?? slugify(r.name)) === roomSlug)
   if (!room) {
     return (
       <div className="min-h-screen bg-black text-zinc-400 flex items-center justify-center">
@@ -50,7 +50,7 @@ export default async function WorldRoomPage({
   const spawnpoint = JSON.parse(instance.spatialMap.spawnpoint) as { roomIndex: number; x: number; y: number }
   const tilemap = JSON.parse(room.tilemap) as Record<string, { floor?: string; impassable?: boolean; object?: string }>
 
-  const allRooms = rooms.map(r => ({ id: r.id, name: r.name, slug: slugify(r.name) }))
+  const allRooms = rooms.map(r => ({ id: r.id, name: r.name, slug: r.slug ?? slugify(r.name) }))
 
   const anchors = room.anchors.map(a => ({
     id: a.id,
@@ -60,6 +60,7 @@ export default async function WorldRoomPage({
     label: a.label,
     linkedId: a.linkedId,
     linkedType: a.linkedType,
+    config: a.config ?? null,
   }))
 
   const avatarConfig = resolveAvatarConfigForPlayer(player)

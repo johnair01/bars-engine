@@ -75,6 +75,12 @@ export function ThroughputLanesSection({ activeInstanceId }: Props) {
               </Link>
               <span className="text-zinc-600"> — shared stakes</span>
             </li>
+            <li>
+              <Link href="/world" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
+                Enter Lobby
+              </Link>
+              <span className="text-zinc-600"> — trade BARs in your nation room</span>
+            </li>
           </ul>
         </div>
       </div>

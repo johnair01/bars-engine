@@ -1,4 +1,4 @@
-import { Application, Assets, Graphics, Container, Rectangle, Sprite, Texture } from 'pixi.js'
+import { Application, Assets, Graphics, Container, Rectangle, Sprite, Texture, Text, TextStyle } from 'pixi.js'
 
 export interface TileMapData {
   [key: string]: { floor?: string; impassable?: boolean; object?: string }
@@ -12,6 +12,7 @@ export interface AnchorData {
   label?: string | null
   linkedId?: string | null
   linkedType?: string | null
+  config?: string | null
 }
 
 export interface AgentData {
@@ -29,12 +30,16 @@ const FRAME_H = 64
 const DEFAULT_SPRITE_URL = '/sprites/walkable/default.png'
 
 const ANCHOR_COLORS: Record<string, number> = {
-  quest_board: 0x7c3aed,
-  anomaly: 0xf97316,
-  bar_table: 0x3b82f6,
-  portal: 0x22c55e,
-  npc_slot: 0x6b7280,
-  cyoa_quest: 0xd97706,
+  quest_board:    0x7c3aed,
+  anomaly:        0xf97316,
+  bar_table:      0x3b82f6,
+  portal:         0x22c55e,
+  npc_slot:       0x6b7280,
+  cyoa_quest:     0xd97706,
+  crafting_forge: 0xea580c,
+  librarian_npc:  0xca8a04,
+  giacomo_npc:    0xdc2626,
+  nation_embassy: 0x2563eb,
 }
 
 type PlayerDirection = 'north' | 'south' | 'east' | 'west'
@@ -176,15 +181,28 @@ export class RoomRenderer {
   private renderAgents() {
     this.agentsContainer.removeChildren()
     for (const agent of this.agents) {
-      const g = new Graphics()
-      g.rect(2, 2, this.tileSize - 4, this.tileSize - 4).fill(0x4b5563)
-      g.x = agent.tileX * this.tileSize
-      g.y = agent.tileY * this.tileSize
-      g.eventMode = 'static'
-      g.cursor = 'pointer'
+      const container = new Container()
+      container.x = agent.tileX * this.tileSize
+      container.y = agent.tileY * this.tileSize
+      container.eventMode = 'static'
+      container.cursor = 'pointer'
       const data = agent
-      g.on('pointerdown', () => this._onAgentClick?.(data))
-      this.agentsContainer.addChild(g)
+      container.on('pointerdown', () => this._onAgentClick?.(data))
+
+      const g = new Graphics()
+      g.rect(2, 2, this.tileSize - 4, this.tileSize - 4).fill(0x374151)
+      container.addChild(g)
+
+      const initials = (agent.playerName ?? '?').slice(0, 2).toUpperCase()
+      const label = new Text({
+        text: initials,
+        style: new TextStyle({ fontSize: 9, fill: 0xe5e7eb, fontFamily: 'monospace' }),
+      })
+      label.x = 5
+      label.y = 11
+      container.addChild(label)
+
+      this.agentsContainer.addChild(container)
     }
   }
 
@@ -214,10 +232,41 @@ export class RoomRenderer {
   private _onAgentClick?: (agent: AgentData) => void
   onAgentClick(cb: (agent: AgentData) => void) { this._onAgentClick = cb }
 
+  private _onCanvasTap?: (tileX: number, tileY: number) => void
+  onCanvasTap(cb: (tileX: number, tileY: number) => void) { this._onCanvasTap = cb }
+
+  handlePointerDown(pixelX: number, pixelY: number) {
+    const tileX = Math.floor(pixelX / this.tileSize)
+    const tileY = Math.floor(pixelY / this.tileSize)
+    this._onCanvasTap?.(tileX, tileY)
+  }
+
   isWalkable(x: number, y: number): boolean {
     const tile = this.tilemap[`${x}, ${y}`] ?? this.tilemap[`${x},${y}`]
     if (!tile) return false
     return !tile.impassable
+  }
+
+  findPath(fromX: number, fromY: number, toX: number, toY: number): { x: number; y: number }[] {
+    if (!this.isWalkable(toX, toY)) return []
+    type Node = { x: number; y: number; path: { x: number; y: number }[] }
+    const queue: Node[] = [{ x: fromX, y: fromY, path: [] }]
+    const visited = new Set<string>([`${fromX},${fromY}`])
+
+    while (queue.length > 0) {
+      const { x, y, path } = queue.shift()!
+      const next = [...path, { x, y }]
+      if (x === toX && y === toY) return next
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]] as [number, number][]) {
+        const nx = x + dx, ny = y + dy
+        const key = `${nx},${ny}`
+        if (!visited.has(key) && this.isWalkable(nx, ny)) {
+          visited.add(key)
+          queue.push({ x: nx, y: ny, path: next })
+        }
+      }
+    }
+    return []
   }
 
   tileToPixel(x: number, y: number) {

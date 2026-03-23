@@ -183,12 +183,24 @@ async function main() {
   })
   console.log(`  Created room: ${floor.slug} (${floor.id})`)
 
+  // Upsert a lobby Instance so /world routing can find it
+  const instance = await prisma.instance.upsert({
+    where: { slug: 'lobby' },
+    update: { spatialMapId: map.id },
+    create: {
+      slug:       'lobby',
+      name:       'BAR Lobby World',
+      domainType: 'lobby',
+      spatialMapId: map.id,
+    },
+  })
+  console.log(`  Instance: ${instance.slug} (${instance.id})`)
+
   console.log()
   console.log('BAR Lobby World seeded successfully.')
   console.log(`  Map:  ${LOBBY_MAP_NAME} (${map.id})`)
   console.log(`  Rooms: ${NATION_ROOMS.length} nation rooms + 1 trading floor`)
   console.log()
-  console.log('Next: npm run db:sync to push schema changes, then run this script.')
 }
 
 main()
