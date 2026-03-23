@@ -13,12 +13,15 @@ import { slugifyName } from '@/lib/avatar-utils'
 import type { SceneType } from '@/lib/alchemy/wuxing'
 import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
+export type PersonalMove = 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
+
 export type CreateChargeBarPayload = {
   summary: string
   emotion_channel?: 'anger' | 'joy' | 'sadness' | 'fear' | 'neutrality'
   intensity?: 1 | 2 | 3 | 4 | 5
   satisfaction?: 'dissatisfied' | 'neutral' | 'satisfied'
   context_note?: string
+  personal_move?: PersonalMove
 }
 
 export type ChargeListFilters = {
@@ -112,6 +115,7 @@ export async function createChargeBar(
       satisfaction: payload.satisfaction ?? null,
       context_note: payload.context_note ?? null,
       sceneType,
+      personal_move: payload.personal_move ?? null,
     })
 
     const bar = await db.customBar.create({
@@ -125,6 +129,7 @@ export async function createChargeBar(
         visibility: 'private',
         status: 'active',
         archetypeKey,
+        moveType: payload.personal_move ?? null,
       },
     })
 
@@ -282,17 +287,23 @@ export async function run321FromCharge(
   try {
     const bar = await db.customBar.findUnique({
       where: { id: barId },
-      select: { id: true, creatorId: true, type: true },
+      select: { id: true, creatorId: true, type: true, inputs: true },
     })
 
     if (!bar) return { error: 'Charge not found' }
     if (bar.type !== 'charge_capture') return { error: 'Not a charge capture' }
     if (bar.creatorId !== player.id) return { error: 'Not your charge' }
 
-    return {
-      success: true,
-      redirectUrl: `/shadow/321?chargeBarId=${barId}`,
-    }
+    let personalMove: string | null = null
+    try {
+      const parsed = JSON.parse(bar.inputs || '{}') as { personal_move?: string }
+      if (['wakeUp', 'cleanUp', 'growUp', 'showUp'].includes(parsed.personal_move ?? '')) {
+        personalMove = parsed.personal_move ?? null
+      }
+    } catch { /* ignore */ }
+
+    const url = `/shadow/321?chargeBarId=${barId}${personalMove ? `&personalMove=${personalMove}` : ''}`
+    return { success: true, redirectUrl: url }
   } catch (e: unknown) {
     console.error('[run321FromCharge]', e)
     return { error: (e as Error)?.message || 'Failed to launch 321' }
@@ -329,20 +340,30 @@ export async function generateQuestSuggestionsFromCharge(
   let emotion_channel: 'anger' | 'joy' | 'sadness' | 'fear' | 'neutrality' | null = null
   let intensity: number | null = null
   let context_note: string | null = null
+  let personal_move: PersonalMove | null = null
 
   try {
     const parsed = JSON.parse(bar.inputs || '{}') as {
       emotion_channel?: string
       intensity?: number
       context_note?: string
+      personal_move?: string
     }
     if (['anger', 'joy', 'sadness', 'fear', 'neutrality'].includes(parsed.emotion_channel ?? '')) {
       emotion_channel = parsed.emotion_channel as 'anger' | 'joy' | 'sadness' | 'fear' | 'neutrality'
     }
     intensity = typeof parsed.intensity === 'number' ? parsed.intensity : null
     context_note = typeof parsed.context_note === 'string' ? parsed.context_note : null
+    if (['wakeUp', 'cleanUp', 'growUp', 'showUp'].includes(parsed.personal_move ?? '')) {
+      personal_move = parsed.personal_move as PersonalMove
+    }
   } catch {
     // use defaults
+  }
+
+  // Map camelCase personal_move → snake_case for generator
+  const CAMEL_TO_SNAKE: Record<PersonalMove, import('@/lib/charge-quest-generator/types').MoveType> = {
+    wakeUp: 'wake_up', cleanUp: 'clean_up', growUp: 'grow_up', showUp: 'show_up',
   }
 
   const suggestions = generateQuestSuggestions({
@@ -351,6 +372,7 @@ export async function generateQuestSuggestionsFromCharge(
     emotion_channel,
     intensity,
     context_note,
+    declared_move: personal_move ? CAMEL_TO_SNAKE[personal_move] : null,
   })
 
   // IE-3: compose context + applyArchetypeOverlay via QuestSeed mapping (overlay failure never blocks)

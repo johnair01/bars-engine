@@ -248,6 +248,57 @@ function testDonationNode() {
   console.log('✅ action node (ritual + transaction) and consequence')
 }
 
+function testAuthenticatedCompilerGates() {
+  const input: QuestCompileInput = {
+    unpackingAnswers: BRUISED_BANANA_ANSWERS,
+    alignedAction: ALIGNED_ACTION,
+    segment: 'player',
+  }
+  const authed = compileQuest({ ...input, isAuthenticated: true })
+  const consequence = authed.nodes.find((n) => n.beatType === 'consequence')
+  if (!consequence) throw new Error('Should have consequence node')
+  assert(consequence.choices.length === 1, 'Authed: one final choice')
+  assert(consequence.choices[0]!.targetId === 'redirect:/hand', 'Authed: Vault redirect')
+  assert(
+    !consequence.choices[0]!.text.toLowerCase().includes('create my account'),
+    'Authed: no Create my account label'
+  )
+
+  const transcendence = authed.nodes.find((n) => n.beatType === 'transcendence')
+  if (!transcendence) throw new Error('Should have transcendence node')
+  assert(
+    !transcendence.text.toLowerCase().includes('creating your account'),
+    'Authed: transcendence text omits account creation'
+  )
+  assert(transcendence.text.includes('thank you for supporting'), 'Authed: alternate donation line')
+
+  const anon = compileQuest(input)
+  const anonConsequence = anon.nodes.find((n) => n.beatType === 'consequence')
+  assert(anonConsequence!.choices[0]!.targetId === 'signup', 'Anonymous: signup target')
+  assert(
+    anon.nodes.find((n) => n.beatType === 'transcendence')!.text.includes('creating your account'),
+    'Anonymous: transcendence still mentions account path for cold start'
+  )
+
+  console.log('✅ authenticated compiler gates (choices + transcendence copy)')
+}
+
+function testOnboardingCampaignActionTypeWhenAuthenticated() {
+  const input: QuestCompileInput = {
+    unpackingAnswers: BRUISED_BANANA_ANSWERS,
+    alignedAction: ALIGNED_ACTION,
+    segment: 'player',
+    campaignId: 'onboarding',
+  }
+  const t = compileQuest({ ...input, isAuthenticated: true }).nodes.find((n) => n.beatType === 'transcendence')
+  assert(t?.actionType === 'complete', 'Onboarding + authed: actionType complete not signup')
+
+  const tAnon = compileQuest(input).nodes.find((n) => n.beatType === 'transcendence')
+  assert(tAnon?.actionType === 'signup', 'Onboarding anonymous: actionType signup')
+
+  console.log('✅ onboarding campaign actionType respects auth')
+}
+
 function runTests() {
   console.log('--- Quest Grammar Compiler Tests ---\n')
   try {
@@ -258,6 +309,8 @@ function runTests() {
     testSegmentInvariant()
     testDeterminism()
     testDonationNode()
+    testAuthenticatedCompilerGates()
+    testOnboardingCampaignActionTypeWhenAuthenticated()
     console.log('\n✅ All tests passed')
   } catch (e) {
     console.error('\n❌', e)

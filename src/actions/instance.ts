@@ -6,6 +6,10 @@ import { revalidatePath } from 'next/cache'
 import { getAppConfig } from '@/actions/config'
 import { redirect } from 'next/navigation'
 import { Prisma } from '@prisma/client'
+import {
+  isBruisedBananaHouseInstance,
+  mergeBruisedBananaHouseGoalData,
+} from '@/lib/bruised-banana-house-state'
 
 function toCents(raw: FormDataEntryValue | null): number | null {
   if (raw == null) return null
@@ -173,6 +177,21 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     if (!name) throw new Error('Name is required')
     if (!domainType) throw new Error('Domain type is required')
 
+    let mergedHouseGoalData: string | undefined
+    if (isBruisedBananaHouseInstance(slug, campaignRef)) {
+      const opNote = (formData.get('houseOperatorNote') as string | null) ?? ''
+      const healthRaw = (formData.get('houseHealthSignal') as string | null)?.trim() ?? ''
+      const patch: { operatorNote: string; healthSignal?: number | null } = { operatorNote: opNote }
+      if (healthRaw === 'clear') patch.healthSignal = null
+      else if (/^[1-5]$/.test(healthRaw)) patch.healthSignal = parseInt(healthRaw, 10)
+
+      const existingGoal =
+        id != null && id.length > 0
+          ? (await db.instance.findUnique({ where: { id }, select: { goalData: true } }))?.goalData
+          : null
+      mergedHouseGoalData = mergeBruisedBananaHouseGoalData(existingGoal, patch)
+    }
+
     const hierarchyData = {
       sourceInstanceId: sourceInstanceId || null,
       parentInstanceId: parentInstanceId || null,
@@ -204,6 +223,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           moveIds: moveIdsJson,
           ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
+          ...(mergedHouseGoalData != null ? { goalData: mergedHouseGoalData } : {}),
         }
       })
     } else {
@@ -230,6 +250,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           moveIds: moveIdsJson,
           ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
+          ...(mergedHouseGoalData != null ? { goalData: mergedHouseGoalData } : {}),
         },
         create: {
           slug,
@@ -253,6 +274,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           moveIds: moveIdsJson,
           currentAmountCents: currentAmountCents ?? 0,
           ...hierarchyData,
+          ...(mergedHouseGoalData != null ? { goalData: mergedHouseGoalData } : {}),
         }
       })
     }

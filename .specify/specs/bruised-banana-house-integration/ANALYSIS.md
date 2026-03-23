@@ -4,6 +4,10 @@
 
 The Bruised Banana residency has two parallel campaigns: (1) **Fundraiser** (GATHERING_RESOURCES) — $3000 for the house; (2) **House Health** (SKILLFUL_ORGANIZING + DIRECT_ACTION) — coordination between Wendell, Eddy, JJ and the community. The house state is an emotional/coordination blocker. This document analyzes the domain model, maps intentions to domains, catalogs blockers, and proposes an integration plan that increases CYOA invitation throughput while building toward house-coordination features.
 
+### Throughput and guided actions (Sage / ontological alignment)
+
+**Problem:** Fundraiser and house-health tracks can both feel “real” in copy but **invisible in motion** unless players know **which actions** move **which** collective beat. The [bruised-banana-milestone-throughput](../bruised-banana-milestone-throughput/spec.md) spec owns **milestone snapshots + guided next actions** (dashboard/hub/board) so the residency **lands** as a place with **legible forward motion**, including vault-honest nudges when caps apply. It **does not** resolve every house blocker in one release; it **bridges** this analysis to **player-facing** throughput UX.
+
 ---
 
 ## Part 1: Domain Definitions (Emergent Problem → Domain)
@@ -143,7 +147,7 @@ Intention choices should fit the **domains available to the system**. Each inten
 | `vibeulon-visibility/spec.md` | Movement feed, who-earned-what |
 | `appreciation-mechanic/spec.md` | Give vibeulons to player/quest |
 | `signature-vibeulons/spec.md` | creatorId on Vibulon; EFA + BAR completion |
-| `bruised-banana-house-instance/spec.md` | House instance, recurring quests, house state |
+| [`bruised-banana-house-instance/spec.md`](../bruised-banana-house-instance/spec.md) | House instance (**v1 seeded**), recurring quests + house state (Phase 2) |
 
 ---
 

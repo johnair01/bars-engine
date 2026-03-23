@@ -10,6 +10,8 @@ import type { SerializableQuestPacket, QuestNode, Choice, SegmentVariant } from 
 
 export interface MovesGMPacketInput {
   segment?: SegmentVariant
+  /** When true, omit signup node and cold-signup copy; commit step goes to Vault. */
+  isAuthenticated?: boolean
 }
 
 const VIBEULON_INTRO = `**Vibeulons** — the emotional energy that powers the construct. They flow through the Conclave, through the heist, through you. Complete this flow to earn your starter share. The threshold awaits.`
@@ -23,6 +25,18 @@ const MOVE_TEXTS: Record<string, string> = {
 [Contribute to the campaign](/event/donate) — donate before or after creating your account.`,
 }
 
+const SHOW_UP_AUTHENTICATED = `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
+
+[Contribute to the campaign](/event/donate) — your support goes directly to the cause.`
+
+/** Loop ids are lowercase `wakeup` … `showup`; align with MOVE_TEXTS keys. */
+const MOVE_TEXT_BY_LOOP_ID: Record<string, string> = {
+  wakeup: MOVE_TEXTS.wakeUp,
+  cleanup: MOVE_TEXTS.cleanUp,
+  growup: MOVE_TEXTS.growUp,
+  showup: MOVE_TEXTS.showUp,
+}
+
 const COMMIT_TEXT = `**Commit** — You've chosen your path. This is the moment of crossing the threshold.`
 
 const SIGNUP_TEXT = `**Sign up** — Create your account. You are now an Early Believer — a Catalyst who crossed before the crowd.
@@ -30,7 +44,7 @@ const SIGNUP_TEXT = `**Sign up** — Create your account. You are now an Early B
 Unlock: founders thread, patron updates.`
 
 export function compileMovesGMPacket(input: MovesGMPacketInput = {}): SerializableQuestPacket {
-  const { segment = 'player' } = input
+  const { segment = 'player', isAuthenticated = false } = input
 
   const nodes: QuestNode[] = []
 
@@ -50,12 +64,14 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
   for (let i = 0; i < moveIds.length; i++) {
     const moveId = moveIds[i]
     const nextId = i < moveIds.length - 1 ? `moves_${moveIds[i + 1]}` : 'gm_choose'
+    const moveBody =
+      moveId === 'showup' && isAuthenticated ? SHOW_UP_AUTHENTICATED : (MOVE_TEXT_BY_LOOP_ID[moveId] ?? '')
     nodes.push({
       id: `moves_${moveId}`,
       beatType: 'rising_engagement',
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
-      text: MOVE_TEXTS[moveId] ?? '',
+      text: moveBody,
       choices: [{ text: 'Continue', targetId: nextId }],
       anchors: {},
     })
@@ -111,22 +127,26 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
     wordCountEstimate: 25,
     emotional: { channel: 'Joy', movement: 'transcend' },
     text: COMMIT_TEXT,
-    choices: [{ text: 'Continue', targetId: 'moves_signup' }],
+    choices: isAuthenticated
+      ? [{ text: 'Continue to your Vault', targetId: 'redirect:/hand' }]
+      : [{ text: 'Continue', targetId: 'moves_signup' }],
     anchors: {},
     isActionNode: true,
-    actionType: 'signup',
+    actionType: isAuthenticated ? 'complete' : 'signup',
   })
 
-  // Signup (consequence)
-  nodes.push({
-    id: 'moves_signup',
-    beatType: 'consequence',
-    wordCountEstimate: 30,
-    emotional: { channel: 'Joy', movement: 'translate' },
-    text: SIGNUP_TEXT,
-    choices: [{ text: 'Create my account', targetId: 'signup' }],
-    anchors: { identityCue: 'Early Believer', consequenceCue: 'contribution logged' },
-  })
+  // Signup (consequence) — omitted when authenticated (commit goes straight to Vault)
+  if (!isAuthenticated) {
+    nodes.push({
+      id: 'moves_signup',
+      beatType: 'consequence',
+      wordCountEstimate: 30,
+      emotional: { channel: 'Joy', movement: 'translate' },
+      text: SIGNUP_TEXT,
+      choices: [{ text: 'Create my account', targetId: 'signup' }],
+      anchors: { identityCue: 'Early Believer', consequenceCue: 'contribution logged' },
+    })
+  }
 
   return {
     signature: {

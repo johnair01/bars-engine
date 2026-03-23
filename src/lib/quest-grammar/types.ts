@@ -151,6 +151,11 @@ export interface QuestCompileInput {
   depthBranchOrder?: Record<number, string[]>
   /** Per-node choice overrides (choiceType, enabledFaces, enabledHorizontal, obstacleActions). Merged into generated nodes. */
   nodeOverrides?: Record<string, NodeChoiceOverride>
+  /**
+   * When true, compiler omits cold-signup choices and account-creation copy (Vault redirect instead).
+   * Pass from server when `getCurrentPlayer()` is present — e.g. dashboard-launched quest compile.
+   */
+  isAuthenticated?: boolean
 }
 
 export interface NodeChoiceOverride {

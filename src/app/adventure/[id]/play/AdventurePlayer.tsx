@@ -1,20 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { completeQuest } from '@/actions/quest-engine'
-import { saveAdventureProgress } from '@/actions/adventure-progress'
+import { saveAdventureProgress, getAdventureProgress } from '@/actions/adventure-progress'
 import { emitBarFromPassage } from '@/actions/emit-bar-from-passage'
 import { createBarFromMoveChoice } from '@/actions/create-bar-from-move-choice'
+import { generateQuestFromReading } from '@/actions/generate-quest'
+import { saveCyoaHexagramSnapshot } from '@/actions/cyoa-artifact-ledger'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
+import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
+import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
 import { CastIChingModal } from '@/components/CastIChingModal'
+import { CyoaBarLedgerSheet } from '@/components/cyoa/CyoaBarLedgerSheet'
 
 interface Choice {
   text: string
   targetId: string
   moveType?: string
+  blueprintKey?: string
 }
 
 interface Node {
@@ -29,6 +35,10 @@ interface Node {
     barTemplate?: { defaultTitle?: string; defaultDescription?: string }
     nextTargetId?: string
     moveType?: string
+    /** Prompt library / ledger key for bar_emit */
+    blueprintKey?: string
+    /** e.g. transcendence — expands BAR recap */
+    beat?: string
   }
 }
 
@@ -43,6 +53,8 @@ interface Props {
   campaignRef?: string
   schoolsAdventureId?: string
   returnTo?: string
+  portalHexagramId?: number
+  portalFace?: string
 }
 
 export function AdventurePlayer({
@@ -56,6 +68,8 @@ export function AdventurePlayer({
   campaignRef,
   schoolsAdventureId,
   returnTo,
+  portalHexagramId,
+  portalFace,
 }: Props) {
   const [currentNode, setCurrentNode] = useState<Node | null>(null)
   const [loading, setLoading] = useState(true)
@@ -67,7 +81,30 @@ export function AdventurePlayer({
   const [moveChoiceProcessing, setMoveChoiceProcessing] = useState(false)
   const [barTitle, setBarTitle] = useState('')
   const [barDescription, setBarDescription] = useState('')
+  const [generatingPortalQuest, setGeneratingPortalQuest] = useState(false)
+  const [portalQuestGenerated, setPortalQuestGenerated] = useState<{ title: string; questId?: string } | null>(null)
+  const [ledger, setLedger] = useState<CyoaArtifactLedgerEntry[]>([])
+  const [hexLine, setHexLine] = useState<string | null>(null)
   const router = useRouter()
+
+  const refreshLedger = useCallback(async () => {
+    if (isPreview) return
+    const p = await getAdventureProgress(adventureId)
+    if (!p?.stateData || typeof p.stateData !== 'object') return
+    const sd = p.stateData as Record<string, unknown>
+    const raw = sd.cyoaArtifactLedger
+    setLedger(Array.isArray(raw) ? (raw as CyoaArtifactLedgerEntry[]) : [])
+    const hex = sd.cyoaHexagramState as { hexagramId?: number } | undefined
+    if (hex?.hexagramId != null) {
+      setHexLine(`Hexagram ${hex.hexagramId} — carried on this journey.`)
+    } else {
+      setHexLine(null)
+    }
+  }, [adventureId, isPreview])
+
+  useEffect(() => {
+    void refreshLedger()
+  }, [refreshLedger])
 
   const isBarEmitNode = currentNode?.metadata?.actionType === 'bar_emit'
   const isCastIChingNode =
@@ -78,7 +115,11 @@ export function AdventurePlayer({
     setLoading(true)
     setError(null)
     try {
-      const url = `/api/adventures/${adventureSlug}/${nodeId}${isPreview ? '?preview=1' : ''}`
+      const params = new URLSearchParams()
+      if (isPreview) params.set('preview', '1')
+      if (portalFace) params.set('face', portalFace)
+      const qs = params.toString()
+      const url = `/api/adventures/${adventureSlug}/${nodeId}${qs ? `?${qs}` : ''}`
       const res = await fetch(url)
       if (!res.ok) {
         setError('Could not load this step.')
@@ -135,6 +176,25 @@ export function AdventurePlayer({
     }
   }, [currentNode?.id, currentNode?.metadata?.actionType, currentNode?.metadata?.barTemplate])
 
+  const handleGeneratePortalQuest = async () => {
+    if (!portalHexagramId) return
+    setGeneratingPortalQuest(true)
+    try {
+      const result = await generateQuestFromReading(
+        portalHexagramId,
+        null,
+        campaignRef ? { campaignRef } : undefined
+      )
+      if ('error' in result) {
+        alert(result.error)
+      } else {
+        setPortalQuestGenerated({ title: result.quest.title, questId: result.questId ?? undefined })
+      }
+    } finally {
+      setGeneratingPortalQuest(false)
+    }
+  }
+
   const handleBarEmitSubmit = async () => {
     if (!currentNode || !isBarEmitNode) return
     const title = barTitle.trim()
@@ -150,12 +210,14 @@ export function AdventurePlayer({
       adventureId,
       passageNodeId: currentNode.id,
       campaignRef: campaignRef ?? undefined,
+      blueprintKey: currentNode.metadata?.blueprintKey,
     })
     setBarSubmitting(false)
     if ('error' in result) {
       setError(result.error)
       return
     }
+    await refreshLedger()
     const nextId =
       currentNode.metadata?.nextTargetId ??
       currentNode.choices[0]?.targetId
@@ -181,7 +243,7 @@ export function AdventurePlayer({
     if (choice.targetId.startsWith('redirect:')) {
       const path = choice.targetId.slice(9)
       let url = path
-      const returnToVal = returnTo ?? (campaignRef ? `/campaign/lobby?ref=${campaignRef}` : null)
+      const returnToVal = returnTo ?? (campaignRef ? `/campaign/hub?ref=${campaignRef}` : null)
       if (returnToVal) {
         const sep = path.includes('?') ? '&' : '?'
         url = `${path}${sep}returnTo=${encodeURIComponent(returnToVal)}`
@@ -214,10 +276,24 @@ export function AdventurePlayer({
         setError(result.error)
         return
       }
+      await refreshLedger()
     }
 
     fetchNode(choice.targetId)
   }
+
+  const displayChoices = useMemo(
+    () => (currentNode ? applyAuthenticatedChoicePolicy(currentNode.choices, true) : []),
+    [currentNode]
+  )
+
+  const isTranscendenceBeat = useMemo(
+    () =>
+      !!currentNode &&
+      (currentNode.metadata?.beat === 'transcendence' ||
+        /\bTranscendence\b/i.test(currentNode.text.slice(0, 200))),
+    [currentNode]
+  )
 
   if (loading && !currentNode) {
     return (
@@ -248,7 +324,9 @@ export function AdventurePlayer({
   const displayText = useSlideMode ? slides[slideIndex] : currentNode.text
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div
+      className={`space-y-8 animate-in fade-in duration-500 ${!isPreview ? 'pb-32 sm:pb-36' : ''}`}
+    >
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
         <ReactMarkdown
           components={{
@@ -289,7 +367,7 @@ export function AdventurePlayer({
               if (slideIndex < slides.length - 1) {
                 setSlideIndex((i) => i + 1)
               } else {
-                const firstChoice = currentNode.choices[0]
+                const firstChoice = displayChoices[0]
                 if (firstChoice) void handleChoice(firstChoice)
               }
             }}
@@ -352,6 +430,14 @@ export function AdventurePlayer({
                   fetchNode(targetId)
                 }}
                 targetNodeId={currentNode.metadata!.castIChingTargetId!}
+                onHexagramAccepted={async (castResult) => {
+                  await saveCyoaHexagramSnapshot(adventureId, {
+                    hexagramId: castResult.hexagramId,
+                    transformedHexagramId: castResult.transformedHexagramId,
+                    changingLines: castResult.changingLines,
+                  })
+                  await refreshLedger()
+                }}
               />
             </>
           )}
@@ -376,6 +462,44 @@ export function AdventurePlayer({
                 <p className="text-green-400 font-bold">Quest completed!</p>
                 <p className="text-zinc-400 text-sm mt-1">Redirecting...</p>
               </div>
+            ) : portalHexagramId && campaignRef ? (
+              <div className="space-y-3">
+                {portalQuestGenerated ? (
+                  <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl space-y-3">
+                    <p className="text-green-400 font-medium text-sm">Quest generated: {portalQuestGenerated.title}</p>
+                    <div className="flex gap-2">
+                      <Link
+                        href="/hand/quests"
+                        className="flex-1 text-center py-2 px-3 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
+                      >
+                        View in Vault →
+                      </Link>
+                      <Link
+                        href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
+                        className="flex-1 text-center py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        Return to hub →
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => void handleGeneratePortalQuest()}
+                      disabled={generatingPortalQuest}
+                      className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-medium rounded-xl transition-colors"
+                    >
+                      {generatingPortalQuest ? 'Generating quest…' : `Generate quest from Hexagram ${portalHexagramId} →`}
+                    </button>
+                    <Link
+                      href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
+                      className="block w-full text-center py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+                    >
+                      Skip — return to lobby
+                    </Link>
+                  </>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() =>
@@ -387,7 +511,7 @@ export function AdventurePlayer({
               </button>
             )
           ) : (
-            currentNode.choices.map((choice, i) => (
+            displayChoices.map((choice, i) => (
               <button
                 key={i}
                 onClick={() => void handleChoice(choice)}
@@ -405,6 +529,14 @@ export function AdventurePlayer({
         <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl">
           <p className="text-red-400 text-sm">{error}</p>
         </div>
+      )}
+
+      {!isPreview && (
+        <CyoaBarLedgerSheet
+          entries={ledger}
+          emphasizeRecap={isTranscendenceBeat}
+          hexagramLine={hexLine}
+        />
       )}
     </div>
   )

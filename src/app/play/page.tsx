@@ -4,13 +4,17 @@ import { redirect } from 'next/navigation'
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
 
 /**
- * Wii Sports–style demo strip: deep-link into existing flows (spec Phase 5).
+ * /play is the "Try the loop" demo page for new/unauthenticated visitors.
+ * Authenticated players are redirected to /adventures (the active play hub).
+ * Spec: PMI G11 — resolve /play vs /adventures route split.
  */
 export default async function PlayPage() {
   const player = await getCurrentPlayer()
   if (!player) {
     redirect('/conclave/guided')
   }
+  // Authenticated players: /adventures is the canonical PLAY tab
+  redirect('/adventures')
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-10 max-w-lg mx-auto space-y-8">

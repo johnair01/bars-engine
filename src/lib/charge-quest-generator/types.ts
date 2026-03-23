@@ -22,4 +22,6 @@ export interface ChargeBarInput {
   emotion_channel?: EmotionChannel | null
   intensity?: number | null
   context_note?: string | null
+  /** Player's committed move at capture time (takes priority over emotion bias). */
+  declared_move?: MoveType | null
 }

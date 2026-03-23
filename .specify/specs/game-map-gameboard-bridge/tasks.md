@@ -41,15 +41,15 @@
 ## Phase 5: Game map → gameboard flow (shared metaphor)
 
 - [x] Audit game map 8 options: ensure each links to explorable nodes (see PHASE5_AUDIT.md)
-- [ ] Node exploration → quest generation: wire or extend existing flows
-- [ ] Add BARS/QuestSeeds to quest: Show Up flow allows appending BARs or quest seeds before completion
+- [x] Node exploration → quest generation: wire or extend existing flows
+- [x] Add BARS/QuestSeeds to quest: Show Up flow allows appending BARs or quest seeds before completion
 - [x] Shared metaphor: align copy — gameboard slots show move type when set; lobby "8 Portals" = 8 hexagrams
-- [ ] Campaign deck: ensure generated quests can be added for gameboard drawing
+- [x] Campaign deck: ensure generated quests can be added for gameboard drawing
 
 ## Phase 6: Verification
 
 - [x] `npm run build` passes (or build:type-check)
-- [ ] `npm run check` passes
+- [x] `npm run check` passes (no errors in modified files; pre-existing warnings only)
 - [ ] Manual: View/Start Adventure from gameboard slot
 - [ ] Manual: View/Start Adventure from hand/quest wallet
 - [ ] Manual: 8 slots display with hexagram + move type labels when set

@@ -20,6 +20,8 @@ export {
 } from './unpacking-constants'
 export { deriveMetadata321 } from './deriveMetadata321'
 export type { Metadata321, Phase3Taxonomic, Phase1Identification } from './deriveMetadata321'
+export { deriveBarDraftFrom321 } from './deriveBarDraftFrom321'
+export type { BarDraftFrom321 } from './deriveBarDraftFrom321'
 export { compileQuest } from './compileQuestCore'
 export { generateBranchedPath } from './branchedPath'
 export type { BranchedPathInput, BranchedQuestPacket } from './branchedPath'

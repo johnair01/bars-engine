@@ -107,6 +107,7 @@ export default async function AdminInstancesPage({
               <option value="fundraiser">fundraiser</option>
               <option value="hackathon">hackathon</option>
               <option value="business">business</option>
+              <option value="house">house</option>
             </select>
           </div>
 

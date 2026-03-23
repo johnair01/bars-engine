@@ -93,6 +93,10 @@ See [STAGE_1_DESIGN.md](STAGE_1_DESIGN.md) for full design.
 - Quest map visualization UI (e.g. graph of 8 stages); see [story-quest-map-exploration](../../.specify/backlog/prompts/story-quest-map-exploration.md).
 - Verification quest; optional; can add later if UX feature.
 
+## Related specs
+
+- **Guided actions & milestone visibility:** [bruised-banana-milestone-throughput](../bruised-banana-milestone-throughput/spec.md) — surfaces Kotter container quests and board/hub links as **ordered next actions** so players don’t bounce between surfaces without advancing the instance.
+
 ## Reference
 
 - Kotter lib: [src/lib/kotter.ts](../../src/lib/kotter.ts)

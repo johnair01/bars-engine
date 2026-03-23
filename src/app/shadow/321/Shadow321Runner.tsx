@@ -8,7 +8,7 @@ import { stashQuestWizardPrefillFrom321 } from '@/lib/quest-wizard-prefill'
 import { awakenDaemonFrom321 } from '@/actions/daemons'
 import { deriveShadowName } from '@/lib/shadow-name-grammar'
 import { computeShadow321NameFields } from '@/lib/shadow321-name-resolution'
-import { deriveMetadata321 } from '@/lib/quest-grammar'
+import { deriveMetadata321, deriveBarDraftFrom321 } from '@/lib/quest-grammar'
 import { logShadowNameFeedback } from '@/actions/shadow-name-feedback'
 import { usePostActionRouter } from '@/hooks/usePostActionRouter'
 import { NAV } from '@/lib/navigation-contract'
@@ -103,6 +103,8 @@ type Props = {
   initialCharge?: string
   /** Return path after completion */
   returnTo?: string
+  /** Committed move from charge capture (wakeUp | cleanUp | growUp | showUp) */
+  initialPersonalMove?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +128,7 @@ function clearSession() {
   if (typeof window !== 'undefined') sessionStorage.removeItem(SESSION_KEY)
 }
 
-export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
+export function Shadow321Runner({ playerId, initialCharge, returnTo, initialPersonalMove }: Props) {
   const router = useRouter()
   const contextualReturn = returnTo ?? '/'
   const daemonRouter = usePostActionRouter(NAV['321_daemon'], contextualReturn)
@@ -147,7 +149,12 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
   // Restore from sessionStorage on mount if available
   const saved = typeof window !== 'undefined' ? loadSession() : null
   const [phase, setPhase] = useState<Phase>(saved?.phase ?? 'face_1')
-  const [alignedAction, setAlignedAction] = useState<AlignedAction | ''>(saved?.alignedAction ?? '')
+  const PERSONAL_MOVE_TO_ALIGNED: Record<string, AlignedAction> = {
+    wakeUp: 'Wake Up', cleanUp: 'Clean Up', growUp: 'Grow Up', showUp: 'Show Up',
+  }
+  const defaultAlignedAction: AlignedAction | '' = saved?.alignedAction ??
+    (initialPersonalMove ? (PERSONAL_MOVE_TO_ALIGNED[initialPersonalMove] ?? '') : '')
+  const [alignedAction, setAlignedAction] = useState<AlignedAction | ''>(defaultAlignedAction)
   const [answers, setAnswers] = useState<Answers>(saved?.answers ?? {
     chargeDescription: initialCharge ?? '',
     maskShape: '',
@@ -229,6 +236,31 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
     )
   }
 
+  /** Tweet-like draft for Create BAR path (BDE). Quest path still uses `buildMetadata`. */
+  function buildBarDraftForCreateBar() {
+    const phase3 = { identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }
+    const phase2 = {
+      q1: answers.chargeDescription,
+      q2: [] as string[],
+      q3: answers.lifeState,
+      q4: [] as string[],
+      q5: answers.rootCause,
+      q6: [] as string[],
+      alignedAction: alignedAction || undefined,
+    }
+    return deriveBarDraftFrom321(
+      phase3,
+      phase2,
+      { identification: answers.maskName, integration: answers.integrationShift },
+      undefined,
+      {
+        phase2Snapshot: JSON.stringify(phase2),
+        phase3Snapshot: JSON.stringify(phase3),
+        shadow321Name: shadow321NameForPersist(),
+      }
+    )
+  }
+
   // -------------------------------------------------------------------------
   // Artifact dispatch handlers
   // -------------------------------------------------------------------------
@@ -255,7 +287,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
       displayHints: {
         chargeLine: answers.chargeDescription?.trim() || '',
         maskPresence: [answers.maskShape, answers.maskName].filter(Boolean).join(' — '),
-        alignedAction: alignedAction || '',
+        alignedAction: alignedAction || (initialPersonalMove ? (PERSONAL_MOVE_TO_ALIGNED[initialPersonalMove] ?? '') : ''),
         integrationShift: answers.integrationShift?.trim() || undefined,
       },
     })
@@ -283,25 +315,32 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo }: Props) {
 
   function handleCreateBAR() {
     if (typeof window !== 'undefined') {
-      const metadata = buildMetadata()
-      const phase2 = {
-        q1: answers.chargeDescription,
-        q2: [],
-        q3: answers.lifeState,
-        q4: [],
-        q5: answers.rootCause,
-        q6: [],
-        alignedAction: alignedAction || undefined,
-      }
-      sessionStorage.setItem('shadow321_metadata', JSON.stringify(metadata))
-      sessionStorage.setItem('shadow321_session', JSON.stringify({
-        phase3Snapshot: JSON.stringify({ identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') }),
-        phase2Snapshot: JSON.stringify(phase2),
-      }))
+      const draft = buildBarDraftForCreateBar()
+      sessionStorage.setItem(
+        'shadow321_metadata',
+        JSON.stringify({
+          title: draft.systemTitle,
+          description: draft.body,
+          tags: draft.tags,
+          linkedQuestId: draft.linkedQuestId,
+          source321FullText: draft.source321FullText,
+          moveType: draft.moveType ?? undefined,
+          systemTitle: draft.systemTitle,
+          barDraftFrom321: true,
+        })
+      )
+      sessionStorage.setItem(
+        'shadow321_session',
+        JSON.stringify({
+          phase3Snapshot: draft.phase3Snapshot,
+          phase2Snapshot: draft.phase2Snapshot,
+          shadow321Name: draft.shadow321Name,
+        })
+      )
     }
-    import('sonner').then(({ toast }) => toast.success('Taking you to create your BAR. Your 321 metadata is ready.'))
-    clearSession()
-    router.push('/create-bar?from321=1') // intermediate: BAR not yet created; /create-bar picks up sessionStorage
+    import('sonner').then(({ toast }) => toast.success('Taking you to create your BAR. Your 321 draft is ready.'))
+    // Keep shadow321_progress until BAR is saved or user discards — reversible return to artifact step
+    router.push('/create-bar?from321=1')
   }
 
   function handleDiscoverDaemon() {

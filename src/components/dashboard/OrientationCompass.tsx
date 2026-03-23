@@ -21,6 +21,12 @@ type CompassProps = {
   activeQuestCount: number
   /** True if player profile is incomplete (no nation/archetype) */
   isSetupIncomplete: boolean
+  /**
+   * True if the player has completed their daily check-in.
+   * When false, the compass shows a ritual gate pre-prompt.
+   * G2: check-in wizard and compass form a single ritual gate.
+   */
+  hasCheckedIn?: boolean
 }
 
 type CompassSuggestion = {
@@ -109,28 +115,40 @@ function deriveSuggestion(props: CompassProps): CompassSuggestion {
 }
 
 export function OrientationCompass(props: CompassProps) {
+  const { hasCheckedIn = true } = props
   const s = deriveSuggestion(props)
 
+  // Ritual gate pre-prompt: player hasn't checked in yet for today.
+  // The check-in button lives in DashboardHeader above this component.
+  const showRitualGate = !hasCheckedIn && !props.isFirstSession && !props.isSetupIncomplete
+
   return (
-    <div className={`rounded-xl border ${s.borderClass} bg-zinc-900/30 px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
-      <div className="space-y-0.5 min-w-0">
-        <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">Current move</p>
-        <p className={`text-sm font-bold ${s.accentClass}`}>{s.move}</p>
-        <p className="text-xs text-zinc-500 leading-snug max-w-sm">{s.tagline}</p>
-      </div>
-      <div className="flex items-center gap-3 shrink-0 flex-wrap">
-        <Link
-          href={s.href}
-          className={`text-xs font-bold px-4 py-2 rounded-lg border ${s.borderClass} ${s.accentClass} hover:bg-zinc-800 transition-colors whitespace-nowrap`}
-        >
-          {s.action} →
-        </Link>
-        <Link
-          href="/wiki/handbook"
-          className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors whitespace-nowrap"
-        >
-          Handbook
-        </Link>
+    <div className="space-y-1.5">
+      {showRitualGate && (
+        <p className="text-[11px] text-zinc-600 px-1">
+          ↑ Check in above to orient your session — the compass updates once your field is active.
+        </p>
+      )}
+      <div className={`rounded-xl border ${s.borderClass} ${showRitualGate ? 'opacity-60' : ''} bg-zinc-900/30 px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
+        <div className="space-y-0.5 min-w-0">
+          <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">Current move</p>
+          <p className={`text-sm font-bold ${s.accentClass}`}>{s.move}</p>
+          <p className="text-xs text-zinc-500 leading-snug max-w-sm">{s.tagline}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <Link
+            href={s.href}
+            className={`text-xs font-bold px-4 py-2 rounded-lg border ${s.borderClass} ${s.accentClass} hover:bg-zinc-800 transition-colors whitespace-nowrap`}
+          >
+            {s.action} →
+          </Link>
+          <Link
+            href="/wiki/handbook"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors whitespace-nowrap"
+          >
+            Handbook
+          </Link>
+        </div>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { appendCyoaArtifactBar } from '@/actions/cyoa-artifact-ledger'
 
 const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
 type MoveType = (typeof MOVE_TYPES)[number]
@@ -88,6 +89,14 @@ export async function createBarFromMoveChoice(input: {
     revalidatePath('/', 'layout')
     revalidatePath('/bars')
     revalidatePath('/hand')
+
+    const blueprintKey = `move_${input.moveType}`
+    await appendCyoaArtifactBar(input.adventureId, {
+      barId: bar.id,
+      passageNodeId: input.passageNodeId,
+      source: 'move_choice',
+      blueprintKey,
+    }).catch(() => {})
 
     return { success: true, barId: bar.id }
   } catch (e) {

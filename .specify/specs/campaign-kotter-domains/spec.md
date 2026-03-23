@@ -128,6 +128,7 @@ Document recommended thresholds for advancing stage (donation % + backlog items 
 
 ## Reference
 
+- Hub → spoke CYOA → **card landings**, I Ching order per period: [campaign-hub-spoke-landing-architecture/spec.md](../campaign-hub-spoke-landing-architecture/spec.md)
 - Cursor plan: [campaign_kotter_structure_96615870.plan.md](.cursor/plans/campaign_kotter_structure_96615870.plan.md)
 - Spec Kit Translator: [.agents/skills/spec-kit-translator/SKILL.md](../../.agents/skills/spec-kit-translator/SKILL.md)
 - Allyship domains spec: [bruised-banana-allyship-domains/spec.md](../bruised-banana-allyship-domains/spec.md)

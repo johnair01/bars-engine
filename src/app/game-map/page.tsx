@@ -13,7 +13,7 @@ const ZONES = [
   {
     label: 'Campaign Lobby',
     description: '8 I Ching portals — choose your path into the campaign.',
-    href: '/campaign/lobby?ref=bruised-banana',
+    href: '/campaign/hub?ref=bruised-banana',
     accent: 'border-purple-600/50 hover:border-purple-500/60',
     tag: 'text-purple-400',
   },

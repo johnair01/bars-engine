@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { appendCyoaArtifactBar } from '@/actions/cyoa-artifact-ledger'
 
 export type EmitBarFromPassageResult =
   | { success: true; barId: string }
@@ -19,6 +20,7 @@ export async function emitBarFromPassage(input: {
   adventureId: string
   passageNodeId: string
   campaignRef?: string | null
+  blueprintKey?: string
 }): Promise<EmitBarFromPassageResult> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -63,6 +65,15 @@ export async function emitBarFromPassage(input: {
     revalidatePath('/', 'layout')
     revalidatePath('/bars')
     revalidatePath('/hand')
+
+    await appendCyoaArtifactBar(input.adventureId, {
+      barId: bar.id,
+      passageNodeId: input.passageNodeId,
+      source: 'passage_emit',
+      blueprintKey: input.blueprintKey,
+    }).catch(() => {
+      /* ledger is best-effort; BAR already created */
+    })
 
     return { success: true, barId: bar.id }
   } catch (e) {

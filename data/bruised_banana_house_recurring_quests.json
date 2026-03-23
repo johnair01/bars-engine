@@ -1,0 +1,31 @@
+{
+  "quests": [
+    {
+      "id": "bb-house-daily-round",
+      "title": "Daily house round (10 min)",
+      "description": "Walk the shared spaces once: dishes, trash, surfaces, bathroom check. Note anything that wants attention next.",
+      "successCondition": "Round completed; one honest note added if something's off.",
+      "moveType": "cleanUp",
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "cadence": "daily"
+    },
+    {
+      "id": "bb-house-weekly-systems",
+      "title": "Weekly systems touch",
+      "description": "One small systems pass: supplies, calendar, who's hosting what, or a shared doc updated.",
+      "successCondition": "One concrete systems action logged.",
+      "moveType": "growUp",
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "cadence": "weekly"
+    },
+    {
+      "id": "bb-house-monthly-deep",
+      "title": "Monthly deeper clean / repair",
+      "description": "Schedule or complete one deeper task: fridge, floors, a repair, or a room reset.",
+      "successCondition": "Task scheduled or done.",
+      "moveType": "showUp",
+      "allyshipDomain": "DIRECT_ACTION",
+      "cadence": "monthly"
+    }
+  ]
+}

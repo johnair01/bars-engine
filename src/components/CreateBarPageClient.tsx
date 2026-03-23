@@ -18,7 +18,6 @@ export function CreateBarPageClient({ setup, from321 }: { setup?: boolean; from3
                     const parsed = JSON.parse(raw) as CreateBarPrefill
                     if (parsed && typeof parsed === 'object') {
                         setPrefill(parsed)
-                        sessionStorage.removeItem(STORAGE_KEY)
                     }
                 }
                 const sessionRaw = sessionStorage.getItem(STORAGE_SESSION_KEY)
@@ -26,7 +25,6 @@ export function CreateBarPageClient({ setup, from321 }: { setup?: boolean; from3
                     const session = JSON.parse(sessionRaw) as CreateBar321Session
                     if (session && typeof session === 'object') {
                         setSession321(session)
-                        sessionStorage.removeItem(STORAGE_SESSION_KEY)
                     }
                 }
             } catch {
@@ -35,5 +33,12 @@ export function CreateBarPageClient({ setup, from321 }: { setup?: boolean; from3
         }
     }, [from321])
 
-    return <CreateBarForm setup={setup} prefill={prefill} session321={session321} />
+    return (
+        <CreateBarForm
+            setup={setup}
+            prefill={prefill}
+            session321={session321}
+            quickFrom321={!!from321}
+        />
+    )
 }

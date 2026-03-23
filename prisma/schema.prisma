@@ -172,6 +172,12 @@ model Player {
   tradesInitiated              TradeTransaction[] @relation("TradeInitiator")
   tradesAsAgent                TradeTransaction[] @relation("TradeAgent")
   starterBARsGranted           StarterBAR[]
+  // WMC — World Map Campaign Deck
+  deckCardsAuthored            CampaignDeckCard[]        @relation("DeckCardAuthor")
+  spokeSessions                SpokeSession[]            @relation("SpokeSessions")
+  milestonesProposed           CampaignMilestone[]       @relation("MilestoneProposals")
+  milestonesApproved           CampaignMilestone[]       @relation("MilestoneApprovals")
+  milestoneContributions       MilestoneContribution[]   @relation("MilestoneContributions")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -273,7 +279,7 @@ model CustomBar {
   allowedTrigrams      String?
   inputs               String         @default("[]")
   moveType             String?
-  status               String         @default("active")
+  status               String         @default("active") // seed | draft | active | archived — seed = emitted from spoke CYOA, needs tending
   archivedAt           DateTime?      // BAR UI Overhaul: soft archive (recoverable)
   mergedIntoId         String?        // when set, this BAR was merged into another
   mergedFromIds        String?        // JSON array of source BAR ids (when this is the merged result)
@@ -330,6 +336,7 @@ model CustomBar {
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization   String?
   isExemplar           Boolean   @default(false) // marked by GM faces for cultural substrate distillation pipeline
+  spokeSessionId       String?   // FK → SpokeSession; set when BAR seed was emitted from a spoke CYOA (status=seed)
   invite               Invite?   @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
   promotedInstance     Instance? @relation("CampaignKernel") // Instance.kernelBarId points here when promoted
   invitesAsStarterQuest Invite[] @relation("InviteStarterQuest")
@@ -373,6 +380,7 @@ model CustomBar {
   carriedWeightResults  CarriedWeight[]     @relation("CarriedWeightBar")
   roleOrientations      Role[]              @relation("RoleOrientationTemplate")
   playerRoleGrants      PlayerRole[]        @relation("PlayerRoleGrantBar")
+  spokeSession          SpokeSession?       @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
 
   @@map("custom_bars")
 }
@@ -717,19 +725,26 @@ model BarSocialLink {
 }
 
 model BarResponse {
-  id           String   @id @default(cuid())
-  barId        String
-  responderId  String
-  responseType String   // join | curious | witness | offer_help | decline | cant_help | appreciate
-  message      String?  @db.Text
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  barId            String
+  responderId      String
+  responseType     String   // join | curious | witness | offer_help | decline | cant_help | appreciate
+  intent           String?  // take_quest | accountable | consult | witness | observe | offer_help | join | decline
+  raciRole         String?  // Responsible | Accountable | Consulted | Informed (derived from intent)
+  parentResponseId String?  // self-referential for depth-1 thread replies
+  depth            Int      @default(0) // 0 = direct BAR response; 1 = reply to response (max depth 2)
+  message          String?  @db.Text
+  createdAt        DateTime @default(now())
 
-  bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
-  responder Player    @relation(fields: [responderId], references: [id], onDelete: Cascade)
+  bar            CustomBar    @relation(fields: [barId], references: [id], onDelete: Cascade)
+  responder      Player       @relation(fields: [responderId], references: [id], onDelete: Cascade)
+  parentResponse BarResponse? @relation("BarResponseThread", fields: [parentResponseId], references: [id], onDelete: Cascade)
+  replies        BarResponse[] @relation("BarResponseThread")
 
   @@unique([barId, responderId])
   @@index([barId])
   @@index([responderId])
+  @@index([parentResponseId])
   @@map("bar_responses")
 }
 
@@ -1379,6 +1394,8 @@ model Instance {
   portalAdventure   Adventure?  @relation("InstancePortalAdventure", fields: [portalAdventureId], references: [id], onDelete: SetNull)
   /// v1 JSON: { v, kotterStage, spokes: [{ hexagramId, changingLines, primaryFace }], updatedAt } — one draw per Kotter stage (campaign hub)
   campaignHubState  Json?
+  /// WMC admin Deck CYOA wizard — last applied intake JSON (DeckIntakeV1) for reproducible deck generation
+  deckAuthoringIntake Json?
   schoolsAdventureId String?    // FK to Adventure: 6-face schools CYOA (Grow Up from room)
   schoolsAdventure   Adventure?  @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
   invites            Invite[]
@@ -1386,6 +1403,7 @@ model Instance {
   barsCollapsedFromInstance CustomBar[] @relation("BarCollapsedFromInstance")
   barShareExternals  BarShareExternal[]
   questThreads       QuestThread[]
+  campaignPeriods    CampaignPeriod[]   @relation("CampaignPeriods")
 
   @@map("instances")
 }
@@ -2731,4 +2749,145 @@ model StarterBAR {
   @@unique([playerId, roomId])
   @@index([playerId])
   @@map("starter_bars")
+}
+
+// ──────────────────────────────────────────────────────────────
+// World Map — Campaign Deck, Periods, Portals, Spoke Sessions,
+//             Milestones, Milestone Contributions  (WMC)
+// ──────────────────────────────────────────────────────────────
+
+/// Creator-authored deck card. One per hexagram slot a campaign author wants to use.
+/// Cards are the source pool; they become CampaignPortals when a period is drawn.
+model CampaignDeckCard {
+  id                 String   @id @default(cuid())
+  campaignRef        String   // e.g. bruised-banana
+  hexagramId         Int      // 1–64
+  theme              String?  // short portal label
+  domain             String?  // GATHERING_RESOURCES | DIRECT_ACTION | etc.
+  cyoaAdventureId    String?  // FK → Adventure (resolved at portal hydration)
+  questId            String?  // FK → CustomBar (the "Raise the Urgency" quest for this portal)
+  createdByPlayerId  String
+  status             String   @default("draft") // draft | active
+
+  createdAt  DateTime @default(now())
+
+  createdBy  Player          @relation("DeckCardAuthor", fields: [createdByPlayerId], references: [id], onDelete: Cascade)
+  portals    CampaignPortal[]
+
+  @@unique([campaignRef, hexagramId]) // one card per hexagram per campaign
+  @@index([campaignRef, status])
+  @@map("campaign_deck_cards")
+}
+
+/// A campaign period — 8 deck cards drawn, no repeats across periods.
+/// Period transition is manual (admin triggers drawPeriod).
+model CampaignPeriod {
+  id            String    @id @default(cuid())
+  campaignRef   String
+  instanceId    String?
+  periodNumber  Int       // sequential, starts at 1
+  kotterStage   String?   // urgency | coalition | vision | empower | wins | sustain | culture
+  status        String    @default("active") // active | closed
+  drawnCardIds  String    @default("[]") // JSON array of CampaignDeckCard ids (8 items)
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  createdAt     DateTime  @default(now())
+
+  instance  Instance?       @relation("CampaignPeriods", fields: [instanceId], references: [id], onDelete: SetNull)
+  portals   CampaignPortal[]
+
+  @@unique([campaignRef, periodNumber])
+  @@index([campaignRef, status])
+  @@map("campaign_periods")
+}
+
+/// A physical portal entry on the campaign hub page.
+/// Created (8 per period) when an admin calls drawPeriod.
+model CampaignPortal {
+  id               String   @id @default(cuid())
+  periodId         String
+  campaignRef      String
+  slotIndex        Int      // 0–7
+  hexagramId       Int?
+  deckCardId       String?
+  cyoaAdventureId  String?  // resolved from deck card
+  questId          String?  // "Raise the Urgency" quest for this portal
+  completionCount  Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  period    CampaignPeriod    @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  deckCard  CampaignDeckCard? @relation(fields: [deckCardId], references: [id], onDelete: SetNull)
+  sessions  SpokeSession[]
+
+  @@unique([periodId, slotIndex])
+  @@index([campaignRef, periodId])
+  @@map("campaign_portals")
+}
+
+/// A player's journey through one portal's CYOA spoke.
+/// Replaces the retired gameboard completion surface for campaign-spoke play.
+model SpokeSession {
+  id               String    @id @default(cuid())
+  portalId         String
+  playerId         String
+  campaignRef      String
+  moveType         String?   // wakeUp | cleanUp | growUp | showUp
+  gmFace           String?   // shaman | regent | challenger | architect | diplomat | sage
+  status           String    @default("in_progress") // in_progress | completed | abandoned
+  barSeedIds       String    @default("[]") // JSON array of CustomBar ids emitted
+  generatedQuestId String?   // FK → PlayerQuest (personal quest spawned at spoke end)
+  moveChosenAt     DateTime?
+  faceChosenAt     DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  portal    CampaignPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  player    Player         @relation("SpokeSessions", fields: [playerId], references: [id], onDelete: Cascade)
+  barSeeds  CustomBar[]    @relation("SpokeBarSeeds")
+
+  @@index([portalId, playerId])
+  @@index([playerId, status])
+  @@map("spoke_sessions")
+}
+
+/// A public campaign goal, player-proposed and admin-approved.
+/// Tracks aggregate progress toward a named outcome.
+model CampaignMilestone {
+  id                  String    @id @default(cuid())
+  campaignRef         String
+  title               String
+  description         String?   @db.Text
+  targetValue         Float?    // e.g. dollar amount for donation milestones
+  currentValue        Float     @default(0)
+  status              String    @default("proposed") // proposed | active | complete
+  proposedByPlayerId  String
+  approvedByPlayerId  String?
+  approvedAt          DateTime?
+  createdAt           DateTime  @default(now())
+
+  proposedBy     Player                  @relation("MilestoneProposals", fields: [proposedByPlayerId], references: [id], onDelete: Cascade)
+  approvedBy     Player?                 @relation("MilestoneApprovals", fields: [approvedByPlayerId], references: [id], onDelete: SetNull)
+  contributions  MilestoneContribution[]
+
+  @@index([campaignRef, status])
+  @@map("campaign_milestones")
+}
+
+/// A contribution toward a CampaignMilestone (donation, pledge, action).
+model MilestoneContribution {
+  id            String   @id @default(cuid())
+  milestoneId   String
+  playerId      String
+  barId         String?  // FK → CustomBar (the tended BAR seed linked to this contribution)
+  donationRef   String?  // external payment/donation reference
+  value         Float    // contribution weight or dollar amount
+  note          String?
+  contributedAt DateTime @default(now())
+
+  milestone  CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  player     Player            @relation("MilestoneContributions", fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([milestoneId])
+  @@index([playerId])
+  @@map("milestone_contributions")
 }

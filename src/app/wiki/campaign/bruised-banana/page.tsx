@@ -25,6 +25,16 @@ export default function BruisedBananaCampaignPage() {
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Progress & milestones</h2>
+        <p className="text-zinc-300 text-sm leading-relaxed">
+          When you&apos;re logged in, the dashboard and campaign hub show{' '}
+          <strong className="text-zinc-200">Kotter stage</strong>, fundraising progress (when set), and{' '}
+          <strong className="text-zinc-200">suggested next steps</strong> (onboarding → vault space → gameboard → hub).
+          Developer reference: <code className="text-xs text-zinc-500">docs/BRUISED_BANANA_PROGRESS.md</code>.
+        </p>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-400">The Fundraiser</h2>
         <p className="text-zinc-300 text-sm leading-relaxed">
           The Bruised Banana Fundraiser supports the house through donations. The campaign runs on quests, BARs,
@@ -48,6 +58,13 @@ export default function BruisedBananaCampaignPage() {
         <p className="text-zinc-300 text-sm leading-relaxed">
           The house state is an emotional and coordination focus. Wendell, Eddy, and JJ are house admins and players.
           The process of developing this system is part of the lore — joining the story means contributing to the house.
+        </p>
+        <p className="text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/80 pt-3">
+          <strong className="text-zinc-300">Engine:</strong> a dedicated coordination instance{' '}
+          <code className="text-xs text-zinc-500">bruised-banana-house</code> links to the main residency instance.{' '}
+          <Link href="/wiki/campaign/bruised-banana/house" className="text-emerald-400 hover:text-emerald-300">
+            House instance (operators) →
+          </Link>
         </p>
       </section>
 

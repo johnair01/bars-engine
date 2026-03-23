@@ -27,6 +27,7 @@ import { getTodayCharge, getChargeArchive } from '@/actions/charge-capture'
 import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
 import { getTodayCheckIn } from '@/actions/alchemy'
 import { SetupRequired } from '@/components/SetupRequired'
+import { DatabaseUnreachable } from '@/components/DatabaseUnreachable'
 import { listMyCampaignSeeds } from '@/actions/campaign-bar'
 import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
 import { getCampaignsForPlayer } from '@/actions/campaign-overview'
@@ -36,6 +37,17 @@ import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
 import { DiscoverStrip } from '@/components/dashboard/DiscoverStrip'
 import { getLibraryQuestsForMove } from '@/actions/library-discover'
 import { NationProvider } from '@/lib/ui/nation-provider'
+import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
+import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
+import { derivePlayerMoveContext } from '@/lib/player-move-context'
+
+function isPrismaConnectionError(err: unknown): boolean {
+  const e = err as { code?: string; name?: string; message?: string }
+  if (e?.code === 'P1001' || e?.code === 'P1000') return true
+  if (e?.name === 'PrismaClientInitializationError') return true
+  if (typeof e?.message === 'string' && e.message.includes("Can't reach database server")) return true
+  return false
+}
 
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
@@ -159,6 +171,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     if (code === 'P2021') {
       return <SetupRequired />
     }
+    if (isPrismaConnectionError(err)) {
+      return <DatabaseUnreachable />
+    }
     // Fallback for temporary schema drift (different columns)
     try {
       player = await db.player.findUnique({
@@ -188,7 +203,10 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           },
         },
       })
-    } catch {
+    } catch (innerErr: unknown) {
+      if (isPrismaConnectionError(innerErr) || isPrismaConnectionError(err)) {
+        return <DatabaseUnreachable />
+      }
       throw err
     }
   }
@@ -385,30 +403,31 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   // Campaigns where player is leader/owner (Phase 3: dashboard overview)
   const campaignsResponsible = await getCampaignsForPlayer(playerId)
 
-  // Derive completed move types for flow checking
-  const completedMoveTypes = Array.from(new Set(
-    player.quests
-      .filter(q => q.status === 'completed' && q.quest.moveType)
-      .map(q => q.quest.moveType as string)
-  ))
-
-  // Orientation compass inputs
-  const compassProps = {
-    completedMoveTypes,
-    isFirstSession: player.quests.length === 0,
-    hasChargeToday: !!todayCharge,
-    activeQuestCount: activeBars.length,
-    isSetupIncomplete: !player.nationId || !player.archetypeId,
+  let milestoneGuidance = null as Awaited<ReturnType<typeof getCampaignMilestoneGuidance>>
+  try {
+    milestoneGuidance = await getCampaignMilestoneGuidance(playerId)
+  } catch {
+    milestoneGuidance = null
   }
 
-  // Derive recommended move type for library discover strip
-  const recommendedMoveType = (() => {
-    if (!player.nationId || !player.archetypeId || player.quests.length === 0) return 'wakeUp'
-    if (!!todayCharge && !completedMoveTypes.includes('cleanUp')) return 'cleanUp'
-    if (completedMoveTypes.includes('cleanUp') && !completedMoveTypes.includes('growUp')) return 'growUp'
-    if (activeBars.length > 0) return 'showUp'
-    return 'wakeUp'
-  })()
+  // Derive move context via shared utility (G17 — single source of truth)
+  const moveCtx = derivePlayerMoveContext({
+    quests: player.quests,
+    hasChargeToday: !!todayCharge,
+    activeQuestCount: activeBars.length,
+    nationId: player.nationId,
+    archetypeId: player.archetypeId,
+  })
+
+  const { completedMoveTypes, recommendedMoveType } = moveCtx
+
+  const compassProps = {
+    completedMoveTypes: moveCtx.completedMoveTypes,
+    isFirstSession: moveCtx.isFirstSession,
+    hasChargeToday: moveCtx.hasChargeToday,
+    activeQuestCount: moveCtx.activeQuestCount,
+    isSetupIncomplete: moveCtx.isSetupIncomplete,
+  }
 
   const discoverQuests = await getLibraryQuestsForMove(recommendedMoveType)
 
@@ -446,9 +465,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     <NationProvider element={player.nation?.element ?? null} archetypeName={player.archetype?.name ?? null}>
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-4 sm:p-8 md:p-12 space-y-8 sm:space-y-12 max-w-4xl mx-auto">
 
-      {/* 1. HEADER & IDENTITY */}
+      {/* 1. HEADER & IDENTITY — compass directly after identity (PMI G1 / PHOS T5.1) */}
       <header className="space-y-6">
-        <p className="text-xs text-zinc-600">Check in · capture what&apos;s charged · follow the compass to your next move</p>
         <DashboardHeader
           player={{
             name: player.name,
@@ -469,6 +487,18 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           questCount={completedBars.length}
         />
 
+        {/* 2. ORIENTATION COMPASS — first structural block after identity; governs the session (PMI G1) */}
+        <OrientationCompass {...compassProps} hasCheckedIn={!!todayCheckIn} />
+        <DiscoverStrip moveType={recommendedMoveType} quests={discoverQuests} />
+
+        <p className="text-xs text-zinc-600">
+          Check in · capture what&apos;s charged · follow the compass to your next move ·{' '}
+          <Link href="/wiki/handbook" className="text-zinc-500 hover:text-zinc-300 underline-offset-2 hover:underline">
+            Player handbook
+          </Link>
+        </p>
+
+        {/* Campaign leader signals (high-priority, before social) */}
         {myCampaignSeeds.some((s) => s.isComplete && !s.promotedInstance) && (
           <CampaignSeedReadyCard seeds={myCampaignSeeds} />
         )}
@@ -476,21 +506,19 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <CampaignsResponsibleSection campaigns={campaignsResponsible} />
         )}
 
-        {/* Appreciations received */}
-        {appreciations.length > 0 && (
-          <AppreciationsReceived items={appreciations} maxItems={5} />
-        )}
-
         {/* Today's Charge + Archive */}
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
         <ThroughputLanesSection activeInstanceId={activeInstance?.id ?? null} />
 
-        {/* Orientation Compass — where are you in your journey */}
-        <OrientationCompass {...compassProps} />
+        {milestoneGuidance && (
+          <CampaignMilestoneStrip data={milestoneGuidance} variant="dashboard" />
+        )}
 
-        {/* Library Discover strip — 1-2 quests from books matching current move */}
-        <DiscoverStrip moveType={recommendedMoveType} quests={discoverQuests} />
+        {/* Appreciations received — social layer after self-orientation (G5) */}
+        {appreciations.length > 0 && (
+          <AppreciationsReceived items={appreciations} maxItems={5} />
+        )}
 
         {/* Player Intention */}
         {intention && (

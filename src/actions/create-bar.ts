@@ -36,8 +36,19 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         return { error: 'Not logged in' }
     }
 
+    const quickFrom321 = (formData.get('quickFrom321') as string) === 'true'
+
     // Optional 321 metadata import (pre-fill when "Import from 321" chosen)
-    type Metadata321 = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
+    type Metadata321 = {
+        title?: string
+        description?: string
+        tags?: string[]
+        linkedQuestId?: string
+        systemTitle?: string
+        source321FullText?: string
+        barDraftFrom321?: boolean
+        moveType?: string
+    }
     let metadata321: Metadata321 | null = null
     const metadata321Raw = formData.get('metadata321') as string | null
     if (metadata321Raw) {
@@ -51,6 +62,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
 
     let title = (formData.get('title') as string || '').trim()
     if (!title && metadata321?.title) title = metadata321.title
+    if (!title && metadata321?.systemTitle) title = metadata321.systemTitle.trim()
     let description = (formData.get('description') as string || '').trim()
     if (!description && metadata321?.description) description = metadata321.description
     const inputType = formData.get('inputType') as string || 'text'
@@ -58,7 +70,8 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     const requestedVisibility = formData.get('visibility') as string || 'private'
     let effectiveVisibility: 'public' | 'private' = requestedVisibility === 'public' ? 'public' : 'private'
     const targetPlayerId = formData.get('targetPlayerId') as string || null
-    let moveType = formData.get('moveType') as string || null // wakeUp, cleanUp, growUp, showUp
+    let moveType = formData.get('moveType') as string | null // wakeUp, cleanUp, growUp, showUp
+    if (!moveType && metadata321?.moveType) moveType = metadata321.moveType
     let storyContent = formData.get('storyContent') as string || null
     const storyMood = formData.get('storyMood') as string || null
     const applyFirstAidLens = (formData.get('applyFirstAidLens') as string) === 'true'
@@ -68,7 +81,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     if (metadata321?.tags?.length) tags = [...new Set([...tags, ...metadata321.tags])].slice(0, 10)
     const allowedNations = formData.get('allowedNations') as string || null
     const allowedTrigrams = formData.get('allowedTrigrams') as string || null
-    const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
+    let allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
     let campaignRef = (formData.get('campaignRef') as string)?.trim() || null
     const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
     const sceneGridInstanceId = (formData.get('sceneGridInstanceId') as string)?.trim() || ''
@@ -101,10 +114,10 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         }
     }
 
-    // Extract nation/archetype from 321 identityFreeText when present
+    // Extract nation/archetype from 321 identityFreeText when present (skip in quick-from-321 — gating is opt-in Advanced)
     let extractedAllowedNations = allowedNations
     let extractedAllowedTrigrams = allowedTrigrams
-    if (phase3Snapshot) {
+    if (phase3Snapshot && !quickFrom321) {
       try {
         const phase3 = JSON.parse(phase3Snapshot) as { identityFreeText?: string }
         if (phase3?.identityFreeText?.trim()) {
@@ -119,6 +132,10 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
       } catch {
         /* ignore parse errors */
       }
+    }
+
+    if (quickFrom321 && !allyshipDomain) {
+        return { error: 'Choose an allyship domain — it shows where this work lives.' }
     }
 
     if (!title) {
@@ -201,6 +218,15 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
                 tags,
                 requestId,
                 createdAt: new Date().toISOString(),
+                ...(metadata321?.source321FullText
+                    ? {
+                          barFrom321: {
+                              source321FullText: metadata321.source321FullText,
+                              systemTitle: metadata321.systemTitle ?? null,
+                              quickFrom321,
+                          },
+                      }
+                    : {}),
             },
         }
         if (sceneGridActive) {

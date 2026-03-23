@@ -6,6 +6,8 @@ import { slugifyName } from '@/lib/avatar-utils'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { resolveTemplates } from '@/lib/template-resolver'
+import { finalizeAdventureNodePayload } from '@/lib/cyoa/filter-choices'
+import { getFaceMoveContent, moveFromEmitNodeId, EMIT_NODE_IDS } from '@/lib/cyoa/face-move-passages'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -484,6 +486,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const ref = searchParams.get('ref')
     const preview = searchParams.get('preview')
+    const portalFace = searchParams.get('face') ?? undefined
     let allowDraft = false
     if (preview === '1') {
       const player = await getCurrentPlayer()
@@ -492,17 +495,20 @@ export async function GET(
     }
 
     try {
+        const sessionPlayer = await getCurrentPlayer()
+        const isAuthed = !!sessionPlayer
+
         // Bruised Banana: prefer Passages (editable) when slug=bruised-banana
         if (slug === 'bruised-banana') {
             const bbNode = await getBruisedBananaFromPassages(nodeId, allowDraft)
-            if (bbNode) return NextResponse.json(bbNode)
+            if (bbNode) return NextResponse.json(finalizeAdventureNodePayload(bbNode, isAuthed))
             return NextResponse.json({ error: 'Node not found' }, { status: 404 })
         }
 
         // Legacy: ref=bruised-banana with wake-up slug (campaign may not yet pass bruised-banana)
         if (ref === 'bruised-banana' && slug === 'wake-up') {
             const bbNode = await getBruisedBananaNode(nodeId)
-            if (bbNode) return NextResponse.json(bbNode)
+            if (bbNode) return NextResponse.json(finalizeAdventureNodePayload(bbNode, isAuthed))
         }
 
         const adventure = await db.adventure.findUnique({
@@ -622,15 +628,53 @@ export async function GET(
             }
         }
 
-        const metadata = passage.metadata as { actionType?: string; castIChingTargetId?: string; moveType?: string } | null
-        return NextResponse.json({
-            id: passage.nodeId,
-            text: passage.text,
-            choices,
-            linkedQuestId: passage.linkedQuestId ?? undefined,
-            isCompletionPassage: isCompletionPassage || undefined,
-            metadata: metadata ?? undefined,
-        })
+        const metadata = passage.metadata as {
+            actionType?: string
+            castIChingTargetId?: string
+            moveType?: string
+            beat?: string
+        } | null
+
+        // Face × move override: inject face-specific text + barTemplate for emit nodes
+        const portalMove = moveFromEmitNodeId(nodeId)
+        if (portalMove && portalFace) {
+            const faceMoveContent = getFaceMoveContent(portalFace, portalMove)
+            if (faceMoveContent) {
+                return NextResponse.json(
+                    finalizeAdventureNodePayload(
+                        {
+                            id: passage.nodeId,
+                            text: faceMoveContent.passage,
+                            choices: [],
+                            metadata: {
+                                actionType: 'bar_emit',
+                                blueprintKey: faceMoveContent.blueprintKey,
+                                barTemplate: {
+                                    defaultTitle: faceMoveContent.barTitle,
+                                    defaultDescription: faceMoveContent.barPrompt,
+                                },
+                                nextTargetId: EMIT_NODE_IDS.hubReturn,
+                            },
+                        },
+                        isAuthed
+                    )
+                )
+            }
+        }
+
+        return NextResponse.json(
+            finalizeAdventureNodePayload(
+                {
+                    id: passage.nodeId,
+                    text: passage.text,
+                    choices,
+                    linkedQuestId: passage.linkedQuestId ?? undefined,
+                    isCompletionPassage: isCompletionPassage || undefined,
+                    metadata: metadata ?? undefined,
+                },
+                isAuthed
+            )
+        )
     } catch (e) {
         return NextResponse.json({ error: 'Failed to load node' }, { status: 500 })
     }

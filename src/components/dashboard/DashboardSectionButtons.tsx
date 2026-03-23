@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ExploreModal } from './ExploreModal'
 import { CharacterModal } from './CharacterModal'
 import { CampaignModal } from './CampaignModal'
+import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
 
 type CampaignEntryData = {
     nation: { id: string; name: string } | null
@@ -20,7 +21,14 @@ type DashboardSectionButtonsProps = {
     }
     globalStage: number
     campaignEntry?: CampaignEntryData | null
-    activeInstance?: { name: string; targetDescription?: string; isEventMode?: boolean; stripeOneTimeUrl?: string } | null
+    activeInstance?: {
+        name: string
+        targetDescription?: string
+        isEventMode?: boolean
+        stripeOneTimeUrl?: string
+        campaignRef?: string | null
+    } | null
+    milestoneGuidance?: CampaignMilestoneGuidance | null
     eventGoal?: number
     eventCurrent?: number
     eventPct?: number
@@ -33,6 +41,7 @@ export function DashboardSectionButtons({
     globalStage,
     campaignEntry,
     activeInstance,
+    milestoneGuidance = null,
     eventGoal = 0,
     eventCurrent = 0,
     eventPct = 0,
@@ -74,6 +83,7 @@ export function DashboardSectionButtons({
                 globalStage={globalStage}
                 campaignEntry={campaignEntry}
                 activeInstance={activeInstance}
+                milestoneGuidance={milestoneGuidance}
                 eventGoal={eventGoal}
                 eventCurrent={eventCurrent}
                 eventPct={eventPct}

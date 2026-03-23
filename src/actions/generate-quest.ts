@@ -16,7 +16,11 @@ import type { IChingCastContext } from '@/lib/iching-cast-context'
 
 const ELEMENT_KEYS: ElementKey[] = ['metal', 'water', 'wood', 'fire', 'earth']
 
-export async function generateQuestFromReading(hexagramId: number, castContext?: IChingCastContext | null) {
+export async function generateQuestFromReading(
+    hexagramId: number,
+    castContext?: IChingCastContext | null,
+    campaignContext?: { campaignRef?: string; campaignGoal?: string }
+) {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -24,7 +28,7 @@ export async function generateQuestFromReading(hexagramId: number, castContext?:
         return { error: 'Not logged in' }
     }
 
-    const result = await generateGrammaticQuestFromReading(playerId, hexagramId, castContext ?? null)
+    const result = await generateGrammaticQuestFromReading(playerId, hexagramId, castContext ?? null, campaignContext)
 
     // Complete orientation-quest-3 regardless of result
     const threadQuest = await db.threadQuest.findFirst({
@@ -62,7 +66,8 @@ export async function generateQuestFromReading(hexagramId: number, castContext?:
 export async function generateGrammaticQuestFromReading(
     playerId: string,
     hexagramId: number,
-    castContext?: IChingCastContext | null
+    castContext?: IChingCastContext | null,
+    campaignContext?: { campaignRef?: string; campaignGoal?: string }
 ): Promise<
     | { success: true; quest: { title: string; description?: string }; adventureId?: string; questId?: string; threadId?: string }
     | { error: string }
@@ -137,7 +142,8 @@ export async function generateGrammaticQuestFromReading(
             compileResult.packet,
             playerId,
             hexagram.name,
-            hexagramId
+            hexagramId,
+            campaignContext
         )
 
         if (!publishResult.success) {

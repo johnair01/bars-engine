@@ -4,6 +4,8 @@ import { useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { CampaignStageCard } from './CampaignStageCard'
 import { CampaignEntryBanner } from '@/components/campaign/CampaignEntryBanner'
+import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
+import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
 
 type CampaignEntryData = {
     nation: { id: string; name: string } | null
@@ -23,6 +25,8 @@ type CampaignModalProps = {
     eventPct?: number
     formattedEventCurrent?: string
     formattedEventGoal?: string
+    /** BBMT — when parent fetches getCampaignMilestoneGuidance */
+    milestoneGuidance?: CampaignMilestoneGuidance | null
 }
 
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
@@ -38,6 +42,7 @@ export function CampaignModal({
     eventPct = 0,
     formattedEventCurrent = '$0',
     formattedEventGoal = '$0',
+    milestoneGuidance,
 }: CampaignModalProps) {
     const handleEscape = useCallback(
         (e: KeyboardEvent) => {
@@ -62,7 +67,7 @@ export function CampaignModal({
     const hasCampaignEntry = campaignEntry && (campaignEntry.nation || campaignEntry.archetype || campaignEntry.starterQuests.length > 0)
     const hasLiveInstance = activeInstance?.isEventMode
     const campaignRef = activeInstance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
-    const lobbyHref = `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`
+    const hubHref = `/campaign/hub?ref=${encodeURIComponent(campaignRef)}`
     const gameboardHref = `/campaign/board?ref=${encodeURIComponent(campaignRef)}`
 
     return (
@@ -128,6 +133,9 @@ export function CampaignModal({
                                         </div>
                                     </div>
                                 )}
+                                {milestoneGuidance && (
+                                    <CampaignMilestoneStrip data={milestoneGuidance} variant="dashboard" />
+                                )}
                             </div>
                         )}
                     </div>
@@ -136,12 +144,12 @@ export function CampaignModal({
                 <div className="flex flex-wrap gap-2 sm:gap-4 mb-6">
                     <CampaignStageCard currentStage={globalStage} />
                     <Link
-                        href={lobbyHref}
+                        href={hubHref}
                         onClick={onClose}
                         className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition"
                     >
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">8 Portals</div>
-                        <div className="text-zinc-200 font-bold">Campaign Lobby</div>
+                        <div className="text-zinc-200 font-bold">Campaign hub</div>
                     </Link>
                     <Link
                         href={gameboardHref}
@@ -154,11 +162,11 @@ export function CampaignModal({
                 </div>
                 <div className="flex gap-2">
                     <Link
-                        href={lobbyHref}
+                        href={hubHref}
                         onClick={onClose}
                         className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
                     >
-                        Campaign Lobby →
+                        Campaign hub →
                     </Link>
                     <Link
                         href={gameboardHref}

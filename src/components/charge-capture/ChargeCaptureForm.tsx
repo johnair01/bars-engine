@@ -8,7 +8,7 @@ import {
   generateQuestSuggestionsFromCharge,
   createQuestFromSuggestion,
 } from '@/actions/charge-capture'
-import type { CreateChargeBarPayload, ChargeExploreCeremony } from '@/actions/charge-capture'
+import type { CreateChargeBarPayload, ChargeExploreCeremony, PersonalMove } from '@/actions/charge-capture'
 import { TransitionCeremony } from '@/components/charge-capture/TransitionCeremony'
 import type { QuestSuggestion } from '@/lib/charge-quest-generator'
 
@@ -44,7 +44,22 @@ const MOVE_LABELS: Record<string, string> = {
   wake_up: 'Wake Up', clean_up: 'Clean Up', grow_up: 'Grow Up', show_up: 'Show Up',
 }
 
-type CapturedCharge = { id: string; title: string }
+type MoveOption = {
+  value: PersonalMove
+  label: string
+  hint: string
+  color: string
+  active: string
+}
+
+const MOVE_OPTIONS: MoveOption[] = [
+  { value: 'wakeUp',  label: 'Wake Up',  hint: 'Name it fresh',        color: 'border-zinc-700 text-zinc-400 hover:border-emerald-700/50', active: 'border-emerald-600 bg-emerald-950/40 text-emerald-300' },
+  { value: 'cleanUp', label: 'Clean Up', hint: 'Process the friction',  color: 'border-zinc-700 text-zinc-400 hover:border-sky-700/50',     active: 'border-sky-600 bg-sky-950/40 text-sky-300' },
+  { value: 'growUp',  label: 'Grow Up',  hint: 'Develop through it',   color: 'border-zinc-700 text-zinc-400 hover:border-amber-700/50',   active: 'border-amber-500 bg-amber-950/40 text-amber-300' },
+  { value: 'showUp',  label: 'Show Up',  hint: 'Act and contribute',   color: 'border-zinc-700 text-zinc-400 hover:border-purple-700/50',  active: 'border-purple-500 bg-purple-950/40 text-purple-300' },
+]
+
+type CapturedCharge = { id: string; title: string; personalMove?: PersonalMove }
 
 type ChargeCaptureFormProps = {
   hasChargedToday?: boolean
@@ -59,6 +74,7 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
   // Form state
   const [summary, setSummary] = useState('')
   const [emotion, setEmotion] = useState<CreateChargeBarPayload['emotion_channel']>()
+  const [moveChoice, setMoveChoice] = useState<PersonalMove | undefined>()
   const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5 | undefined>()
   const [satisfaction, setSatisfaction] = useState<CreateChargeBarPayload['satisfaction']>()
   const [showMore, setShowMore] = useState(false)
@@ -80,6 +96,7 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
   const reset = () => {
     setSummary('')
     setEmotion(undefined)
+    setMoveChoice(undefined)
     setIntensity(undefined)
     setSatisfaction(undefined)
     setShowMore(false)
@@ -97,9 +114,10 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
         emotion_channel: emotion,
         intensity,
         satisfaction,
+        personal_move: moveChoice,
       })
       if ('error' in result) { setError(result.error); return }
-      if ('barId' in result) setCaptured((prev) => [...prev, { id: result.barId, title: capturedSummary }])
+      if ('barId' in result) setCaptured((prev) => [...prev, { id: result.barId, title: capturedSummary, personalMove: moveChoice }])
       reset()
       router.refresh()
     })
@@ -129,10 +147,15 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
 
   // ── Transition ceremony before quest suggestions ──────────────────────────
   if (ceremony && pendingSuggestions && activeId && !suggestions) {
+    // Retrieve the move from the active charge's captured list or today's charge
+    const activeMoveChoice = moveChoice ??
+      captured.find((c) => c.id === activeId)?.personalMove ??
+      (todayCharge?.id === activeId ? (todayCharge as { id: string; title: string; description: string; createdAt: string; moveType?: string }).moveType : undefined)
     return (
       <TransitionCeremony
         sceneType={ceremony.sceneType}
         kotterStage={ceremony.kotterStage}
+        moveLabel={activeMoveChoice}
         onComplete={() => {
           setSuggestions(pendingSuggestions)
           setCeremony(null)
@@ -245,7 +268,27 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
           </div>
         </div>
 
-        {/* 2. Summary text input */}
+        {/* 2. Move commitment — optional, compact */}
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-zinc-600 mb-2">How are you metabolizing? <span className="text-zinc-700 normal-case tracking-normal">(optional)</span></p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {MOVE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setMoveChoice(moveChoice === opt.value ? undefined : opt.value)}
+                className={`py-2.5 px-3 rounded-xl border text-left transition ${
+                  moveChoice === opt.value ? opt.active : opt.color
+                }`}
+              >
+                <span className="block text-xs font-semibold">{opt.label}</span>
+                <span className="block text-[10px] opacity-60 mt-0.5">{opt.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. Summary text input */}
         <div>
           <input
             ref={textRef}
@@ -259,7 +302,7 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
           />
         </div>
 
-        {/* 3. Submit */}
+        {/* 4. Submit */}
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"
@@ -269,7 +312,7 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
           {isPending ? 'Capturing…' : 'Capture'}
         </button>
 
-        {/* 4. More detail — collapsible */}
+        {/* 5. More detail — collapsible */}
         <div>
           <button
             type="button"

@@ -46,7 +46,7 @@ const NATION_ROOMS = [
     sortOrder: 0,
     anchors: [
       { anchorType: 'crafting_forge',  tileX: 5, tileY: 2, label: 'Forge' },
-      { anchorType: 'portal',          tileX: 9, tileY: 5, label: 'To Card Club' },
+      { anchorType: 'portal',          tileX: 9, tileY: 5, label: 'To Card Club', config: JSON.stringify({ targetSlug: 'card-club' }) },
     ],
   },
   {
@@ -95,6 +95,7 @@ const TRADING_FLOOR = {
   backgroundUrl: '/lobby-art/card-club.png',
   sortOrder: 4,
   anchors: [
+    { anchorType: 'campaign_portal',  tileX: 7,  tileY: 1,  label: 'Bruised Banana Campaign', config: JSON.stringify({ campaignRef: 'bruised-banana' }) },
     { anchorType: 'librarian_npc',    tileX: 7,  tileY: 2,  label: 'Regent (Librarian)' },
     { anchorType: 'giacomo_npc',      tileX: 14, tileY: 9,  label: 'Giacomo' },
     { anchorType: 'bar_table',        tileX: 7,  tileY: 7,  label: 'Cross-Nation BAR Pool' },

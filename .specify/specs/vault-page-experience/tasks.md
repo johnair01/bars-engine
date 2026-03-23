@@ -19,10 +19,10 @@ Spec: [.specify/specs/vault-page-experience/spec.md](./spec.md) · Plan: [plan.m
 Design: [VAULT_NESTED_ROOMS.md](./VAULT_NESTED_ROOMS.md)
 
 - [x] **VPE-E1**: Add nested routes `/hand/charges`, `/hand/quests`, `/hand/drafts`, `/hand/invitations` with **full** lists (reuse lobby query logic; DRY via shared module — `src/lib/vault-queries.ts`, `VAULT_ROOM_LIST_CAP`).
-- [ ] **VPE-E2**: **`VaultFourMovesStrip`** (or `VaultRoomMoves`) — Wake Up / Clean Up / Grow Up / Show Up with **room-specific** actions + links to `/hand/moves` + wiki.
-- [ ] **VPE-E3**: **Lobby** (`/hand`) — add prominent **“Open room”** cards or links; optionally reduce duplicate long lists to teasers (coordinate with product).
-- [ ] **VPE-E4**: Breadcrumbs / **← Vault** on nested pages; optional `hand/layout.tsx` subnav.
-- [ ] **VPE-E5**: Extend [UI Style Guide](/wiki/ui-style-guide) Vault subsection with **rooms + four moves** pattern.
+- [x] **VPE-E2**: **`VaultFourMovesStrip`** — Wake Up / Clean Up / Grow Up / Show Up with room-specific actions. `src/components/hand/VaultFourMovesStrip.tsx`; wired into charges, quests, drafts, invitations pages.
+- [x] **VPE-E3**: **Lobby** (`/hand`) — `VaultNestedRoomsNav` room pill links present; lobby stays shallow (peek-then-enter).
+- [x] **VPE-E4**: Breadcrumbs / **← Vault** on nested pages — `VaultRoomHeader` handles this on all rooms.
+- [x] **VPE-E5**: [UI Style Guide](/wiki/ui-style-guide) Vault subsection expanded with rooms table, nested routes, and Four Moves color grid.
 - [x] **VPE-E6**: Rename stray copy **“Quest Wallet”** → **Vault** in primary app surfaces (`/hand/moves`, forge-invitation, game-map, landing, charge explore, unpack flows, bars nav). Older specs may still say Quest Wallet.
 
 ## Phase B — Caps

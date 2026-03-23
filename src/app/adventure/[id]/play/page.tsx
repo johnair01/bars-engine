@@ -15,10 +15,11 @@ export default async function AdventurePlayPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string; start?: string; ref?: string; returnTo?: string }>
+  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string; start?: string; ref?: string; returnTo?: string; hexagram?: string; face?: string }>
 }) {
   const { id: adventureId } = await params
-  const { questId, threadId, ritual, preview, start: startParam, ref: campaignRef, returnTo } = await searchParams
+  const { questId, threadId, ritual, preview, start: startParam, ref: campaignRef, returnTo, hexagram, face: portalFace } = await searchParams
+  const hexagramId = hexagram ? parseInt(hexagram, 10) || undefined : undefined
   const isRitual = ritual === 'true'
   const isPreview = preview === '1'
   const player = await getCurrentPlayer()
@@ -80,7 +81,7 @@ export default async function AdventurePlayPage({
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <Link
-            href={returnTo ?? (campaignRef ? `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}` : '/conclave/onboarding')}
+            href={returnTo ?? (campaignRef ? `/campaign/hub?ref=${encodeURIComponent(campaignRef)}` : '/conclave/onboarding')}
             className="text-sm text-zinc-500 hover:text-white transition"
           >
             ← {returnTo ? 'Back' : campaignRef ? 'Lobby' : 'Back'}
@@ -107,6 +108,8 @@ export default async function AdventurePlayPage({
           campaignRef={campaignRef ?? adventure.campaignRef ?? undefined}
           schoolsAdventureId={schoolsAdventureId ?? undefined}
           returnTo={returnTo ?? undefined}
+          portalHexagramId={hexagramId}
+          portalFace={portalFace ?? undefined}
         />
       </div>
     </div>

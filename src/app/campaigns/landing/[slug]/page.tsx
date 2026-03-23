@@ -26,7 +26,7 @@ export default async function CampaignLandingPage({
     ? `/campaign/initiation?segment=player&shareToken=${encodeURIComponent(shareContext.shareToken)}`
     : firstQuestCta.questId
       ? `/adventure/hub/${firstQuestCta.questId}?ref=${encodeURIComponent(campaignRef)}`
-      : `/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`
+      : `/campaign/hub?ref=${encodeURIComponent(campaignRef)}`
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans flex items-center justify-center p-4">

@@ -147,6 +147,7 @@ Or derive from existing: `CustomBar` has `allyshipDomain`, `kotterStage`; track 
 
 ## Dependencies
 
+- [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md) — hub/spokes, landings-as-cards, 52/64 campaign topology, vault-gated CYOA emissions
 - [gameboard-campaign-deck](../gameboard-campaign-deck/spec.md) — gameboard slots, draw, vibeulon spend
 - [campaign-kotter-domains](../campaign-kotter-domains/spec.md) — instance kotterStage, Domain × Kotter
 - [bruised-banana-quest-map](../bruised-banana-quest-map/spec.md) — GATHERING_RESOURCES quest map; seed pattern

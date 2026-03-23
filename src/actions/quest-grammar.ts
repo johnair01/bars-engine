@@ -87,7 +87,12 @@ export async function compileQuestWithPrivilegingAction(
     const { hexagramId, ...rest } = input
     const ichingContext =
       input.ichingContext ?? (hexagramId ? await buildIChingContextFromHexagram(hexagramId) : undefined)
-    const packet = await compileQuestWithPrivileging({ ...rest, ichingContext })
+    const player = await getCurrentPlayer()
+    const packet = await compileQuestWithPrivileging({
+      ...rest,
+      ichingContext,
+      isAuthenticated: !!player,
+    })
     const { telemetryHooks: _, ...serializable } = packet
     return serializable
   } catch (e) {
@@ -168,7 +173,8 @@ export async function compileQuestWithAI(
     const { hexagramId, ...rest } = input
     const ichingContext =
       input.ichingContext ?? (hexagramId ? await buildIChingContextFromHexagram(hexagramId) : undefined)
-    const effectiveInput = { ...rest, ichingContext }
+    const sessionPlayer = await getCurrentPlayer()
+    const effectiveInput = { ...rest, ichingContext, isAuthenticated: !!sessionPlayer }
 
     const packet = compileQuest(effectiveInput)
 
@@ -180,12 +186,11 @@ export async function compileQuestWithAI(
       try {
         const backendUp = await isBackendAvailable()
         if (backendUp) {
-          const player = await getCurrentPlayer()
           const agentResult = await compileQuestViaAgent({
             unpackingAnswers: effectiveInput.unpackingAnswers as unknown as Record<string, string>,
             ichingContext,
             questGrammar: effectiveInput.questModel === 'communal' ? 'kotter' : 'epiphany_bridge',
-            playerId: player?.id,
+            playerId: sessionPlayer?.id,
           })
 
           if (agentResult.output?.node_texts?.length) {
@@ -219,6 +224,12 @@ export async function compileQuestWithAI(
     const promptContext = await buildQuestPromptContext(effectiveInput, packet)
     const isCommunal = effectiveInput.questModel === 'communal'
 
+    const authHint = effectiveInput.isAuthenticated
+      ? `
+
+AUTHENTICATED PLAYER: The player is already logged in. Do not mention creating an account, signing up, or cold signup. Do not frame the ending as "create your account." Donation/contribution links may remain where appropriate.`
+      : ''
+
     const systemPrompt = isCommunal
       ? `You are a narrative designer for a choose-your-own-adventure quest. Your task is to turn the prompt context into grammatical, emotionally coherent story text for each Kotter stage.
 
@@ -229,7 +240,7 @@ Rules:
 - Each node should feel like part of one continuous story.
 - Follow the Voice Style Guide: presence first, confident tone, economical with words.
 - CRITICAL: Transform the creator unpacking answers into narrative. NEVER reproduce Q1–Q6 answers verbatim — weave them into story. The unpacking answers are raw material, not copy.
-- For action nodes (wins, build_on, anchor): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.`
+- For action nodes (wins, build_on, anchor): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.${authHint}`
       : `You are a narrative designer for a choose-your-own-adventure quest. Your task is to turn the prompt context into grammatical, emotionally coherent story text for each beat.
 
 Rules:
@@ -247,7 +258,7 @@ Grammatical example (generate structure like this — 6 beats, each 2–4 senten
 - Tension: Gap between from-state and to-state. Shadow voices surface.
 - Integration: Aligned action translates channel into movement. Threshold is near.
 - Transcendence: Moment of commitment. Include [Contribute to the campaign](/event/donate) wrapped in narrative.
-- Consequence: "You are now an Early Believer." Structural consequence.`
+- Consequence: "You are now an Early Believer." Structural consequence.${authHint}`
 
     const framing = effectiveInput.segment === 'player'
       ? 'You are entering a living world mid-formation. Your participation matters.'
@@ -302,6 +313,7 @@ Return ${hasLensChoice ? 7 : 6} refined node texts (nodeTexts array), one per no
       expectedMoves: effectiveInput.expectedMoves ?? [],
       ichingContext: effectiveInput.ichingContext ?? null,
       adminFeedback: effectiveInput.adminFeedback ?? null,
+      isAuthenticated: effectiveInput.isAuthenticated ?? false,
       feature: 'quest_grammar_ai',
     })
     const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
@@ -375,8 +387,13 @@ export async function generateQuestOverviewWithAI(
       return { success: false, error: 'Quest Grammar AI is disabled.' }
     }
 
-    const packet = compileQuest(input)
-    const promptContext = await buildQuestPromptContext(input, packet)
+    const player = await getCurrentPlayer()
+    const packet = compileQuest({ ...input, isAuthenticated: !!player })
+    const promptContext = await buildQuestPromptContext({ ...input, isAuthenticated: !!player }, packet)
+
+    const overviewAuthRule = player
+      ? `- Final passage: choice to continue the journey (e.g. targetId: redirect:/hand or next in-world step). Do NOT use cold signup or "Create my account" — the player is already logged in.`
+      : `- Final passage: choice to "Create my account" (targetId: signup) or similar cold-start CTA.`
 
     const systemPrompt = `You are a narrative designer for a choose-your-own-adventure quest. From the prompt context, generate a complete quest skeleton: objectives and passages with choices.
 
@@ -385,7 +402,7 @@ Rules:
 - Passage IDs: node_0, node_1, ... or similar. Start passage: node_0.
 - Clear second-person prose. Follow Voice Style Guide: presence first, confident, economical.
 - Emotional arc: orientation → rising engagement → tension → integration → consequence.
-- Final passage: choice to "Create my account" (targetId: signup) or similar.`
+${overviewAuthRule}`
 
     const userPrompt = `${promptContext}
 
@@ -401,6 +418,7 @@ Generate a quest skeleton. Return:
       targetNationId: input.targetNationId ?? null,
       targetArchetypeId: input.targetArchetypeId ?? null,
       ichingContext: input.ichingContext ?? null,
+      isAuthenticated: !!player,
       feature: 'quest_overview_ai',
     })
     const modelId = process.env.QUEST_GRAMMAR_AI_MODEL || 'gpt-4o'
@@ -640,7 +658,8 @@ export async function publishIChingQuestToPlayer(
   packet: SerializableQuestPacket,
   playerId: string,
   questTitle: string,
-  hexagramId: number
+  hexagramId: number,
+  campaignContext?: { campaignRef?: string; campaignGoal?: string }
 ): Promise<
   | { success: true; adventureId: string; threadId: string; questId: string }
   | { success: false; error: string }
@@ -664,6 +683,8 @@ export async function publishIChingQuestToPlayer(
         hexagramId,
         isSystem: true,
         inputs: JSON.stringify([]),
+        campaignRef: campaignContext?.campaignRef ?? null,
+        campaignGoal: campaignContext?.campaignGoal ?? null,
       },
     })
     await db.customBar.update({ where: { id: quest.id }, data: { rootId: quest.id } })

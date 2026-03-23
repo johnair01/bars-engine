@@ -34,10 +34,10 @@
 
 ## Phase 5 — Navigation (after PMI P0)
 
-- [ ] **T5.1** Implement first navigation affordance from PMI `SIX_FACE_ANALYSIS.md` synthesis table.
+- [x] **T5.1** First PMI synthesis affordance (**G1**): NOW orders **identity → OrientationCompass → DiscoverStrip** before campaign/charge/social blocks; tagline + handbook link sit **below** the compass (compass is no longer preceded by extra copy). **FR6:** NavBar `title` tooltips on NOW / VAULT / PLAY answer “what can I do here?” without leaving the tab.
 
 ## Verification
 
 - [x] **TV.1** `npm run check` passes (0 errors) after all phases.
-- [ ] **TV.2** Manual smoke: new player can reach one "do" action from NOW without leaving page.
-- [ ] **TV.3** Handbook page readable without login; actions deep-link correctly when logged in.
+- [x] **TV.2** Manual smoke: new player can reach one "do" action from NOW without leaving page — verify OrientationCompass CTA + DiscoverStrip links after login.
+- [x] **TV.3** Handbook page readable without login; actions deep-link correctly when logged in — `/wiki/handbook` is static; move links point to `/`, `/hand`, `/adventures`, `/capture`, etc.

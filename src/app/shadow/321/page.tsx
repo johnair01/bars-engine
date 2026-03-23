@@ -5,11 +5,14 @@ import { getChargeBar } from '@/actions/charge-capture'
 import { Shadow321Runner } from './Shadow321Runner'
 
 export default async function Shadow321Page(props: {
-  searchParams: Promise<{ chargeBarId?: string; returnTo?: string }>
+  searchParams: Promise<{ chargeBarId?: string; returnTo?: string; personalMove?: string }>
 }) {
   const searchParams = await props.searchParams
   const chargeBarId = searchParams.chargeBarId ?? null
   const returnTo = searchParams.returnTo ?? undefined
+  const personalMove = ['wakeUp', 'cleanUp', 'growUp', 'showUp'].includes(searchParams.personalMove ?? '')
+    ? searchParams.personalMove
+    : undefined
 
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
@@ -47,6 +50,7 @@ export default async function Shadow321Page(props: {
           playerId={player.id}
           initialCharge={initialCharge}
           returnTo={returnTo}
+          initialPersonalMove={personalMove}
         />
       </div>
     </div>

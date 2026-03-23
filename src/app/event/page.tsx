@@ -19,6 +19,7 @@ import { EventGuestsPanel } from './EventGuestsPanel'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
+import { BruisedBananaApr2026EventBlocks } from './BruisedBananaApr2026EventBlocks'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -120,6 +121,8 @@ export default async function EventPage() {
             <p className="text-zinc-400">{instance.targetDescription}</p>
           )}
         </header>
+
+        {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
 
         <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">Wake Up: Learn the story</h2>

@@ -1,7 +1,9 @@
 'use client'
 
+import { useMemo } from 'react'
 import { upsertInstance } from '@/actions/instance'
 import { KOTTER_STAGES } from '@/lib/kotter'
+import { isBruisedBananaHouseInstance, parseHouseGoalData } from '@/lib/bruised-banana-house-state'
 
 type Instance = {
   id: string
@@ -28,6 +30,7 @@ type Instance = {
   sourceInstanceId?: string | null
   parentInstanceId?: string | null
   linkedInstanceId?: string | null
+  goalData?: string | null
 }
 
 type PromotedMove = { id: string; key: string; name: string }
@@ -58,6 +61,14 @@ export function InstanceEditModal({
   const goalDollars = instance.goalAmountCents != null ? (instance.goalAmountCents / 100).toString() : ''
   const selectedMoveIds = new Set(parseMoveIds(instance.moveIds))
   const currentDollars = (instance.currentAmountCents / 100).toString()
+
+  const showHouseState = isBruisedBananaHouseInstance(instance.slug, instance.campaignRef)
+  const houseParsed = useMemo(() => parseHouseGoalData(instance.goalData), [instance.goalData])
+  const defaultHouseNote = houseParsed.house?.operatorNote ?? ''
+  const defaultHouseHealth =
+    houseParsed.house?.healthSignal != null && houseParsed.house.healthSignal >= 1 && houseParsed.house.healthSignal <= 5
+      ? String(houseParsed.house.healthSignal)
+      : ''
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -94,6 +105,7 @@ export function InstanceEditModal({
                 <option value="fundraiser">fundraiser</option>
                 <option value="hackathon">hackathon</option>
                 <option value="business">business</option>
+                <option value="house">house</option>
               </select>
             </div>
 
@@ -137,6 +149,45 @@ export function InstanceEditModal({
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref</label>
               <input name="campaignRef" defaultValue={instance.campaignRef ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
             </div>
+
+            {showHouseState && (
+              <div className="md:col-span-2 space-y-3 rounded-xl border border-teal-900/50 bg-teal-950/15 p-4">
+                <div className="text-[10px] uppercase tracking-widest text-teal-500 font-bold">Bruised Banana House — operator state</div>
+                <p className="text-xs text-zinc-500">
+                  Stored in <span className="font-mono text-zinc-400">Instance.goalData</span> (schema{' '}
+                  <span className="font-mono">bruised-banana-house-state-v1</span>). Shown when slug or campaign ref is{' '}
+                  <span className="font-mono">bruised-banana-house</span>.
+                </p>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Operator note</label>
+                  <textarea
+                    name="houseOperatorNote"
+                    key={`hn-${instance.id}`}
+                    rows={3}
+                    defaultValue={defaultHouseNote}
+                    placeholder="What’s alive in the house this week?"
+                    className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Health signal (1–5)</label>
+                  <select
+                    name="houseHealthSignal"
+                    key={`hh-${instance.id}`}
+                    defaultValue={defaultHouseHealth === '' ? '' : defaultHouseHealth}
+                    className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white"
+                  >
+                    <option value="">No change</option>
+                    <option value="1">1 — rough</option>
+                    <option value="2">2</option>
+                    <option value="3">3 — ok</option>
+                    <option value="4">4</option>
+                    <option value="5">5 — thriving</option>
+                    <option value="clear">Clear rating</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Source instance (fork from)</label>

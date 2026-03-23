@@ -51,6 +51,20 @@ export async function saveAdventureProgress(
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
 
+  const existing = await db.playerAdventureProgress.findUnique({
+    where: { playerId_adventureId: { playerId: player.id, adventureId } },
+  })
+  let prevState: Record<string, unknown> = {}
+  if (existing?.stateData) {
+    try {
+      prevState = JSON.parse(existing.stateData) as Record<string, unknown>
+    } catch {
+      /* ignore */
+    }
+  }
+  // Shallow merge: `{}` from callers no longer wipes cyoaArtifactLedger / cyoaHexagramState
+  const merged: Record<string, unknown> = { ...prevState, ...stateData }
+
   await db.playerAdventureProgress.upsert({
     where: {
       playerId_adventureId: { playerId: player.id, adventureId },
@@ -59,11 +73,11 @@ export async function saveAdventureProgress(
       playerId: player.id,
       adventureId,
       currentNodeId,
-      stateData: JSON.stringify(stateData),
+      stateData: JSON.stringify(merged),
     },
     update: {
       currentNodeId,
-      stateData: JSON.stringify(stateData),
+      stateData: JSON.stringify(merged),
     },
   })
 

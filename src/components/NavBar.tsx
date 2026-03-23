@@ -29,13 +29,25 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
             <div className="flex items-center gap-1 sm:gap-4">
                 {isAuthenticated && (
                     <>
-                        <Link href="/" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/')}`}>
+                        <Link
+                            href="/"
+                            title="Orient your session: daily check-in, compass, and what to do next."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/')}`}
+                        >
                             NOW
                         </Link>
-                        <Link href="/hand" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand')}`}>
+                        <Link
+                            href="/hand"
+                            title="Your private studio: charges, quests, drafts, invitations — metabolize what you are carrying."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand')}`}
+                        >
                             VAULT
                         </Link>
-                        <Link href="/adventures" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/adventures')}`}>
+                        <Link
+                            href="/adventures"
+                            title="Active play: shadow work, journeys, daemons, campaigns, and published adventures."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/adventures')}`}
+                        >
                             PLAY
                         </Link>
                     </>

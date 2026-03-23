@@ -54,6 +54,12 @@ export function generateQuestSuggestions(input: ChargeBarInput): QuestSuggestion
     moveOrder = ['clean_up', 'wake_up', 'grow_up', 'show_up']
   }
 
+  // Player's committed move takes priority — put it first, others follow in original order
+  if (input.declared_move) {
+    const declared = input.declared_move
+    moveOrder = [declared, ...moveOrder.filter((m) => m !== declared)]
+  }
+
   const seenMoves = new Set<string>()
   const suggestions: QuestSuggestion[] = []
 

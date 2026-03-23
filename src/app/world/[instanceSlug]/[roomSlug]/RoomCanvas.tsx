@@ -48,6 +48,37 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
   const posRef = useRef(playerPos)
   posRef.current = playerPos
+
+  // Stable ref so the playerPos effect never needs to expand its deps
+  const portalNavigateRef = useRef<(anchor: AnchorData) => void>(() => {})
+  portalNavigateRef.current = (anchor: AnchorData) => {
+    // Campaign portal — routes to /campaign/hub (or custom href via config)
+    if (anchor.anchorType === 'campaign_portal') {
+      let href = '/campaign/hub'
+      if (anchor.config) {
+        try {
+          const cfg = JSON.parse(anchor.config) as { href?: string; campaignRef?: string }
+          href = cfg.href ?? (cfg.campaignRef ? `/campaign/hub?ref=${cfg.campaignRef}` : '/campaign/hub')
+        } catch { /* ignore */ }
+      }
+      router.push(href)
+      return
+    }
+    // Room-to-room portal
+    let target = allRooms.find(r => r.id === anchor.linkedId)
+    if (!target && anchor.config) {
+      try {
+        const cfg = JSON.parse(anchor.config) as { targetSlug?: string }
+        if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
+      } catch { /* ignore */ }
+    }
+    // Fallback: match label "To <Room Name>" against room names
+    if (!target && anchor.label?.startsWith('To ')) {
+      const labelName = anchor.label.slice(3).toLowerCase()
+      target = allRooms.find(r => r.name.toLowerCase() === labelName || r.slug === labelName.replace(/\s+/g, '-'))
+    }
+    if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
+  }
   const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const cancelWalk = useCallback(() => {
@@ -83,8 +114,8 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     const rect = containerRef.current.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0]!.clientX : (e as MouseEvent).clientX
     const clientY = 'touches' in e ? e.touches[0]!.clientY : (e as MouseEvent).clientY
-    const tileX = Math.floor((clientX - rect.left) / 32)
-    const tileY = Math.floor((clientY - rect.top) / 32)
+    // Account for camera offset when converting screen → tile coords
+    const { x: tileX, y: tileY } = rendererRef.current.screenToTile(clientX - rect.left, clientY - rect.top)
     const path = rendererRef.current.findPath(posRef.current.x, posRef.current.y, tileX, tileY)
     if (path.length > 1) walkPath(path.slice(1))
   }, [walkPath])
@@ -106,38 +137,51 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
     const app = new Application()
     appRef.current = app
+    let initDone = false
 
     void app.init({
       backgroundColor: 0x09090b,
       resizeTo: containerRef.current,
       antialias: false,
     }).then(() => {
+      initDone = true
       if (!containerRef.current || !appRef.current) return
       containerRef.current.appendChild(app.canvas)
       const renderer = new RoomRenderer(app, room.tilemap)
       rendererRef.current = renderer
       renderer.setPlayerPosition(spawnX, spawnY)
-      if (player.walkableSpriteUrl) renderer.setPlayerSpriteUrl(player.walkableSpriteUrl)
+      renderer.setPlayerSpriteUrl(player.walkableSpriteUrl ?? null)
       renderer.setAnchors(room.anchors)
       renderer.onAgentClick(setSelectedAgent)
+      renderer.onPortalActivate(anchor => portalNavigateRef.current(anchor))
+      // Re-center after layout settles — screen dimensions may be 0 during app.init()
+      requestAnimationFrame(() => renderer.recenter())
     })
 
     return () => {
       mountedRef.current = false
       cancelWalk()
-      appRef.current?.destroy(true, { children: true })
       appRef.current = null
       rendererRef.current = null
+      // Only destroy if init completed — avoids _cancelResize not a function on early unmount
+      if (initDone) {
+        app.destroy({ removeView: true })
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spriteReady, player.walkableSpriteUrl])
 
-  // Update renderer when position changes
+  // Update renderer when position changes; auto-navigate portals on touch
   useEffect(() => {
     rendererRef.current?.setPlayerPosition(playerPos.x, playerPos.y)
     rendererRef.current?.setPlayerDirection(lastMoveDirection)
     const anchor = rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null
     setProximateAnchor(anchor)
+
+    // Step onto a portal tile → navigate immediately
+    if (anchor?.anchorType === 'portal' && anchor.tileX === playerPos.x && anchor.tileY === playerPos.y) {
+      portalNavigateRef.current(anchor)
+    }
   }, [playerPos, lastMoveDirection])
 
   // Update agents in renderer
@@ -157,13 +201,13 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     }
   }, [spriteReady, handleCanvasTap])
 
-  // WASD movement
+  // Arrow key movement
   useEffect(() => {
     const DELTAS: Record<string, { dx: number; dy: number; dir: 'north' | 'south' | 'east' | 'west' }> = {
-      w: { dx: 0, dy: -1, dir: 'north' }, ArrowUp: { dx: 0, dy: -1, dir: 'north' },
-      s: { dx: 0, dy: 1, dir: 'south' }, ArrowDown: { dx: 0, dy: 1, dir: 'south' },
-      a: { dx: -1, dy: 0, dir: 'west' }, ArrowLeft: { dx: -1, dy: 0, dir: 'west' },
-      d: { dx: 1, dy: 0, dir: 'east' }, ArrowRight: { dx: 1, dy: 0, dir: 'east' },
+      ArrowUp: { dx: 0, dy: -1, dir: 'north' },
+      ArrowDown: { dx: 0, dy: 1, dir: 'south' },
+      ArrowLeft: { dx: -1, dy: 0, dir: 'west' },
+      ArrowRight: { dx: 1, dy: 0, dir: 'east' },
     }
     const handler = (e: KeyboardEvent) => {
       const delta = DELTAS[e.key]
@@ -196,6 +240,10 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
 
   const handleAnchorClick = useCallback(() => {
     if (!proximateAnchor) return
+    if (proximateAnchor.anchorType === 'campaign_portal') {
+      portalNavigateRef.current(proximateAnchor)
+      return
+    }
     if (proximateAnchor.anchorType === 'portal') {
       let target = allRooms.find(r => r.id === proximateAnchor.linkedId)
       if (!target && proximateAnchor.config) {
@@ -204,6 +252,10 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
           if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
         } catch { /* ignore */ }
       }
+      if (!target && proximateAnchor.label?.startsWith('To ')) {
+        const labelName = proximateAnchor.label.slice(3).toLowerCase()
+        target = allRooms.find(r => r.name.toLowerCase() === labelName || r.slug === labelName.replace(/\s+/g, '-'))
+      }
       if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
       return
     }
@@ -211,8 +263,11 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     setModalKey(k => k + 1)
   }, [proximateAnchor, allRooms, instanceSlug, router])
 
-  const promptPixel = proximateAnchor
-    ? { left: proximateAnchor.tileX * 32, top: proximateAnchor.tileY * 32 - 36 }
+  const promptPixel = proximateAnchor && rendererRef.current
+    ? (() => {
+        const { left, top } = rendererRef.current.worldToScreen(proximateAnchor.tileX, proximateAnchor.tileY)
+        return { left, top: top - 36 }
+      })()
     : null
 
   if (!spriteReady) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createCustomBar, getActivePlayers, getLinkableQuests, getGatingOptions } from '@/actions/create-bar'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
@@ -11,7 +12,17 @@ import { NAV } from '@/lib/navigation-contract'
 type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
 
-export type CreateBarPrefill = { title?: string; description?: string; tags?: string[]; linkedQuestId?: string }
+export type CreateBarPrefill = {
+    title?: string
+    description?: string
+    tags?: string[]
+    linkedQuestId?: string
+    /** BDE: tweet-like draft */
+    source321FullText?: string
+    moveType?: 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
+    systemTitle?: string
+    barDraftFrom321?: boolean
+}
 export type CreateBar321Session = {
   phase3Snapshot?: string
   phase2Snapshot?: string
@@ -22,6 +33,7 @@ export function CreateBarForm({
     setup,
     prefill,
     session321,
+    quickFrom321,
     sceneGridBind,
     onSceneGridBound,
     onCancel,
@@ -29,6 +41,8 @@ export function CreateBarForm({
     setup?: boolean
     prefill?: CreateBarPrefill
     session321?: CreateBar321Session
+    /** Tweet-like compose from 321 — domain required; gating in Advanced */
+    quickFrom321?: boolean
     sceneGridBind?: {
         instanceId: string
         cardId: string
@@ -47,7 +61,9 @@ export function CreateBarForm({
     const router = useRouter()
     const privateRouter = usePostActionRouter(NAV['create_bar_private'])
     const publicRouter = usePostActionRouter(NAV['create_bar_public'])
-    const [isOpen, setIsOpen] = useState(setup || !!prefill || !!sceneGridBind || false)
+    const [isOpen, setIsOpen] = useState(setup || !!prefill || !!sceneGridBind || !!quickFrom321 || false)
+    const [showAdvanced321, setShowAdvanced321] = useState(false)
+    const [domainError, setDomainError] = useState<string | null>(null)
     const [players, setPlayers] = useState<Player[]>([])
     const [linkableQuests, setLinkableQuests] = useState<LinkableQuest[]>([])
     const [visibility, setVisibility] = useState<'public' | 'private'>('private')
@@ -69,6 +85,16 @@ export function CreateBarForm({
     const [atlasVaultTab, setAtlasVaultTab] = useState<'core' | 'layers' | 'advanced'>('core')
 
     useEffect(() => {
+        if (prefill || session321 || quickFrom321) setIsOpen(true)
+    }, [prefill, session321, quickFrom321])
+
+    useEffect(() => {
+        if (prefill?.moveType) {
+            setMoveType(prefill.moveType)
+        }
+    }, [prefill?.moveType])
+
+    useEffect(() => {
         if (isOpen) {
             Promise.all([getActivePlayers(), getLinkableQuests(), getGatingOptions()]).then(([activePlayers, quests, options]) => {
                 setPlayers(activePlayers)
@@ -80,6 +106,11 @@ export function CreateBarForm({
 
     useEffect(() => {
         if (state?.success) {
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('shadow321_progress')
+                sessionStorage.removeItem('shadow321_metadata')
+                sessionStorage.removeItem('shadow321_session')
+            }
             if (sceneGridBind) {
                 onSceneGridBound?.()
                 router.refresh()
@@ -116,10 +147,21 @@ export function CreateBarForm({
                     <h3 className="font-bold text-white text-lg">
                         {sceneGridBind
                             ? 'Create a BAR for this Scene Atlas cell'
-                            : setup
-                              ? 'The Setup'
-                              : 'Create a new Bar'}
+                            : quickFrom321
+                              ? 'Post from your 321'
+                              : setup
+                                ? 'The Setup'
+                                : 'Create a new Bar'}
                     </h3>
+                    {quickFrom321 && !sceneGridBind && (
+                        <p className="text-xs text-zinc-500">
+                            <Link href="/shadow/321" className="text-teal-400 hover:text-teal-300">
+                                ← Back to 321
+                            </Link>
+                            {' · '}
+                            Your session stays until you save this BAR.
+                        </p>
+                    )}
                     {sceneGridBind && (
                         <p className="text-xs text-amber-400/90 leading-relaxed max-w-md">
                             <span className="text-zinc-500 block mb-1">Template: Scene Atlas cell BAR (compost structure in description).</span>
@@ -145,7 +187,19 @@ export function CreateBarForm({
                 )}
             </div>
 
-            <form action={formAction} className="space-y-4">
+            <form
+                action={formAction}
+                className="space-y-4"
+                onSubmit={(e) => {
+                    if (quickFrom321 && !sceneGridBind && !allyshipDomain) {
+                        e.preventDefault()
+                        setDomainError('Choose an allyship domain — where does this work live?')
+                        return
+                    }
+                    setDomainError(null)
+                }}
+            >
+                {quickFrom321 && !sceneGridBind ? <input type="hidden" name="quickFrom321" value="true" /> : null}
                 {sceneGridBind ? (
                     <>
                         <input type="hidden" name="sceneGridInstanceId" value={sceneGridBind.instanceId} />
@@ -498,6 +552,223 @@ export function CreateBarForm({
                             </label>
                             <input type="hidden" name="applyFirstAidLens" value={applyFirstAidLens ? 'true' : 'false'} />
                         </div>
+                    </>
+                ) : quickFrom321 ? (
+                    <>
+                        <p className="text-sm text-zinc-400">
+                            Lead with your words — like a post. The list title below is optional; we default one for you.
+                        </p>
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase text-zinc-500">What you want to share</label>
+                            <textarea
+                                name="description"
+                                placeholder="Say it in your voice…"
+                                required
+                                rows={6}
+                                defaultValue={prefill?.description}
+                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base leading-relaxed"
+                            />
+                        </div>
+                        {prefill?.source321FullText ? (
+                            <details className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500">
+                                <summary className="cursor-pointer text-zinc-400 hover:text-zinc-300">
+                                    Show original 321 export
+                                </summary>
+                                <pre className="mt-2 whitespace-pre-wrap font-sans text-zinc-500">{prefill.source321FullText}</pre>
+                            </details>
+                        ) : null}
+
+                        <div className="space-y-3 pt-2 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500 block">
+                                Allyship domain <span className="text-red-400">*</span>
+                            </label>
+                            <p className="text-xs text-zinc-600">WHERE the work happens — required for BARs from 321.</p>
+                            <div className="flex flex-wrap gap-2">
+                                {ALLYSHIP_DOMAINS.map((d) => (
+                                    <button
+                                        key={d.key}
+                                        type="button"
+                                        onClick={() => {
+                                            setAllyshipDomain(allyshipDomain === d.key ? null : d.key)
+                                            setDomainError(null)
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${
+                                            allyshipDomain === d.key
+                                                ? 'bg-teal-900/40 border-teal-600 text-teal-300'
+                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                        }`}
+                                    >
+                                        {d.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="hidden" name="allyshipDomain" value={allyshipDomain || ''} />
+                            {domainError ? <p className="text-sm text-red-400">{domainError}</p> : null}
+                        </div>
+
+                        <div className="space-y-3 pt-2 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500">Move (from 321)</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { key: 'wakeUp', label: '👁 Wake Up' },
+                                    { key: 'cleanUp', label: '🧹 Clean Up' },
+                                    { key: 'growUp', label: '🌱 Grow Up' },
+                                    { key: 'showUp', label: '🎯 Show Up' },
+                                ].map((mt) => (
+                                    <button
+                                        key={mt.key}
+                                        type="button"
+                                        onClick={() =>
+                                            setMoveType(moveType === mt.key ? null : (mt.key as 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'))
+                                        }
+                                        className={`py-2 px-3 rounded-lg border text-sm transition ${
+                                            moveType === mt.key
+                                                ? 'bg-amber-900/30 border-amber-600 text-amber-400'
+                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
+                                    >
+                                        {mt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="hidden" name="moveType" value={moveType || ''} />
+                        </div>
+
+                        <input
+                            type="hidden"
+                            name="tags"
+                            value={prefill?.tags?.join(', ') ?? ''}
+                        />
+
+                        <div className="space-y-3 pt-2 border-t border-zinc-800">
+                            <label className="text-xs uppercase text-zinc-500">Quest Visibility</label>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('public')}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
+                                        visibility === 'public'
+                                            ? 'bg-green-900/30 border-green-600 text-green-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                    }`}
+                                >
+                                    🌍 Public
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('private')}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
+                                        visibility === 'private'
+                                            ? 'bg-purple-900/30 border-purple-600 text-purple-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                    }`}
+                                >
+                                    🔒 Private
+                                </button>
+                            </div>
+                            <input type="hidden" name="visibility" value={visibility} />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowAdvanced321(!showAdvanced321)}
+                            className="text-sm text-zinc-500 hover:text-zinc-300"
+                        >
+                            {showAdvanced321 ? '▼' : '▶'} Advanced — list label & audience gating
+                        </button>
+                        {showAdvanced321 ? (
+                            <div className="space-y-4 pl-3 border-l border-zinc-700">
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase text-zinc-500">
+                                        List label (optional)
+                                    </label>
+                                    <p className="text-[10px] text-zinc-600">
+                                        Shown in lists and search. Defaults to a dated label if you leave this blank.
+                                    </p>
+                                    <input
+                                        name="title"
+                                        type="text"
+                                        placeholder={prefill?.systemTitle ?? prefill?.title ?? 'Optional short label'}
+                                        defaultValue={prefill?.title ?? prefill?.systemTitle}
+                                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase text-zinc-500 block">
+                                        Restrict to nations (optional)
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {gatingOptions.nations.map((nation) => (
+                                            <button
+                                                key={nation}
+                                                type="button"
+                                                onClick={() =>
+                                                    setSelectedNations((prev) =>
+                                                        prev.includes(nation)
+                                                            ? prev.filter((n) => n !== nation)
+                                                            : [...prev, nation]
+                                                    )
+                                                }
+                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${
+                                                    selectedNations.includes(nation)
+                                                        ? 'bg-blue-900/40 border-blue-600 text-blue-300'
+                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
+                                            >
+                                                {nation}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <input
+                                        type="hidden"
+                                        name="allowedNations"
+                                        value={selectedNations.length > 0 ? JSON.stringify(selectedNations) : ''}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs uppercase text-zinc-500 block">
+                                        Restrict to archetypes (optional)
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {gatingOptions.archetypeKeys.map((key) => (
+                                            <button
+                                                key={key}
+                                                type="button"
+                                                onClick={() =>
+                                                    setSelectedArchetypeKeys((prev) =>
+                                                        prev.includes(key)
+                                                            ? prev.filter((t) => t !== key)
+                                                            : [...prev, key]
+                                                    )
+                                                }
+                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${
+                                                    selectedArchetypeKeys.includes(key)
+                                                        ? 'bg-purple-900/40 border-purple-600 text-purple-300'
+                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
+                                            >
+                                                {key}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <input
+                                        type="hidden"
+                                        name="allowedTrigrams"
+                                        value={
+                                            selectedArchetypeKeys.length > 0
+                                                ? JSON.stringify(selectedArchetypeKeys)
+                                                : ''
+                                        }
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <input
+                                type="hidden"
+                                name="title"
+                                defaultValue={prefill?.systemTitle ?? prefill?.title ?? ''}
+                            />
+                        )}
                     </>
                 ) : (
                     <>

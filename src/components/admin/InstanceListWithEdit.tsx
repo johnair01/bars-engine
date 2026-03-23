@@ -31,6 +31,7 @@ type Instance = {
   sourceInstanceId?: string | null
   parentInstanceId?: string | null
   linkedInstanceId?: string | null
+  goalData?: string | null
   childInstances?: Instance[]
 }
 

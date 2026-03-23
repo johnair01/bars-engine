@@ -61,7 +61,7 @@ export default async function GameboardPage(props: {
           </Link>
           <div className="flex gap-4">
             <Link
-              href={`/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`}
+              href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
               className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
             >
               Portals

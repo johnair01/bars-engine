@@ -170,6 +170,7 @@ This spec defines:
 
 ## Dependencies
 
+- [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md) — **hard vault gate** on CYOA spokes; **[vault compost modal mini-game](../vault-compost-minigame-modal/spec.md)** (stub) for in-flow capacity relief
 - [VAULT_ANALYSIS.md](./VAULT_ANALYSIS.md)
 - [VAULT_NESTED_ROOMS.md](./VAULT_NESTED_ROOMS.md)
 - `src/app/hand/page.tsx`, `src/components/hand/*`, `StarterQuestBoard`
@@ -194,3 +195,4 @@ This spec defines:
 | 2026-03-21 | Nested Vault rooms + Four Moves per room ([VAULT_NESTED_ROOMS.md](./VAULT_NESTED_ROOMS.md)); Phase E in spec. |
 | 2026-03-21 | **Phase B**: inventory caps — `vault-limits.ts`, env vars, enforcement on create paths (see tasks.md). |
 | 2026-03-21 | **Phase C**: Vault Compost v1 — `CompostLedger`, `/hand/compost`, `runVaultCompost`, `VaultSalvagePayload` in `src/lib/vault-compost.ts`; migration `20260317180000_add_compost_ledger`. |
+| 2026-03-18 | Linked **modal compost mini-game** spec (stub) for hub/spoke CYOA hard gate without leaving journey. |

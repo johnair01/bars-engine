@@ -21,6 +21,8 @@ export {
 } from './unpacking-constants'
 export { deriveMetadata321 } from './deriveMetadata321'
 export type { Metadata321, Phase3Taxonomic, Phase1Identification } from './deriveMetadata321'
+export { deriveBarDraftFrom321 } from './deriveBarDraftFrom321'
+export type { BarDraftFrom321 } from './deriveBarDraftFrom321'
 export { compileQuest } from './compileQuestCore'
 export { toSkeletonPacket } from './compileQuestSkeleton'
 export { compileCharacterCreationPacket } from './characterCreationPacket'

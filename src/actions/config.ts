@@ -5,61 +5,85 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { Prisma } from '@prisma/client'
 
+/** Safe defaults when Postgres is down (P1001) or config read fails entirely. */
+const APP_CONFIG_FALLBACK = {
+    id: 'singleton' as const,
+    features: null as string | null,
+    theme: null as string | null,
+    heroTitle: null as string | null,
+    heroSubtitle: null as string | null,
+    updatedAt: new Date(0),
+    updatedBy: null as string | null,
+    orientationQuestId: null as string | null,
+    activeInstanceId: null as string | null,
+    defaultLobbyMapId: null as string | null,
+}
+
 // Get the singleton AppConfig (create if doesn't exist)
 export async function getAppConfig() {
-    const baseSelect = {
-        id: true,
-        features: true,
-        theme: true,
-        heroTitle: true,
-        heroSubtitle: true,
-        updatedAt: true,
-        updatedBy: true,
-        orientationQuestId: true,
-    } as const
-
-    const selectWithInstance = {
-        ...baseSelect,
-        activeInstanceId: true,
-        defaultLobbyMapId: true,
-    } as const
-
-    // 1) Try reading with the newest schema fields
     try {
-        const config = await db.appConfig.findUnique({
-            where: { id: 'singleton' },
-            select: selectWithInstance,
-        })
-        if (config) return config
-    } catch {
-        // If the DB hasn't been pushed yet, selecting new columns will throw.
-    }
+        const baseSelect = {
+            id: true,
+            features: true,
+            theme: true,
+            heroTitle: true,
+            heroSubtitle: true,
+            updatedAt: true,
+            updatedBy: true,
+            orientationQuestId: true,
+        } as const
 
-    // 2) Fallback read that avoids referencing newly-added columns.
-    let fallback = await db.appConfig.findUnique({
-        where: { id: 'singleton' },
-        select: baseSelect,
-    })
+        const selectWithInstance = {
+            ...baseSelect,
+            activeInstanceId: true,
+            defaultLobbyMapId: true,
+        } as const
 
-    // 3) Ensure the singleton row exists without referencing any new columns.
-    if (!fallback) {
-        await db.$executeRaw(
-            // app_config.updatedAt is NOT NULL and has no DB default (it’s managed by Prisma).
-            // When we insert via raw SQL (schema-drift safe), we must supply it.
-            Prisma.sql`INSERT INTO "app_config" ("id", "updatedAt") VALUES ('singleton', NOW()) ON CONFLICT ("id") DO NOTHING;`
-        )
+        // 1) Try reading with the newest schema fields
+        try {
+            const config = await db.appConfig.findUnique({
+                where: { id: 'singleton' },
+                select: selectWithInstance,
+            })
+            if (config) return config
+        } catch {
+            // If the DB hasn't been pushed yet, selecting new columns will throw.
+        }
 
-        fallback = await db.appConfig.findUnique({
+        // 2) Fallback read that avoids referencing newly-added columns.
+        let fallback = await db.appConfig.findUnique({
             where: { id: 'singleton' },
             select: baseSelect,
         })
-    }
 
-    // Provide a consistent shape for callers.
-    return {
-        ...fallback,
-        activeInstanceId: null,
-        defaultLobbyMapId: null,
+        // 3) Ensure the singleton row exists without referencing any new columns.
+        if (!fallback) {
+            await db.$executeRaw(
+                // app_config.updatedAt is NOT NULL and has no DB default (it’s managed by Prisma).
+                // When we insert via raw SQL (schema-drift safe), we must supply it.
+                Prisma.sql`INSERT INTO "app_config" ("id", "updatedAt") VALUES ('singleton', NOW()) ON CONFLICT ("id") DO NOTHING;`
+            )
+
+            fallback = await db.appConfig.findUnique({
+                where: { id: 'singleton' },
+                select: baseSelect,
+            })
+        }
+
+        // Provide a consistent shape for callers.
+        if (!fallback) {
+            return { ...APP_CONFIG_FALLBACK }
+        }
+        return {
+            ...fallback,
+            activeInstanceId: null,
+            defaultLobbyMapId: null,
+        }
+    } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('[getAppConfig] DB unreachable or misconfigured:', e)
+        }
+        return { ...APP_CONFIG_FALLBACK }
     }
 }
 

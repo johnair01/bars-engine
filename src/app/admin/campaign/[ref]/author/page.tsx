@@ -46,12 +46,20 @@ export default async function CampaignAuthorPage({
         title={`Campaign Hub: ${campaignRef}`}
         description="Authoring overview — passages, fill status, and deck generation."
         action={
-          <Link
-            href="/admin/adventures"
-            className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
-          >
-            ← All Adventures
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href={`/admin/campaign/${encodeURIComponent(campaignRef)}/deck`}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+            >
+              Deck CYOA wizard →
+            </Link>
+            <Link
+              href="/admin/adventures"
+              className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
+            >
+              ← All Adventures
+            </Link>
+          </div>
         }
       />
 

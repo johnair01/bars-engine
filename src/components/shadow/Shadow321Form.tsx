@@ -11,6 +11,7 @@ import {
   FACE_OPTIONS,
   baseInputClass,
   deriveMetadata321,
+  deriveBarDraftFrom321,
 } from '@/lib/quest-grammar'
 import type { UnpackingAnswers, Metadata321 } from '@/lib/quest-grammar'
 import type { Phase3Taxonomic, Phase1Identification } from '@/lib/quest-grammar'
@@ -64,15 +65,34 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
 
   const store321SessionForCreateBar = () => {
     if (typeof window !== 'undefined') {
-      const metadata = getMetadata()
       const phase2 = { ...answers, q6Context: q6Context || undefined, alignedAction }
       const sn = shadow321NameFromForm()
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(metadata))
-      sessionStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
-        phase3Snapshot: JSON.stringify(phase3),
+      const draft = deriveBarDraftFrom321(phase3, phase2, phase1, contextQuestId ?? undefined, {
         phase2Snapshot: JSON.stringify(phase2),
-        ...(sn ? { shadow321Name: sn } : {}),
-      }))
+        phase3Snapshot: JSON.stringify(phase3),
+        shadow321Name: sn,
+      })
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          title: draft.systemTitle,
+          description: draft.body,
+          tags: draft.tags,
+          linkedQuestId: draft.linkedQuestId,
+          source321FullText: draft.source321FullText,
+          moveType: draft.moveType ?? undefined,
+          systemTitle: draft.systemTitle,
+          barDraftFrom321: true,
+        })
+      )
+      sessionStorage.setItem(
+        STORAGE_SESSION_KEY,
+        JSON.stringify({
+          phase3Snapshot: draft.phase3Snapshot,
+          phase2Snapshot: draft.phase2Snapshot,
+          ...(sn ? { shadow321Name: sn } : {}),
+        })
+      )
     }
   }
 

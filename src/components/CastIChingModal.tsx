@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { castIChingTraditional, persistHexagramContext } from '@/actions/cast-iching'
+import {
+  castIChingTraditional,
+  persistHexagramContext,
+  type CastIChingTraditionalResult,
+} from '@/actions/cast-iching'
 import type { IChingCastContext } from '@/lib/iching-cast-context'
 
 interface CastIChingModalProps {
@@ -11,6 +15,8 @@ interface CastIChingModalProps {
   targetNodeId: string
   /** Optional collective context (e.g. campaign) — merged into `storyProgress.state.ichingCastContext`. */
   castContext?: IChingCastContext | null
+  /** After a successful cast (persisted), receive full result for CYOA state / adventure ledger. */
+  onHexagramAccepted?: (result: CastIChingTraditionalResult) => void
 }
 
 export function CastIChingModal({
@@ -19,6 +25,7 @@ export function CastIChingModal({
   onComplete,
   targetNodeId,
   castContext = null,
+  onHexagramAccepted,
 }: CastIChingModalProps) {
   const [phase, setPhase] = useState<'ready' | 'casting' | 'revealed' | 'accepted'>('ready')
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +54,8 @@ export function CastIChingModal({
       setPhase('ready')
       return
     }
+
+    onHexagramAccepted?.(result as CastIChingTraditionalResult)
 
     setPhase('revealed')
     await new Promise((r) => setTimeout(r, 600))

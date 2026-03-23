@@ -8,6 +8,22 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import type { CustomBar, PlayerQuest } from '@prisma/client'
 import { AdventureRestartButton } from '@/components/AdventureRestartButton'
+import { derivePlayerMoveContext, MOVE_LABELS, MOVE_COLORS, type MoveType } from '@/lib/player-move-context'
+
+function MoveBadge({ move, recommended, label }: { move: MoveType; recommended: boolean; label: string }) {
+  const c = MOVE_COLORS[move]
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`text-[9px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded ${c.badge}`}>
+        {MOVE_LABELS[move]}
+      </span>
+      <span className={`text-[10px] uppercase tracking-widest ${recommended ? c.text : 'text-zinc-500'}`}>
+        {label}
+        {recommended ? ' ←' : ''}
+      </span>
+    </div>
+  )
+}
 
 export default async function PlayPage() {
   const player = await getCurrentPlayer()
@@ -33,6 +49,28 @@ export default async function PlayPage() {
     t => !t.playerProgress?.completedAt && !(t.playerProgress as { isArchived?: boolean } | null)?.isArchived
   )
 
+  // Today's charge + completed move types (lightweight — for move context only)
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
+  const [todayCharge, completedQuestMoves] = await Promise.all([
+    db.customBar.findFirst({
+      where: { creatorId: player.id, type: 'charge_capture', createdAt: { gte: todayStart } },
+      select: { id: true },
+    }),
+    db.playerQuest.findMany({
+      where: { playerId: player.id, status: 'completed' },
+      select: { quest: { select: { moveType: true } } },
+    }),
+  ])
+
+  // Derive recommended move to promote contextually relevant container (G12, G17)
+  const moveCtx = derivePlayerMoveContext({
+    quests: completedQuestMoves.map((pq) => ({ status: 'completed', quest: { moveType: pq.quest.moveType } })),
+    hasChargeToday: !!todayCharge,
+    activeQuestCount: activeThreads.length,
+    nationId: player.nation?.id ?? null,
+    archetypeId: player.archetype?.id ?? null,
+  })
+
   // Daemons that have been summoned (active summon) or are in progress
   const activeDaemons = daemons.filter(d => d.summons.length > 0)
 
@@ -46,6 +84,7 @@ export default async function PlayPage() {
   )
   const visibleStories = isAdmin ? stories : stories.filter(s => !certStoryIds.has(s.id))
 
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
       <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12 space-y-10">
@@ -54,14 +93,23 @@ export default async function PlayPage() {
           <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1">Play</div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Moves you can make right now</h1>
           <p className="text-sm text-zinc-500 mt-1">Shadow work, quest arcs, I Ching — pick a container and go.</p>
+          {moveCtx.recommendedMoveType !== 'wakeUp' && (
+            <p className="text-[11px] text-zinc-600 mt-1.5">
+              Your current move:{' '}
+              <span className={MOVE_COLORS[moveCtx.recommendedMoveType].text}>
+                {MOVE_LABELS[moveCtx.recommendedMoveType]}
+              </span>
+              {' '}— relevant container highlighted below.
+            </p>
+          )}
         </header>
 
-        {/* ── Shadow Work ─────────────────────────────────────────── */}
+        {/* ── Shadow Work (Clean Up) ───────────────────────────────── */}
         <section className="space-y-3">
-          <div className="text-[10px] uppercase tracking-widest text-zinc-500">Shadow Work</div>
+          <MoveBadge move="cleanUp" recommended={moveCtx.recommendedMoveType === 'cleanUp'} label="Shadow Work" />
           <Link
             href="/shadow/321"
-            className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-purple-600/60 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+            className={`flex items-center justify-between w-full bg-zinc-900/60 border hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group ${moveCtx.recommendedMoveType === 'cleanUp' ? 'border-sky-800/60 hover:border-sky-600/70' : 'border-zinc-800 hover:border-purple-600/60'}`}
           >
             <div>
               <div className="font-semibold text-white group-hover:text-purple-200 transition-colors">321 Process</div>
@@ -71,10 +119,10 @@ export default async function PlayPage() {
           </Link>
         </section>
 
-        {/* ── Active Journeys ──────────────────────────────────────── */}
+        {/* ── Active Journeys (Show Up) ────────────────────────────── */}
         {activeThreads.length > 0 && (
           <section className="space-y-3">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Journeys</div>
+            <MoveBadge move="showUp" recommended={moveCtx.recommendedMoveType === 'showUp'} label="Journeys" />
             <div className="space-y-2">
               {activeThreads.map(thread => {
                 const currentQuest = thread.currentQuest
@@ -111,10 +159,10 @@ export default async function PlayPage() {
           </section>
         )}
 
-        {/* ── Daemon Work ──────────────────────────────────────────── */}
+        {/* ── Daemon Work (Grow Up) ────────────────────────────────── */}
         {activeDaemons.length > 0 && (
           <section className="space-y-3">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Daemon Work</div>
+            <MoveBadge move="growUp" recommended={moveCtx.recommendedMoveType === 'growUp'} label="Daemon Work" />
             <div className="space-y-2">
               {activeDaemons.map(daemon => (
                 <Link
@@ -137,10 +185,10 @@ export default async function PlayPage() {
           </section>
         )}
 
-        {/* ── Campaign Board ───────────────────────────────────────── */}
+        {/* ── Campaign Board (Show Up) ─────────────────────────────── */}
         {activeCampaign && (
           <section className="space-y-3">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Campaign</div>
+            <MoveBadge move="showUp" recommended={false} label="Campaign" />
             <Link
               href={`/campaign/board?ref=${activeCampaign.campaignRef ?? ''}`}
               className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-teal-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
@@ -156,10 +204,10 @@ export default async function PlayPage() {
           </section>
         )}
 
-        {/* ── Adventures (Twine) ───────────────────────────────────── */}
+        {/* ── Adventures — Twine (Grow Up) ─────────────────────────── */}
         {visibleStories.length > 0 && (
           <section className="space-y-3">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500">Adventures</div>
+            <MoveBadge move="growUp" recommended={moveCtx.recommendedMoveType === 'growUp'} label="Adventures" />
             <div className="space-y-2">
               {visibleStories.map(story => {
                 const quest = storyQuests.find((q: CustomBar) => q.twineStoryId === story.id)

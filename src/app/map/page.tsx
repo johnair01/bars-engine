@@ -42,5 +42,5 @@ export default async function MapPage(props: {
 
   const activeInstance = await getActiveInstance()
   const campaignRef = activeInstance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
-  redirect(`/campaign/lobby?ref=${encodeURIComponent(campaignRef)}`)
+  redirect(`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`)
 }

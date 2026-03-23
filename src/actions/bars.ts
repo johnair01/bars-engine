@@ -905,3 +905,39 @@ export async function getBarRecipients() {
         orderBy: { name: 'asc' }
     })
 }
+
+// ---------------------------------------------------------------------------
+// CREATE SUPPORTING BAR LINKED TO QUEST (Show Up step)
+// ---------------------------------------------------------------------------
+
+export async function createSupportingBarForQuest(
+  questId: string,
+  title: string,
+  description?: string
+): Promise<{ success: true; barId: string } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+
+  const trimmedTitle = title.trim()
+  if (!trimmedTitle) return { error: 'Title is required' }
+
+  try {
+    const bar = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title: trimmedTitle,
+        description: description?.trim() || '',
+        type: 'vibe',
+        status: 'active',
+        visibility: 'private',
+        parentId: questId,
+      },
+    })
+
+    revalidatePath('/hand')
+    return { success: true, barId: bar.id }
+  } catch (e) {
+    console.error('[createSupportingBarForQuest]', e)
+    return { error: e instanceof Error ? e.message : 'Failed to create BAR' }
+  }
+}

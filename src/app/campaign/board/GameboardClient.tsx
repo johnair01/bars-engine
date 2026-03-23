@@ -20,6 +20,7 @@ import {
   forkDeclinedAidQuest,
 } from '@/actions/gameboard'
 import { createSubQuest } from '@/actions/quest-nesting'
+import { createSupportingBarForQuest } from '@/actions/bars'
 import { QuestOutlineReview } from '@/components/admin/QuestOutlineReview'
 import { logPrePublishFeedback } from '@/actions/narrative-quality-feedback'
 import type { SerializableQuestPacket } from '@/lib/quest-grammar/types'
@@ -163,6 +164,11 @@ export function GameboardClient({
   const [subquestTitle, setSubquestTitle] = useState('')
   const [subquestDesc, setSubquestDesc] = useState('')
   const [subquestLoading, setSubquestLoading] = useState(false)
+  const [showBarAddSlotId, setShowBarAddSlotId] = useState<string | null>(null)
+  const [supportBarTitle, setSupportBarTitle] = useState('')
+  const [supportBarDesc, setSupportBarDesc] = useState('')
+  const [supportBarLoading, setSupportBarLoading] = useState(false)
+  const [supportBarsAdded, setSupportBarsAdded] = useState<Record<string, number>>({})
   const [generateLoading, setGenerateLoading] = useState(false)
   const [subquestParentId, setSubquestParentId] = useState<string | null>(null)
 
@@ -401,6 +407,25 @@ export function GameboardClient({
       }
     } finally {
       setReleasing(null)
+    }
+  }
+
+  async function handleAddSupportBar(slotId: string, questId: string) {
+    const title = supportBarTitle.trim()
+    if (!title) return
+    setSupportBarLoading(true)
+    try {
+      const result = await createSupportingBarForQuest(questId, title, supportBarDesc || undefined)
+      if ('error' in result) {
+        alert(result.error)
+      } else {
+        setSupportBarsAdded((prev) => ({ ...prev, [slotId]: (prev[slotId] ?? 0) + 1 }))
+        setSupportBarTitle('')
+        setSupportBarDesc('')
+        setShowBarAddSlotId(null)
+      }
+    } finally {
+      setSupportBarLoading(false)
     }
   }
 
@@ -693,19 +718,62 @@ export function GameboardClient({
                     <p className="text-xs text-amber-400/80">✓ Clean Up</p>
                   )}
 
-                  {/* Step 3: Complete */}
-                  {isSteward(slot) && (
-                    <button
-                      onClick={() => handleComplete(slot.id)}
-                      disabled={!!completing || !canComplete(slot)}
-                      className={
-                        canComplete(slot)
-                          ? 'w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors'
-                          : 'w-full py-2 px-4 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-500 text-sm font-medium rounded-lg transition-colors'
-                      }
-                    >
-                      {completing === slot.id ? 'Completing...' : '3. Show Up — Complete'}
-                    </button>
+                  {/* Step 3: Show Up — optional supporting BAR + complete */}
+                  {isSteward(slot) && slot.quest && (
+                    <div className="space-y-2">
+                      {showBarAddSlotId === slot.id ? (
+                        <div className="p-3 bg-zinc-900 border border-amber-800/40 rounded-lg space-y-2">
+                          <p className="text-xs text-amber-400/80 uppercase tracking-wider">Add supporting BAR</p>
+                          <input
+                            type="text"
+                            value={showBarAddSlotId === slot.id ? supportBarTitle : ''}
+                            onChange={(e) => setSupportBarTitle(e.target.value)}
+                            placeholder="BAR title (required)"
+                            className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-xs rounded border border-zinc-700"
+                          />
+                          <textarea
+                            value={showBarAddSlotId === slot.id ? supportBarDesc : ''}
+                            onChange={(e) => setSupportBarDesc(e.target.value)}
+                            placeholder="Description (optional)"
+                            rows={2}
+                            className="w-full px-3 py-2 bg-zinc-800 text-zinc-200 text-xs rounded border border-zinc-700 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => void handleAddSupportBar(slot.id, slot.quest!.id)}
+                              disabled={supportBarLoading || !supportBarTitle.trim()}
+                              className="flex-1 py-1.5 bg-amber-700/60 hover:bg-amber-600/60 disabled:opacity-50 text-amber-100 text-xs font-medium rounded transition-colors"
+                            >
+                              {supportBarLoading ? 'Adding…' : 'Add BAR'}
+                            </button>
+                            <button
+                              onClick={() => { setShowBarAddSlotId(null); setSupportBarTitle(''); setSupportBarDesc('') }}
+                              className="px-3 py-1.5 text-zinc-500 hover:text-zinc-400 text-xs"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowBarAddSlotId(slot.id)}
+                          className="w-full py-1.5 px-3 border border-dashed border-amber-800/40 hover:border-amber-700/60 text-amber-500/70 hover:text-amber-400 text-xs rounded-lg transition-colors"
+                        >
+                          {supportBarsAdded[slot.id] ? `+ Add another BAR (${supportBarsAdded[slot.id]} added)` : '+ Add supporting BAR (optional)'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleComplete(slot.id)}
+                        disabled={!!completing || !canComplete(slot)}
+                        className={
+                          canComplete(slot)
+                            ? 'w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors'
+                            : 'w-full py-2 px-4 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-500 text-sm font-medium rounded-lg transition-colors'
+                        }
+                      >
+                        {completing === slot.id ? 'Completing...' : '3. Show Up — Complete'}
+                      </button>
+                    </div>
                   )}
                   {isSteward(slot) && (
                     <button

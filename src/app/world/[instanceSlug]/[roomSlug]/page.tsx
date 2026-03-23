@@ -70,6 +70,7 @@ export default async function WorldRoomPage({
 
   return (
     <RoomCanvas
+      key={room.id}
       player={{
         id: player.id,
         name: player.name,

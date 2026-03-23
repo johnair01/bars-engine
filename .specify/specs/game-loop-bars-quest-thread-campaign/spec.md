@@ -8,6 +8,8 @@ Wire the main game loop so players can extend BARS into Quests, Quests into Thre
 
 **Practice**: Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI.
 
+**Related — collective milestone throughput:** [bruised-banana-milestone-throughput](../bruised-banana-milestone-throughput/spec.md) defines **player-visible** residency progress (Kotter stage, goal, guided CTAs) so personal BAR→quest→gameboard placement **reads as** contributing to **Bruised Banana** when `campaignRef` aligns. The game loop supplies **mechanisms**; BBMT supplies **orientation** and prioritized deep links.
+
 ## Design Decisions
 
 | Topic | Decision |

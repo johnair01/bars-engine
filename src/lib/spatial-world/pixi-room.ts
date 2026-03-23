@@ -30,16 +30,17 @@ const FRAME_H = 64
 const DEFAULT_SPRITE_URL = '/sprites/walkable/default.png'
 
 const ANCHOR_COLORS: Record<string, number> = {
-  quest_board:    0x7c3aed,
-  anomaly:        0xf97316,
-  bar_table:      0x3b82f6,
-  portal:         0x22c55e,
-  npc_slot:       0x6b7280,
-  cyoa_quest:     0xd97706,
-  crafting_forge: 0xea580c,
-  librarian_npc:  0xca8a04,
-  giacomo_npc:    0xdc2626,
-  nation_embassy: 0x2563eb,
+  quest_board:      0x7c3aed,
+  anomaly:          0xf97316,
+  bar_table:        0x3b82f6,
+  portal:           0x22c55e,
+  npc_slot:         0x6b7280,
+  cyoa_quest:       0xd97706,
+  crafting_forge:   0xea580c,
+  librarian_npc:    0xca8a04,
+  giacomo_npc:      0xdc2626,
+  nation_embassy:   0x2563eb,
+  campaign_portal:  0xd4a017,  // gold — campaign threshold
 }
 
 type PlayerDirection = 'north' | 'south' | 'east' | 'west'
@@ -63,6 +64,9 @@ export class RoomRenderer {
   private agentsContainer: Container
   private playerContainer: Container
   private textureCache = new Map<string, Texture>()
+  // Persistent player display object — position updated in place, no teardown/recreate
+  private playerDisplayObject: Graphics | Sprite | null = null
+  private playerSpriteLoaded = false
 
   constructor(app: Application, tilemap: TileMapData, tileSize = TILE_SIZE) {
     this.app = app
@@ -110,17 +114,54 @@ export class RoomRenderer {
 
   setPlayerPosition(x: number, y: number) {
     this.playerPos = { x, y }
-    this.renderPlayer()
+    this.updatePlayerDisplayPosition()
+    this.centerCamera()
+  }
+
+  private centerCamera() {
+    const screenW = this.app.screen.width || this.app.canvas.clientWidth
+    const screenH = this.app.screen.height || this.app.canvas.clientHeight
+    if (!screenW || !screenH) return
+    const px = this.playerPos.x * this.tileSize + this.tileSize / 2
+    const py = this.playerPos.y * this.tileSize + this.tileSize / 2
+    this.app.stage.x = Math.round(screenW / 2 - px)
+    this.app.stage.y = Math.round(screenH / 2 - py)
+  }
+
+  recenter() {
+    this.centerCamera()
+  }
+
+  worldToScreen(tileX: number, tileY: number): { left: number; top: number } {
+    return {
+      left: tileX * this.tileSize + this.app.stage.x,
+      top: tileY * this.tileSize + this.app.stage.y,
+    }
+  }
+
+  screenToTile(pixelX: number, pixelY: number): { x: number; y: number } {
+    return {
+      x: Math.floor((pixelX - this.app.stage.x) / this.tileSize),
+      y: Math.floor((pixelY - this.app.stage.y) / this.tileSize),
+    }
   }
 
   setPlayerSpriteUrl(url: string | null) {
     this.playerSpriteUrl = url
-    this.renderPlayer()
+    this.playerSpriteLoaded = false
+    this.initPlayerDisplay()
   }
 
   setPlayerDirection(direction: PlayerDirection) {
     this.playerDirection = direction
-    this.renderPlayer()
+    // If sprite is loaded, update texture frame for direction; otherwise no-op (fallback rect is directionless)
+    if (this.playerSpriteLoaded && this.playerDisplayObject instanceof Sprite && this.playerSpriteUrl) {
+      void this.loadFrameTexture(this.playerSpriteUrl, directionToFrameIndex(direction)).then(tex => {
+        if (tex && this.playerDisplayObject instanceof Sprite) {
+          this.playerDisplayObject.texture = tex
+        }
+      })
+    }
   }
 
   private async loadFrameTexture(url: string, frameIndex: number): Promise<Texture | null> {
@@ -141,36 +182,43 @@ export class RoomRenderer {
     }
   }
 
-  private renderPlayer() {
+  // Create the persistent player display object once; subsequent position updates just move it
+  private initPlayerDisplay() {
     this.playerContainer.removeChildren()
+    this.playerDisplayObject = null
+
     const px = this.playerPos.x * this.tileSize
     const py = this.playerPos.y * this.tileSize
 
-    const addFallbackRect = () => {
-      const g = new Graphics()
-      g.rect(2, 2, this.tileSize - 4, this.tileSize - 4).fill(0x10b981)
-      g.x = px
-      g.y = py
-      this.playerContainer.addChild(g)
-    }
+    // Always start with a visible fallback rect
+    const g = new Graphics()
+    g.rect(2, 2, this.tileSize - 4, this.tileSize - 4).fill(0x10b981)
+    g.x = px
+    g.y = py
+    this.playerContainer.addChild(g)
+    this.playerDisplayObject = g
 
-    if (!this.playerSpriteUrl) {
-      addFallbackRect()
-      return
-    }
+    if (!this.playerSpriteUrl) return
 
-    addFallbackRect()
-    const frameIndex = directionToFrameIndex(this.playerDirection)
-    void this.loadFrameTexture(this.playerSpriteUrl, frameIndex).then(tex => {
-      if (!tex) return
-      this.playerContainer.removeChildren()
+    const url = this.playerSpriteUrl
+    void this.loadFrameTexture(url, directionToFrameIndex(this.playerDirection)).then(tex => {
+      if (!tex || this.playerSpriteUrl !== url) return  // bailed or url changed
       const sprite = new Sprite(tex)
       sprite.width = this.tileSize
       sprite.height = this.tileSize
       sprite.x = this.playerPos.x * this.tileSize
       sprite.y = this.playerPos.y * this.tileSize
+      this.playerContainer.removeChildren()
       this.playerContainer.addChild(sprite)
+      this.playerDisplayObject = sprite
+      this.playerSpriteLoaded = true
     })
+  }
+
+  private updatePlayerDisplayPosition() {
+    if (!this.playerDisplayObject) return
+    this.playerDisplayObject.x = this.playerPos.x * this.tileSize
+    this.playerDisplayObject.y = this.playerPos.y * this.tileSize
   }
 
   setIntentAgents(agents: AgentData[]) {
@@ -219,9 +267,18 @@ export class RoomRenderer {
       g.rect(4, 4, this.tileSize - 8, this.tileSize - 8).fill(color)
       g.x = anchor.tileX * this.tileSize
       g.y = anchor.tileY * this.tileSize
+      if (anchor.anchorType === 'portal' || anchor.anchorType === 'campaign_portal') {
+        g.eventMode = 'static'
+        g.cursor = 'pointer'
+        const data = anchor
+        g.on('pointerdown', () => this._onPortalActivate?.(data))
+      }
       this.anchorsContainer.addChild(g)
     }
   }
+
+  private _onPortalActivate?: (anchor: AnchorData) => void
+  onPortalActivate(cb: (anchor: AnchorData) => void) { this._onPortalActivate = cb }
 
   getProximateAnchor(playerX: number, playerY: number): AnchorData | null {
     return this.anchors.find(a =>
@@ -242,6 +299,10 @@ export class RoomRenderer {
   }
 
   isWalkable(x: number, y: number): boolean {
+    // Portal anchors are always passable — stepping on them triggers room transition
+    if (this.anchors.some(a => a.anchorType === 'portal' && a.tileX === x && a.tileY === y)) {
+      return true
+    }
     const tile = this.tilemap[`${x}, ${y}`] ?? this.tilemap[`${x},${y}`]
     if (!tile) return false
     return !tile.impassable

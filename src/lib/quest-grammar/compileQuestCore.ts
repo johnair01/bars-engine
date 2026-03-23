@@ -41,6 +41,16 @@ function getActionTypeForCampaign(campaignId?: string): ActionType {
   return 'donation'
 }
 
+/** Logged-in players should not get signup as the commitment action type. */
+function resolveActionTypeForCompile(
+  campaignId: string | undefined,
+  isAuthenticated: boolean | undefined
+): ActionType {
+  const base = getActionTypeForCampaign(campaignId)
+  if (isAuthenticated && base === 'signup') return 'complete'
+  return base
+}
+
 const EPIPHANY_BEATS: EpiphanyBeatType[] = [
   'orientation',
   'rising_engagement',
@@ -196,7 +206,8 @@ function generateEpiphanyNodeText(
   answers: UnpackingAnswers,
   alignedAction: string,
   segment: 'player' | 'sponsor',
-  q3Display: string
+  q3Display: string,
+  isAuthenticated?: boolean
 ): string {
   const { primaryChannel, dissatisfiedLabels, satisfiedLabels } = signature
   const fromState = dissatisfiedLabels[0] ?? 'stuck'
@@ -206,12 +217,16 @@ function generateEpiphanyNodeText(
   const sponsorFraming = 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
+  const transcendenceDonationLine = isAuthenticated
+    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+
   const templates: Record<EpiphanyBeatType, string> = {
     orientation: `**Orientation** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}`,
     rising_engagement: `**Rising engagement** — You feel ${fromState}. ${toText(answers.q4)}\n\nWhat would have to be true? ${answers.q5}`,
     tension: `**Moment of tension** — The gap between ${fromState} and ${toState} is real. ${signature.shadowVoices.join('. ')}`,
     integration: `**Integration** — ${alignedAction}\n\nYou're translating ${primaryChannel} into movement. The threshold is near.`,
-    transcendence: `**Transcendence** — Cross the threshold.\n\n**Ritual**: This is a moment of commitment — you are choosing to contribute.\n\n**Transaction**: Your contribution supports the campaign. Funds go directly to the cause.\n\n[Contribute to the campaign](/event/donate) — donate before or after creating your account.`,
+    transcendence: `**Transcendence** — Cross the threshold.\n\n**Ritual**: This is a moment of commitment — you are choosing to contribute.\n\n**Transaction**: Your contribution supports the campaign. Funds go directly to the cause.\n\n${transcendenceDonationLine}`,
     consequence: `**Structural consequence** — Contribution logged. You are now an Early Believer — a Catalyst who crossed before the crowd.\n\nUnlock: founders thread, patron updates.`,
   }
   return templates[beatType]
@@ -223,7 +238,8 @@ function generateKotterNodeText(
   answers: UnpackingAnswers,
   alignedAction: string,
   segment: 'player' | 'sponsor',
-  q3Display: string
+  q3Display: string,
+  isAuthenticated?: boolean
 ): string {
   const { dissatisfiedLabels, satisfiedLabels } = signature
   const fromState = dissatisfiedLabels[0] ?? 'stuck'
@@ -233,13 +249,17 @@ function generateKotterNodeText(
   const sponsorFraming = 'You are protecting emergence. Your stewardship catalyzes what wants to happen.'
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
+  const winsDonationLine = isAuthenticated
+    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+
   const templates: Record<KotterBeatType, string> = {
     urgency: `**1. Urgency** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}\n\nWe need to create urgency around this need.`,
     coalition: `**2. Coalition** — Who will contribute?\n\n${signature.shadowVoices.join('. ')} — who can help bridge this gap? Build the coalition.`,
     vision: `**3. Vision** — What does success look like?\n\n${satisfiedLabels.join(', ')} — ${toState}. What would have to be true? ${answers.q5}`,
     communicate: `**4. Communicate** — Share the need.\n\n${alignedAction} — communicate the vision. Spread the message.`,
     obstacles: `**5. Obstacles** — What blocks progress?\n\nYou feel ${fromState}. ${toText(answers.q4)}. ${signature.shadowVoices.join('. ')}`,
-    wins: `**6. Wins** — First milestone reached.\n\nCelebrate progress. The threshold is approaching. Contribution supports the campaign.\n\n[Contribute to the campaign](/event/donate) — donate before or after creating your account.`,
+    wins: `**6. Wins** — First milestone reached.\n\nCelebrate progress. The threshold is approaching. Contribution supports the campaign.\n\n${winsDonationLine}`,
     build_on: `**7. Build On** — Scale giving.\n\nBuild on the wins. Iterate and amplify. Funds go directly to the cause.`,
     anchor: `**8. Anchor** — Sustainable funding.\n\nContribution logged. You are now an Early Believer — a Catalyst who crossed before the crowd.\n\nUnlock: founders thread, patron updates.`,
   }
@@ -284,10 +304,14 @@ function generateChoices(
   privilegeContext?: { nationElement: ElementKey; archetypeWave: PersonalMoveType },
   depthBranchIds?: string[],
   nodeConfig?: NodeChoiceOverride,
-  depthBranchOrder?: Record<number, string[]>
+  depthBranchOrder?: Record<number, string[]>,
+  isAuthenticated?: boolean
 ): Choice[] {
   const isFinal = beatType === 'consequence' || beatType === 'anchor'
   if (isFinal) {
+    if (isAuthenticated) {
+      return [{ text: 'Continue to your Vault', targetId: 'redirect:/hand' }]
+    }
     return [{ text: 'Create my account', targetId: 'signup' }]
   }
   if (index < nodeIds.length - 1) {
@@ -447,6 +471,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     depthBranchOrder,
     ichingContext,
     nodeOverrides,
+    isAuthenticated,
   } = input
   const fullBeatTypes = questModel === 'communal' ? KOTTER_BEATS : EPIPHANY_BEATS
   const beatTypes =
@@ -470,7 +495,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
   })()
 
   const nodeIds = beatTypes.map((_, i) => `node_${i}`)
-  const actionType = getActionTypeForCampaign(campaignId)
+  const actionType = resolveActionTypeForCompile(campaignId, isAuthenticated)
   const useDepthBranches = spineLength !== 'short'
   const depthBranchIdsPerGap = useDepthBranches
     ? nodeIds.slice(0, -1).map((_, gapIndex) => getDepthBranchIdsForGap(gapIndex, nodeIds, depthBranchOrder))
@@ -481,8 +506,24 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     const nodeConfig = nodeOverrides?.[id]
     const text =
       questModel === 'communal'
-        ? generateKotterNodeText(beatType as KotterBeatType, signature, unpackingAnswers, alignedAction, segment, q3Display)
-        : generateEpiphanyNodeText(beatType as EpiphanyBeatType, signature, unpackingAnswers, alignedAction, segment, q3Display)
+        ? generateKotterNodeText(
+            beatType as KotterBeatType,
+            signature,
+            unpackingAnswers,
+            alignedAction,
+            segment,
+            q3Display,
+            isAuthenticated
+          )
+        : generateEpiphanyNodeText(
+            beatType as EpiphanyBeatType,
+            signature,
+            unpackingAnswers,
+            alignedAction,
+            segment,
+            q3Display,
+            isAuthenticated
+          )
     const depthIds =
       nodeConfig?.choiceType === 'horizontal'
         ? undefined
@@ -496,7 +537,8 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
       privilegeContext,
       depthIds,
       nodeConfig,
-      depthBranchOrder
+      depthBranchOrder,
+      isAuthenticated
     )
     const wordCountEstimate = wordCount(text)
     const isActionNode = beatType === 'transcendence' || beatType === 'wins'

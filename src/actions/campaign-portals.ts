@@ -1,5 +1,6 @@
 'use server'
 
+import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
 import {
@@ -8,6 +9,11 @@ import {
 } from '@/lib/portal-context'
 import type { AllyshipDomain } from '@/lib/kotter'
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import {
+  type CampaignHubStateV1,
+  hubStateMatchesKotter,
+  isCampaignHubStateV1,
+} from '@/lib/campaign-hub/types'
 
 export type PortalData = {
   hexagramId: number
@@ -74,6 +80,45 @@ export async function getSchoolsAdventureId(campaignRef: string): Promise<string
   return instance?.schoolsAdventureId ?? null
 }
 
+const instanceHubSelect = {
+  id: true,
+  name: true,
+  kotterStage: true,
+  allyshipDomain: true,
+  portalAdventureId: true,
+  campaignRef: true,
+  slug: true,
+  campaignHubState: true,
+} satisfies Prisma.InstanceSelect
+
+async function ensurePersistedHubDraw(inst: {
+  id: string
+  kotterStage: number
+  campaignHubState: Prisma.JsonValue | null
+}): Promise<CampaignHubStateV1> {
+  const ks = inst.kotterStage ?? 1
+  const raw = inst.campaignHubState
+  if (isCampaignHubStateV1(raw) && hubStateMatchesKotter(raw, ks)) {
+    return raw
+  }
+  const spokes = draw8PortalCasts().map((c) => ({
+    hexagramId: c.hexagramId,
+    changingLines: c.changingLines,
+    primaryFace: c.primaryFace,
+  }))
+  const newState: CampaignHubStateV1 = {
+    v: 1,
+    kotterStage: ks,
+    spokes,
+    updatedAt: new Date().toISOString(),
+  }
+  await db.instance.update({
+    where: { id: inst.id },
+    data: { campaignHubState: newState as Prisma.InputJsonValue },
+  })
+  return newState
+}
+
 export async function get8PortalsForCampaign(
   campaignRef: string
 ): Promise<
@@ -83,18 +128,27 @@ export async function get8PortalsForCampaign(
       kotterStage: number
       portalAdventureId: string | null
       portalStartNodeIds: string[]
+      campaignRefResolved: string
     }
   | { error: string }
 > {
   try {
-    const instance = await db.instance.findFirst({
+    let inst = await db.instance.findFirst({
       where: {
         OR: [{ campaignRef }, { slug: campaignRef }],
       },
+      select: instanceHubSelect,
     })
 
-    const activeInstance = await getActiveInstance()
-    const inst = instance ?? activeInstance
+    if (!inst) {
+      const active = await getActiveInstance()
+      if (active) {
+        inst = await db.instance.findUnique({
+          where: { id: active.id },
+          select: instanceHubSelect,
+        })
+      }
+    }
 
     if (!inst) {
       return { error: 'No campaign instance found. Create an instance with this campaign ref.' }
@@ -111,7 +165,16 @@ export async function get8PortalsForCampaign(
     ]
     const allyshipDomain = validDomains.includes(domain) ? domain : 'GATHERING_RESOURCES'
 
-    const casts = draw8PortalCasts()
+    const hubState = await ensurePersistedHubDraw({
+      id: inst.id,
+      kotterStage,
+      campaignHubState: inst.campaignHubState,
+    })
+    const casts: CastResult[] = hubState.spokes.map((s) => ({
+      hexagramId: s.hexagramId,
+      changingLines: s.changingLines,
+      primaryFace: s.primaryFace,
+    }))
     const hexagramIds = casts.map((c) => c.hexagramId)
 
     const bars = await db.bar.findMany({
@@ -148,17 +211,117 @@ export async function get8PortalsForCampaign(
       }
     })
 
+    const refResolved = inst.campaignRef ?? inst.slug ?? campaignRef
+
     return {
       portals,
       campaignName: inst.name ?? campaignRef,
       kotterStage,
       portalAdventureId: inst.portalAdventureId ?? null,
       portalStartNodeIds: PORTAL_START_NODE_IDS,
+      campaignRefResolved: refResolved,
     }
   } catch (e) {
     console.error('[get8PortalsForCampaign]', e)
     return {
       error: e instanceof Error ? e.message : 'Failed to load portals',
     }
+  }
+}
+
+/** One spoke’s persisted draw + contextual copy — for landing “card” pages. */
+export async function getSpokeLandingContext(
+  campaignRef: string,
+  spokeIndex: number
+): Promise<
+  | {
+      campaignName: string
+      kotterStage: number
+      campaignRefResolved: string
+      spokeIndex: number
+      hexagramId: number
+      hexagramName: string
+      tone: string | null
+      text: string | null
+      flavor: string
+      stageAction: string
+      stageName: string
+      domainLabel: string
+      pathHint: string
+      primaryFace?: GameMasterFace
+      changingLines?: number[]
+    }
+  | { error: string }
+> {
+  if (spokeIndex < 0 || spokeIndex > 7 || !Number.isInteger(spokeIndex)) {
+    return { error: 'Invalid spoke index (use 0–7).' }
+  }
+  try {
+    let inst = await db.instance.findFirst({
+      where: { OR: [{ campaignRef }, { slug: campaignRef }] },
+      select: instanceHubSelect,
+    })
+    if (!inst) {
+      const active = await getActiveInstance()
+      if (active) {
+        inst = await db.instance.findUnique({
+          where: { id: active.id },
+          select: instanceHubSelect,
+        })
+      }
+    }
+    if (!inst) {
+      return { error: 'No campaign instance found.' }
+    }
+    const kotterStage = inst.kotterStage ?? 1
+    const domain = (inst.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain
+    const validDomains: AllyshipDomain[] = [
+      'GATHERING_RESOURCES',
+      'SKILLFUL_ORGANIZING',
+      'RAISE_AWARENESS',
+      'DIRECT_ACTION',
+    ]
+    const allyshipDomain = validDomains.includes(domain) ? domain : 'GATHERING_RESOURCES'
+
+    const hubState = await ensurePersistedHubDraw({
+      id: inst.id,
+      kotterStage,
+      campaignHubState: inst.campaignHubState,
+    })
+    const cast = hubState.spokes[spokeIndex]!
+    const bars = await db.bar.findMany({
+      where: { id: { in: [cast.hexagramId] } },
+    })
+    const bar = bars[0]
+    const name = bar?.name ?? `Hexagram ${cast.hexagramId}`
+    const tone = bar?.tone ?? null
+    const text = bar?.text ?? null
+    const ctx = contextualizeHexagramForPortal(
+      cast.hexagramId,
+      allyshipDomain,
+      kotterStage,
+      name,
+      tone,
+      text,
+      cast.changingLines,
+      cast.primaryFace
+    )
+    const refResolved = inst.campaignRef ?? inst.slug ?? campaignRef
+    return {
+      campaignName: inst.name ?? campaignRef,
+      kotterStage,
+      campaignRefResolved: refResolved,
+      spokeIndex,
+      hexagramId: cast.hexagramId,
+      hexagramName: name,
+      tone,
+      text,
+      changingLines: cast.changingLines,
+      primaryFace: cast.primaryFace,
+      ...ctx,
+    }
+  } catch (e) {
+    console.error('[getSpokeLandingContext]', e)
+    return { error: e instanceof Error ? e.message : 'Failed to load landing' }
   }
 }

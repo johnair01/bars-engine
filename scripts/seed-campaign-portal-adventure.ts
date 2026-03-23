@@ -1,15 +1,11 @@
 /**
- * Seed Campaign Portal Adventure (Phase 2A + 2B)
+ * Seed Campaign Portal Adventure (Phase 2E: Face × Move)
  *
- * Creates one Adventure per campaignRef with 8 portal entry passages (Portal_1 … Portal_8)
- * and 8 room passages (Room_1 … Room_8). Each Portal_N has hexagram-flavored text and
- * a single choice "Enter the room" → Room_N.
+ * Structure: 8 Portal + 8 Room + 3 shared Emit + 1 Hub_Return = 20 passages.
  *
- * Phase 2B: Each Room has 4 choices:
- * - Wake Up → redirect:/shadow/321 (with returnTo to lobby)
- * - Clean Up → redirect:/emotional-first-aid (with returnTo to lobby)
- * - Grow Up → schools (client navigates to schools adventure; Phase 2C)
- * - Show Up → redirect:/campaign/lobby
+ * Room choices now route to shared emit nodes (WakeUp_Emit, CleanUp_Emit, ShowUp_Emit).
+ * The API route injects face-specific text + barTemplate at runtime via ?face= param.
+ * Face is passed from CampaignHubView → AdventurePlayer → node fetch URL.
  *
  * Run: npm run seed:portal-adventure [campaignRef]
  * Default: bruised-banana
@@ -32,25 +28,54 @@ const PORTAL_FLAVOR_TEMPLATES: Record<number, string> = {
   8: '**Portal 8** — Holding Together\n\nAlliance and unity. We are stronger together. Enter when you\'re ready.',
 }
 
-// Phase 2D: Warm, inviting room copy. No onboarding language.
+// Room copy — intentionally sparse. Move choices carry the weight.
 const ROOM_TEXT = `**The room holds space for you.**
 
-What do you need right now? Choose your move:
+What kind of move do you want to make right now?`
 
-- **Wake Up** — See what's emerging
-- **Clean Up** — Tend to what blocks you
-- **Grow Up** — Study at a school
-- **Show Up** — Return to the lobby`
-
-// Phase 2B+2C: Wake Up → 321, Clean Up → EFA, Grow Up → schools (client navigates), Show Up → lobby
+// Phase 2E: Rooms route to shared emit nodes (face-aware at runtime) or schools
 function buildRoomChoices(_roomIndex: number) {
   return [
-    { text: 'Wake Up — See what\'s emerging', targetId: 'redirect:/shadow/321' },
-    { text: 'Clean Up — Tend to what blocks you', targetId: 'redirect:/emotional-first-aid' },
+    { text: 'Wake Up — See what\'s emerging', targetId: 'WakeUp_Emit' },
+    { text: 'Clean Up — Tend to what blocks you', targetId: 'CleanUp_Emit' },
     { text: 'Grow Up — Study at a school', targetId: 'schools' },
-    { text: 'Show Up — Return to the lobby', targetId: 'redirect:/campaign/lobby' },
+    { text: 'Show Up — Make a commitment', targetId: 'ShowUp_Emit' },
   ]
 }
+
+// Shared emit node definitions (face-neutral fallback text; runtime replaces with face-specific content)
+const EMIT_PASSAGES = [
+  {
+    nodeId: 'WakeUp_Emit',
+    text: 'Take a moment to orient. What is becoming visible that was hidden before?\n\nName it in a BAR.',
+    metadata: {
+      actionType: 'bar_emit',
+      blueprintKey: 'move_wakeUp',
+      barTemplate: { defaultTitle: 'What I see emerging', defaultDescription: 'What became visible when I stepped in?' },
+      nextTargetId: 'Hub_Return',
+    },
+  },
+  {
+    nodeId: 'CleanUp_Emit',
+    text: 'Something is blocking flow. What charge are you ready to metabolize?\n\nName it in a BAR.',
+    metadata: {
+      actionType: 'bar_emit',
+      blueprintKey: 'move_cleanUp',
+      barTemplate: { defaultTitle: 'What is blocking me', defaultDescription: 'What would unblock my flow right now?' },
+      nextTargetId: 'Hub_Return',
+    },
+  },
+  {
+    nodeId: 'ShowUp_Emit',
+    text: 'You are ready to make a move. Name the specific commitment you are making.\n\nCapture it as a BAR.',
+    metadata: {
+      actionType: 'bar_emit',
+      blueprintKey: 'move_showUp',
+      barTemplate: { defaultTitle: 'My commitment', defaultDescription: 'The specific action I am committing to.' },
+      nextTargetId: 'Hub_Return',
+    },
+  },
+]
 
 async function seed(campaignRef: string) {
   console.log(`--- Seeding Campaign Portal Adventure: ${campaignRef} ---`)
@@ -134,6 +159,45 @@ async function seed(campaignRef: string) {
       })
       created++
     }
+  }
+
+  // Shared emit passages (WakeUp_Emit, CleanUp_Emit, ShowUp_Emit) + Hub_Return
+  for (const ep of EMIT_PASSAGES) {
+    const existing = await db.passage.findUnique({
+      where: { adventureId_nodeId: { adventureId: adventure.id, nodeId: ep.nodeId } },
+    })
+    if (existing) {
+      await db.passage.update({
+        where: { id: existing.id },
+        data: { text: ep.text, choices: '[]', metadata: ep.metadata },
+      })
+      updated++
+    } else {
+      await db.passage.create({
+        data: { adventureId: adventure.id, nodeId: ep.nodeId, text: ep.text, choices: '[]', metadata: ep.metadata },
+      })
+      created++
+    }
+  }
+
+  // Hub_Return passage
+  const hubReturnNodeId = 'Hub_Return'
+  const hubReturnExisting = await db.passage.findUnique({
+    where: { adventureId_nodeId: { adventureId: adventure.id, nodeId: hubReturnNodeId } },
+  })
+  const hubReturnChoices = JSON.stringify([{ text: 'Return to the hub →', targetId: 'redirect:/campaign/hub' }])
+  const hubReturnText = 'Your response has been captured.\n\nReturn to the campaign hub when you\'re ready.'
+  if (hubReturnExisting) {
+    await db.passage.update({
+      where: { id: hubReturnExisting.id },
+      data: { text: hubReturnText, choices: hubReturnChoices },
+    })
+    updated++
+  } else {
+    await db.passage.create({
+      data: { adventureId: adventure.id, nodeId: hubReturnNodeId, text: hubReturnText, choices: hubReturnChoices },
+    })
+    created++
   }
 
   // Phase 2C: Grow Up → schools adventure (targetId "schools"). Remove old Schools_N placeholders.
