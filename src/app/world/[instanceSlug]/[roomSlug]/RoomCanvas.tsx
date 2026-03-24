@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Application } from 'pixi.js'
-import { RoomRenderer, type AnchorData, type AgentData } from '@/lib/spatial-world/pixi-room'
+import type { AnchorData, AgentData } from '@/lib/spatial-world/pixi-room'
+import { useSpatialRoomSession } from '@/lib/spatial-world/useSpatialRoomSession'
 import { enterRoom, heartbeat } from '@/actions/room-presence'
 import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
@@ -12,6 +12,8 @@ import { MapAvatarGate } from '@/components/world/MapAvatarGate'
 import { DPadOverlay } from '@/components/world/DPadOverlay'
 
 type RoomCanvasProps = {
+  /** Canonical spatial bind from computeSpatialBindKey (server or client). */
+  spatialBindKey: string
   player: {
     id: string
     name: string
@@ -30,11 +32,8 @@ type RoomCanvasProps = {
   spawnY: number
 }
 
-export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawnY }: RoomCanvasProps) {
+export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlug, spawnX, spawnY }: RoomCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const rendererRef = useRef<RoomRenderer | null>(null)
-  const appRef = useRef<Application | null>(null)
-  const mountedRef = useRef(false)
   const router = useRouter()
 
   const [playerPos, setPlayerPos] = useState({ x: spawnX, y: spawnY })
@@ -80,6 +79,22 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
     if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
   }
   const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const { rendererRef } = useSpatialRoomSession({
+    spatialBindKey,
+    containerRef,
+    spriteReady,
+    tilemap: room.tilemap,
+    anchors: room.anchors,
+    spawn: { x: spawnX, y: spawnY },
+    walkableSpriteUrl: player.walkableSpriteUrl ?? null,
+    onAgentClick: setSelectedAgent,
+    onPortalActivate: anchor => portalNavigateRef.current(anchor),
+  })
+
+  useEffect(() => {
+    setPlayerPos({ x: spawnX, y: spawnY })
+  }, [spatialBindKey, spawnX, spawnY])
 
   const cancelWalk = useCallback(() => {
     if (walkIntervalRef.current !== null) {
@@ -129,47 +144,6 @@ export function RoomCanvas({ player, room, allRooms, instanceSlug, spawnX, spawn
       setPlayerPos(next)
     }
   }, [cancelWalk])
-
-  // Init Pixi
-  useEffect(() => {
-    if (mountedRef.current || !containerRef.current || !spriteReady) return
-    mountedRef.current = true
-
-    const app = new Application()
-    appRef.current = app
-    let initDone = false
-
-    void app.init({
-      backgroundColor: 0x09090b,
-      resizeTo: containerRef.current,
-      antialias: false,
-    }).then(() => {
-      initDone = true
-      if (!containerRef.current || !appRef.current) return
-      containerRef.current.appendChild(app.canvas)
-      const renderer = new RoomRenderer(app, room.tilemap)
-      rendererRef.current = renderer
-      renderer.setPlayerPosition(spawnX, spawnY)
-      renderer.setPlayerSpriteUrl(player.walkableSpriteUrl ?? null)
-      renderer.setAnchors(room.anchors)
-      renderer.onAgentClick(setSelectedAgent)
-      renderer.onPortalActivate(anchor => portalNavigateRef.current(anchor))
-      // Re-center after layout settles — screen dimensions may be 0 during app.init()
-      requestAnimationFrame(() => renderer.recenter())
-    })
-
-    return () => {
-      mountedRef.current = false
-      cancelWalk()
-      appRef.current = null
-      rendererRef.current = null
-      // Only destroy if init completed — avoids _cancelResize not a function on early unmount
-      if (initDone) {
-        app.destroy({ removeView: true })
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spriteReady, player.walkableSpriteUrl])
 
   // Update renderer when position changes; auto-navigate portals on touch
   useEffect(() => {

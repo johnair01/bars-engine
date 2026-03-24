@@ -3,6 +3,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { getAppConfig } from '@/actions/config'
 import { dbBase } from '@/lib/db'
 import { slugify } from '@/lib/spatial-world/utils'
+import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { LobbyCanvas } from '../LobbyCanvas'
 
@@ -54,8 +55,11 @@ export default async function LobbyRoomPage({
     ? getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))
     : null
 
+  const spatialBindKey = computeSpatialBindKey(room.id, tilemap, anchors)
+
   return (
     <LobbyCanvas
+      spatialBindKey={spatialBindKey}
       player={{
         id: player.id,
         name: player.name,

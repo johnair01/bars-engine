@@ -3,8 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Application } from 'pixi.js'
-import { RoomRenderer, type AnchorData, type AgentData } from '@/lib/spatial-world/pixi-room'
+import type { AnchorData, AgentData } from '@/lib/spatial-world/pixi-room'
+import { useSpatialRoomSession } from '@/lib/spatial-world/useSpatialRoomSession'
 import { enterRoom, heartbeat } from '@/actions/room-presence'
 import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
@@ -14,6 +14,7 @@ import { MapAvatarGate } from '@/components/world/MapAvatarGate'
 const INSTANCE_SLUG_LOBBY = 'lobby'
 
 type LobbyCanvasProps = {
+  spatialBindKey: string
   player: {
     id: string
     name: string
@@ -32,11 +33,8 @@ type LobbyCanvasProps = {
   mapName: string
 }
 
-export function LobbyCanvas({ player, room, allRooms, spawnX, spawnY, mapName }: LobbyCanvasProps) {
+export function LobbyCanvas({ spatialBindKey, player, room, allRooms, spawnX, spawnY, mapName }: LobbyCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const rendererRef = useRef<RoomRenderer | null>(null)
-  const appRef = useRef<Application | null>(null)
-  const mountedRef = useRef(false)
   const router = useRouter()
 
   const [playerPos, setPlayerPos] = useState({ x: spawnX, y: spawnY })
@@ -51,35 +49,20 @@ export function LobbyCanvas({ player, room, allRooms, spawnX, spawnY, mapName }:
   const posRef = useRef(playerPos)
   useLayoutEffect(() => { posRef.current = playerPos })
 
+  const { rendererRef } = useSpatialRoomSession({
+    spatialBindKey,
+    containerRef,
+    spriteReady,
+    tilemap: room.tilemap,
+    anchors: room.anchors,
+    spawn: { x: spawnX, y: spawnY },
+    walkableSpriteUrl: player.walkableSpriteUrl ?? null,
+    onAgentClick: setSelectedAgent,
+  })
+
   useEffect(() => {
-    if (mountedRef.current || !containerRef.current || !spriteReady) return
-    mountedRef.current = true
-
-    const app = new Application()
-    appRef.current = app
-
-    void app.init({
-      backgroundColor: 0x09090b,
-      resizeTo: containerRef.current,
-      antialias: false,
-    }).then(() => {
-      if (!containerRef.current || !appRef.current) return
-      containerRef.current.appendChild(app.canvas)
-      const renderer = new RoomRenderer(app, room.tilemap)
-      rendererRef.current = renderer
-      renderer.setPlayerPosition(spawnX, spawnY)
-      if (player.walkableSpriteUrl) renderer.setPlayerSpriteUrl(player.walkableSpriteUrl)
-      renderer.setAnchors(room.anchors)
-      renderer.onAgentClick(setSelectedAgent)
-    })
-
-    return () => {
-      mountedRef.current = false
-      appRef.current?.destroy(true, { children: true })
-      appRef.current = null
-      rendererRef.current = null
-    }
-  }, [spriteReady, room.tilemap, room.anchors, spawnX, spawnY, player.walkableSpriteUrl])
+    setPlayerPos({ x: spawnX, y: spawnY })
+  }, [spatialBindKey, spawnX, spawnY])
 
   useEffect(() => {
     rendererRef.current?.setPlayerPosition(playerPos.x, playerPos.y)

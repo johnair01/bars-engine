@@ -42,9 +42,18 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <header className="space-y-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Vault</h1>
-                    <p className="text-zinc-400 mt-1">Your private studio — metabolize what you&apos;ve been carrying.</p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                    <div className="min-w-0">
+                        <h1 className="text-3xl font-bold text-white">Vault</h1>
+                        <p className="text-zinc-400 mt-1">Your private studio — metabolize what you&apos;ve been carrying.</p>
+                    </div>
+                    <Link
+                        href="/capture"
+                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-rose-700/70 bg-rose-950/40 px-4 py-3 text-sm font-semibold text-rose-100 shadow-[0_0_0_1px_rgba(244,63,94,0.15)] transition-colors hover:border-rose-500/80 hover:bg-rose-900/50 hover:text-white min-h-[44px] sm:min-w-[12rem]"
+                    >
+                        <span aria-hidden>⚡</span>
+                        Capture a BAR
+                    </Link>
                 </div>
 
                 <VaultSummaryStrip
@@ -120,12 +129,6 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
             </div>
 
             <div className="flex flex-wrap gap-2">
-                <Link
-                    href="/capture"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-800/50 bg-rose-950/20 text-sm text-rose-400 hover:text-rose-300 hover:border-rose-700/60 transition-colors"
-                >
-                    ⚡ Capture Charge
-                </Link>
                 <Link
                     href="/hand/forge-invitation"
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-sm text-emerald-400 hover:text-emerald-300 hover:border-emerald-700/60 transition-colors"

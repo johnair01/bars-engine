@@ -119,8 +119,10 @@ export class RoomRenderer {
   }
 
   private centerCamera() {
-    const screenW = this.app.screen.width || this.app.canvas.clientWidth
-    const screenH = this.app.screen.height || this.app.canvas.clientHeight
+    // Pixi v8: app.screen can be null briefly or after destroy; canvas may be detached.
+    const scr = this.app.screen
+    const screenW = scr?.width ?? this.app.canvas?.clientWidth ?? 0
+    const screenH = scr?.height ?? this.app.canvas?.clientHeight ?? 0
     if (!screenW || !screenH) return
     const px = this.playerPos.x * this.tileSize + this.tileSize / 2
     const py = this.playerPos.y * this.tileSize + this.tileSize / 2

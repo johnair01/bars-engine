@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { dbBase } from '@/lib/db'
 import { slugify } from '@/lib/spatial-world/utils'
+import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { RoomCanvas } from './RoomCanvas'
 
@@ -68,9 +69,11 @@ export default async function WorldRoomPage({
     ? getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))
     : null
 
+  const spatialBindKey = computeSpatialBindKey(room.id, tilemap, anchors)
+
   return (
     <RoomCanvas
-      key={room.id}
+      spatialBindKey={spatialBindKey}
       player={{
         id: player.id,
         name: player.name,
