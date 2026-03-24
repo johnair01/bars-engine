@@ -18,19 +18,18 @@ Design rules (from constraints):
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Enumerations (string-valued for JSON round-trip)
 # ---------------------------------------------------------------------------
 
 
-class SubmissionPath(str, Enum):
+class SubmissionPath(StrEnum):
     """Four co-creation submission paths — all enter identical review lifecycle."""
 
     PLAYER_DIRECT = "player_direct"
@@ -46,7 +45,7 @@ class SubmissionPath(str, Enum):
     """challenger.py autonomous proposal generation — SLA fallback path."""
 
 
-class FaceSubPacketState(str, Enum):
+class FaceSubPacketState(StrEnum):
     """Lifecycle state for a single face sub-packet."""
 
     PENDING = "pending"
@@ -62,7 +61,7 @@ class FaceSubPacketState(str, Enum):
     """Player explicitly bypassed this face during the orientation session."""
 
 
-class GameMasterFace(str, Enum):
+class GameMasterFace(StrEnum):
     """The six Game Master faces that guide depth branches."""
 
     SHAMAN = "shaman"
@@ -73,7 +72,7 @@ class GameMasterFace(str, Enum):
     SAGE = "sage"
 
 
-class SessionState(str, Enum):
+class SessionState(StrEnum):
     """Overall orientation session state."""
 
     ACTIVE = "active"
@@ -86,7 +85,7 @@ class SessionState(str, Enum):
 # ---------------------------------------------------------------------------
 
 
-class MoveCategory(str, Enum):
+class MoveCategory(StrEnum):
     AWARENESS = "awareness"
     REFRAMING = "reframing"
     EMOTIONAL_PROCESSING = "emotional_processing"
@@ -94,14 +93,14 @@ class MoveCategory(str, Enum):
     INTEGRATION = "integration"
 
 
-class WcgsStage(str, Enum):
+class WcgsStage(StrEnum):
     WAKE_UP = "wake_up"
     CLEAN_UP = "clean_up"
     GROW_UP = "grow_up"
     SHOW_UP = "show_up"
 
 
-class TypicalOutputType(str, Enum):
+class TypicalOutputType(StrEnum):
     REFLECTION = "reflection"
     DIALOGUE = "dialogue"
     SOMATIC = "somatic"
@@ -109,14 +108,14 @@ class TypicalOutputType(str, Enum):
     INTEGRATION = "integration"
 
 
-class LockType(str, Enum):
+class LockType(StrEnum):
     IDENTITY_LOCK = "identity_lock"
     EMOTIONAL_LOCK = "emotional_lock"
     ACTION_LOCK = "action_lock"
     POSSIBILITY_LOCK = "possibility_lock"
 
 
-class EmotionChannel(str, Enum):
+class EmotionChannel(StrEnum):
     FEAR = "fear"
     ANGER = "anger"
     SADNESS = "sadness"
@@ -331,12 +330,12 @@ class CompositeQualityScore(BaseModel):
         description="Normalised mean: (admin + structural + live) / 3.",
     )
     computed_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when the composite was last computed.",
     )
 
     @model_validator(mode="after")
-    def _sync_composite(self) -> "CompositeQualityScore":
+    def _sync_composite(self) -> CompositeQualityScore:
         """Keep composite_score consistent with the three input signals."""
         self.composite_score = round(
             (self.admin_score + self.structural_agent_score + self.live_performance_signal) / 3.0,
@@ -392,12 +391,12 @@ class OrientationMetaPacket(BaseModel):
     )
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when this meta-packet was created.",
     )
 
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp of the most recent sub-packet update.",
     )
 
@@ -408,7 +407,7 @@ class OrientationMetaPacket(BaseModel):
         player_id: str,
         submission_path: SubmissionPath,
         enabled_faces: list[GameMasterFace] | None = None,
-    ) -> "OrientationMetaPacket":
+    ) -> OrientationMetaPacket:
         """Construct a fresh OrientationMetaPacket with all face sub-packets initialised.
 
         Args:

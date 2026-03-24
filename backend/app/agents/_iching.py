@@ -11,10 +11,9 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
 
 from pydantic_ai import RunContext
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 
 from app.agents._deps import AgentDeps
 

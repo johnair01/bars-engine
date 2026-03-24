@@ -2,7 +2,7 @@ import asyncio
 import logging
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Query
 
 from .schemas import SpriteGenerationJob, SpriteJobEnqueuedResponse, SpriteStatusResponse
 from .worker import process_portrait_job
@@ -29,7 +29,7 @@ async def enqueue_sprite_generation(job: SpriteGenerationJob):
     return SpriteJobEnqueuedResponse(jobId=job_id, status="enqueued")
 
 @router.get("/status", response_model=SpriteStatusResponse)
-async def get_sprite_status(playerId: str):
+async def get_sprite_status(player_id: str = Query(..., alias="playerId")):
     """Check generation status for a player's sprites."""
     # TODO: query SpriteAuditLog (Phase 3a.16 — Regent face)
     return SpriteStatusResponse(portrait="none", walkable="none")

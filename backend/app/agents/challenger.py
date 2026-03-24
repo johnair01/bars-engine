@@ -11,7 +11,6 @@ from pydantic_ai import Agent, RunContext
 
 from app.agents._deps import AgentDeps
 from app.agents._iching import iching_context_prompt, iching_journal_prompt
-from app.config import settings
 from app.agents._instructions import deftness_context, nation_context, player_narrative_context
 from app.agents._tools import (
     discern_wave_move,
@@ -19,7 +18,7 @@ from app.agents._tools import (
     load_nation_moves,
     load_player_context,
 )
-
+from app.config import settings
 
 # ---------------------------------------------------------------------------
 # Output schema
@@ -147,9 +146,9 @@ async def get_player_move_unlocks(ctx: RunContext[AgentDeps]) -> str:
     if not ctx.deps.player_id:
         return "No player ID set."
 
-    from app.models.game import NationMove, PlayerNationMoveUnlock
-
     from sqlalchemy import select
+
+    from app.models.game import NationMove, PlayerNationMoveUnlock
 
     db = ctx.deps.db
     stmt = (
@@ -170,9 +169,9 @@ async def get_player_equipped_moves(ctx: RunContext[AgentDeps]) -> str:
     if not ctx.deps.player_id:
         return "No player ID set."
 
-    from app.models.game import NationMove, PlayerMoveEquip
-
     from sqlalchemy import select
+
+    from app.models.game import NationMove, PlayerMoveEquip
 
     db = ctx.deps.db
     stmt = (

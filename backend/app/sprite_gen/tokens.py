@@ -3,6 +3,7 @@ Token registry — nation and archetype descriptors for sprite generation.
 Each entry describes conceptual identity (philosophy + material), not just appearance.
 """
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 

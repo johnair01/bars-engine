@@ -54,3 +54,4 @@
 - [x] `DeckIntakeV1.ownerGoalLine` + wizard step `owner_goal` + parse/finalize
 - [x] `applyDeckIntakeV1` interactive transaction: create/update `CustomBar`, set `CampaignDeckCard.questId` (idempotent)
 - [x] `revalidatePath('/admin/quests')` after apply
+- [x] Kotter × hexagram × alchemy × face grammar — [`kotter-quest-seed-grammar`](../kotter-quest-seed-grammar/spec.md); deck wizard stage-1 quests use [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts)

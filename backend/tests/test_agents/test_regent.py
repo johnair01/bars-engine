@@ -9,9 +9,8 @@ from httpx import ASGITransport, AsyncClient
 from pydantic_ai.models.test import TestModel
 
 from app.agents._deps import AgentDeps
-from app.agents.regent import CampaignAssessment, regent_agent, deterministic_regent_assessment
+from app.agents.regent import CampaignAssessment, deterministic_regent_assessment, regent_agent
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback

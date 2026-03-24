@@ -12,7 +12,6 @@ from app.agents._deps import AgentDeps
 from app.agents.architect import QuestDraft, architect_agent, deterministic_architect_draft
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback
 # ---------------------------------------------------------------------------

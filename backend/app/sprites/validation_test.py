@@ -1,5 +1,8 @@
 """Basic smoke tests for sprite validation."""
-import os, struct, tempfile
+import os
+import struct
+import tempfile
+
 
 def _make_png(w: int, h: int, has_alpha: bool = True) -> bytes:
     """Minimal valid PNG bytes."""

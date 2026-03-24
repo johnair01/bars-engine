@@ -1,5 +1,6 @@
+from typing import Literal
+
 from pydantic import BaseModel
-from typing import Literal, Optional, List
 
 PipelineType = Literal["portrait", "walkable"]
 StatusType = Literal["enqueued", "generated", "review", "approved", "rejected"]
@@ -9,7 +10,7 @@ class SpriteGenerationJob(BaseModel):
     nationKey: str
     archetypeKey: str
     genderKey: str = "default"
-    pipeline: List[PipelineType] = ["portrait", "walkable"]
+    pipeline: list[PipelineType] = ["portrait", "walkable"]
 
 class SpriteJobEnqueuedResponse(BaseModel):
     jobId: str

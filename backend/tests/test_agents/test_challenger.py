@@ -12,7 +12,6 @@ from app.agents._deps import AgentDeps
 from app.agents.challenger import MoveProposal, challenger_agent, deterministic_challenger_proposal
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback
 # ---------------------------------------------------------------------------

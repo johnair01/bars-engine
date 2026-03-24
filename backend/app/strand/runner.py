@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
+from pydantic_ai._tool_manager import ToolManager
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.architect import architect_agent, deterministic_architect_draft
-from app.agents.sage import sage_agent, deterministic_sage_response
-from app.agents.shaman import shaman_agent, deterministic_shaman_reading
 from app.agents._deps import AgentDeps
+from app.agents.architect import architect_agent, deterministic_architect_draft
+from app.agents.sage import deterministic_sage_response, sage_agent
+from app.agents.shaman import deterministic_shaman_reading, shaman_agent
 from app.config import settings
 from app.models.player import Player
 from app.models.quest import CustomBar
@@ -80,200 +80,203 @@ async def run_strand(
     outputs: list[str] = []
     audit_trail: list[dict] = []
 
-    for sect in sect_sequence:
-        if sect == "shaman":
-            # --- before advocacy ---
-            audit_trail.append({
-                "sect": "shaman",
-                "event": "before_advocacy",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "shouldRun": True,
-                    "reason": "Shaman reads root-cause emotional landscape before any synthesis.",
-                },
-            })
+    # Single shared AsyncSession: pydantic-ai defaults to parallel tool calls, which asyncpg rejects
+    # ("another operation is in progress"). Strand runs must serialize tool execution.
+    with ToolManager.parallel_execution_mode("sequential"):
+        for sect in sect_sequence:
+            if sect == "shaman":
+                # --- before advocacy ---
+                audit_trail.append({
+                    "sect": "shaman",
+                    "event": "before_advocacy",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "shouldRun": True,
+                        "reason": "Shaman reads root-cause emotional landscape before any synthesis.",
+                    },
+                })
 
-            # --- run ---
-            if settings.openai_api_key.get_secret_value():
-                try:
-                    r = await shaman_agent.run(f"Read the emotional/root-cause landscape for: {subject}", deps=deps)
-                    shaman_out = r.output.model_dump_json()
-                except Exception as e:
-                    logger.warning("Shaman failed", exc_info=True)
-                    # during flag — recoverable fallback
-                    audit_trail.append({
-                        "sect": "shaman",
-                        "event": "during_flag",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "data": {
-                            "flag": "agent_error",
-                            "message": str(e),
-                            "severity": "warn",
-                        },
-                    })
+                # --- run ---
+                if settings.openai_api_key.get_secret_value():
+                    try:
+                        r = await shaman_agent.run(f"Read the emotional/root-cause landscape for: {subject}", deps=deps)
+                        shaman_out = r.output.model_dump_json()
+                    except Exception as e:
+                        logger.warning("Shaman failed", exc_info=True)
+                        # during flag — recoverable fallback
+                        audit_trail.append({
+                            "sect": "shaman",
+                            "event": "during_flag",
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "data": {
+                                "flag": "agent_error",
+                                "message": str(e),
+                                "severity": "warn",
+                            },
+                        })
+                        shaman_out = deterministic_shaman_reading(subject).model_dump_json()
+                else:
                     shaman_out = deterministic_shaman_reading(subject).model_dump_json()
-            else:
-                shaman_out = deterministic_shaman_reading(subject).model_dump_json()
 
-            audit_trail.append({
-                "sect": "shaman",
-                "event": "run",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {"output_preview": shaman_out[:200]},
-            })
+                audit_trail.append({
+                    "sect": "shaman",
+                    "event": "run",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {"output_preview": shaman_out[:200]},
+                })
 
-            # --- after retro ---
-            audit_trail.append({
-                "sect": "shaman",
-                "event": "after_retro",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "retrospective": (
-                        "Shaman surfaced emotional/root-cause terrain. "
-                        "Sage should synthesize before Architect commits to a spec shape."
-                    ),
-                    "suggestedImprovements": [
-                        "Consider multi-pass shaman reading for high-ambiguity subjects.",
-                    ],
-                },
-            })
+                # --- after retro ---
+                audit_trail.append({
+                    "sect": "shaman",
+                    "event": "after_retro",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "retrospective": (
+                            "Shaman surfaced emotional/root-cause terrain. "
+                            "Sage should synthesize before Architect commits to a spec shape."
+                        ),
+                        "suggestedImprovements": [
+                            "Consider multi-pass shaman reading for high-ambiguity subjects.",
+                        ],
+                    },
+                })
 
-        elif sect == "sage":
-            # --- before advocacy ---
-            audit_trail.append({
-                "sect": "sage",
-                "event": "before_advocacy",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "shouldRun": True,
-                    "reason": "Sage synthesizes shaman output into structured next steps before Architect specs.",
-                },
-            })
+            elif sect == "sage":
+                # --- before advocacy ---
+                audit_trail.append({
+                    "sect": "sage",
+                    "event": "before_advocacy",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "shouldRun": True,
+                        "reason": "Sage synthesizes shaman output into structured next steps before Architect specs.",
+                    },
+                })
 
-            # --- run ---
-            if settings.openai_api_key.get_secret_value():
-                try:
-                    r = await sage_agent.run(
-                        f"Synthesize root cause and next steps for: {subject}",
-                        deps=deps,
-                    )
-                    sage_out = r.output.synthesis
-                except Exception as e:
-                    logger.warning("Sage failed", exc_info=True)
-                    audit_trail.append({
-                        "sect": "sage",
-                        "event": "during_flag",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "data": {
-                            "flag": "agent_error",
-                            "message": str(e),
-                            "severity": "warn",
-                        },
-                    })
+                # --- run ---
+                if settings.openai_api_key.get_secret_value():
+                    try:
+                        r = await sage_agent.run(
+                            f"Synthesize root cause and next steps for: {subject}",
+                            deps=deps,
+                        )
+                        sage_out = r.output.synthesis
+                    except Exception as e:
+                        logger.warning("Sage failed", exc_info=True)
+                        audit_trail.append({
+                            "sect": "sage",
+                            "event": "during_flag",
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "data": {
+                                "flag": "agent_error",
+                                "message": str(e),
+                                "severity": "warn",
+                            },
+                        })
+                        sage_out = deterministic_sage_response(subject).synthesis
+                else:
                     sage_out = deterministic_sage_response(subject).synthesis
-            else:
-                sage_out = deterministic_sage_response(subject).synthesis
 
-            audit_trail.append({
-                "sect": "sage",
-                "event": "run",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {"synthesis_preview": sage_out[:200]},
-            })
+                audit_trail.append({
+                    "sect": "sage",
+                    "event": "run",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {"synthesis_preview": sage_out[:200]},
+                })
 
-            # --- after retro ---
-            audit_trail.append({
-                "sect": "sage",
-                "event": "after_retro",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "retrospective": (
-                        "Sage produced synthesis. "
-                        "Architect should anchor spec grammar to the emotional root cause surfaced here."
-                    ),
-                    "suggestedImprovements": [
-                        "Cross-reference synthesis against shaman reading for coherence gaps.",
-                    ],
-                },
-            })
+                # --- after retro ---
+                audit_trail.append({
+                    "sect": "sage",
+                    "event": "after_retro",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "retrospective": (
+                            "Sage produced synthesis. "
+                            "Architect should anchor spec grammar to the emotional root cause surfaced here."
+                        ),
+                        "suggestedImprovements": [
+                            "Cross-reference synthesis against shaman reading for coherence gaps.",
+                        ],
+                    },
+                })
 
-        elif sect == "architect":
-            narrative_lock = f"Root cause / diagnostic: {subject}"
+            elif sect == "architect":
+                narrative_lock = f"Root cause / diagnostic: {subject}"
 
-            # --- before advocacy ---
-            audit_trail.append({
-                "sect": "architect",
-                "event": "before_advocacy",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "shouldRun": True,
-                    "suggestRoute": "epiphany_bridge",
-                    "reason": "Architect commits shaman+sage findings into a durable spec BAR.",
-                },
-            })
+                # --- before advocacy ---
+                audit_trail.append({
+                    "sect": "architect",
+                    "event": "before_advocacy",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "shouldRun": True,
+                        "suggestRoute": "epiphany_bridge",
+                        "reason": "Architect commits shaman+sage findings into a durable spec BAR.",
+                    },
+                })
 
-            # --- run ---
-            if settings.openai_api_key.get_secret_value():
-                try:
-                    r = await architect_agent.run(
-                        f"Design a diagnostic spec for: {narrative_lock}\nGrammar: epiphany_bridge",
-                        deps=deps,
-                    )
-                    draft = r.output
-                except Exception as e:
-                    logger.warning("Architect failed", exc_info=True)
-                    audit_trail.append({
-                        "sect": "architect",
-                        "event": "during_flag",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "data": {
-                            "flag": "agent_error",
-                            "message": str(e),
-                            "severity": "warn",
-                        },
-                    })
+                # --- run ---
+                if settings.openai_api_key.get_secret_value():
+                    try:
+                        r = await architect_agent.run(
+                            f"Design a diagnostic spec for: {narrative_lock}\nGrammar: epiphany_bridge",
+                            deps=deps,
+                        )
+                        draft = r.output
+                    except Exception as e:
+                        logger.warning("Architect failed", exc_info=True)
+                        audit_trail.append({
+                            "sect": "architect",
+                            "event": "during_flag",
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "data": {
+                                "flag": "agent_error",
+                                "message": str(e),
+                                "severity": "warn",
+                            },
+                        })
+                        draft = deterministic_architect_draft(narrative_lock, "epiphany_bridge")
+                else:
                     draft = deterministic_architect_draft(narrative_lock, "epiphany_bridge")
-            else:
-                draft = deterministic_architect_draft(narrative_lock, "epiphany_bridge")
 
-            # Create output spec BAR
-            spec_bar = CustomBar(
-                creator_id=creator_id,
-                title=draft.title[:80] if draft.title else f"Diagnostic spec: {subject[:40]}",
-                description=draft.description or f"Spec from strand diagnostic: {subject}",
-                type="vibe",
-                status="active",
-                visibility="private",
-                is_system=True,
-                source_bar_id=strand_bar.id,
-            )
-            session.add(spec_bar)
-            await session.flush()
-            outputs.append(spec_bar.id)
+                # Create output spec BAR
+                spec_bar = CustomBar(
+                    creator_id=creator_id,
+                    title=draft.title[:80] if draft.title else f"Diagnostic spec: {subject[:40]}",
+                    description=draft.description or f"Spec from strand diagnostic: {subject}",
+                    type="vibe",
+                    status="active",
+                    visibility="private",
+                    is_system=True,
+                    source_bar_id=strand_bar.id,
+                )
+                session.add(spec_bar)
+                await session.flush()
+                outputs.append(spec_bar.id)
 
-            audit_trail.append({
-                "sect": "architect",
-                "event": "run",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {"output_bar_id": spec_bar.id},
-            })
+                audit_trail.append({
+                    "sect": "architect",
+                    "event": "run",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {"output_bar_id": spec_bar.id},
+                })
 
-            # --- after retro ---
-            audit_trail.append({
-                "sect": "architect",
-                "event": "after_retro",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "data": {
-                    "retrospective": (
-                        "Architect produced spec BAR. "
-                        "Review grammar alignment (epiphany_bridge) against strand subject before promotion."
-                    ),
-                    "suggestedImprovements": [
-                        "Validate spec BAR title length and description completeness before player exposure.",
-                        "Consider linking spec BAR back to shaman/sage audit entries for full provenance.",
-                    ],
-                },
-            })
+                # --- after retro ---
+                audit_trail.append({
+                    "sect": "architect",
+                    "event": "after_retro",
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "data": {
+                        "retrospective": (
+                            "Architect produced spec BAR. "
+                            "Review grammar alignment (epiphany_bridge) against strand subject before promotion."
+                        ),
+                        "suggestedImprovements": [
+                            "Validate spec BAR title length and description completeness before player exposure.",
+                            "Consider linking spec BAR back to shaman/sage audit entries for full provenance.",
+                        ],
+                    },
+                })
 
     # 3. Ensure at least one output (spec)
     if not outputs:

@@ -9,9 +9,8 @@ from httpx import ASGITransport, AsyncClient
 from pydantic_ai.models.test import TestModel
 
 from app.agents._deps import AgentDeps
-from app.agents.diplomat import CommunityGuidance, diplomat_agent, deterministic_diplomat_guidance
+from app.agents.diplomat import CommunityGuidance, deterministic_diplomat_guidance, diplomat_agent
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback

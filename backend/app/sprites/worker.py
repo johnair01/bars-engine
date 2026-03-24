@@ -10,12 +10,12 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
 from app.config import settings
 from app.sprite_gen.builder import build_walkable
+
 from .schemas import SpriteGenerationJob
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ async def generate_walkable_sprite(job: SpriteGenerationJob) -> dict:
         return {"status": "error", "error": str(e)}
 
 
-async def _poll_prediction(token: str, prediction_id: str, max_wait: int = 90) -> Optional[str]:
+async def _poll_prediction(token: str, prediction_id: str, max_wait: int = 90) -> str | None:
     """Poll Replicate prediction until complete or timeout."""
     import asyncio
     async with httpx.AsyncClient(timeout=30) as client:
@@ -182,7 +182,7 @@ async def process_portrait_job(job: SpriteGenerationJob) -> dict:
     return {"status": "portrait_pending", "path": str(marker)}
 
 
-async def flatten_portrait(nation_key: str, archetype_key: str) -> Optional[Path]:
+async def flatten_portrait(nation_key: str, archetype_key: str) -> Path | None:
     """
     Flatten 5 portrait layers into a single 64x64 PNG using LibreSprite --batch.
     Returns path to flattened PNG or None if LibreSprite not available.

@@ -11,10 +11,9 @@ from pydantic_ai import Agent, RunContext
 
 from app.agents._deps import AgentDeps
 from app.agents._iching import iching_context_prompt, iching_journal_prompt
-from app.config import settings
 from app.agents._instructions import archetype_context, deftness_context, player_narrative_context
 from app.agents._tools import load_active_quests, load_player_context
-
+from app.config import settings
 
 # ---------------------------------------------------------------------------
 # Output schema

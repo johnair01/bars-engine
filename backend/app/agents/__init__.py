@@ -12,10 +12,10 @@ from app.agents._deps import AgentDeps
 from app.agents._schemas import AgentMindState, CompostableItem, MoveInfo, PlayerContext, QuestSummary
 from app.agents.architect import QuestDraft, architect_agent, deterministic_architect_draft
 from app.agents.challenger import MoveProposal, challenger_agent, deterministic_challenger_proposal
-from app.agents.diplomat import CommunityGuidance, diplomat_agent, deterministic_diplomat_guidance
-from app.agents.regent import CampaignAssessment, regent_agent, deterministic_regent_assessment
-from app.agents.sage import SageResponse, sage_agent, deterministic_sage_response
-from app.agents.shaman import EmotionalAlchemyReading, shaman_agent, deterministic_shaman_reading
+from app.agents.diplomat import CommunityGuidance, deterministic_diplomat_guidance, diplomat_agent
+from app.agents.regent import CampaignAssessment, deterministic_regent_assessment, regent_agent
+from app.agents.sage import SageResponse, deterministic_sage_response, sage_agent
+from app.agents.shaman import EmotionalAlchemyReading, deterministic_shaman_reading, shaman_agent
 
 __all__ = [
     "AgentDeps",

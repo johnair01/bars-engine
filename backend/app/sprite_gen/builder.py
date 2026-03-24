@@ -6,10 +6,11 @@ Usage:
     prompt, negative = build_walkable("argyra", "danger-walker")
 """
 from __future__ import annotations
+
 import hashlib
 from dataclasses import dataclass
-from .tokens import NATIONS, ARCHETYPES, NationTokens, ArchetypeTokens
 
+from .tokens import ARCHETYPES, NATIONS, ArchetypeTokens, NationTokens
 
 # ---------------------------------------------------------------------------
 # Result type
@@ -149,14 +150,20 @@ def build_overlay(
             positive_parts.append(f"garment: {nation.garment}")
             positive_parts.append("ONLY RENDER: vest, collar, shoulder plates — face transparent, neck transparent, background transparent")
         else:
-            positive_parts.append("ONLY RENDER: chest accent badge, small ornament — face transparent, neck transparent, background transparent")
+            positive_parts.append(
+                "ONLY RENDER: chest accent badge, small ornament — face transparent, "
+                "neck transparent, background transparent"
+            )
 
     elif layer in ("playbook_outfit", "playbook_accent") and archetype:
         positive_parts.append(f"gear: {archetype.gear}")
         if layer == "playbook_outfit":
             positive_parts.append("ONLY RENDER: outfit, cloak, armor — face transparent, neck transparent, background transparent")
         else:
-            positive_parts.append("ONLY RENDER: small accent badge, weapon hilt detail — face transparent, neck transparent, background transparent")
+            positive_parts.append(
+                "ONLY RENDER: small accent badge, weapon hilt detail — face transparent, "
+                "neck transparent, background transparent"
+            )
 
     positive_parts.append("pure transparent PNG background, 64x64")
 

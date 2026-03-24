@@ -152,6 +152,8 @@ export async function applyDeckIntakeV1(
                 kotterStage: qp.kotterStage,
                 campaignGoal: qp.campaignGoal,
                 completionEffects: qp.completionEffects,
+                emotionalAlchemyTag: qp.emotionalAlchemyTag,
+                gameMasterFace: qp.gameMasterFace,
                 type: 'quest',
                 visibility: 'public',
                 isSystem: true,
@@ -181,6 +183,8 @@ export async function applyDeckIntakeV1(
               allyshipDomain: spec.domain ?? undefined,
               isSystem: true,
               completionEffects: qp.completionEffects,
+              emotionalAlchemyTag: qp.emotionalAlchemyTag ?? undefined,
+              gameMasterFace: qp.gameMasterFace ?? undefined,
             },
           })
           await tx.customBar.update({

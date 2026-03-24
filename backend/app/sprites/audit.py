@@ -28,8 +28,8 @@ Wiring point (for routes.py, owned by the Architect face):
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,11 +49,11 @@ async def record_sprite_event(
     archetype_key: str,
     status: StatusType,
     attempt: int = 1,
-    prompt_used: Optional[str] = None,
-    source_model: Optional[str] = None,
-    review_note: Optional[str] = None,
-    lpc_base_asset: Optional[str] = None,
-) -> Optional[str]:
+    prompt_used: str | None = None,
+    source_model: str | None = None,
+    review_note: str | None = None,
+    lpc_base_asset: str | None = None,
+) -> str | None:
     """Write a SpriteAuditLog entry. Returns the new record id or None on failure.
 
     Never raises — Regent observes without blocking.
@@ -63,7 +63,7 @@ async def record_sprite_event(
     face and created by the next migration / db:sync run.
     """
     record_id = generate_cuid()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     try:
         await db.execute(
@@ -112,7 +112,7 @@ async def get_sprite_status(
     db: AsyncSession,
     player_id: str,
     pipeline: Literal["portrait", "walkable"],
-) -> Optional[str]:
+) -> str | None:
     """Return the most recent status for a player's sprite pipeline.
 
     Returns the status string or None if no record exists.

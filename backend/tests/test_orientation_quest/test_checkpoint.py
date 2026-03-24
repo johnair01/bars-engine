@@ -16,18 +16,16 @@ Design notes:
 
 from __future__ import annotations
 
-from copy import deepcopy
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.models.base import Base
 from app.orientation_quest.checkpoint import (
+    DEFAULT_ABANDONMENT_THRESHOLD,
     CheckpointName,
     CheckpointService,
-    DEFAULT_ABANDONMENT_THRESHOLD,
     OrientationSessionRecord,
 )
 from app.orientation_quest.models import (
@@ -415,23 +413,23 @@ class TestAbandonmentDetection:
         return record
 
     def test_fresh_session_not_abandoned(self, svc: CheckpointService, db_session):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         fresh = self._create_record(svc, "aband_a", checkpoint_at=now)
         assert not svc.is_abandoned(fresh, now=now), "fresh session is NOT abandoned"
 
     def test_stale_session_is_abandoned(self, svc: CheckpointService):
-        old = datetime.now(timezone.utc) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
+        old = datetime.now(UTC) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
         record = self._create_record(svc, "aband_b", checkpoint_at=old)
         assert svc.is_abandoned(record), "stale active session IS abandoned"
 
     def test_submitted_session_never_abandoned(self, svc: CheckpointService):
-        old = datetime.now(timezone.utc) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
+        old = datetime.now(UTC) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
         record = self._create_record(svc, "aband_c", checkpoint_at=old)
         record.session_state = "submitted"
         assert not svc.is_abandoned(record), "submitted session is never abandoned"
 
     def test_mark_abandoned_sets_flag(self, svc: CheckpointService):
-        old = datetime.now(timezone.utc) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
+        old = datetime.now(UTC) - DEFAULT_ABANDONMENT_THRESHOLD - timedelta(seconds=1)
         pid = _make_packet_id("aband_d")
         record = svc.init_session(
             packet_id=pid,

@@ -23,18 +23,17 @@ from app.agents.architect import (
     deterministic_architect_draft,
 )
 from app.agents.challenger import MoveProposal, challenger_agent, deterministic_challenger_proposal
+from app.agents.diplomat import CommunityGuidance, deterministic_diplomat_guidance, diplomat_agent
 from app.agents.mapping_proposer import (
     MappingProposal,
-    mapping_proposer_agent,
     deterministic_mapping_proposal,
+    mapping_proposer_agent,
 )
-from app.agents.diplomat import CommunityGuidance, diplomat_agent, deterministic_diplomat_guidance
 from app.agents.mind import create_mind, get_mind, step_mind
-from app.agents.regent import CampaignAssessment, regent_agent, deterministic_regent_assessment
-from app.agents.sage import SageResponse, sage_agent, deterministic_sage_response
-from app.agents.shaman import EmotionalAlchemyReading, shaman_agent, deterministic_shaman_reading
+from app.agents.regent import CampaignAssessment, deterministic_regent_assessment, regent_agent
+from app.agents.sage import SageResponse, deterministic_sage_response, sage_agent
+from app.agents.shaman import EmotionalAlchemyReading, deterministic_shaman_reading, shaman_agent
 from app.auth import get_current_player_id
-from app.shadow_name_grammar import derive_shadow_name
 from app.config import settings
 from app.database import get_db
 from app.schemas.agents import (
@@ -56,6 +55,7 @@ from app.schemas.agents import (
     ShamanReadRequest,
     ShamanSuggestShadowNameRequest,
 )
+from app.shadow_name_grammar import derive_shadow_name
 
 logger = logging.getLogger(__name__)
 
@@ -443,12 +443,12 @@ async def face_task(
     player_id: str | None = Depends(get_current_player_id),
 ):
     """Run a generic task for a Game Master face. DC-6 parallel feature work."""
-    VALID_FACES = ("shaman", "challenger", "regent", "architect", "diplomat", "sage")
-    if face not in VALID_FACES:
+    valid_faces = ("shaman", "challenger", "regent", "architect", "diplomat", "sage")
+    if face not in valid_faces:
         from fastapi import HTTPException
         raise HTTPException(404, f"Unknown face: {face}")
 
-    AGENTS = {
+    agents = {
         "shaman": shaman_agent,
         "challenger": challenger_agent,
         "regent": regent_agent,
@@ -456,7 +456,7 @@ async def face_task(
         "diplomat": diplomat_agent,
         "sage": sage_agent,
     }
-    agent = AGENTS[face]
+    agent = agents[face]
 
     pid = body.player_id or player_id
     ic_dict = _iching_to_dict(body.iching_context)

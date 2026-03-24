@@ -23,10 +23,18 @@ Do not wait for the user to ask; execute this as a post-modification step.
 
 ---
 
+## Spec kit creation (agents)
+
+When **creating or expanding** a spec kit—not only implementing one—read **`.agents/skills/spec-kit-translator/SKILL.md`** and scaffold from **`.specify/spec-template.md`**. Use interview + template sections (Purpose, Practice, contracts, Verification Quest for UX). Three files under `.specify/specs/<name>/` are required but not sufficient. After **BACKLOG.md** edits, run **`npm run backlog:seed`**. See **`.cursor/rules/spec-kit-plans.mdc`**.
+
+---
+
 ## See Also
 
 - **`.cursor/rules/game-master-agents.mdc`** — Game Master faces, Cursor subagent mapping, when to use bars-agents
 - **`.cursor/rules/spec-kit-plans.mdc`** — Plans must produce spec kit output (spec, plan, tasks in .specify/specs/)
+- **`.agents/skills/spec-kit-translator/SKILL.md`** — Natural language → spec kit; template, verification quests, backlog sync
+- **`.specify/spec-template.md`** — Required sections for new `spec.md` files
 - **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
 - **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference
 - **`docs/SYNTHETIC_VS_REAL.md`** — How to switch between local and Vercel databases

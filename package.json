@@ -55,6 +55,7 @@
     "test:creation-quest": "tsx src/lib/creation-quest/__tests__/creationQuest.test.ts",
     "test:transformation-move-registry": "tsx src/lib/transformation-move-registry/__tests__/registry.test.ts",
     "test:transformation-encounter-geometry": "tsx src/lib/transformation-encounter-geometry/__tests__/encounter-geometry.test.ts",
+    "test:kotter-quest-seed-grammar": "tsx src/lib/__tests__/kotter-quest-seed-grammar.test.ts",
     "test:bar-quest-generation": "tsx src/lib/bar-quest-generation/__tests__/interpretation.test.ts && tsx src/lib/bar-quest-generation/__tests__/campaign-phase.test.ts && tsx src/lib/bar-quest-generation/__tests__/twine-ir-bridge.test.ts",
     "test:charge-quest-generator": "tsx src/lib/charge-quest-generator/__tests__/generator.test.ts",
     "test:charge-move": "npx tsx src/lib/charge-quest-generator/__tests__/declared-move.test.ts",

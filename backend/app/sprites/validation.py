@@ -2,10 +2,8 @@
 Sprite validation — Challenger gate.
 Rejects sprites to review queue if any of the 4 failure modes are detected.
 """
-from pathlib import Path
-from typing import Tuple, Optional
 import struct
-import zlib
+from pathlib import Path
 
 # Approved palette from docs/STYLE_GUIDE.md (load dynamically if file exists, else use defaults)
 # Each entry is an (R, G, B) tuple. Alpha is excluded from palette check (transparency is separate check).
@@ -21,7 +19,7 @@ def load_approved_palette(style_guide_path: str = "docs/STYLE_GUIDE.md") -> list
     except Exception:
         return []
 
-def read_png_header(path: str) -> Tuple[int, int, int, bool]:
+def read_png_header(path: str) -> tuple[int, int, int, bool]:
     """
     Read PNG IHDR: returns (width, height, bit_depth, has_alpha).
     Raises ValueError if not a valid PNG.
@@ -43,7 +41,7 @@ def read_png_header(path: str) -> Tuple[int, int, int, bool]:
         has_alpha = color_type in (4, 6)
         return w, h, bit_depth, has_alpha
 
-def check_dimensions(path: str, expected_w: int, expected_h: int) -> Optional[str]:
+def check_dimensions(path: str, expected_w: int, expected_h: int) -> str | None:
     """Failure mode 1: Wrong dimensions. Returns error string or None."""
     try:
         w, h, _, _ = read_png_header(path)
@@ -53,7 +51,7 @@ def check_dimensions(path: str, expected_w: int, expected_h: int) -> Optional[st
     except Exception as e:
         return f"PNG read error: {e}"
 
-def check_transparency(path: str) -> Optional[str]:
+def check_transparency(path: str) -> str | None:
     """Failure mode 3: Opaque background on overlay layers. Returns error string or None."""
     try:
         _, _, _, has_alpha = read_png_header(path)
@@ -63,7 +61,7 @@ def check_transparency(path: str) -> Optional[str]:
     except Exception as e:
         return f"PNG read error: {e}"
 
-def check_palette(path: str, approved: list[tuple[int, int, int]]) -> Optional[str]:
+def check_palette(path: str, approved: list[tuple[int, int, int]]) -> str | None:
     """Failure mode 2: Palette violation. Permissive (pass) when approved palette is empty."""
     if not approved:
         return None  # No palette locked yet — pass
@@ -89,7 +87,7 @@ def check_palette(path: str, approved: list[tuple[int, int, int]]) -> Optional[s
     except Exception as e:
         return f"Palette check error: {e}"
 
-def check_attribution(sprite_dir: str, nation_key: str, archetype_key: str) -> Optional[str]:
+def check_attribution(sprite_dir: str, nation_key: str, archetype_key: str) -> str | None:
     """Failure mode 4: LPC-derived assets require attribution file."""
     attr_path = Path(sprite_dir) / f"{nation_key}-{archetype_key}.attribution.txt"
     source_path = Path(sprite_dir) / f"{nation_key}-{archetype_key}.source"
@@ -107,7 +105,7 @@ class ValidationResult:
     def ok(self) -> bool:
         return len(self.errors) == 0
 
-    def add(self, err: Optional[str]):
+    def add(self, err: str | None):
         if err:
             self.errors.append(err)
 

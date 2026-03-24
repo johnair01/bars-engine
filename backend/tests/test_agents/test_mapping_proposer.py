@@ -24,7 +24,6 @@ from app.agents.mapping_proposer import (
 )
 from app.main import app
 
-
 # ---------------------------------------------------------------------------
 # Unit: FACE_FIELD_AFFINITY static compile-time lookup
 # ---------------------------------------------------------------------------

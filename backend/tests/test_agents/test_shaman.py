@@ -9,9 +9,8 @@ from httpx import ASGITransport, AsyncClient
 from pydantic_ai.models.test import TestModel
 
 from app.agents._deps import AgentDeps
-from app.agents.shaman import EmotionalAlchemyReading, shaman_agent, deterministic_shaman_reading
+from app.agents.shaman import EmotionalAlchemyReading, deterministic_shaman_reading, shaman_agent
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback

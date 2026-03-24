@@ -174,7 +174,7 @@ Primary authoring path for the **starter deck** (hexagrams 1–8) matches the ap
 - **Persistence:** `Instance.deckAuthoringIntake` stores the last applied intake for replay/export.
 - **Flow:** welcome → intent → tone → donation spoke → **owner goal** (optional line or skip) → review → apply → done (activate + period draw + copy JSON).
 - **Linking:** On apply, each card gets `cyoaAdventureId` from `Instance.portalAdventureId` when set (run `seed:portal-adventure` first).
-- **Quests on apply:** For each hexagram 1–8, `applyDeckIntakeV1` creates or updates a `CustomBar` (`type: quest`, `visibility: public`, `isSystem: true`, `campaignRef`, `allyshipDomain`, `hexagramId`, `kotterStage: 1`) and sets `CampaignDeckCard.questId`. If the card already references a quest that still exists, that row is **updated** (no duplicate quests on re-run).
+- **Quests on apply:** For each hexagram 1–8, `applyDeckIntakeV1` creates or updates a `CustomBar` (`type: quest`, `visibility: public`, `isSystem: true`, `campaignRef`, `allyshipDomain`, `hexagramId`, `kotterStage: 1`) and sets `CampaignDeckCard.questId`. If the card already references a quest that still exists, that row is **updated** (no duplicate quests on re-run). Copy is composed by the **Kotter quest seed grammar** ([`kotter-quest-seed-grammar`](../kotter-quest-seed-grammar/spec.md) / [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts)) — deterministic Kotter × domain × hexagram slots; optional alchemy/face when provided later from CYOA. **GM face × stage moves** (six moves per Kotter stage) and **milestone gating** for which moves are available are specified in KQSG addenda §C–D.
 
 Deck mutations (`createDeckCard`, `activateDeckCard`, `drawPeriod`) require **admin** role.
 

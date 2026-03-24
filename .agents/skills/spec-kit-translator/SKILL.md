@@ -162,3 +162,13 @@ Example: pdf-parse-new build failure → [pdf-parse-new-build-fix](.specify/spec
 3. Generate the **Spec Kit Prompt** as an artifact or code block.
 4. (Optional) Run `specify` CLI using the generated prompt.
 5. **If a build/infra error blocks progress**: Execute the Build/Infra Blocker Protocol above.
+
+### When creating or expanding a spec kit (agent checklist)
+
+1. **Read this skill** (this section + Spec Template + Verification Quest rules for UX).
+2. Scaffold **`.specify/specs/<kebab-name>/`** with **`spec.md`**, **`plan.md`**, **`tasks.md`** using [.specify/spec-template.md](../../../.specify/spec-template.md) — not only freeform prose.
+3. Fill **Purpose**, **Practice** (if UI/API/persistence), **Design Decisions**, **Conceptual Model** (WHO/WHAT/WHERE where relevant), **Data/API contracts** before deep FR lists.
+4. For **any user-facing behavior change**, add a **Verification Quest** section in `spec.md` and matching tasks (Twine + seed pattern from [cyoa-certification-quests](../../../.specify/specs/cyoa-certification-quests/)).
+5. Link **BACKLOG.md** when the item is tracked there; run `npm run backlog:seed` after backlog edits per [Backlog Sync](#backlog-sync).
+
+Spec kits created without this checklist are **structurally** valid (three files) but may need retrofit to match template and certification requirements — see **Avatar Paper Doll Coherence** as a retrofit example.

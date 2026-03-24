@@ -5,9 +5,8 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.agents.mind import create_mind, get_mind, step_mind, _mind_store
+from app.agents.mind import _mind_store, create_mind, get_mind, step_mind
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

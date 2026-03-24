@@ -15,12 +15,11 @@ from __future__ import annotations
 from typing import Literal
 
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 
 from app.agents._deps import AgentDeps
 from app.agents._instructions import deftness_context
 from app.config import settings
-
 
 # ---------------------------------------------------------------------------
 # Static compile-time lookup — FACE_FIELD_AFFINITY

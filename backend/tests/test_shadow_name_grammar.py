@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from app.shadow_name_grammar import derive_shadow_name, shadow_name_hash_payload
 
 

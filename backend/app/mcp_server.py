@@ -23,12 +23,13 @@ from app.agents.architect import (
     deterministic_architect_draft,
 )
 from app.agents.challenger import challenger_agent, deterministic_challenger_proposal
-from app.agents.diplomat import diplomat_agent, deterministic_diplomat_guidance
-from app.agents.regent import regent_agent, deterministic_regent_assessment
-from app.agents.sage import sage_agent, deterministic_sage_response
-from app.agents.shaman import shaman_agent, deterministic_shaman_reading
+from app.agents.diplomat import deterministic_diplomat_guidance, diplomat_agent
+from app.agents.regent import deterministic_regent_assessment, regent_agent
+from app.agents.sage import deterministic_sage_response, sage_agent
+from app.agents.shaman import deterministic_shaman_reading, shaman_agent
 from app.config import settings
 from app.database import async_session_factory
+from app.mcp_health import backend_not_ready_payload, check_backend_http_ready
 from app.strand.runner import run_strand
 
 logging.basicConfig(level=logging.INFO)
@@ -37,9 +38,12 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP(
     name="bars-agents",
     instructions=(
-        "Game Master agents for BARS Engine. The six faces are: shaman, regent, challenger, architect, diplomat, sage. "
-        "Sage is the integration/synthesis agent — use sage_consult for meta, coordination, or cross-cutting questions. "
-        "Do not confuse these with Cursor's mcp_task subagents (evaluator, contrarian, etc.). For BARS domain work, use these tools."
+        "Game Master agents for BARS Engine. The six faces are: shaman, regent, challenger, "
+        "architect, diplomat, sage. "
+        "Sage is the integration/synthesis agent — use sage_consult for meta, coordination, "
+        "or cross-cutting questions. "
+        "Do not confuse these with Cursor's mcp_task subagents (evaluator, contrarian, etc.). "
+        "For BARS domain work, use these tools."
     ),
 )
 
@@ -92,7 +96,7 @@ def architect_draft(narrative_lock: str, quest_grammar: str = "epiphany_bridge")
                 deps=deps,
             )
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Architect AI failed", exc_info=True)
             draft = deterministic_architect_draft(narrative_lock, quest_grammar)
             return draft.model_dump_json()
@@ -115,7 +119,7 @@ def architect_compile(unpacking_answers_json: str, quest_grammar: str = "epiphan
             prompt = f"Compile a quest from these unpacking answers: {json.dumps(answers)}\nGrammar: {quest_grammar}"
             result = await architect_compile_agent.run(prompt, deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Architect compile failed", exc_info=True)
             out = deterministic_architect_compile(answers, quest_grammar)
             return json.dumps({"overview": out.overview, "node_texts": out.node_texts, "deterministic": True})
@@ -137,7 +141,7 @@ def architect_analyze_chunk(chunk_text: str, domain_hint: str | None = None) -> 
                 deps=deps,
             )
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Architect analyze failed", exc_info=True)
             draft = deterministic_architect_draft(chunk_text[:500], "epiphany_bridge")
             return draft.model_dump_json()
@@ -155,7 +159,7 @@ def challenger_propose(context: str = "") -> str:
         try:
             result = await challenger_agent.run(context or "What moves are available?", deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Challenger failed", exc_info=True)
             return deterministic_challenger_proposal().model_dump_json()
 
@@ -172,7 +176,7 @@ def shaman_read(context: str = "") -> str:
         try:
             result = await shaman_agent.run(context or "Read the current emotional state.", deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Shaman failed", exc_info=True)
             return deterministic_shaman_reading(context or "current state").model_dump_json()
 
@@ -189,7 +193,7 @@ def shaman_identify(free_text: str) -> str:
         try:
             result = await shaman_agent.run(f"Identify from: {free_text}", deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Shaman identify failed", exc_info=True)
             return deterministic_shaman_reading(free_text).model_dump_json()
 
@@ -209,7 +213,7 @@ def regent_assess(instance_id: str = "default") -> str:
                 deps=deps,
             )
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Regent failed", exc_info=True)
             return deterministic_regent_assessment(instance_id).model_dump_json()
 
@@ -226,7 +230,7 @@ def diplomat_guide(context: str = "") -> str:
         try:
             result = await diplomat_agent.run(context or "Community guidance.", deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Diplomat failed", exc_info=True)
             return deterministic_diplomat_guidance().model_dump_json()
 
@@ -246,7 +250,7 @@ def diplomat_bridge(narrative_text: str, move_type: str | None = None) -> str:
                 prompt += f"\nMove type: {move_type}"
             result = await diplomat_agent.run(prompt, deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Diplomat bridge failed", exc_info=True)
             return deterministic_diplomat_guidance().model_dump_json()
 
@@ -254,14 +258,24 @@ def diplomat_bridge(narrative_text: str, move_type: str | None = None) -> str:
 
 
 @mcp.tool()
-def strand_run(subject: str, strand_type: str = "diagnostic") -> str:
-    """Run a multi-agent strand investigation. subject: problem to investigate. strand_type: diagnostic (default), research, content, backlog, etc. Returns strandBarId and outputBarIds."""
-    async def _run():
-        async with async_session_factory() as session:
-            result = await run_strand(session, strand_type, subject)
-            return json.dumps(result)
+async def strand_run(subject: str, strand_type: str = "diagnostic") -> str:
+    """Run a multi-agent strand investigation.
 
-    return _run_async(_run())
+    subject: problem to investigate. strand_type: diagnostic (default), research, content, backlog, etc.
+    Returns strandBarId and outputBarIds. Requires GET /api/health on the FastAPI app
+    (see npm run mcp:serve:with-backend).
+
+    Must be async: FastMCP runs sync tools in a thread pool; asyncio + SQLAlchemy asyncpg must share
+    the server's event loop (see fastmcp FunctionTool.run / call_sync_fn_in_threadpool).
+    """
+    ok, err = check_backend_http_ready()
+    if not ok:
+        logger.warning("strand_run blocked: backend not ready: %s", err)
+        return backend_not_ready_payload(err)
+
+    async with async_session_factory() as session:
+        result = await run_strand(session, strand_type, subject)
+    return json.dumps(result)
 
 
 @mcp.tool()
@@ -277,7 +291,7 @@ def diplomat_refine_copy(target_type: str, current_copy: str, context: str = "")
                 prompt += f"\nContext: {context}"
             result = await diplomat_agent.run(prompt, deps=deps)
             return result.output.model_dump_json()
-        except Exception as e:
+        except Exception:
             logger.warning("Diplomat refine failed", exc_info=True)
             return deterministic_diplomat_guidance().model_dump_json()
 

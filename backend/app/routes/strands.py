@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.strand.runner import run_strand
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/api/strands", tags=["strands"])
 

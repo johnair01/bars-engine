@@ -15,7 +15,6 @@ from app.agents._instructions import deftness_context, player_narrative_context
 from app.agents._tools import load_player_context
 from app.config import settings
 
-
 # ---------------------------------------------------------------------------
 # Output schema
 # ---------------------------------------------------------------------------

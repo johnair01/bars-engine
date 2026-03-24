@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Literal, TypeVar
+from typing import Literal, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -14,7 +14,7 @@ T = TypeVar("T")
 # ---------------------------------------------------------------------------
 
 
-class AgentResponse(BaseModel, Generic[T]):
+class AgentResponse[T](BaseModel):
     """Wraps every agent output with Integral metadata."""
 
     agent: str  # Which sect responded

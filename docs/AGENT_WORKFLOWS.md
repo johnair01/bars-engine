@@ -98,6 +98,7 @@ The six Game Master faces are exposed as MCP tools so Cursor AI can invoke them 
 - **Verify**: `npm run verify:bars-agents-mcp` before relying on MCP in a workflow
 - **Run**: `npm run mcp:serve` to start the MCP server manually, or let Cursor spawn it when tools are used
 - **MCP wrapper**: `.cursor/mcp.json` points to `scripts/mcp-serve-with-backend.ts`, which ensures the backend is ready (auto-starts if needed) before spawning the MCP. Use `npm run mcp:serve:with-backend` for manual testing.
+- **Reload after MCP code changes**: Cursor keeps the **bars-agents** Python process running until you reconnect it. If you edit `backend/app/mcp_server.py` (or other MCP server code), the old process may still be in memory, so tools can behave like the previous version (wrong async/sync path, confusing DB errors, etc.). **After changing MCP server code**, use **Command Palette → Developer: Reload Window**, or turn **bars-agents** off and on under **Settings → MCP**, so Cursor spawns a fresh process.
 
 Tools: `architect_draft`, `architect_compile`, `architect_analyze_chunk`, `challenger_propose`, `shaman_read`, `shaman_identify`, `regent_assess`, `diplomat_guide`, `diplomat_bridge`, `diplomat_refine_copy`, `sage_consult`, `strand_run`.
 

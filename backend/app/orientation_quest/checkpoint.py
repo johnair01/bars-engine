@@ -26,11 +26,10 @@ Design rules (from constraints):
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
-from enum import Enum
-from typing import Literal
+from datetime import UTC, datetime, timedelta
+from enum import StrEnum
 
-from sqlalchemy import DateTime, Index, String, Text, UniqueConstraint, func, update
+from sqlalchemy import DateTime, Index, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from app.models.base import Base, generate_cuid
@@ -42,13 +41,12 @@ from app.orientation_quest.models import (
     SubmissionPath,
 )
 
-
 # ---------------------------------------------------------------------------
 # Named checkpoints (mirrors TypeScript CheckpointName)
 # ---------------------------------------------------------------------------
 
 
-class CheckpointName(str, Enum):
+class CheckpointName(StrEnum):
     """Six session-level transitions that trigger a DB upsert.
 
     Values mirror the TypeScript CheckpointName union in checkpoint.ts exactly
@@ -296,7 +294,7 @@ class CheckpointService:
                 enabled_faces=enabled_faces,
             )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         record = OrientationSessionRecord(
             id=generate_cuid(),
             packet_id=packet_id,
@@ -344,7 +342,7 @@ class CheckpointService:
         record.submission_path = packet.submission_path.value
         record.packet_json = self.serialize_packet(packet)
         record.last_checkpoint = checkpoint.value
-        record.checkpoint_at = datetime.now(timezone.utc)
+        record.checkpoint_at = datetime.now(UTC)
         record.checkpoint_node_id = node_id
         # abandonedAt is NEVER reset by normal checkpoint writes
 
@@ -380,7 +378,7 @@ class CheckpointService:
                 update={
                     "face_sub_packets": updated_subs,
                     "active_face": face,
-                    "updated_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(UTC),
                 }
             )
         else:
@@ -388,7 +386,7 @@ class CheckpointService:
             packet = packet.model_copy(
                 update={
                     "active_face": face,
-                    "updated_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(UTC),
                 }
             )
 
@@ -456,7 +454,7 @@ class CheckpointService:
         packet = packet.model_copy(
             update={
                 "face_sub_packets": updated_subs,
-                "updated_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(UTC),
             }
         )
 
@@ -486,7 +484,7 @@ class CheckpointService:
         if sub is None:
             return packet, record
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         from copy import copy
         updated_sub = copy(sub)
         updated_sub.state = FaceSubPacketState.COMPLETE
@@ -547,7 +545,7 @@ class CheckpointService:
         packet = packet.model_copy(
             update={
                 "face_sub_packets": updated_subs,
-                "updated_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(UTC),
             }
         )
 
@@ -572,7 +570,7 @@ class CheckpointService:
             update={
                 "session_state": SessionState.CLOSED,
                 "active_face": None,
-                "updated_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(UTC),
             }
         )
 
@@ -605,10 +603,10 @@ class CheckpointService:
             return False
         if record.abandoned_at is not None:
             return True
-        reference = now or datetime.now(timezone.utc)
+        reference = now or datetime.now(UTC)
         checkpoint_dt = record.checkpoint_at
         if checkpoint_dt.tzinfo is None:
-            checkpoint_dt = checkpoint_dt.replace(tzinfo=timezone.utc)
+            checkpoint_dt = checkpoint_dt.replace(tzinfo=UTC)
         return (reference - checkpoint_dt) > threshold
 
     def mark_abandoned(
@@ -631,7 +629,7 @@ class CheckpointService:
             The updated OrientationSessionRecord.
         """
         record = self.get_by_packet_id_or_raise(packet_id)
-        reference = now or datetime.now(timezone.utc)
+        reference = now or datetime.now(UTC)
 
         # Close the packet state
         try:
@@ -690,7 +688,7 @@ class CheckpointService:
             )
 
         records = query.order_by(OrientationSessionRecord.checkpoint_at.desc()).all()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for record in records:
             if not self.is_abandoned(record, threshold, now):
                 return record

@@ -9,9 +9,8 @@ from httpx import ASGITransport, AsyncClient
 from pydantic_ai.models.test import TestModel
 
 from app.agents._deps import AgentDeps
-from app.agents.sage import SageResponse, sage_agent, deterministic_sage_response
+from app.agents.sage import SageResponse, deterministic_sage_response, sage_agent
 from app.main import app
-
 
 # ---------------------------------------------------------------------------
 # Unit: deterministic fallback
