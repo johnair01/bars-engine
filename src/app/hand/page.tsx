@@ -18,11 +18,12 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     if (!isGameAccountReady(player)) redirect('/conclave/guided')
 
     const playerId = player.id
+    const isAdmin = !!player.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
     const [data, acceptedInvites, eventInviteBars] = await Promise.all([
         loadVaultCoreData(playerId, 'lobby'),
         loadAcceptedInvitesForVault(playerId),
-        loadEventInviteBarsForStewards(playerId),
+        loadEventInviteBarsForStewards(playerId, { includeAllForAdmin: isAdmin }),
     ])
 
     const {

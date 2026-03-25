@@ -23,10 +23,33 @@ const select = {
   createdAt: true,
 } as const
 
+export type LoadEventInviteBarsOptions = {
+  /** Admins see every active `event_invite` BAR (ops), not only steward-scoped rows. */
+  includeAllForAdmin?: boolean
+}
+
 /**
  * Invitation BARs for players who are owner/steward on any instance, or who created the BAR.
+ * With `includeAllForAdmin`, admins get the full active list (for prod when instance membership is missing).
  */
-export async function loadEventInviteBarsForStewards(playerId: string): Promise<VaultEventInviteBarRow[]> {
+export async function loadEventInviteBarsForStewards(
+  playerId: string,
+  options?: LoadEventInviteBarsOptions
+): Promise<VaultEventInviteBarRow[]> {
+  if (options?.includeAllForAdmin) {
+    const rows = await db.customBar.findMany({
+      where: {
+        type: EVENT_INVITE_BAR_TYPE,
+        archivedAt: null,
+        status: 'active',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 32,
+      select,
+    })
+    return rows.map((r) => ({ ...r, updatedAt: r.createdAt }))
+  }
+
   const memberships = await db.instanceMembership.findMany({
     where: {
       playerId,
