@@ -105,6 +105,8 @@ type Props = {
   returnTo?: string
   /** Committed move from charge capture (wakeUp | cleanUp | growUp | showUp) */
   initialPersonalMove?: string
+  /** When 321 was opened from a charge_capture BAR — compost charge on metabolizing outcomes (NEV). */
+  chargeBarId?: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +130,13 @@ function clearSession() {
   if (typeof window !== 'undefined') sessionStorage.removeItem(SESSION_KEY)
 }
 
-export function Shadow321Runner({ playerId, initialCharge, returnTo, initialPersonalMove }: Props) {
+export function Shadow321Runner({
+  playerId,
+  initialCharge,
+  returnTo,
+  initialPersonalMove,
+  chargeBarId,
+}: Props) {
   const router = useRouter()
   const contextualReturn = returnTo ?? '/'
   const daemonRouter = usePostActionRouter(NAV['321_daemon'], contextualReturn)
@@ -300,7 +308,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo, initialPers
     setError(null)
     startTransition(async () => {
       const metadata = buildMetadata()
-      const res = await fuelSystemFrom321(metadata, undefined, shadow321NameForPersist())
+      const res = await fuelSystemFrom321(metadata, undefined, shadow321NameForPersist(), chargeBarId ?? undefined)
       if (res && 'error' in res) {
         setError(res.error)
       } else if (res?.success) {
@@ -360,6 +368,7 @@ export function Shadow321Runner({ playerId, initialCharge, returnTo, initialPers
         }),
         daemonName: answers.maskName || `From: ${answers.chargeDescription.slice(0, 30)}`,
         shadow321Name: shadow321NameForPersist(),
+        chargeSourceBarId: chargeBarId ?? undefined,
       })
       if (res.error) {
         setError(res.error)

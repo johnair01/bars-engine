@@ -73,14 +73,74 @@ async function canInviteToEventArtifact(
   }
 }
 
+/** Same permission as schedule/invite: steward/admin/owner OR campaign host. */
+export async function canEditEventArtifact(
+  playerId: string,
+  eventArtifactId: string,
+  instanceId: string
+): Promise<boolean> {
+  return canInviteToEventArtifact(playerId, eventArtifactId, instanceId)
+}
+
+async function isGlobalAdmin(playerId: string): Promise<boolean> {
+  const row = await db.playerRole.findFirst({
+    where: { playerId, role: { key: 'admin' } },
+  })
+  return !!row
+}
+
+/** Admin, owner, or steward on the instance — may create campaigns and attach events. */
+export async function canCreateCampaignOnInstance(
+  playerId: string,
+  instanceId: string
+): Promise<boolean> {
+  return canInviteToInstance(playerId, instanceId)
+}
+
+/**
+ * May create EventArtifact rows under this campaign for this instance:
+ * stewards/admins OR listed campaign hosts when the campaign is scoped to the instance (or unscoped for first attach).
+ */
+export async function canCreateEventOnCampaign(
+  playerId: string,
+  campaignId: string,
+  instanceId: string
+): Promise<boolean> {
+  if (await canInviteToInstance(playerId, instanceId)) return true
+
+  const c = await db.eventCampaign.findUnique({
+    where: { id: campaignId },
+    select: { instanceId: true, hostActorIds: true },
+  })
+  if (!c) return false
+  if (c.instanceId && c.instanceId !== instanceId) return false
+
+  let hosts: string[] = []
+  try {
+    hosts = JSON.parse(c.hostActorIds || '[]') as string[]
+  } catch {
+    hosts = []
+  }
+  if (!Array.isArray(hosts) || !hosts.includes(playerId)) return false
+
+  return true
+}
+
 /** True if player may send BAR invites for any event on this instance (admin/steward OR campaign host). */
 export async function canInviteToAnyEventOnInstance(
   playerId: string,
   instanceId: string
 ): Promise<boolean> {
   if (await canInviteToInstance(playerId, instanceId)) return true
+  const inst = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = inst?.campaignRef
   const campaigns = await dbBase.eventCampaign.findMany({
-    where: { instanceId },
+    where: cref
+      ? { OR: [{ instanceId }, { instance: { campaignRef: cref } }] }
+      : { instanceId },
     select: { hostActorIds: true },
   })
   for (const c of campaigns) {
@@ -272,6 +332,247 @@ export async function updateEventArtifactSchedule(
 
   revalidatePath('/event')
   return { success: true }
+}
+
+export type EventStewardshipRow = {
+  id: string
+  title: string
+  parentEventArtifactId: string | null
+  startTime: Date | null
+  endTime: Date | null
+  linkedCampaignId: string
+  campaignContext: string
+  hostActorIds: string[]
+}
+
+/**
+ * Event rows for admin stewardship UI (includes campaign id + hosts for reassignment).
+ */
+export async function listEventArtifactsForStewardship(instanceId: string): Promise<EventStewardshipRow[]> {
+  const inst = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const campaignRef = inst?.campaignRef ?? null
+  const orBranches: Prisma.EventArtifactWhereInput[] = [
+    { instanceId },
+    { campaign: { instanceId } },
+  ]
+  if (campaignRef) {
+    orBranches.push({ instance: { is: { campaignRef } } })
+    orBranches.push({ campaign: { instance: { is: { campaignRef } } } })
+  }
+  const rows = await db.eventArtifact.findMany({
+    where: { OR: orBranches },
+    select: {
+      id: true,
+      title: true,
+      parentEventArtifactId: true,
+      startTime: true,
+      endTime: true,
+      linkedCampaignId: true,
+      campaign: { select: { campaignContext: true, hostActorIds: true } },
+    },
+    orderBy: [{ parentEventArtifactId: 'asc' }, { startTime: 'asc' }],
+  })
+  return rows.map((r) => {
+    let hostActorIds: string[] = []
+    try {
+      hostActorIds = JSON.parse(r.campaign.hostActorIds || '[]') as string[]
+    } catch {
+      hostActorIds = []
+    }
+    return {
+      id: r.id,
+      title: r.title,
+      parentEventArtifactId: r.parentEventArtifactId,
+      startTime: r.startTime,
+      endTime: r.endTime,
+      linkedCampaignId: r.linkedCampaignId,
+      campaignContext: r.campaign.campaignContext,
+      hostActorIds: Array.isArray(hostActorIds) ? hostActorIds : [],
+    }
+  })
+}
+
+export type UpdateEventArtifactDetailsInput = {
+  title?: string
+  description?: string
+  eventType?: string
+  locationType?: string
+  locationDetails?: string | null
+  visibility?: string
+  status?: string
+  startTime?: Date | null
+  endTime?: Date | null
+  timezone?: string | null
+  capacity?: number | null
+}
+
+/**
+ * Update EventArtifact fields (metadata + optional schedule). Same permission as schedule edit.
+ */
+export async function updateEventArtifactDetails(
+  instanceId: string,
+  eventArtifactId: string,
+  patch: UpdateEventArtifactDetailsInput
+): Promise<{ success: true } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to edit this event' }
+  }
+
+  const instRow = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = instRow?.campaignRef ?? null
+  const orBranches: Prisma.EventArtifactWhereInput[] = [
+    { instanceId },
+    { campaign: { instanceId } },
+  ]
+  if (cref) {
+    orBranches.push({ instance: { is: { campaignRef: cref } } })
+    orBranches.push({ campaign: { instance: { is: { campaignRef: cref } } } })
+  }
+  const artifact = await db.eventArtifact.findFirst({
+    where: { id: eventArtifactId, OR: orBranches },
+    select: { id: true },
+  })
+  if (!artifact) return { error: 'Event not found on this instance' }
+
+  const data: Prisma.EventArtifactUpdateInput = {}
+  if (patch.title !== undefined) data.title = patch.title
+  if (patch.description !== undefined) data.description = patch.description
+  if (patch.eventType !== undefined) data.eventType = patch.eventType
+  if (patch.locationType !== undefined) data.locationType = patch.locationType
+  if (patch.locationDetails !== undefined) data.locationDetails = patch.locationDetails
+  if (patch.visibility !== undefined) data.visibility = patch.visibility
+  if (patch.status !== undefined) data.status = patch.status
+  if (patch.startTime !== undefined) data.startTime = patch.startTime
+  if (patch.endTime !== undefined) data.endTime = patch.endTime
+  if (patch.timezone !== undefined) data.timezone = patch.timezone
+  if (patch.capacity !== undefined) data.capacity = patch.capacity
+
+  if (Object.keys(data).length === 0) return { error: 'Nothing to update' }
+
+  if (
+    patch.startTime != null &&
+    patch.endTime != null &&
+    patch.endTime < patch.startTime
+  ) {
+    return { error: 'End must be on or after start' }
+  }
+
+  await db.eventArtifact.update({
+    where: { id: eventArtifactId },
+    data,
+  })
+
+  revalidatePath('/event')
+  revalidatePath('/admin/campaign-events')
+  return { success: true }
+}
+
+/**
+ * Replace campaign host list (JSON player ids). **Global admin only** — transitional handoff tool.
+ */
+export async function updateEventCampaignHosts(
+  instanceId: string,
+  campaignId: string,
+  hostPlayerIds: string[]
+): Promise<{ success: true } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await isGlobalAdmin(playerId))) {
+    return { error: 'Only global admins can reassign campaign hosts' }
+  }
+
+  const inst = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = inst?.campaignRef ?? null
+  const campaignOk = await db.eventCampaign.findFirst({
+    where: {
+      id: campaignId,
+      OR: cref
+        ? [{ instanceId }, { instance: { campaignRef: cref } }]
+        : [{ instanceId }],
+    },
+    select: { id: true },
+  })
+  if (!campaignOk) return { error: 'Campaign not found for this instance' }
+
+  await db.eventCampaign.update({
+    where: { id: campaignId },
+    data: { hostActorIds: JSON.stringify(hostPlayerIds) },
+  })
+
+  revalidatePath('/event')
+  revalidatePath('/admin/campaign-events')
+  return { success: true }
+}
+
+export type EventDetailsForEdit =
+  | {
+      title: string
+      description: string
+      eventType: string
+      locationType: string
+      locationDetails: string | null
+      visibility: string
+      status: string
+    }
+  | { error: string }
+
+/** Load editable fields for hosts/stewards (same gate as update). */
+export async function getEventArtifactDetailsForEdit(
+  instanceId: string,
+  eventArtifactId: string
+): Promise<EventDetailsForEdit> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to view this event' }
+  }
+
+  const instRow = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = instRow?.campaignRef ?? null
+  const orBranches: Prisma.EventArtifactWhereInput[] = [
+    { instanceId },
+    { campaign: { instanceId } },
+  ]
+  if (cref) {
+    orBranches.push({ instance: { is: { campaignRef: cref } } })
+    orBranches.push({ campaign: { instance: { is: { campaignRef: cref } } } })
+  }
+  const ev = await db.eventArtifact.findFirst({
+    where: { id: eventArtifactId, OR: orBranches },
+    select: {
+      title: true,
+      description: true,
+      eventType: true,
+      locationType: true,
+      locationDetails: true,
+      visibility: true,
+      status: true,
+    },
+  })
+  if (!ev) return { error: 'Event not found on this instance' }
+  return {
+    title: ev.title,
+    description: ev.description,
+    eventType: ev.eventType,
+    locationType: ev.locationType,
+    locationDetails: ev.locationDetails,
+    visibility: ev.visibility,
+    status: ev.status,
+  }
 }
 
 export type CreateCampaignRoleInvitationResult =
@@ -504,8 +805,34 @@ export async function listEventArtifactsForInstance(instanceId: string): Promise
     parentEventArtifactId: string | null
   }
 
+  const inst = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const campaignRef = inst?.campaignRef ?? null
+
   try {
-    const raw = await dbBase.$queryRaw<Row[]>(Prisma.sql`
+    const raw = campaignRef
+      ? await dbBase.$queryRaw<Row[]>(Prisma.sql`
+      SELECT ea.id,
+             ea.title,
+             ea."startTime",
+             ea."endTime",
+             ea.timezone,
+             ea.capacity,
+             ea.parent_event_artifact_id AS "parentEventArtifactId"
+      FROM event_artifacts ea
+      LEFT JOIN event_campaigns ec ON ec.id = ea."linkedCampaignId"
+      LEFT JOIN instances inst_ea ON inst_ea.id = ea.instance_id
+      LEFT JOIN instances inst_ec ON inst_ec.id = ec."instanceId"
+      WHERE ea.instance_id = ${instanceId}
+         OR ec."instanceId" = ${instanceId}
+         OR inst_ea."campaignRef" = ${campaignRef}
+         OR inst_ec."campaignRef" = ${campaignRef}
+      ORDER BY (ea.parent_event_artifact_id IS NOT NULL) ASC,
+               ea."startTime" ASC NULLS LAST
+    `)
+      : await dbBase.$queryRaw<Row[]>(Prisma.sql`
       SELECT ea.id,
              ea.title,
              ea."startTime",
@@ -527,10 +854,16 @@ export async function listEventArtifactsForInstance(instanceId: string): Promise
       e
     )
     try {
+      const orBranches: Prisma.EventArtifactWhereInput[] = [
+        { instanceId },
+        { campaign: { instanceId } },
+      ]
+      if (campaignRef) {
+        orBranches.push({ instance: { is: { campaignRef } } })
+        orBranches.push({ campaign: { instance: { is: { campaignRef } } } })
+      }
       const rows = await dbBase.eventArtifact.findMany({
-        where: {
-          OR: [{ instanceId }, { campaign: { instanceId } }],
-        },
+        where: { OR: orBranches },
         select: {
           id: true,
           title: true,

@@ -70,6 +70,7 @@ export async function awakenDaemonFrom321(input: {
   phase3Snapshot: string
   daemonName: string
   shadow321Name?: Shadow321NameFields | null
+  chargeSourceBarId?: string | null
 }): Promise<{ daemonId?: string; sessionId?: string; name?: string; moveIds?: string[]; error?: string }> {
   const player = await getCurrentPlayer()
   if (!player || player.id !== input.playerId) return { error: 'Not authorized' }
@@ -79,6 +80,7 @@ export async function awakenDaemonFrom321(input: {
     phase3Snapshot: input.phase3Snapshot,
     outcome: 'daemon_awakened',
     shadow321Name: input.shadow321Name ?? undefined,
+    chargeSourceBarId: input.chargeSourceBarId ?? undefined,
   })
 
   if ('error' in persist) return { error: persist.error }

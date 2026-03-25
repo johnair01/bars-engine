@@ -25,6 +25,45 @@ export default async function AdminDashboard() {
                 </div>
             </header>
 
+            <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
+                <h2 className="text-lg font-bold text-white">Stewardship (four moves)</h2>
+                <p className="text-sm text-zinc-500 max-w-3xl">
+                    Wayfinding aligned with player moves — see{' '}
+                    <code className="text-zinc-400 text-xs">docs/runbooks/ADMIN_STEWARDSHIP.md</code>.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <MoveBlock
+                        title="Wake up — orient"
+                        links={[
+                            { label: 'Instances', href: '/admin/instances' },
+                            { label: 'Docs', href: '/admin/docs' },
+                        ]}
+                    />
+                    <MoveBlock
+                        title="Clean up — repair"
+                        links={[
+                            { label: 'Campaign events', href: '/admin/campaign-events' },
+                            { label: 'Config', href: '/admin/config' },
+                        ]}
+                    />
+                    <MoveBlock
+                        title="Grow up — author"
+                        links={[
+                            { label: 'Adventures', href: '/admin/adventures' },
+                            { label: 'Twine', href: '/admin/twine' },
+                            { label: 'Quest proposals', href: '/admin/quest-proposals' },
+                        ]}
+                    />
+                    <MoveBlock
+                        title="Show up — ship"
+                        links={[
+                            { label: 'Campaign page (/event)', href: '/event' },
+                            { label: 'Lobby', href: '/lobby' },
+                        ]}
+                    />
+                </div>
+            </section>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <DashboardCard
                     title="Active Players"
@@ -93,6 +132,29 @@ export default async function AdminDashboard() {
 
             {/* DANGER ZONE */}
             <AdminResetZone />
+        </div>
+    )
+}
+
+function MoveBlock({
+    title,
+    links,
+}: {
+    title: string
+    links: { label: string; href: string }[]
+}) {
+    return (
+        <div className="rounded-lg border border-zinc-800/80 bg-black/20 p-4 space-y-2">
+            <div className="text-xs font-bold text-purple-300 uppercase tracking-wide">{title}</div>
+            <ul className="space-y-1">
+                {links.map((l) => (
+                    <li key={l.href}>
+                        <a href={l.href} className="text-zinc-300 hover:text-white underline-offset-2 hover:underline">
+                            {l.label}
+                        </a>
+                    </li>
+                ))}
+            </ul>
         </div>
     )
 }

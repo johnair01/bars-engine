@@ -51,6 +51,7 @@ export default async function Shadow321Page(props: {
           initialCharge={initialCharge}
           returnTo={returnTo}
           initialPersonalMove={personalMove}
+          chargeBarId={chargeBarId}
         />
       </div>
     </div>

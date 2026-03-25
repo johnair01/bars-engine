@@ -20,6 +20,8 @@ export type Shadow321SessionInput = {
   outcome: 'bar_created' | 'quest_created' | 'fueled_system' | 'skipped' | 'daemon_awakened'
   linkedBarId?: string | null
   linkedQuestId?: string | null
+  /** Originating charge_capture BAR when 321 was launched from a charge (NEV compost). */
+  chargeSourceBarId?: string | null
   /** When set, persisted on Shadow321Session (321 name step / Phase 6). */
   shadow321Name?: Shadow321NameFields | null
 }
@@ -43,6 +45,7 @@ export async function persist321Session(
         outcome: data.outcome,
         linkedBarId: data.linkedBarId ?? null,
         linkedQuestId: data.linkedQuestId ?? null,
+        chargeSourceBarId: data.chargeSourceBarId ?? null,
         ...(data.shadow321Name
           ? {
               finalShadowName: data.shadow321Name.finalShadowName,
@@ -172,7 +175,8 @@ export async function createQuestFrom321Metadata(
   phase2?: UnpackingAnswers & { alignedAction?: string },
   phase3?: Phase3Taxonomic,
   target?: QuestPlacementTarget,
-  shadow321Name?: Shadow321NameFields | null
+  shadow321Name?: Shadow321NameFields | null,
+  chargeSourceBarId?: string | null,
 ): Promise<{ success: true; questId: string } | { error: string }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -214,6 +218,7 @@ export async function createQuestFrom321Metadata(
         visibility: 'private',
         status: 'active',
         claimedById: player.id,
+        sourceBarId: chargeSourceBarId ?? undefined,
         agentMetadata: JSON.stringify({
           sourceType: '321',
           nextAction,
@@ -238,6 +243,7 @@ export async function createQuestFrom321Metadata(
       outcome: 'quest_created',
       linkedQuestId: quest.id,
       shadow321Name: shadow321Name ?? undefined,
+      chargeSourceBarId: chargeSourceBarId ?? undefined,
     })
 
     if ('success' in persistResult && persistResult.success) {
@@ -278,7 +284,8 @@ export async function createQuestFrom321Metadata(
 export async function fuelSystemFrom321(
   metadata: Metadata321,
   _context?: { isAdmin?: boolean },
-  shadow321Name?: Shadow321NameFields | null
+  shadow321Name?: Shadow321NameFields | null,
+  chargeSourceBarId?: string | null,
 ): Promise<{ success: true; sessionId?: string } | { error: string }> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -295,6 +302,7 @@ export async function fuelSystemFrom321(
     phase2Snapshot,
     outcome: 'fueled_system',
     shadow321Name: shadow321Name ?? undefined,
+    chargeSourceBarId: chargeSourceBarId ?? undefined,
   })
 
   if ('success' in result && result.success) {

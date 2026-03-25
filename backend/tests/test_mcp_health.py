@@ -1,8 +1,15 @@
 """Tests for MCP HTTP health probe (strand_run gate)."""
 
+import inspect
 from unittest import mock
 
+from app import mcp_server
 from app.mcp_health import check_backend_http_ready, get_backend_health_url
+
+
+def test_strand_run_is_sync_mcp_tool():
+    """Regression: async def MCP tool + FastMCP thread pool broke asyncpg (different event loop)."""
+    assert not inspect.iscoroutinefunction(mcp_server.strand_run)
 
 
 def test_get_backend_health_url_mcp_override_wins():

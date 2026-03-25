@@ -108,3 +108,4 @@ The quest completion context restriction (CT) blocks campaign quest completion o
 - Tasks: [.specify/specs/gameboard-campaign-deck/tasks.md](tasks.md)
 - Quest completion: [quest-completion-context-restriction](quest-completion-context-restriction/spec.md)
 - Bruised Banana quest map: [bruised-banana-quest-map](../bruised-banana-quest-map/spec.md) — different (Kotter stages); may inform deck
+- **Player marketplace slots (wild vs mall)**: [campaign-marketplace-slots](../campaign-marketplace-slots/spec.md) — reconcile deck draw vs **stall** semantics when implementing CMS.

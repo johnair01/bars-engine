@@ -258,24 +258,30 @@ def diplomat_bridge(narrative_text: str, move_type: str | None = None) -> str:
 
 
 @mcp.tool()
-async def strand_run(subject: str, strand_type: str = "diagnostic") -> str:
+def strand_run(subject: str, strand_type: str = "diagnostic") -> str:
     """Run a multi-agent strand investigation.
 
     subject: problem to investigate. strand_type: diagnostic (default), research, content, backlog, etc.
     Returns strandBarId and outputBarIds. Requires GET /api/health on the FastAPI app
     (see npm run mcp:serve:with-backend).
 
-    Must be async: FastMCP runs sync tools in a thread pool; asyncio + SQLAlchemy asyncpg must share
-    the server's event loop (see fastmcp FunctionTool.run / call_sync_fn_in_threadpool).
+    **Health check first:** probes ``/api/health`` so operators start uvicorn (or use
+    ``npm run mcp:serve:with-backend``) before strands hit the DB.
+
+    **Sync tool + ``_run_async``:** Same pattern as ``sage_consult`` and other Game Master tools.
+    An ``async def`` MCP tool was running in FastMCP's thread pool with a different asyncio loop
+    than SQLAlchemy/asyncpg, causing "Future attached to a different loop" failures.
     """
     ok, err = check_backend_http_ready()
     if not ok:
         logger.warning("strand_run blocked: backend not ready: %s", err)
         return backend_not_ready_payload(err)
 
-    async with async_session_factory() as session:
-        result = await run_strand(session, strand_type, subject)
-    return json.dumps(result)
+    async def _run(deps: AgentDeps):
+        result = await run_strand(deps.db, strand_type, subject)
+        return json.dumps(result)
+
+    return _run_async(_with_session(_run))
 
 
 @mcp.tool()

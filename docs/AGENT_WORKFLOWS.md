@@ -137,6 +137,8 @@ Tools: `architect_draft`, `architect_compile`, `architect_analyze_chunk`, `chall
 | diplomat_refine_copy | target_type: string, current_copy: string, context?: string | JSON: refined copy |
 | strand_run | subject: string, strand_type?: string | JSON: `{ strandBarId, outputBarIds, ... }` |
 
+**Strand BAR ownership**: New strand BARs use `creatorId` = a dedicated agent `Player` (not arbitrary first user). Configure `STRAND_CREATOR_PLAYER_ID` in backend env or run `npm run seed:strand-agent` so **`BARS Strand Agent`** exists. See [ENV_AND_VERCEL.md](./ENV_AND_VERCEL.md) § STRAND_CREATOR_PLAYER_ID.
+
 **Deterministic fallbacks**: When `OPENAI_API_KEY` is missing or an AI call fails, all tools return valid JSON via deterministic fallbacks. Output may include `"deterministic": true`.
 
 **Test outputs**: Run `npm run test:gm-agents` to smoke-test all 6 agent APIs. Backend auto-starts if needed. Use to verify deterministic and AI paths.

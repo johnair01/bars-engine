@@ -161,6 +161,7 @@ export async function getTodayCharge(): Promise<
         creatorId: player.id,
         type: 'charge_capture',
         createdAt: { gte: startOfToday },
+        archivedAt: null,
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true, title: true, description: true, createdAt: true, inputs: true },

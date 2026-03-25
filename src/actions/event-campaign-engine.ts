@@ -1,7 +1,9 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
+import { canCreateCampaignOnInstance, canCreateEventOnCampaign } from '@/actions/campaign-invitation'
 import { intentToRaciRole } from '@/lib/bar-raci'
 import {
   deriveKotterContext,
@@ -32,7 +34,8 @@ export interface CreateEventCampaignInput {
   targetArchetypes?: string[]
   targetMoves?: string[]
   developmentalLens?: string
-  instanceId?: string
+  /** Required — campaigns are created in the context of a residency. */
+  instanceId: string
 }
 
 export async function createEventCampaign(
@@ -40,6 +43,11 @@ export async function createEventCampaign(
 ): Promise<{ success: true; campaignId: string; threadId: string } | { error: string }> {
   const playerId = await getPlayerId()
   if (!playerId) return { error: 'Not authenticated' }
+
+  if (!input.instanceId?.trim()) return { error: 'Instance is required' }
+  if (!(await canCreateCampaignOnInstance(playerId, input.instanceId))) {
+    return { error: 'You do not have permission to create a campaign for this instance' }
+  }
 
   const campaign = await db.eventCampaign.create({
     data: {
@@ -51,7 +59,7 @@ export async function createEventCampaign(
       targetArchetypes: JSON.stringify(input.targetArchetypes ?? []),
       targetMoves: JSON.stringify(input.targetMoves ?? []),
       developmentalLens: input.developmentalLens ?? null,
-      instanceId: input.instanceId ?? null,
+      instanceId: input.instanceId,
       status: 'proposed',
     },
     select: { id: true },
@@ -68,7 +76,30 @@ export async function createEventCampaign(
     select: { id: true },
   })
 
+  revalidatePath('/event')
   return { success: true, campaignId: campaign.id, threadId: thread.id }
+}
+
+// ---------------------------------------------------------------------------
+// getEventCampaignsForInstance
+// ---------------------------------------------------------------------------
+
+export async function getEventCampaignsForInstance(instanceId: string): Promise<
+  Array<{ id: string; topic: string; campaignContext: string; primaryDomain: string }>
+> {
+  const inst = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = inst?.campaignRef ?? null
+  const campaigns = await db.eventCampaign.findMany({
+    where: cref
+      ? { OR: [{ instanceId }, { instance: { campaignRef: cref } }] }
+      : { instanceId },
+    select: { id: true, topic: true, campaignContext: true, primaryDomain: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  return campaigns
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +107,8 @@ export async function createEventCampaign(
 // ---------------------------------------------------------------------------
 
 export interface CreateEventArtifactInput {
+  /** Instance this event is being created for (must match campaign scope). */
+  instanceId: string
   campaignId: string
   title: string
   description: string
@@ -102,38 +135,74 @@ export async function createEventArtifact(
   const playerId = await getPlayerId()
   if (!playerId) return { error: 'Not authenticated' }
 
+  if (!input.instanceId?.trim()) return { error: 'Instance is required' }
+
   const campaign = await db.eventCampaign.findUnique({
     where: { id: input.campaignId },
-    select: { id: true },
+    select: { id: true, instanceId: true },
   })
   if (!campaign) return { error: 'Campaign not found' }
 
-  const artifact = await db.eventArtifact.create({
-    data: {
-      linkedCampaignId: input.campaignId,
-      title: input.title,
-      description: input.description,
-      eventType: input.eventType,
-      topic: input.topic,
-      campaignContext: input.campaignContext,
-      primaryDomain: input.primaryDomain,
-      secondaryDomain: input.secondaryDomain ?? null,
-      targetArchetypes: JSON.stringify(input.targetArchetypes ?? []),
-      targetMoves: JSON.stringify(input.targetMoves ?? []),
-      locationType: input.locationType,
-      locationDetails: input.locationDetails ?? null,
-      startTime: input.startTime ?? null,
-      endTime: input.endTime ?? null,
-      timezone: input.timezone ?? null,
-      capacity: input.capacity ?? null,
-      visibility: input.visibility ?? 'campaign_visible',
-      createdByActorId: playerId,
-      parentEventArtifactId: input.parentEventArtifactId ?? null,
-      status: 'draft',
-    },
-    select: { id: true },
+  if (campaign.instanceId && campaign.instanceId !== input.instanceId) {
+    return { error: 'This campaign is not linked to this instance' }
+  }
+
+  const canCreate = await canCreateEventOnCampaign(playerId, input.campaignId, input.instanceId)
+  if (!canCreate) return { error: 'You do not have permission to create events for this campaign' }
+
+  if (input.parentEventArtifactId) {
+    const parent = await db.eventArtifact.findUnique({
+      where: { id: input.parentEventArtifactId },
+      select: { linkedCampaignId: true, parentEventArtifactId: true },
+    })
+    if (!parent || parent.linkedCampaignId !== input.campaignId) {
+      return { error: 'Parent event must belong to this campaign' }
+    }
+    if (parent.parentEventArtifactId) {
+      return { error: 'Attach crew events to the main event, not to another crew row' }
+    }
+  }
+
+  const artifactInstanceId = campaign.instanceId ?? input.instanceId
+  const status = input.startTime ? 'scheduled' : 'draft'
+
+  const artifact = await db.$transaction(async (tx) => {
+    if (!campaign.instanceId) {
+      await tx.eventCampaign.update({
+        where: { id: input.campaignId },
+        data: { instanceId: input.instanceId },
+      })
+    }
+
+    return tx.eventArtifact.create({
+      data: {
+        linkedCampaignId: input.campaignId,
+        instanceId: artifactInstanceId,
+        title: input.title,
+        description: input.description,
+        eventType: input.eventType,
+        topic: input.topic,
+        campaignContext: input.campaignContext,
+        primaryDomain: input.primaryDomain,
+        secondaryDomain: input.secondaryDomain ?? null,
+        targetArchetypes: JSON.stringify(input.targetArchetypes ?? []),
+        targetMoves: JSON.stringify(input.targetMoves ?? []),
+        locationType: input.locationType,
+        locationDetails: input.locationDetails ?? null,
+        startTime: input.startTime ?? null,
+        endTime: input.endTime ?? null,
+        timezone: input.timezone ?? null,
+        capacity: input.capacity ?? null,
+        visibility: input.visibility ?? 'campaign_visible',
+        createdByActorId: playerId,
+        parentEventArtifactId: input.parentEventArtifactId ?? null,
+        status,
+      },
+      select: { id: true },
+    })
   })
 
+  revalidatePath('/event')
   return { success: true, artifactId: artifact.id }
 }
 

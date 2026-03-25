@@ -4,17 +4,15 @@ import { redirect } from 'next/navigation'
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
 
 /**
- * /play is the "Try the loop" demo page for new/unauthenticated visitors.
- * Authenticated players are redirected to /adventures (the active play hub).
- * Spec: PMI G11 — resolve /play vs /adventures route split.
+ * /play — short guided loop (Charge → Scene Atlas → I Ching). Same pattern as the two-channel hub, step-by-step.
+ * Logged-in players see this page (no redirect); **Play** tab / hub remains `/adventures`.
+ * Unauthenticated: send to guided conclave (capture/deck need an account in practice).
  */
 export default async function PlayPage() {
   const player = await getCurrentPlayer()
   if (!player) {
     redirect('/conclave/guided')
   }
-  // Authenticated players: /adventures is the canonical PLAY tab
-  redirect('/adventures')
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-10 max-w-lg mx-auto space-y-8">
@@ -25,6 +23,12 @@ export default async function PlayPage() {
         <h1 className="text-2xl font-bold text-white">Try the loop</h1>
         <p className="text-sm text-zinc-400">
           Three stops: name a charge, answer one Scene Atlas cell, cast for the collective field.
+        </p>
+        <p className="text-xs text-zinc-600 pt-1">
+          Already living in the play hub?{' '}
+          <Link href="/adventures" className="text-amber-400/90 hover:text-amber-300 font-medium">
+            Open Play (journeys &amp; adventures) →
+          </Link>
         </p>
       </header>
 

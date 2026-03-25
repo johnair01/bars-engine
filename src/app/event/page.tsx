@@ -3,9 +3,11 @@ import type { Metadata } from 'next'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
+  canCreateCampaignOnInstance,
   canInviteToAnyEventOnInstance,
   listEventArtifactsForInstance,
 } from '@/actions/campaign-invitation'
+import { getEventCampaignsForInstance } from '@/actions/event-campaign-engine'
 import { getWorldVenueEntryForInstance } from '@/actions/spatial-maps'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
@@ -15,11 +17,14 @@ import {
   formatEventCapacityLine,
   formatEventScheduleRange,
 } from './EditEventScheduleButton'
+import { EditEventDetailsButton } from './EditEventDetailsButton'
 import { EventGuestsPanel } from './EventGuestsPanel'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
+import { EventCrewSurface } from '@/components/event/EventCrewSurface'
 import { BruisedBananaApr2026EventBlocks } from './BruisedBananaApr2026EventBlocks'
+import { CreateEventButton } from './CreateEventButton'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -72,8 +77,11 @@ export default async function EventPage() {
   const pct = goal > 0 ? Math.max(0, Math.min(1, current / goal)) : 0
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
   const eventArtifacts = await listEventArtifactsForInstance(instance.id)
+  const eventCampaigns = await getEventCampaignsForInstance(instance.id)
   const canSendEventInvites =
     !!player && (await canInviteToAnyEventOnInstance(player.id, instance.id))
+  const canCreateCampaign =
+    !!player && (await canCreateCampaignOnInstance(player.id, instance.id))
   const rootEvents = eventArtifacts.filter((e) => !e.parentEventArtifactId)
   const childrenOf = (parentId: string) =>
     eventArtifacts.filter((e) => e.parentEventArtifactId === parentId)
@@ -122,49 +130,121 @@ export default async function EventPage() {
           )}
         </header>
 
-        {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
+        {goal > 0 && instance.isEventMode && (
+          <details
+            open
+            className="group bg-zinc-900/40 border border-zinc-800 rounded-2xl open:pb-2"
+          >
+            <summary className="cursor-pointer list-none p-6 font-bold text-white flex items-center justify-between gap-2">
+              <span>Fundraiser progress</span>
+              <span className="text-zinc-500 text-sm font-normal group-open:hidden">Show</span>
+              <span className="text-zinc-500 text-sm font-normal hidden group-open:inline">Hide</span>
+            </summary>
+            <div className="px-6 pb-6 space-y-4 -mt-2">
+              <div className="flex items-end justify-between gap-4 flex-wrap">
+                <div>
+                  <div className="text-2xl font-bold text-white">
+                    {formatUsdCents(current)} <span className="text-zinc-500 font-mono">/</span>{' '}
+                    {formatUsdCents(goal)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-zinc-500 font-mono">{Math.round(pct * 100)}%</div>
+                  {isAdmin && (
+                    <EventProgressUpdater
+                      instanceId={instance.id}
+                      initialCurrentCents={current}
+                      initialGoalCents={goal}
+                    />
+                  )}
+                </div>
+              </div>
 
-        <section className="bg-emerald-950/20 border border-emerald-900/40 rounded-2xl p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Wake Up: Learn the story</h2>
-          <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
-            {wakeUpContent}
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/wiki"
-              className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
-            >
-              Learn more →
-            </Link>
-            {player && (
-              <>
-                <span className="text-zinc-500 text-sm">•</span>
-                <span className="text-zinc-500 text-sm">Have a question?</span>
-                <LibraryRequestButton context={{ campaignRef: 'bruised-banana' }} />
-              </>
+              <div className="h-3 rounded-full bg-black border border-zinc-800 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
+                  style={{ width: `${Math.round(pct * 100)}%` }}
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Link
+                  href="/event/donate"
+                  className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
+                >
+                  Donate
+                </Link>
+              </div>
+            </div>
+          </details>
+        )}
+
+        <details className="group bg-emerald-950/20 border border-emerald-900/40 rounded-2xl open:pb-2">
+          <summary className="cursor-pointer list-none p-6 font-bold text-white flex items-center justify-between gap-2">
+            <span>Wake Up: Learn the story</span>
+            <span className="text-zinc-500 text-sm font-normal group-open:hidden">Show</span>
+            <span className="text-zinc-500 text-sm font-normal hidden group-open:inline">Hide</span>
+          </summary>
+          <div className="px-6 pb-6 space-y-4 -mt-2">
+            <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{wakeUpContent}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/wiki"
+                className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+              >
+                Learn more →
+              </Link>
+              {instance.campaignRef === 'bruised-banana' && (
+                <>
+                  <span className="text-zinc-500 text-sm">•</span>
+                  <Link
+                    href="/campaign/twine"
+                    className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+                  >
+                    Browse initiation story (read-only)
+                  </Link>
+                </>
+              )}
+              {player && instance.campaignRef && (
+                <>
+                  <span className="text-zinc-500 text-sm">•</span>
+                  <span className="text-zinc-500 text-sm">Have a question?</span>
+                  <LibraryRequestButton context={{ campaignRef: instance.campaignRef }} />
+                </>
+              )}
+            </div>
+            {(instance.theme || instance.targetDescription) && (
+              <details className="mt-1">
+                <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
+                  Theme &amp; target (extra)
+                </summary>
+                <div className="mt-3 space-y-2 text-zinc-400 text-sm">
+                  {instance.theme && <p>{instance.theme}</p>}
+                  {instance.targetDescription && <p>{instance.targetDescription}</p>}
+                </div>
+              </details>
             )}
           </div>
-          {(instance.theme || instance.targetDescription) && (
-            <details className="mt-3">
-              <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
-                Read more
-              </summary>
-              <div className="mt-3 space-y-2 text-zinc-400 text-sm">
-                {instance.theme && <p>{instance.theme}</p>}
-                {instance.targetDescription && <p>{instance.targetDescription}</p>}
-              </div>
-            </details>
-          )}
-        </section>
+        </details>
+
+        {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
 
         <section className="bg-amber-950/15 border border-amber-900/35 rounded-2xl p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div>
+            <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold text-white">Events on this campaign</h2>
               <p className="text-zinc-500 text-sm mt-1">
                 Dated gatherings linked to this instance. Invites attach to one of these rows—not to the whole campaign page.
               </p>
             </div>
+            {canSendEventInvites && (
+              <CreateEventButton
+                instanceId={instance.id}
+                instanceName={instance.name}
+                campaigns={eventCampaigns}
+                canCreateCampaign={canCreateCampaign}
+              />
+            )}
           </div>
 
           {eventArtifacts.length === 0 ? (
@@ -216,7 +296,10 @@ export default async function EventPage() {
                           ) : null}
                         </div>
                         {canSendEventInvites && (
-                          <EditEventScheduleButton instanceId={instance.id} event={ev} />
+                          <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+                            <EditEventDetailsButton instanceId={instance.id} event={ev} />
+                            <EditEventScheduleButton instanceId={instance.id} event={ev} />
+                          </div>
                         )}
                       </div>
                       {subs.length > 0 && (
@@ -250,7 +333,10 @@ export default async function EventPage() {
                                 ) : null}
                               </div>
                               {canSendEventInvites && (
-                                <EditEventScheduleButton instanceId={instance.id} event={sub} />
+                                <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+                                  <EditEventDetailsButton instanceId={instance.id} event={sub} />
+                                  <EditEventScheduleButton instanceId={instance.id} event={sub} />
+                                </div>
                               )}
                             </li>
                           ))}
@@ -272,6 +358,13 @@ export default async function EventPage() {
             </>
           )}
         </section>
+
+        <EventCrewSurface
+          eventArtifacts={eventArtifacts}
+          instanceId={instance.id}
+          player={player}
+          canSendEventInvites={canSendEventInvites}
+        />
 
         {(worldVenue || (isAdmin && !worldVenue)) && (
           <section className="bg-zinc-900/25 border border-zinc-800/80 rounded-2xl p-5 space-y-3">
@@ -297,73 +390,45 @@ export default async function EventPage() {
           </section>
         )}
 
-        {goal > 0 && instance.isEventMode && (
-          <section className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 space-y-4">
-            <div className="flex items-end justify-between gap-4 flex-wrap">
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono">Fundraiser progress</div>
-                <div className="text-2xl font-bold text-white">
-                  {formatUsdCents(current)} <span className="text-zinc-500 font-mono">/</span> {formatUsdCents(goal)}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-xs text-zinc-500 font-mono">
-                  {Math.round(pct * 100)}%
-                </div>
-                {isAdmin && (
-                  <EventProgressUpdater
-                    instanceId={instance.id}
-                    initialCurrentCents={current}
-                    initialGoalCents={goal}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="h-3 rounded-full bg-black border border-zinc-800 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
-                style={{ width: `${Math.round(pct * 100)}%` }}
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <details className="group bg-zinc-900/20 border border-zinc-800 rounded-2xl open:pb-2">
+          <summary className="cursor-pointer list-none p-6 font-bold text-white flex items-center justify-between gap-2">
+            <span>Show Up: Contribute to the campaign</span>
+            <span className="text-zinc-500 text-sm font-normal group-open:hidden">Show</span>
+            <span className="text-zinc-500 text-sm font-normal hidden group-open:inline">Hide</span>
+          </summary>
+          <div className="px-6 pb-6 space-y-4 -mt-2">
+            <p className="text-zinc-500 text-sm whitespace-pre-wrap">{showUpContent}</p>
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               <Link
                 href="/event/donate"
-                className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
+                className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600/80 hover:bg-green-500/80 text-white font-bold border border-green-500/50"
               >
                 Donate
               </Link>
+              <InviteButton />
+              {player ? (
+                <Link href="/" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/campaign?ref=bruised-banana"
+                    className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold"
+                  >
+                    Play the game
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-bold"
+                  >
+                    Log In
+                  </Link>
+                </>
+              )}
             </div>
-          </section>
-        )}
-
-        <section className="bg-zinc-900/20 border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Show Up: Contribute to the campaign</h2>
-          <p className="text-zinc-500 text-sm whitespace-pre-wrap">
-            {showUpContent}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-            <Link href="/event/donate" className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600/80 hover:bg-green-500/80 text-white font-bold border border-green-500/50">
-              Donate
-            </Link>
-            <InviteButton />
-            {player ? (
-              <Link href="/" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold">
-                Go to Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link href="/campaign?ref=bruised-banana" className="flex-1 text-center px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">
-                  Play the game
-                </Link>
-                <Link href="/login" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-bold">
-                  Log In
-                </Link>
-              </>
-            )}
           </div>
-        </section>
+        </details>
       </div>
     </div>
   )

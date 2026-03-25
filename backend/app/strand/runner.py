@@ -6,7 +6,6 @@ import logging
 from datetime import UTC, datetime
 
 from pydantic_ai._tool_manager import ToolManager
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents._deps import AgentDeps
@@ -14,24 +13,14 @@ from app.agents.architect import architect_agent, deterministic_architect_draft
 from app.agents.sage import deterministic_sage_response, sage_agent
 from app.agents.shaman import deterministic_shaman_reading, shaman_agent
 from app.config import settings
-from app.models.player import Player
 from app.models.quest import CustomBar
+from app.strand.creator import resolve_strand_creator_id
 from app.strand.schemas import StrandMetadata
 
 logger = logging.getLogger(__name__)
 
 STRAND_TYPES = ("research", "postmortem", "implementation", "operational", "diagnostic", "content", "backlog")
 DIAGNOSTIC_SECT_SEQUENCE = ["shaman", "sage", "architect"]
-
-
-async def _get_system_creator_id(session: AsyncSession) -> str:
-    """Get first player ID for system/strand BAR creation."""
-    stmt = select(Player.id).limit(1)
-    result = await session.execute(stmt)
-    row = result.scalar_one_or_none()
-    if not row:
-        raise RuntimeError("No player in database; seed the database first")
-    return row
 
 
 async def run_strand(
@@ -50,7 +39,7 @@ async def run_strand(
     if strand_type not in STRAND_TYPES:
         raise ValueError(f"Invalid strand_type: {strand_type}. Must be one of {STRAND_TYPES}")
 
-    creator_id = await _get_system_creator_id(session)
+    creator_id = await resolve_strand_creator_id(session)
 
     # 1. Create strand BAR (metadata placeholder)
     strand_meta = StrandMetadata(

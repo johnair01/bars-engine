@@ -139,8 +139,8 @@ export function OrientationCompass(props: CompassProps) {
         </p>
       )}
       <div
-        className={`rounded-xl border ${s.borderClass} bg-zinc-950/45 overflow-hidden ${
-          showRitualGate ? 'opacity-60' : ''
+        className={`rounded-xl border-2 ${s.borderClass} bg-zinc-900/80 shadow-lg shadow-black/40 ring-1 ring-white/10 overflow-hidden ${
+          showRitualGate ? 'opacity-80' : ''
         }`}
       >
         <div className="grid min-h-0 grid-cols-2 items-stretch gap-0 divide-x divide-zinc-800/70 md:grid-cols-[minmax(0,11.5rem)_minmax(0,1fr)]">
@@ -155,7 +155,9 @@ export function OrientationCompass(props: CompassProps) {
                   <div
                     key={slug}
                     className={`flex h-full min-h-0 min-w-0 items-center gap-1 rounded-md border px-1.5 py-1 sm:gap-1.5 sm:rounded-lg sm:px-2 sm:py-1.5 ${
-                      active ? 'border-zinc-500 bg-zinc-800/60' : 'border-zinc-800/60 bg-zinc-900/30 opacity-70'
+                      active
+                        ? 'border-zinc-400/90 bg-zinc-800/90 ring-1 ring-white/15'
+                        : 'border-zinc-700/80 bg-zinc-950/50 opacity-90'
                     }`}
                   >
                     <Image
@@ -167,7 +169,7 @@ export function OrientationCompass(props: CompassProps) {
                     />
                     <span
                       className={`min-w-0 text-[9px] font-semibold leading-tight sm:text-[10px] ${
-                        active ? 'text-zinc-200' : 'text-zinc-500'
+                        active ? 'text-zinc-50' : 'text-zinc-400'
                       }`}
                     >
                       {label}
@@ -180,13 +182,15 @@ export function OrientationCompass(props: CompassProps) {
 
           {/* Current move — same width budget as half an iPhone at default grid; stacks CTA + Handbook */}
           <div className="flex min-w-0 flex-col gap-2 p-2.5 sm:gap-2.5 sm:p-3">
-            <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Current move</p>
-            <p className={`text-sm font-bold leading-tight break-words text-balance ${s.accentClass}`}>{s.move}</p>
-            <p className="text-[11px] leading-snug text-zinc-500 break-words text-pretty sm:text-xs">{s.tagline}</p>
+            <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-400">Current move</p>
+            <p className={`text-base sm:text-lg font-bold leading-tight break-words text-balance ${s.accentClass}`}>
+              {s.move}
+            </p>
+            <p className="text-[11px] leading-snug text-zinc-400 break-words text-pretty sm:text-sm">{s.tagline}</p>
             <div className="mt-0.5 flex min-w-0 flex-col gap-2">
               <Link
                 href={s.href}
-                className={`flex min-h-10 w-full items-center justify-center rounded-lg border px-2 py-2 text-center text-[11px] font-bold leading-snug transition-colors hover:bg-zinc-800/80 sm:text-xs ${s.borderClass} ${s.accentClass}`}
+                className={`flex min-h-10 w-full items-center justify-center rounded-lg border-2 px-2 py-2 text-center text-[11px] font-bold leading-snug transition-colors hover:bg-zinc-800/90 sm:text-xs bg-zinc-950/40 ${s.borderClass} ${s.accentClass}`}
               >
                 <span className="break-words">
                   {s.action}

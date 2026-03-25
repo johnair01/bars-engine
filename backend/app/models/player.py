@@ -35,6 +35,7 @@ class Player(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_cuid)
     account_id: Mapped[str | None] = mapped_column("accountId", String, ForeignKey("accounts.id"), nullable=True)
     name: Mapped[str] = mapped_column(String)
+    creator_type: Mapped[str] = mapped_column("creatorType", String, default="human")
     contact_type: Mapped[str] = mapped_column("contactType", String)
     contact_value: Mapped[str] = mapped_column("contactValue", String)
     password_hash: Mapped[str | None] = mapped_column("passwordHash", String, nullable=True, default=None)

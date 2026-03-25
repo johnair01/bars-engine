@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     logfire_token: SecretStr = SecretStr("")
     secret_key: SecretStr = SecretStr("change-me-in-production")
     dev_player_id: str = ""
+    """If set, strand/MCP-created BARs use this Player id as creator. Else lookup agent player by name."""
+    strand_creator_player_id: str = ""
     agent_model: str = "openai:gpt-4o"
     environment: str = "development"
     cors_origins: str = ""

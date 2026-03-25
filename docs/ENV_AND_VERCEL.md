@@ -94,6 +94,22 @@ AI features (Book analysis, I Ching quest generation) require `OPENAI_API_KEY`. 
 3. **Verify**: Run `npm run smoke` — it checks for `OPENAI_API_KEY` presence.
 4. **Key format**: Valid keys start with `sk-` or `sk-proj-`. If rotated or expired, create a new key and update env.
 
+### STRAND_CREATOR_PLAYER_ID (FastAPI / bars-agents)
+
+Strand and MCP-generated BARs attach to a **dedicated agent `Player`**, not an arbitrary first user.
+
+| Variable | Where | Meaning |
+|----------|--------|---------|
+| `STRAND_CREATOR_PLAYER_ID` | **Backend** `.env` / `.env.local` (loaded by `backend/app/config.py`) | Optional. If set, must equal an existing `players.id`; strand uses it as `creatorId` for new BARs. |
+
+If **unset**, the backend looks up a player with `creatorType = agent` and name **`BARS Strand Agent`**. Seed that row with:
+
+`npm run seed:strand-agent`
+
+(or `npx tsx scripts/with-env.ts "npx tsx scripts/seed-strand-agent-player.ts"`).
+
+After seeding, you may pin the id: `STRAND_CREATOR_PLAYER_ID=bars-strand-agent` (default stable id from the seed script).
+
 ### Vault inventory caps (optional)
 
 Per [.specify/specs/vault-page-experience/spec.md](../.specify/specs/vault-page-experience/spec.md) **Phase B**, creation of private draft BARs and unplaced personal quests can be limited:

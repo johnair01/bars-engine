@@ -32,7 +32,7 @@ import { listMyCampaignSeeds } from '@/actions/campaign-bar'
 import { CampaignSeedReadyCard } from '@/components/dashboard/CampaignSeedReadyCard'
 import { getCampaignsForPlayer } from '@/actions/campaign-overview'
 import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
-import { ThroughputLanesSection } from '@/components/dashboard/ThroughputLanesSection'
+import { DashboardTwoChannelHub } from '@/components/dashboard/DashboardTwoChannelHub'
 import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
 import { DiscoverStrip } from '@/components/dashboard/DiscoverStrip'
 import { getLibraryQuestsForMove } from '@/actions/library-discover'
@@ -508,6 +508,13 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <Link href="/wiki/handbook" className="text-zinc-500 hover:text-zinc-300 underline-offset-2 hover:underline">
             Player handbook
           </Link>
+          <span className="text-zinc-700"> · </span>
+          <Link
+            href="/event"
+            className="text-amber-400/95 hover:text-amber-300 font-semibold underline-offset-2 hover:underline"
+          >
+            Residency events
+          </Link>
         </p>
 
         {/* Campaign leader signals (high-priority, before social) */}
@@ -525,7 +532,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         {/* Today's Charge + Archive */}
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
-        <ThroughputLanesSection
+        <DashboardTwoChannelHub
           activeInstanceId={activeInstance?.id ?? null}
           campaignHomeHref={playerCampaignHomeHref}
         />

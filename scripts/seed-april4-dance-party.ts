@@ -1,5 +1,6 @@
 /**
- * April 4 dance party + nested pre-production EventArtifacts for BB-BDAY-001.
+ * April 4 dance party + nested pre-production EventArtifacts for the BB fundraiser instance
+ * (slug `bb-bday-001`, or legacy id BB-BDAY-001).
  * Hosts: Wendell + JJ (by player name, case-insensitive).
  *
  * Run: npx tsx scripts/seed-april4-dance-party.ts
@@ -9,7 +10,8 @@ import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
 
-const INSTANCE_ID = 'BB-BDAY-001'
+/** Legacy id used in early seeds; quest-map uses slug `bb-bday-001` with a Prisma cuid `id`. */
+const LEGACY_INSTANCE_ID = 'BB-BDAY-001'
 const CAMPAIGN_ID = 'EC-BB-APRIL-DANCE-2026'
 const MAIN_EVENT_ID = 'EVT-BB-DANCE-2026-04-04'
 
@@ -20,11 +22,16 @@ const PRE = {
 } as const
 
 async function main() {
-  const instance = await db.instance.findUnique({ where: { id: INSTANCE_ID } })
+  const instance =
+    (await db.instance.findUnique({ where: { id: LEGACY_INSTANCE_ID } })) ??
+    (await db.instance.findUnique({ where: { slug: 'bb-bday-001' } }))
   if (!instance) {
-    console.error(`Instance ${INSTANCE_ID} not found. Run party seed or create instance first.`)
+    console.error(
+      `No Bruised Banana fundraiser instance found (id ${LEGACY_INSTANCE_ID} or slug bb-bday-001). Run: npx tsx scripts/seed_bruised_banana_quest_map.ts`,
+    )
     process.exit(1)
   }
+  const instanceId = instance.id
 
   const wendell = await db.player.findFirst({
     where: { name: { equals: 'Wendell', mode: 'insensitive' } },
@@ -64,7 +71,7 @@ async function main() {
       primaryDomain: 'GATHERING_RESOURCES',
       productionGrammar: 'kotter',
       status: 'planning',
-      instanceId: INSTANCE_ID,
+      instanceId,
       hostActorIds: JSON.stringify(hostIds),
     },
     create: {
@@ -74,7 +81,7 @@ async function main() {
       primaryDomain: 'GATHERING_RESOURCES',
       productionGrammar: 'kotter',
       status: 'planning',
-      instanceId: INSTANCE_ID,
+      instanceId,
       hostActorIds: JSON.stringify(hostIds),
     },
   })
@@ -97,7 +104,7 @@ async function main() {
       timezone: 'America/Los_Angeles',
       status: 'scheduled',
       visibility: 'campaign_visible',
-      instanceId: INSTANCE_ID,
+      instanceId,
       parentEventArtifactId: null,
     },
     create: {
@@ -117,7 +124,7 @@ async function main() {
       timezone: 'America/Los_Angeles',
       status: 'scheduled',
       visibility: 'campaign_visible',
-      instanceId: INSTANCE_ID,
+      instanceId,
     },
   })
 
@@ -142,7 +149,7 @@ async function main() {
         locationDetails: venueBlurb,
         status: 'scheduled',
         visibility: 'campaign_visible',
-        instanceId: INSTANCE_ID,
+        instanceId,
         parentEventArtifactId: mainEvent.id,
       },
       create: {
@@ -160,7 +167,7 @@ async function main() {
         locationDetails: venueBlurb,
         status: 'scheduled',
         visibility: 'campaign_visible',
-        instanceId: INSTANCE_ID,
+        instanceId,
         parentEventArtifactId: mainEvent.id,
       },
     })

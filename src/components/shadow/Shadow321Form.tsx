@@ -32,9 +32,17 @@ export type Shadow321FormProps = {
   contextQuestId?: string | null
   /** Optional: prefill q1 (experience) from charge BAR when launched via run321FromCharge */
   initialQ1?: string
+  /** Optional: charge_capture BAR id when 321 was launched from a charge (NEV compost). */
+  chargeBarId?: string | null
 }
 
-export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 }: Shadow321FormProps = {}) {
+export function Shadow321Form({
+  onComplete,
+  embedded,
+  contextQuestId,
+  initialQ1,
+  chargeBarId,
+}: Shadow321FormProps = {}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [chargeError, setChargeError] = useState<string | null>(null)
@@ -135,7 +143,8 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
         phase2,
         phase3,
         undefined,
-        shadow321NameFromForm()
+        shadow321NameFromForm(),
+        chargeBarId ?? undefined,
       )
       if (res && 'error' in res) {
         setChargeError(res.error)
@@ -156,7 +165,7 @@ export function Shadow321Form({ onComplete, embedded, contextQuestId, initialQ1 
     setChargeError(null)
     startTransition(async () => {
       const metadata = getMetadata()
-      const res = await fuelSystemFrom321(metadata)
+      const res = await fuelSystemFrom321(metadata, undefined, undefined, chargeBarId ?? undefined)
       if (res && 'error' in res) {
         setChargeError(res.error)
         toast.error(res.error)

@@ -417,6 +417,8 @@ model Shadow321Session {
   outcome          String // bar_created | quest_created | fueled_system | skipped | daemon_awakened
   linkedBarId      String?
   linkedQuestId    String?
+  /// When set, 321 was launched from this charge_capture BAR; metabolizing outcomes archive the charge.
+  chargeSourceBarId String?
   questCompletedAt DateTime?
   /// Final shadow name when the player completed / preserved the naming step (321 Face It name field).
   finalShadowName  String?

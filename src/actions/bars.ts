@@ -792,6 +792,13 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
             create: { playerId, questId: quest.id, status: 'assigned', assignedAt: new Date() },
         })
 
+        if (bar.type === 'charge_capture') {
+            await db.customBar.update({
+                where: { id: barId },
+                data: { archivedAt: new Date() },
+            })
+        }
+
         const { completeOnboardingStep } = await import('@/actions/onboarding')
         const creatorFull = await db.player.findUnique({
             where: { id: playerId },

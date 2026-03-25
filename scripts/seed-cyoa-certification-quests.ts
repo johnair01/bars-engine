@@ -38,7 +38,9 @@ const CERT_QUEST_IDS = [
     'cert-template-library-v1',
     'cert-game-loop-tighten-v1',
     'cert-campaign-map-phase-1-v1',
-    'cert-admin-books-compass-compact-ui-v1'
+    'cert-admin-books-compass-compact-ui-v1',
+    'cert-now-event-vault-qol-v1',
+    'cert-campaign-marketplace-slots-v1'
 ]
 
 async function seed() {
@@ -3561,6 +3563,222 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${abclSlug}`)
+
+    // --- Certification: NOW / Event / Vault throughput QOL (NEV) ---
+    const nevTitle = 'Certification: NOW Event Vault Throughput QOL V1'
+    const nevSlug = 'cert-now-event-vault-qol-v1'
+
+    const nevPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify dashboard compass contrast, Vault Create BAR routing, charge compost after quest/321, /event layout (Wake Up first, bingo modals). Supports Bruised Banana residency clarity.',
+            cleanText: 'NEV verification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: NOW compass + /event\n\nOpen [/](/) signed in. Confirm **Four moves** and **Current move** are easy to read (not washed out). In the line under the compass, confirm **Residency events** links to [/event](/event).',
+            cleanText: 'Step 1: Compass + event link.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Vault Create BAR\n\nOpen [/hand](/hand). The primary CTA should say **Create a BAR** and go to [/bars/create](/bars/create) (not charge capture).',
+            cleanText: 'Step 2: Vault CTA.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Charge compost\n\nCapture a charge, then either **grow a quest** from that charge BAR or complete a **321** path that fuels / creates (with charge in URL). Confirm **Today\'s Charge** on the dashboard no longer shows that capture as active.',
+            cleanText: 'Step 3: Charge clears.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: /event layout\n\nOn [/event](/event) (bruised-banana instance): **Wake Up: Learn the story** appears before the **Spring residency** block. Bingo uses **buttons** that open **modals**, not full grids on the page. Fundraiser and Show Up are in **collapsible** sections.',
+            cleanText: 'Step 4: Event IA.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'NEV verification complete. Clearer NOW / Vault / event paths support the residency and daily play. Complete this quest for your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const nevParsedJson = JSON.stringify({
+        title: nevTitle,
+        startPassage: 'START',
+        passages: nevPassages
+    })
+
+    const nevStory = await db.twineStory.upsert({
+        where: { slug: nevSlug },
+        update: {
+            title: nevTitle,
+            parsedJson: nevParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: nevTitle,
+            slug: nevSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'NOW Event Vault QOL (seed-cyoa-certification-quests.ts)',
+            parsedJson: nevParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: nevSlug },
+        update: {
+            title: nevTitle,
+            description: 'Verify compass, Vault Create BAR, charge compost, /event IA + bingo modals.',
+            reward: 1,
+            twineStoryId: nevStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/now-event-vault-throughput-qol/spec.md'
+        },
+        create: {
+            id: nevSlug,
+            title: nevTitle,
+            description: 'Verify compass, Vault Create BAR, charge compost, /event IA + bingo modals.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: nevStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/now-event-vault-throughput-qol/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${nevSlug}`)
+
+    // --- Certification: Campaign marketplace slots & wilderness IA (CMS) ---
+    const cmsTitle = 'Certification: Campaign Marketplace Slots V1'
+    const cmsSlug = 'cert-campaign-marketplace-slots-v1'
+
+    const cmsPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify **wilderness vs marketplace** IA: hub/map/CYOA feel like exploration; campaign slots feel like **mall stalls**. BARSeeds and quests can move from wild to **list** without forcing one linear path. Supports Bruised Banana residency marketplace clarity.',
+            cleanText: 'CMS verification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Wilderness copy\n\nOpen **campaign hub** and **game map** (or board entry). Confirm primary language suggests **explore / discover**, not **shop** or **stall** as the main metaphor on those surfaces (once Phase A copy ships).',
+            cleanText: 'Step 1: Wild copy.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Post-discovery CTA\n\nAfter a discovery beat (CYOA completion hook or Hand when implemented), confirm **Add to your campaign stall** or **List on marketplace** appears and can be **dismissed** — not a blocking forced quest.',
+            cleanText: 'Step 2: Bridge CTA.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Marketplace & empty mall\n\nOpen the **campaign marketplace** route (once shipped). When you have **no** player stalls yet, confirm **at least one** system/instance stall or explainer so the mall does not look broken.',
+            cleanText: 'Step 3: Mitigation.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Slot economics\n\nConfirm **8** baseline stalls (or documented cap) and **high cost** disclosure **before** buying slot 9+ (when purchase flow ships).',
+            cleanText: 'Step 4: Slots.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'CMS verification complete. Wild grass and dungeons feed the mall: exploration stays generous, listings stay scarce. Complete this quest for your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const cmsParsedJson = JSON.stringify({
+        title: cmsTitle,
+        startPassage: 'START',
+        passages: cmsPassages
+    })
+
+    const cmsStory = await db.twineStory.upsert({
+        where: { slug: cmsSlug },
+        update: {
+            title: cmsTitle,
+            parsedJson: cmsParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: cmsTitle,
+            slug: cmsSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Campaign marketplace slots (seed-cyoa-certification-quests.ts)',
+            parsedJson: cmsParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: cmsSlug },
+        update: {
+            title: cmsTitle,
+            description: 'Verify wild vs mall IA, bridge CTA, empty-mall mitigation, 8+ slot economics.',
+            reward: 1,
+            twineStoryId: cmsStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-marketplace-slots/spec.md'
+        },
+        create: {
+            id: cmsSlug,
+            title: cmsTitle,
+            description: 'Verify wild vs mall IA, bridge CTA, empty-mall mitigation, 8+ slot economics.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: cmsStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/campaign-marketplace-slots/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${cmsSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getCurrentPlayer } from '@/lib/auth'
-import { PartyMiniGameGridInteractive } from '@/components/party-mini-game/PartyMiniGameGridInteractive'
+import { PartyMiniGameInModal } from '@/components/party-mini-game/PartyMiniGameInModal'
 import {
   BB_APR2026_EVENT_STORE_KEY,
   BB_APR4_DANCE_BINGO,
@@ -10,8 +10,7 @@ import {
 
 /**
  * In-app campaign home blocks for Bruised Banana April 2026 (Pacific).
- * Anchors match TEST_PLAN_PARTY_AND_INTAKE.md: `/event#apr-4`, `/event#apr-5`.
- * RSVP / address gate lives on Partiful — see docs/events/bruised-banana-apr-2026-partiful-copy.md
+ * Bingo grids open in modals (NEV) — event page stays scannable; anchors preserved for deep links.
  */
 export async function BruisedBananaApr2026EventBlocks() {
   const player = await getCurrentPlayer()
@@ -59,11 +58,13 @@ export async function BruisedBananaApr2026EventBlocks() {
         </nav>
       </div>
 
-      <PartyMiniGameGridInteractive
+      <PartyMiniGameInModal
         game={BB_INVITE_PRIMING}
         eventKey={BB_APR2026_EVENT_STORE_KEY}
-        sectionId="bb-invite-bingo"
+        sectionId="bb-invite-bingo-grid"
         playerId={partyMiniGamePlayerId}
+        buttonLabel="Open invite bingo card"
+        anchorId="bb-invite-bingo"
       />
 
       <article
@@ -113,11 +114,14 @@ export async function BruisedBananaApr2026EventBlocks() {
             In-room prompts for dance night — event-invite BARs can deep-link{' '}
             <span className="font-mono text-zinc-600">#bb-invite-bingo-apr4</span>.
           </p>
-          <PartyMiniGameGridInteractive
+          <PartyMiniGameInModal
             game={BB_APR4_DANCE_BINGO}
             eventKey={BB_APR2026_EVENT_STORE_KEY}
             sectionId="apr-4-bingo"
             playerId={partyMiniGamePlayerId}
+            buttonLabel="Open Apr 4 in-room bingo"
+            anchorId="apr-4-bingo-anchor"
+            buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg border border-fuchsia-700/50 bg-fuchsia-950/40 px-4 py-2.5 text-sm font-semibold text-fuchsia-100 hover:bg-fuchsia-900/50 hover:border-fuchsia-500/60 transition-colors"
           />
         </div>
       </article>
@@ -167,11 +171,14 @@ export async function BruisedBananaApr2026EventBlocks() {
             In-room prompts for scheming day — event-invite BARs can deep-link{' '}
             <span className="font-mono text-zinc-600">#bb-invite-bingo-apr5</span>.
           </p>
-          <PartyMiniGameGridInteractive
+          <PartyMiniGameInModal
             game={BB_APR5_SCHEMING_BINGO}
             eventKey={BB_APR2026_EVENT_STORE_KEY}
             sectionId="apr-5-bingo"
             playerId={partyMiniGamePlayerId}
+            buttonLabel="Open Apr 5 in-room bingo"
+            anchorId="apr-5-bingo-anchor"
+            buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg border border-violet-700/50 bg-violet-950/40 px-4 py-2.5 text-sm font-semibold text-violet-100 hover:bg-violet-900/50 hover:border-violet-500/60 transition-colors"
           />
         </div>
       </article>
@@ -182,9 +189,7 @@ export async function BruisedBananaApr2026EventBlocks() {
         <span className="font-mono text-zinc-500">/event#apr-4</span> ·{' '}
         <span className="font-mono text-zinc-500">/event#apr-5</span> ·{' '}
         <span className="font-mono text-zinc-500">/event#bb-invite-bingo-apr4</span> ·{' '}
-        <span className="font-mono text-zinc-500">/event#bb-invite-bingo-apr5</span> ·{' '}
-        <span className="font-mono text-zinc-500">/event#apr-4-bingo</span> ·{' '}
-        <span className="font-mono text-zinc-500">/event#apr-5-bingo</span>
+        <span className="font-mono text-zinc-500">/event#bb-invite-bingo-apr5</span>
       </p>
     </section>
   )
