@@ -16,6 +16,13 @@ const GUIDES = {
   ],
   'Hands-on features': [
     {
+      href: '/wiki/cyoa-adventure',
+      title: 'Your Adventure Path',
+      blurb:
+        'How the intake + spoke adventure system works: four phases, four moves, personalized routing, NPC encounters.',
+      status: 'live' as const,
+    },
+    {
       href: '/wiki/grid-deck',
       title: 'Scene Atlas',
       blurb:
