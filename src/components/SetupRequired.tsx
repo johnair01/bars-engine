@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { logout } from '@/actions/logout'
 
 /**
- * Shown when DB tables are missing (P2021). Run npm run setup to apply migrations and seed.
+ * Shown when DB is behind the Prisma schema (P2021 missing tables, P2022 missing columns). Run migrations.
  */
 export function SetupRequired() {
   return (
@@ -12,14 +12,15 @@ export function SetupRequired() {
       <div className="max-w-md space-y-6 text-center">
         <h1 className="text-2xl font-bold text-amber-400">Database setup required</h1>
         <p className="text-zinc-400">
-          The database tables are missing. Apply migrations and seed the database:
+          The database is out of sync with the app (missing tables or columns). Apply migrations for the same{' '}
+          <code className="text-zinc-300">DATABASE_URL</code> as dev, then seed if needed:
         </p>
         <pre className="text-left text-sm bg-zinc-900 p-4 rounded-lg overflow-x-auto">
-          npm run setup
+          npx tsx scripts/with-env.ts &quot;prisma migrate deploy&quot;
+          {'\n'}npm run setup
         </pre>
         <p className="text-zinc-500 text-sm">
-          Or manually: <code className="text-zinc-400">prisma migrate deploy</code> then{' '}
-          <code className="text-zinc-400">npm run db:seed</code>
+          Local Docker: ensure <code className="text-zinc-400">npm run switch -- local</code> first so migrate targets your local DB.
         </p>
         <div className="flex flex-col gap-3">
           <form action={logout}>

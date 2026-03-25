@@ -19,9 +19,10 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
 
     const playerId = player.id
 
-    const [data, acceptedInvites] = await Promise.all([
+    const [data, acceptedInvites, eventInviteBars] = await Promise.all([
         loadVaultCoreData(playerId, 'lobby'),
         loadAcceptedInvitesForVault(playerId),
+        loadEventInviteBarsForStewards(playerId),
     ])
 
     const {
@@ -91,6 +92,8 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                 invitationCount={invitationCount}
                 staleItems={staleItems}
             />
+
+            <VaultCampaignInviteBars bars={eventInviteBars} />
 
             {/* Accepted invitations — relational signal at lobby level (G20) */}
             {acceptedInvites.length > 0 && (

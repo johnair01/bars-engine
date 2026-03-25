@@ -171,9 +171,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       }
     })
   } catch (err: unknown) {
-    // P2021 = table does not exist — DB needs migrations/setup
+    // P2021 = table missing; P2022 = column missing — DB needs migrations (e.g. custom_bars.partifulUrl)
     const code = (err as { code?: string })?.code
-    if (code === 'P2021') {
+    if (code === 'P2021' || code === 'P2022') {
       return <SetupRequired />
     }
     if (isPrismaConnectionError(err)) {

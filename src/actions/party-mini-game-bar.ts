@@ -9,7 +9,7 @@ import {
   type PartyMiniGameBarStampV1,
 } from '@/lib/party-mini-game/completion-effects-party-mini-game'
 import type { PartyMiniGameMomentBarInput } from '@/lib/party-mini-game/bar-create-types'
-import { assertCanCreatePrivateDraft } from '@/lib/vault-limits'
+import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 
 const MAX_TITLE = 200
 const MAX_GUEST_NAME = 120
@@ -140,6 +140,50 @@ export async function createPartyMiniGameMomentBar(
       where: { id: newBar.id },
       data: { rootId: newBar.id },
     })
+
+    // BBR P1: invite-bingo moments → follow-up Show Up quest to actually invite that person.
+    if (def.flavor === 'invite') {
+      const qcap = await assertCanCreateUnplacedVaultQuest(playerId)
+      if (qcap.ok) {
+        const inviteTitle = truncateTitle(`Invite ${personLabel}`)
+        const inviteDescription = [
+          `From invite bingo: “${square.text}”.`,
+          `Reach out and invite ${personLabel} to the residency.`,
+          `Event context and RSVP links: /event`,
+        ].join('\n')
+        try {
+          const inviteQuest = await db.customBar.create({
+            data: {
+              creatorId: playerId,
+              title: inviteTitle,
+              description: inviteDescription,
+              type: 'quest',
+              reward: 1,
+              visibility: 'private',
+              status: 'active',
+              moveType: 'showUp',
+              allyshipDomain: 'GATHERING_RESOURCES',
+              sourceBarId: newBar.id,
+              campaignRef: def.campaignRef,
+              inputs: '[]',
+              rootId: 'temp',
+            },
+          })
+          await db.customBar.update({
+            where: { id: inviteQuest.id },
+            data: { rootId: inviteQuest.id },
+          })
+          await db.playerQuest.upsert({
+            where: { playerId_questId: { playerId, questId: inviteQuest.id } },
+            update: { status: 'assigned' },
+            create: { playerId, questId: inviteQuest.id, status: 'assigned', assignedAt: new Date() },
+          })
+          revalidatePath('/hand/quests')
+        } catch (e) {
+          console.warn('[party-mini-game-bar] invite follow-up quest skipped', e)
+        }
+      }
+    }
 
     revalidatePath('/hand')
     revalidatePath('/')

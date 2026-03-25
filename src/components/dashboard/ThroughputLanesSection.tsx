@@ -78,6 +78,12 @@ export function ThroughputLanesSection({ activeInstanceId, campaignHomeHref }: P
               <span className="text-zinc-600"> — residency hub (or onboarding if you&apos;re new)</span>
             </li>
             <li>
+              <Link href="/event" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
+                Residency events
+              </Link>
+              <span className="text-zinc-600"> — party nights, donate, invite bingo (BB)</span>
+            </li>
+            <li>
               <Link href="/world" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
                 Enter Lobby
               </Link>

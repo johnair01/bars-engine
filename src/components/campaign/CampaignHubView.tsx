@@ -80,10 +80,10 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
                 Campaign story
               </Link>
               <Link
-                href={`/event`}
+                href="/event"
                 className="text-sm text-zinc-500 hover:text-amber-400/90 transition-colors"
               >
-                Event
+                Residency events
               </Link>
             </div>
           </div>
