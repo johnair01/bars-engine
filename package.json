@@ -67,6 +67,7 @@
     "test:creator-scene-grid": "tsx src/lib/creator-scene-grid-deck/__tests__/grid.test.ts && tsx src/lib/creator-scene-grid-deck/__tests__/polarities.test.ts && tsx src/lib/creator-scene-grid-deck/__tests__/archetype-trigram-polarities.test.ts && tsx src/lib/creator-scene-grid-deck/__tests__/scene-atlas-draft.test.ts",
     "test:prompt-deck": "tsx src/lib/prompt-deck/__tests__/rank-move-map.test.ts && tsx src/lib/prompt-deck/__tests__/cycle-logic.test.ts",
     "test:event-invite-story": "tsx src/lib/event-invite-story/__tests__/parse.test.ts",
+    "test:story-graph": "tsx src/lib/story-graph/__tests__/validateDirectedGraph.test.ts",
     "test:orientation-quest": "tsx src/lib/orientation-quest/__tests__/face-context-index.test.ts",
     "test:shadow-name-grammar": "npx tsx src/lib/shadow-name-grammar/__tests__/deriveShadowName.test.ts",
     "test:narrative-transformation": "npx tsx src/lib/narrative-transformation/__tests__/parse.test.ts && npx tsx src/lib/narrative-transformation/__tests__/lockDetection.test.ts && npx tsx src/lib/narrative-transformation/__tests__/seedFromNarrative.test.ts && npx tsx src/lib/narrative-transformation/__tests__/alchemyHints.test.ts && npx tsx src/lib/narrative-transformation/__tests__/fullPipeline.test.ts && npx tsx src/lib/narrative-transformation/moves/__tests__/selectMoves.test.ts && npx tsx src/lib/narrative-transformation/moves/__tests__/nation-profiles.test.ts && npx tsx src/lib/narrative-transformation/moves/__tests__/archetype-move-styles.test.ts",

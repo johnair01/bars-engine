@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { validateAdventurePassagesGraph } from '@/lib/story-graph/adventurePassagesGraph'
 
 async function requireAdmin(): Promise<string> {
   const cookieStore = await cookies()
@@ -46,6 +47,31 @@ export async function getCampaignPassageForEdit(
 }
 
 /**
+ * All passage node ids for an active adventure (admin) — for CYOA target picker.
+ */
+export async function listCampaignPassageNodeIds(
+  adventureSlug: string
+): Promise<{ nodeIds: string[] } | { error: string }> {
+  try {
+    await requireAdmin()
+    const adventure = await db.adventure.findFirst({
+      where: { slug: adventureSlug, status: 'ACTIVE' },
+      select: { id: true },
+    })
+    if (!adventure) return { error: 'Adventure not found or inactive' }
+    const passages = await db.passage.findMany({
+      where: { adventureId: adventure.id },
+      select: { nodeId: true },
+      orderBy: { nodeId: 'asc' },
+    })
+    return { nodeIds: passages.map((p) => p.nodeId) }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Failed to list passages'
+    return { error: msg }
+  }
+}
+
+/**
  * Upsert campaign passage. Creates if missing, updates if exists.
  * Requires admin. Used for in-context campaign editing.
  */
@@ -62,6 +88,23 @@ export async function upsertCampaignPassage(
     })
     if (!adventure) {
       return { success: false, error: 'Adventure not found or inactive' }
+    }
+
+    const existingRows = await db.passage.findMany({
+      where: { adventureId: adventure.id },
+      select: { nodeId: true, choices: true },
+    })
+
+    const graphResult = validateAdventurePassagesGraph(
+      existingRows.map((r) => ({ nodeId: r.nodeId, choicesJson: r.choices })),
+      nodeId.trim(),
+      data.choices,
+      adventure.startNodeId
+    )
+
+    if (!graphResult.ok) {
+      const msg = graphResult.errors.map((e) => e.message).join('\n')
+      return { success: false, error: msg || 'Graph validation failed' }
     }
 
     const choicesJson = JSON.stringify(data.choices)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getCampaignPassageForEdit, upsertCampaignPassage } from '@/actions/campaign-passage'
+import { getCampaignPassageForEdit, listCampaignPassageNodeIds, upsertCampaignPassage } from '@/actions/campaign-passage'
 
 interface CampaignChoice {
   text: string
@@ -32,6 +32,20 @@ export function CampaignPassageEditModal({
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [targetSuggestions, setTargetSuggestions] = useState<string[]>([])
+  const datalistId = `cyoa-targets-${adventureSlug.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+
+  useEffect(() => {
+    if (!isOpen || !adventureSlug) return
+    const current = nodeId?.trim() ?? ''
+    listCampaignPassageNodeIds(adventureSlug).then((r) => {
+      const base = 'nodeIds' in r ? r.nodeIds : []
+      const extra = ['signup', 'Game_Login']
+      const merged =
+        current && !base.includes(current) ? [...base, current] : [...base]
+      setTargetSuggestions([...new Set([...merged, ...extra])].sort())
+    })
+  }, [isOpen, adventureSlug, nodeId])
 
   useEffect(() => {
     if (isOpen && adventureSlug && nodeId) {
@@ -113,8 +127,15 @@ export function CampaignPassageEditModal({
             <div className="text-zinc-500 animate-pulse py-8">Loading...</div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              <datalist id={datalistId}>
+                {targetSuggestions.map((id) => (
+                  <option key={id} value={id} />
+                ))}
+              </datalist>
               {error && (
-                <div className="p-3 bg-red-900/20 text-red-300 text-sm rounded-lg">{error}</div>
+                <div className="p-3 bg-red-900/20 text-red-300 text-sm rounded-lg whitespace-pre-wrap">
+                  {error}
+                </div>
               )}
 
               <div>
@@ -157,8 +178,10 @@ export function CampaignPassageEditModal({
                         type="text"
                         value={choice.targetId}
                         onChange={(e) => updateChoice(i, 'targetId', e.target.value)}
-                        placeholder="targetId"
-                        className="w-40 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono"
+                        list={datalistId}
+                        placeholder="target node id"
+                        className="w-44 min-w-0 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono"
+                        autoComplete="off"
                       />
                       <button
                         type="button"
@@ -172,7 +195,10 @@ export function CampaignPassageEditModal({
                   ))}
                 </div>
                 <p className="text-xs text-zinc-500 mt-1">
-                  targetId links to the next node (e.g. BB_ShowUp, BB_LearnMore, signup).
+                  Target = next passage&apos;s <span className="font-mono text-zinc-400">nodeId</span>. Use the suggestions
+                  (existing passages + <span className="font-mono">signup</span> /{' '}
+                  <span className="font-mono">Game_Login</span>) or type a new id — you must create that passage or save will
+                  fail validation.
                 </p>
               </div>
 
