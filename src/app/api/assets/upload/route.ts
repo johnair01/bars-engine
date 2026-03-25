@@ -110,7 +110,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
           const bar = await db.customBar.findUnique({
             where: { id: barId },
-            select: { creatorId: true },
+            select: {
+              creatorId: true,
+              collapsedFromInstance: { select: { slug: true } },
+            },
           })
           if (!bar) throw new Error('BAR not found')
 
@@ -131,6 +134,11 @@ export async function POST(request: Request): Promise<NextResponse> {
           revalidatePath('/bars')
           revalidatePath(`/bars/${barId}`)
           revalidatePath('/hand')
+          const swapSlug = bar.collapsedFromInstance?.slug
+          if (swapSlug) {
+            revalidatePath(`/swap/${swapSlug}/gallery`)
+            revalidatePath(`/swap/${swapSlug}/new`)
+          }
         } catch (e) {
           console.error('[ASSETS] Upload completed error:', e)
           throw new Error('Could not create asset record')

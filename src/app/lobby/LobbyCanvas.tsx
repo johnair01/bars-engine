@@ -10,6 +10,7 @@ import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
 import { MapAvatarGate } from '@/components/world/MapAvatarGate'
+import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 
 const INSTANCE_SLUG_LOBBY = 'lobby'
 
@@ -127,7 +128,7 @@ export function LobbyCanvas({ spatialBindKey, player, room, allRooms, spawnX, sp
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden" style={zoneBackgroundStyle('lobby')}>
       <div ref={containerRef} className="w-full h-full" />
 
       {promptPixel && (

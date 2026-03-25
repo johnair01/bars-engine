@@ -66,6 +66,24 @@ npm run dev:backend
 
 This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_URL` and `OPENAI_API_KEY` from `.env.local` or `.env`.
 
+## Day-to-day dev vs deployed backend (precedence)
+
+**Default story (prioritize this):** Agent scripts, `ensureBackendReady`, and the **bars-agents** MCP wrapper target **local** FastAPI at **`http://127.0.0.1:8000`** (or `http://localhost:8000`). That is the path this repo is built around: edit code, run `npm run dev:backend` (or let the wrapper auto-start), hit `/api/health`, use MCP.
+
+| Context | Intended backend | Notes |
+|--------|-------------------|--------|
+| **Daily dev** (Cursor, MCP, `strand_run`, `sage:brief`, strand consult scripts) | **Local** `127.0.0.1:8000` | Omit `NEXT_PUBLIC_BACKEND_URL` / `BARS_BACKEND_URL` for MCP health, or set explicitly to `http://127.0.0.1:8000`. |
+| **Next.js app** (browser → agents) | From `NEXT_PUBLIC_BACKEND_URL` or fallback in `agent-client` | Vercel Preview/Production often points at **deployed** Railway; that is separate from “is my laptop MCP talking to local Python?”. |
+| **Intentional remote agents** | Deployed URL (`https://…railway.app`) | Opt-in: you are testing production/staging agents or not running local API. Align `OPENAI_API_KEY` on **that** host. |
+
+**Why this matters:** `NEXT_PUBLIC_BACKEND_URL` is loaded into the same `.env.local` that the **Python MCP process** reads. If it points at Railway while you expect **local** agents, MCP tools (`strand_run`, etc.) health-check the wrong origin — or you get `openai_configured: false` on the remote host. **When helping someone or writing runbooks, assume local-first**; mention deployed URLs only as an explicit alternate.
+
+**MCP health probe fallback (strand_run gate):** `backend/app/mcp_health.py` probes `GET /api/health` on the URL derived from env (with bare-host normalization). If that probe **fails** and the primary origin was **not** already `http://127.0.0.1:8000` or `http://localhost:8000`, it **retries once** against **`http://127.0.0.1:8000/api/health`**. So with `npm run dev:backend` running locally, a bad or unreachable Railway URL in `.env.local` should not block `strand_run` by itself.
+
+**Pin MCP to local explicitly:** set **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** in `.env.local`. That variable **only** affects the MCP Python process health check (not the browser/Next agent client). Use it when you want Next to keep pointing at Vercel/Railway but Cursor **bars-agents** must talk to local FastAPI.
+
+See [CURSOR_MCP_TROUBLESHOOTING.md](./CURSOR_MCP_TROUBLESHOOTING.md) (dev-first + bare-host URL fixes).
+
 ## MCP availability (do not skip)
 
 **Strand consult**, **sage_consult**, and other flows that assume **bars-agents** in Cursor must not move on until MCP is actually available.
@@ -84,7 +102,7 @@ This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_
    - Ensure **bars-agents** is **enabled** (the project ships `.cursor/mcp.json`; Cursor loads it for this workspace)
    - If **bars-agents** does not appear: **Command Palette** → `Developer: Reload Window`
 
-3. **Agent rule** — Do **not** skip MCP by substituting ad-hoc “Sage synthesis” in chat when the user required **bars-agents** / `sage_consult`. If tools still do not appear after verify + reload, stop and fix the environment; document the blocker in the strand/spec output.
+3. **Agent rule** — Do **not** skip MCP by substituting ad-hoc “Sage synthesis” in chat when the user required **bars-agents** / `sage_consult` / **`strand_run`**. If a tool call errors (health URL, backend down, etc.): report the exact error, run **`npm run verify:bars-agents-mcp`**, ensure **`npm run dev:backend`** (or the MCP wrapper) is up, set **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** if you need to force local probe, **Reload Window**, and **retry the tool** — or **ask the user** how they want to proceed. Do **not** silently substitute inline synthesis without that loop and, when unclear, without **asking the user**.
 
 4. **Optional smoke** — `npm run test:gm-agents` exercises HTTP `/api/agents/*` (same agents as MCP, not the MCP pipe).
 
@@ -177,7 +195,7 @@ Expect `"openai_configured": true`. If `false`, the key is missing from those fi
 
 **Common pitfall**: Key only in Vercel or only in a shell export — fine for that session, but `uvicorn` started from another terminal/Cursor won’t see it unless it’s in one of the files above.
 
-**Wrong `NEXT_PUBLIC_BACKEND_URL`**: Scripts that call Sage default to `localhost:8000`. If `.env.local` points at a remote Railway URL that has no key, you get healthy `/api/health` but `openai_configured: false`, or consult failures. For local dev, use `--backend http://localhost:8000` on assess/brief scripts or align the env var with where your keyed backend runs.
+**Wrong `NEXT_PUBLIC_BACKEND_URL`**: See [Day-to-day dev vs deployed backend (precedence)](#day-to-day-dev-vs-deployed-backend-precedence). If `.env.local` points MCP/scripts at Railway while you meant local, or the remote host has no key, you get `openai_configured: false` or consult failures. For local dev, prefer unset or `http://127.0.0.1:8000`; use `--backend http://localhost:8000` on assess/brief scripts when overriding.
 
 ### Generic or deterministic agent output (Sage, strand, sage:brief)
 

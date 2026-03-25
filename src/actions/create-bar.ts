@@ -17,6 +17,15 @@ import {
     type SceneAtlasBarTemplateMeta,
 } from '@/lib/creator-scene-grid-deck/bar-template'
 import { assertCanCreatePrivateDraft, assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
+import {
+    clampCampaignAllyshipDomain,
+    resolveCampaignInstanceForRef,
+    resolvedCampaignRefFromRow,
+} from '@/lib/campaign-instance-resolve'
+import {
+    buildKotterStampForWizardQuest,
+    type KotterWizardStampOk,
+} from '@/lib/quest-wizard-kotter-stamp'
 
 function parseTags(raw: string | null) {
     if (!raw) return []
@@ -452,6 +461,8 @@ export async function createQuestFromWizard(data: any) {
             barTypeOnCompletion,
             isBounty, stakeAmount, maxCompletions, rewardPerCompletion,
             source321,
+            gmFaceMoveId: dataGmFaceMoveId,
+            kotterHexagramId: dataKotterHexagramId,
         } = data as {
             title?: string
             description?: string
@@ -479,6 +490,8 @@ export async function createQuestFromWizard(data: any) {
                 phase3Snapshot: string
                 shadow321Name?: Shadow321NameFields | null
             }
+            gmFaceMoveId?: string | null
+            kotterHexagramId?: number | null
         }
 
         const creator = await db.player.findUnique({
@@ -561,6 +574,41 @@ export async function createQuestFromWizard(data: any) {
         if (source321?.phase2Snapshot) {
             completionEffectsObj.source321Wizard = true
         }
+
+        let kotterWizardStamp: KotterWizardStampOk | null = null
+        const gmMoveTrim =
+            typeof dataGmFaceMoveId === 'string' ? dataGmFaceMoveId.trim() : ''
+        if (gmMoveTrim) {
+            const cref = (dataCampaignRef as string | undefined)?.trim()
+            if (!cref) {
+                return { error: 'Campaign ref is required when using a GM face move.' }
+            }
+            const inst = await resolveCampaignInstanceForRef(cref)
+            if (!inst) {
+                return { error: 'No campaign instance found for GM face move stamping.' }
+            }
+            const resolvedRef = resolvedCampaignRefFromRow(inst, cref)
+            const hex =
+                dataKotterHexagramId != null && Number.isFinite(Number(dataKotterHexagramId))
+                    ? Math.max(1, Math.min(64, Math.round(Number(dataKotterHexagramId))))
+                    : 1
+            const stamp = buildKotterStampForWizardQuest({
+                resolvedCampaignRef: resolvedRef,
+                instanceKotterStage: inst.kotterStage ?? 1,
+                instanceAllyshipDomain: clampCampaignAllyshipDomain(inst.allyshipDomain),
+                gmFaceMoveId: gmMoveTrim,
+                wizardAllyshipDomain: finalAllyshipDomain,
+                hexagramId: hex,
+            })
+            if ('error' in stamp) {
+                return { error: stamp.error }
+            }
+            kotterWizardStamp = stamp
+            completionEffectsObj.kotterQuestSeed = stamp.kotterCompletionEffects
+            completionEffectsObj.gmFaceMoveId = gmMoveTrim
+            completionEffectsObj.questWizardKotterStamp = true
+        }
+
         const completionEffects = JSON.stringify(completionEffectsObj)
 
         let agentMeta321: string | null = null
@@ -574,6 +622,11 @@ export async function createQuestFromWizard(data: any) {
             } catch {
                 agentMeta321 = JSON.stringify({ sourceType: '321', via: 'quest_wizard' })
             }
+        }
+
+        let effectiveCampaignGoal = ((dataCampaignGoal as string) || '').trim() || null
+        if (!effectiveCampaignGoal && kotterWizardStamp) {
+            effectiveCampaignGoal = kotterWizardStamp.campaignGoalFromKotter
         }
 
         const isBountyMode = !!isBounty && effectiveVisibility === 'public'
@@ -632,7 +685,14 @@ export async function createQuestFromWizard(data: any) {
                     allowedTrigrams: allowedTrigrams ? JSON.stringify(allowedTrigrams) : null,
                     allyshipDomain: finalAllyshipDomain,
                     campaignRef: (dataCampaignRef as string) || null,
-                    campaignGoal: (dataCampaignGoal as string) || null,
+                    campaignGoal: effectiveCampaignGoal,
+                    ...(kotterWizardStamp
+                        ? {
+                              kotterStage: kotterWizardStamp.kotterStage,
+                              gameMasterFace: kotterWizardStamp.gameMasterFace,
+                              hexagramId: kotterWizardStamp.hexagramId,
+                          }
+                        : {}),
                     questSource: isBountyMode ? 'bounty' : null,
                     stakedPool: isBountyMode ? stake : 0,
                     maxAssignments: isBountyMode ? maxComp : 1,

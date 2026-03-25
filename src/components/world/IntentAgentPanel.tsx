@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { ElementKey } from '@/lib/ui/card-tokens'
 import type { AgentData } from '@/lib/spatial-world/pixi-room'
-import { getAgentBars } from '@/actions/intent-agents'
+import { Avatar } from '@/components/Avatar'
+import { getAgentBars, getPlayerAvatarPreview } from '@/actions/intent-agents'
 import { claimPublicBar } from '@/actions/world-anchors'
 
 type BarItem = { id: string; title: string; description: string; type: string }
@@ -19,6 +21,10 @@ export function IntentAgentPanel({ agent, onClose }: Props) {
   const [loading, setLoading] = useState(true)
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimed, setClaimed] = useState<Set<string>>(new Set())
+  const [avatarPreview, setAvatarPreview] = useState<{
+    avatarConfig: string | null
+    element: ElementKey | null
+  } | null>(null)
 
   useEffect(() => {
     void getAgentBars(agent.playerId).then(data => {
@@ -26,6 +32,10 @@ export function IntentAgentPanel({ agent, onClose }: Props) {
       setQuests(data.quests)
       setLoading(false)
     })
+  }, [agent.playerId])
+
+  useEffect(() => {
+    void getPlayerAvatarPreview(agent.playerId).then(setAvatarPreview)
   }, [agent.playerId])
 
   async function handleClaim(barId: string) {
@@ -42,10 +52,20 @@ export function IntentAgentPanel({ agent, onClose }: Props) {
 
   return (
     <div className="fixed right-0 top-0 h-full w-80 bg-zinc-900 border-l border-zinc-800 z-40 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-        <div>
-          <p className="text-white font-bold">{agent.playerName}</p>
-          <p className="text-zinc-500 text-xs">Intent Agent</p>
+      <div className="flex items-center justify-between gap-3 p-4 border-b border-zinc-800">
+        <div className="flex items-center gap-3 min-w-0">
+          {avatarPreview && (
+            <Avatar
+              player={{ name: agent.playerName, avatarConfig: avatarPreview.avatarConfig }}
+              size="md"
+              register3
+              element={avatarPreview.element ?? undefined}
+            />
+          )}
+          <div className="min-w-0">
+            <p className="text-white font-bold truncate">{agent.playerName}</p>
+            <p className="text-zinc-500 text-xs">Intent Agent</p>
+          </div>
         </div>
         <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-sm">Close</button>
       </div>

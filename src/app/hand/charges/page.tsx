@@ -14,7 +14,7 @@ export default async function HandChargesRoomPage() {
     const data = await loadVaultCoreData(player.id, 'room')
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <VaultRoomHeader
                 title="Charge Captures"
                 description="Felt charges you captured — turn into quests, explore, or metabolize. This room shows your full in-vault list (up to the server limit)."

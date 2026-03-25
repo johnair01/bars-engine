@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { EVENT_INVITE_BAR_TYPE, parseEventInviteStory } from '@/lib/event-invite-story/schema'
+import { EventInvitePartyActions } from '@/components/event-invite/EventInvitePartyActions'
 import { EventInviteStoryReader } from '@/components/event-invite/EventInviteStoryReader'
 
 type Props = { params: Promise<{ barId: string }> }
@@ -44,6 +45,8 @@ export default async function PublicEventInvitePage({ params }: Props) {
             title: true,
             description: true,
             storyContent: true,
+            partifulUrl: true,
+            eventSlug: true,
         },
     })
 
@@ -60,7 +63,13 @@ export default async function PublicEventInvitePage({ params }: Props) {
                 </Link>
             </div>
             <div className="w-full max-w-xl">
-                <EventInviteStoryReader barTitle={bar.title} barDescription={bar.description} story={story} />
+                <EventInvitePartyActions partifulUrl={bar.partifulUrl} eventSlug={bar.eventSlug} />
+                <EventInviteStoryReader
+                    barTitle={bar.title}
+                    barDescription={bar.description}
+                    story={story}
+                    endingCtas={story.endingCtas}
+                />
             </div>
         </div>
     )

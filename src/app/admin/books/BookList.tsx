@@ -1,12 +1,13 @@
 'use client'
 
-import { extractBookText, extractBookToc } from '@/actions/books'
-import { analyzeBook, analyzeBookMore, analyzeBookForMoves, type AnalysisFilters } from '@/actions/book-analyze'
-import { createThreadFromBook } from '@/actions/book-to-thread'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import type { AnalysisFilters } from '@/actions/book-analyze'
 import { BookPraxisBadge, BookPraxisPanel } from './BookPraxisPanel'
+import { BookPipelineActions } from './BookPipelineActions'
+import { useBookPipelineActions } from './useBookPipelineActions'
+import type { AdminBookRow } from './book-admin-types'
+import { parseBookMeta } from './book-admin-types'
 
 const MOVE_OPTIONS = [
   { value: 'wakeUp', label: 'Wake Up' },
@@ -30,31 +31,24 @@ const ARCHETYPE_OPTIONS = [
 
 const KOTTER_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
-type Book = {
-  id: string
-  title: string
-  author: string | null
-  slug: string
-  sourcePdfUrl: string | null
-  status: string
-  metadataJson: string | null
-  createdAt: Date
-  thread?: { id: string } | null
+function statusBadge(status: string) {
+  const styles: Record<string, string> = {
+    draft: 'bg-zinc-700 text-zinc-300',
+    extracted: 'bg-green-900/30 text-green-400',
+    analyzed: 'bg-blue-900/30 text-blue-400',
+    published: 'bg-purple-900/30 text-purple-400',
+  }
+  return (
+    <span
+      className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status] ?? 'bg-zinc-800 text-zinc-500'}`}
+    >
+      {status}
+    </span>
+  )
 }
 
-export function BookList({ books }: { books: Book[] }) {
+export function BookList({ books }: { books: AdminBookRow[] }) {
   const router = useRouter()
-  const [extractingId, setExtractingId] = useState<string | null>(null)
-  const [extractResult, setExtractResult] = useState<{ id: string; msg: string } | null>(null)
-  const [analyzingId, setAnalyzingId] = useState<string | null>(null)
-  const [analyzingMoreId, setAnalyzingMoreId] = useState<string | null>(null)
-  const [analyzeResult, setAnalyzeResult] = useState<{ id: string; msg: string } | null>(null)
-  const [publishingId, setPublishingId] = useState<string | null>(null)
-  const [publishResult, setPublishResult] = useState<{ id: string; msg: string } | null>(null)
-  const [extractingTocId, setExtractingTocId] = useState<string | null>(null)
-  const [tocResult, setTocResult] = useState<{ id: string; msg: string } | null>(null)
-  const [extractingMovesId, setExtractingMovesId] = useState<string | null>(null)
-  const [extractMovesResult, setExtractMovesResult] = useState<{ id: string; msg: string } | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<AnalysisFilters>({})
 
@@ -76,130 +70,7 @@ export function BookList({ books }: { books: Book[] }) {
     })
   }
 
-  const handleExtractToc = async (bookId: string) => {
-    setExtractingTocId(bookId)
-    setTocResult(null)
-    const result = await extractBookToc(bookId)
-    setExtractingTocId(null)
-    if (result.error) {
-      setTocResult({ id: bookId, msg: result.error })
-    } else {
-      setTocResult({
-        id: bookId,
-        msg: `TOC extracted: ${result.entryCount} entries`,
-      })
-      router.refresh()
-    }
-  }
-
-  const handleExtract = async (bookId: string) => {
-    setExtractingId(bookId)
-    setExtractResult(null)
-    const result = await extractBookText(bookId)
-    setExtractingId(null)
-    if (result.error) {
-      setExtractResult({ id: bookId, msg: result.error })
-    } else {
-      setExtractResult({
-        id: bookId,
-        msg: `Extracted: ${result.pageCount} pages, ${result.wordCount} words`,
-      })
-      router.refresh()
-    }
-  }
-
-  const handleAnalyze = async (bookId: string) => {
-    setAnalyzingId(bookId)
-    setAnalyzeResult(null)
-    const result = await analyzeBook(bookId, hasActiveFilters ? { filters } : undefined)
-    setAnalyzingId(null)
-    if (result.error) {
-      setAnalyzeResult({ id: bookId, msg: result.error })
-    } else if ('chunksTotal' in result) {
-      const chunkMsg =
-        result.chunksTotal != null && result.chunksTotal > result.chunkCount
-          ? `${result.chunkCount} of ${result.chunksTotal} chunks`
-          : `${result.chunkCount} chunks`
-      const filterMsg =
-        'chunksFilteredByTarget' in result && result.chunksFilteredByTarget != null && result.chunksFilteredByTarget > 0
-          ? ` (${result.chunksFilteredByTarget} skipped by filters)`
-          : ''
-      setAnalyzeResult({
-        id: bookId,
-        msg: `Analyzed: ${result.questsCreated} quests from ${chunkMsg}${filterMsg}`,
-      })
-      router.refresh()
-    }
-  }
-
-  const handleAnalyzeMore = async (bookId: string) => {
-    setAnalyzingMoreId(bookId)
-    setAnalyzeResult(null)
-    const result = await analyzeBookMore(bookId)
-    setAnalyzingMoreId(null)
-    if (result.error) {
-      setAnalyzeResult({ id: bookId, msg: result.error })
-    } else if ('chunksTotal' in result) {
-      const chunkMsg =
-        result.chunksTotal != null && result.chunksTotal > result.chunkCount
-          ? `${result.chunkCount} of ${result.chunksTotal} chunks`
-          : `${result.chunkCount} chunks`
-      setAnalyzeResult({
-        id: bookId,
-        msg: `Analyzed: ${result.questsCreated} quests from ${chunkMsg}`,
-      })
-      router.refresh()
-    }
-  }
-
-  const handleExtractMoves = async (bookId: string) => {
-    setExtractingMovesId(bookId)
-    setExtractMovesResult(null)
-    const result = await analyzeBookForMoves(bookId)
-    setExtractingMovesId(null)
-    if ('error' in result) {
-      setExtractMovesResult({ id: bookId, msg: result.error })
-    } else if ('created' in result) {
-      const errMsg = result.errors?.length ? ` (${result.errors.length} errors)` : ''
-      setExtractMovesResult({
-        id: bookId,
-        msg: `Extracted: ${result.created} moves created, ${result.skipped} skipped${errMsg}`,
-      })
-      router.refresh()
-    }
-  }
-
-  const handlePublish = async (bookId: string) => {
-    setPublishingId(bookId)
-    setPublishResult(null)
-    const result = await createThreadFromBook(bookId)
-    setPublishingId(null)
-    if (result.error) {
-      setPublishResult({ id: bookId, msg: result.error })
-    } else {
-      setPublishResult({
-        id: bookId,
-        msg: `Published: ${result.questCount} quests → thread`,
-      })
-      router.refresh()
-    }
-  }
-
-  const statusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      draft: 'bg-zinc-700 text-zinc-300',
-      extracted: 'bg-green-900/30 text-green-400',
-      analyzed: 'bg-blue-900/30 text-blue-400',
-      published: 'bg-purple-900/30 text-purple-400',
-    }
-    return (
-      <span
-        className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status] ?? 'bg-zinc-800 text-zinc-500'}`}
-      >
-        {status}
-      </span>
-    )
-  }
+  const shared = useBookPipelineActions(router, { filters, hasActiveFilters })
 
   const hasExtractedBooks = books.some((b) => b.status === 'extracted')
 
@@ -290,45 +161,29 @@ export function BookList({ books }: { books: Book[] }) {
         </div>
       )}
       {books.map((book) => {
-        let meta: {
-          pageCount?: number
-          wordCount?: number
-          analysis?: { questsCreated?: number; chunksAnalyzed?: number; chunksTotal?: number }
-          toc?: { entries?: unknown[] }
-        } | null = null
-        try {
-          meta = book.metadataJson ? JSON.parse(book.metadataJson) : null
-        } catch {
-          // ignore
-        }
+        const meta = parseBookMeta(book.metadataJson)
         return (
           <div
             key={book.id}
-            className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex flex-col gap-4"
           >
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               <h3 className="font-medium text-white truncate">{book.title}</h3>
-              {book.author && (
-                <p className="text-sm text-zinc-500">{book.author}</p>
-              )}
-              <div className="flex items-center gap-2 mt-2">
+              {book.author && <p className="text-sm text-zinc-500">{book.author}</p>}
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 {statusBadge(book.status)}
                 <BookPraxisBadge metadataJson={book.metadataJson} />
-                {meta?.pageCount && (
+                {meta?.pageCount != null && (
                   <span className="text-xs text-zinc-500">
                     {meta.pageCount} pages
                     {meta.wordCount != null && ` · ${meta.wordCount.toLocaleString()} words`}
                   </span>
                 )}
                 {meta?.analysis?.questsCreated != null && (
-                  <span className="text-xs text-zinc-500">
-                    · {meta.analysis.questsCreated} quests
-                  </span>
+                  <span className="text-xs text-zinc-500">· {meta.analysis.questsCreated} quests</span>
                 )}
                 {meta?.toc?.entries != null && meta.toc.entries.length > 0 && (
-                  <span className="text-xs text-zinc-500">
-                    · {meta.toc.entries.length} TOC entries
-                  </span>
+                  <span className="text-xs text-zinc-500">· {meta.toc.entries.length} TOC entries</span>
                 )}
                 {meta?.analysis?.chunksAnalyzed != null &&
                   meta?.analysis?.chunksTotal != null &&
@@ -338,157 +193,24 @@ export function BookList({ books }: { books: Book[] }) {
                     </span>
                   )}
               </div>
-              {extractResult?.id === book.id && (
-                <p className="text-sm text-green-400 mt-1">{extractResult.msg}</p>
+              {shared.extractResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{shared.extractResult.msg}</p>
               )}
-              {analyzeResult?.id === book.id && (
-                <p className="text-sm text-green-400 mt-1">{analyzeResult.msg}</p>
+              {shared.analyzeResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{shared.analyzeResult.msg}</p>
               )}
-              {publishResult?.id === book.id && (
-                <p className="text-sm text-green-400 mt-1">{publishResult.msg}</p>
+              {shared.publishResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{shared.publishResult.msg}</p>
               )}
-              {extractMovesResult?.id === book.id && (
-                <p className="text-sm text-green-400 mt-1">{extractMovesResult.msg}</p>
+              {shared.extractMovesResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{shared.extractMovesResult.msg}</p>
               )}
-              {tocResult?.id === book.id && (
-                <p className="text-sm text-green-400 mt-1">{tocResult.msg}</p>
+              {shared.tocResult?.id === book.id && (
+                <p className="text-sm text-green-400 mt-1">{shared.tocResult.msg}</p>
               )}
               <BookPraxisPanel bookId={book.id} metadataJson={book.metadataJson} />
             </div>
-            <div className="flex gap-2 shrink-0">
-              {book.sourcePdfUrl && (
-                <a
-                  href={book.sourcePdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition"
-                >
-                  View PDF
-                </a>
-              )}
-              {book.thread && (
-                <a
-                  href={`/admin/journeys/thread/${book.thread.id}`}
-                  className="px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition"
-                >
-                  View thread
-                </a>
-              )}
-              {book.status === 'draft' && book.sourcePdfUrl && (
-                <button
-                  onClick={() => handleExtract(book.id)}
-                  disabled={extractingId !== null}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition disabled:opacity-50"
-                >
-                  {extractingId === book.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                      Extracting...
-                    </>
-                  ) : (
-                    'Extract Text'
-                  )}
-                </button>
-              )}
-              {(book.status === 'analyzed' || book.status === 'published') && (
-                <>
-                  <Link
-                    href={`/admin/books/${book.id}/quests`}
-                    className="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition"
-                  >
-                    Review quests
-                  </Link>
-                  {meta?.analysis?.chunksAnalyzed != null &&
-                    meta?.analysis?.chunksTotal != null &&
-                    meta.analysis.chunksAnalyzed < meta.analysis.chunksTotal && (
-                      <button
-                        onClick={() => handleAnalyzeMore(book.id)}
-                        disabled={analyzingMoreId !== null}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition disabled:opacity-50"
-                      >
-                        {analyzingMoreId === book.id ? (
-                          <>
-                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          'Analyze More'
-                        )}
-                      </button>
-                    )}
-                </>
-              )}
-              {(book.status === 'extracted' || book.status === 'analyzed' || book.status === 'published') && (
-                <>
-                  <button
-                    onClick={() => handleExtractToc(book.id)}
-                    disabled={extractingTocId !== null}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded-lg transition disabled:opacity-50"
-                  >
-                    {extractingTocId === book.id ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                        Extracting...
-                      </>
-                    ) : (
-                      'Extract TOC'
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleExtractMoves(book.id)}
-                    disabled={extractingMovesId !== null}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition disabled:opacity-50"
-                  >
-                    {extractingMovesId === book.id ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                        Extracting...
-                      </>
-                    ) : (
-                      'Extract Moves'
-                    )}
-                  </button>
-                  <Link
-                    href={`/admin/books/${book.id}/moves`}
-                    className="px-3 py-1.5 text-sm bg-teal-800 hover:bg-teal-700 text-teal-200 rounded-lg transition"
-                  >
-                    View moves
-                  </Link>
-                </>
-              )}
-              {book.status === 'extracted' && (
-                <button
-                  onClick={() => handleAnalyze(book.id)}
-                  disabled={analyzingId !== null}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition disabled:opacity-50"
-                >
-                  {analyzingId === book.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    'Trigger Analysis'
-                  )}
-                </button>
-              )}
-              {(book.status === 'analyzed' || book.status === 'published') && (
-                <button
-                  onClick={() => handlePublish(book.id)}
-                  disabled={publishingId !== null}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition disabled:opacity-50"
-                >
-                  {publishingId === book.id ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                      Publishing...
-                    </>
-                  ) : (
-                    book.status === 'published' ? 'Re-publish' : 'Publish'
-                  )}
-                </button>
-              )}
-            </div>
+            <BookPipelineActions book={book} meta={meta} layout="list" shared={shared} />
           </div>
         )
       })}

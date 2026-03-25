@@ -48,12 +48,16 @@ export function buildRaiseUrgencyQuestPayload(
     gameMasterFace: null,
     ownerGoalLine: intake.ownerGoalLine,
     portalTheme: spec.theme,
+    gmFaceMoveId: intake.gmFaceMoveId?.trim() || null,
   })
 
   const fx = JSON.parse(composed.completionEffects) as Record<string, unknown>
   fx.campaignDeckWizard = true
   fx.intakeVersion = intake.v
   fx.generatedAt = intake.appliedAt ?? null
+  if (intake.gmFaceMoveId?.trim()) {
+    fx.deckIntakeGmFaceMoveId = intake.gmFaceMoveId.trim()
+  }
 
   return {
     ...composed,

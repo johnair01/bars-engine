@@ -10,7 +10,8 @@ const createAdventureSchema = z.object({
     title: z.string().min(1, "Title is required"),
     slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
     description: z.string().optional(),
-    visibility: z.enum(["PUBLIC_ONBOARDING", "PRIVATE_QUEST"])
+    visibility: z.enum(["PUBLIC_ONBOARDING", "PRIVATE_QUEST"]),
+    adventureType: z.enum(["CHARACTER_CREATOR", "CYOA_INTAKE"]).optional(),
 })
 
 export async function createAdventure(prevState: any, formData: FormData) {
@@ -19,6 +20,7 @@ export async function createAdventure(prevState: any, formData: FormData) {
         slug: formData.get("slug"),
         description: formData.get("description"),
         visibility: formData.get("visibility"),
+        adventureType: formData.get("adventureType") || undefined,
     }
 
     const result = createAdventureSchema.safeParse(data)
@@ -39,7 +41,8 @@ export async function createAdventure(prevState: any, formData: FormData) {
                 slug: result.data.slug,
                 description: result.data.description,
                 visibility: result.data.visibility,
-                status: "DRAFT"
+                status: "DRAFT",
+                ...(result.data.adventureType ? { adventureType: result.data.adventureType } : {}),
             }
         })
     } catch (error: any) {

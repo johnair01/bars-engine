@@ -3,18 +3,34 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
-import type { EventInviteStory } from '@/lib/event-invite-story/schema'
+import type { EventInviteEndingCta, EventInviteStory } from '@/lib/event-invite-story/schema'
 import { EVENT_INVITE_DEFAULT_CTAS } from '@/lib/event-invite-story/default-cta'
+
+export type { EventInviteEndingCta }
 
 type Props = {
     barTitle: string
     barDescription: string
     story: EventInviteStory
+    /** When set (e.g. server branch for returning players), overrides `story.start` for initial passage and restart. */
+    initialPassageId?: string
+    /** `undefined` = default footer; `null` = hide; string = custom note */
+    footerNote?: string | null
+    /** Override default ending CTAs (Partiful, donate, hub, etc.) */
+    endingCtas?: readonly EventInviteEndingCta[]
 }
 
-export function EventInviteStoryReader({ barTitle, barDescription, story }: Props) {
+export function EventInviteStoryReader({
+    barTitle,
+    barDescription,
+    story,
+    initialPassageId,
+    footerNote,
+    endingCtas,
+}: Props) {
     const byId = useMemo(() => new Map(story.passages.map((p) => [p.id, p])), [story.passages])
-    const [currentId, setCurrentId] = useState(story.start)
+    const effectiveStart = initialPassageId ?? story.start
+    const [currentId, setCurrentId] = useState(effectiveStart)
 
     const passage = byId.get(currentId)
     if (!passage) {
@@ -23,7 +39,7 @@ export function EventInviteStoryReader({ barTitle, barDescription, story }: Prop
         )
     }
 
-    const restart = () => setCurrentId(story.start)
+    const restart = () => setCurrentId(effectiveStart)
 
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
@@ -46,7 +62,7 @@ export function EventInviteStoryReader({ barTitle, barDescription, story }: Prop
                         <p className="text-lg font-semibold text-white">{passage.ending.role}</p>
                         <p className="text-zinc-400 text-sm">{passage.ending.description}</p>
                         <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2">
-                            {EVENT_INVITE_DEFAULT_CTAS.map((c) => (
+                            {(endingCtas ?? EVENT_INVITE_DEFAULT_CTAS).map((c) => (
                                 <Link
                                     key={c.href}
                                     href={c.href}
@@ -80,9 +96,12 @@ export function EventInviteStoryReader({ barTitle, barDescription, story }: Prop
                 )}
             </div>
 
-            <p className="text-center text-[10px] text-zinc-600">
-                No account needed for this preview. Save the link for April 5.
-            </p>
+            {footerNote !== null ? (
+                <p className="text-center text-[10px] text-zinc-600">
+                    {footerNote ??
+                        'No account needed for this preview. Save the link for April 5.'}
+                </p>
+            ) : null}
         </div>
     )
 }

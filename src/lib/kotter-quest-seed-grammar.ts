@@ -1,3 +1,9 @@
+export type { GmFaceStageMove, GmFaceStageMoveId } from '@/lib/gm-face-stage-moves'
+export {
+  getGmFaceStageMoveById,
+  getGmFaceStageMovesForStage,
+} from '@/lib/gm-face-stage-moves'
+
 /**
  * Kotter × hexagram × emotional alchemy × GM face — deterministic quest/BAR seed grammar.
  * Composes player-facing title/description from slots (no LLM). Use for campaign deck,
@@ -7,8 +13,12 @@
  */
 
 import { getHexagramStructure, type Trigram } from '@/lib/iching-struct'
+import {
+  resolveGmFaceStageMoveForComposition,
+  type GmFaceStageMove,
+} from '@/lib/gm-face-stage-moves'
 import { getStageAction, KOTTER_STAGES, type AllyshipDomain } from '@/lib/kotter'
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
 
 export type EmotionalAlchemyStance = 'aligned' | 'curious' | 'skeptical'
 
@@ -28,6 +38,8 @@ export interface KotterQuestSeedSlots {
   faceLine: string | null
   portalTheme: string | null
   ownerGoalLine: string | null
+  /** Set when {@link ComposeKotterQuestSeedInput.gmFaceMoveId} resolves for this stage. */
+  faceMove: GmFaceStageMove | null
 }
 
 export interface ComposeKotterQuestSeedInput {
@@ -42,6 +54,17 @@ export interface ComposeKotterQuestSeedInput {
   ownerGoalLine?: string | null
   /** Deck card theme or portal flavor line. */
   portalTheme?: string | null
+  /**
+   * Optional GM face × stage move (`K{n}_{face}`). When set and matching `kotterStage`,
+   * title segment, micro-beat, evidence, and default `gameMasterFace` come from the move.
+   */
+  gmFaceMoveId?: string | null
+  /**
+   * Optional **reading / voice** face (spec §A). When it differs from the structural face
+   * (`gameMasterFace` or move face), description appends a second lens block; `gameMasterFace`
+   * on the BAR stays **structural** only.
+   */
+  readingFace?: GameMasterFace | null
 }
 
 export interface KotterQuestSeedBarPayload {
@@ -115,6 +138,17 @@ const FACE_QUEST_MICRO: Record<GameMasterFace, string> = {
     '**Lens — pattern:** Step back one zoom level—what story are you inside, and what becomes possible if you name it?',
 }
 
+/**
+ * Stage-1 **play-speak** domain headlines (Phase C). Neutral fallback for title + domain beat
+ * when no `gmFaceMoveId`; warmer than `getStageAction(1, domain)` deficit phrasing.
+ */
+const STAGE_1_PLAY_HEADLINE: Record<AllyshipDomain, string> = {
+  GATHERING_RESOURCES: 'Name what’s running out or thin',
+  SKILLFUL_ORGANIZING: 'Name the missing piece of the system',
+  RAISE_AWARENESS: 'Say what people still don’t see',
+  DIRECT_ACTION: 'Name the smallest honest next move',
+}
+
 const CAMPAIGN_GOAL_BY_STAGE: Record<number, string> = {
   1: 'Raise the urgency',
   2: 'Form the guiding coalition',
@@ -143,11 +177,19 @@ export function fillKotterQuestSeedSlots(input: ComposeKotterQuestSeedInput): Ko
   const hexagramId = Math.max(1, Math.min(64, Math.round(input.hexagramId)))
   const structure = getHexagramStructure(hexagramId)
   const kotterName = KOTTER_STAGES[stage as keyof typeof KOTTER_STAGES].name
-  const stageHeadline = getStageAction(stage, domain)
+  const rawStageHeadline = getStageAction(stage, domain)
+  const stageHeadline =
+    stage === 1 ? STAGE_1_PLAY_HEADLINE[domain] ?? rawStageHeadline : rawStageHeadline
+
+  const faceMove = resolveGmFaceStageMoveForComposition(stage, input.gmFaceMoveId) ?? null
+  const microBeat = faceMove?.action ?? STAGE_MICRO_BEAT[stage] ?? STAGE_MICRO_BEAT[1]!
+  const evidencePrompt = faceMove?.evidence ?? STAGE_EVIDENCE[stage] ?? STAGE_EVIDENCE[1]!
+
+  const effectiveFace: GameMasterFace | null = input.gameMasterFace ?? faceMove?.face ?? null
 
   const stanceLine =
     input.emotionalAlchemyTag != null ? STANCE_LINES[input.emotionalAlchemyTag] : null
-  const faceLine = input.gameMasterFace != null ? FACE_QUEST_MICRO[input.gameMasterFace] : null
+  const faceLine = effectiveFace != null ? FACE_QUEST_MICRO[effectiveFace] : null
 
   const owner =
     input.ownerGoalLine?.trim() && input.ownerGoalLine.trim().length > 0
@@ -167,12 +209,13 @@ export function fillKotterQuestSeedSlots(input: ComposeKotterQuestSeedInput): Ko
     trigramLower: structure.lower,
     trigramEssence: trigramPairEssence(structure.upper, structure.lower),
     domain,
-    microBeat: STAGE_MICRO_BEAT[stage] ?? STAGE_MICRO_BEAT[1]!,
-    evidencePrompt: STAGE_EVIDENCE[stage] ?? STAGE_EVIDENCE[1]!,
+    microBeat,
+    evidencePrompt,
     stanceLine,
     faceLine,
     portalTheme: portal,
     ownerGoalLine: owner,
+    faceMove,
   }
 }
 
@@ -185,7 +228,8 @@ export function composeKotterQuestSeedBar(
   const s = fillKotterQuestSeedSlots(input)
   const campaignGoal = `${s.kotterName} — ${CAMPAIGN_GOAL_BY_STAGE[s.kotterStage] ?? 'Campaign beat'}`
 
-  const title = `${s.kotterName} · H${s.hexagramId} · ${s.stageHeadline}`.slice(0, 200)
+  const titleSegment = s.faceMove != null ? s.faceMove.title : s.stageHeadline
+  const title = `${s.kotterName} · H${s.hexagramId} · ${titleSegment}`.slice(0, 200)
 
   const parts: string[] = [
     `**${campaignGoal}**`,
@@ -208,6 +252,13 @@ export function composeKotterQuestSeedBar(
     parts.push('', s.faceLine)
   }
 
+  const structuralFace: GameMasterFace | null = input.gameMasterFace ?? s.faceMove?.face ?? null
+  const readingFace = input.readingFace ?? null
+  if (readingFace && readingFace !== structuralFace) {
+    const label = FACE_META[readingFace].label
+    parts.push('', `**Read as ${label}:**`, '', FACE_QUEST_MICRO[readingFace])
+  }
+
   parts.push(
     '',
     s.microBeat,
@@ -221,6 +272,8 @@ export function composeKotterQuestSeedBar(
 
   const description = parts.join('\n')
 
+  const effectiveFace = input.gameMasterFace ?? s.faceMove?.face ?? null
+
   const completionEffects = JSON.stringify({
     grammar: 'kotter-seed-v1',
     campaignRef: input.campaignRef,
@@ -228,7 +281,9 @@ export function composeKotterQuestSeedBar(
     hexagramId: s.hexagramId,
     allyshipDomain: s.domain,
     emotionalAlchemyTag: input.emotionalAlchemyTag ?? null,
-    gameMasterFace: input.gameMasterFace ?? null,
+    gameMasterFace: effectiveFace,
+    readingFace: input.readingFace ?? null,
+    moveId: s.faceMove?.id ?? null,
   })
 
   return {
@@ -237,7 +292,7 @@ export function composeKotterQuestSeedBar(
     kotterStage: s.kotterStage,
     campaignGoal,
     emotionalAlchemyTag: input.emotionalAlchemyTag ?? null,
-    gameMasterFace: input.gameMasterFace ?? null,
+    gameMasterFace: effectiveFace,
     completionEffects,
   }
 }

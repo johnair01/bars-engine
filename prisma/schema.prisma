@@ -9,29 +9,29 @@ datasource db {
 }
 
 model Invite {
-  id                     String      @id @default(cuid())
-  token                  String      @unique
-  status                 String      @default("active")
-  preassignedRoleKey     String?
-  maxUses                Int         @default(1)
-  uses                   Int         @default(0)
-  theme                  String      @default("standard")
-  createdAt              DateTime    @default(now())
-  usedAt                DateTime?
-  forgerId               String?     // Player who forged/sent the invitation
-  invitationTargetType   String?     // nation | school | sect
-  invitationTargetId     String?     // nationId, face key (shaman, etc.), or sectId
-  instanceId             String?     // Golden path: campaign (Instance) to join
-  starterQuestId         String?     // Golden path: starter quest (CustomBar)
-  invitationBarId        String?     // Golden path: optional invitation BAR
-  invitationMessage      String?     // INV-6: forger's personal message ("What do you see in this person...")
-  forger                 Player?     @relation("InvitesForged", fields: [forgerId], references: [id], onDelete: SetNull)
-  players                Player[]    @relation("InviteUsed")
-  invitationBars         CustomBar[] @relation("InvitationBar")
-  instance               Instance?   @relation(fields: [instanceId], references: [id], onDelete: SetNull)
-  starterQuest           CustomBar?  @relation("InviteStarterQuest", fields: [starterQuestId], references: [id], onDelete: SetNull)
-  invitationBar          CustomBar?  @relation("InviteInvitationBar", fields: [invitationBarId], references: [id], onDelete: SetNull)
-  demoOrientationLinks   DemoOrientationLink[]
+  id                   String                @id @default(cuid())
+  token                String                @unique
+  status               String                @default("active")
+  preassignedRoleKey   String?
+  maxUses              Int                   @default(1)
+  uses                 Int                   @default(0)
+  theme                String                @default("standard")
+  createdAt            DateTime              @default(now())
+  usedAt               DateTime?
+  forgerId             String? // Player who forged/sent the invitation
+  invitationTargetType String? // nation | school | sect
+  invitationTargetId   String? // nationId, face key (shaman, etc.), or sectId
+  instanceId           String? // Golden path: campaign (Instance) to join
+  starterQuestId       String? // Golden path: starter quest (CustomBar)
+  invitationBarId      String? // Golden path: optional invitation BAR
+  invitationMessage    String? // INV-6: forger's personal message ("What do you see in this person...")
+  forger               Player?               @relation("InvitesForged", fields: [forgerId], references: [id], onDelete: SetNull)
+  players              Player[]              @relation("InviteUsed")
+  invitationBars       CustomBar[]           @relation("InvitationBar")
+  instance             Instance?             @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  starterQuest         CustomBar?            @relation("InviteStarterQuest", fields: [starterQuestId], references: [id], onDelete: SetNull)
+  invitationBar        CustomBar?            @relation("InviteInvitationBar", fields: [invitationBarId], references: [id], onDelete: SetNull)
+  demoOrientationLinks DemoOrientationLink[]
 
   @@map("invites")
 }
@@ -63,121 +63,121 @@ model DemoOrientationLink {
 }
 
 model Player {
-  id                     String                     @id @default(cuid())
-  accountId              String?
-  name                   String
-  creatorType            String                     @default("human") // human | agent — NPC/simulated player content ecology
-  contactType            String
-  contactValue           String
-  passwordHash           String?
-  onboardingMode         String?                    @default("expert")
-  onboardingComplete     Boolean                    @default(false)
-  storyProgress          String?
-  hasSeenWelcome         Boolean                    @default(false)
-  hasSeenCampaignEntry   Boolean                    @default(false)
-  hasCompletedFirstQuest Boolean                    @default(false)
-  hasCreatedFirstQuest   Boolean                    @default(false)
-  onboardingCompletedAt  DateTime?
-  inviteId               String
-  invitedByPlayerId      String?     // Who invited this player (for analytics, "invited by X")
-  nationId               String?
-  archetypeId            String?
-  campaignDomainPreference String?   // JSON array: ["GATHERING_RESOURCES","DIRECT_ACTION"]; null or [] = show all
-  avatarConfig            String?   // JSON: { nationKey, archetypeKey, domainKey, variant } derived from CYOA choices
-  avatarSpritePath        String?   // /sprites/avatar/{nationKey}-{archetypeKey}-{layer}.png (portrait bust, set after generation approved)
-  walkableSpritePath      String?   // /sprites/walkable/{nationKey}-{archetypeKey}.png (set after walkable approved)
-  pronouns               String?
-  attendance             String?
-  createdAt              DateTime                   @default(now())
-  barSharesSent          BarShare[]                 @relation("BarSharesSent")
-  barSharesReceived      BarShare[]                 @relation("BarSharesReceived")
-  barShareExternalsSent BarShareExternal[]         @relation("BarShareExternalsSent")
-  barShareExternalsClaimed BarShareExternal[]       @relation("BarShareExternalsClaimed")
-  barTopics              BarTopic[]
-  claimedBars            CustomBar[]                @relation("ClaimedBars")
-  createdBars            CustomBar[]                @relation("CreatedBars")
-  donations              Donation[]
-  emotionalAidSessions   EmotionalFirstAidSession[]
-  instanceMemberships    InstanceMembership[]
-  bars                   PlayerBar[]
-  nationMoveUnlocks      PlayerNationMoveUnlock[]
-  moveEquips             PlayerMoveEquip[]
-  moveUses               MoveUse[]
-  barResponses           BarResponse[]
-  quests                 PlayerQuest[]
-  roles                  PlayerRole[]
-  account                Account?                   @relation(fields: [accountId], references: [id])
-  invite                 Invite                     @relation("InviteUsed", fields: [inviteId], references: [id])
-  invitedBy              Player?                   @relation("PlayerInvites", fields: [invitedByPlayerId], references: [id], onDelete: SetNull)
-  playersInvited         Player[]                  @relation("PlayerInvites")
-  invitesForged          Invite[]                  @relation("InvitesForged")
-  nation                 Nation?                    @relation(fields: [nationId], references: [id])
-  archetype              Archetype?                @relation(fields: [archetypeId], references: [id])
-  questMoveLogs          QuestMoveLog[]
-  starterPack            StarterPack?
-  twineBindingsCreated   TwineBinding[]             @relation("TwineBindingsCreated")
-  twineRunsPlayed        TwineRun[]                 @relation("TwineRunsPlayed")
-  twineStoriesCreated    TwineStory[]               @relation("TwineStoriesCreated")
-  vibulonEvents          VibulonEvent[]
-  vibulons               Vibulon[]
-  creatorVibulons        Vibulon[]                 @relation("VibulonCreator")
-  vibeulonLedger         VibeulonLedger[]
-  participations         InstanceParticipation[]
-  adventureProgress      PlayerAdventureProgress[]
-  redemptionPacks        RedemptionPack[]
-  libraryRequests        LibraryRequest[]
-  bookAnalysisResumeLogs BookAnalysisResumeLog[]
-  verificationCompletionLogs VerificationCompletionLog[]
-  stewardedSlots         GameboardSlot[] @relation("GameboardSteward")
-  gameboardBids         GameboardBid[]
-  gameboardAidOffersMade GameboardAidOffer[] @relation("GameboardAidOfferer")
-  gameboardAidOffersReceived GameboardAidOffer[] @relation("GameboardAidSteward")
-  questProposals       QuestProposal[]
-  bountyStakes         BountyStake[]
-  shadow321Sessions    Shadow321Session[]
-  eventArtifactsCreated EventArtifact[]     @relation("EventArtifactCreator")
-  eventParticipations   EventParticipant[]  @relation("EventParticipantAsParticipant")
-  eventInvitesReceived  EventInvite[]       @relation("EventInviteReceived")
-  eventInvitesSent      EventInvite[]       @relation("EventInviteSent")
-  orientationSessions  OrientationSession[]
-  daemons              Daemon[]
-  daemonSummons        DaemonSummon[]
-  blessedObjectsEarned BlessedObjectEarned[]
-  playerPlaybooks      PlayerPlaybook[]
-  alchemyPlayerState   AlchemyPlayerState?
-  alchemySceneEvents   AlchemySceneEvent[]
-  npcMemories          NpcMemory[]
-  npcRelationships     NpcRelationshipState[]
-  growthScenes         GrowthScene[]
-  alchemyCheckIns      AlchemyCheckIn[]
-  thresholdEncounters  ThresholdEncounter[]
-  instanceExportRequests InstanceExportRequest[]
-  assets                 Asset[]
-  mapPresences           PlayerMapPresence[]
-  spriteUrl              String?        @map("sprite_url")
-  roomPresences          RoomPresence[]
-  lastForgeTimestamp     DateTime?      // Admin Agent Forge: cooldown start
-  forgeSessions          ForgeSession[]
-  alignment              PlayerAlignment?
-  carriedWeights         CarriedWeight[]
-  npcProfile             NpcProfile?
-  npc321InnerWorkMergesAsHuman Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeHuman")
-  npc321InnerWorkMergesAsNpc   Npc321InnerWorkMerge[] @relation("Npc321InnerWorkMergeNpc")
-  daemonPromotedFrom           Daemon[]                  @relation("DaemonPromotedToNpc")
+  id                           String                      @id @default(cuid())
+  accountId                    String?
+  name                         String
+  creatorType                  String                      @default("human") // human | agent — NPC/simulated player content ecology
+  contactType                  String
+  contactValue                 String
+  passwordHash                 String?
+  onboardingMode               String?                     @default("expert")
+  onboardingComplete           Boolean                     @default(false)
+  storyProgress                String?
+  hasSeenWelcome               Boolean                     @default(false)
+  hasSeenCampaignEntry         Boolean                     @default(false)
+  hasCompletedFirstQuest       Boolean                     @default(false)
+  hasCreatedFirstQuest         Boolean                     @default(false)
+  onboardingCompletedAt        DateTime?
+  inviteId                     String
+  invitedByPlayerId            String? // Who invited this player (for analytics, "invited by X")
+  nationId                     String?
+  archetypeId                  String?
+  campaignDomainPreference     String? // JSON array: ["GATHERING_RESOURCES","DIRECT_ACTION"]; null or [] = show all
+  avatarConfig                 String? // JSON: { nationKey, archetypeKey, domainKey, variant } derived from CYOA choices
+  avatarSpritePath             String? // /sprites/avatar/{nationKey}-{archetypeKey}-{layer}.png (portrait bust, set after generation approved)
+  walkableSpritePath           String? // /sprites/walkable/{nationKey}-{archetypeKey}.png (set after walkable approved)
+  pronouns                     String?
+  attendance                   String?
+  createdAt                    DateTime                    @default(now())
+  barSharesSent                BarShare[]                  @relation("BarSharesSent")
+  barSharesReceived            BarShare[]                  @relation("BarSharesReceived")
+  barShareExternalsSent        BarShareExternal[]          @relation("BarShareExternalsSent")
+  barShareExternalsClaimed     BarShareExternal[]          @relation("BarShareExternalsClaimed")
+  barTopics                    BarTopic[]
+  claimedBars                  CustomBar[]                 @relation("ClaimedBars")
+  createdBars                  CustomBar[]                 @relation("CreatedBars")
+  donations                    Donation[]
+  emotionalAidSessions         EmotionalFirstAidSession[]
+  instanceMemberships          InstanceMembership[]
+  bars                         PlayerBar[]
+  nationMoveUnlocks            PlayerNationMoveUnlock[]
+  moveEquips                   PlayerMoveEquip[]
+  moveUses                     MoveUse[]
+  barResponses                 BarResponse[]
+  quests                       PlayerQuest[]
+  roles                        PlayerRole[]
+  account                      Account?                    @relation(fields: [accountId], references: [id])
+  invite                       Invite                      @relation("InviteUsed", fields: [inviteId], references: [id])
+  invitedBy                    Player?                     @relation("PlayerInvites", fields: [invitedByPlayerId], references: [id], onDelete: SetNull)
+  playersInvited               Player[]                    @relation("PlayerInvites")
+  invitesForged                Invite[]                    @relation("InvitesForged")
+  nation                       Nation?                     @relation(fields: [nationId], references: [id])
+  archetype                    Archetype?                  @relation(fields: [archetypeId], references: [id])
+  questMoveLogs                QuestMoveLog[]
+  starterPack                  StarterPack?
+  twineBindingsCreated         TwineBinding[]              @relation("TwineBindingsCreated")
+  twineRunsPlayed              TwineRun[]                  @relation("TwineRunsPlayed")
+  twineStoriesCreated          TwineStory[]                @relation("TwineStoriesCreated")
+  vibulonEvents                VibulonEvent[]
+  vibulons                     Vibulon[]
+  creatorVibulons              Vibulon[]                   @relation("VibulonCreator")
+  vibeulonLedger               VibeulonLedger[]
+  participations               InstanceParticipation[]
+  adventureProgress            PlayerAdventureProgress[]
+  redemptionPacks              RedemptionPack[]
+  libraryRequests              LibraryRequest[]
+  bookAnalysisResumeLogs       BookAnalysisResumeLog[]
+  verificationCompletionLogs   VerificationCompletionLog[]
+  stewardedSlots               GameboardSlot[]             @relation("GameboardSteward")
+  gameboardBids                GameboardBid[]
+  gameboardAidOffersMade       GameboardAidOffer[]         @relation("GameboardAidOfferer")
+  gameboardAidOffersReceived   GameboardAidOffer[]         @relation("GameboardAidSteward")
+  questProposals               QuestProposal[]
+  bountyStakes                 BountyStake[]
+  shadow321Sessions            Shadow321Session[]
+  eventArtifactsCreated        EventArtifact[]             @relation("EventArtifactCreator")
+  eventParticipations          EventParticipant[]          @relation("EventParticipantAsParticipant")
+  eventInvitesReceived         EventInvite[]               @relation("EventInviteReceived")
+  eventInvitesSent             EventInvite[]               @relation("EventInviteSent")
+  orientationSessions          OrientationSession[]
+  daemons                      Daemon[]
+  daemonSummons                DaemonSummon[]
+  blessedObjectsEarned         BlessedObjectEarned[]
+  playerPlaybooks              PlayerPlaybook[]
+  alchemyPlayerState           AlchemyPlayerState?
+  alchemySceneEvents           AlchemySceneEvent[]
+  npcMemories                  NpcMemory[]
+  npcRelationships             NpcRelationshipState[]
+  growthScenes                 GrowthScene[]
+  alchemyCheckIns              AlchemyCheckIn[]
+  thresholdEncounters          ThresholdEncounter[]
+  instanceExportRequests       InstanceExportRequest[]
+  assets                       Asset[]
+  mapPresences                 PlayerMapPresence[]
+  spriteUrl                    String?                     @map("sprite_url")
+  roomPresences                RoomPresence[]
+  lastForgeTimestamp           DateTime? // Admin Agent Forge: cooldown start
+  forgeSessions                ForgeSession[]
+  alignment                    PlayerAlignment?
+  carriedWeights               CarriedWeight[]
+  npcProfile                   NpcProfile?
+  npc321InnerWorkMergesAsHuman Npc321InnerWorkMerge[]      @relation("Npc321InnerWorkMergeHuman")
+  npc321InnerWorkMergesAsNpc   Npc321InnerWorkMerge[]      @relation("Npc321InnerWorkMergeNpc")
+  daemonPromotedFrom           Daemon[]                    @relation("DaemonPromotedToNpc")
   compostLedgers               CompostLedger[]
   sceneAtlasGuidedDrafts       SceneAtlasGuidedDraft[]
   playerPromptHand             PlayerPromptHand?
   promptDeckCycles             PromptDeckCycle[]
   // BAR Lobby World (LW-2)
-  tradesInitiated              TradeTransaction[] @relation("TradeInitiator")
-  tradesAsAgent                TradeTransaction[] @relation("TradeAgent")
+  tradesInitiated              TradeTransaction[]          @relation("TradeInitiator")
+  tradesAsAgent                TradeTransaction[]          @relation("TradeAgent")
   starterBARsGranted           StarterBAR[]
   // WMC — World Map Campaign Deck
-  deckCardsAuthored            CampaignDeckCard[]        @relation("DeckCardAuthor")
-  spokeSessions                SpokeSession[]            @relation("SpokeSessions")
-  milestonesProposed           CampaignMilestone[]       @relation("MilestoneProposals")
-  milestonesApproved           CampaignMilestone[]       @relation("MilestoneApprovals")
-  milestoneContributions       MilestoneContribution[]   @relation("MilestoneContributions")
+  deckCardsAuthored            CampaignDeckCard[]          @relation("DeckCardAuthor")
+  spokeSessions                SpokeSession[]              @relation("SpokeSessions")
+  milestonesProposed           CampaignMilestone[]         @relation("MilestoneProposals")
+  milestonesApproved           CampaignMilestone[]         @relation("MilestoneApprovals")
+  milestoneContributions       MilestoneContribution[]     @relation("MilestoneContributions")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -200,25 +200,25 @@ model CompostLedger {
 }
 
 model Role {
-  id           String       @id @default(cuid())
-  key          String       @unique
-  displayName  String
-  description  String
-  isForecasted Boolean      @default(false)
+  id                    String       @id @default(cuid())
+  key                   String       @unique
+  displayName           String
+  description           String
+  isForecasted          Boolean      @default(false)
   // Holacracy governance
-  purpose          String?  // what this role pursues or expresses
-  accountabilities String?  // JSON array: ongoing activities the role enacts
-  scope            String   @default("instance") // instance | nation | global
+  purpose               String? // what this role pursues or expresses
+  accountabilities      String? // JSON array: ongoing activities the role enacts
+  scope                 String       @default("instance") // instance | nation | global
   // NPC defaults — face/tier that fills this role when no human holds it
-  npcFace      String?      // shaman | challenger | regent | architect | diplomat | sage
-  npcTier      Int          @default(1)
+  npcFace               String? // shaman | challenger | regent | architect | diplomat | sage
+  npcTier               Int          @default(1)
   // Prerequisite gate: JSON { minBars?, requiredRoleKeys?, alignmentThresholds? }
   prerequisites         String?
   // Quest spawned when role is granted to a human player
   orientationTemplateId String?
-  createdAt    DateTime     @default(now())
-  players      PlayerRole[]
-  orientationTemplate CustomBar? @relation("RoleOrientationTemplate", fields: [orientationTemplateId], references: [id], onDelete: SetNull)
+  createdAt             DateTime     @default(now())
+  players               PlayerRole[]
+  orientationTemplate   CustomBar?   @relation("RoleOrientationTemplate", fields: [orientationTemplateId], references: [id], onDelete: SetNull)
 
   @@map("roles")
 }
@@ -235,20 +235,20 @@ model Account {
 }
 
 model PlayerRole {
-  id               String    @id @default(cuid())
+  id               String     @id @default(cuid())
   playerId         String
   roleId           String
   grantedByAdminId String?
-  grantedAt        DateTime  @default(now())
+  grantedAt        DateTime   @default(now())
   expiresAt        DateTime?
   // Governance scope
-  instanceId       String?   // role is scoped to this campaign instance
-  nationId         String?   // role is scoped to this nation
-  focus            String?   // Holacracy: specific area/context within the role
-  grantedByBarId   String?   // the grantRole face move BAR that created this
-  isFilledByNpc    Boolean   @default(false) // NPC is holding this role (no human yet)
-  player           Player    @relation(fields: [playerId], references: [id])
-  role             Role      @relation(fields: [roleId], references: [id])
+  instanceId       String? // role is scoped to this campaign instance
+  nationId         String? // role is scoped to this nation
+  focus            String? // Holacracy: specific area/context within the role
+  grantedByBarId   String? // the grantRole face move BAR that created this
+  isFilledByNpc    Boolean    @default(false) // NPC is holding this role (no human yet)
+  player           Player     @relation(fields: [playerId], references: [id])
+  role             Role       @relation(fields: [roleId], references: [id])
   grantedByBar     CustomBar? @relation("PlayerRoleGrantBar", fields: [grantedByBarId], references: [id], onDelete: SetNull)
 
   @@unique([playerId, roleId])
@@ -267,128 +267,135 @@ model Bar {
 }
 
 model CustomBar {
-  id                   String         @id @default(cuid())
-  creatorId            String
-  title                String
-  description          String
-  type                 String         @default("vibe")
-  reward               Int            @default(1)
-  visibility           String         @default("public")
-  claimedById          String?
-  storyPath            String?
-  allowedTrigrams      String?
-  inputs               String         @default("[]")
-  moveType             String?
-  status               String         @default("active") // seed | draft | active | archived — seed = emitted from spoke CYOA, needs tending
-  archivedAt           DateTime?      // BAR UI Overhaul: soft archive (recoverable)
-  mergedIntoId         String?        // when set, this BAR was merged into another
-  mergedFromIds        String?        // JSON array of source BAR ids (when this is the merged result)
-  collapsedFromQuestId String?        // Share-as-BAR: when set, this BAR was collapsed from this quest
-  collapsedFromInstanceId String?     // Share-as-BAR: when set, this BAR was collapsed from this campaign/instance
-  kotterStage          Int            @default(1)
-  storyContent         String?
-  storyMood            String?
-  isSystem             Boolean        @default(false)
-  hexagramId           Int?
-  periodGenerated      Int?
-  firstCompleterId     String?
-  maxAssignments       Int            @default(1)
-  createdAt            DateTime       @default(now())
-  parentId             String?
-  twineLogic           String?
-  completionEffects    String?
-  rootId               String?
-  allowedNations       String?
-  allyshipDomain       String?      // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
-  nation               String?      // thematic nation (Argyra, Pyrakanth, etc.) from book analysis
-  archetype            String?      // thematic archetype (Bold Heart, Danger Walker, etc.) from book analysis
-  lockType             String?      // identity_lock | emotional_lock | action | possibility (transformation alignment)
-  campaignRef          String?      // e.g. bruised-banana; when set, quest is campaign-linked
-  campaignGoal         String?      // e.g. throw a party; the goal this quest fulfills
-  successCondition     String?      // Golden path: explicit success criterion (e.g. "Email sent")
-  emotionalAlchemyTag  String?      // aligned | curious | skeptical; when set, quest preferred for that onboarding branch
-  forkedFromId         String?      // when set, this quest is a private fork of another
-  gameMasterFace       String?      // shaman | challenger | regent | architect | diplomat | sage (dojo alignment for growUp)
-  twineStoryId         String?
-  docQuestMetadata     String?   // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
-  backlogPromptPath    String?   // e.g. .specify/specs/lore-cyoa-onboarding/spec.md (verification quest → backlog update)
-  evidenceKind         String?   // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
-  sourceBarId          String?   // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
-  source321SessionId   String?   // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
-  proposedByAgentId    String?   // when set, this BAR/quest was proposed by an agent (NPC); requires admin approval before publication
+  id                       String               @id @default(cuid())
+  creatorId                String
+  title                    String
+  description              String
+  type                     String               @default("vibe")
+  reward                   Int                  @default(1)
+  visibility               String               @default("public")
+  claimedById              String?
+  storyPath                String?
+  allowedTrigrams          String?
+  inputs                   String               @default("[]")
+  moveType                 String?
+  status                   String               @default("active") // seed | draft | active | archived — seed = emitted from spoke CYOA, needs tending
+  archivedAt               DateTime? // BAR UI Overhaul: soft archive (recoverable)
+  mergedIntoId             String? // when set, this BAR was merged into another
+  mergedFromIds            String? // JSON array of source BAR ids (when this is the merged result)
+  collapsedFromQuestId     String? // Share-as-BAR: when set, this BAR was collapsed from this quest
+  collapsedFromInstanceId  String? // Share-as-BAR: when set, this BAR was collapsed from this campaign/instance
+  kotterStage              Int                  @default(1)
+  storyContent             String?
+  storyMood                String?
+  isSystem                 Boolean              @default(false)
+  hexagramId               Int?
+  periodGenerated          Int?
+  firstCompleterId         String?
+  maxAssignments           Int                  @default(1)
+  createdAt                DateTime             @default(now())
+  parentId                 String?
+  twineLogic               String?
+  completionEffects        String?
+  rootId                   String?
+  allowedNations           String?
+  allyshipDomain           String? // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  nation                   String? // thematic nation (Argyra, Pyrakanth, etc.) from book analysis
+  archetype                String? // thematic archetype (Bold Heart, Danger Walker, etc.) from book analysis
+  lockType                 String? // identity_lock | emotional_lock | action | possibility (transformation alignment)
+  campaignRef              String? // e.g. bruised-banana; when set, quest is campaign-linked
+  /// EIP: Partiful RSVP URL for event_invite BARs (external HTTPS).
+  partifulUrl              String?
+  /// EIP: explicit slug for `/campaign/event/[eventSlug]/initiation` (e.g. apr-4-dance).
+  eventSlug                String?
+  campaignGoal             String? // e.g. throw a party; the goal this quest fulfills
+  successCondition         String? // Golden path: explicit success criterion (e.g. "Email sent")
+  emotionalAlchemyTag      String? // aligned | curious | skeptical; when set, quest preferred for that onboarding branch
+  forkedFromId             String? // when set, this quest is a private fork of another
+  gameMasterFace           String? // shaman | challenger | regent | architect | diplomat | sage (dojo alignment for growUp)
+  twineStoryId             String?
+  docQuestMetadata         String? // JSON: { docIntent, targetDocNodeId, targetLibraryRequestId, schismId, validationChecklist, barRequirements }
+  backlogPromptPath        String? // e.g. .specify/specs/lore-cyoa-onboarding/spec.md (verification quest → backlog update)
+  evidenceKind             String? // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
+  sourceBarId              String? // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
+  source321SessionId       String? // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
+  proposedByAgentId        String? // when set, this BAR/quest was proposed by an agent (NPC); requires admin approval before publication
   // Provenance Stamp fields (PSS) — set at creation, immutable; persists through trades
-  creatorNationKey     String?   @map("creator_nation_key")     // nationKey of the creating player
-  creatorArchetypeKey  String?   @map("creator_archetype_key")  // archetypeKey of the creating player
-  isKeyUnblocker       Boolean   @default(false) // tetris: completing this subquest unblocks root + siblings
-  grantsMoveId         String?   // when set, completing this quest unlocks this NationMove
-  questSource          String?   // system | bounty; bounties have stakedPool > 0
-  stakedPool           Int       @default(0) // vibeulons in escrow for bounty payouts
-  agentMetadata        String?   // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
-  strandMetadata       String?   // JSON: { agent_sequence, phase_temperature, output_thread_links, audit_trail, branch_reference, thread_linkage? } when type=strand
-  questPool            String?   // efa | dojo | discovery | gameboard — wave routing for book-derived quests
+  creatorNationKey         String?              @map("creator_nation_key") // nationKey of the creating player
+  creatorArchetypeKey      String?              @map("creator_archetype_key") // archetypeKey of the creating player
+  isKeyUnblocker           Boolean              @default(false) // tetris: completing this subquest unblocks root + siblings
+  grantsMoveId             String? // when set, completing this quest unlocks this NationMove
+  questSource              String? // system | bounty; bounties have stakedPool > 0
+  stakedPool               Int                  @default(0) // vibeulons in escrow for bounty payouts
+  agentMetadata            String? // JSON: { agent, deterministic, confidence, reasoning, discernedMove, usageTokens }
+  strandMetadata           String? // JSON: { agent_sequence, phase_temperature, output_thread_links, audit_trail, branch_reference, thread_linkage? } when type=strand
+  questPool                String? // efa | dojo | discovery | gameboard — wave routing for book-derived quests
   /// Playbook slug at charge capture (IE-10); immutable once set; null = no archetype stamp
-  archetypeKey         String?
-  inviteId             String?   // when set, this BAR is an invitation BAR linked to that invite
-  wateringProgress     String?   // JSON: { shaman, regent, challenger, architect, diplomat, sage } — campaign kernel watering
-  wateringContent      String?   // JSON: { shaman: string, regent: string, ... } — stored responses per face
-  intensity            String?   // everyday | capable | skilled | defining — move intensity register (Hearts Blazing-derived)
-  contextLines         String?   // JSON: { solo: string, interpersonal: string, narrative: string } — I/We/Its expressions for group play
+  archetypeKey             String?
+  inviteId                 String? // when set, this BAR is an invitation BAR linked to that invite
+  wateringProgress         String? // JSON: { shaman, regent, challenger, architect, diplomat, sage } — campaign kernel watering
+  wateringContent          String? // JSON: { shaman: string, regent: string, ... } — stored responses per face
+  intensity                String? // everyday | capable | skilled | defining — move intensity register (Hearts Blazing-derived)
+  contextLines             String? // JSON: { solo: string, interpersonal: string, narrative: string } — I/We/Its expressions for group play
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
-  seedMetabolization   String?
-  isExemplar           Boolean   @default(false) // marked by GM faces for cultural substrate distillation pipeline
-  spokeSessionId       String?   // FK → SpokeSession; set when BAR seed was emitted from a spoke CYOA (status=seed)
-  invite               Invite?   @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
-  promotedInstance     Instance? @relation("CampaignKernel") // Instance.kernelBarId points here when promoted
-  invitesAsStarterQuest Invite[] @relation("InviteStarterQuest")
-  invitesAsInvitationBar Invite[] @relation("InviteInvitationBar")
-  shares               BarShare[]
-  shareExternals      BarShareExternal[]
-  socialLinks         BarSocialLink[]
-  bountyStakes         BountyStake[]
-  claimedBy            Player?        @relation("ClaimedBars", fields: [claimedById], references: [id])
-  creator              Player         @relation("CreatedBars", fields: [creatorId], references: [id])
-  parent               CustomBar?     @relation("CustomBarTree", fields: [parentId], references: [id])
-  children             CustomBar[]    @relation("CustomBarTree")
-  forkedFrom           CustomBar?     @relation("QuestFork", fields: [forkedFromId], references: [id], onDelete: SetNull)
-  forks                CustomBar[]   @relation("QuestFork")
-  twineStory           TwineStory?    @relation(fields: [twineStoryId], references: [id])
-  packQuests           PackQuest[]
-  assignments          PlayerQuest[]
-  moveLogsAsCreatedBar QuestMoveLog[] @relation("QuestMoveCreatedBar")
-  questMoveLogs        QuestMoveLog[] @relation("QuestMoveQuest")
-  threadQuests         ThreadQuest[]
-  linkedPassages       Passage[]      @relation("PassageLinkedQuest")
-  upgradedThreads      QuestThread[]  @relation("QuestUpgradeProvenance")
-  microTwine           MicroTwineModule?
-  libraryRequestsSpawned LibraryRequest[] @relation("LibraryRequestSpawnedQuest")
-  gameboardSlots       GameboardSlot[]
-  aidOffersLinked     GameboardAidOffer[] @relation("AidOfferLinkedQuest")
-  questAdventureLinks  QuestAdventureLink[] @relation("QuestAdventureLinks")
-  sourceBar           CustomBar?          @relation("BarConversion", fields: [sourceBarId], references: [id], onDelete: SetNull)
-  questsFromBar       CustomBar[]         @relation("BarConversion")
-  questProposals      QuestProposal[]
-  responses           BarResponse[]
-  bindings            BarBinding[]
-  assets              Asset[]
-  nextActionBridgesAsQuest NextActionBridge[] @relation("NextActionBridgeQuest")
-  nextActionBridgesAsBar  NextActionBridge[] @relation("NextActionBridgeBar")
-  topicAssignments    BarTopicAssignment[]
-  collapsedFromQuest   CustomBar?  @relation("BarCollapsedFromQuest", fields: [collapsedFromQuestId], references: [id], onDelete: SetNull)
-  collapsedFromInstance Instance?  @relation("BarCollapsedFromInstance", fields: [collapsedFromInstanceId], references: [id], onDelete: SetNull)
-  barsCollapsedFromQuest CustomBar[] @relation("BarCollapsedFromQuest")
-  campaignInvitation    CampaignInvitation? // one BAR can carry one role invitation
-  carriedWeightResults  CarriedWeight[]     @relation("CarriedWeightBar")
-  roleOrientations      Role[]              @relation("RoleOrientationTemplate")
-  playerRoleGrants      PlayerRole[]        @relation("PlayerRoleGrantBar")
-  spokeSession          SpokeSession?       @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
+  seedMetabolization       String?
+  isExemplar               Boolean              @default(false) // marked by GM faces for cultural substrate distillation pipeline
+  spokeSessionId           String? // FK → SpokeSession; set when BAR seed was emitted from a spoke CYOA (status=seed)
+  /// CSHE: clothing-swap listing excluded from public gallery (host/co-host moderation)
+  swapListingHidden        Boolean              @default(false) @map("swap_listing_hidden")
+  invite                   Invite?              @relation("InvitationBar", fields: [inviteId], references: [id], onDelete: SetNull)
+  promotedInstance         Instance?            @relation("CampaignKernel") // Instance.kernelBarId points here when promoted
+  invitesAsStarterQuest    Invite[]             @relation("InviteStarterQuest")
+  invitesAsInvitationBar   Invite[]             @relation("InviteInvitationBar")
+  shares                   BarShare[]
+  shareExternals           BarShareExternal[]
+  socialLinks              BarSocialLink[]
+  bountyStakes             BountyStake[]
+  claimedBy                Player?              @relation("ClaimedBars", fields: [claimedById], references: [id])
+  creator                  Player               @relation("CreatedBars", fields: [creatorId], references: [id])
+  parent                   CustomBar?           @relation("CustomBarTree", fields: [parentId], references: [id])
+  children                 CustomBar[]          @relation("CustomBarTree")
+  forkedFrom               CustomBar?           @relation("QuestFork", fields: [forkedFromId], references: [id], onDelete: SetNull)
+  forks                    CustomBar[]          @relation("QuestFork")
+  twineStory               TwineStory?          @relation(fields: [twineStoryId], references: [id])
+  packQuests               PackQuest[]
+  assignments              PlayerQuest[]
+  moveLogsAsCreatedBar     QuestMoveLog[]       @relation("QuestMoveCreatedBar")
+  questMoveLogs            QuestMoveLog[]       @relation("QuestMoveQuest")
+  threadQuests             ThreadQuest[]
+  linkedPassages           Passage[]            @relation("PassageLinkedQuest")
+  upgradedThreads          QuestThread[]        @relation("QuestUpgradeProvenance")
+  microTwine               MicroTwineModule?
+  libraryRequestsSpawned   LibraryRequest[]     @relation("LibraryRequestSpawnedQuest")
+  gameboardSlots           GameboardSlot[]
+  aidOffersLinked          GameboardAidOffer[]  @relation("AidOfferLinkedQuest")
+  questAdventureLinks      QuestAdventureLink[] @relation("QuestAdventureLinks")
+  sourceBar                CustomBar?           @relation("BarConversion", fields: [sourceBarId], references: [id], onDelete: SetNull)
+  questsFromBar            CustomBar[]          @relation("BarConversion")
+  questProposals           QuestProposal[]
+  responses                BarResponse[]
+  bindings                 BarBinding[]
+  assets                   Asset[]
+  nextActionBridgesAsQuest NextActionBridge[]   @relation("NextActionBridgeQuest")
+  nextActionBridgesAsBar   NextActionBridge[]   @relation("NextActionBridgeBar")
+  topicAssignments         BarTopicAssignment[]
+  collapsedFromQuest       CustomBar?           @relation("BarCollapsedFromQuest", fields: [collapsedFromQuestId], references: [id], onDelete: SetNull)
+  collapsedFromInstance    Instance?            @relation("BarCollapsedFromInstance", fields: [collapsedFromInstanceId], references: [id], onDelete: SetNull)
+  barsCollapsedFromQuest   CustomBar[]          @relation("BarCollapsedFromQuest")
+  campaignInvitation       CampaignInvitation? // one BAR can carry one role invitation
+  carriedWeightResults     CarriedWeight[]      @relation("CarriedWeightBar")
+  roleOrientations         Role[]               @relation("RoleOrientationTemplate")
+  playerRoleGrants         PlayerRole[]         @relation("PlayerRoleGrantBar")
+  spokeSession             SpokeSession?        @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
 
+  @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
 }
 
 model NextActionBridge {
   id         String   @id @default(cuid())
   questId    String
-  barId      String?  // Optional: when from cleanup BAR
+  barId      String? // Optional: when from cleanup BAR
   nextAction String   @db.Text
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -405,9 +412,9 @@ model Shadow321Session {
   id               String    @id @default(cuid())
   playerId         String
   createdAt        DateTime  @default(now())
-  phase3Snapshot   String    // JSON: archetypeName, nationName, developmentalLens, genderOfCharge
-  phase2Snapshot   String    // JSON: q1, q5, alignedAction, moveType
-  outcome          String    // bar_created | quest_created | fueled_system | skipped | daemon_awakened
+  phase3Snapshot   String // JSON: archetypeName, nationName, developmentalLens, genderOfCharge
+  phase2Snapshot   String // JSON: q1, q5, alignedAction, moveType
+  outcome          String // bar_created | quest_created | fueled_system | skipped | daemon_awakened
   linkedBarId      String?
   linkedQuestId    String?
   questCompletedAt DateTime?
@@ -430,21 +437,21 @@ model Shadow321Session {
 
 /// Append-only log: human 321 name resolution teaches matching NPCs (creatorType agent) by nation + archetype.
 model Npc321InnerWorkMerge {
-  id                   String            @id @default(cuid())
-  createdAt            DateTime          @default(now())
-  humanPlayerId       String
-  npcPlayerId         String
-  shadow321SessionId  String
-  finalShadowName     String
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  humanPlayerId      String
+  npcPlayerId        String
+  shadow321SessionId String
+  finalShadowName    String
   /// suggested_accepted | edited | typed_no_suggest (matches Shadow321Session.nameResolution)
-  nameResolution      String
-  suggestionCount     Int?
-  metadataKeys        Json              // { nationId, archetypeId, alignedAction? }
-  chargeExcerpt       String?           @db.Text
+  nameResolution     String
+  suggestionCount    Int?
+  metadataKeys       Json // { nationId, archetypeId, alignedAction? }
+  chargeExcerpt      String?  @db.Text
 
-  humanPlayer        Player             @relation("Npc321InnerWorkMergeHuman", fields: [humanPlayerId], references: [id], onDelete: Cascade)
-  npcPlayer          Player             @relation("Npc321InnerWorkMergeNpc", fields: [npcPlayerId], references: [id], onDelete: Cascade)
-  shadow321Session   Shadow321Session  @relation(fields: [shadow321SessionId], references: [id], onDelete: Cascade)
+  humanPlayer      Player           @relation("Npc321InnerWorkMergeHuman", fields: [humanPlayerId], references: [id], onDelete: Cascade)
+  npcPlayer        Player           @relation("Npc321InnerWorkMergeNpc", fields: [npcPlayerId], references: [id], onDelete: Cascade)
+  shadow321Session Shadow321Session @relation(fields: [shadow321SessionId], references: [id], onDelete: Cascade)
 
   @@unique([shadow321SessionId, npcPlayerId])
   @@index([npcPlayerId, createdAt])
@@ -454,38 +461,38 @@ model Npc321InnerWorkMerge {
 }
 
 model ForgeSession {
-  id                    String    @id @default(cuid())
-  adminId               String
-  stage                 String    // THIRD_PERSON | SECOND_PERSON | FIRST_PERSON | FRICTION_REASSESS | ROUTING | COMPLETE
-  partDescription       String?   @db.Text
-  triggerContext        String?   @db.Text
-  observedPattern       String?   @db.Text
-  desiredExperience     String?   @db.Text
-  desiredSatisfaction   String?   // SatisfactionApexEnum
-  currentGameState      String?   @db.Text
+  id                     String    @id @default(cuid())
+  adminId                String
+  stage                  String // THIRD_PERSON | SECOND_PERSON | FIRST_PERSON | FRICTION_REASSESS | ROUTING | COMPLETE
+  partDescription        String?   @db.Text
+  triggerContext         String?   @db.Text
+  observedPattern        String?   @db.Text
+  desiredExperience      String?   @db.Text
+  desiredSatisfaction    String? // SatisfactionApexEnum
+  currentGameState       String?   @db.Text
   currentDissatisfaction String? // DissatisfactionEnum
-  underlyingBelief      String?   @db.Text
-  sabotageBelief        String?   // SelfSabotageEnum
-  firstPersonVoice      String?   @db.Text
-  reclaimedIntent       String?   @db.Text
-  alignedStep           String?   @db.Text
-  mintedValues          String?   @default("[]") // JSON array
-  mintedConstraints     String?   @default("[]") // JSON array
-  frictionStart         Int?
-  frictionEnd           Int?
-  frictionDelta         Int?
-  vibeulonMinted        Boolean   @default(false)
-  outputType            String?   // NEW_AGENT | APPEND_EXISTING
-  routingTargetType     String?   // ARCHETYPE | NATION | CAMPAIGN | META_AGENT | GLOBAL_POLICY
-  routingTargetId       String?
-  allocationWeight     Int?
-  agentSpecId           String?
-  agentPatchId          String?
-  createdAt             DateTime  @default(now())
-  completedAt           DateTime?
+  underlyingBelief       String?   @db.Text
+  sabotageBelief         String? // SelfSabotageEnum
+  firstPersonVoice       String?   @db.Text
+  reclaimedIntent        String?   @db.Text
+  alignedStep            String?   @db.Text
+  mintedValues           String?   @default("[]") // JSON array
+  mintedConstraints      String?   @default("[]") // JSON array
+  frictionStart          Int?
+  frictionEnd            Int?
+  frictionDelta          Int?
+  vibeulonMinted         Boolean   @default(false)
+  outputType             String? // NEW_AGENT | APPEND_EXISTING
+  routingTargetType      String? // ARCHETYPE | NATION | CAMPAIGN | META_AGENT | GLOBAL_POLICY
+  routingTargetId        String?
+  allocationWeight       Int?
+  agentSpecId            String?
+  agentPatchId           String?
+  createdAt              DateTime  @default(now())
+  completedAt            DateTime?
 
-  admin  Player     @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  agentSpec AgentSpec? @relation(fields: [agentSpecId], references: [id], onDelete: SetNull)
+  admin      Player      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  agentSpec  AgentSpec?  @relation(fields: [agentSpecId], references: [id], onDelete: SetNull)
   agentPatch AgentPatch? @relation(fields: [agentPatchId], references: [id], onDelete: SetNull)
 
   @@index([adminId])
@@ -494,15 +501,15 @@ model ForgeSession {
 }
 
 model AgentSpec {
-  id                      String    @id @default(cuid())
-  name                    String
-  nationOrientation       String?
-  distortionSignature     String?
-  coreValues              String    @default("[]") // JSON array
-  constraints             String    @default("[]") // JSON array
-  beliefContext            String?   @db.Text
-  sabotageSignature       String?
-  createdAt               DateTime  @default(now())
+  id                  String   @id @default(cuid())
+  name                String
+  nationOrientation   String?
+  distortionSignature String?
+  coreValues          String   @default("[]") // JSON array
+  constraints         String   @default("[]") // JSON array
+  beliefContext       String?  @db.Text
+  sabotageSignature   String?
+  createdAt           DateTime @default(now())
 
   forgeSessions ForgeSession[]
 
@@ -510,12 +517,12 @@ model AgentSpec {
 }
 
 model AgentPatch {
-  id                      String    @id @default(cuid())
-  targetAgentId           String    // Mind agent or backend agent ID
-  addValues               String    @default("[]") // JSON array
-  addConstraints          String    @default("[]") // JSON array
+  id                        String   @id @default(cuid())
+  targetAgentId             String // Mind agent or backend agent ID
+  addValues                 String   @default("[]") // JSON array
+  addConstraints            String   @default("[]") // JSON array
   updateDistortionSignature String?
-  createdAt               DateTime  @default(now())
+  createdAt                 DateTime @default(now())
 
   forgeSessions ForgeSession[]
 
@@ -525,10 +532,10 @@ model AgentPatch {
 model ShadowNameFeedback {
   id            String   @id @default(cuid())
   createdAt     DateTime @default(now())
-  inputHash     String   // hash of normalize(chargeDescription + ' ' + maskShape)
-  suggestedName String   // what deriveShadowName returned
-  accepted      Boolean  // true = user kept it; false = user edited it
-  editedTo      String?  // what user typed instead (only when accepted=false)
+  inputHash     String // hash of normalize(chargeDescription + ' ' + maskShape)
+  suggestedName String // what deriveShadowName returned
+  accepted      Boolean // true = user kept it; false = user edited it
+  editedTo      String? // what user typed instead (only when accepted=false)
 
   @@index([inputHash])
   @@index([accepted])
@@ -536,38 +543,38 @@ model ShadowNameFeedback {
 }
 
 model Daemon {
-  id           String   @id @default(cuid())
-  playerId     String
-  name         String
-  source       String   // 321_wake_up | school | bar
-  sourceBarId  String?  // when source=bar, the BAR this daemon was grown from
-  level        Int      @default(1)
-  moveIds      String   @default("[]") // JSON array of NationMove ids
-  discoveredAt DateTime @default(now())
+  id                 String   @id @default(cuid())
+  playerId           String
+  name               String
+  source             String // 321_wake_up | school | bar
+  sourceBarId        String? // when source=bar, the BAR this daemon was grown from
+  level              Int      @default(1)
+  moveIds            String   @default("[]") // JSON array of NationMove ids
+  discoveredAt       DateTime @default(now())
   /// When set, this daemon was awakened from a full 321 flow with persisted session (SN Phase 8).
   shadow321SessionId String?
   /// Bounded JSON: v, finalShadowName, nameResolution, suggestionCount, identityExcerpt, etc.
   innerWorkDigest    Json?
   /// Set when daemon graduates to an NPC (`Player` creatorType agent) at promotion level.
-  promotedToPlayerId String? @unique
+  promotedToPlayerId String?  @unique
 
   // --- Individuation Engine / Daemon Codex (IE-8) ---
-  voice         String?  @db.Text
-  desire        String?  @db.Text
-  fear          String?  @db.Text
-  shadow        String?  @db.Text
+  voice        String? @db.Text
+  desire       String? @db.Text
+  fear         String? @db.Text
+  shadow       String? @db.Text
   /// JSON array of evolution entries (append-only). See lib/daemon-evolution.ts
-  evolutionLog  String   @default("[]")
+  evolutionLog String  @default("[]")
 
   // --- Daemon Move System (DMS-1) ---
-  channel        String   @default("METAL")        // WOOD | FIRE | EARTH | METAL | WATER
-  altitude       String   @default("DISSATISFIED") // DISSATISFIED | NEUTRAL | SATISFIED
-  collective     Boolean  @default(false)
-  communityScope String?  // null = individual; instanceId = community scope
+  channel        String  @default("METAL") // WOOD | FIRE | EARTH | METAL | WATER
+  altitude       String  @default("DISSATISFIED") // DISSATISFIED | NEUTRAL | SATISFIED
+  collective     Boolean @default(false)
+  communityScope String? // null = individual; instanceId = community scope
 
-  player           Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  shadow321Session Shadow321Session?   @relation(fields: [shadow321SessionId], references: [id], onDelete: SetNull)
-  promotedToPlayer Player?             @relation("DaemonPromotedToNpc", fields: [promotedToPlayerId], references: [id], onDelete: SetNull)
+  player           Player               @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  shadow321Session Shadow321Session?    @relation(fields: [shadow321SessionId], references: [id], onDelete: SetNull)
+  promotedToPlayer Player?              @relation("DaemonPromotedToNpc", fields: [promotedToPlayerId], references: [id], onDelete: SetNull)
   summons          DaemonSummon[]
   moveCreations    DaemonMoveCreation[]
 
@@ -577,12 +584,12 @@ model Daemon {
 }
 
 model DaemonSummon {
-  id        String     @id @default(cuid())
-  daemonId  String
-  playerId  String
-  summonedAt DateTime   @default(now())
+  id         String   @id @default(cuid())
+  daemonId   String
+  playerId   String
+  summonedAt DateTime @default(now())
   expiresAt  DateTime
-  status    String     @default("active") // active | dismissed
+  status     String   @default("active") // active | dismissed
 
   daemon Daemon @relation(fields: [daemonId], references: [id], onDelete: Cascade)
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -594,14 +601,14 @@ model DaemonSummon {
 }
 
 model DaemonMoveCreation {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   daemonId       String
-  rawEmbodyText  String    @db.Text
-  rawWitnessText String    @db.Text
-  rawActionText  String    @db.Text
-  channel        String?   // WOOD | FIRE | EARTH | METAL | WATER — null until classified
-  moveId         String?   // set when promoted to a NationMove
-  createdAt      DateTime  @default(now())
+  rawEmbodyText  String   @db.Text
+  rawWitnessText String   @db.Text
+  rawActionText  String   @db.Text
+  channel        String? // WOOD | FIRE | EARTH | METAL | WATER — null until classified
+  moveId         String? // set when promoted to a NationMove
+  createdAt      DateTime @default(now())
 
   daemon Daemon      @relation(fields: [daemonId], references: [id], onDelete: Cascade)
   move   NationMove? @relation(fields: [moveId], references: [id], onDelete: SetNull)
@@ -612,14 +619,14 @@ model DaemonMoveCreation {
 }
 
 model BlessedObjectEarned {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   playerId    String
-  source      String    // efa | 321 | stage_talisman | campaign_completion | personal
-  earnedAt    DateTime  @default(now())
+  source      String // efa | 321 | stage_talisman | campaign_completion | personal
+  earnedAt    DateTime @default(now())
   instanceId  String?
   kotterStage Int?
   questId     String?
-  metadata    Json?     // extra provenance: loreBarId, etc.
+  metadata    Json? // extra provenance: loreBarId, etc.
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -629,23 +636,23 @@ model BlessedObjectEarned {
 }
 
 model QuestProposal {
-  id                    String   @id @default(cuid())
-  barId                 String
-  campaignRef           String?  // e.g. bruised-banana; from BAR or context
-  playerId              String
-  title                 String
-  description           String   @db.Text
-  domain                String?  // allyship domain: GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
-  questType             String?  // resource | coordination | awareness | action | reflection
-  completionConditions  String   @default("[]") // JSON array
-  emotionalAlchemy      String   @default("{}") // JSON: { status, moveId, moveName, prompt, completionReflection }
-  reviewStatus          String   @default("pending") // pending | approved | rejected | deferred
+  id                   String   @id @default(cuid())
+  barId                String
+  campaignRef          String? // e.g. bruised-banana; from BAR or context
+  playerId             String
+  title                String
+  description          String   @db.Text
+  domain               String? // allyship domain: GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
+  questType            String? // resource | coordination | awareness | action | reflection
+  completionConditions String   @default("[]") // JSON array
+  emotionalAlchemy     String   @default("{}") // JSON: { status, moveId, moveName, prompt, completionReflection }
+  reviewStatus         String   @default("pending") // pending | approved | rejected | deferred
   confidenceScore      Float    @default(0)
-  publishedQuestId      String?  // set when published; links to created CustomBar
-  createdAt             DateTime @default(now())
+  publishedQuestId     String? // set when published; links to created CustomBar
+  createdAt            DateTime @default(now())
 
-  bar     CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
-  player  Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  bar    CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+  player Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([barId])
   @@index([reviewStatus])
@@ -686,16 +693,16 @@ model BarShare {
 }
 
 model BarShareExternal {
-  id           String    @id @default(cuid())
-  barId        String
-  fromUserId   String
-  toEmail      String?
-  shareToken   String    @unique
-  status       String    @default("pending") // pending | claimed | expired | revoked
-  instanceId   String?   // campaign instance when BAR is campaign-linked
-  expiresAt    DateTime
-  claimedById  String?
-  createdAt    DateTime  @default(now())
+  id          String   @id @default(cuid())
+  barId       String
+  fromUserId  String
+  toEmail     String?
+  shareToken  String   @unique
+  status      String   @default("pending") // pending | claimed | expired | revoked
+  instanceId  String? // campaign instance when BAR is campaign-linked
+  expiresAt   DateTime
+  claimedById String?
+  createdAt   DateTime @default(now())
 
   bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
   fromUser  Player    @relation("BarShareExternalsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
@@ -711,7 +718,7 @@ model BarShareExternal {
 model BarSocialLink {
   id           String   @id @default(cuid())
   barId        String
-  platform     String   // instagram | spotify | twitter | youtube | generic
+  platform     String // instagram | spotify | twitter | youtube | generic
   url          String   @db.Text
   note         String?  @db.Text
   metadataJson String?  @map("metadata_json")
@@ -728,17 +735,17 @@ model BarResponse {
   id               String   @id @default(cuid())
   barId            String
   responderId      String
-  responseType     String   // join | curious | witness | offer_help | decline | cant_help | appreciate
-  intent           String?  // take_quest | accountable | consult | witness | observe | offer_help | join | decline
-  raciRole         String?  // Responsible | Accountable | Consulted | Informed (derived from intent)
-  parentResponseId String?  // self-referential for depth-1 thread replies
+  responseType     String // join | curious | witness | offer_help | decline | cant_help | appreciate
+  intent           String? // take_quest | accountable | consult | witness | observe | offer_help | join | decline
+  raciRole         String? // Responsible | Accountable | Consulted | Informed (derived from intent)
+  parentResponseId String? // self-referential for depth-1 thread replies
   depth            Int      @default(0) // 0 = direct BAR response; 1 = reply to response (max depth 2)
   message          String?  @db.Text
   createdAt        DateTime @default(now())
 
-  bar            CustomBar    @relation(fields: [barId], references: [id], onDelete: Cascade)
-  responder      Player       @relation(fields: [responderId], references: [id], onDelete: Cascade)
-  parentResponse BarResponse? @relation("BarResponseThread", fields: [parentResponseId], references: [id], onDelete: Cascade)
+  bar            CustomBar     @relation(fields: [barId], references: [id], onDelete: Cascade)
+  responder      Player        @relation(fields: [responderId], references: [id], onDelete: Cascade)
+  parentResponse BarResponse?  @relation("BarResponseThread", fields: [parentResponseId], references: [id], onDelete: Cascade)
   replies        BarResponse[] @relation("BarResponseThread")
 
   @@unique([barId, responderId])
@@ -764,13 +771,13 @@ model BarTopic {
 }
 
 model BarTopicAssignment {
-  id       String   @id @default(cuid())
-  topicId  String
-  barId    String
+  id        String   @id @default(cuid())
+  topicId   String
+  barId     String
   createdAt DateTime @default(now())
 
-  topic BarTopic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  bar   CustomBar  @relation(fields: [barId], references: [id], onDelete: Cascade)
+  topic BarTopic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  bar   CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
 
   @@unique([topicId, barId])
   @@index([topicId])
@@ -779,16 +786,16 @@ model BarTopicAssignment {
 }
 
 model Asset {
-  id           String    @id @default(cuid())
-  type         String    // bar_attachment | sprite | tile
+  id           String     @id @default(cuid())
+  type         String // bar_attachment | sprite | tile
   url          String
-  mimeType     String?   @map("mime_type")
-  metadataJson String?   @map("metadata_json") // { intention?, rotationDegrees?, altText?, ... }
-  side         String?   // front | back | null (legacy = front); BAR physical capture
-  ownerId      String    @map("owner_id")
-  customBarId  String?   @map("custom_bar_id")
-  createdAt    DateTime  @default(now())
-  owner        Player    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  mimeType     String?    @map("mime_type")
+  metadataJson String?    @map("metadata_json") // { intention?, rotationDegrees?, altText?, ... }
+  side         String? // front | back | null (legacy = front); BAR physical capture
+  ownerId      String     @map("owner_id")
+  customBarId  String?    @map("custom_bar_id")
+  createdAt    DateTime   @default(now())
+  owner        Player     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   customBar    CustomBar? @relation(fields: [customBarId], references: [id], onDelete: SetNull)
 
   @@index([customBarId])
@@ -818,7 +825,7 @@ model PlayerQuest {
   inputs             String?
   assignedAt         DateTime  @default(now())
   completedAt        DateTime?
-  frictionType       String?   // confusion | fear | overwhelm | avoidance | other
+  frictionType       String? // confusion | fear | overwhelm | avoidance | other
   frictionRecordedAt DateTime?
   player             Player    @relation(fields: [playerId], references: [id])
   quest              CustomBar @relation(fields: [questId], references: [id])
@@ -828,17 +835,17 @@ model PlayerQuest {
 }
 
 model Book {
-  id                   String                 @id @default(cuid())
-  title                String
-  author               String?
-  slug                 String                 @unique
-  sourcePdfUrl         String?
-  extractedText        String?                @db.Text
-  status               String                 @default("draft") // draft | extracted | analyzed | published
-  metadataJson         String?
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  thread               QuestThread?
+  id                     String                  @id @default(cuid())
+  title                  String
+  author                 String?
+  slug                   String                  @unique
+  sourcePdfUrl           String?
+  extractedText          String?                 @db.Text
+  status                 String                  @default("draft") // draft | extracted | analyzed | published
+  metadataJson           String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  thread                 QuestThread?
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
 
   @@map("books")
@@ -870,31 +877,31 @@ model VerificationCompletionLog {
 }
 
 model QuestThread {
-  id               String           @id @default(cuid())
-  title            String
-  description      String?
-  threadType       String           @default("standard")
-  creatorType      String           @default("system")
-  creatorId        String?
-  creationCost     Int              @default(0)
-  completionReward Int              @default(0)
+  id                String           @id @default(cuid())
+  title             String
+  description       String?
+  threadType        String           @default("standard")
+  creatorType       String           @default("system")
+  creatorId         String?
+  creationCost      Int              @default(0)
+  completionReward  Int              @default(0)
   allowedArchetypes String?
-  gateNationId     String?
-  gateArchetypeId  String?
-  status           String           @default("active")
-  createdAt        DateTime         @default(now())
-  bookId           String?          @unique
-  adventureId      String?          @unique
-  eventCampaignId  String?          @unique // Event production quest thread
-  instanceId       String?          // Sub-campaign instance (e.g. BB-BANANA for CAMP-BANANA)
-  sourceQuestId    String?          // Provenance: upgraded from this CustomBar (quest)
-  book             Book?            @relation(fields: [bookId], references: [id])
-  instance         Instance?        @relation(fields: [instanceId], references: [id], onDelete: SetNull)
-  eventCampaign    EventCampaign?   @relation(fields: [eventCampaignId], references: [id], onDelete: SetNull)
-  adventure        Adventure?       @relation(fields: [adventureId], references: [id], onDelete: SetNull)
-  sourceQuest      CustomBar?       @relation("QuestUpgradeProvenance", fields: [sourceQuestId], references: [id])
-  progress         ThreadProgress[]
-  quests           ThreadQuest[]
+  gateNationId      String?
+  gateArchetypeId   String?
+  status            String           @default("active")
+  createdAt         DateTime         @default(now())
+  bookId            String?          @unique
+  adventureId       String?          @unique
+  eventCampaignId   String?          @unique // Event production quest thread
+  instanceId        String? // Sub-campaign instance (e.g. BB-BANANA for CAMP-BANANA)
+  sourceQuestId     String? // Provenance: upgraded from this CustomBar (quest)
+  book              Book?            @relation(fields: [bookId], references: [id])
+  instance          Instance?        @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  eventCampaign     EventCampaign?   @relation(fields: [eventCampaignId], references: [id], onDelete: SetNull)
+  adventure         Adventure?       @relation(fields: [adventureId], references: [id], onDelete: SetNull)
+  sourceQuest       CustomBar?       @relation("QuestUpgradeProvenance", fields: [sourceQuestId], references: [id])
+  progress          ThreadProgress[]
+  quests            ThreadQuest[]
 
   @@map("quest_threads")
 }
@@ -927,17 +934,17 @@ model ThreadProgress {
 }
 
 model QuestPack {
-  id               String         @id @default(cuid())
-  title            String
-  description      String?
-  creatorType      String         @default("system")
-  creatorId        String?
+  id                String         @id @default(cuid())
+  title             String
+  description       String?
+  creatorType       String         @default("system")
+  creatorId         String?
   allowedArchetypes String?
-  status           String         @default("active")
-  visibility       String         @default("private")
-  createdAt        DateTime       @default(now())
-  progress         PackProgress[]
-  quests           PackQuest[]
+  status            String         @default("active")
+  visibility        String         @default("private")
+  createdAt         DateTime       @default(now())
+  progress          PackProgress[]
+  quests            PackQuest[]
 
   @@map("quest_packs")
 }
@@ -982,17 +989,17 @@ model VibulonEvent {
 }
 
 model Vibulon {
-  id            String   @id @default(cuid())
+  id            String       @id @default(cuid())
   ownerId       String?
-  creatorId     String?  // Signature: who "signed" this vibeulon (EFA=self, BAR=quest creator)
+  creatorId     String? // Signature: who "signed" this vibeulon (EFA=self, BAR=quest creator)
   originSource  String
   originId      String
   originTitle   String
-  generation    Int      @default(1)
+  generation    Int          @default(1)
   stakedOnBarId String?
-  createdAt     DateTime @default(now())
-  owner         Player?  @relation(fields: [ownerId], references: [id])
-  creator       Player?  @relation("VibulonCreator", fields: [creatorId], references: [id])
+  createdAt     DateTime     @default(now())
+  owner         Player?      @relation(fields: [ownerId], references: [id])
+  creator       Player?      @relation("VibulonCreator", fields: [creatorId], references: [id])
   bountyStake   BountyStake?
 
   @@map("vibulons")
@@ -1009,7 +1016,7 @@ model Nation {
   cleanUp     String?
   growUp      String?
   showUp      String?
-  instanceId  String?      // null = global; non-null = instance-scoped
+  instanceId  String? // null = global; non-null = instance-scoped
   createdAt   DateTime     @default(now())
   moves       NationMove[]
   players     Player[]
@@ -1032,43 +1039,43 @@ model Polarity {
 }
 
 model NationMove {
-  id                 String                   @id @default(cuid())
-  key                String                   @unique
+  id                 String   @id @default(cuid())
+  key                String   @unique
   nationId           String
-  archetypeId        String?                  // when set, move is in archetype pool for this archetype
+  archetypeId        String? // when set, move is in archetype pool for this archetype
   polarityId         String?
   name               String
   description        String
-  isStartingUnlocked Boolean                  @default(false)
-  usesPerPeriod      Int                      @default(2) // 0 = unlimited; max uses per period (daily)
-  appliesToStatus    String                   @default("[]")
-  requirementsSchema String                   @default("{}")
-  effectsSchema      String                   @default("{}")
-  sortOrder          Int                      @default(0)
-  createdAt          DateTime                 @default(now())
-  updatedAt          DateTime                 @updatedAt
+  isStartingUnlocked Boolean  @default(false)
+  usesPerPeriod      Int      @default(2) // 0 = unlimited; max uses per period (daily)
+  appliesToStatus    String   @default("[]")
+  requirementsSchema String   @default("{}")
+  effectsSchema      String   @default("{}")
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // --- Daemon Move System (DMS-1) ---
-  tier               String    @default("CANONICAL")   // EPHEMERAL | CUSTOM | CANDIDATE | CANONICAL
-  origin             String    @default("GM_AUTHORED") // GM_AUTHORED | PLAYER_NAMED | AI_PROPOSED
-  channel            String?   // WOOD | FIRE | EARTH | METAL | WATER — null = channel-agnostic
-  moveFamilyId       String?   // soft ref to MoveFamily key (no FK — lives in app code)
-  parentMoveId       String?   // self-relation: null = root canonical move
-  semanticEmbedding  String?   // JSON vector for similarity fingerprinting
-  deprecatedAt       DateTime?
-  supersededById     String?   // soft ref to NationMove.id that replaces this one
-  sourceMetadata     String?   // JSON: { sourceBookId?, sourceChunkIndex? } for BOOK_EXTRACTED provenance
+  tier              String    @default("CANONICAL") // EPHEMERAL | CUSTOM | CANDIDATE | CANONICAL
+  origin            String    @default("GM_AUTHORED") // GM_AUTHORED | PLAYER_NAMED | AI_PROPOSED
+  channel           String? // WOOD | FIRE | EARTH | METAL | WATER — null = channel-agnostic
+  moveFamilyId      String? // soft ref to MoveFamily key (no FK — lives in app code)
+  parentMoveId      String? // self-relation: null = root canonical move
+  semanticEmbedding String? // JSON vector for similarity fingerprinting
+  deprecatedAt      DateTime?
+  supersededById    String? // soft ref to NationMove.id that replaces this one
+  sourceMetadata    String? // JSON: { sourceBookId?, sourceChunkIndex? } for BOOK_EXTRACTED provenance
 
-  nation             Nation                   @relation(fields: [nationId], references: [id], onDelete: Cascade)
-  archetype          Archetype?               @relation(fields: [archetypeId], references: [id], onDelete: SetNull)
-  polarity           Polarity?                @relation(fields: [polarityId], references: [id])
-  unlocks            PlayerNationMoveUnlock[]
-  logs               QuestMoveLog[]
-  equipSlots         PlayerMoveEquip[]
-  uses               MoveUse[]
-  childMoves         NationMove[]             @relation("NationMoveParent")
-  parentMove         NationMove?              @relation("NationMoveParent", fields: [parentMoveId], references: [id], onDelete: SetNull)
-  moveCreations      DaemonMoveCreation[]
+  nation        Nation                   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+  archetype     Archetype?               @relation(fields: [archetypeId], references: [id], onDelete: SetNull)
+  polarity      Polarity?                @relation(fields: [polarityId], references: [id])
+  unlocks       PlayerNationMoveUnlock[]
+  logs          QuestMoveLog[]
+  equipSlots    PlayerMoveEquip[]
+  uses          MoveUse[]
+  childMoves    NationMove[]             @relation("NationMoveParent")
+  parentMove    NationMove?              @relation("NationMoveParent", fields: [parentMoveId], references: [id], onDelete: SetNull)
+  moveCreations DaemonMoveCreation[]
 
   @@index([nationId, sortOrder])
   @@map("nation_moves")
@@ -1090,7 +1097,7 @@ model PlayerNationMoveUnlock {
 model PlayerMoveEquip {
   id         String     @id @default(cuid())
   playerId   String
-  slotIndex  Int        // 1-4
+  slotIndex  Int // 1-4
   moveId     String
   equippedAt DateTime   @default(now())
   move       NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
@@ -1106,7 +1113,7 @@ model MoveUse {
   id        String     @id @default(cuid())
   playerId  String
   moveId    String
-  periodKey String     // e.g. "2025-03-02" for daily
+  periodKey String // e.g. "2025-03-02" for daily
   usedAt    DateTime   @default(now())
   questId   String?
   move      NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
@@ -1117,22 +1124,22 @@ model MoveUse {
 }
 
 model QuestMoveLog {
-  id           String     @id @default(cuid())
+  id           String   @id @default(cuid())
   questId      String
   moveId       String
   playerId     String
   createdBarId String?
   inputsJson   String?
   effectsJson  String?
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime @default(now())
 
   // --- Daemon Move System (DMS-1) ---
-  outcome      String?    // ABANDONED | COMPLETED | BAR_WRITTEN | TAUGHT_BACK
+  outcome String? // ABANDONED | COMPLETED | BAR_WRITTEN | TAUGHT_BACK
 
-  createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
-  move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
-  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  quest        CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
+  createdBar CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
+  move       NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quest      CustomBar  @relation("QuestMoveQuest", fields: [questId], references: [id], onDelete: Cascade)
 
   @@index([questId, createdAt])
   @@index([playerId, createdAt])
@@ -1140,7 +1147,7 @@ model QuestMoveLog {
 }
 
 model Archetype {
-  id                String   @id @default(cuid())
+  id                String       @id @default(cuid())
   name              String
   description       String
   moves             String
@@ -1156,13 +1163,13 @@ model Archetype {
   cleanUp           String?
   growUp            String?
   showUp            String?
-  primaryWaveStage  String?   // wakeUp | cleanUp | growUp | showUp — signature WAVE for choice privileging
-  createdAt         DateTime @default(now())
+  primaryWaveStage  String? // wakeUp | cleanUp | growUp | showUp — signature WAVE for choice privileging
+  createdAt         DateTime     @default(now())
   emotionalFirstAid String?
-  instanceId        String?  // null = global; non-null = instance-scoped
+  instanceId        String? // null = global; non-null = instance-scoped
   players           Player[]
-  nationMoves      NationMove[]
-  instance          Instance? @relation("ArchetypeInstance", fields: [instanceId], references: [id], onDelete: Cascade)
+  nationMoves       NationMove[]
+  instance          Instance?    @relation("ArchetypeInstance", fields: [instanceId], references: [id], onDelete: Cascade)
 
   @@index([instanceId])
   @@map("archetypes")
@@ -1258,23 +1265,23 @@ model StoryTick {
 }
 
 model TwineStory {
-  id          String         @id @default(cuid())
-  title       String
-  slug        String?        @unique
-  sourceType  String         @default("twine_html")
-  sourceText  String
-  parsedJson  String         @default("{}")
-  irDraft     String?        // JSON: IR story nodes for authoring; compile to .twee on publish
-  isPublished Boolean        @default(false)
-  isTemplate  Boolean        @default(false)  // Mark as template; can clone to create new story
-  createdById String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  quests      CustomBar[]
-  bindings    TwineBinding[]
-  runs        TwineRun[]
+  id               String                @id @default(cuid())
+  title            String
+  slug             String?               @unique
+  sourceType       String                @default("twine_html")
+  sourceText       String
+  parsedJson       String                @default("{}")
+  irDraft          String? // JSON: IR story nodes for authoring; compile to .twee on publish
+  isPublished      Boolean               @default(false)
+  isTemplate       Boolean               @default(false) // Mark as template; can clone to create new story
+  createdById      String
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  quests           CustomBar[]
+  bindings         TwineBinding[]
+  runs             TwineRun[]
   compiledVersions CompiledTweeVersion[]
-  createdBy   Player         @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy        Player                @relation("TwineStoriesCreated", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById, createdAt])
   @@map("twine_stories")
@@ -1283,7 +1290,7 @@ model TwineStory {
 model CompiledTweeVersion {
   id          String     @id @default(cuid())
   storyId     String
-  tweeContent String     // Compiled .twee source
+  tweeContent String // Compiled .twee source
   createdAt   DateTime   @default(now())
   createdById String?
   story       TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
@@ -1329,83 +1336,106 @@ model TwineBinding {
 }
 
 model Instance {
-  id                 String               @id @default(cuid())
-  slug               String               @unique
-  name               String
-  domainType         String
-  theme              String?
-  targetDescription  String?
-  wakeUpContent      String?              // Editable "Learn the story" paragraph
-  showUpContent      String?             // Editable "Contribute to the campaign" paragraph
-  storyBridgeCopy    String?             // Optional: game↔real world bridge ("This residency is your Conclave...")
-  campaignRef        String?             // Default campaign when /campaign has no ref (e.g. bruised-banana)
-  primaryCampaignDomain String?          // Top-level campaign's allyship domain (e.g. GATHERING_RESOURCES for bruised-banana)
-  narrativeKernel    String?              // Campaign kernel: shared narrative premise used for AI generation
-  goalAmountCents    Int?
-  currentAmountCents Int                  @default(0)
-  kotterStage        Int                  @default(1) // 1–8; admin advances
-  timezone           String?              // IANA timezone (e.g. America/Los_Angeles) for "start of day" in charge capture; null = UTC
-  allyshipDomain     String?              // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING; when set, gameboard uses domain deck
-  domainDeckCycles   Json     @default("{}") // { [domain]: { playedQuestIds: string[], cycleId: string } }
-  isEventMode        Boolean              @default(false)
-  stripeOneTimeUrl   String?
-  patreonUrl         String?
-  venmoUrl           String?
-  cashappUrl         String?
-  paypalUrl          String?
-  donationPackRateCents Int?   @default(100) // 100 = 1 pack per $1
-  packConfig          String?  // JSON: { packTypes: { [key]: { vibeulonAmount?: number, vibeulonMin?: number, vibeulonMax?: number } } }
-  startDate          DateTime?
-  endDate            DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  activeInConfigs    AppConfig[]
-  donations          Donation[]
-  memberships        InstanceMembership[]
-  participations     InstanceParticipation[]
-  redemptionPacks    RedemptionPack[]
-  libraryRequests    LibraryRequest[]
+  id                    String                  @id @default(cuid())
+  slug                  String                  @unique
+  name                  String
+  domainType            String
+  theme                 String?
+  targetDescription     String?
+  wakeUpContent         String? // Editable "Learn the story" paragraph
+  showUpContent         String? // Editable "Contribute to the campaign" paragraph
+  storyBridgeCopy       String? // Optional: game↔real world bridge ("This residency is your Conclave...")
+  campaignRef           String? // Default campaign when /campaign has no ref (e.g. bruised-banana)
+  primaryCampaignDomain String? // Top-level campaign's allyship domain (e.g. GATHERING_RESOURCES for bruised-banana)
+  narrativeKernel       String? // Campaign kernel: shared narrative premise used for AI generation
+  goalAmountCents       Int?
+  currentAmountCents    Int                     @default(0)
+  kotterStage           Int                     @default(1) // 1–8; admin advances
+  timezone              String? // IANA timezone (e.g. America/Los_Angeles) for "start of day" in charge capture; null = UTC
+  allyshipDomain        String? // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING; when set, gameboard uses domain deck
+  domainDeckCycles      Json                    @default("{}") // { [domain]: { playedQuestIds: string[], cycleId: string } }
+  isEventMode           Boolean                 @default(false)
+  stripeOneTimeUrl      String?
+  patreonUrl            String?
+  venmoUrl              String?
+  cashappUrl            String?
+  paypalUrl             String?
+  donationPackRateCents Int?                    @default(100) // 100 = 1 pack per $1
+  packConfig            String? // JSON: { packTypes: { [key]: { vibeulonAmount?: number, vibeulonMin?: number, vibeulonMax?: number } } }
+  startDate             DateTime?
+  endDate               DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  activeInConfigs       AppConfig[]
+  donations             Donation[]
+  memberships           InstanceMembership[]
+  participations        InstanceParticipation[]
+  redemptionPacks       RedemptionPack[]
+  libraryRequests       LibraryRequest[]
 
-  vibeData          String?   // JSON: vibe interview answers
-  goalData          String?   // JSON: campaign goal interview answers
-  sourceInstanceId  String?   // if copied from another instance
-  parentInstanceId  String?   @map("parent_instance_id") // when set, this instance is a sub-campaign of the parent
-  linkedInstanceId  String?   @map("linked_instance_id") // when set, this instance links to another (e.g. Fundraising → Bruised Banana)
-  kernelBarId       String?   @unique // when set, this Instance was promoted from this campaign_kernel BAR
-  moveIds           String    @default("[]") // JSON array of NationMove ids — campaign move pool (Sage synthesis)
+  vibeData         String? // JSON: vibe interview answers
+  goalData         String? // JSON: campaign goal interview answers
+  sourceInstanceId String? // if copied from another instance
+  parentInstanceId String? @map("parent_instance_id") // when set, this instance is a sub-campaign of the parent
+  linkedInstanceId String? @map("linked_instance_id") // when set, this instance links to another (e.g. Fundraising → Bruised Banana)
+  kernelBarId      String? @unique // when set, this Instance was promoted from this campaign_kernel BAR
+  moveIds          String  @default("[]") // JSON array of NationMove ids — campaign move pool (Sage synthesis)
 
-  parentInstance    Instance?  @relation("InstanceChildren", fields: [parentInstanceId], references: [id], onDelete: SetNull)
-  childInstances    Instance[] @relation("InstanceChildren")
-  linkedInstance    Instance?  @relation("InstanceLinkedTo", fields: [linkedInstanceId], references: [id], onDelete: SetNull)
-  instancesLinkedToMe Instance[] @relation("InstanceLinkedTo")
-  kernelBar         CustomBar? @relation("CampaignKernel", fields: [kernelBarId], references: [id], onDelete: SetNull)
-  gameboardSlots GameboardSlot[]
-  eventCampaigns EventCampaign[]
-  eventArtifacts EventArtifact[]
-  campaignPlaybook CampaignPlaybook?
-  campaignInvitations CampaignInvitation[]
-  barDeck BarDeck?
-  scopedNations     Nation[]    @relation("NationInstance")
-  scopedArchetypes  Archetype[] @relation("ArchetypeInstance")
-  exportRequests    InstanceExportRequest[]
-  spatialMapId      String?     @map("spatial_map_id")
-  spatialMap        SpatialMap? @relation("InstanceSpatialMap", fields: [spatialMapId], references: [id], onDelete: SetNull)
-  portalAdventureId String?     // FK to Adventure: 8 portal entries + 8 room passages per campaign
-  portalAdventure   Adventure?  @relation("InstancePortalAdventure", fields: [portalAdventureId], references: [id], onDelete: SetNull)
+  parentInstance             Instance?               @relation("InstanceChildren", fields: [parentInstanceId], references: [id], onDelete: SetNull)
+  childInstances             Instance[]              @relation("InstanceChildren")
+  linkedInstance             Instance?               @relation("InstanceLinkedTo", fields: [linkedInstanceId], references: [id], onDelete: SetNull)
+  instancesLinkedToMe        Instance[]              @relation("InstanceLinkedTo")
+  kernelBar                  CustomBar?              @relation("CampaignKernel", fields: [kernelBarId], references: [id], onDelete: SetNull)
+  gameboardSlots             GameboardSlot[]
+  eventCampaigns             EventCampaign[]
+  eventArtifacts             EventArtifact[]
+  campaignPlaybook           CampaignPlaybook?
+  campaignInvitations        CampaignInvitation[]
+  barDeck                    BarDeck?
+  scopedNations              Nation[]                @relation("NationInstance")
+  scopedArchetypes           Archetype[]             @relation("ArchetypeInstance")
+  exportRequests             InstanceExportRequest[]
+  spatialMapId               String?                 @map("spatial_map_id")
+  spatialMap                 SpatialMap?             @relation("InstanceSpatialMap", fields: [spatialMapId], references: [id], onDelete: SetNull)
+  portalAdventureId          String? // FK to Adventure: 8 portal entries + 8 room passages per campaign
+  portalAdventure            Adventure?              @relation("InstancePortalAdventure", fields: [portalAdventureId], references: [id], onDelete: SetNull)
   /// v1 JSON: { v, kotterStage, spokes: [{ hexagramId, changingLines, primaryFace }], updatedAt } — one draw per Kotter stage (campaign hub)
-  campaignHubState  Json?
+  campaignHubState           Json?
   /// WMC admin Deck CYOA wizard — last applied intake JSON (DeckIntakeV1) for reproducible deck generation
-  deckAuthoringIntake Json?
-  schoolsAdventureId String?    // FK to Adventure: 6-face schools CYOA (Grow Up from room)
-  schoolsAdventure   Adventure?  @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
-  invites            Invite[]
-  demoOrientationLinks DemoOrientationLink[]
-  barsCollapsedFromInstance CustomBar[] @relation("BarCollapsedFromInstance")
-  barShareExternals  BarShareExternal[]
-  questThreads       QuestThread[]
-  campaignPeriods    CampaignPeriod[]   @relation("CampaignPeriods")
+  deckAuthoringIntake        Json?
+  schoolsAdventureId         String? // FK to Adventure: 6-face schools CYOA (Grow Up from room)
+  schoolsAdventure           Adventure?              @relation("InstanceSchoolsAdventure", fields: [schoolsAdventureId], references: [id], onDelete: SetNull)
+  invites                    Invite[]
+  demoOrientationLinks       DemoOrientationLink[]
+  barsCollapsedFromInstance  CustomBar[]             @relation("BarCollapsedFromInstance")
+  barShareExternals          BarShareExternal[]
+  questThreads               QuestThread[]
+  campaignPeriods            CampaignPeriod[]        @relation("CampaignPeriods")
+  /// CSHE / clothing-swap sub-campaign: organizer intake JSON (SwapEventIntakeV1); null = not using swap-event intake on this instance
+  swapEventIntake            Json?                   @map("swap_event_intake")
+  /// When set, participants may read published intake (organizers always see latest draft in organizer UI)
+  swapEventIntakePublishedAt DateTime?               @map("swap_event_intake_published_at")
+  swapEventRsvps             SwapEventRsvp[]
 
   @@map("instances")
+}
+
+/// CSHE Phase B — light RSVP without full onboarding (Partiful remains canonical).
+model SwapEventRsvp {
+  id                      String   @id @default(cuid())
+  instanceId              String   @map("instance_id")
+  email                   String
+  name                    String?
+  partifulRef             String?  @map("partiful_ref")
+  externalRef             String?  @map("external_ref")
+  /// Audit: guest opted into RSVP-only path (no nation/archetype required).
+  skipFullOnboarding      Boolean  @default(true) @map("skip_full_onboarding")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId, createdAt])
+  @@map("swap_event_rsvps")
 }
 
 model InstanceExportRequest {
@@ -1413,12 +1443,12 @@ model InstanceExportRequest {
   instanceId          String
   requestedByPlayerId String
   status              String    @default("pending") // pending | approved | rejected
-  configBundle        String?   // JSON config export (set on approval)
+  configBundle        String? // JSON config export (set on approval)
   requestedAt         DateTime  @default(now())
   resolvedAt          DateTime?
 
-  instance  Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  player    Player   @relation(fields: [requestedByPlayerId], references: [id], onDelete: Cascade)
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player   Player   @relation(fields: [requestedByPlayerId], references: [id], onDelete: Cascade)
 
   @@index([instanceId, status])
   @@map("instance_export_requests")
@@ -1430,8 +1460,8 @@ model BarDeck {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  instance Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  cards    BarDeckCard[]
+  instance         Instance          @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  cards            BarDeckCard[]
   promptDeckCycles PromptDeckCycle[]
 
   @@map("bar_decks")
@@ -1440,8 +1470,8 @@ model BarDeck {
 model BarDeckCard {
   id           String   @id @default(cuid())
   deckId       String
-  suit         String   // GATHERING_RESOURCES | RAISE_AWARENESS | DIRECT_ACTION | SKILLFUL_ORGANIZING
-  rank         Int      // 1-13
+  suit         String // GATHERING_RESOURCES | RAISE_AWARENESS | DIRECT_ACTION | SKILLFUL_ORGANIZING
+  rank         Int // 1-13
   promptTitle  String
   promptText   String   @db.Text
   shufflePower Boolean  @default(false)
@@ -1449,8 +1479,8 @@ model BarDeckCard {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  deck    BarDeck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  bindings BarBinding[]
+  deck         BarDeck                 @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  bindings     BarBinding[]
   guidedDrafts SceneAtlasGuidedDraft[]
 
   @@unique([deckId, suit, rank])
@@ -1548,7 +1578,7 @@ model CampaignInvitation {
   targetActorId    String
   invitedRole      String
   acceptedRole     String?
-  invitationType   String    // guiding_coalition | campaign_collaborator | domain_contributor | event_participant | observer | role_invitation
+  invitationType   String // guiding_coalition | campaign_collaborator | domain_contributor | event_participant | observer | role_invitation
   messageText      String    @db.Text
   status           String    @default("draft") // draft | sent | accepted | declined | expired
   createdByActorId String
@@ -1559,9 +1589,9 @@ model CampaignInvitation {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  instance       Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  bar             CustomBar?    @relation(fields: [barId], references: [id], onDelete: SetNull)
-  eventArtifact   EventArtifact? @relation(fields: [eventArtifactId], references: [id], onDelete: SetNull)
+  instance      Instance       @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  bar           CustomBar?     @relation(fields: [barId], references: [id], onDelete: SetNull)
+  eventArtifact EventArtifact? @relation(fields: [eventArtifactId], references: [id], onDelete: SetNull)
 
   @@index([instanceId])
   @@index([targetActorId])
@@ -1592,25 +1622,25 @@ model CampaignPlaybook {
 }
 
 model EventCampaign {
-  id                String    @id @default(cuid())
-  campaignContext   String    // e.g. Bruised Banana Residency
-  topic             String    // e.g. Emotional First Aid, Friendcraft
-  primaryDomain     String    // GATHERING_RESOURCES | SKILLFUL_ORGANIZING | RAISE_AWARENESS | DIRECT_ACTION
-  productionGrammar String    // kotter | epiphany_bridge
-  campaignType      String    @default("event_production")
-  hostActorIds      String    @default("[]") // JSON array of Player ids
-  targetArchetypes  String    @default("[]") // JSON array
-  targetMoves       String    @default("[]") // JSON array: wakeUp, cleanUp, growUp, showUp
+  id                String   @id @default(cuid())
+  campaignContext   String // e.g. Bruised Banana Residency
+  topic             String // e.g. Emotional First Aid, Friendcraft
+  primaryDomain     String // GATHERING_RESOURCES | SKILLFUL_ORGANIZING | RAISE_AWARENESS | DIRECT_ACTION
+  productionGrammar String // kotter | epiphany_bridge
+  campaignType      String   @default("event_production")
+  hostActorIds      String   @default("[]") // JSON array of Player ids
+  targetArchetypes  String   @default("[]") // JSON array
+  targetMoves       String   @default("[]") // JSON array: wakeUp, cleanUp, growUp, showUp
   developmentalLens String?
-  status            String    @default("proposed") // proposed | planning | assembling | promotion | ready | event_live | post_event | archived
-  linkedEventIds    String    @default("[]") // JSON array of EventArtifact ids
+  status            String   @default("proposed") // proposed | planning | assembling | promotion | ready | event_live | post_event | archived
+  linkedEventIds    String   @default("[]") // JSON array of EventArtifact ids
   instanceId        String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  instance          Instance?        @relation(fields: [instanceId], references: [id], onDelete: SetNull)
-  productionThread  QuestThread?
-  events            EventArtifact[]
+  instance         Instance?       @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  productionThread QuestThread?
+  events           EventArtifact[]
 
   @@index([instanceId])
   @@index([status])
@@ -1618,43 +1648,43 @@ model EventCampaign {
 }
 
 model EventArtifact {
-  id                 String    @id @default(cuid())
-  linkedCampaignId   String
+  id                    String    @id @default(cuid())
+  linkedCampaignId      String
   // When set: sub-event (e.g. pre-production crew) under the parent main event.
-  parentEventArtifactId String? @map("parent_event_artifact_id")
-  instanceId         String?   @map("instance_id") // when set, this artifact is the "live event" for that Instance
-  title              String
-  description        String    @db.Text
-  eventType          String    // workshop | meeting | fundraiser | dance | onboarding_session | discussion | training | ceremony | quest_action | gathering
-  topic              String    // inherited from campaign
-  campaignContext    String    // inherited from campaign
-  primaryDomain      String    // inherited from campaign
-  secondaryDomain    String?   // operational function of this event
-  targetArchetypes   String    @default("[]") // JSON array
-  targetMoves        String    @default("[]") // JSON array
-  developmentalLens String?
-  locationType       String    // in_person | virtual | hybrid | asynchronous_recording
-  locationDetails   String?
-  startTime          DateTime?
-  endTime            DateTime?
-  timezone           String?
-  capacity           Int?      // max attendees; null = unlimited
-  recurrenceRule     String?   @map("recurrence_rule") // optional RRULE (Phase 6+); not wired in UI yet
-  visibility         String    @default("campaign_visible") // private | campaign_visible | public
-  status             String    @default("draft") // draft | scheduled | live | completed | recorded | archived
-  recordingUrl       String?
-  createdByActorId   String
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  parentEventArtifactId String?   @map("parent_event_artifact_id")
+  instanceId            String?   @map("instance_id") // when set, this artifact is the "live event" for that Instance
+  title                 String
+  description           String    @db.Text
+  eventType             String // workshop | meeting | fundraiser | dance | onboarding_session | discussion | training | ceremony | quest_action | gathering
+  topic                 String // inherited from campaign
+  campaignContext       String // inherited from campaign
+  primaryDomain         String // inherited from campaign
+  secondaryDomain       String? // operational function of this event
+  targetArchetypes      String    @default("[]") // JSON array
+  targetMoves           String    @default("[]") // JSON array
+  developmentalLens     String?
+  locationType          String // in_person | virtual | hybrid | asynchronous_recording
+  locationDetails       String?
+  startTime             DateTime?
+  endTime               DateTime?
+  timezone              String?
+  capacity              Int? // max attendees; null = unlimited
+  recurrenceRule        String?   @map("recurrence_rule") // optional RRULE (Phase 6+); not wired in UI yet
+  visibility            String    @default("campaign_visible") // private | campaign_visible | public
+  status                String    @default("draft") // draft | scheduled | live | completed | recorded | archived
+  recordingUrl          String?
+  createdByActorId      String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  campaign             EventCampaign       @relation(fields: [linkedCampaignId], references: [id], onDelete: Cascade)
-  parentEvent          EventArtifact?      @relation("EventArtifactNested", fields: [parentEventArtifactId], references: [id], onDelete: SetNull)
-  childEvents          EventArtifact[]     @relation("EventArtifactNested")
-  instance             Instance?           @relation(fields: [instanceId], references: [id], onDelete: SetNull)
-  creator              Player              @relation("EventArtifactCreator", fields: [createdByActorId], references: [id])
-  invites              EventInvite[]
-  participants         EventParticipant[]
-  campaignInvitations  CampaignInvitation[]
+  campaign            EventCampaign        @relation(fields: [linkedCampaignId], references: [id], onDelete: Cascade)
+  parentEvent         EventArtifact?       @relation("EventArtifactNested", fields: [parentEventArtifactId], references: [id], onDelete: SetNull)
+  childEvents         EventArtifact[]      @relation("EventArtifactNested")
+  instance            Instance?            @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  creator             Player               @relation("EventArtifactCreator", fields: [createdByActorId], references: [id])
+  invites             EventInvite[]
+  participants        EventParticipant[]
+  campaignInvitations CampaignInvitation[]
 
   @@index([linkedCampaignId])
   @@index([instanceId])
@@ -1665,17 +1695,17 @@ model EventArtifact {
 }
 
 model EventParticipant {
-  id                String   @id @default(cuid())
-  eventId           String
-  participantId     String
-  participantState  String   // invited | interested | RSVP_yes | attending | attended | declined | no_show
-  functionalRole    String?  // host | co_host | facilitator | steward | participant | observer | preproduction
-  raciRole          String?  // Responsible | Accountable | Consulted | Informed
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  eventId          String
+  participantId    String
+  participantState String // invited | interested | RSVP_yes | attending | attended | declined | no_show
+  functionalRole   String? // host | co_host | facilitator | steward | participant | observer | preproduction
+  raciRole         String? // Responsible | Accountable | Consulted | Informed
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  event             EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  participant       Player        @relation("EventParticipantAsParticipant", fields: [participantId], references: [id], onDelete: Cascade)
+  event       EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  participant Player        @relation("EventParticipantAsParticipant", fields: [participantId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, participantId])
   @@index([participantId])
@@ -1688,12 +1718,12 @@ model EventInvite {
   actorId          String
   invitedByActorId String
   inviteStatus     String   @default("pending") // pending | accepted | declined | expired
-  inviteSource     String?  // campaign_broadcast | direct_actor | quest_bar | public_discovery | organizer_admin
+  inviteSource     String? // campaign_broadcast | direct_actor | quest_bar | public_discovery | organizer_admin
   createdAt        DateTime @default(now())
 
-  event            EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  actor            Player        @relation("EventInviteReceived", fields: [actorId], references: [id], onDelete: Cascade)
-  invitedBy        Player        @relation("EventInviteSent", fields: [invitedByActorId], references: [id], onDelete: Cascade)
+  event     EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  actor     Player        @relation("EventInviteReceived", fields: [actorId], references: [id], onDelete: Cascade)
+  invitedBy Player        @relation("EventInviteSent", fields: [invitedByActorId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, actorId])
   @@index([actorId])
@@ -1701,26 +1731,26 @@ model EventInvite {
 }
 
 model GameboardSlot {
-  id               String    @id @default(cuid())
-  instanceId       String
-  campaignRef      String
-  period           Int       // instance.kotterStage or GlobalState.currentPeriod
-  slotIndex        Int       // 0–7 (8 slots, one per hexagram in period)
-  hexagramId       Int?      // 1–64; each period uses 8 hexagrams, slot tied to one
-  moveType         String?   // wakeUp | cleanUp | growUp | showUp; set when player commits to path from portal
-  questId          String?
-  drawnAt          DateTime?
-  stewardId        String?   // player who has taken but not completed
-  wakeUpAt         DateTime? // step 1: acknowledged read
-  cleanUpAt        DateTime? // step 2: reflected on obstacles
-  cleanUpReflection String?  // step 2: obstacle reflection text
-  createdAt        DateTime  @default(now())
+  id                String    @id @default(cuid())
+  instanceId        String
+  campaignRef       String
+  period            Int // instance.kotterStage or GlobalState.currentPeriod
+  slotIndex         Int // 0–7 (8 slots, one per hexagram in period)
+  hexagramId        Int? // 1–64; each period uses 8 hexagrams, slot tied to one
+  moveType          String? // wakeUp | cleanUp | growUp | showUp; set when player commits to path from portal
+  questId           String?
+  drawnAt           DateTime?
+  stewardId         String? // player who has taken but not completed
+  wakeUpAt          DateTime? // step 1: acknowledged read
+  cleanUpAt         DateTime? // step 2: reflected on obstacles
+  cleanUpReflection String? // step 2: obstacle reflection text
+  createdAt         DateTime  @default(now())
 
-  instance         Instance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  quest            CustomBar? @relation(fields: [questId], references: [id], onDelete: SetNull)
-  steward          Player?   @relation("GameboardSteward", fields: [stewardId], references: [id], onDelete: SetNull)
-  bids             GameboardBid[]
-  aidOffers        GameboardAidOffer[]
+  instance  Instance            @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  quest     CustomBar?          @relation(fields: [questId], references: [id], onDelete: SetNull)
+  steward   Player?             @relation("GameboardSteward", fields: [stewardId], references: [id], onDelete: SetNull)
+  bids      GameboardBid[]
+  aidOffers GameboardAidOffer[]
 
   @@unique([instanceId, campaignRef, period, slotIndex])
   @@index([instanceId, campaignRef, period, moveType])
@@ -1732,12 +1762,12 @@ model GameboardBid {
   id        String   @id @default(cuid())
   slotId    String
   bidderId  String
-  amount    Int      // vibeulons (each Vibulon token = 1)
+  amount    Int // vibeulons (each Vibulon token = 1)
   status    String   @default("active") // active | won | withdrawn
   createdAt DateTime @default(now())
 
   slot   GameboardSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
-  bidder Player         @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  bidder Player        @relation(fields: [bidderId], references: [id], onDelete: Cascade)
 
   @@index([slotId, status])
   @@index([bidderId])
@@ -1745,17 +1775,17 @@ model GameboardBid {
 }
 
 model GameboardAidOffer {
-  id             String    @id @default(cuid())
-  slotId         String
-  stewardId      String
-  offererId      String
-  message        String    @db.Text
-  type           String    @default("direct") // direct (EFA, support) | quest (quest to unblock)
-  linkedQuestId  String?   // for type=quest: quest created to help steward
-  status         String    @default("pending") // pending | accepted | declined
-  expiresAt      DateTime? // steward must respond by this time; configurable TTL from createdAt
-  forkedAt       DateTime? // when offerer forked the linked quest after decline
-  createdAt      DateTime  @default(now())
+  id            String    @id @default(cuid())
+  slotId        String
+  stewardId     String
+  offererId     String
+  message       String    @db.Text
+  type          String    @default("direct") // direct (EFA, support) | quest (quest to unblock)
+  linkedQuestId String? // for type=quest: quest created to help steward
+  status        String    @default("pending") // pending | accepted | declined
+  expiresAt     DateTime? // steward must respond by this time; configurable TTL from createdAt
+  forkedAt      DateTime? // when offerer forked the linked quest after decline
+  createdAt     DateTime  @default(now())
 
   slot        GameboardSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
   steward     Player        @relation("GameboardAidSteward", fields: [stewardId], references: [id], onDelete: Cascade)
@@ -1768,11 +1798,11 @@ model GameboardAidOffer {
 }
 
 model BountyStake {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   barId     String
   vibulonId String
   playerId  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   bar       CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
   vibulon   Vibulon   @relation(fields: [vibulonId], references: [id], onDelete: Cascade)
   player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -1783,18 +1813,18 @@ model BountyStake {
 }
 
 model RedemptionPack {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   instanceId     String
   playerId       String
   donationId     String?
-  packType       String   @default("donation")
-  status         String   @default("unredeemed") // unredeemed | redeemed
+  packType       String    @default("donation")
+  status         String    @default("unredeemed") // unredeemed | redeemed
   vibeulonAmount Int
-  metadata       String?  // JSON
-  createdAt      DateTime @default(now())
+  metadata       String? // JSON
+  createdAt      DateTime  @default(now())
   redeemedAt     DateTime?
-  instance       Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  instance       Instance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player         Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
   donation       Donation? @relation(fields: [donationId], references: [id], onDelete: SetNull)
 
   @@index([playerId, status])
@@ -1803,16 +1833,16 @@ model RedemptionPack {
 }
 
 model Donation {
-  id          String   @id @default(cuid())
-  instanceId  String
-  playerId    String?
-  amountCents Int
-  provider    String   @default("manual")
-  externalId  String?
-  note        String?
-  createdAt   DateTime @default(now())
-  instance    Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  player      Player?  @relation(fields: [playerId], references: [id])
+  id              String           @id @default(cuid())
+  instanceId      String
+  playerId        String?
+  amountCents     Int
+  provider        String           @default("manual")
+  externalId      String?
+  note            String?
+  createdAt       DateTime         @default(now())
+  instance        Instance         @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  player          Player?          @relation(fields: [playerId], references: [id])
   redemptionPacks RedemptionPack[]
 
   @@index([instanceId, createdAt])
@@ -1836,33 +1866,33 @@ model InstanceMembership {
 }
 
 model AppConfig {
-  id                   String    @id @default("singleton")
-  features             String    @default("{}")
-  theme                String    @default("{}")
-  heroTitle            String?
-  heroSubtitle         String?
-  updatedAt            DateTime  @updatedAt
-  updatedBy            String?
-  activeInstanceId     String?
-  orientationQuestId   String?
-  postSignupRedirect   String?   // 'conclave' | 'dashboard'; default 'dashboard' for new campaign model
-  defaultLobbyMapId    String?   @map("default_lobby_map_id") // SpatialMap id for global lobby (no Instance)
-  defaultLobbyMap      SpatialMap? @relation("DefaultLobbyMap", fields: [defaultLobbyMapId], references: [id], onDelete: SetNull)
-  activeInstance       Instance? @relation(fields: [activeInstanceId], references: [id])
+  id                 String      @id @default("singleton")
+  features           String      @default("{}")
+  theme              String      @default("{}")
+  heroTitle          String?
+  heroSubtitle       String?
+  updatedAt          DateTime    @updatedAt
+  updatedBy          String?
+  activeInstanceId   String?
+  orientationQuestId String?
+  postSignupRedirect String? // 'conclave' | 'dashboard'; default 'dashboard' for new campaign model
+  defaultLobbyMapId  String?     @map("default_lobby_map_id") // SpatialMap id for global lobby (no Instance)
+  defaultLobbyMap    SpatialMap? @relation("DefaultLobbyMap", fields: [defaultLobbyMapId], references: [id], onDelete: SetNull)
+  activeInstance     Instance?   @relation(fields: [activeInstanceId], references: [id])
 
   @@map("app_config")
 }
 
 model GmFaceModifier {
-  id                    String   @id @default(cuid())
-  face                  String   @unique // shaman|challenger|regent|architect|diplomat|sage
-  anomalyStyle          String   // numinous|provocative|official|patterned|social|subtle
-  contactVoice          String   // JSON descriptor
+  id                     String   @id @default(cuid())
+  face                   String   @unique // shaman|challenger|regent|architect|diplomat|sage
+  anomalyStyle           String // numinous|provocative|official|patterned|social|subtle
+  contactVoice           String // JSON descriptor
   interpretationPressure String // low|medium|high
-  responseStyle         String   // JSON descriptor
-  artifactAffinity      String   // memory_entry|quest_hook|obligation|orientation|relationship_update|contemplation
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  responseStyle          String // JSON descriptor
+  artifactAffinity       String // memory_entry|quest_hook|obligation|orientation|relationship_update|contemplation
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   @@map("gm_face_modifiers")
 }
@@ -1879,15 +1909,15 @@ model AdminAuditLog {
 }
 
 model MicroTwineModule {
-  id               String       @id @default(cuid())
-  questId          String       @unique
-  canonicalJson    String       // Form structure (Moments, Options)
-  tweeSource       String       // Generated SugarCube Twee
-  htmlArtifact     String?      // Compiled Twine HTML (Base64 or String)
-  isDraft          Boolean      @default(true)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  quest            CustomBar    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  questId       String    @unique
+  canonicalJson String // Form structure (Moments, Options)
+  tweeSource    String // Generated SugarCube Twee
+  htmlArtifact  String? // Compiled Twine HTML (Base64 or String)
+  isDraft       Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  quest         CustomBar @relation(fields: [questId], references: [id], onDelete: Cascade)
 
   @@map("micro_twine_modules")
 }
@@ -1898,8 +1928,8 @@ model VibeulonLedger {
   sourceInstanceId String?
   targetInstanceId String?
   amount           Int
-  type             String   // MINT, ATTUNE, SPEND, TRANSMUTE
-  metadata         String?  // JSON
+  type             String // MINT, ATTUNE, SPEND, TRANSMUTE
+  metadata         String? // JSON
   createdAt        DateTime @default(now())
   player           Player   @relation(fields: [playerId], references: [id])
 
@@ -1921,27 +1951,27 @@ model InstanceParticipation {
 }
 
 model Adventure {
-  id                 String    @id @default(cuid())
-  slug               String    @unique
-  title              String
-  description        String?
-  status             String    @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
-  visibility         String    @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
-  startNodeId        String?
-  campaignRef        String?   // e.g. bruised-banana; when set, campaign page uses this Adventure for ref=bruised-banana
-  subcampaignDomain  String?   // RAISE_AWARENESS | DIRECT_ACTION | SKILLFUL_ORGANIZING; null = top-level campaign
-  adventureType    String?   // CHARACTER_CREATOR | null
-  playbookTemplate String?   // JSON: ArchetypeTemplate
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  title             String
+  description       String?
+  status            String   @default("DRAFT") // DRAFT, ACTIVE, ARCHIVED
+  visibility        String   @default("PUBLIC_ONBOARDING") // PUBLIC_ONBOARDING, PRIVATE_QUEST
+  startNodeId       String?
+  campaignRef       String? // e.g. bruised-banana; when set, campaign page uses this Adventure for ref=bruised-banana
+  subcampaignDomain String? // RAISE_AWARENESS | DIRECT_ACTION | SKILLFUL_ORGANIZING; null = top-level campaign
+  adventureType     String? // CHARACTER_CREATOR | CYOA_INTAKE | null
+  playbookTemplate  String? // JSON: ArchetypeTemplate | IntakeTemplate
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  passages         Passage[]
-  progress         PlayerAdventureProgress[]
-  questThread      QuestThread?
-  questAdventureLinks QuestAdventureLink[] @relation("AdventureQuestLinks")
-  playerPlaybooks  PlayerPlaybook[]
-  instancesAsPortal Instance[] @relation("InstancePortalAdventure")
-  instancesAsSchools Instance[] @relation("InstanceSchoolsAdventure")
+  passages             Passage[]
+  progress             PlayerAdventureProgress[]
+  questThread          QuestThread?
+  questAdventureLinks  QuestAdventureLink[]      @relation("AdventureQuestLinks")
+  playerPlaybooks      PlayerPlaybook[]
+  instancesAsPortal    Instance[]                @relation("InstancePortalAdventure")
+  instancesAsSchools   Instance[]                @relation("InstanceSchoolsAdventure")
   demoOrientationLinks DemoOrientationLink[]
 
   @@map("adventures")
@@ -1951,7 +1981,7 @@ model QuestAdventureLink {
   id          String   @id @default(cuid())
   questId     String
   adventureId String
-  moveType    String   // wakeUp | cleanUp | growUp | showUp
+  moveType    String // wakeUp | cleanUp | growUp | showUp
   createdAt   DateTime @default(now())
 
   quest     CustomBar @relation("QuestAdventureLinks", fields: [questId], references: [id], onDelete: Cascade)
@@ -1968,7 +1998,7 @@ model AdventureTemplate {
   key          String   @unique
   name         String
   description  String?
-  passageSlots String   // JSON: [{ nodeId, label?, order }]
+  passageSlots String // JSON: [{ nodeId, label?, order }]
   startNodeId  String
   ownership    String   @default("system") // system | player
   createdAt    DateTime @default(now())
@@ -1982,51 +2012,54 @@ model PlayerPlaybook {
   playerId       String
   adventureId    String?
   playbookName   String
-  playerAnswers  String?   // JSON: {discovery: [{qId, answer}], archetype: [{qId, answer}]}
-  playbookMoves  String?   // JSON: [{id, name, key}] — chosen archetype moves (2)
-  playbookBonds  String?   // JSON: [{id, name, key}] — chosen nation moves (2)
+  playerAnswers  String? // JSON: {discovery: [{qId, answer}], archetype: [{qId, answer}]}
+  playbookMoves  String? // JSON: [{id, name, key}] — chosen archetype moves (2)
+  playbookBonds  String? // JSON: [{id, name, key}] — chosen nation moves (2)
   shareToken     String    @unique @default(cuid())
   completedAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  spokeSessionId String? // Links intake/spoke PlayerPlaybook to its SpokeSession
+  playbookRole   String? // Open string: 'intake' | 'spoke' | future values — not an enum
 
-  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  adventure      Adventure? @relation(fields: [adventureId], references: [id], onDelete: SetNull)
+  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  adventure Adventure? @relation(fields: [adventureId], references: [id], onDelete: SetNull)
 
   @@index([playerId])
   @@index([adventureId])
+  @@index([spokeSessionId])
   @@map("player_playbooks")
 }
 
 model Passage {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   adventureId   String
   nodeId        String
-  text          String    // Markdown + macros
-  choices       String    @default("[]") // JSON array
-  linkedQuestId String?   // When set, Passage.text syncs with CustomBar.description (edit sync)
-  metadata      Json?     // actionType, castIChingTargetId, etc. for branching quest
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  adventure     Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
-  linkedQuest   CustomBar? @relation("PassageLinkedQuest", fields: [linkedQuestId], references: [id], onDelete: SetNull)
+  text          String // Markdown + macros
+  choices       String   @default("[]") // JSON array
+  linkedQuestId String? // When set, Passage.text syncs with CustomBar.description (edit sync)
+  metadata      Json? // actionType, castIChingTargetId, etc. for branching quest
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  adventure   Adventure  @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+  linkedQuest CustomBar? @relation("PassageLinkedQuest", fields: [linkedQuestId], references: [id], onDelete: SetNull)
 
   @@unique([adventureId, nodeId])
   @@map("passages")
 }
 
 model PlayerAdventureProgress {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   playerId      String
   adventureId   String
   currentNodeId String?
-  stateData     String    @default("{}") // JSON map of resolved state
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  adventure     Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
+  stateData     String   @default("{}") // JSON map of resolved state
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  adventure Adventure @relation(fields: [adventureId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, adventureId])
   @@map("player_adventure_progress")
@@ -2035,23 +2068,23 @@ model PlayerAdventureProgress {
 // --- K-Space Librarian ---
 
 model LibraryRequest {
-  id                    String    @id @default(cuid())
-  createdAt             DateTime  @default(now())
-  createdById           String
-  instanceId            String?
-  requestText           String
-  requestType           String    @default("other") // rules, ux, tech, lore, social, other
-  privacy               String    @default("anonymized") // private, anonymized, public
-  contextJson           String?   // JSON: screen, questId, actionId, etc.
-  status                String    @default("new") // new, resolved, spawned, closed
-  resolvedDocNodeId     String?
-  spawnedBacklogItemId  String?   @unique
-  spawnedDocQuestId     String?   @unique
-  createdBy             Player    @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  instance              Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
-  resolvedDocNode       DocNode?  @relation("LibraryRequestResolved", fields: [resolvedDocNodeId], references: [id], onDelete: SetNull)
-  spawnedBacklogItem    BacklogItem? @relation("BacklogItemSpawnedBy", fields: [spawnedBacklogItemId], references: [id], onDelete: SetNull)
-  spawnedDocQuest       CustomBar? @relation("LibraryRequestSpawnedQuest", fields: [spawnedDocQuestId], references: [id], onDelete: SetNull)
+  id                   String       @id @default(cuid())
+  createdAt            DateTime     @default(now())
+  createdById          String
+  instanceId           String?
+  requestText          String
+  requestType          String       @default("other") // rules, ux, tech, lore, social, other
+  privacy              String       @default("anonymized") // private, anonymized, public
+  contextJson          String? // JSON: screen, questId, actionId, etc.
+  status               String       @default("new") // new, resolved, spawned, closed
+  resolvedDocNodeId    String?
+  spawnedBacklogItemId String?      @unique
+  spawnedDocQuestId    String?      @unique
+  createdBy            Player       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  instance             Instance?    @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+  resolvedDocNode      DocNode?     @relation("LibraryRequestResolved", fields: [resolvedDocNodeId], references: [id], onDelete: SetNull)
+  spawnedBacklogItem   BacklogItem? @relation("BacklogItemSpawnedBy", fields: [spawnedBacklogItemId], references: [id], onDelete: SetNull)
+  spawnedDocQuest      CustomBar?   @relation("LibraryRequestSpawnedQuest", fields: [spawnedDocQuestId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([instanceId, createdAt])
@@ -2059,25 +2092,25 @@ model LibraryRequest {
 }
 
 model DocNode {
-  id                  String    @id @default(cuid())
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  nodeType            String    @default("handbook") // handbook, codex, lore, request_record
+  id                  String            @id @default(cuid())
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  nodeType            String            @default("handbook") // handbook, codex, lore, request_record
   title               String
-  slug                String    @unique
-  scope               String    @default("experimental") // local, campaign, global, experimental, deprecated
+  slug                String            @unique
+  scope               String            @default("experimental") // local, campaign, global, experimental, deprecated
   versionMin          String?
   versionMax          String?
   buildHash           String?
-  tags                String    @default("[]") // JSON array
-  bodyRst             String?  @db.Text
-  bodySource          String    @default("curated") // generated, curated
-  canonicalStatus     String    @default("draft") // draft, validated, canonical, deprecated
+  tags                String            @default("[]") // JSON array
+  bodyRst             String?           @db.Text
+  bodySource          String            @default("curated") // generated, curated
+  canonicalStatus     String            @default("draft") // draft, validated, canonical, deprecated
   mergedIntoDocNodeId String?
-  provenanceJson      String?   // JSON: libraryRequestId, questIds, barIds, instanceIds
-  mergedInto          DocNode?  @relation("DocNodeMerge", fields: [mergedIntoDocNodeId], references: [id], onDelete: SetNull)
-  mergedFrom          DocNode[] @relation("DocNodeMerge")
-  resolvedRequests    LibraryRequest[] @relation("LibraryRequestResolved")
+  provenanceJson      String? // JSON: libraryRequestId, questIds, barIds, instanceIds
+  mergedInto          DocNode?          @relation("DocNodeMerge", fields: [mergedIntoDocNodeId], references: [id], onDelete: SetNull)
+  mergedFrom          DocNode[]         @relation("DocNodeMerge")
+  resolvedRequests    LibraryRequest[]  @relation("LibraryRequestResolved")
   evidenceLinks       DocEvidenceLink[]
 
   @@index([canonicalStatus, scope])
@@ -2086,31 +2119,31 @@ model DocNode {
 }
 
 model DocEvidenceLink {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   docNodeId     String
   customBarId   String?
-  questId       String?  // CustomBar id of DocQuest
+  questId       String? // CustomBar id of DocQuest
   playerQuestId String?
-  kind          String   @default("observation") // observation, instruction, canon_statement, spec_clause, lore, schism
-  weight        Float    @default(1.0)
-  confidence    Float?   // 0..1
-  docNode       DocNode  @relation(fields: [docNodeId], references: [id], onDelete: Cascade)
+  kind          String  @default("observation") // observation, instruction, canon_statement, spec_clause, lore, schism
+  weight        Float   @default(1.0)
+  confidence    Float? // 0..1
+  docNode       DocNode @relation(fields: [docNodeId], references: [id], onDelete: Cascade)
 
   @@index([docNodeId])
   @@map("doc_evidence_links")
 }
 
 model BacklogItem {
-  id                    String    @id @default(cuid())
-  createdAt             DateTime  @default(now())
-  title                 String
-  description           String    @db.Text
-  severity              String    @default("medium") // low, medium, high, blocking
-  area                  String    @default("other") // rules, ux, tech, lore, social
-  status                String    @default("new") // new, triaged, in_progress, done, wontfix
-  linkedDocNodeId       String?
-  linkedDocQuestId      String?
-  sourceLibraryRequest  LibraryRequest? @relation("BacklogItemSpawnedBy")
+  id                   String          @id @default(cuid())
+  createdAt            DateTime        @default(now())
+  title                String
+  description          String          @db.Text
+  severity             String          @default("medium") // low, medium, high, blocking
+  area                 String          @default("other") // rules, ux, tech, lore, social
+  status               String          @default("new") // new, triaged, in_progress, done, wontfix
+  linkedDocNodeId      String?
+  linkedDocQuestId     String?
+  sourceLibraryRequest LibraryRequest? @relation("BacklogItemSpawnedBy")
 
   @@index([status])
   @@map("backlog_items")
@@ -2137,7 +2170,7 @@ model SpecKitBacklogItem {
   category     String   @default("UI")
   status       String   @default("Ready")
   dependencies String   @default("")
-  ownerFace    String?  // shaman | challenger | regent | architect | diplomat | sage
+  ownerFace    String? // shaman | challenger | regent | architect | diplomat | sage
   updatedAt    DateTime @updatedAt
 
   @@map("spec_kit_backlog_items")
@@ -2145,12 +2178,12 @@ model SpecKitBacklogItem {
 
 model AiResponseCache {
   id         String   @id @default(cuid())
-  inputHash  String   // SHA-256 of normalized input
-  feature    String   // book_analysis | quest_gen
+  inputHash  String // SHA-256 of normalized input
+  feature    String // book_analysis | quest_gen
   model      String
   outputJson String   @db.Text
   createdAt  DateTime @default(now())
-  expiresAt DateTime
+  expiresAt  DateTime
 
   @@unique([inputHash, feature])
   @@index([expiresAt])
@@ -2159,7 +2192,7 @@ model AiResponseCache {
 
 model HexagramEncounterLog {
   id                    String   @id @default(cuid())
-  agentName             String   // architect | challenger | shaman | regent | diplomat | sage
+  agentName             String // architect | challenger | shaman | regent | diplomat | sage
   hexagramId            Int
   upperTrigram          String
   lowerTrigram          String
@@ -2169,7 +2202,7 @@ model HexagramEncounterLog {
   archetypesInvolved    String   @default("[]") // JSON array
   questOutcome          String?
   emotionalAlchemyTag   String?
-  questId               String?  // linked quest if applicable
+  questId               String? // linked quest if applicable
   playerId              String?
   createdAt             DateTime @default(now())
 
@@ -2180,8 +2213,8 @@ model HexagramEncounterLog {
 
 model AgentInterpretiveProfile {
   id                String   @id @default(cuid())
-  agentName         String   // architect | challenger | shaman | regent | diplomat | sage
-  hexagramId        Int?     // null = general profile, set = hexagram-specific
+  agentName         String // architect | challenger | shaman | regent | diplomat | sage
+  hexagramId        Int? // null = general profile, set = hexagram-specific
   profileText       String   @db.Text
   encounterCount    Int      @default(0)
   lastSynthesizedAt DateTime @default(now())
@@ -2205,33 +2238,33 @@ model AgentInterpretiveProfile {
 
 model OrientationSession {
   /// Surrogate primary key (cuid).
-  id               String   @id @default(cuid())
+  id String @id @default(cuid())
 
   /// Natural key — maps 1-to-1 to OrientationMetaPacket.packetId.
-  packetId         String   @unique
+  packetId String @unique
 
   /// Owning player.
-  playerId         String
+  playerId String
 
   /// Mirror of OrientationMetaPacket.sessionState for indexed queries.
   /// Values: active | submitted | closed
-  sessionState     String   @default("active")
+  sessionState String @default("active")
 
   /// Mirror of OrientationMetaPacket.submissionPath for indexed queries.
   /// Values: player_direct | player_assisted | admin_authored | ai_autonomous
-  submissionPath   String
+  submissionPath String
 
   /// Full OrientationMetaPacket serialised as JSON.
   /// Authoritative source for resuming or auditing the session.
-  packetJson       String   @db.Text
+  packetJson String @db.Text
 
   /// Named checkpoint that triggered the most recent write.
   /// Values: SESSION_INIT | FACE_ENTER | PAYLOAD_PATCH | FACE_SUBMIT | FACE_SKIP | SESSION_CLOSE
-  lastCheckpoint   String   @default("SESSION_INIT")
+  lastCheckpoint String @default("SESSION_INIT")
 
   /// Timestamp of the most recent checkpoint write.
   /// Doubles as the "last active at" timestamp for abandonment detection.
-  checkpointAt     DateTime @default(now())
+  checkpointAt DateTime @default(now())
 
   /// The quest node ID the player was at when the checkpoint was written.
   /// Enables fine-grained resume: caller advances to this node instead of the face hub.
@@ -2240,12 +2273,12 @@ model OrientationSession {
 
   /// Set when sessionState transitions to 'abandoned' (player did not return
   /// within the abandonment threshold). Null for all other states.
-  abandonedAt      DateTime?
+  abandonedAt DateTime?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([playerId])
   @@index([sessionState])
@@ -2259,8 +2292,8 @@ model OrientationSession {
 model AlchemyPlayerState {
   id        String   @id @default(cuid())
   playerId  String   @unique
-  channel   String   // fear | anger | sadness | joy | neutrality
-  altitude  String   // dissatisfied | neutral | satisfied
+  channel   String // fear | anger | sadness | joy | neutrality
+  altitude  String // dissatisfied | neutral | satisfied
   updatedAt DateTime @updatedAt
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -2273,7 +2306,7 @@ model AlchemySceneEvent {
   playerId   String
   templateId String
   choiceKey  String?
-  outcome    String?  // altitude reached
+  outcome    String? // altitude reached
   createdAt  DateTime @default(now())
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -2283,25 +2316,25 @@ model AlchemySceneEvent {
 }
 
 model AlchemySceneTemplate {
-  id            String  @id @default(cuid())
-  sceneType     String  @default("transcend") // transcend | generate | control
-  channel       String  // fear | anger | sadness | joy | neutrality
-  altitudeFrom  String  // dissatisfied | neutral | satisfied
-  altitudeTo    String  // dissatisfied | neutral | satisfied
-  targetChannel String? // for generate/control: destination channel (Wuxing routing)
-  title         String
-  situation     String
-  friction      String
-  invitation    String
-  choices       String  // JSON: [{key, label, isGrowth}]
-  advice        String?
-  archetypeBias String? // JSON: archetype slugs that prefer this template
-  nationBias    String? // JSON: nation slugs
+  id                String  @id @default(cuid())
+  sceneType         String  @default("transcend") // transcend | generate | control
+  channel           String // fear | anger | sadness | joy | neutrality
+  altitudeFrom      String // dissatisfied | neutral | satisfied
+  altitudeTo        String // dissatisfied | neutral | satisfied
+  targetChannel     String? // for generate/control: destination channel (Wuxing routing)
+  title             String
+  situation         String
+  friction          String
+  invitation        String
+  choices           String // JSON: [{key, label, isGrowth}]
+  advice            String?
+  archetypeBias     String? // JSON: archetype slugs that prefer this template
+  nationBias        String? // JSON: nation slugs
   /// JSON array of Kotter stage ints, e.g. [1,2,3] — IE-9 scene bias
-  kotterStageBias    String?
+  kotterStageBias   String?
   /// JSON array of GM face keys, e.g. ["challenger","regent"] — IE-9
   campaignFrontBias String?
-  status        String  @default("active") // active | draft (draft = awaiting GM review)
+  status            String  @default("active") // active | draft (draft = awaiting GM review)
 
   @@index([channel, altitudeFrom, sceneType])
   @@map("alchemy_scene_templates")
@@ -2312,19 +2345,20 @@ model AlchemySceneTemplate {
 model AlchemyCheckIn {
   id              String    @id @default(cuid())
   playerId        String
-  date            String    // YYYY-MM-DD — one per player per day
-  stucknessRating Int       // 0–10
-  channel         String    // chosen channel
-  altitude        String    // chosen altitude
-  sceneTypeChosen String?   // transcend | generate | control (null if no scene launched)
-  sceneId         String?   // GrowthScene.id if launched
+  date            String // YYYY-MM-DD — one per player per day
+  stucknessRating Int // 0–10
+  channel         String // chosen channel
+  altitude        String // chosen altitude
+  sceneTypeChosen String? // transcend | generate | control (null if no scene launched)
+  sceneId         String? // GrowthScene.id if launched
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
 
   thresholdEncounterId String?
   thresholdEncounter   ThresholdEncounter? @relation(fields: [thresholdEncounterId], references: [id], onDelete: SetNull)
 
-  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player        Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  spokeSessions SpokeSession[] @relation("SpokeSessionCheckIn")
 
   @@unique([playerId, date])
   @@index([playerId])
@@ -2336,15 +2370,15 @@ model AlchemyCheckIn {
 model GrowthScene {
   id         String    @id @default(cuid())
   playerId   String
-  vector     String    // e.g. "fear:dissatisfied→fear:neutral"
+  vector     String // e.g. "fear:dissatisfied→fear:neutral"
   templateId String
-  sceneDsl   String    // JSON: SceneDsl object
+  sceneDsl   String // JSON: SceneDsl object
   status     String    @default("active") // active|resolved|abandoned
   choiceMade String?
   createdAt  DateTime  @default(now())
   resolvedAt DateTime?
 
-  player    Player               @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player    Player                @relation(fields: [playerId], references: [id], onDelete: Cascade)
   artifacts GrowthSceneArtifact[]
 
   @@index([playerId, status])
@@ -2354,8 +2388,8 @@ model GrowthScene {
 model GrowthSceneArtifact {
   id        String   @id @default(cuid())
   sceneId   String
-  type      String   // BAR | quest_hook | vibeulon | relationship_update | memory_entry
-  payload   String   // JSON
+  type      String // BAR | quest_hook | vibeulon | relationship_update | memory_entry
+  payload   String // JSON
   emittedAt DateTime @default(now())
 
   scene GrowthScene @relation(fields: [sceneId], references: [id], onDelete: Cascade)
@@ -2367,38 +2401,38 @@ model GrowthSceneArtifact {
 // --- Threshold Encounter (TE-1) ---
 
 model ThresholdEncounter {
-  id              String    @id @default(cuid())
-  playerId        String
-  vector          String    // e.g. "fear:dissatisfied→anger:neutral"
-  sceneType       String    // transcend | generate | control
-  gmFace          String    @default("shaman") // shaman|challenger|regent|architect|diplomat|sage
-  hexagramId      Int?      // 1–64
-  nationSlug      String?
-  archetypeSlug   String?
-  beatMode        String    @default("canonical") // minimal | canonical
-  tweeSource      String    // full .twee file content
-  storyData       String    // JSON: StoryData block
-  status          String    @default("draft") // draft | active | archived
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  playerId      String
+  vector        String // e.g. "fear:dissatisfied→anger:neutral"
+  sceneType     String // transcend | generate | control
+  gmFace        String    @default("shaman") // shaman|challenger|regent|architect|diplomat|sage
+  hexagramId    Int? // 1–64
+  nationSlug    String?
+  archetypeSlug String?
+  beatMode      String    @default("canonical") // minimal | canonical
+  tweeSource    String // full .twee file content
+  storyData     String // JSON: StoryData block
+  status        String    @default("draft") // draft | active | archived
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  player            Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  artifacts         ThresholdEncounterArtifact[]
-  checkIns          AlchemyCheckIn[]
+  player    Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  artifacts ThresholdEncounterArtifact[]
+  checkIns  AlchemyCheckIn[]
 
   @@index([playerId, status])
   @@map("threshold_encounters")
 }
 
 model ThresholdEncounterArtifact {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   encounterId String
-  type        String   // bar_candidate | BAR | quest_hook | vibeulon | relationship_update | memory_entry
-  payload     String   // JSON
-  promoted    Boolean  @default(false)
+  type        String // bar_candidate | BAR | quest_hook | vibeulon | relationship_update | memory_entry
+  payload     String // JSON
+  promoted    Boolean   @default(false)
   promotedAt  DateTime?
-  emittedAt   DateTime @default(now())
+  emittedAt   DateTime  @default(now())
 
   encounter ThresholdEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
 
@@ -2410,23 +2444,23 @@ model ThresholdEncounterArtifact {
 // --- Agentic NPC Constitution System (ANC-1) ---
 
 model NpcConstitution {
-  id                   String   @id @default(cuid())
-  name                 String
-  archetypalRole       String
-  tier                 Int      @default(1) // 1-4
-  constitutionVersion  String   @default("1.0")
-  identity             String   // JSON: core_nature, voice_style, worldview, mask_type
-  values               String   // JSON: protects[], longs_for[], refuses[]
-  function             String   // JSON: primary_scene_role, quest_affinities[], bar_affinities[]
-  limits               String   // JSON: can_initiate[], cannot_do[], requires_regent_approval_for[]
-  memoryPolicy         String   // JSON: scope, retention_rules[]
-  reflectionPolicy     String   // JSON: allowed, frequency, max_outputs
-  governedBy           String   @default("regent_game_master")
-  status               String   @default("draft") // draft|active|suspended|archived
-  currentLocation      String   @default("none")  // library|efa|dojos|gameboard|none
-  linkedAdventures     String   @default("[]")     // JSON: Adventure IDs
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  name                String
+  archetypalRole      String
+  tier                Int      @default(1) // 1-4
+  constitutionVersion String   @default("1.0")
+  identity            String // JSON: core_nature, voice_style, worldview, mask_type
+  values              String // JSON: protects[], longs_for[], refuses[]
+  function            String // JSON: primary_scene_role, quest_affinities[], bar_affinities[]
+  limits              String // JSON: can_initiate[], cannot_do[], requires_regent_approval_for[]
+  memoryPolicy        String // JSON: scope, retention_rules[]
+  reflectionPolicy    String // JSON: allowed, frequency, max_outputs
+  governedBy          String   @default("regent_game_master")
+  status              String   @default("draft") // draft|active|suspended|archived
+  currentLocation     String   @default("none") // library|efa|dojos|gameboard|none
+  linkedAdventures    String   @default("[]") // JSON: Adventure IDs
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   versions      NpcConstitutionVersion[]
   memories      NpcMemory[]
@@ -2434,6 +2468,7 @@ model NpcConstitution {
   actions       NpcAction[]
   relationships NpcRelationshipState[]
   npcProfile    NpcProfile?
+  npcEncounters NpcEncounter[]           @relation("NpcEncounterNpc")
 
   @@map("npc_constitutions")
 }
@@ -2442,8 +2477,8 @@ model NpcConstitutionVersion {
   id        String   @id @default(cuid())
   npcId     String
   version   String
-  snapshot  String   // JSON full constitution at this version
-  changedBy String   // regent_game_master | admin
+  snapshot  String // JSON full constitution at this version
+  changedBy String // regent_game_master | admin
   createdAt DateTime @default(now())
 
   npc NpcConstitution @relation(fields: [npcId], references: [id], onDelete: Cascade)
@@ -2457,7 +2492,7 @@ model NpcMemory {
   npcId      String
   playerId   String?
   campaignId String?
-  memoryType String   // scene | relationship | campaign
+  memoryType String // scene | relationship | campaign
   summary    String
   tags       String   @default("[]") // JSON
   isCanon    Boolean  @default(false)
@@ -2476,7 +2511,7 @@ model NpcReflection {
   npcId        String
   campaignId   String?
   inputSummary String
-  outputs      String    // JSON: stance_update, possible_hooks[], bar_affinity_shift[]
+  outputs      String // JSON: stance_update, possible_hooks[], bar_affinity_shift[]
   status       String    @default("pending") // pending|approved|rejected
   reviewedBy   String?
   reviewedAt   DateTime?
@@ -2492,8 +2527,8 @@ model NpcAction {
   id                     String   @id @default(cuid())
   npcId                  String
   sceneId                String?
-  verb                   String   // reveal_lore|ask_question|challenge_player|affirm_player|offer_quest_seed|reflect_bar|redirect_scene|deepen_scene|handoff_to_other_npc
-  payload                String   // JSON
+  verb                   String // reveal_lore|ask_question|challenge_player|affirm_player|offer_quest_seed|reflect_bar|redirect_scene|deepen_scene|handoff_to_other_npc
+  payload                String // JSON
   requiresRegentApproval Boolean  @default(false)
   status                 String   @default("executed") // executed|blocked|pending
   reason                 String?
@@ -2523,32 +2558,32 @@ model NpcRelationshipState {
 }
 
 model SpatialMap {
-  id         String               @id @default(cuid())
-  name       String
-  instanceId String?              @map("instance_id")
-  mapType    String               @map("map_type") // campaign_map | encounter | lobby
-  spawnpoint String               // JSON: { roomIndex, x, y }
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
-  rooms           MapRoom[]
-  presences       PlayerMapPresence[]
-  linkedInstances Instance[] @relation("InstanceSpatialMap")
-  defaultLobbyMapConfigs AppConfig[] @relation("DefaultLobbyMap")
+  id                     String              @id @default(cuid())
+  name                   String
+  instanceId             String?             @map("instance_id")
+  mapType                String              @map("map_type") // campaign_map | encounter | lobby
+  spawnpoint             String // JSON: { roomIndex, x, y }
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  rooms                  MapRoom[]
+  presences              PlayerMapPresence[]
+  linkedInstances        Instance[]          @relation("InstanceSpatialMap")
+  defaultLobbyMapConfigs AppConfig[]         @relation("DefaultLobbyMap")
 
   @@map("spatial_maps")
 }
 
 model PlayerMapPresence {
-  id         String     @id @default(cuid())
-  playerId   String     @map("player_id")
-  mapId      String     @map("map_id")
-  roomIndex  Int        @map("room_index")
-  x          Int
-  y          Int
-  direction  String     @default("south") // north | south | east | west
-  updatedAt  DateTime   @updatedAt
-  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  map        SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  playerId  String     @map("player_id")
+  mapId     String     @map("map_id")
+  roomIndex Int        @map("room_index")
+  x         Int
+  y         Int
+  direction String     @default("south") // north | south | east | west
+  updatedAt DateTime   @updatedAt
+  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  map       SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, mapId])
   @@index([mapId])
@@ -2556,23 +2591,23 @@ model PlayerMapPresence {
 }
 
 model MapRoom {
-  id            String     @id @default(cuid())
-  mapId         String     @map("map_id")
-  map           SpatialMap @relation(fields: [mapId], references: [id], onDelete: Cascade)
-  name          String
-  slug          String     @default("") @map("slug")
-  tilemap       String     // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
-  graphNodeId   String?    @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
-  channelId     String?    @map("channel_id")    // For video chat if used later
-  sortOrder     Int        @default(0) @map("sort_order")
+  id                String             @id @default(cuid())
+  mapId             String             @map("map_id")
+  map               SpatialMap         @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  name              String
+  slug              String             @default("") @map("slug")
+  tilemap           String // JSON: { "x, y": { floor?, above_floor?, object?, impassable?, teleporter? } }
+  graphNodeId       String?            @map("graph_node_id") // Links to Twine passage ID or campaign map node ID
+  channelId         String?            @map("channel_id") // For video chat if used later
+  sortOrder         Int                @default(0) @map("sort_order")
   // BAR Lobby World fields (LW-2)
-  roomType      String?    @map("room_type")      // nation_room | trading_floor | embassy
-  nationKey     String?    @map("nation_key")     // pyrakanth | lamenth | virelune | argyra | meridia | null (trading floor)
-  backgroundUrl String?    @map("background_url") // public/lobby-art/{slug}.png
-  anchors       SpatialMapAnchor[]
-  presences     RoomPresence[]
+  roomType          String?            @map("room_type") // nation_room | trading_floor | embassy
+  nationKey         String?            @map("nation_key") // pyrakanth | lamenth | virelune | argyra | meridia | null (trading floor)
+  backgroundUrl     String?            @map("background_url") // public/lobby-art/{slug}.png
+  anchors           SpatialMapAnchor[]
+  presences         RoomPresence[]
   tradeTransactions TradeTransaction[]
-  starterBARs   StarterBAR[]
+  starterBARs       StarterBAR[]
 
   @@unique([mapId, slug])
   @@index([mapId])
@@ -2580,18 +2615,18 @@ model MapRoom {
 }
 
 model SpatialMapAnchor {
-  id          String   @id @default(cuid())
-  roomId      String   @map("room_id")
-  room        MapRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  anchorType  String   @map("anchor_type")
-  tileX       Int      @map("tile_x")
-  tileY       Int      @map("tile_y")
-  label       String?
-  linkedId    String?  @map("linked_id")
-  linkedType  String?  @map("linked_type")
-  config      String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  room       MapRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  anchorType String   @map("anchor_type")
+  tileX      Int      @map("tile_x")
+  tileY      Int      @map("tile_y")
+  label      String?
+  linkedId   String?  @map("linked_id")
+  linkedType String?  @map("linked_type")
+  config     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([roomId])
   @@map("spatial_map_anchors")
@@ -2614,19 +2649,19 @@ model RoomPresence {
 }
 
 model SpriteAuditLog {
-  id            String   @id @default(cuid())
-  playerId      String
-  pipeline      String   // "portrait" | "walkable"
-  nationKey     String
-  archetypeKey  String
-  status        String   // "enqueued" | "generated" | "review" | "approved" | "rejected"
-  attempt       Int      @default(1)
-  promptUsed    String?
-  sourceModel   String?  // "dalle3" | "stability" | "lpc" | "manual"
-  reviewNote    String?
-  lpcBaseAsset  String?  // for walkable: LPC base asset used (attribution)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  playerId     String
+  pipeline     String // "portrait" | "walkable"
+  nationKey    String
+  archetypeKey String
+  status       String // "enqueued" | "generated" | "review" | "approved" | "rejected"
+  attempt      Int      @default(1)
+  promptUsed   String?
+  sourceModel  String? // "dalle3" | "stability" | "lpc" | "manual"
+  reviewNote   String?
+  lpcBaseAsset String? // for walkable: LPC base asset used (attribution)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ── Phase 3: Cultural Substrate Pipeline ─────────────────────────────────────
@@ -2647,9 +2682,9 @@ model CarriedWeight {
   playerId         String
   beliefText       String
   shadowName       String?
-  source           String    // shadow_name_session | voluntary_pickup | face_named
+  source           String // shadow_name_session | voluntary_pickup | face_named
   status           String    @default("held") // held | in_play | metabolized | set_down
-  loadLevel        Int       @default(1)      // 1 | 2 | 3
+  loadLevel        Int       @default(1) // 1 | 2 | 3
   heldSince        DateTime  @default(now())
   metabolizedAt    DateTime?
   metabolizedBarId String?
@@ -2669,7 +2704,7 @@ model DistillationCandidate {
   archetype             String?
   allyshipDomain        String?
   nationKey             String?
-  sourceBarIds          String    // JSON array of CustomBar ids
+  sourceBarIds          String // JSON array of CustomBar ids
   clusterSize           Int
   secondRegisterName    String
   internalExpr          String
@@ -2688,20 +2723,19 @@ model DistillationCandidate {
   @@map("distillation_candidates")
 }
 
-
 // ── NPC Governance Layer ──────────────────────────────────────────────────────
 
 model NpcProfile {
   id               String    @id @default(cuid())
   playerId         String    @unique
-  constitutionId   String?   @unique  // → NpcConstitution (created lazily on first chat)
-  altitude         String    // shaman | challenger | regent | architect | diplomat | sage
-  tier             Int       @default(1)  // 1-4 constitutional depth
+  constitutionId   String?   @unique // → NpcConstitution (created lazily on first chat)
+  altitude         String // shaman | challenger | regent | architect | diplomat | sage
+  tier             Int       @default(1) // 1-4 constitutional depth
   weeklyBudget     Int       @default(10000) // max tokens per week
   tokensUsed       Int       @default(0)
   budgetResetAt    DateTime  @default(now())
   dormantUntil     DateTime? // set when budget exhausted; NPC unavailable until then
-  sourceInstanceId String?   // origin instance for portability (fork/translate)
+  sourceInstanceId String? // origin instance for portability (fork/translate)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -2711,21 +2745,20 @@ model NpcProfile {
   @@map("npc_profiles")
 }
 
-
 // ── BAR Lobby World (LW-2) ────────────────────────────────────────────────────
 
 model TradeTransaction {
-  id               String   @id @default(cuid())
-  initiatorId      String   @map("initiator_id")    // player who offered
-  agentId          String   @map("agent_id")         // player whose BAR was received
-  offeredBarId     String   @map("offered_bar_id")
-  receivedBarId    String   @map("received_bar_id")
-  roomId           String   @map("room_id")
-  roomSlug         String   @map("room_slug")
-  completedAt      DateTime @default(now()) @map("completed_at")
+  id            String   @id @default(cuid())
+  initiatorId   String   @map("initiator_id") // player who offered
+  agentId       String   @map("agent_id") // player whose BAR was received
+  offeredBarId  String   @map("offered_bar_id")
+  receivedBarId String   @map("received_bar_id")
+  roomId        String   @map("room_id")
+  roomSlug      String   @map("room_slug")
+  completedAt   DateTime @default(now()) @map("completed_at")
 
   initiator Player  @relation("TradeInitiator", fields: [initiatorId], references: [id])
-  agent     Player  @relation("TradeAgent",     fields: [agentId],     references: [id])
+  agent     Player  @relation("TradeAgent", fields: [agentId], references: [id])
   room      MapRoom @relation(fields: [roomId], references: [id])
 
   @@index([initiatorId, completedAt])
@@ -2738,7 +2771,7 @@ model StarterBAR {
   playerId  String   @map("player_id")
   roomId    String   @map("room_id")
   roomSlug  String   @map("room_slug")
-  barId     String   @map("bar_id")        // the CustomBar granted
+  barId     String   @map("bar_id") // the CustomBar granted
   grantedAt DateTime @default(now()) @map("granted_at")
 
   player Player  @relation(fields: [playerId], references: [id])
@@ -2759,20 +2792,20 @@ model StarterBAR {
 /// Creator-authored deck card. One per hexagram slot a campaign author wants to use.
 /// Cards are the source pool; they become CampaignPortals when a period is drawn.
 model CampaignDeckCard {
-  id                 String   @id @default(cuid())
-  campaignRef        String   // e.g. bruised-banana
-  hexagramId         Int      // 1–64
-  theme              String?  // short portal label
-  domain             String?  // GATHERING_RESOURCES | DIRECT_ACTION | etc.
-  cyoaAdventureId    String?  // FK → Adventure (resolved at portal hydration)
-  questId            String?  // FK → CustomBar (the "Raise the Urgency" quest for this portal)
-  createdByPlayerId  String
-  status             String   @default("draft") // draft | active
+  id                String  @id @default(cuid())
+  campaignRef       String // e.g. bruised-banana
+  hexagramId        Int // 1–64
+  theme             String? // short portal label
+  domain            String? // GATHERING_RESOURCES | DIRECT_ACTION | etc.
+  cyoaAdventureId   String? // FK → Adventure (resolved at portal hydration)
+  questId           String? // FK → CustomBar (the "Raise the Urgency" quest for this portal)
+  createdByPlayerId String
+  status            String  @default("draft") // draft | active
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  createdBy  Player          @relation("DeckCardAuthor", fields: [createdByPlayerId], references: [id], onDelete: Cascade)
-  portals    CampaignPortal[]
+  createdBy Player           @relation("DeckCardAuthor", fields: [createdByPlayerId], references: [id], onDelete: Cascade)
+  portals   CampaignPortal[]
 
   @@unique([campaignRef, hexagramId]) // one card per hexagram per campaign
   @@index([campaignRef, status])
@@ -2782,19 +2815,19 @@ model CampaignDeckCard {
 /// A campaign period — 8 deck cards drawn, no repeats across periods.
 /// Period transition is manual (admin triggers drawPeriod).
 model CampaignPeriod {
-  id            String    @id @default(cuid())
-  campaignRef   String
-  instanceId    String?
-  periodNumber  Int       // sequential, starts at 1
-  kotterStage   String?   // urgency | coalition | vision | empower | wins | sustain | culture
-  status        String    @default("active") // active | closed
-  drawnCardIds  String    @default("[]") // JSON array of CampaignDeckCard ids (8 items)
-  startedAt     DateTime  @default(now())
-  endedAt       DateTime?
-  createdAt     DateTime  @default(now())
+  id           String    @id @default(cuid())
+  campaignRef  String
+  instanceId   String?
+  periodNumber Int // sequential, starts at 1
+  kotterStage  String? // urgency | coalition | vision | empower | wins | sustain | culture
+  status       String    @default("active") // active | closed
+  drawnCardIds String    @default("[]") // JSON array of CampaignDeckCard ids (8 items)
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  createdAt    DateTime  @default(now())
 
-  instance  Instance?       @relation("CampaignPeriods", fields: [instanceId], references: [id], onDelete: SetNull)
-  portals   CampaignPortal[]
+  instance Instance?        @relation("CampaignPeriods", fields: [instanceId], references: [id], onDelete: SetNull)
+  portals  CampaignPortal[]
 
   @@unique([campaignRef, periodNumber])
   @@index([campaignRef, status])
@@ -2804,20 +2837,20 @@ model CampaignPeriod {
 /// A physical portal entry on the campaign hub page.
 /// Created (8 per period) when an admin calls drawPeriod.
 model CampaignPortal {
-  id               String   @id @default(cuid())
-  periodId         String
-  campaignRef      String
-  slotIndex        Int      // 0–7
-  hexagramId       Int?
-  deckCardId       String?
-  cyoaAdventureId  String?  // resolved from deck card
-  questId          String?  // "Raise the Urgency" quest for this portal
-  completionCount  Int      @default(0)
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  periodId        String
+  campaignRef     String
+  slotIndex       Int // 0–7
+  hexagramId      Int?
+  deckCardId      String?
+  cyoaAdventureId String? // resolved from deck card
+  questId         String? // "Raise the Urgency" quest for this portal
+  completionCount Int      @default(0)
+  createdAt       DateTime @default(now())
 
-  period    CampaignPeriod    @relation(fields: [periodId], references: [id], onDelete: Cascade)
-  deckCard  CampaignDeckCard? @relation(fields: [deckCardId], references: [id], onDelete: SetNull)
-  sessions  SpokeSession[]
+  period   CampaignPeriod    @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  deckCard CampaignDeckCard? @relation(fields: [deckCardId], references: [id], onDelete: SetNull)
+  sessions SpokeSession[]
 
   @@unique([periodId, slotIndex])
   @@index([campaignRef, periodId])
@@ -2831,43 +2864,47 @@ model SpokeSession {
   portalId         String
   playerId         String
   campaignRef      String
-  moveType         String?   // wakeUp | cleanUp | growUp | showUp
-  gmFace           String?   // shaman | regent | challenger | architect | diplomat | sage
+  moveType         String? // wakeUp | cleanUp | growUp | showUp
+  gmFace           String? // shaman | regent | challenger | architect | diplomat | sage
   status           String    @default("in_progress") // in_progress | completed | abandoned
   barSeedIds       String    @default("[]") // JSON array of CustomBar ids emitted
-  generatedQuestId String?   // FK → PlayerQuest (personal quest spawned at spoke end)
+  generatedQuestId String? // FK → PlayerQuest (personal quest spawned at spoke end)
   moveChosenAt     DateTime?
   faceChosenAt     DateTime?
   completedAt      DateTime?
   createdAt        DateTime  @default(now())
+  intakeCheckInId  String? // FK → AlchemyCheckIn; set by completeIntakeSession
 
-  portal    CampaignPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
-  player    Player         @relation("SpokeSessions", fields: [playerId], references: [id], onDelete: Cascade)
-  barSeeds  CustomBar[]    @relation("SpokeBarSeeds")
+  portal        CampaignPortal  @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  player        Player          @relation("SpokeSessions", fields: [playerId], references: [id], onDelete: Cascade)
+  barSeeds      CustomBar[]     @relation("SpokeBarSeeds")
+  intakeCheckIn AlchemyCheckIn? @relation("SpokeSessionCheckIn", fields: [intakeCheckInId], references: [id], onDelete: SetNull)
+  npcEncounters NpcEncounter[]  @relation("NpcEncounters")
 
   @@index([portalId, playerId])
   @@index([playerId, status])
+  @@index([intakeCheckInId])
   @@map("spoke_sessions")
 }
 
 /// A public campaign goal, player-proposed and admin-approved.
 /// Tracks aggregate progress toward a named outcome.
 model CampaignMilestone {
-  id                  String    @id @default(cuid())
-  campaignRef         String
-  title               String
-  description         String?   @db.Text
-  targetValue         Float?    // e.g. dollar amount for donation milestones
-  currentValue        Float     @default(0)
-  status              String    @default("proposed") // proposed | active | complete
-  proposedByPlayerId  String
-  approvedByPlayerId  String?
-  approvedAt          DateTime?
-  createdAt           DateTime  @default(now())
+  id                 String    @id @default(cuid())
+  campaignRef        String
+  title              String
+  description        String?   @db.Text
+  targetValue        Float? // e.g. dollar amount for donation milestones
+  currentValue       Float     @default(0)
+  status             String    @default("proposed") // proposed | active | complete
+  proposedByPlayerId String
+  approvedByPlayerId String?
+  approvedAt         DateTime?
+  createdAt          DateTime  @default(now())
 
-  proposedBy     Player                  @relation("MilestoneProposals", fields: [proposedByPlayerId], references: [id], onDelete: Cascade)
-  approvedBy     Player?                 @relation("MilestoneApprovals", fields: [approvedByPlayerId], references: [id], onDelete: SetNull)
-  contributions  MilestoneContribution[]
+  proposedBy    Player                  @relation("MilestoneProposals", fields: [proposedByPlayerId], references: [id], onDelete: Cascade)
+  approvedBy    Player?                 @relation("MilestoneApprovals", fields: [approvedByPlayerId], references: [id], onDelete: SetNull)
+  contributions MilestoneContribution[]
 
   @@index([campaignRef, status])
   @@map("campaign_milestones")
@@ -2878,16 +2915,36 @@ model MilestoneContribution {
   id            String   @id @default(cuid())
   milestoneId   String
   playerId      String
-  barId         String?  // FK → CustomBar (the tended BAR seed linked to this contribution)
-  donationRef   String?  // external payment/donation reference
-  value         Float    // contribution weight or dollar amount
+  barId         String? // FK → CustomBar (the tended BAR seed linked to this contribution)
+  donationRef   String? // external payment/donation reference
+  value         Float // contribution weight or dollar amount
   note          String?
   contributedAt DateTime @default(now())
 
-  milestone  CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  player     Player            @relation("MilestoneContributions", fields: [playerId], references: [id], onDelete: Cascade)
+  milestone CampaignMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  player    Player            @relation("MilestoneContributions", fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([milestoneId])
   @@index([playerId])
   @@map("milestone_contributions")
+}
+
+/// Lightweight join: one NPC slot injected into a spoke CYOA session.
+/// Created at first-hit NPC slot injection; questId set when NPC quest seed is emitted.
+/// No full PlayerPlaybook overhead — this is a structural join only.
+model NpcEncounter {
+  id                 String    @id @default(cuid())
+  spokeSessionId     String
+  npcId              String // FK → NpcConstitution
+  questId            String? // FK → CustomBar (NPC quest seed, set after slot injection)
+  departurePassageId String // passage node in spoke CYOA where NPC slot fires
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+
+  spokeSession SpokeSession    @relation("NpcEncounters", fields: [spokeSessionId], references: [id], onDelete: Cascade)
+  npc          NpcConstitution @relation("NpcEncounterNpc", fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@index([spokeSessionId])
+  @@index([npcId])
+  @@map("npc_encounters")
 }

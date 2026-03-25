@@ -243,6 +243,29 @@ export async function updateBookPraxisMetadata(
   }
 }
 
+const adminBookHubSelect = {
+  id: true,
+  title: true,
+  author: true,
+  slug: true,
+  sourcePdfUrl: true,
+  status: true,
+  metadataJson: true,
+  createdAt: true,
+  thread: { select: { id: true } },
+} as const
+
+/**
+ * Single book for admin hub page. No extractedText (P6009).
+ */
+export async function getAdminBookForHub(bookId: string) {
+  await requireAdmin()
+  return db.book.findUnique({
+    where: { id: bookId },
+    select: adminBookHubSelect,
+  })
+}
+
 /**
  * List all books for admin.
  * Excludes extractedText to avoid P6009 (response size > 5MB) with Prisma Accelerate.
@@ -250,17 +273,7 @@ export async function updateBookPraxisMetadata(
 export async function listBooks() {
   await requireAdmin()
   return db.book.findMany({
-    select: {
-      id: true,
-      title: true,
-      author: true,
-      slug: true,
-      sourcePdfUrl: true,
-      status: true,
-      metadataJson: true,
-      createdAt: true,
-      thread: { select: { id: true } },
-    },
+    select: adminBookHubSelect,
     orderBy: { createdAt: 'desc' },
   })
 }

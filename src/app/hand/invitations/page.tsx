@@ -15,7 +15,7 @@ export default async function HandInvitationsRoomPage() {
     const baseUrl = getVaultBaseUrl()
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <VaultRoomHeader
                 title="Invitations I've forged"
                 description="Invitation BARs — copy the invite or claim URL and share with someone you want in play."

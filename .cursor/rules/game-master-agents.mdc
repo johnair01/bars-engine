@@ -17,7 +17,10 @@ When the user requires **bars-agents**, **sage_consult**, or **strand** synthesi
 
 1. Run **`npm run verify:bars-agents-mcp`** and fix failures before treating MCP as unavailable.
 2. Confirm **Cursor → Settings → MCP → bars-agents** is enabled; **Reload Window** if the server does not show.
-3. **Do not** substitute inline “Sage” prose instead of calling **`sage_consult`** if the workflow explicitly depends on MCP.
+3. **Do not** substitute inline “Sage” prose instead of calling **`sage_consult`** or **`strand_run`** if the workflow explicitly depends on MCP.
+4. If **`call_mcp_tool` fails** (e.g. backend health, URL errors): **do not** decide unilaterally to skip MCP. Report the error, follow `docs/AGENT_WORKFLOWS.md` (local FastAPI: `npm run dev:backend`, optional **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** in `.env.local`, verify + reload), **retry the tool**, or **ask the user** for direction before substituting prose.
+
+The MCP health probe **retries local `http://127.0.0.1:8000/api/health`** once when the primary URL fails (`backend/app/mcp_health.py`) — ensure local API is running so that retry can succeed.
 
 See `docs/AGENT_WORKFLOWS.md` § **MCP availability (do not skip)**.
 

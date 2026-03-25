@@ -14,6 +14,8 @@ import {
   hubStateMatchesKotter,
   isCampaignHubStateV1,
 } from '@/lib/campaign-hub/types'
+import { getAvailableFaceMovesForStage } from '@/lib/gm-face-moves-availability'
+import type { GmFaceStageMove } from '@/lib/gm-face-stage-moves'
 
 export type PortalData = {
   hexagramId: number
@@ -129,6 +131,8 @@ export async function get8PortalsForCampaign(
       portalAdventureId: string | null
       portalStartNodeIds: string[]
       campaignRefResolved: string
+      /** Six face moves for strict lockstep (current Kotter stage). */
+      faceMoves: readonly GmFaceStageMove[]
     }
   | { error: string }
 > {
@@ -212,6 +216,7 @@ export async function get8PortalsForCampaign(
     })
 
     const refResolved = inst.campaignRef ?? inst.slug ?? campaignRef
+    const faceMoves = getAvailableFaceMovesForStage(kotterStage)
 
     return {
       portals,
@@ -220,12 +225,38 @@ export async function get8PortalsForCampaign(
       portalAdventureId: inst.portalAdventureId ?? null,
       portalStartNodeIds: PORTAL_START_NODE_IDS,
       campaignRefResolved: refResolved,
+      faceMoves,
     }
   } catch (e) {
     console.error('[get8PortalsForCampaign]', e)
     return {
       error: e instanceof Error ? e.message : 'Failed to load portals',
     }
+  }
+}
+
+/**
+ * Face-move availability for a campaign (strict lockstep: current `Instance.kotterStage` only).
+ * `playerId` reserved for future per-player gates; ignored in v1.
+ * @see .specify/specs/kotter-quest-seed-grammar/spec.md §D
+ */
+export async function getGmFaceMoveAvailabilityForCampaign(
+  campaignRef: string,
+  _playerId?: string | null,
+): Promise<
+  | {
+      kotterStage: number
+      campaignRefResolved: string
+      moves: readonly GmFaceStageMove[]
+    }
+  | { error: string }
+> {
+  const r = await get8PortalsForCampaign(campaignRef)
+  if ('error' in r) return r
+  return {
+    kotterStage: r.kotterStage,
+    campaignRefResolved: r.campaignRefResolved,
+    moves: r.faceMoves,
   }
 }
 

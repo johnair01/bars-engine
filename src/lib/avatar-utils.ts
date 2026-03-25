@@ -1,6 +1,13 @@
 /**
  * Avatar config derived from CYOA/character creation choices.
  * Uses name-based slugs for stable sprite part paths.
+ *
+ * **ARDS — one `AvatarConfig`, three character-scale renderers:**
+ * 1. **Portrait (Register 3)** — `getAvatarPartSpecs()` → layered PNGs in `Avatar.tsx` / `CharacterCreatorAvatarPreview`.
+ *    Optional `register3` + `element` applies Register 3 crop + vignette (`register-portrait.ts`).
+ * 2. **Walk sprite (Register 4)** — `getWalkableSpriteUrl()` → `public/sprites/walkable/{nationKey}-{archetypeKey}.png`
+ *    composited in Pixi (`RoomRenderer`). Nation sheet tints align with `ELEMENT_TOKENS` via `nation-element.ts`.
+ * 3. **Provenance stamp (Register 2)** — planned `resolveProvenanceStamp()` (provenance-stamp-system spec) — BAR/quest corners.
  */
 
 export type AvatarConfig = {

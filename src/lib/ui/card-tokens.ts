@@ -9,6 +9,14 @@
  *
  * AI: Always derive colors from these tokens. Never hardcode hex in components.
  * Layout via Tailwind. Game aesthetic via cultivation-cards.css using these vars.
+ *
+ * ARDS (Asset Register Design System) — which semantic register each export feeds:
+ *   Register 1 Cosmic — ELEMENT_TOKENS palettes for mythic art + derived UI tints.
+ *   Register 4 Walk — nation overlay colors trace to `frame` / css vars (walk sheets tint); nation keys → element: `nation-element.ts`.
+ *   Register 5 Frame/Chrome — altitude + stage tokens below (border/glow/density); move icons are separate PNGs in public/icons/moves/.
+ *   Register 6 Zone/Texture — SURFACE_TOKENS screen/card surfaces; zone tile PNGs layer on bgBase when present.
+ *   Register 7 Ceremony — elementCssVars / gem+glow for ritual feedback; no separate image register.
+ * See docs/SEMANTIC_REGISTERS.md
  */
 
 // ─── Element Keys ────────────────────────────────────────────────────────────
@@ -20,7 +28,7 @@ export type CardAltitude = 'dissatisfied' | 'neutral' | 'satisfied'
 export type CardStage    = 'seed' | 'growing' | 'composted'
 export type CardTier     = 1 | 2 | 3 | 4
 
-// ─── Wuxing Element Palette ──────────────────────────────────────────────────
+// ─── Wuxing Element Palette — Register 1 (Cosmic palette) + 4 (walk tint) + 7 (ceremony) ──
 // Each element: frame (border), glow (box-shadow), gem (rarity indicator)
 // Colors are desaturated — cultivation is a long game.
 // Saturation increases with altitude via glow intensity, not hue shift.
@@ -113,7 +121,7 @@ export const ELEMENT_TOKENS = {
   cssVarColor: string; cssVarGlow: string
 }>
 
-// ─── Altitude Tokens ─────────────────────────────────────────────────────────
+// ─── Altitude Tokens — Register 5 Frame/Chrome (dissatisfied / neutral / satisfied border) ─
 
 export const ALTITUDE_TOKENS: Record<CardAltitude, {
   glowRadius: string     // CSS value for --glow-radius
@@ -145,7 +153,7 @@ export const ALTITUDE_TOKENS: Record<CardAltitude, {
   },
 }
 
-// ─── Stage Tokens ─────────────────────────────────────────────────────────────
+// ─── Stage Tokens — Register 5 Frame/Chrome (seed / growing / composted density) ─────────
 
 export const STAGE_TOKENS: Record<CardStage, {
   artWindowHeight: string  // Tailwind class
@@ -181,7 +189,7 @@ export const STAGE_TOKENS: Record<CardStage, {
   },
 }
 
-// ─── Surface Tokens ───────────────────────────────────────────────────────────
+// ─── Surface Tokens — Register 6 Zone/Texture (ambient surfaces; pair with zone-*.png tiles) ─
 
 export const SURFACE_TOKENS = {
   bgBase:        '#0a0908',   // screen background (imperceptibly warm, not pure black)

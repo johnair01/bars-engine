@@ -91,6 +91,24 @@ export function CreateAdventureForm() {
                         <option value="PRIVATE_QUEST">Private Quest (Requires login & assignment)</option>
                     </select>
                 </div>
+
+                <div>
+                    <label htmlFor="adventureType" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Adventure Type <span className="text-zinc-500 font-normal">(Optional)</span>
+                    </label>
+                    <select
+                        name="adventureType"
+                        id="adventureType"
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all appearance-none"
+                    >
+                        <option value="">Standard Adventure</option>
+                        <option value="CHARACTER_CREATOR">Character Creator</option>
+                        <option value="CYOA_INTAKE">CYOA Intake (Hub Campaign)</option>
+                    </select>
+                    <p className="text-zinc-500 text-xs mt-1.5">
+                        CYOA Intake adventures route players to AI-generated spoke adventures based on their answers.
+                    </p>
+                </div>
             </div>
 
             <div className="pt-2 border-t border-zinc-800">

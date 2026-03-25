@@ -12,18 +12,20 @@ import fs from 'fs'
 import path from 'path'
 import { PNG } from 'pngjs'
 
+import { ELEMENT_TOKENS } from '../src/lib/ui/card-tokens'
+import { NATION_KEY_TO_ELEMENT } from '../src/lib/ui/nation-element'
+
 const PARTS_DIR = path.join(process.cwd(), 'public', 'sprites', 'parts')
 const SILHOUETTE_PATH = path.join(PARTS_DIR, 'base-silhouette.json')
 const W = 64
 const H = 64
 
-const NATIONS = [
-    { key: 'argyra', hex: '#c0c0c0' },
-    { key: 'pyrakanth', hex: '#e85c2c' },
-    { key: 'virelune', hex: '#4a7c4e' },
-    { key: 'meridia', hex: '#8b7355' },
-    { key: 'lamenth', hex: '#4a90b8' },
-] as const
+/** Nation body/accent tints align with ARDS `ELEMENT_TOKENS[element].frame` (Register 1 + 4). */
+const NATION_KEYS = ['argyra', 'pyrakanth', 'virelune', 'meridia', 'lamenth'] as const
+const NATIONS = NATION_KEYS.map(key => ({
+    key,
+    hex: ELEMENT_TOKENS[NATION_KEY_TO_ELEMENT[key]].frame,
+}))
 
 const PLAYBOOKS = [
     { key: 'bold-heart', hex: '#c41e3a' },

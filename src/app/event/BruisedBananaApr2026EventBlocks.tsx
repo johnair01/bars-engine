@@ -1,11 +1,22 @@
 import Link from 'next/link'
+import { getCurrentPlayer } from '@/lib/auth'
+import { PartyMiniGameGridInteractive } from '@/components/party-mini-game/PartyMiniGameGridInteractive'
+import {
+  BB_APR2026_EVENT_STORE_KEY,
+  BB_APR4_DANCE_BINGO,
+  BB_APR5_SCHEMING_BINGO,
+  BB_INVITE_PRIMING,
+} from '@/lib/party-mini-game/definitions'
 
 /**
  * In-app campaign home blocks for Bruised Banana April 2026 (Pacific).
  * Anchors match TEST_PLAN_PARTY_AND_INTAKE.md: `/event#apr-4`, `/event#apr-5`.
  * RSVP / address gate lives on Partiful — see docs/events/bruised-banana-apr-2026-partiful-copy.md
  */
-export function BruisedBananaApr2026EventBlocks() {
+export async function BruisedBananaApr2026EventBlocks() {
+  const player = await getCurrentPlayer()
+  const partyMiniGamePlayerId = player?.id ?? null
+
   return (
     <section
       className="bg-gradient-to-b from-fuchsia-950/30 to-violet-950/20 border border-fuchsia-900/40 rounded-2xl p-6 space-y-6"
@@ -21,6 +32,15 @@ export function BruisedBananaApr2026EventBlocks() {
           in-engine home for context and next steps.
         </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Jump to night">
+          <a
+            href="#bb-invite-bingo"
+            className="text-emerald-400/90 hover:text-emerald-300 underline-offset-2 hover:underline"
+          >
+            Invite bingo
+          </a>
+          <span className="text-zinc-600 hidden sm:inline" aria-hidden>
+            ·
+          </span>
           <a
             href="#apr-4"
             className="text-fuchsia-400 hover:text-fuchsia-300 underline-offset-2 hover:underline"
@@ -38,6 +58,13 @@ export function BruisedBananaApr2026EventBlocks() {
           </a>
         </nav>
       </div>
+
+      <PartyMiniGameGridInteractive
+        game={BB_INVITE_PRIMING}
+        eventKey={BB_APR2026_EVENT_STORE_KEY}
+        sectionId="bb-invite-bingo"
+        playerId={partyMiniGamePlayerId}
+      />
 
       <article
         id="apr-4"
@@ -67,15 +94,32 @@ export function BruisedBananaApr2026EventBlocks() {
             April 5 →
           </a>
         </p>
-        <p className="text-sm text-zinc-500">
-          Already in the game?{' '}
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-1">
+          <Link
+            href="/invite/event/bb-event-invite-apr4-dance"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-fuchsia-700/80 hover:bg-fuchsia-600 text-white text-sm font-bold border border-fuchsia-500/50"
+          >
+            Optional pre-experience (invite story) →
+          </Link>
           <Link
             href="/campaign/hub?ref=bruised-banana"
-            className="text-fuchsia-400 hover:text-fuchsia-300 font-medium"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-sm font-bold border border-zinc-600"
           >
             Enter the 8 paths (hub) →
           </Link>
-        </p>
+        </div>
+        <div id="bb-invite-bingo-apr4" className="space-y-3 scroll-mt-24">
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            In-room prompts for dance night — event-invite BARs can deep-link{' '}
+            <span className="font-mono text-zinc-600">#bb-invite-bingo-apr4</span>.
+          </p>
+          <PartyMiniGameGridInteractive
+            game={BB_APR4_DANCE_BINGO}
+            eventKey={BB_APR2026_EVENT_STORE_KEY}
+            sectionId="apr-4-bingo"
+            playerId={partyMiniGamePlayerId}
+          />
+        </div>
       </article>
 
       <article
@@ -118,12 +162,29 @@ export function BruisedBananaApr2026EventBlocks() {
         <p className="text-xs text-zinc-500">
           RSVP on Partiful for April 5 for logistics; use the links above when you&apos;re ready to go deeper in-app.
         </p>
+        <div id="bb-invite-bingo-apr5" className="space-y-3 scroll-mt-24">
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            In-room prompts for scheming day — event-invite BARs can deep-link{' '}
+            <span className="font-mono text-zinc-600">#bb-invite-bingo-apr5</span>.
+          </p>
+          <PartyMiniGameGridInteractive
+            game={BB_APR5_SCHEMING_BINGO}
+            eventKey={BB_APR2026_EVENT_STORE_KEY}
+            sectionId="apr-5-bingo"
+            playerId={partyMiniGamePlayerId}
+          />
+        </div>
       </article>
 
       <p className="text-xs text-zinc-600 border-t border-zinc-800/80 pt-4">
         Deep-link share:{' '}
+        <span className="font-mono text-zinc-500">/event#bb-invite-bingo</span> ·{' '}
         <span className="font-mono text-zinc-500">/event#apr-4</span> ·{' '}
-        <span className="font-mono text-zinc-500">/event#apr-5</span>
+        <span className="font-mono text-zinc-500">/event#apr-5</span> ·{' '}
+        <span className="font-mono text-zinc-500">/event#bb-invite-bingo-apr4</span> ·{' '}
+        <span className="font-mono text-zinc-500">/event#bb-invite-bingo-apr5</span> ·{' '}
+        <span className="font-mono text-zinc-500">/event#apr-4-bingo</span> ·{' '}
+        <span className="font-mono text-zinc-500">/event#apr-5-bingo</span>
       </p>
     </section>
   )

@@ -75,9 +75,28 @@ export async function createCharacter(prevState: any, formData: FormData) {
     }
 
     try {
-        const invite = await db.invite.findUnique({ where: { token } })
+        const invite = await db.invite.findUnique({
+            where: { token },
+            select: {
+                id: true,
+                status: true,
+                uses: true,
+                maxUses: true,
+                usedAt: true,
+                forgerId: true,
+                instanceId: true,
+                invitationBarId: true,
+                invitationTargetType: true,
+                invitationTargetId: true,
+                invitationMessage: true,
+                preassignedRoleKey: true,
+            },
+        })
         if (!invite || invite.status !== 'active') {
             return { error: 'Invalid Invite' }
+        }
+        if (invite.uses >= invite.maxUses) {
+            return { error: 'This invitation has reached its maximum uses.' }
         }
 
         // Check if account taken
@@ -108,10 +127,16 @@ export async function createCharacter(prevState: any, formData: FormData) {
         const passwordHash = await hashPassword(identity.password)
 
         const player = await db.$transaction(async (tx) => {
-            // 1. Mark invite used
+            // 1. Increment invite uses (multi-use golden-path invites)
+            const newUses = invite.uses + 1
+            const exhausted = newUses >= invite.maxUses
             await tx.invite.update({
                 where: { id: invite.id },
-                data: { status: 'used', usedAt: new Date() },
+                data: {
+                    uses: newUses,
+                    status: exhausted ? 'used' : 'active',
+                    usedAt: exhausted ? new Date() : invite.usedAt,
+                },
             })
 
             // 2. Create Account
@@ -146,6 +171,24 @@ export async function createCharacter(prevState: any, formData: FormData) {
                     initialVibeulons: 0,
                 }
             })
+
+            // 4b. Golden path: campaign instance on invite → membership at signup
+            if (invite.instanceId) {
+                await tx.instanceMembership.upsert({
+                    where: {
+                        instanceId_playerId: {
+                            instanceId: invite.instanceId,
+                            playerId: newPlayer.id,
+                        },
+                    },
+                    create: {
+                        instanceId: invite.instanceId,
+                        playerId: newPlayer.id,
+                        roleKey: null,
+                    },
+                    update: {},
+                })
+            }
 
             // 5. Assign Role if preassigned
             if (invite.preassignedRoleKey) {

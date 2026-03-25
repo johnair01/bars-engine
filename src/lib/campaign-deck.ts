@@ -30,6 +30,10 @@ export interface SpokeOutcome {
   gmFace: string
   barSeedIds: string[]
   generatedQuestId: string | null
+  /** Phase B+: create a Kotter quest BAR via {@link composeKotterQuestSeedBar} (e.g. `K3_shaman`). */
+  gmFaceMoveId?: string | null
+  emotionalAlchemyTag?: string | null
+  readingFace?: string | null
 }
 
 export interface MilestoneView {

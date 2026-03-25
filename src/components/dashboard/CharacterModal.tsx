@@ -73,12 +73,12 @@ export function CharacterModal({ open, onClose, player }: CharacterModalProps) {
                         </div>
                     )}
                     <Link
-                        href="/campaign"
+                        href="/campaign/hub?ref=bruised-banana"
                         onClick={onClose}
                         className="px-4 py-2 bg-emerald-900/20 border border-emerald-800/50 rounded-lg hover:border-emerald-600/60 transition"
                     >
                         <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1">Story</div>
-                        <div className="text-emerald-100 font-bold">Begin the Journey</div>
+                        <div className="text-emerald-100 font-bold">Campaign hub</div>
                     </Link>
                     <Link
                         href="/reliquary"
@@ -98,11 +98,18 @@ export function CharacterModal({ open, onClose, player }: CharacterModalProps) {
                         Ouroboros Interview
                     </Link>
                     <Link
-                        href="/campaign"
+                        href="/campaign/hub?ref=bruised-banana"
                         onClick={onClose}
                         className="block w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-center font-medium rounded-lg transition-colors"
                     >
-                        View full page →
+                        Open campaign hub →
+                    </Link>
+                    <Link
+                        href="/campaign?ref=bruised-banana"
+                        onClick={onClose}
+                        className="block w-full py-2 text-center text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                        First-time Bruised Banana orientation (twine / initiation) →
                     </Link>
                 </div>
             </div>

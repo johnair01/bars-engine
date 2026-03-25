@@ -134,6 +134,24 @@ Optional (can inherit from base):
 - Zone/Texture: can use base textures, or generate new
 - Ceremony/Effect: auto-inherits new element colors
 
+## Integration surface — BAR lobby world (five rooms)
+
+The repo already ships a **walkable lobby map** seeded as one `SpatialMap` with **five rooms** — **four nation common rooms** (homerooms) plus the **Card Club** trading floor:
+
+| Room | Nation / role | Slug (path segment) |
+|------|----------------|----------------------|
+| Pyrakanth Forge | Pyrakanth (fire) | `pyrakanth-forge` |
+| Lamenth Tide Hall | Lamenth (water) | `lamenth-tide-hall` |
+| Virelune Grove | Virelune (wood) | `virelune-grove` |
+| Argyra Crystal Chamber | Argyra (metal) | `argyra-crystal-chamber` |
+| Card Club | Shared trading floor | `card-club` |
+
+**Seed / data:** `scripts/seed-bar-lobby-world.ts` (map name `bar-lobby-world-v1`). Narrative and LW milestones: `seed-bar-lobby-world.yaml`. **App routes:** `/lobby` (spawn room), `/lobby/[roomSlug]` — client shell `src/app/lobby/LobbyCanvas.tsx`; **Pixi floor rendering:** `src/lib/spatial-world/pixi-room.ts` (`RoomRenderer`).
+
+**Today:** Floors are intentionally **simple color blocks** (per-tile fill in Pixi — walkable vs border vs object). This is not the final art; it is a **stable integration harness**.
+
+**Why this matters for ARDS:** As we layer registers — **Walk** compositing, **Zone** textures, **Cosmic/Portrait** context, **Frame/Chrome** move marks, **Ceremony** feedback — **these five rooms are the first place players (and we) should see the stack cohere.** Use them to **test** new assets and **decide what to build next** (e.g. nation-tinted zone tiles in homerooms vs neutral Card Club, provenance stamp near BAR Pool anchors, ceremony on portal use). The simple baseline makes regressions obvious when “the magic” lands.
+
 ## Design Constraints
 
 - All RGBA PNGs must have transparent regions outside the character/mark area. No solid backgrounds.
