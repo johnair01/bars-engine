@@ -111,6 +111,24 @@ export function VaultMoveDashboard({
                     )
                 })}
             </div>
+
+            <Link
+                href="/hand/who"
+                className="group block rounded-xl border border-emerald-800/55 bg-emerald-950/25 hover:bg-emerald-950/40 px-4 py-3 transition-colors space-y-1"
+            >
+                <div className="flex items-center justify-between gap-1">
+                    <span className="text-[9px] uppercase tracking-widest font-semibold text-emerald-600/90">
+                        Wake Up — Who
+                    </span>
+                    {whoContactCount > 0 && (
+                        <span className="text-[10px] font-mono text-emerald-600/80 opacity-80">{whoContactCount}</span>
+                    )}
+                </div>
+                <p className="text-sm font-medium text-emerald-400/95 group-hover:opacity-90">People &amp; moments →</p>
+                <p className="text-[11px] text-zinc-600">
+                    Contacts from events and play — a growing list of who you might run a quest with.
+                </p>
+            </Link>
         </div>
     )
 }
