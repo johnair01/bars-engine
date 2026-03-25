@@ -11,8 +11,9 @@
 import { config } from 'dotenv'
 import { execSync } from 'child_process'
 
+// Match Next.js: base env first, then .env.local wins on duplicate keys (dotenv default = no override).
 config({ path: '.env' })
-config({ path: '.env.local' })
+config({ path: '.env.local', override: true })
 
 const cmd = process.argv.slice(2).join(' ')
 if (!cmd) {

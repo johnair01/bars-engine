@@ -4,6 +4,7 @@ type VaultMoveDashboardProps = {
     chargeCount: number
     unplacedQuestCount: number
     draftCount: number
+    whoContactCount: number
     invitationCount: number
     staleItems: number
 }
@@ -71,6 +72,7 @@ export function VaultMoveDashboard({
     chargeCount,
     unplacedQuestCount,
     draftCount,
+    whoContactCount,
     invitationCount,
     staleItems,
 }: VaultMoveDashboardProps) {

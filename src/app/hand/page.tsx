@@ -28,6 +28,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     const {
         chargeCount,
         draftCount,
+        whoContactCount,
         invitationCount,
         unplacedQuestCount,
         staleItems,
@@ -64,6 +65,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                         chargeCaptures: chargeCount,
                         unplacedQuests: unplacedQuestCount,
                         privateDrafts: draftCount,
+                        whoContacts: whoContactCount,
                         staleItems,
                     }}
                 />
@@ -89,6 +91,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                 chargeCount={chargeCount}
                 unplacedQuestCount={unplacedQuestCount}
                 draftCount={draftCount}
+                whoContactCount={whoContactCount}
                 invitationCount={invitationCount}
                 staleItems={staleItems}
             />
