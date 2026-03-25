@@ -25,7 +25,7 @@ export default async function ForgeInvitationPage() {
     })
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             <header className="space-y-2">
                 <Link href="/hand" className="text-zinc-500 hover:text-white text-sm">
                     ← Back to Vault

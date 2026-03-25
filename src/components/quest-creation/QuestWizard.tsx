@@ -11,14 +11,27 @@ import Link from 'next/link'
 import { consumeQuestWizardPrefillFrom321 } from '@/lib/quest-wizard-prefill'
 import type { QuestWizard321DisplayHints } from '@/lib/quest-wizard-prefill'
 import { extractCreationIntent } from '@/lib/creation-quest'
+import type { GmFaceStageMove } from '@/lib/gm-face-stage-moves'
+import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
 
 export function QuestWizard({
     gameboardContext,
     wizardSource,
+    campaignKotterContext,
+    initialGmFaceMoveId,
+    initialKotterHexagramId,
 }: {
     gameboardContext?: { questId: string; slotId: string; campaignRef: string }
     /** When set from `/quest/create?from=321`, 321 payload was stashed in sessionStorage */
     wizardSource?: '321' | null
+    /** Server-resolved campaign + six face moves for optional Kotter stamping */
+    campaignKotterContext?: {
+        ref: string
+        kotterStage: number
+        moves: readonly GmFaceStageMove[]
+    } | null
+    initialGmFaceMoveId?: string | null
+    initialKotterHexagramId?: number | null
 }) {
     const router = useRouter()
 
@@ -92,6 +105,23 @@ export function QuestWizard({
         }
     }, [wizardSource])
 
+    useEffect(() => {
+        if (!initialGmFaceMoveId || !campaignKotterContext?.moves?.length) return
+        const ok = campaignKotterContext.moves.some((m) => m.id === initialGmFaceMoveId)
+        if (ok) {
+            setFormData((prev: Record<string, unknown>) => ({
+                ...prev,
+                gmFaceMoveId: initialGmFaceMoveId,
+            }))
+        }
+    }, [initialGmFaceMoveId, campaignKotterContext])
+
+    useEffect(() => {
+        if (initialKotterHexagramId == null || !Number.isFinite(initialKotterHexagramId)) return
+        const h = Math.max(1, Math.min(64, Math.round(initialKotterHexagramId)))
+        setFormData((prev: Record<string, unknown>) => ({ ...prev, kotterHexagramId: h }))
+    }, [initialKotterHexagramId])
+
     // Handlers
     const handleTemplateSelect = (template: QuestTemplate) => {
         setSelectedTemplate(template)
@@ -161,12 +191,21 @@ export function QuestWizard({
                 maxCompletions: formData.maxCompletions ?? 1,
                 rewardPerCompletion: formData.rewardPerCompletion ?? 1,
                 ...(gameboardContext && {
-                    campaignRef: gameboardContext.campaignRef,
+                    campaignRef: campaignKotterContext?.ref ?? gameboardContext.campaignRef,
                     campaignGoal: formData.campaignGoal || 'gameboard subquest',
                 }),
                 ...(formData.source321 && {
                     source321: formData.source321,
                 }),
+                ...(formData.gmFaceMoveId &&
+                    campaignKotterContext && {
+                        gmFaceMoveId: formData.gmFaceMoveId,
+                        kotterHexagramId:
+                            typeof formData.kotterHexagramId === 'number'
+                                ? formData.kotterHexagramId
+                                : initialKotterHexagramId ?? undefined,
+                        ...(!gameboardContext ? { campaignRef: campaignKotterContext.ref } : {}),
+                    }),
             })
 
             if (result?.error) {
@@ -251,6 +290,72 @@ export function QuestWizard({
                             </div>
                         </div>
                     </>
+                )}
+
+                {campaignKotterContext && campaignKotterContext.moves.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-zinc-800">
+                        <label className="text-xs uppercase text-zinc-500">GM face move (optional)</label>
+                        <p className="text-[10px] text-zinc-600 max-w-xl">
+                            Matches <span className="font-mono text-zinc-500">{campaignKotterContext.ref}</span> at
+                            Kotter stage {campaignKotterContext.kotterStage}. Stamps{' '}
+                            <code className="text-zinc-500">gameMasterFace</code>,{' '}
+                            <code className="text-zinc-500">kotterStage</code>, and Kotter grammar into{' '}
+                            <code className="text-zinc-500">completionEffects</code> — your title and description stay
+                            yours.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {campaignKotterContext.moves.map((m) => {
+                                const meta = FACE_META[m.face as GameMasterFace]
+                                const sel = formData.gmFaceMoveId === m.id
+                                return (
+                                    <button
+                                        key={m.id}
+                                        type="button"
+                                        onClick={() =>
+                                            handleInputChange(
+                                                'gmFaceMoveId',
+                                                sel ? null : m.id,
+                                            )
+                                        }
+                                        className={`p-3 rounded-lg border text-left transition ${
+                                            sel
+                                                ? 'bg-amber-900/25 border-amber-500/50 text-amber-100'
+                                                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                                        }`}
+                                    >
+                                        <div
+                                            className={`text-[10px] font-bold uppercase tracking-wider ${meta?.color ?? 'text-zinc-500'}`}
+                                        >
+                                            {meta?.label ?? m.face}
+                                        </div>
+                                        <div className="text-sm font-medium text-zinc-200 mt-0.5">{m.title}</div>
+                                        <code className="text-[9px] text-zinc-600 font-mono">{m.id}</code>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <p className="text-[10px] text-zinc-600">
+                            I Ching slot for the stamp (default 1). Override if you came from a spoke link.
+                        </p>
+                        <input
+                            type="number"
+                            min={1}
+                            max={64}
+                            value={
+                                typeof formData.kotterHexagramId === 'number'
+                                    ? formData.kotterHexagramId
+                                    : initialKotterHexagramId ?? 1
+                            }
+                            onChange={(e) => {
+                                const n = parseInt(e.target.value, 10)
+                                handleInputChange(
+                                    'kotterHexagramId',
+                                    Number.isFinite(n) ? Math.max(1, Math.min(64, n)) : 1,
+                                )
+                            }}
+                            className="w-28 bg-black border border-zinc-700 rounded px-2 py-1.5 text-sm text-white"
+                        />
+                    </div>
                 )}
 
                 <div className="space-y-3 pt-4 border-t border-zinc-800">

@@ -1,6 +1,9 @@
 'use server'
 import { dbBase } from '@/lib/db'
 import { requirePlayer } from '@/lib/auth'
+import { parseAvatarConfig, slugifyName } from '@/lib/avatar-utils'
+import { getElementForNationKey } from '@/lib/ui/nation-element'
+import type { ElementKey } from '@/lib/ui/card-tokens'
 import { computeAgentPositions } from '@/lib/spatial-world/intent-agents'
 
 export async function getIntentAgentsForRoom(roomId: string, tilemap: Record<string, unknown>) {
@@ -34,4 +37,22 @@ export async function getAgentBars(agentPlayerId: string) {
     }),
   ])
   return { bars, quests }
+}
+
+/** For Register 3 panels: avatar + element ring from resolved nation (lobby intent agents, trade UI). */
+export async function getPlayerAvatarPreview(playerId: string): Promise<{
+  avatarConfig: string | null
+  element: ElementKey | null
+} | null> {
+  await requirePlayer()
+  const p = await dbBase.player.findUnique({
+    where: { id: playerId },
+    select: { avatarConfig: true, nation: { select: { name: true } } },
+  })
+  if (!p) return null
+  const parsed = parseAvatarConfig(p.avatarConfig ?? null)
+  const nationKey =
+    (parsed?.nationKey?.trim() || (p.nation?.name ? slugifyName(p.nation.name) : '')) || ''
+  const element = nationKey ? getElementForNationKey(nationKey) : null
+  return { avatarConfig: p.avatarConfig ?? null, element }
 }

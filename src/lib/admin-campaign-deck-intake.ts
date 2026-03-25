@@ -5,6 +5,7 @@
  */
 
 import { ALLYSHIP_DOMAINS } from '@/lib/campaign-subcampaigns'
+import { resolveGmFaceStageMoveForComposition } from '@/lib/gm-face-stage-moves'
 
 export const DECK_INTAKE_VERSION = 1 as const
 
@@ -29,6 +30,11 @@ export interface DeckIntakeV1 {
   includeDonationSpoke: boolean
   /** Optional line woven into every “Raise the urgency” quest body (campaign owner voice). */
   ownerGoalLine?: string
+  /**
+   * Optional GM face × Kotter move for **stage 1** urgency quests only (`K1_*`).
+   * Same move seeds all eight hexagram slots; hexagram + portal theme still vary per card.
+   */
+  gmFaceMoveId?: string | null
   /** ISO timestamp when intake was committed (set server-side on apply). */
   appliedAt?: string
 }
@@ -104,6 +110,16 @@ export function parseDeckIntakeV1(raw: unknown): DeckIntakeV1 | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
   if (o.v !== DECK_INTAKE_VERSION) return null
+
+  let gmFaceMoveId: string | undefined
+  if (o.gmFaceMoveId !== undefined && o.gmFaceMoveId !== null) {
+    if (typeof o.gmFaceMoveId !== 'string') return null
+    const gid = o.gmFaceMoveId.trim()
+    if (gid) {
+      if (!resolveGmFaceStageMoveForComposition(1, gid)) return null
+      gmFaceMoveId = gid
+    }
+  }
   const campaignIntent = o.campaignIntent as CampaignIntent
   const urgencyTone = o.urgencyTone as UrgencyTone
   const validIntent: CampaignIntent[] = [
@@ -131,6 +147,7 @@ export function parseDeckIntakeV1(raw: unknown): DeckIntakeV1 | null {
     urgencyTone,
     includeDonationSpoke: o.includeDonationSpoke,
     ownerGoalLine,
+    ...(gmFaceMoveId ? { gmFaceMoveId } : {}),
     appliedAt: typeof o.appliedAt === 'string' ? o.appliedAt : undefined,
   }
 }
@@ -243,7 +260,7 @@ Max **${OWNER_GOAL_LINE_MAX_LEN}** characters.`,
   {
     id: 'import',
     title: 'Paste DeckIntakeV1 JSON',
-    body: `Paste a JSON object exported from a previous run (\`v\`, \`campaignIntent\`, \`urgencyTone\`, \`includeDonationSpoke\`, optional \`ownerGoalLine\`).`,
+    body: `Paste a JSON object exported from a previous run (\`v\`, \`campaignIntent\`, \`urgencyTone\`, \`includeDonationSpoke\`, optional \`ownerGoalLine\`, optional stage-1 \`gmFaceMoveId\` e.g. \`K1_sage\`).`,
     choices: [{ label: '← Back', patch: {}, next: 'welcome' }],
   },
 ]
@@ -268,6 +285,8 @@ export function finalizeIntake(draft: {
   urgencyTone: UrgencyTone
   includeDonationSpoke: boolean
   ownerGoalLine?: string | null
+  /** Stage-1 registry id only (`K1_*`); omit or null for template-default urgency copy. */
+  gmFaceMoveId?: string | null
 }): DeckIntakeV1 {
   const raw = draft.ownerGoalLine?.trim()
   const ownerGoalLine =
@@ -276,11 +295,15 @@ export function finalizeIntake(draft: {
         ? raw.slice(0, OWNER_GOAL_LINE_MAX_LEN)
         : raw
       : undefined
+  const gmRaw = draft.gmFaceMoveId?.trim()
+  const gmFaceMoveId =
+    gmRaw && resolveGmFaceStageMoveForComposition(1, gmRaw) ? gmRaw : undefined
   return {
     v: DECK_INTAKE_VERSION,
     campaignIntent: draft.campaignIntent,
     urgencyTone: draft.urgencyTone,
     includeDonationSpoke: draft.includeDonationSpoke,
     ...(ownerGoalLine ? { ownerGoalLine } : {}),
+    ...(gmFaceMoveId ? { gmFaceMoveId } : {}),
   }
 }

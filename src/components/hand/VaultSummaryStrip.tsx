@@ -4,6 +4,8 @@ export type VaultSummaryCounts = {
     chargeCaptures: number
     unplacedQuests: number
     privateDrafts: number
+    /** Wake Up → Who ledger (party mini-game + future WHO BARs) */
+    whoContacts?: number
     staleItems: number
 }
 
@@ -15,7 +17,7 @@ type VaultSummaryStripProps = {
  * Command-center strip: counts + staleness hint + placeholder CTA for future Vault Compost (Phase C).
  */
 export function VaultSummaryStrip({ counts }: VaultSummaryStripProps) {
-    const { chargeCaptures, unplacedQuests, privateDrafts, staleItems } = counts
+    const { chargeCaptures, unplacedQuests, privateDrafts, whoContacts = 0, staleItems } = counts
 
     return (
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
@@ -32,6 +34,10 @@ export function VaultSummaryStrip({ counts }: VaultSummaryStripProps) {
                 <span className="text-zinc-300">
                     <span className="text-purple-400/90 font-medium tabular-nums">{privateDrafts}</span>{' '}
                     private {privateDrafts === 1 ? 'draft' : 'drafts'}
+                </span>
+                <span className="text-zinc-300">
+                    <span className="text-emerald-400/90 font-medium tabular-nums">{whoContacts}</span>{' '}
+                    who {whoContacts === 1 ? 'moment' : 'moments'}
                 </span>
             </div>
             {staleItems > 0 ? (

@@ -19,7 +19,7 @@ export default async function HandCompostRoomPage() {
     }))
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <VaultRoomHeader
                 title="Vault Compost"
                 description="Metabolize what you no longer need. Salvage the lines that still matter, then release the rest — care, not shame."

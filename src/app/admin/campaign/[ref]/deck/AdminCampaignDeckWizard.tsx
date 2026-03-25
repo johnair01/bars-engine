@@ -21,6 +21,8 @@ import {
   type CampaignDeckAdminState,
 } from '@/actions/admin-campaign-deck'
 import { OWNER_GOAL_LINE_MAX_LEN } from '@/lib/campaign-deck-quests'
+import { getGmFaceStageMovesForStage } from '@/lib/gm-face-stage-moves'
+import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
 
 type ClientStep = DeckWizardStepId | 'done'
 
@@ -85,6 +87,7 @@ export function AdminCampaignDeckWizard({
   const [draftTone, setDraftTone] = useState<UrgencyTone>(() => defaultDraftIntake().urgencyTone)
   const [draftDonation, setDraftDonation] = useState(() => defaultDraftIntake().includeDonationSpoke)
   const [draftOwnerGoalLine, setDraftOwnerGoalLine] = useState('')
+  const [draftGmFaceMoveId, setDraftGmFaceMoveId] = useState<string>('')
   const [importText, setImportText] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -96,9 +99,12 @@ export function AdminCampaignDeckWizard({
         urgencyTone: draftTone,
         includeDonationSpoke: draftDonation,
         ownerGoalLine: draftOwnerGoalLine,
+        gmFaceMoveId: draftGmFaceMoveId.trim() || null,
       }),
-    [draftIntent, draftTone, draftDonation, draftOwnerGoalLine],
+    [draftIntent, draftTone, draftDonation, draftOwnerGoalLine, draftGmFaceMoveId],
   )
+
+  const stage1FaceMoves = useMemo(() => getGmFaceStageMovesForStage(1), [])
 
   const previewSpecs = useMemo(() => materializeDeckFromIntake(draftIntake), [draftIntake])
 
@@ -163,6 +169,7 @@ export function AdminCampaignDeckWizard({
       setDraftTone(parsed.urgencyTone)
       setDraftDonation(parsed.includeDonationSpoke)
       setDraftOwnerGoalLine(parsed.ownerGoalLine ?? '')
+      setDraftGmFaceMoveId(parsed.gmFaceMoveId ?? '')
       setStep('review')
     } catch {
       setImportError('Invalid JSON.')
@@ -235,6 +242,7 @@ export function AdminCampaignDeckWizard({
               setStep('welcome')
               setActionError(null)
               setDraftOwnerGoalLine('')
+              setDraftGmFaceMoveId('')
             }}
             className="text-zinc-500 hover:text-zinc-300"
           >
@@ -368,7 +376,45 @@ export function AdminCampaignDeckWizard({
             ) : (
               <li>Owner line: (templates only)</li>
             )}
+            <li>
+              GM face move (stage 1 urgency):{' '}
+              {draftGmFaceMoveId.trim() ? (
+                <code className="text-zinc-300">{draftGmFaceMoveId.trim()}</code>
+              ) : (
+                <span className="text-zinc-500">template default</span>
+              )}
+            </li>
           </ul>
+          <div className="space-y-2 border border-zinc-800/80 rounded-xl p-3 bg-zinc-900/30">
+            <p className="text-xs text-zinc-500">
+              Optional: one <strong className="text-zinc-400">K1_*</strong> move seeds all eight “Raise the urgency”
+              quests (hexagram copy still varies per card).
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDraftGmFaceMoveId('')}
+                className={`text-[10px] px-2 py-1 rounded border ${!draftGmFaceMoveId.trim() ? 'border-amber-600/50 bg-amber-950/30 text-amber-200' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+              >
+                None
+              </button>
+              {stage1FaceMoves.map((m) => {
+                const meta = FACE_META[m.face as GameMasterFace]
+                const on = draftGmFaceMoveId === m.id
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    title={m.title}
+                    onClick={() => setDraftGmFaceMoveId(on ? '' : m.id)}
+                    className={`text-[10px] px-2 py-1 rounded border max-w-[10rem] truncate ${on ? 'border-amber-600/50 bg-amber-950/30 text-amber-100' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+                  >
+                    <span className={meta?.color ?? ''}>{meta?.label ?? m.face}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <details className="text-xs text-zinc-500">
             <summary className="cursor-pointer text-zinc-400">Preview card themes</summary>
             <ul className="mt-2 space-y-1 font-mono text-zinc-500">

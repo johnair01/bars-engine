@@ -15,22 +15,27 @@
 
 ## Next (implementation)
 
-### Phase A — Move registry + composer
+### Phase A — Move registry + composer (done)
 
-- Add static registry (or generated JSON) for 48 moves: `id`, `kotterStage`, `face`, `title`, `action`, `evidence`.
-- Extend `composeKotterQuestSeedBar` / `fillKotterQuestSeedSlots` with optional `gmFaceMoveId` → title, micro-beat, evidence, `completionEffects.moveId`.
-- Align `STAGE_MICRO_BEAT` / evidence with matrix where redundant (reduce drift).
+- [`src/lib/gm-face-stage-moves.ts`](../../../src/lib/gm-face-stage-moves.ts) — 48 moves; `getGmFaceStageMoveById`, `getGmFaceStageMovesForStage`, `resolveGmFaceStageMoveForComposition`.
+- [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts) / `fillKotterQuestSeedSlots`: optional `gmFaceMoveId` → title segment, micro-beat, evidence, `completionEffects.moveId`; `gameMasterFace` defaults from move when omitted.
+- Optional follow-up: align generic `STAGE_MICRO_BEAT` / `STAGE_EVIDENCE` with matrix defaults (reduce drift).
 
-### Phase B — Gating + UI
+### Before Phase B (frozen in spec)
 
-- Implement `getAvailableFaceMoves(campaignRef, playerId)` using `Instance.kotterStage` and/or `CampaignMilestone` completion.
-- Move picker in quest / spoke flow: only current-stage moves (or `<= unlockedStage` per product choice in spec).
-- Wire milestone completion → advance `kotterStage` (or `unlockedStageMax`) per spec §D.
+- [spec.md § Addendum E](./spec.md) — player encounter surfaces, shared Kotter stage, owner-as-admin, nested campaigns, **Sage v1 inheritance** (`parentCampaignRef`, provenance, resets, optional defaults).
 
-### Phase C — Headline refresh (optional)
+### Phase B — Gating + UI (done — hub + milestones v1)
 
-- Replace or supplement `getStageAction(1, domain)` with face-move titles when a move is selected; keep domain lines as neutral fallback.
-- Optional: `readingFace` tint line at render without overwriting structural face.
+- [`getAvailableFaceMovesForStage`](../../../src/lib/gm-face-moves-availability.ts), [`getGmFaceMoveAvailabilityForCampaign`](../../../src/actions/campaign-portals.ts), hub data via [`get8PortalsForCampaign`](../../../src/actions/campaign-portals.ts) (`faceMoves`).
+- Campaign hub: [`GmFaceMovesPanel`](../../../src/components/campaign/GmFaceMovesPanel.tsx).
+- [`recordContribution`](../../../src/actions/campaign-deck.ts) → auto-complete milestone at target + bump `kotterStage`; [`adminCompleteCampaignMilestone`](../../../src/actions/campaign-deck.ts) for milestones without targets.
+- **Later:** spoke / quest-create surfaces using the same availability primitive (Addendum E).
+
+### Phase C — Headline refresh + reading tint (done)
+
+- **Stage 1** domain headline in composer: `STAGE_1_PLAY_HEADLINE` (play-speak); stages 2–8 still use `getStageAction`; face-move title still overrides title segment when `gmFaceMoveId` set.
+- **`readingFace`** on [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts) input → second lens block + `completionEffects.readingFace`; structural `gameMasterFace` unchanged.
 
 ### Ongoing
 

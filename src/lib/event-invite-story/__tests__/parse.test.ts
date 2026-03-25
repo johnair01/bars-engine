@@ -13,4 +13,15 @@ const parsed = parseEventInviteStory(JSON.stringify(minimal))
 if (!parsed || parsed.start !== 'a') throw new Error('parse minimal failed')
 if (parseEventInviteStory('')) throw new Error('empty should fail')
 if (parseEventInviteStory('{"id":1}')) throw new Error('invalid should fail')
+
+const withCtas = {
+    ...minimal,
+    endingCtas: [
+        { href: '/event', label: 'E', className: 'a' },
+        { href: '/x', label: 'X', className: 'b' },
+    ],
+}
+const p2 = parseEventInviteStory(JSON.stringify(withCtas))
+if (!p2?.endingCtas || p2.endingCtas.length !== 2) throw new Error('endingCtas parse failed')
+
 console.log('event-invite-story parse: OK')

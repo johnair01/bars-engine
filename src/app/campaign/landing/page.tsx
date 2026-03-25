@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getSpokeLandingContext } from '@/actions/campaign-portals'
+import { GmFaceMovesPanel } from '@/components/campaign/GmFaceMovesPanel'
 import { loadBruisedBananaQuestMapCard } from '@/lib/campaign-hub/bruised-banana-quest-map'
+import { getAvailableFaceMovesForStage } from '@/lib/gm-face-moves-availability'
 import { KOTTER_STAGES } from '@/lib/kotter'
 
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
@@ -35,6 +37,7 @@ export default async function CampaignLandingPage(props: {
       ? loadBruisedBananaQuestMapCard(spokeIndex)
       : null
   const stageInfo = KOTTER_STAGES[ctx.kotterStage as keyof typeof KOTTER_STAGES]
+  const faceMoves = getAvailableFaceMovesForStage(ctx.kotterStage)
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
@@ -71,6 +74,17 @@ export default async function CampaignLandingPage(props: {
             <p className="mt-3 text-zinc-500 text-xs">{ctx.pathHint}</p>
           </section>
         )}
+
+        <GmFaceMovesPanel
+          kotterStage={ctx.kotterStage}
+          campaignRef={campaignRef}
+          moves={faceMoves}
+          pickConfig={{
+            campaignRef,
+            hexagramId: ctx.hexagramId,
+            portalTheme: null,
+          }}
+        />
 
         <section className="text-xs text-zinc-600 border border-dashed border-zinc-800 rounded-xl p-4">
           <p className="uppercase tracking-widest mb-2 text-zinc-500">Presence</p>

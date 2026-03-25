@@ -13,8 +13,8 @@ import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
-config({ path: '.env.local' })
 config({ path: '.env' })
+config({ path: '.env.local', override: true })
 
 import { resolveDatabaseUrl } from '../src/lib/db-resolve'
 
@@ -66,6 +66,21 @@ async function main() {
     // Check tables and row counts
     console.log('📋 TABLES')
     console.log('─'.repeat(50))
+
+    try {
+        const partifulCols = await client.$queryRaw<{ column_name: string }[]>`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'custom_bars'
+            AND column_name IN ('partifulUrl', 'eventSlug')
+        `
+        const names = new Set(partifulCols.map((r) => r.column_name))
+        const ok = names.has('partifulUrl') && names.has('eventSlug')
+        console.log(
+            `   custom_bars EIP columns (partifulUrl, eventSlug): ${ok ? 'present' : 'MISSING — run migrate deploy against this DB'}`,
+        )
+    } catch (e) {
+        console.log(`   custom_bars column check: error (${(e as Error).message})`)
+    }
 
     const tables = ['players', 'app_config', 'instances'] as const
     for (const table of tables) {

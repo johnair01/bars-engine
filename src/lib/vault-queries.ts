@@ -4,6 +4,7 @@
  */
 import { db } from '@/lib/db'
 import { daysAgoDate, VAULT_ROOM_LIST_CAP, VAULT_SERVER_LIST_CAP, VAULT_STALE_DAYS } from '@/lib/vault-ui'
+import { whoContactGrammarOrFilter } from '@/lib/vault-who-contacts'
 
 export const draftWhere = (playerId: string) => ({
     creatorId: playerId,
@@ -14,6 +15,20 @@ export const draftWhere = (playerId: string) => ({
     type: { not: 'quest' as const },
     inviteId: null,
 })
+
+/** Private drafts that are not on the Who / contacts ledger (see `whoContactVaultWhere`). */
+export function genericPrivateDraftWhere(playerId: string) {
+    return {
+        AND: [draftWhere(playerId), { NOT: { OR: whoContactGrammarOrFilter() } }],
+    }
+}
+
+/** Party moments + future WHO captures — same visibility rules as drafts, different room in Vault. */
+export function whoContactVaultWhere(playerId: string) {
+    return {
+        AND: [draftWhere(playerId), { OR: whoContactGrammarOrFilter() }],
+    }
+}
 
 export const unplacedPersonalQuestWhere = (playerId: string) => ({
     creatorId: playerId,
@@ -113,9 +128,26 @@ async function fetchUnplacedQuestsSelect(playerId: string, take: number) {
 
 async function fetchPrivateDraftsFull(playerId: string, take: number) {
     return db.customBar.findMany({
-        where: draftWhere(playerId),
+        where: genericPrivateDraftWhere(playerId),
         orderBy: { createdAt: 'desc' },
         take,
+    })
+}
+
+const whoContactSelect = {
+    id: true,
+    title: true,
+    description: true,
+    createdAt: true,
+    completionEffects: true,
+} as const
+
+async function fetchWhoContactBarsSelect(playerId: string, take: number) {
+    return db.customBar.findMany({
+        where: whoContactVaultWhere(playerId),
+        orderBy: { createdAt: 'desc' },
+        take,
+        select: whoContactSelect,
     })
 }
 
@@ -142,6 +174,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
     const [
         chargeCount,
         draftCount,
+        whoContactCount,
         staleDraftCount,
         invitationCount,
         unplacedQuestCount,
@@ -149,12 +182,14 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         chargeBars,
         personalQuestsRaw,
         privateDrafts,
+        whoContactBars,
         invitationBars,
     ] = await Promise.all([
         db.customBar.count({
             where: { creatorId: playerId, type: 'charge_capture', status: 'active' },
         }),
-        db.customBar.count({ where: draftWhere(playerId) }),
+        db.customBar.count({ where: genericPrivateDraftWhere(playerId) }),
+        db.customBar.count({ where: whoContactVaultWhere(playerId) }),
         db.customBar.count({
             where: { ...draftWhere(playerId), createdAt: { lt: staleDate } },
         }),
@@ -171,6 +206,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         fetchChargeBarsSelect(playerId, listTake),
         fetchUnplacedQuestsSelect(playerId, listTake),
         fetchPrivateDraftsFull(playerId, listTake),
+        fetchWhoContactBarsSelect(playerId, listTake),
         fetchInvitationBarsSelect(playerId, listTake),
     ])
 
@@ -186,6 +222,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
     return {
         chargeCount,
         draftCount,
+        whoContactCount,
         staleDraftCount,
         invitationCount,
         unplacedQuestCount,
@@ -194,6 +231,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         chargeBars,
         personalQuestsRaw,
         privateDrafts,
+        whoContactBars,
         invitationBars,
         personalQuestRows,
         listTake,

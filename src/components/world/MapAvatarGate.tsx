@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 
+import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
+
 type Props = {
   /** Lobby vs world: lobby can link to character-creator; world requires onboarding. */
   context?: 'lobby' | 'world'
@@ -9,7 +11,7 @@ type Props = {
 
 export function MapAvatarGate({ context = 'lobby' }: Props) {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={zoneBackgroundStyle('lobby')}>
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 space-y-6 max-w-sm w-full text-center">
         <div className="space-y-2">
           <h2 className="text-white font-bold text-lg">Build your character</h2>

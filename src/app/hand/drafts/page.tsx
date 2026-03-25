@@ -13,10 +13,10 @@ export default async function HandDraftsRoomPage() {
     const data = await loadVaultCoreData(player.id, 'room')
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <VaultRoomHeader
                 title="Private Drafts"
-                description="Work-in-progress BARs — pick up, edit, release to the bowl, or publish when ready."
+                description="Work-in-progress BARs — pick up, edit, release to the bowl, or publish when ready. Moments with people from event bingo live under Vault → Who."
             />
 
             <VaultFourMovesStrip

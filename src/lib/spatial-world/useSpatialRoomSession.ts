@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type MutableRefObject, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, type MutableRefObject, type RefObject } from 'react'
 import type { AnchorData, AgentData, RoomRenderer, TileMapData } from '@/lib/spatial-world/pixi-room'
 import { mountSpatialRoomSession } from '@/lib/spatial-world/spatial-room-session'
 
@@ -31,7 +31,9 @@ export function useSpatialRoomSession(args: UseSpatialRoomSessionArgs): {
   const onAgentClickRef = useRef(args.onAgentClick)
   onAgentClickRef.current = args.onAgentClick
 
-  useEffect(() => {
+  // useLayoutEffect: containerRef must be attached before mount; useEffect can run too early
+  // and skip Pixi init forever (black screen with chrome still visible).
+  useLayoutEffect(() => {
     if (!args.spriteReady || !args.containerRef.current) return
 
     const myGen = ++generationRef.current
@@ -50,14 +52,18 @@ export function useSpatialRoomSession(args: UseSpatialRoomSessionArgs): {
       walkableSpriteUrl,
       onAgentClick: agent => onAgentClickRef.current(agent),
       onPortalActivate,
-    }).then(session => {
-      if (myGen !== generationRef.current) {
-        session.dispose()
-        return
-      }
-      sessionDisposeRef.current = session.dispose
-      rendererRef.current = session.renderer
     })
+      .then(session => {
+        if (myGen !== generationRef.current) {
+          session.dispose()
+          return
+        }
+        sessionDisposeRef.current = session.dispose
+        rendererRef.current = session.renderer
+      })
+      .catch(err => {
+        console.error('[useSpatialRoomSession] Pixi mount failed', err)
+      })
 
     return () => {
       generationRef.current++

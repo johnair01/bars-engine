@@ -22,10 +22,19 @@ export type EventInvitePassage = {
     ending?: EventInviteEnding
 }
 
+/** Outbound buttons after the final passage (overrides defaults when set). */
+export type EventInviteEndingCta = {
+    href: string
+    label: string
+    className: string
+}
+
 export type EventInviteStory = {
     id: string
     start: string
     passages: EventInvitePassage[]
+    /** When set, invite page uses these instead of EVENT_INVITE_DEFAULT_CTAS. */
+    endingCtas?: EventInviteEndingCta[]
 }
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -90,9 +99,23 @@ export function parseEventInviteStory(raw: string | null | undefined): EventInvi
         }
     }
 
+    let endingCtas: EventInviteEndingCta[] | undefined
+    if (parsed.endingCtas !== undefined) {
+        if (!Array.isArray(parsed.endingCtas)) return null
+        endingCtas = []
+        for (const c of parsed.endingCtas) {
+            if (!isRecord(c)) return null
+            if (typeof c.href !== 'string' || typeof c.label !== 'string' || typeof c.className !== 'string')
+                return null
+            endingCtas.push({ href: c.href, label: c.label, className: c.className })
+        }
+        if (endingCtas.length === 0) return null
+    }
+
     return {
         id: parsed.id,
         start: parsed.start,
         passages,
+        endingCtas,
     }
 }

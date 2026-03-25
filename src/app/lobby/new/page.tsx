@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { InstanceCreationWizard } from './InstanceCreationWizard'
 
 export default async function NewInstancePage({
@@ -8,7 +9,7 @@ export default async function NewInstancePage({
 }) {
   const { copyFrom } = await searchParams
   return (
-    <div className="min-h-screen bg-black text-zinc-200 font-sans">
+    <div className="min-h-screen text-zinc-200 font-sans" style={zoneBackgroundStyle('lobby')}>
       <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">
         <header className="space-y-1">
           <Link href="/lobby" className="text-xs text-zinc-600 hover:text-zinc-400 transition">

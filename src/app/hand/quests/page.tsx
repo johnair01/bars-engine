@@ -17,7 +17,7 @@ export default async function HandQuestsRoomPage(props: { searchParams: Promise<
     const data = await loadVaultCoreData(player.id, 'room')
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <VaultRoomHeader
                 title="Personal Quests"
                 description="Unplaced quests from your BARs or 321 — place them in a thread or on the campaign gameboard."

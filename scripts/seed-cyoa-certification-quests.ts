@@ -37,7 +37,8 @@ const CERT_QUEST_IDS = [
     'cert-daemons-discovery-v1',
     'cert-template-library-v1',
     'cert-game-loop-tighten-v1',
-    'cert-campaign-map-phase-1-v1'
+    'cert-campaign-map-phase-1-v1',
+    'cert-admin-books-compass-compact-ui-v1'
 ]
 
 async function seed() {
@@ -3466,6 +3467,100 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${campaignMapSlug}`)
+
+    // --- Certification: Admin books list + home compass row (ABCL) ---
+    const abclTitle = 'Certification: Admin Books & Compass Layout V1'
+    const abclSlug = 'cert-admin-books-compass-compact-ui-v1'
+
+    const abclPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify admin Books list overflow fixes and the home dashboard compass row layout. This protects operators preparing the **Bruised Banana** residency and Quest Library throughput.',
+            cleanText: 'Verify admin books UI and compass layout.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Admin Books — no clipped buttons\n\nSign in as **admin**. Open [/admin/books](/admin/books). Find a book with many actions (e.g. analyzed + chunks remaining). Confirm **no action buttons are cut off** on the right. Use **More actions** if present. Click **Open book** and confirm the book hub shows a **wrapping** action row with every pipeline control.',
+            cleanText: 'Step 1: Books list and hub wrap; no clipped buttons.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Home — compass + current move row\n\nOpen the **dashboard** [/](/) (signed in). At **viewport width ≥640px**, confirm **Four moves** and **Current move** sit **side by side** in one row. Narrow below **640px**: they should **stack** with readable tap targets.',
+            cleanText: 'Step 2: Compass row at sm+; stack on mobile.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'Admin books + compass layout verified. Better operator UX supports the residency and engine polish. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const abclParsedJson = JSON.stringify({
+        title: abclTitle,
+        startPassage: 'START',
+        passages: abclPassages
+    })
+
+    const abclStory = await db.twineStory.upsert({
+        where: { slug: abclSlug },
+        update: {
+            title: abclTitle,
+            parsedJson: abclParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: abclTitle,
+            slug: abclSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Admin books + compass compact UI (seed-cyoa-certification-quests.ts)',
+            parsedJson: abclParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: abclSlug },
+        update: {
+            title: abclTitle,
+            description: 'Verify /admin/books wrap + hub; home compass row sm+.',
+            reward: 1,
+            twineStoryId: abclStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-books-compass-compact-ui/spec.md'
+        },
+        create: {
+            id: abclSlug,
+            title: abclTitle,
+            description: 'Verify /admin/books wrap + hub; home compass row sm+.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: abclStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/admin-books-compass-compact-ui/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${abclSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

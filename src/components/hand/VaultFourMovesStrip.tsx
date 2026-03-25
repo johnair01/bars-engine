@@ -1,4 +1,7 @@
+import Image from 'next/image'
 import Link from 'next/link'
+
+import { MOVE_ICON_PATHS, VAULT_MOVE_KEY_TO_ICON } from '@/lib/ui/move-icons'
 
 export type VaultMoveEntry = {
     /** Short verb phrase shown as the action label. */
@@ -92,6 +95,13 @@ export function VaultFourMovesStrip({ moves }: { moves: VaultRoomMovesConfig }) 
                             className={`rounded-lg border ${color.border} bg-zinc-900/40 px-3 py-2.5 space-y-1`}
                         >
                             <div className="flex items-center gap-2">
+                                <Image
+                                    src={MOVE_ICON_PATHS[VAULT_MOVE_KEY_TO_ICON[key]]}
+                                    alt=""
+                                    width={24}
+                                    height={24}
+                                    className="shrink-0 opacity-90"
+                                />
                                 <span
                                     className={`text-[9px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded ${color.badge}`}
                                 >

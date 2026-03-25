@@ -129,6 +129,7 @@ See [backend/Makefile](backend/Makefile) for all backend targets.
 ---
 
 ## 📚 Documentation
+- [docs/SEMANTIC_REGISTERS.md](./docs/SEMANTIC_REGISTERS.md) - Seven semantic visual registers (Cosmic → Ceremony); fork entry point; ties to `card-tokens.ts`.
 - [FOUNDATIONS.md](./FOUNDATIONS.md) - Ontology, five dimensions, emotional alchemy, creative composting, Yellow Brick Road.
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Schema mapping, core objects, governance, economy.
 - [CLAUDE.md](./CLAUDE.md) - Agent ethos and development guidelines (Integral Theory based).

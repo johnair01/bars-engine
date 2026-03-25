@@ -5,14 +5,19 @@ import {
     parseAvatarConfig,
     getAvatarHue,
     getAvatarInitials,
-    type AvatarConfig
 } from '@/lib/avatar-utils'
 import { getAvatarPartSpecs } from '@/lib/avatar-parts'
+import type { ElementKey } from '@/lib/ui/card-tokens'
+import { REGISTER_PORTRAIT_IMG_CLASSES, registerPortraitShellStyle } from '@/lib/ui/register-portrait'
 
 type AvatarProps = {
     player: { name: string; avatarConfig?: string | null; pronouns?: string | null; id?: string }
     size?: 'sm' | 'md' | 'lg' | 'xl'
     className?: string
+    /** ARDS Register 3: upward crop + optional element vignette (panels, trade UI). */
+    register3?: boolean
+    /** When set with register3, applies frame/glow from ELEMENT_TOKENS. */
+    element?: ElementKey
 }
 
 const sizeClasses = {
@@ -22,7 +27,13 @@ const sizeClasses = {
     xl: 'w-64 h-64 text-4xl'
 }
 
-export function Avatar({ player, size = 'md', className = '' }: AvatarProps) {
+export function Avatar({
+    player,
+    size = 'md',
+    className = '',
+    register3 = false,
+    element
+}: AvatarProps) {
     const config = parseAvatarConfig(player.avatarConfig ?? null)
     const initials = getAvatarInitials(config, player.name)
     const hue = getAvatarHue(config)
@@ -55,10 +66,16 @@ export function Avatar({ player, size = 'md', className = '' }: AvatarProps) {
         )
     }
 
+    const layerClass = register3 ? REGISTER_PORTRAIT_IMG_CLASSES : 'absolute inset-0 w-full h-full object-contain'
+    const shellStyle =
+        register3 && element
+            ? { ...registerPortraitShellStyle(element), border: 'none' as const }
+            : { border: '2px solid hsl(var(--border) / 0.3)' }
+
     return (
         <div
             className={`relative overflow-hidden rounded-full shrink-0 bg-zinc-900 ${sizeClass} ${className}`}
-            style={{ border: '2px solid hsl(var(--border) / 0.3)' }}
+            style={shellStyle}
             title={player.name}
         >
             {visibleSpecs.map((spec) => (
@@ -66,7 +83,7 @@ export function Avatar({ player, size = 'md', className = '' }: AvatarProps) {
                     key={spec.layer}
                     src={spec.path}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-contain"
+                    className={layerClass}
                     onError={() => handleLayerError(spec.layer)}
                 />
             ))}

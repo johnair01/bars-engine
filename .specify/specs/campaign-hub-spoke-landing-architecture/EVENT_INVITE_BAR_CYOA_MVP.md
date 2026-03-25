@@ -20,6 +20,12 @@ Partiful (RSVP) → public BAR link → JSON CYOA → role / intent → deeper r
 
 **Note:** Partiful remains the **RSVP + logistics** canonical link per event. **`/event`** stays the **in-app campaign home** (see test plan). The **BAR** is the **bridge** from “I RSVP’d” to “I’m oriented before April 5.”
 
+### Evolution — BAR-first invitation + event initiation Twine
+
+Product direction: the **BAR URL can be the primary share** (text / QR), with **two primary actions** on the invite surface: **RSVP on Partiful** and **begin initiation Twine** scoped to **this event** via **explicit `eventSlug` in the URL**. One **dedicated `Adventure` per event** (e.g. Apr 4 vs Apr 5).
+
+**Canonical spec:** [.specify/specs/event-invite-party-initiation/spec.md](../event-invite-party-initiation/spec.md) (routing, slugs, `partifulUrl` + `eventSlug` on BAR).
+
 ## MVP capabilities (tiers from draft)
 
 | Tier | Capability |
@@ -67,7 +73,7 @@ type Ending = { role: string; description: string }
 - [x] **EventInviteStoryReader** + `parseEventInviteStory`.  
 - [x] Seed: `npx tsx scripts/with-env.ts "npx tsx scripts/seed-bruised-banana-event-invite-bar.ts"` → stable id **`bb-event-invite-apr26`**.  
 - [x] Default ending CTAs: `/event`, `/campaign/hub?ref=bruised-banana`, `/conclave`.  
-- [ ] Partiful / email: paste **`https://<domain>/invite/bb-event-invite-apr26`**.  
+- [x] Partiful / email: paste engine URLs — see **`docs/events/PARTIFUL_ENGINE_LINKS.md`** (Apr 4 + Apr 5 invite BARs).  
 - [ ] Optional: analytics on `/invite/*`; optional `localStorage` resume (Tier 3).
 
 ## Non-goals (this MVP)

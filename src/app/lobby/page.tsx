@@ -6,6 +6,7 @@ import { slugify } from '@/lib/spatial-world/utils'
 import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import Link from 'next/link'
+import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { LobbyCanvas } from './LobbyCanvas'
 
 export default async function LobbyPage() {
@@ -17,7 +18,10 @@ export default async function LobbyPage() {
 
   if (!mapId) {
     return (
-      <div className="min-h-screen bg-black text-zinc-400 flex flex-col items-center justify-center gap-6 p-8">
+      <div
+        className="min-h-screen text-zinc-400 flex flex-col items-center justify-center gap-6 p-8"
+        style={zoneBackgroundStyle('lobby')}
+      >
         <h1 className="text-xl font-bold text-white">Lobby</h1>
         <p className="text-center max-w-md">
           The global lobby is not yet configured. An admin can set a default map in config.
@@ -46,7 +50,10 @@ export default async function LobbyPage() {
 
   if (!spatialMap || spatialMap.rooms.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-zinc-400 flex flex-col items-center justify-center gap-6 p-8">
+      <div
+        className="min-h-screen text-zinc-400 flex flex-col items-center justify-center gap-6 p-8"
+        style={zoneBackgroundStyle('lobby')}
+      >
         <h1 className="text-xl font-bold text-white">Lobby</h1>
         <p className="text-center max-w-md">
           The lobby map has no rooms. An admin can add rooms in the map editor.

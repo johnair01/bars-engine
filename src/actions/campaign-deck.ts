@@ -6,8 +6,17 @@
  */
 
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
+import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { getActiveInstance } from '@/actions/instance'
+import {
+  parseGmFaceQuestAlchemyTag,
+  parseGmFaceQuestReadingFace,
+  persistGmFaceMoveQuestBar,
+} from '@/lib/gm-face-move-quest-persist'
+import type { AllyshipDomain } from '@/lib/kotter'
 import {
   buildDrawPool,
   collectUsedCardIds,
@@ -35,6 +44,52 @@ async function requireAdmin(): Promise<{ id: string } | { error: string }> {
   const ok = player.roles.some((r) => r.role.key === 'admin')
   if (!ok) return { error: 'Admin role required' }
   return { id: player.id }
+}
+
+/** Advance instance Kotter stage by 1 (max 8) for this campaign ref. */
+async function bumpKotterStageInTx(
+  tx: Prisma.TransactionClient,
+  campaignRef: string,
+): Promise<boolean> {
+  const inst = await tx.instance.findFirst({
+    where: { OR: [{ campaignRef }, { slug: campaignRef }] },
+    select: { id: true, kotterStage: true },
+  })
+  if (!inst) return false
+  const cur = inst.kotterStage ?? 1
+  if (cur >= 8) return false
+  await tx.instance.update({
+    where: { id: inst.id },
+    data: { kotterStage: cur + 1 },
+  })
+  return true
+}
+
+/**
+ * When an **active** milestone has a numeric **targetValue** and **currentValue** has reached it,
+ * mark the milestone complete and advance the campaign instance’s `kotterStage` by 1 (cap 8).
+ */
+async function maybeCompleteMilestoneAndAdvanceKotter(milestoneId: string): Promise<void> {
+  await db.$transaction(async (tx) => {
+    const m = await tx.campaignMilestone.findUnique({
+      where: { id: milestoneId },
+      select: {
+        id: true,
+        status: true,
+        targetValue: true,
+        currentValue: true,
+        campaignRef: true,
+      },
+    })
+    if (!m || m.status !== 'active') return
+    if (m.targetValue == null) return
+    if (m.currentValue < m.targetValue) return
+    await tx.campaignMilestone.update({
+      where: { id: milestoneId },
+      data: { status: 'complete' },
+    })
+    await bumpKotterStageInTx(tx, m.campaignRef)
+  })
 }
 
 // ─── Input types ─────────────────────────────────────────────────────────────
@@ -365,7 +420,18 @@ export async function completeSpokeSession(
   try {
     const session = await db.spokeSession.findUnique({
       where: { id: sessionId },
-      select: { portalId: true, campaignRef: true, playerId: true, status: true },
+      select: {
+        portalId: true,
+        campaignRef: true,
+        playerId: true,
+        status: true,
+        portal: {
+          select: {
+            hexagramId: true,
+            deckCard: { select: { theme: true } },
+          },
+        },
+      },
     })
 
     if (!session) return { error: 'Session not found' }
@@ -400,6 +466,77 @@ export async function completeSpokeSession(
         data: { completionCount: { increment: 1 } },
       }),
     ])
+
+    const moveId = outcome.gmFaceMoveId?.trim()
+    if (moveId) {
+      const portalHex = session.portal?.hexagramId
+      const hex =
+        portalHex != null ? Math.max(1, Math.min(64, portalHex)) : 1
+      const portalTheme = session.portal?.deckCard?.theme ?? null
+
+      let inst = await db.instance.findFirst({
+        where: {
+          OR: [{ campaignRef: session.campaignRef }, { slug: session.campaignRef }],
+        },
+        select: {
+          kotterStage: true,
+          allyshipDomain: true,
+          campaignRef: true,
+          slug: true,
+        },
+      })
+      if (!inst) {
+        const active = await getActiveInstance()
+        if (active) {
+          inst = await db.instance.findUnique({
+            where: { id: active.id },
+            select: {
+              kotterStage: true,
+              allyshipDomain: true,
+              campaignRef: true,
+              slug: true,
+            },
+          })
+        }
+      }
+
+      if (inst) {
+        const validDomains: AllyshipDomain[] = [
+          'GATHERING_RESOURCES',
+          'SKILLFUL_ORGANIZING',
+          'RAISE_AWARENESS',
+          'DIRECT_ACTION',
+        ]
+        const domain = (inst.allyshipDomain ?? 'GATHERING_RESOURCES') as AllyshipDomain
+        const allyshipDomain = validDomains.includes(domain) ? domain : 'GATHERING_RESOURCES'
+        const resolvedRef = (inst.campaignRef ?? inst.slug ?? session.campaignRef).trim()
+
+        const questResult = await persistGmFaceMoveQuestBar({
+          playerId,
+          campaignRef: resolvedRef,
+          kotterStage: inst.kotterStage ?? 1,
+          allyshipDomain,
+          hexagramId: hex,
+          gmFaceMoveId: moveId,
+          portalTheme,
+          emotionalAlchemyTag: parseGmFaceQuestAlchemyTag(
+            outcome.emotionalAlchemyTag ?? undefined,
+          ),
+          readingFace: parseGmFaceQuestReadingFace(outcome.readingFace ?? undefined),
+          provenanceExtra: {
+            source: 'spoke-session-complete',
+            spokeSessionId: sessionId,
+          },
+        })
+        if ('questId' in questResult) {
+          revalidatePath('/hand')
+          revalidatePath('/')
+          revalidatePath('/campaign/hub')
+        } else {
+          console.warn('[completeSpokeSession] gmFaceMoveId quest persist:', questResult.error)
+        }
+      }
+    }
 
     return { success: true, barSeedIds: outcome.barSeedIds }
   } catch (err) {
@@ -498,11 +635,49 @@ export async function recordContribution(
       }),
     ])
 
+    try {
+      await maybeCompleteMilestoneAndAdvanceKotter(milestoneId)
+    } catch (e) {
+      console.warn('[recordContribution] milestone completion / kotter advance', e)
+    }
+
     return {
       success: true,
       contributionId: contribution.id,
       newTotal: milestone.currentValue,
     }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { error: msg }
+  }
+}
+
+/**
+ * Admin: mark a milestone **complete** and advance the campaign instance’s Kotter stage by 1 (cap 8).
+ * Use when a milestone has **no** `targetValue` or completion is judged outside contribution totals.
+ */
+export async function adminCompleteCampaignMilestone(
+  milestoneId: string,
+): Promise<{ success: true; kotterAdvanced: boolean } | { error: string }> {
+  const admin = await requireAdmin()
+  if ('error' in admin) return admin
+
+  try {
+    let kotterAdvanced = false
+    await db.$transaction(async (tx) => {
+      const m = await tx.campaignMilestone.findUnique({
+        where: { id: milestoneId },
+        select: { id: true, status: true, campaignRef: true },
+      })
+      if (!m) throw new Error('Milestone not found')
+      if (m.status === 'complete') return
+      await tx.campaignMilestone.update({
+        where: { id: milestoneId },
+        data: { status: 'complete' },
+      })
+      kotterAdvanced = await bumpKotterStageInTx(tx, m.campaignRef)
+    })
+    return { success: true, kotterAdvanced }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return { error: msg }

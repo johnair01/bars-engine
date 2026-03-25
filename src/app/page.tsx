@@ -40,6 +40,11 @@ import { NationProvider } from '@/lib/ui/nation-provider'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
 import { derivePlayerMoveContext } from '@/lib/player-move-context'
+import {
+  campaignHomePath,
+  needsCampaignOnboardingRoute,
+  resolveDefaultCampaignRef,
+} from '@/lib/campaign-player-home'
 
 function isPrismaConnectionError(err: unknown): boolean {
   const e = err as { code?: string; name?: string; message?: string }
@@ -166,9 +171,9 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
       }
     })
   } catch (err: unknown) {
-    // P2021 = table does not exist — DB needs migrations/setup
+    // P2021 = table missing; P2022 = column missing — DB needs migrations (e.g. custom_bars.partifulUrl)
     const code = (err as { code?: string })?.code
-    if (code === 'P2021') {
+    if (code === 'P2021' || code === 'P2022') {
       return <SetupRequired />
     }
     if (isPrismaConnectionError(err)) {
@@ -433,6 +438,13 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
+  const defaultCampaignRef = resolveDefaultCampaignRef(activeInstance?.campaignRef)
+  const useCampaignOnboarding = needsCampaignOnboardingRoute(player, hasActiveOrientationThread)
+  const playerCampaignHomeHref = campaignHomePath({
+    campaignRef: defaultCampaignRef,
+    useOnboardingCampaignRoute: useCampaignOnboarding,
+  })
+
   // Campaign Entry: show when player has bruised-banana thread and hasn't dismissed
   const bbThread = threads.find(
     (t: { id: string }) =>
@@ -503,13 +515,20 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <CampaignSeedReadyCard seeds={myCampaignSeeds} />
         )}
         {campaignsResponsible.length > 0 && (
-          <CampaignsResponsibleSection campaigns={campaignsResponsible} />
+          <CampaignsResponsibleSection
+            campaigns={campaignsResponsible}
+            defaultCampaignRef={defaultCampaignRef}
+            needsCampaignOnboardingRoute={useCampaignOnboarding}
+          />
         )}
 
         {/* Today's Charge + Archive */}
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
-        <ThroughputLanesSection activeInstanceId={activeInstance?.id ?? null} />
+        <ThroughputLanesSection
+          activeInstanceId={activeInstance?.id ?? null}
+          campaignHomeHref={playerCampaignHomeHref}
+        />
 
         {milestoneGuidance && (
           <CampaignMilestoneStrip data={milestoneGuidance} variant="dashboard" />

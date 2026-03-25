@@ -1,14 +1,16 @@
+import Image from 'next/image'
 import Link from 'next/link'
+
+import { MOVE_ICON_PATHS, type MoveIconSlug } from '@/lib/ui/move-icons'
 
 /**
  * OrientationCompass — shows the player where they are in the four-move cycle
  * and offers one concrete next action.
  *
- * Spec: .specify/specs/player-handbook-orientation-system/spec.md (FR3)
+ * Spec: .specify/specs/player-handbook-orientation-system/spec.md (FR3);
+ * Single card, ~50/50 columns on phone; current-move pane wraps CTAs (ABCL follow-up).
  * No new DB queries — derives context from data already loaded by page.tsx.
  */
-
-type MoveKey = 'wake_up' | 'clean_up' | 'grow_up' | 'show_up'
 
 type CompassProps = {
   /** Completed moveType strings from PlayerQuest rows */
@@ -122,6 +124,13 @@ export function OrientationCompass(props: CompassProps) {
   // The check-in button lives in DashboardHeader above this component.
   const showRitualGate = !hasCheckedIn && !props.isFirstSession && !props.isSetupIncomplete
 
+  const quadrantOrder: { label: string; slug: MoveIconSlug }[] = [
+    { label: 'Wake Up', slug: 'wake-up' },
+    { label: 'Grow Up', slug: 'grow-up' },
+    { label: 'Clean Up', slug: 'clean-up' },
+    { label: 'Show Up', slug: 'show-up' },
+  ]
+
   return (
     <div className="space-y-1.5">
       {showRitualGate && (
@@ -129,25 +138,69 @@ export function OrientationCompass(props: CompassProps) {
           ↑ Check in above to orient your session — the compass updates once your field is active.
         </p>
       )}
-      <div className={`rounded-xl border ${s.borderClass} ${showRitualGate ? 'opacity-60' : ''} bg-zinc-900/30 px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
-        <div className="space-y-0.5 min-w-0">
-          <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-mono">Current move</p>
-          <p className={`text-sm font-bold ${s.accentClass}`}>{s.move}</p>
-          <p className="text-xs text-zinc-500 leading-snug max-w-sm">{s.tagline}</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0 flex-wrap">
-          <Link
-            href={s.href}
-            className={`text-xs font-bold px-4 py-2 rounded-lg border ${s.borderClass} ${s.accentClass} hover:bg-zinc-800 transition-colors whitespace-nowrap`}
-          >
-            {s.action} →
-          </Link>
-          <Link
-            href="/wiki/handbook"
-            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors whitespace-nowrap"
-          >
-            Handbook
-          </Link>
+      <div
+        className={`rounded-xl border ${s.borderClass} bg-zinc-950/45 overflow-hidden ${
+          showRitualGate ? 'opacity-60' : ''
+        }`}
+      >
+        <div className="grid min-h-0 grid-cols-2 items-stretch gap-0 divide-x divide-zinc-800/70 md:grid-cols-[minmax(0,11.5rem)_minmax(0,1fr)]">
+          {/* Four moves — ~half screen on phone; grid rows grow to match current-move column height */}
+          <div className="flex min-h-0 h-full min-w-0 flex-col p-2.5 sm:p-3 md:pr-3">
+            <p className="mb-1.5 shrink-0 text-[9px] uppercase tracking-widest text-zinc-600">Four moves</p>
+            <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-[1fr_1fr] gap-1.5 sm:gap-2">
+              {quadrantOrder.map(({ label, slug }) => {
+                const active = s.move === label
+                const src = MOVE_ICON_PATHS[slug]
+                return (
+                  <div
+                    key={slug}
+                    className={`flex h-full min-h-0 min-w-0 items-center gap-1 rounded-md border px-1.5 py-1 sm:gap-1.5 sm:rounded-lg sm:px-2 sm:py-1.5 ${
+                      active ? 'border-zinc-500 bg-zinc-800/60' : 'border-zinc-800/60 bg-zinc-900/30 opacity-70'
+                    }`}
+                  >
+                    <Image
+                      src={src}
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="size-5 shrink-0 opacity-90 sm:h-6 sm:w-6"
+                    />
+                    <span
+                      className={`min-w-0 text-[9px] font-semibold leading-tight sm:text-[10px] ${
+                        active ? 'text-zinc-200' : 'text-zinc-500'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Current move — same width budget as half an iPhone at default grid; stacks CTA + Handbook */}
+          <div className="flex min-w-0 flex-col gap-2 p-2.5 sm:gap-2.5 sm:p-3">
+            <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Current move</p>
+            <p className={`text-sm font-bold leading-tight break-words text-balance ${s.accentClass}`}>{s.move}</p>
+            <p className="text-[11px] leading-snug text-zinc-500 break-words text-pretty sm:text-xs">{s.tagline}</p>
+            <div className="mt-0.5 flex min-w-0 flex-col gap-2">
+              <Link
+                href={s.href}
+                className={`flex min-h-10 w-full items-center justify-center rounded-lg border px-2 py-2 text-center text-[11px] font-bold leading-snug transition-colors hover:bg-zinc-800/80 sm:text-xs ${s.borderClass} ${s.accentClass}`}
+              >
+                <span className="break-words">
+                  {s.action}
+                  <span aria-hidden="true"> →</span>
+                </span>
+              </Link>
+              <Link
+                href="/wiki/handbook"
+                className="min-h-9 self-start text-[10px] leading-snug text-zinc-600 underline-offset-2 hover:text-zinc-400 break-words"
+              >
+                Handbook
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

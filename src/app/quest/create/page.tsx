@@ -1,25 +1,51 @@
 import { QuestWizard } from '@/components/quest-creation/QuestWizard'
+import { getGmFaceMoveAvailabilityForCampaign } from '@/actions/campaign-portals'
 import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 export default async function CreateQuestPage(props: {
-  searchParams: Promise<{ from?: string; questId?: string; slotId?: string; campaignRef?: string }>
+  searchParams: Promise<{
+    from?: string
+    questId?: string
+    slotId?: string
+    campaignRef?: string
+    gmFaceMoveId?: string
+    hexagramId?: string
+  }>
 }) {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')
 
     const searchParams = await props.searchParams
     const gameboardContext =
-      searchParams.from === 'gameboard' && searchParams.questId && searchParams.slotId && searchParams.campaignRef
-        ? {
-            questId: searchParams.questId,
-            slotId: searchParams.slotId,
-            campaignRef: searchParams.campaignRef,
-          }
-        : undefined
+        searchParams.from === 'gameboard' && searchParams.questId && searchParams.slotId && searchParams.campaignRef
+            ? {
+                questId: searchParams.questId,
+                slotId: searchParams.slotId,
+                campaignRef: searchParams.campaignRef,
+            }
+            : undefined
 
     const wizardSource = searchParams.from === '321' ? ('321' as const) : null
+
+    const campaignRefForKotter = searchParams.campaignRef ?? gameboardContext?.campaignRef
+    const campaignKotterContext =
+        campaignRefForKotter != null && campaignRefForKotter !== ''
+            ? await getGmFaceMoveAvailabilityForCampaign(campaignRefForKotter)
+            : null
+    const kotterCtx =
+        campaignKotterContext && !('error' in campaignKotterContext)
+            ? {
+                ref: campaignKotterContext.campaignRefResolved,
+                kotterStage: campaignKotterContext.kotterStage,
+                moves: campaignKotterContext.moves,
+            }
+            : null
+
+    const initialGmFaceMoveId = searchParams.gmFaceMoveId?.trim() || null
+    const hexRaw = searchParams.hexagramId != null ? Number.parseInt(searchParams.hexagramId, 10) : NaN
+    const initialKotterHexagramId = Number.isFinite(hexRaw) ? hexRaw : null
 
     const isSetupIncomplete = !player.nationId || !player.archetypeId
 
@@ -61,7 +87,13 @@ export default async function CreateQuestPage(props: {
 
             {/* Main Content */}
             <main className="p-4 sm:p-6 max-w-4xl mx-auto pb-20">
-                <QuestWizard gameboardContext={gameboardContext} wizardSource={wizardSource} />
+                <QuestWizard
+                    gameboardContext={gameboardContext}
+                    wizardSource={wizardSource}
+                    campaignKotterContext={kotterCtx}
+                    initialGmFaceMoveId={initialGmFaceMoveId}
+                    initialKotterHexagramId={initialKotterHexagramId}
+                />
             </main>
         </div>
     )

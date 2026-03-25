@@ -4,9 +4,11 @@ import { SCENE_ATLAS_DISPLAY_NAME } from '@/lib/creator-scene-grid-deck/branding
 type Props = {
   /** Optional active instance — forwarded as query for future collective I Ching context. */
   activeInstanceId?: string | null
+  /** Canonical campaign entry (hub vs onboarding) from dashboard. */
+  campaignHomeHref: string
 }
 
-export function ThroughputLanesSection({ activeInstanceId }: Props) {
+export function ThroughputLanesSection({ activeInstanceId, campaignHomeHref }: Props) {
   const ichingHref =
     activeInstanceId != null && activeInstanceId !== ''
       ? `/iching?instanceId=${encodeURIComponent(activeInstanceId)}`
@@ -70,10 +72,16 @@ export function ThroughputLanesSection({ activeInstanceId }: Props) {
               <span className="text-zinc-600"> — where we are</span>
             </li>
             <li>
-              <Link href="/campaign" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
+              <Link href={campaignHomeHref} className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
                 Campaign
               </Link>
-              <span className="text-zinc-600"> — shared stakes</span>
+              <span className="text-zinc-600"> — residency hub (or onboarding if you&apos;re new)</span>
+            </li>
+            <li>
+              <Link href="/event" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">
+                Residency events
+              </Link>
+              <span className="text-zinc-600"> — party nights, donate, invite bingo (BB)</span>
             </li>
             <li>
               <Link href="/world" className="text-amber-200/90 hover:text-amber-100 underline-offset-2 hover:underline">

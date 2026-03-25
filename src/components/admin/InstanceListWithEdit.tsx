@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { setActiveInstance, updateInstanceKotterStage, updateInstanceFundraise } from '@/actions/instance'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceEditModal } from './InstanceEditModal'
@@ -91,6 +92,12 @@ function InstanceCard({
           >
             Invite to role
           </button>
+          <Link
+            href={`/swap-organizer/${inst.slug}`}
+            className="inline-flex items-center px-3 py-1.5 rounded-lg bg-cyan-900/40 hover:bg-cyan-800/40 text-cyan-300 text-xs font-bold border border-cyan-800 min-h-[44px]"
+          >
+            Swap intake
+          </Link>
           <button
             type="button"
             onClick={() => onProgress(progressInstance?.id === inst.id ? null : inst)}

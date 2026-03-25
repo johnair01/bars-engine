@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { PlacementModal } from '@/components/hand/PlacementModal'
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
 import { loadAcceptedInvitesForVault, loadVaultCoreData } from '@/lib/vault-queries'
+import { loadEventInviteBarsForStewards } from '@/lib/vault-event-invite-bars'
+import { VaultCampaignInviteBars } from '@/components/hand/VaultCampaignInviteBars'
 import { VaultSummaryStrip } from '@/components/hand/VaultSummaryStrip'
 import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
 
@@ -17,14 +19,16 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
 
     const playerId = player.id
 
-    const [data, acceptedInvites] = await Promise.all([
+    const [data, acceptedInvites, eventInviteBars] = await Promise.all([
         loadVaultCoreData(playerId, 'lobby'),
         loadAcceptedInvitesForVault(playerId),
+        loadEventInviteBarsForStewards(playerId),
     ])
 
     const {
         chargeCount,
         draftCount,
+        whoContactCount,
         invitationCount,
         unplacedQuestCount,
         staleItems,
@@ -40,7 +44,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     }
 
     return (
-        <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
             <header className="space-y-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                     <div className="min-w-0">
@@ -61,6 +65,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                         chargeCaptures: chargeCount,
                         unplacedQuests: unplacedQuestCount,
                         privateDrafts: draftCount,
+                        whoContacts: whoContactCount,
                         staleItems,
                     }}
                 />
@@ -86,9 +91,12 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                 chargeCount={chargeCount}
                 unplacedQuestCount={unplacedQuestCount}
                 draftCount={draftCount}
+                whoContactCount={whoContactCount}
                 invitationCount={invitationCount}
                 staleItems={staleItems}
             />
+
+            <VaultCampaignInviteBars bars={eventInviteBars} />
 
             {/* Accepted invitations — relational signal at lobby level (G20) */}
             {acceptedInvites.length > 0 && (

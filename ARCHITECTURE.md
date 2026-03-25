@@ -22,6 +22,10 @@ The five dimensions (WHO, WHAT, WHERE, Energy, Personal throughput) map to schem
 
 **Emotional alchemy** (narrative movement): 5 elements, WAVE, 15 canonical moves. Energy economy: Transcend +2, Generative +1, Control -1. Binary `translate` | `transcend` per node via `deriveMovementPerNode()` in `src/lib/quest-grammar/emotional-alchemy.ts`. Move engine: `src/lib/quest-grammar/move-engine.ts`; elements: `src/lib/quest-grammar/elements.ts`. Schema: `EmotionalAlchemySignature.movementPerNode`, `moveType`; `NodeEmotional.movement`. **Mastery**: Wake Up = choice-based completion; Show Up = action-based (required attestation on end passage). See [.agent/context/emotional-alchemy-ontology.md](.agent/context/emotional-alchemy-ontology.md).
 
+## Visual language (ARDS)
+
+Pixel/UI assets are organized into **seven semantic registers** (Cosmic hero art, provenance stamp, portrait crop, walk sprites, frame/chrome including move icons, zone textures, ceremony effects). Color and chrome trace to `src/lib/ui/card-tokens.ts`. Summary for contributors and forks: [docs/SEMANTIC_REGISTERS.md](docs/SEMANTIC_REGISTERS.md); full design spec: [.specify/specs/asset-register-design-system/spec.md](.specify/specs/asset-register-design-system/spec.md).
+
 ## Core Objects
 
 ### BAR (Kernel)

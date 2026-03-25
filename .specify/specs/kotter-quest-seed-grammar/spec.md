@@ -30,7 +30,7 @@ Each composed quest/BAR fills these **slots** (all deterministic strings, no LLM
 
 | Slot | Source |
 |------|--------|
-| Stage headline | `getStageAction(stage, allyshipDomain)` — *see § Headline refresh; may be replaced by face-move title* |
+| Stage headline | **Stage 1:** play-speak domain lines in composer (`STAGE_1_PLAY_HEADLINE`); **stages 2–8:** `getStageAction`; **with `gmFaceMoveId`:** move **title** in BAR title segment; domain line in body stays stage headline |
 | Kotter name | `KOTTER_STAGES[stage].name` |
 | Campaign goal line | Stage-specific one-liner (Kotter canonical) |
 | Hexagram frame | `{upper} over {lower}` + trigram essence lines |
@@ -43,14 +43,16 @@ Each composed quest/BAR fills these **slots** (all deterministic strings, no LLM
 
 ### API
 
-- [`fillKotterQuestSeedSlots`](../../../src/lib/kotter-quest-seed-grammar.ts) — inspect filled slots (UI preview, tests, future prompts).
+- [`fillKotterQuestSeedSlots`](../../../src/lib/kotter-quest-seed-grammar.ts) — inspect filled slots (UI preview, tests, future prompts). Includes **`faceMove`** when **`gmFaceMoveId`** resolves for the clamped stage.
 - [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts) — returns `{ title, description, kotterStage, campaignGoal, emotionalAlchemyTag, gameMasterFace, completionEffects }` for Prisma `CustomBar` writes.
-- `completionEffects.grammar === 'kotter-seed-v1'` for downstream tooling.
+- [`gm-face-stage-moves`](../../../src/lib/gm-face-stage-moves.ts) — 48-move registry (`K{n}_{face}`), lookups by id and by stage.
+- `completionEffects.grammar === 'kotter-seed-v1'`; when a face move applies, **`moveId`** is set and **`gameMasterFace`** defaults from the move if omitted.
+- **Phase C:** optional **`readingFace`** — when it differs from structural face (`gameMasterFace` or move face), description appends **Read as {Face}:** + second lens; **`gameMasterFace`** on the BAR remains structural; **`completionEffects.readingFace`** stores the reading voice.
 
 ### Integration
 
-- **Deck wizard (stage 1):** [`buildRaiseUrgencyQuestPayload`](../../../src/lib/campaign-deck-quests.ts) delegates to `composeKotterQuestSeedBar` with `kotterStage: 1`, alchemy/face null until CYOA supplies them.
-- **Future:** Composer accepts optional **`gmFaceMoveId`** (from § Face–stage move matrix) to set title, micro-beat, evidence, and `completionEffects.moveId` for UI + completion checks.
+- **Deck wizard (stage 1):** [`buildRaiseUrgencyQuestPayload`](../../../src/lib/campaign-deck-quests.ts) delegates to `composeKotterQuestSeedBar` with `kotterStage: 1`, alchemy/face null until CYOA supplies them (no `gmFaceMoveId` yet).
+- **Composer:** Optional **`gmFaceMoveId`** (from §C matrix) sets BAR title segment, micro-beat, evidence, **`completionEffects.moveId`**, and default **`gameMasterFace`** when the id matches the requested Kotter stage.
 
 ---
 
@@ -208,7 +210,7 @@ The **face–stage move table** (§C) is the canonical source of **actionable** 
 
 - `GmFaceStageMove` record or static JSON: `id`, `kotterStage`, `face`, `title`, `action`, `evidence`, `allyshipDomain?` (optional filter).
 - `completionEffects`: `{ moveId: "K1_regent", grammar: "kotter-seed-v1" }`.
-- Action: `getAvailableFaceMoves(playerId, campaignRef)` — filters by `kotterStage` + milestone state.
+- **Implemented (v1):** `getAvailableFaceMovesForStage` / `getGmFaceMoveAvailabilityForCampaign` — current `Instance.kotterStage` only (strict lockstep). `playerId` parameter reserved on the server action for future use.
 - Optional: `PlayerCampaignProgress` JSON on instance or player: `{ unlockedStageMax, completedMilestoneIds[] }`.
 
 ### Acceptance (gating)
@@ -218,14 +220,63 @@ The **face–stage move table** (§C) is the canonical source of **actionable** 
 
 ---
 
+## Addendum E — Player encounter, roles, nested campaigns (frozen before Phase B)
+
+### How players encounter face moves (surfaces)
+
+Over time, the **same** availability primitive applies everywhere the player might “show up”:
+
+- **Campaign hub / board / “what’s next”** — picker for the current campaign, domain, and shared Kotter stage.
+- **After a spoke** — same primitive; context may be **pre-scoped** by portal, hexagram, or session outcome.
+- **New or updated quest / BAR** — choosing a move **materializes** copy via the composer (`gmFaceMoveId`, `completionEffects.moveId`).
+
+UI chrome differs per surface; **data path** does not fork (one `getAvailableFaceMoves`-shaped contract → `composeKotterQuestSeedBar`).
+
+### Campaign clock and roles
+
+- **Shared Kotter stage:** All **players** on a given campaign share **one** Kotter stage for that campaign (strict lockstep per §D).
+- **Owner:** The player who **owns** a campaign is **admin of that campaign** within normal permission bounds—they see admin surfaces for **that** scope only unless separate cross-campaign admin is granted elsewhere.
+
+### Domain
+
+- **Domain tints everything inside it:** copy, move semantics, and (when implemented) filtering/eligibility for face moves and quest seeds **respect** the campaign’s allyship domain context.
+
+### Nested campaign (spoke → new campaign)
+
+If traversing a spoke **creates** or **anchors** a **child** campaign:
+
+- That player becomes **owner/admin** of the **child** campaign.
+- A **new hub** starts at the **originating note** (portal / narrative node as implemented).
+- The child campaign **starts at Kotter stage 1** (urgency) again; the design intent is **faster metabolism** than the parent (narrower scope, practiced player).
+- **Invites** to the child campaign are **independent** of the parent roster.
+- **Single-player** is valid: a child campaign may have only the owner if no one else discovers or joins it.
+
+### Addendum E.1 — Sub-campaign inheritance (Sage v1, frozen)
+
+**Authority:** Sage integration consult (wide lens: Architect, Diplomat, Challenger, Shaman) + product constraints above. **Hexagram 55 attunement note:** inherit only what preserves **lineage and coherence** without importing **momentum or obligation** that belongs to the parent’s chapter.
+
+| Tier | Policy | Rationale (one line) |
+|------|--------|-------------------------|
+| **MUST inherit** | **Lineage link** to parent: persistent `parentCampaignRef` (or equivalent) on the child so structure, analytics, and narrative traceability stay honest. | Continuity without collapsing two campaigns into one. |
+| **MUST inherit** | **Originating context** when spawn is from a portal/spoke: **hexagram id** (and, when available, portal / deck card / spoke session id) as **provenance** on the child. | Thematic and mechanical alignment to *why* this sub-campaign exists. |
+| **MUST reset** | **`kotterStage` → 1**; **milestone slate** is **new** for the child (no copy of parent milestones as active gates). | Each campaign body runs its own urgency → anchor rhythm. |
+| **MUST reset** | **Membership / roster:** no automatic copy of parent players; child invites are **explicit**. | Independent social contract per campaign. |
+| **OPTIONAL (defaults toggles)** | **Starter deck / deck wizard intake:** clone parent’s deck pattern **or** start from template/empty—**new admin** choice or product default, not silent merge. | Flexibility without hidden coupling. |
+| **OPTIONAL (defaults toggles)** | **`emotionalAlchemyTag`, portal theme, owner goal line:** may **suggest** defaults from parent or spoke exit; admin may clear or override. | Speed for the creator without locking alchemy. |
+| **OPTIONAL (defaults toggles)** | **`allyshipDomain`:** default from parent **or** from spoke/domain context; admin may override. Domain still **rules** the child once chosen. | Domain remains first-class while respecting spawn context. |
+
+**Out of scope for v1 (explicit non-goals):** silently syncing child `kotterStage` to parent; auto-adding parent admins to child roster; inheriting **closed** milestone history as if it were the child’s.
+
+---
+
 ## Acceptance criteria (updated)
 
 1. All eight Kotter stages have distinct micro-beat + evidence lines **or** equivalent coverage in the face–stage matrix (convergence target).
 2. Composition is **pure** (same inputs → same output) aside from explicit timestamps in merged `completionEffects` from callers.
 3. `npm run test:kotter-quest-seed-grammar` passes.
 4. `npx tsc --noEmit` passes.
-5. **Spec:** Face–stage matrix and milestone gating documented (this doc).
-6. **Implementation (future task):** `GmFaceStageMove` registry in code + `getAvailableFaceMoves` + composer integration + UI move picker gated by `Instance.kotterStage` / milestones.
+5. **Spec:** Face–stage matrix, milestone gating, player encounter, nested campaigns, and **Sage v1 inheritance** documented (Addenda D–E).
+6. **Implementation:** Phase A registry + composer; Phase B hub `GmFaceMovesPanel`, `getGmFaceMoveAvailabilityForCampaign`, milestone target → `kotterStage` bump + `adminCompleteCampaignMilestone`. Further UI surfaces + child-campaign §E.1 fields remain.
 
 ---
 

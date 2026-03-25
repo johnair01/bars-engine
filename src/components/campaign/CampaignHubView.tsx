@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import type { PortalData } from '@/actions/campaign-portals'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
+import { GmFaceMovesPanel } from '@/components/campaign/GmFaceMovesPanel'
 import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
+import type { GmFaceStageMove } from '@/lib/gm-face-stage-moves'
 
 export type CampaignHubPayload = {
   portals: PortalData[]
@@ -11,6 +13,7 @@ export type CampaignHubPayload = {
   portalAdventureId: string | null
   portalStartNodeIds: string[]
   campaignRefResolved: string
+  faceMoves: readonly GmFaceStageMove[]
 }
 
 type RecentCapture = {
@@ -48,6 +51,7 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
     portalAdventureId,
     portalStartNodeIds,
     campaignRefResolved,
+    faceMoves,
   } = data
   const stageInfo = KOTTER_STAGES[kotterStage as keyof typeof KOTTER_STAGES]
 
@@ -76,10 +80,10 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
                 Campaign story
               </Link>
               <Link
-                href={`/event`}
+                href="/event"
                 className="text-sm text-zinc-500 hover:text-amber-400/90 transition-colors"
               >
-                Event
+                Residency events
               </Link>
             </div>
           </div>
@@ -96,6 +100,13 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
         {milestoneGuidance && (
           <CampaignMilestoneStrip data={milestoneGuidance} variant="hub" />
         )}
+
+        <GmFaceMovesPanel
+          kotterStage={kotterStage}
+          campaignRef={campaignRef}
+          moves={faceMoves}
+          pickConfig={{ campaignRef, hexagramId: undefined }}
+        />
 
         {recentCapture && (
           <div className="rounded-xl border border-emerald-800/40 bg-emerald-950/20 px-5 py-4 space-y-1">

@@ -2,7 +2,7 @@
 
 **Spec ID:** WMC  
 **Status:** active  
-**Related:** CHS (campaign-hub-spoke-landing-architecture), campaign-domain-decks, gameboard-campaign-deck, STRAND_CONSULT_MAP_DECK_MOVES.md
+**Related:** CHS (campaign-hub-spoke-landing-architecture), campaign-domain-decks, gameboard-campaign-deck, STRAND_CONSULT_MAP_DECK_MOVES.md, [`kotter-quest-seed-grammar`](../kotter-quest-seed-grammar/spec.md) (Addendum **E** — player encounter, nested campaigns, **Sage v1 inheritance**)
 
 ---
 
@@ -177,6 +177,12 @@ Primary authoring path for the **starter deck** (hexagrams 1–8) matches the ap
 - **Quests on apply:** For each hexagram 1–8, `applyDeckIntakeV1` creates or updates a `CustomBar` (`type: quest`, `visibility: public`, `isSystem: true`, `campaignRef`, `allyshipDomain`, `hexagramId`, `kotterStage: 1`) and sets `CampaignDeckCard.questId`. If the card already references a quest that still exists, that row is **updated** (no duplicate quests on re-run). Copy is composed by the **Kotter quest seed grammar** ([`kotter-quest-seed-grammar`](../kotter-quest-seed-grammar/spec.md) / [`composeKotterQuestSeedBar`](../../../src/lib/kotter-quest-seed-grammar.ts)) — deterministic Kotter × domain × hexagram slots; optional alchemy/face when provided later from CYOA. **GM face × stage moves** (six moves per Kotter stage) and **milestone gating** for which moves are available are specified in KQSG addenda §C–D.
 
 Deck mutations (`createDeckCard`, `activateDeckCard`, `drawPeriod`) require **admin** role.
+
+### Nested campaigns, shared stage, inheritance (normative)
+
+Spoke → **child campaign** flows (new hub, owner becomes admin, independent invites, child starts at Kotter **stage 1**, domain tints child scope) and **what must inherit vs reset vs optional defaults** are specified in **KQSG Addendum E** ([`kotter-quest-seed-grammar/spec.md` § Addendum E](../kotter-quest-seed-grammar/spec.md)). WMC owns deck/portal/spoke **mechanics**; KQSG owns **progression + move encounter + inheritance policy** so Phase B implements against one doc.
+
+**Campaign hub (v1):** `/campaign/hub` shows **six GM face moves** for the instance’s current `kotterStage` (`GmFaceMovesPanel`, data from `get8PortalsForCampaign`). **Milestones:** when `recordContribution` brings an **active** milestone to its **targetValue**, the milestone is marked **complete** and the instance’s **kotterStage** advances by 1 (max 8). **`adminCompleteCampaignMilestone`** (`campaign-deck` server action) closes a milestone without a numeric target and advances Kotter the same way.
 
 ---
 
