@@ -31,6 +31,8 @@ type Props = {
   milestoneGuidance?: CampaignMilestoneGuidance | null
   /** Most recent BAR emitted from a portal passage this session */
   recentCapture?: RecentCapture
+  /** CYOA_INTAKE adventure id for this campaign, if seeded */
+  intakeAdventureId?: string | null
 }
 
 const MOVE_LABEL: Record<string, string> = {
@@ -43,7 +45,7 @@ const MOVE_LABEL: Record<string, string> = {
  * Campaign residency hub — 8 spokes (portals) into CYOA + landing cards.
  * @see .specify/specs/campaign-hub-spoke-landing-architecture/spec.md
  */
-export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCapture }: Props) {
+export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCapture, intakeAdventureId }: Props) {
   const {
     portals,
     campaignName,
@@ -71,7 +73,13 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
                 href={`/campaign/board?ref=${encodeURIComponent(campaignRef)}`}
                 className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
               >
-                Gameboard
+                Featured field
+              </Link>
+              <Link
+                href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
+                className="text-sm text-zinc-500 hover:text-teal-400 transition-colors"
+              >
+                Stalls
               </Link>
               <Link
                 href={`/campaign/twine?ref=${campaignRef}`}
@@ -90,10 +98,16 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
           <p className="text-[10px] uppercase tracking-widest text-zinc-600">Campaign hub</p>
           <h1 className="text-3xl font-bold text-white tracking-tight">{campaignName}</h1>
           <p className="text-zinc-400 text-sm max-w-2xl">
-            {stageInfo?.emoji} Kotter stage {kotterStage}: {stageInfo?.name ?? 'Urgency'}. Eight spokes lead
-            through a short CYOA into <strong className="text-zinc-200">landing cards</strong> — one field
-            draw per stage is saved for everyone (I Ching-style ordering). Pick a path that fits; complete the
-            spoke to reach your card.
+            {stageInfo?.emoji} Kotter stage {kotterStage}: {stageInfo?.name ?? 'Urgency'}. This hub is for{' '}
+            <strong className="text-zinc-200">exploration</strong> — eight spokes through CYOA into landing
+            cards (wild-grass pacing: go where you want). When you have something to share publicly, list it in{' '}
+            <Link
+              href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
+              className="text-teal-400/90 hover:text-teal-300 underline-offset-2 hover:underline"
+            >
+              campaign stalls
+            </Link>
+            .
           </p>
         </header>
 
@@ -117,13 +131,37 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
             {recentCapture.description && (
               <p className="text-xs text-zinc-400 line-clamp-2">{recentCapture.description}</p>
             )}
-            <Link
-              href="/hand"
-              className="text-[10px] text-emerald-600 hover:text-emerald-400 transition"
-            >
-              See all your BARs →
-            </Link>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
+              <Link
+                href="/hand"
+                className="text-[10px] text-emerald-600 hover:text-emerald-400 transition"
+              >
+                See all your BARs →
+              </Link>
+              <Link
+                href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}&attach=${encodeURIComponent(recentCapture.id)}`}
+                className="text-[10px] text-teal-500 hover:text-teal-400 transition font-semibold"
+              >
+                Add to your campaign stall →
+              </Link>
+            </div>
           </div>
+        )}
+
+        {intakeAdventureId && (
+          <Link
+            href={`/cyoa-intake/${intakeAdventureId}`}
+            className="group block rounded-xl border border-amber-800/50 bg-amber-950/20 hover:bg-amber-950/35 px-5 py-4 transition-colors space-y-1"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-amber-500/90">Adventure path — Wake Up</p>
+            <p className="text-sm font-semibold text-amber-200 group-hover:text-amber-100">
+              Where are you arriving from? →
+            </p>
+            <p className="text-xs text-zinc-500">
+              A short branching story that reads your current state and routes you into a personalized adventure.
+              Takes under 3 minutes.
+            </p>
+          </Link>
         )}
 
         <section>

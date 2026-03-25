@@ -12,6 +12,7 @@ export const EVENT_INVITE_DEFAULT_CTAS = [
 ] as const
 
 const MINI_GAME_CTA_CLASS = 'bg-fuchsia-700/90 hover:bg-fuchsia-600 text-white'
+const INTAKE_CTA_CLASS = 'bg-amber-700/80 hover:bg-amber-600 text-white'
 
 /**
  * Standard ending row: campaign home, party-mini-game invite layer anchor, hub, sign-in.
@@ -26,6 +27,32 @@ export function eventInviteStandardCtasWithMiniGame(miniGamePath: string): Event
             className: MINI_GAME_CTA_CLASS,
         },
         EVENT_INVITE_DEFAULT_CTAS[1],
+        EVENT_INVITE_DEFAULT_CTAS[2],
+    ]
+}
+
+/**
+ * Ending row that includes the CYOA intake as a "go deeper" path.
+ * Use when an active CYOA_INTAKE adventure exists for this campaign.
+ * @param miniGamePath e.g. `/event#bb-invite-bingo-apr4`
+ * @param intakeAdventureId Adventure.id for the CYOA_INTAKE (from seed)
+ */
+export function eventInviteCtasWithIntake(
+    miniGamePath: string,
+    intakeAdventureId: string,
+): EventInviteEndingCta[] {
+    return [
+        EVENT_INVITE_DEFAULT_CTAS[0],
+        {
+            href: `/cyoa-intake/${intakeAdventureId}`,
+            label: 'Go deeper — adventure path →',
+            className: INTAKE_CTA_CLASS,
+        },
+        {
+            href: miniGamePath,
+            label: 'Invite friends (mini-game) →',
+            className: MINI_GAME_CTA_CLASS,
+        },
         EVENT_INVITE_DEFAULT_CTAS[2],
     ]
 }

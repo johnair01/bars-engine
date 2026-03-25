@@ -18,7 +18,7 @@ export default async function CampaignHubPage(props: {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
-  const [result, milestoneGuidance, recentCapture] = await Promise.all([
+  const [result, milestoneGuidance, recentCapture, intakeAdventure] = await Promise.all([
     get8PortalsForCampaign(campaignRef),
     getCampaignMilestoneGuidance(player.id, { campaignRef }),
     db.customBar.findFirst({
@@ -29,6 +29,11 @@ export default async function CampaignHubPage(props: {
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true, title: true, description: true, rootId: true, createdAt: true },
+    }),
+    db.adventure.findFirst({
+      where: { adventureType: 'CYOA_INTAKE', campaignRef, status: 'ACTIVE' },
+      select: { id: true },
+      orderBy: { createdAt: 'desc' },
     }),
   ])
 
@@ -54,6 +59,7 @@ export default async function CampaignHubPage(props: {
       data={result}
       milestoneGuidance={milestoneGuidance}
       recentCapture={recentCapture ?? undefined}
+      intakeAdventureId={intakeAdventure?.id ?? null}
     />
   )
 }
