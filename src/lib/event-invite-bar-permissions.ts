@@ -1,5 +1,5 @@
 /**
- * Who may edit EIP fields (partifulUrl, eventSlug) on event_invite CustomBars.
+ * Who may edit event_invite BAR fields (links, story JSON, title) on event_invite CustomBars.
  */
 import { db } from '@/lib/db'
 import { EVENT_INVITE_BAR_TYPE } from '@/lib/event-invite-story/schema'
@@ -9,8 +9,8 @@ function isAdminPlayer(roles: { role: { key: string } }[] | undefined): boolean 
 }
 
 /**
- * Returns true if the player may update partifulUrl / eventSlug for this BAR.
- * Admins may edit any active event_invite BAR; others must be creator or owner/steward on a matching campaign instance.
+ * Returns true if the player may update this invitation BAR.
+ * Admins may edit any active event_invite BAR; others must be **owner** on a matching campaign instance (not steward/creator-only).
  */
 export async function playerCanEditEventInviteBar(
   playerId: string,
@@ -24,11 +24,10 @@ export async function playerCanEditEventInviteBar(
       archivedAt: null,
       status: 'active',
     },
-    select: { id: true, creatorId: true, campaignRef: true },
+    select: { id: true, campaignRef: true },
   })
   if (!bar) return false
   if (isAdminPlayer(roles)) return true
-  if (bar.creatorId === playerId) return true
 
   const ref = bar.campaignRef?.trim()
   if (!ref) return false
@@ -36,7 +35,7 @@ export async function playerCanEditEventInviteBar(
   const membership = await db.instanceMembership.findFirst({
     where: {
       playerId,
-      roleKey: { in: ['owner', 'steward'] },
+      roleKey: 'owner',
       instance: { campaignRef: ref },
     },
     select: { id: true },

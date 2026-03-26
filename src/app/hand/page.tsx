@@ -51,14 +51,40 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                     <div className="min-w-0">
                         <h1 className="text-3xl font-bold text-white">Vault</h1>
                         <p className="text-zinc-400 mt-1">Your private studio — metabolize what you&apos;ve been carrying.</p>
+                        <p className="text-xs text-zinc-600 mt-2">
+                            List discoveries publicly in{' '}
+                            <Link
+                                href="/campaign/marketplace?ref=bruised-banana"
+                                className="text-teal-500 hover:text-teal-400 font-medium"
+                            >
+                                campaign stalls
+                            </Link>{' '}
+                            (mall) — explore stays in hub &amp; map.
+                        </p>
                     </div>
-                    <Link
-                        href="/capture"
-                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-rose-700/70 bg-rose-950/40 px-4 py-3 text-sm font-semibold text-rose-100 shadow-[0_0_0_1px_rgba(244,63,94,0.15)] transition-colors hover:border-rose-500/80 hover:bg-rose-900/50 hover:text-white min-h-[44px] sm:min-w-[12rem]"
-                    >
-                        <span aria-hidden>⚡</span>
-                        Capture a BAR
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                        <Link
+                            href="/bars/create"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-amber-800/70 bg-amber-950/30 px-4 py-3 text-sm font-semibold text-amber-100 hover:border-amber-500/70 hover:bg-amber-900/40 min-h-[44px] sm:min-w-[12rem]"
+                        >
+                            <span aria-hidden>📜</span>
+                            Create BAR
+                        </Link>
+                        <Link
+                            href="/campaign/marketplace?ref=bruised-banana"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-teal-800/70 bg-teal-950/30 px-4 py-3 text-sm font-semibold text-teal-100 hover:border-teal-500/70 hover:bg-teal-900/40 min-h-[44px] sm:min-w-[10rem]"
+                        >
+                            Stalls
+                        </Link>
+                        <Link
+                            href="/capture"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-rose-800/60 bg-rose-950/25 px-4 py-3 text-sm font-medium text-rose-200/95 transition-colors hover:border-rose-500/75 hover:bg-rose-900/35 min-h-[44px] sm:min-w-[11rem]"
+                            title="Name today’s emotional charge — same as NOW throughput"
+                        >
+                            <span aria-hidden>⚡</span>
+                            Capture charge
+                        </Link>
+                    </div>
                 </div>
 
                 <VaultSummaryStrip

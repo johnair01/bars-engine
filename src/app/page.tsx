@@ -500,7 +500,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         />
 
         {/* 2. ORIENTATION COMPASS — first structural block after identity; governs the session (PMI G1) */}
-        <OrientationCompass {...compassProps} hasCheckedIn={!!todayCheckIn} />
+        <OrientationCompass
+          {...compassProps}
+          hasCheckedIn={!!todayCheckIn}
+          residencyEventsHref={defaultCampaignRef === 'bruised-banana' ? '/event' : null}
+        />
         <DiscoverStrip moveType={recommendedMoveType} quests={discoverQuests} />
 
         <p className="text-xs text-zinc-600">

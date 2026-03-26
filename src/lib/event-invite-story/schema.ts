@@ -20,6 +20,8 @@ export type EventInvitePassage = {
     text: string
     choices?: EventInviteChoice[]
     ending?: EventInviteEnding
+    /** When true, reader hides in-app Back (commitment surface without full `ending` block). Mutually exclusive with `ending`. */
+    confirmation?: boolean
 }
 
 /** Outbound buttons after the final passage (overrides defaults when set). */
@@ -83,10 +85,19 @@ export function parseEventInviteStory(raw: string | null | undefined): EventInvi
             ending = { role: p.ending.role, description: p.ending.description }
         }
 
+        let confirmation: boolean | undefined
+        if (p.confirmation !== undefined) {
+            if (typeof p.confirmation !== 'boolean') return null
+            confirmation = p.confirmation
+        }
+
+        if (ending && confirmation) return null
         if (ending && choices?.length) return null
         if (!ending && !choices?.length) return null
 
-        passages.push({ id: p.id, text: p.text, choices, ending })
+        const entry: EventInvitePassage = { id: p.id, text: p.text, choices, ending }
+        if (confirmation !== undefined) entry.confirmation = confirmation
+        passages.push(entry)
     }
 
     if (!ids.has(parsed.start)) return null

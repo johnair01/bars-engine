@@ -11,27 +11,27 @@
 
 ## Phase A — IA & copy (implementation)
 
-- [ ] Audit hub, board, map for **wilderness** vs **marketplace** terminology; align CTAs.
-- [ ] Implement **canonical post-discovery CTA** (minimum: Hand eligible row + one CYOA completion hook for BB).
-- [ ] Add marketplace route stub or placeholder page linking from CTA (optional if only copy in A).
+- [x] Audit hub, board, map for **wilderness** vs **marketplace** terminology; align CTAs.
+- [x] Implement **canonical post-discovery CTA** (hub recent capture → **Add to your campaign stall**; Vault copy + Stalls button).
+- [x] Marketplace route `/campaign/marketplace` (full UI, not stub).
 
 ## Phase B — Data & server actions
 
-- [ ] Prisma: `CampaignMarketplaceSlot` (or agreed model) + migration.
-- [ ] `listPlayerCampaignSlots` / `attachArtifactToSlot` / `purchaseAdditionalSlot`.
-- [ ] Player campaign shell (reuse or new model per plan).
+- [x] Prisma: `PlayerMarketplaceProfile` + `MarketplaceStallSlot` + migration `20260326150000_add_marketplace_stall_slots`.
+- [x] `listPlayerMarketplaceSlotsForPlayer` / `attachArtifactToMarketplaceSlot` / `purchaseAdditionalMarketplaceSlot` / `clearMarketplaceSlot` (+ `src/lib/campaign-marketplace-queries.ts` for RSC reads).
+- [x] Player stall grouping = `PlayerMarketplaceProfile` per `(playerId, campaignRef)` (no separate EventCampaign).
 
 ## Phase C — UI & mitigation
 
-- [ ] `/campaign/marketplace` (or chosen path) — stall grid, empty states, system stalls.
-- [ ] Seed **system/instance** stalls for cold start.
-- [ ] Slot extension purchase UX + cost disclosure.
+- [x] `/campaign/marketplace` — stall grid, explainer, system showcase from public `isSystem` campaign BARs.
+- [x] System listings: query-time (no new seed required when BB quests exist).
+- [x] Slot extension purchase UX + cost disclosure (`MarketplacePurchaseSlot`).
 
 ## Phase D — Gameboard reconciliation
 
-- [ ] Choose D1 vs D2 in plan; update spec Design Decisions; implement relabel or migration.
+- [x] **D1**: Board relabeled **Featured campaign field**; nav **Stalls** → marketplace; spec Design Decisions updated.
 
 ## Verification
 
-- [ ] Run `npm run seed:cert:campaign-marketplace-slots` in dev.
-- [ ] Complete cert quest steps once UI exists; until then cert documents **intended** acceptance.
+- [ ] Run `npm run seed:cert:campaign-marketplace-slots` in dev (optional refresh).
+- [ ] Complete cert quest steps in-app when verifying UX.

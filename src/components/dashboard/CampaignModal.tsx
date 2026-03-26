@@ -69,6 +69,7 @@ export function CampaignModal({
     const campaignRef = activeInstance?.campaignRef ?? DEFAULT_CAMPAIGN_REF
     const hubHref = `/campaign/hub?ref=${encodeURIComponent(campaignRef)}`
     const gameboardHref = `/campaign/board?ref=${encodeURIComponent(campaignRef)}`
+    const marketplaceHref = `/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`
 
     return (
         <div
@@ -115,6 +116,24 @@ export function CampaignModal({
                                         <Link href="/event" onClick={onClose} className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-green-600/60 text-zinc-200 text-xs font-bold">
                                             Event Page →
                                         </Link>
+                                        {campaignRef === 'bruised-banana' && (
+                                            <>
+                                                <Link
+                                                    href="/event#apr-4"
+                                                    onClick={onClose}
+                                                    className="px-4 py-2 rounded-lg bg-amber-950/40 border border-amber-800/50 hover:border-amber-600/50 text-amber-200 text-xs font-bold"
+                                                >
+                                                    Apr 4 night →
+                                                </Link>
+                                                <Link
+                                                    href="/event#apr-5"
+                                                    onClick={onClose}
+                                                    className="px-4 py-2 rounded-lg bg-violet-950/40 border border-violet-800/50 hover:border-violet-600/50 text-violet-200 text-xs font-bold"
+                                                >
+                                                    Apr 5 →
+                                                </Link>
+                                            </>
+                                        )}
                                         {activeInstance.stripeOneTimeUrl && (
                                             <a href={activeInstance.stripeOneTimeUrl} target="_blank" rel="noreferrer" className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-bold">
                                                 Donate
@@ -141,6 +160,35 @@ export function CampaignModal({
                     </div>
                 )}
 
+                {campaignRef === 'bruised-banana' && !hasLiveInstance && (
+                    <div className="mb-6 rounded-xl border border-amber-900/35 bg-amber-950/10 p-4 space-y-2">
+                        <p className="text-[10px] uppercase tracking-widest text-amber-500/90">Show up — residency nights</p>
+                        <div className="flex flex-wrap gap-2">
+                            <Link
+                                href="/event"
+                                onClick={onClose}
+                                className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-amber-600/50 text-zinc-200 text-xs font-bold"
+                            >
+                                Event page →
+                            </Link>
+                            <Link
+                                href="/event#apr-4"
+                                onClick={onClose}
+                                className="px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-800/50 text-amber-200 text-xs font-bold"
+                            >
+                                Apr 4 night →
+                            </Link>
+                            <Link
+                                href="/event#apr-5"
+                                onClick={onClose}
+                                className="px-3 py-2 rounded-lg bg-violet-950/40 border border-violet-800/50 text-violet-200 text-xs font-bold"
+                            >
+                                Apr 5 →
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex flex-wrap gap-2 sm:gap-4 mb-6">
                     <CampaignStageCard currentStage={globalStage} />
                     <Link
@@ -156,24 +204,39 @@ export function CampaignModal({
                         onClick={onClose}
                         className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-zinc-600 transition"
                     >
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Campaign</div>
-                        <div className="text-zinc-200 font-bold">Gameboard</div>
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Instance deck</div>
+                        <div className="text-zinc-200 font-bold">Featured field</div>
+                    </Link>
+                    <Link
+                        href={marketplaceHref}
+                        onClick={onClose}
+                        className="px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-lg hover:border-teal-900/50 transition"
+                    >
+                        <div className="text-[10px] uppercase tracking-widest text-teal-600 mb-1">Publish</div>
+                        <div className="text-zinc-200 font-bold">Stalls</div>
                     </Link>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <Link
                         href={hubHref}
                         onClick={onClose}
                         className="flex-1 py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
                     >
-                        Campaign hub →
+                        Explore hub →
                     </Link>
                     <Link
                         href={gameboardHref}
                         onClick={onClose}
                         className="flex-1 py-2 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-center font-medium rounded-lg transition-colors"
                     >
-                        Gameboard →
+                        Featured field →
+                    </Link>
+                    <Link
+                        href={marketplaceHref}
+                        onClick={onClose}
+                        className="flex-1 py-2 px-4 bg-teal-900/80 hover:bg-teal-800 text-teal-100 text-center font-medium rounded-lg transition-colors border border-teal-800/60"
+                    >
+                        Stalls →
                     </Link>
                 </div>
             </div>

@@ -15,7 +15,7 @@
 | Wild vs market | **Exploration surfaces** (hub, spokes, map nodes, initiation CYOA) = **discovery graph**; **marketplace** = **listing graph**. Different copy, different primary CTAs. |
 | Slot metaphor | **Campaign slots** = **mall stalls**: start **empty**, **developed by players**; not the same as “today’s 8 drawn campaign cards.” |
 | Initial cap | **8 campaign slots** per player (or per player–campaignRef scope — **TBD in plan**); **high vibeulon (or pack) cost** to unlock **slot 9+**. |
-| Gameboard relationship | Existing **gameboard deck draw** is **reframed or migrated**: either (a) becomes **instance/system** “featured window” separate from **player stalls**, or (b) defers to marketplace spec in a later phase — **plan** picks one; this spec owns **player marketplace slots**. |
+| Gameboard relationship | **D1 (shipped)**: `/campaign/board` remains the **instance “featured field”** (8 deck draws). Copy and nav distinguish it from **Campaign stalls** (`/campaign/marketplace`). Player mall slots are a **separate** table (`PlayerMarketplaceProfile` / `MarketplaceStallSlot`). |
 | BARSeed / quest pipeline | **Wild** produces **draft/private** artifacts; **market actions** **promote** to **slot-bound, campaign-visible** listings (quests, BAR offers, campaign hooks). |
 | Canonical post-discovery CTA | **“Add to your campaign stall”** (or shorter **“List on marketplace”**) — **one** primary string family; appears after key discovery completions (see § Bridge IA). **Not** a forced navigation; optional dismiss. |
 | Empty mall | **Mitigation required** before relying on empty stalls (see § Empty mall mitigation). |

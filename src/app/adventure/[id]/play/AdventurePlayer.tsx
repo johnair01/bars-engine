@@ -449,12 +449,12 @@ export function AdventurePlayer({
               </div>
             ) : error && error.includes('gameboard') && questId && currentNode.linkedQuestId === questId ? (
               <div className="p-4 bg-amber-900/20 border border-amber-800/50 rounded-xl text-center space-y-3">
-                <p className="text-amber-300 font-medium">This campaign quest must be completed on the gameboard.</p>
+                <p className="text-amber-300 font-medium">This campaign quest must be completed on the featured field.</p>
                 <Link
                   href="/campaign/board?ref=bruised-banana"
                   className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
                 >
-                  Go to gameboard →
+                  Go to featured field →
                 </Link>
               </div>
             ) : questId && currentNode.linkedQuestId === questId ? (
@@ -467,13 +467,21 @@ export function AdventurePlayer({
                 {portalQuestGenerated ? (
                   <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl space-y-3">
                     <p className="text-green-400 font-medium text-sm">Quest generated: {portalQuestGenerated.title}</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Link
                         href="/hand/quests"
                         className="flex-1 text-center py-2 px-3 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
                       >
                         View in Vault →
                       </Link>
+                      {portalQuestGenerated.questId ? (
+                        <Link
+                          href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}&attach=${encodeURIComponent(portalQuestGenerated.questId)}`}
+                          className="flex-1 text-center py-2 px-3 bg-teal-900/80 hover:bg-teal-800 text-teal-100 text-sm font-medium rounded-lg transition-colors border border-teal-800/50"
+                        >
+                          List on marketplace →
+                        </Link>
+                      ) : null}
                       <Link
                         href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
                         className="flex-1 text-center py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"

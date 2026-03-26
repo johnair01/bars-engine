@@ -12,7 +12,7 @@ Replace `<host>` with your deployment origin (e.g. `https://your-app.vercel.app`
 | **April 4 — Dance** | `/invite/event/bb-event-invite-apr4-dance` | `https://<host>/invite/event/bb-event-invite-apr4-dance` |
 | **April 5 — The Game** | `/invite/event/bb-event-invite-apr26` | `https://<host>/invite/event/bb-event-invite-apr26` |
 
-Seed (local / deploy): `npx tsx scripts/with-env.ts "npx tsx scripts/seed-bruised-banana-event-invite-bar.ts"`
+Seed (local / deploy): `npm run seed:event-invite-bar` — then **`npm run verify:event-invite-seed`** ([EIP_T7_VERIFICATION.md](./EIP_T7_VERIFICATION.md)).
 
 ## Campaign home (context + anchors)
 

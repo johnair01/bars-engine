@@ -10,7 +10,10 @@ import { EventInvitePartyActions } from '@/components/event-invite/EventInvitePa
 import { EventInviteStoryReader } from '@/components/event-invite/EventInviteStoryReader'
 import { eventInviteCtasWithIntake } from '@/lib/event-invite-story/default-cta'
 
-type Props = { params: Promise<{ barId: string }> }
+type Props = {
+    params: Promise<{ barId: string }>
+    searchParams: Promise<{ note?: string }>
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { barId } = await params
@@ -33,8 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 }
 
-export default async function PublicEventInvitePage({ params }: Props) {
+export default async function PublicEventInvitePage({ params, searchParams }: Props) {
     const { barId } = await params
+    const { note: rawNote } = await searchParams
+    // Sanitise: max 280 chars, strip HTML-like content
+    const senderNote = rawNote ? rawNote.slice(0, 280).replace(/<[^>]*>/g, '').trim() || null : null
 
     const bar = await db.customBar.findFirst({
         where: {
@@ -89,6 +95,12 @@ export default async function PublicEventInvitePage({ params }: Props) {
                 </Link>
             </div>
             <div className="w-full max-w-xl">
+                {senderNote && (
+                    <div className="mb-6 rounded-lg border border-zinc-700/50 bg-zinc-900/60 px-4 py-3 space-y-1">
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500">A note from the sender</p>
+                        <p className="text-sm text-zinc-300 italic leading-relaxed">&ldquo;{senderNote}&rdquo;</p>
+                    </div>
+                )}
                 {canEdit ? (
                     <EventInviteBarContentEditor
                         barId={bar.id}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import type { EventInviteEndingCta, EventInviteStory } from '@/lib/event-invite-story/schema'
@@ -31,6 +31,12 @@ export function EventInviteStoryReader({
     const byId = useMemo(() => new Map(story.passages.map((p) => [p.id, p])), [story.passages])
     const effectiveStart = initialPassageId ?? story.start
     const [currentId, setCurrentId] = useState(effectiveStart)
+    const [history, setHistory] = useState<string[]>([])
+
+    useEffect(() => {
+        setCurrentId(effectiveStart)
+        setHistory([])
+    }, [effectiveStart, story.id])
 
     const passage = byId.get(currentId)
     if (!passage) {
@@ -39,7 +45,27 @@ export function EventInviteStoryReader({
         )
     }
 
-    const restart = () => setCurrentId(effectiveStart)
+    const restart = () => {
+        setHistory([])
+        setCurrentId(effectiveStart)
+    }
+
+    const goToPassage = (nextId: string) => {
+        setHistory((h) => [...h, currentId])
+        setCurrentId(nextId)
+    }
+
+    const goBack = () => {
+        setHistory((h) => {
+            if (h.length === 0) return h
+            const prev = h[h.length - 1]!
+            setCurrentId(prev)
+            return h.slice(0, -1)
+        })
+    }
+
+    const blocksBack = !!(passage.ending || passage.confirmation)
+    const canGoBack = history.length > 0 && !blocksBack
 
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
@@ -52,6 +78,17 @@ export function EventInviteStoryReader({
             </header>
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+                {canGoBack ? (
+                    <div className="mb-4">
+                        <button
+                            type="button"
+                            onClick={goBack}
+                            className="text-xs text-zinc-500 hover:text-amber-400/90 underline underline-offset-2"
+                        >
+                            ← Back
+                        </button>
+                    </div>
+                ) : null}
                 <div className="prose prose-invert prose-zinc prose-sm max-w-none">
                     <ReactMarkdown>{passage.text}</ReactMarkdown>
                 </div>
@@ -86,7 +123,7 @@ export function EventInviteStoryReader({
                             <button
                                 key={c.next + c.label}
                                 type="button"
-                                onClick={() => setCurrentId(c.next)}
+                                onClick={() => goToPassage(c.next)}
                                 className="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/80 border border-zinc-700 hover:border-amber-700/60 hover:bg-zinc-800 text-zinc-100 text-sm font-medium transition-colors"
                             >
                                 {c.label}

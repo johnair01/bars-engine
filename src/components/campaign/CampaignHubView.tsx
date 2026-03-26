@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import type { PortalData } from '@/actions/campaign-portals'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
+import { ResidencyEventsCallout } from '@/components/campaign/ResidencyEventsCallout'
 import { GmFaceMovesPanel } from '@/components/campaign/GmFaceMovesPanel'
 import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
 import type { GmFaceStageMove } from '@/lib/gm-face-stage-moves'
@@ -114,6 +115,8 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
         {milestoneGuidance && (
           <CampaignMilestoneStrip data={milestoneGuidance} variant="hub" />
         )}
+
+        {campaignRef === 'bruised-banana' && <ResidencyEventsCallout />}
 
         <GmFaceMovesPanel
           kotterStage={kotterStage}

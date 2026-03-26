@@ -6,4 +6,5 @@
 - [x] **T4** Update **`/invite/event/[barId]`** to show **RSVP on Partiful** + **Begin initiation** as primary actions when config is present.
 - [x] **T5** Publish **two Adventures** (Apr 4 / Apr 5 player path minimum) with matching slugs; wire seed or admin instructions.
 - [x] **T6** Update **seed** `scripts/seed-bruised-banana-event-invite-bar.ts` with Partiful placeholders + `eventSlug` per BAR.
-- [ ] **T7** `npm run check` + manual incognito QA (BAR → Partiful + initiation). *(Check passes; run `npm run seed:event-invite-bar` against DB, then QA.)*
+- [x] **T7** Ship gate: `npm run seed:event-invite-bar` → `npm run verify:event-invite-seed` (optional `EIP_VERIFY_STRICT=1` for real Partiful URLs) → incognito QA per [docs/events/EIP_T7_VERIFICATION.md](../../../docs/events/EIP_T7_VERIFICATION.md). Optional env: `EIP_PARTIFUL_APR4_URL`, `EIP_PARTIFUL_APR5_URL` on seed.
+- [x] **T8** In-product **event_invite** story editing + reader **Back**: **RBAC** — campaign **owner** + **admin** only (`playerCanEditEventInviteBar`); **Back** via history stack on non-confirmation passages; **no in-app Back** on **`ending`** or **`confirmation: true`** passages. **Versioning:** backlog **EIPV** (Future).

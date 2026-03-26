@@ -13,6 +13,8 @@ import { MOVE_ICON_PATHS, type MoveIconSlug } from '@/lib/ui/move-icons'
  */
 
 type CompassProps = {
+  /** When set (e.g. Bruised Banana residency), Show Up suggests this collective path too. */
+  residencyEventsHref?: string | null
   /** Completed moveType strings from PlayerQuest rows */
   completedMoveTypes: string[]
   /** True if player has no quest history at all */
@@ -117,7 +119,7 @@ function deriveSuggestion(props: CompassProps): CompassSuggestion {
 }
 
 export function OrientationCompass(props: CompassProps) {
-  const { hasCheckedIn = true } = props
+  const { hasCheckedIn = true, residencyEventsHref } = props
   const s = deriveSuggestion(props)
 
   // Ritual gate pre-prompt: player hasn't checked in yet for today.
@@ -197,6 +199,14 @@ export function OrientationCompass(props: CompassProps) {
                   <span aria-hidden="true"> →</span>
                 </span>
               </Link>
+              {s.move === 'Show Up' && residencyEventsHref ? (
+                <Link
+                  href={residencyEventsHref}
+                  className="flex min-h-9 w-full items-center justify-center rounded-lg border border-amber-800/45 bg-amber-950/25 px-2 py-1.5 text-center text-[10px] font-semibold text-amber-200/95 transition-colors hover:bg-amber-900/35"
+                >
+                  Residency events & nights →
+                </Link>
+              ) : null}
               <Link
                 href="/wiki/handbook"
                 className="min-h-9 self-start text-[10px] leading-snug text-zinc-600 underline-offset-2 hover:text-zinc-400 break-words"

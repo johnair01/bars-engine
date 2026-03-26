@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
 import { listInstances } from '@/actions/instance'
 import { listEventArtifactsForStewardship } from '@/actions/campaign-invitation'
+import { AddCampaignKernelButton } from '@/components/admin/AddCampaignKernelButton'
 import { formatEventScheduleRange } from '@/lib/event-artifact-format'
 import type { EventStewardshipRow } from '@/actions/campaign-invitation'
 import type { EventArtifactListItem } from '@/lib/event-artifact-list-types'
@@ -71,14 +72,7 @@ export default async function AdminCampaignEventsPage({
           >
             Load events
           </button>
-          <button
-            type="button"
-            disabled
-            title="Campaign creation kernel is not wired yet — this will assign campaigns to players."
-            className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-500 font-bold text-sm cursor-not-allowed opacity-70"
-          >
-            Add campaign
-          </button>
+          {instanceId ? <AddCampaignKernelButton instanceId={instanceId} /> : null}
         </form>
         {activeId && (
           <p className="text-xs text-zinc-600">

@@ -115,7 +115,7 @@ export function DashboardTwoChannelHub({ activeInstanceId, campaignHomeHref }: H
           />
           <DashboardChannelRow
             href="/event"
-            title="Residency events"
+            title="Show up — residency events"
             description="Party nights, donate, invite bingo"
           />
           <DashboardChannelRow href="/world" title="Enter Lobby" description="Trade BARs in your nation room" />

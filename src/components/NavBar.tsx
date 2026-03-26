@@ -44,6 +44,13 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             VAULT
                         </Link>
                         <Link
+                            href="/event"
+                            title="Residency nights, donate, invite bingo — show up for the campaign."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/event')}`}
+                        >
+                            EVENTS
+                        </Link>
+                        <Link
                             href="/adventures"
                             title="Active play: shadow work, journeys, daemons, campaigns, and published adventures."
                             className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/adventures')}`}

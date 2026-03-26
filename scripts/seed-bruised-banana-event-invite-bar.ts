@@ -2,7 +2,12 @@
 /**
  * Seed two public event-invite BARs + JSON CYOA (Partiful → BAR → story → /event + mini-game).
  *
- *   npx tsx scripts/with-env.ts "npx tsx scripts/seed-bruised-banana-event-invite-bar.ts"
+ *   npm run seed:event-invite-bar
+ *
+ * **Partiful (optional):** set real RSVP URLs so staging/prod match Partiful without editing this file:
+ *   - `EIP_PARTIFUL_APR4_URL` — HTTPS URL for April 4 dance event on Partiful
+ *   - `EIP_PARTIFUL_APR5_URL` — HTTPS URL for April 5 (The Game) on Partiful
+ *   If unset, defaults to `https://partiful.com/` (placeholder). Run `npm run verify:event-invite-seed` after.
  *
  * Stable ids:
  *   bb-event-invite-apr4-dance  → /invite/event/bb-event-invite-apr4-dance
@@ -18,8 +23,26 @@ import { eventInitiationAdventureSlug } from '../src/lib/event-invite-party'
 const BAR_APR4 = 'bb-event-invite-apr4-dance'
 const BAR_APR5 = 'bb-event-invite-apr26'
 
-/** Replace with real Partiful event URLs before production (see docs/events/PARTIFUL_ENGINE_LINKS.md). */
 const PARTIFUL_PLACEHOLDER = 'https://partiful.com/'
+
+function partifulUrlForBar(which: 'apr4' | 'apr5'): string {
+  const raw =
+    which === 'apr4'
+      ? process.env.EIP_PARTIFUL_APR4_URL?.trim()
+      : process.env.EIP_PARTIFUL_APR5_URL?.trim()
+  if (!raw) return PARTIFUL_PLACEHOLDER
+  try {
+    const u = new URL(raw)
+    if (u.protocol !== 'https:') {
+      console.warn(`[seed] ${which}: Partiful URL must use HTTPS — got ${raw}; using placeholder.`)
+      return PARTIFUL_PLACEHOLDER
+    }
+    return raw
+  } catch {
+    console.warn(`[seed] ${which}: invalid Partiful URL — ${raw}; using placeholder.`)
+    return PARTIFUL_PLACEHOLDER
+  }
+}
 
 const STORY_APR4: EventInviteStory = {
     id: 'bb-apr4-doorway',
@@ -309,7 +332,8 @@ async function main() {
     console.log(`   Apr 4:  /invite/event/${BAR_APR4}`)
     console.log(`   Apr 5:  /invite/event/${BAR_APR5}`)
     console.log('   Initiation: /campaign/event/apr-4-dance/initiation · /campaign/event/apr-5-game/initiation')
-    console.log('   Replace partifulUrl in DB or edit seed when real Partiful links are live.')
+    console.log('   Set EIP_PARTIFUL_APR4_URL / EIP_PARTIFUL_APR5_URL before seeding for real RSVP links, or use Hand → Vault.')
+    console.log('   Then: npm run verify:event-invite-seed')
 }
 
 main()

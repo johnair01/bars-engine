@@ -33,13 +33,13 @@ const ALTITUDES: Array<{ key: AlchemyAltitude; label: string; hint: string }> = 
   { key: 'satisfied', label: 'Satisfied', hint: 'Clear and flowing — momentum, capacity, readiness' },
 ]
 
-/** Human-readable label for a 1–10 satisfaction rating. */
+/** Human-readable label for a 1–10 stuckness rating (10 = most stuck). */
 function satisfactionLabel(rating: number): string {
-  if (rating <= 2) return 'Quite stuck — significant friction or resistance present'
-  if (rating <= 4) return 'Below centre — some drag, not yet flowing'
+  if (rating <= 2) return 'High flow — clear, energised, resourced'
+  if (rating <= 4) return 'Above centre — momentum building, capacity available'
   if (rating <= 6) return 'Mid-range — aware and moving, not yet at ease'
-  if (rating <= 8) return 'Above centre — momentum building, capacity available'
-  return 'High flow — clear, energised, resourced'
+  if (rating <= 8) return 'Below centre — some drag, not yet flowing'
+  return 'Quite stuck — significant friction or resistance present'
 }
 
 // ---------------------------------------------------------------------------
@@ -236,6 +236,14 @@ function CompleteScene({
           className="mt-6 px-8 py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-stone-100 rounded-lg font-medium transition-colors"
         >
           {isPending ? 'Preparing your adventure…' : 'Begin your Adventure →'}
+        </button>
+      ) : campaignRef ? (
+        <button
+          type="button"
+          onClick={() => router.push(`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`)}
+          className="mt-6 px-8 py-3 bg-amber-700/80 hover:bg-amber-600 text-stone-100 rounded-lg font-medium transition-colors"
+        >
+          Enter the campaign hub →
         </button>
       ) : (
         <button
@@ -657,16 +665,16 @@ function CheckInStep0Scene({
             Satisfaction right now
           </h3>
           <p className="text-xs text-stone-500 mt-0.5">
-            1 = very stuck &nbsp;·&nbsp; 10 = full flow
+            1 = full flow &nbsp;·&nbsp; 10 = very stuck
           </p>
         </div>
 
         {/* Slider track with flanking labels */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-stone-500">
-            <span>Stuck</span>
-            <span className="text-2xl font-bold text-stone-100 tabular-nums">{rating}</span>
             <span>Flow</span>
+            <span className="text-2xl font-bold text-stone-100 tabular-nums">{rating}</span>
+            <span>Stuck</span>
           </div>
           <input
             type="range"

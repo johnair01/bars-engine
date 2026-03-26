@@ -69,6 +69,9 @@ next-env.d.ts
 # Database backups (local cold storage)
 /backups/
 
+# Google Workspace mirror output (may contain private content; regenerate locally)
+/docs/google-mirror/
+
 # Bootstrap output (creation quest analysis)
 scripts/bootstrap-creation-quests-output.json
 

@@ -77,6 +77,7 @@ export async function createEventCampaign(
   })
 
   revalidatePath('/event')
+  revalidatePath('/admin/campaign-events')
   return { success: true, campaignId: campaign.id, threadId: thread.id }
 }
 

@@ -64,6 +64,13 @@ This spec **extends** the JSON CYOA doorway in [EVENT_INVITE_BAR_CYOA_MVP.md](..
 
 - The existing **short JSON story** (`storyContent`, `EventInviteStory`) MAY remain the **first screen**; ending CTAs SHOULD align with the two-button model (Partiful + initiation) once implemented.
 
+### JSON CYOA — authoring & guest navigation (policy)
+
+- **Who may edit** (when story editing is in-product): **campaign owners** for the BAR’s `campaignRef` **and** **admin** only — not arbitrary logged-in players.
+- **Guest navigation:** readers SHOULD be able to **go back** and pick another branch on **non-confirmation** passages (history stack or equivalent).
+- **Confirmation passages:** steps that **commit** the guest to an outcome (e.g. **RSVP / Partiful**, **Begin initiation**, or other explicit “you chose this” surfaces) MUST **not** offer **Back** into the prior branch — treat them as a **hard stop** for backward navigation (browser back may still exist; product UI does not re-open the fork).
+- **Versioning** of published invite stories is **out of scope** for the first ship; see backlog **EIPV** for a future spec (snapshots / history) if needed.
+
 ### Non-goals (v1 of this spec)
 
 - Partiful API sync or webhook.
@@ -85,3 +92,4 @@ This spec **extends** the JSON CYOA doorway in [EVENT_INVITE_BAR_CYOA_MVP.md](..
 - Implementation appendix: [EVENT_INVITE_BAR_CYOA_MVP.md](../campaign-hub-spoke-landing-architecture/EVENT_INVITE_BAR_CYOA_MVP.md)
 - Current initiation entry: [`src/app/campaign/initiation/page.tsx`](../../../src/app/campaign/initiation/page.tsx) (today: single `bruised-banana-initiation-{segment}` slug — this spec generalizes per **event**).
 - Host playbook: [`docs/events/HOST_EVENT_INVITE_BAR.md`](../../../docs/events/HOST_EVENT_INVITE_BAR.md)
+- **T7 verification gate:** [`docs/events/EIP_T7_VERIFICATION.md`](../../../docs/events/EIP_T7_VERIFICATION.md) — `npm run verify:event-invite-seed` after seed; incognito QA checklist.

@@ -178,6 +178,7 @@ model Player {
   milestonesProposed           CampaignMilestone[]         @relation("MilestoneProposals")
   milestonesApproved           CampaignMilestone[]         @relation("MilestoneApprovals")
   milestoneContributions       MilestoneContribution[]     @relation("MilestoneContributions")
+  marketplaceProfiles          PlayerMarketplaceProfile[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -387,6 +388,7 @@ model CustomBar {
   roleOrientations         Role[]               @relation("RoleOrientationTemplate")
   playerRoleGrants         PlayerRole[]         @relation("PlayerRoleGrantBar")
   spokeSession             SpokeSession?        @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
+  marketplaceStallListing  MarketplaceStallSlot? @relation("MarketplaceListedBar")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
@@ -1797,6 +1799,40 @@ model GameboardAidOffer {
   @@index([slotId])
   @@index([stewardId, status])
   @@map("gameboard_aid_offers")
+}
+
+/// Player-owned campaign marketplace profile (mall stalls) per campaignRef — separate from instance gameboard deck draws.
+model PlayerMarketplaceProfile {
+  id               String   @id @default(cuid())
+  playerId         String
+  campaignRef      String
+  /// 8 base + paidExtensions
+  maxSlots         Int      @default(8)
+  paidExtensions   Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  player           Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  stallSlots       MarketplaceStallSlot[]
+
+  @@unique([playerId, campaignRef])
+  @@index([campaignRef])
+  @@map("player_marketplace_profiles")
+}
+
+/// One numbered stall in a player marketplace profile; lists a CustomBar (BAR or quest).
+model MarketplaceStallSlot {
+  id                String                   @id @default(cuid())
+  profileId         String
+  slotIndex         Int
+  listedCustomBarId String?                  @unique
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  profile           PlayerMarketplaceProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  listedCustomBar   CustomBar?               @relation("MarketplaceListedBar", fields: [listedCustomBarId], references: [id], onDelete: SetNull)
+
+  @@unique([profileId, slotIndex])
+  @@index([profileId])
+  @@map("marketplace_stall_slots")
 }
 
 model BountyStake {

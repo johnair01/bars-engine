@@ -185,22 +185,36 @@ export default async function PlayPage() {
           </section>
         )}
 
-        {/* ── Campaign Board (Show Up) ─────────────────────────────── */}
+        {/* ── Campaign field + stalls (Show Up) ─────────────────── */}
         {activeCampaign && (
           <section className="space-y-3">
             <MoveBadge move="showUp" recommended={false} label="Campaign" />
-            <Link
-              href={`/campaign/board?ref=${activeCampaign.campaignRef ?? ''}`}
-              className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-teal-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
-            >
-              <div>
-                <div className="font-semibold text-white group-hover:text-teal-200 transition-colors">
-                  {activeCampaign.name}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Link
+                href={`/campaign/board?ref=${activeCampaign.campaignRef ?? ''}`}
+                className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-teal-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+              >
+                <div>
+                  <div className="font-semibold text-white group-hover:text-teal-200 transition-colors">
+                    {activeCampaign.name}
+                  </div>
+                  <div className="text-sm text-zinc-500 mt-0.5">Featured field (deck)</div>
                 </div>
-                <div className="text-sm text-zinc-500 mt-0.5">Campaign board</div>
-              </div>
-              <div className="text-zinc-600 group-hover:text-teal-400 transition-colors text-lg">→</div>
-            </Link>
+                <div className="text-zinc-600 group-hover:text-teal-400 transition-colors text-lg">→</div>
+              </Link>
+              <Link
+                href={`/campaign/marketplace?ref=${encodeURIComponent(activeCampaign.campaignRef ?? 'bruised-banana')}`}
+                className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-teal-700/50 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
+              >
+                <div>
+                  <div className="font-semibold text-white group-hover:text-teal-200 transition-colors">
+                    Campaign stalls
+                  </div>
+                  <div className="text-sm text-zinc-500 mt-0.5">List your BARs &amp; quests</div>
+                </div>
+                <div className="text-zinc-600 group-hover:text-teal-400 transition-colors text-lg">→</div>
+              </Link>
+            </div>
           </section>
         )}
 

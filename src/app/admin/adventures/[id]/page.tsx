@@ -4,6 +4,7 @@ import { StartNodeForm } from "./StartNodeForm"
 import { CampaignRefForm } from "./CampaignRefForm"
 import { ImportPassagesForm } from "./ImportPassagesForm"
 import { CharacterCreatorTemplateEditor } from "./CharacterCreatorTemplateEditor"
+import { IntakeTemplateEditor } from "./IntakeTemplateEditor"
 import { PromoteDraftButton } from "./PromoteDraftButton"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -69,7 +70,16 @@ export default async function AdventureDetailPage({
                                 New Passage
                             </Link>
                         </div>
-                        {adventure.passages.length > 0 && (
+                        {adventure.adventureType === 'CYOA_INTAKE' ? (
+                            <Link
+                                href={`/cyoa-intake/${adventure.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-zinc-500 hover:text-amber-400 transition-colors"
+                            >
+                                Preview intake
+                            </Link>
+                        ) : adventure.passages.length > 0 ? (
                             <Link
                                 href={`/adventure/${adventure.id}/play?preview=1`}
                                 target="_blank"
@@ -78,7 +88,7 @@ export default async function AdventureDetailPage({
                             >
                                 Preview
                             </Link>
-                        )}
+                        ) : null}
                     </div>
                 }
             />
@@ -143,6 +153,12 @@ export default async function AdventureDetailPage({
                             currentTemplate={adventure.playbookTemplate ? (() => {
                                 try { return JSON.parse(adventure.playbookTemplate!) } catch { return null }
                             })() : null}
+                        />
+                    )}
+                    {adventure.adventureType === 'CYOA_INTAKE' && (
+                        <IntakeTemplateEditor
+                            adventureId={adventure.id}
+                            currentTemplateJson={adventure.playbookTemplate}
                         />
                     )}
                 </div>

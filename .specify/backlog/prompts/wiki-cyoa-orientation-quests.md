@@ -34,14 +34,25 @@ Every wiki section becomes exactly one passage. A passage has:
 ```
 claim        — one sentence. states the core idea. opens the passage.
 body         — 2–4 sentences. elaborates the claim. no sub-bullets.
-choices[]    — 1–4 choices. each is a question a player would genuinely ask.
-              "Back to overview" always counts as one valid choice.
-              terminal passages have zero choices.
+choices[]    — 0–4 authored choices (see terminal rule below).
 ```
 
-**If a wiki section cannot be expressed in this unit — claim + body + at least one
-choice — the section is not ready to be a passage.** This is the canonical failure mode
-to check before generation.
+**Terminal passages (relationship type `terminal`):** authored **`choices` is the empty
+array** — no in-passage buttons. The passage ends with forward-momentum copy only. This
+does **not** trap the player: **return navigation** (e.g. back to a parent hub after
+exploring a branch) is **not** modeled as an extra “fake” choice on the terminal. It is
+handled by **runner chrome** (prominent **“Return to overview”** / **“Back to [section]”**)
+and/or **implicit graph edges** from terminal → parent hub `nodeId` maintained in the
+adventure graph. Authors and `validateOrientationGraph` must ensure every terminal either
+completes the adventure or has an explicit **return** edge / runner rule so the player is
+never stuck.
+
+**Non-terminal passages:** 1–4 authored choices; **“Back to overview”** (or equivalent)
+counts as a valid choice when the topology needs it.
+
+**If a wiki section that should be navigable (not a true ending) cannot be expressed with
+claim + body + at least one choice *or* an allowed return path — the section is not ready
+to be a passage.** This is the canonical failure mode to check before generation.
 
 ### Section relationship types
 
@@ -51,8 +62,8 @@ These determine the topology of the adventure graph:
 |------|-------------|------------|
 | `hub` | Page intro / overview | Start node. Choices = one per major section. |
 | `sequential` | Numbered phases, procedures | Forced linear chain. No branching. Each node has exactly one "next" choice + optional "back to overview". |
-| `branching` | Parallel concepts (e.g. four moves grid) | Hub sub-node. Player picks which branch to explore. Each branch terminates. Returns to parent hub after terminal. |
-| `terminal` | Concluding insight, steward callout | Zero choices. Passage ends with a forward-momentum sentence ("You have named this. Carry it."). |
+| `branching` | Parallel concepts (e.g. four moves grid) | Hub sub-node. Player picks which branch to explore. Each branch ends at a **`terminal`** node (zero authored choices). **Return to parent hub** uses runner back/return chrome and/or an explicit **graph edge** `terminalNodeId → parentHubNodeId` — not a third “choice” on the terminal passage. |
+| `terminal` | Concluding insight, steward callout | **Zero authored choices.** Ends with a forward-momentum sentence ("You have named this. Carry it."). Return to hub (if any) is **outside** the passage choice list — see above. |
 
 ### The hub-and-spoke shape (most common wiki page)
 
@@ -65,10 +76,17 @@ These determine the topology of the adventure graph:
     │       └── [B.3 concept] → [terminal B.3]
     └── [section C: single terminal]
 
-[quest complete: all terminals visited]
+[quest complete: required terminals satisfied]
 ```
 
-Completion condition: player has visited all terminal nodes (or a configurable subset).
+**Completion condition (normative):**
+
+- **Default:** player has visited **every** passage with `relationshipType: 'terminal'`.
+- **Configurable subset:** optional field on the orientation template, e.g.
+  **`requiredTerminalNodeIds: string[]`** (passage `nodeId`s). When **present and non-empty**,
+  only those terminals count toward completion; other terminals are **optional explore**
+  paths. When **absent or empty**, all terminals are required.
+- Document this field in admin UI copy so GMs know which endings gate “quest complete.”
 
 ### Wake Up framing
 
@@ -95,11 +113,35 @@ Never leak routing metadata, GM face names, or SD labels into passage text.
 New `adventureType` enum value: **`CYOA_ORIENTATION`**
 
 Differs from `CYOA_INTAKE` and `CYOA_SPOKE`:
-- No `SpokeSession` created (no gmFace/moveType routing)
+- No `SpokeSession` created (no gmFace/moveType routing from this flow)
 - No `AlchemyCheckIn` step (no emotional calibration phase)
-- Completion tracked via `PlayerPlaybook` (same as intake)
+- **`PlayerPlaybook` is the canonical completion artifact** for orientation: when the player
+  satisfies the completion rule, set **`completedAt`** (and/or progress fields) on the
+  `PlayerPlaybook` row for this adventure — same storage pattern as intake for “player
+  finished this CYOA.”
+- **Optional Wake Up quest BAR:** if product wants a **visible Vault / quest ledger** line
+  item, a separate **`CustomBar` or `PlayerQuest` completion** may be **additionally**
+  recorded when orientation completes — **orthogonal** to `PlayerPlaybook`. It is **not**
+  required for orientation to function; if used, document which server action writes it.
 - `moveType` stored on Adventure as `wakeUp` (fixed, not inferred)
-- `campaignRef` optional — orientation quests can be campaign-scoped or global
+- `campaignRef` **optional** on `Adventure` — see **Wiki ↔ adventure discovery** below.
+
+### Wiki ↔ adventure discovery (CTA query)
+
+Orientation adventures must be findable from wiki pages **without** breaking when
+`campaignRef` is null:
+
+- Add a stable **`wikiOrientationSlug`** (nullable `String` on `Adventure`, or reuse a
+  dedicated column with the same semantics) when `adventureType = CYOA_ORIENTATION`:
+  e.g. `cyoa-adventure` for the page `/wiki/cyoa-adventure`.
+- **CTA resolution order** when rendering a wiki page with known slug `S` and optional
+  player/campaign context `ref`:
+  1. Prefer **`campaignRef = ref` AND `wikiOrientationSlug = S`** (campaign-specific
+     override).
+  2. Else **`campaignRef IS NULL` AND `wikiOrientationSlug = S`** (global orientation).
+- If both exist, (1) wins. If neither exists, hide the CTA.
+- Phase 3 implements `WikiOrientationCta` using this query — **do not** require non-null
+  `campaignRef` for global orientations.
 
 ---
 
@@ -135,14 +177,17 @@ Entry points for orientation quests:
    page that has a corresponding `CYOA_ORIENTATION` Adventure. Links to `/cyoa-orientation/[id]`.
 2. **Campaign landing** — orientation quests listed as "Learn the system" entry points alongside
    the main intake.
-3. **Hand / quests** — orientation quest completions appear as Wake Up quest records in Vault.
+3. **Hand / quests** — if optional quest BAR completion is enabled, Wake Up records appear in Vault;
+   regardless, **`PlayerPlaybook` completion** is the source of truth for “finished orientation.”
 
 Runner: reuse `CyoaIntakeRunner` with a `mode="orientation"` prop that:
 - Skips Phase 1 (check-in slider + channel selector)
 - Skips Phase 2 (altitude)
 - Goes directly to the passage navigation (Phase 3)
 - Shows a "Quest complete" terminal instead of "Your adventure is being prepared"
-- Awards a `wakeUp` quest completion record (not a `SpokeSession`)
+- On completion: **always** finalize **`PlayerPlaybook`** for this adventure; **optionally**
+  also write a Wake Up **quest / BAR completion** if product requires Vault surfacing
+  (orthogonal — not a `SpokeSession`)
 
 ---
 
@@ -150,11 +195,32 @@ Runner: reuse `CyoaIntakeRunner` with a `mode="orientation"` prop that:
 
 ### Phase 0 — Schema + grammar validation
 - [ ] Add `CYOA_ORIENTATION` to `adventureType` enum in `prisma/schema.prisma`
-- [ ] Migration: `prisma/migrations/YYYYMMDDHHMMSS_add_cyoa_orientation_type/migration.sql`
-- [ ] Add `CyoaOrientationPassageSchema` to `src/lib/cyoa-intake/types.ts`:
-      `relationshipType: 'hub' | 'sequential' | 'branching' | 'terminal'`
-- [ ] Validation helper: `validateOrientationGraph(passages)` — checks grammar rules
-      (hub has ≥2 choices, terminal has 0, sequential has exactly 1 next + optional back)
+- [ ] Migration: enum value + **`wikiOrientationSlug`** (nullable `String`) on `Adventure`
+      (and indexes as needed for CTA query), e.g.
+      `prisma/migrations/YYYYMMDDHHMMSS_cyoa_orientation_wiki_slug/migration.sql`
+- [ ] **Orientation template types — do not extend `IntakeTemplatePassage`.** Intake templates
+      live in `Adventure.playbookTemplate` for `CYOA_INTAKE` only. For orientation, add a
+      **separate** discriminated shape, e.g. `OrientationTemplate` + `OrientationTemplatePassage`
+      in `src/lib/cyoa-intake/orientation-template.ts` (or beside `types.ts`) with:
+      - `templateKind: 'orientation'` and `version: 1` at the root JSON
+      - `relationshipType: 'hub' | 'sequential' | 'branching' | 'terminal'` per passage
+      - optional `requiredTerminalNodeIds?: string[]` for completion subset
+      Store in **`playbookTemplate`** only when `adventureType === CYOA_ORIENTATION` so
+      existing intake parsers ignore it by adventure type. **No breaking change** to
+      `IntakeTemplate` / `IntakeTemplatePassage`.
+- [ ] Zod: `CyoaOrientationPassageSchema` / `OrientationTemplateSchema` mirroring the types above.
+- [ ] Validation helper: `validateOrientationGraph(template)` — at minimum:
+      - **`hub`:** ≥2 outgoing choices (or document exception for single-spoke pages).
+      - **`sequential`:** exactly one “forward” choice to the next node + optional back/overview;
+        linear chain must reach a terminal or loop back as designed.
+      - **`branching`:** ≥2 branch choices; each branch target must exist; every branch path
+        must reach a **`terminal`** node; **terminal → parent return** must be satisfiable via
+        explicit return edges in the graph and/or runner back affordance (reject graphs that
+        strand the player with no return and no adventure-complete).
+      - **`terminal`:** zero authored choices; if not adventure-ending, graph must define
+        return to hub or runner must inject return UI.
+      - **Reachability:** `startNodeId` exists; all `targetId`s reference defined `nodeId`s
+        (align with `src/lib/story-graph` patterns where useful).
 
 ### Phase 1 — Admin authoring
 - [ ] `CreateAdventureForm`: add `CYOA_ORIENTATION` option
@@ -165,12 +231,17 @@ Runner: reuse `CyoaIntakeRunner` with a `mode="orientation"` prop that:
 ### Phase 2 — Player runner
 - [ ] `/cyoa-orientation/[id]/page.tsx` — server entry, loads adventure + playbook
 - [ ] `CyoaOrientationRunner.tsx` — `CyoaIntakeRunner` variant, skips check-in phases
-- [ ] Quest completion record on terminal (PlayerPlaybook + optional WakeUp quest BAR)
+- [ ] On terminal completion: **PlayerPlaybook** required; optional Wake Up quest BAR (document action)
 
 ### Phase 3 — Wiki CTA
-- [ ] `WikiOrientationCta` component — shown at bottom of wiki pages that have a
-      corresponding `CYOA_ORIENTATION` Adventure (query by `campaignRef` + `slug` match)
-- [ ] Wire into wiki layout or individual pages as applicable
+- [ ] `WikiOrientationCta` component — resolves adventure via **`wikiOrientationSlug` +
+      optional `campaignRef`** (see discovery rules above), renders “Experience as adventure →”
+      linking to `/cyoa-orientation/[adventureId]` (or agreed route).
+- [ ] **Explicit:** wire CTA into `src/app/wiki/cyoa-adventure/page.tsx` (slug
+      `cyoa-adventure`) so acceptance criteria below are implementable; other wiki pages
+      opt-in the same component with their slug.
+- [ ] Seed or admin-create one `CYOA_ORIENTATION` adventure with `wikiOrientationSlug =
+      'cyoa-adventure'` for local/prod verification.
 
 ### Phase 4 (optional) — AI generation
 - [ ] `orientation-generator.ts` — `generateOrientationAdventure(wikiContent, campaignRef)`
@@ -185,7 +256,9 @@ Runner: reuse `CyoaIntakeRunner` with a `mode="orientation"` prop that:
 - [ ] Player can navigate the orientation adventure at `/cyoa-orientation/[id]`
 - [ ] Grammar validation prevents saving malformed passage graphs (no motiveless dead ends)
 - [ ] Terminal passages feel like genuine completion, not dead ends
-- [ ] `/wiki/cyoa-adventure` has a working "Experience as adventure →" CTA when an
-      orientation Adventure for that page exists
-- [ ] Completed orientation quests appear in player Vault as Wake Up records
+- [ ] `/wiki/cyoa-adventure` has a working "Experience as adventure →" CTA when a
+      `CYOA_ORIENTATION` adventure exists with `wikiOrientationSlug = 'cyoa-adventure'`
+      (see Phase 3 — page wiring + slug are in scope)
+- [ ] Completed orientation quests are reflected in **`PlayerPlaybook`**; optional Vault Wake Up
+      quest line item only if explicitly implemented
 - [ ] Wiki page + CYOA mode feel like two lenses on the same knowledge, not duplicates

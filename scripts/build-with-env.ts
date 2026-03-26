@@ -14,10 +14,22 @@
 import { config } from 'dotenv'
 import { execSync } from 'child_process'
 
-const NO_MIGRATE_CMD = 'prisma generate && next build'
-
 function hasDatabaseUrl(): boolean {
   return !!(process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL)
+}
+
+/** Run Next production build; exit 1 with a short banner (real errors are above via stdio: inherit). */
+function runNextBuild(): void {
+  try {
+    execSync('next build', { stdio: 'inherit', shell: true })
+  } catch {
+    console.error('')
+    console.error('❌ next build failed (non-zero exit).')
+    console.error('   Scroll up in this log for TypeScript, compile, or static-generation errors.')
+    console.error('   Local repro: npm run build')
+    console.error('')
+    process.exit(1)
+  }
 }
 
 function loadEnv(): void {
@@ -40,10 +52,18 @@ if (hasDatabaseUrl()) {
     console.error('')
     process.exit(1)
   }
-  execSync('next build', { stdio: 'inherit', shell: true })
+  runNextBuild()
 } else {
   console.warn(
     '⚠ DATABASE_URL not set. Skipping prisma migrate deploy. Run npm run env:pull or add DATABASE_URL to .env.local for full build.'
   )
-  execSync(NO_MIGRATE_CMD, { stdio: 'inherit', shell: true })
+  try {
+    execSync('npx prisma generate', { stdio: 'inherit', shell: true })
+  } catch {
+    console.error('')
+    console.error('❌ prisma generate failed. Build aborted.')
+    console.error('')
+    process.exit(1)
+  }
+  runNextBuild()
 }

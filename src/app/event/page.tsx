@@ -130,6 +130,55 @@ export default async function EventPage() {
           )}
         </header>
 
+        {/* NEV: story (Wake Up) before fundraiser + BB blocks */}
+        <details className="group bg-emerald-950/20 border border-emerald-900/40 rounded-2xl open:pb-2" open>
+          <summary className="cursor-pointer list-none p-6 font-bold text-white flex items-center justify-between gap-2">
+            <span>Wake Up: Learn the story</span>
+            <span className="text-zinc-500 text-sm font-normal group-open:hidden">Show</span>
+            <span className="text-zinc-500 text-sm font-normal hidden group-open:inline">Hide</span>
+          </summary>
+          <div className="px-6 pb-6 space-y-4 -mt-2">
+            <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{wakeUpContent}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/wiki"
+                className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+              >
+                Learn more →
+              </Link>
+              {instance.campaignRef === 'bruised-banana' && (
+                <>
+                  <span className="text-zinc-500 text-sm">•</span>
+                  <Link
+                    href="/campaign/twine"
+                    className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
+                  >
+                    Browse initiation story (read-only)
+                  </Link>
+                </>
+              )}
+              {player && instance.campaignRef && (
+                <>
+                  <span className="text-zinc-500 text-sm">•</span>
+                  <span className="text-zinc-500 text-sm">Have a question?</span>
+                  <LibraryRequestButton context={{ campaignRef: instance.campaignRef }} />
+                </>
+              )}
+            </div>
+            {(instance.theme || instance.targetDescription) && (
+              <details className="mt-1">
+                <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
+                  Theme &amp; target (extra)
+                </summary>
+                <div className="mt-3 space-y-2 text-zinc-400 text-sm">
+                  {instance.theme && <p>{instance.theme}</p>}
+                  {instance.targetDescription && <p>{instance.targetDescription}</p>}
+                </div>
+              </details>
+            )}
+          </div>
+        </details>
+
         {goal > 0 && instance.isEventMode && (
           <details
             open
@@ -178,54 +227,6 @@ export default async function EventPage() {
             </div>
           </details>
         )}
-
-        <details className="group bg-emerald-950/20 border border-emerald-900/40 rounded-2xl open:pb-2">
-          <summary className="cursor-pointer list-none p-6 font-bold text-white flex items-center justify-between gap-2">
-            <span>Wake Up: Learn the story</span>
-            <span className="text-zinc-500 text-sm font-normal group-open:hidden">Show</span>
-            <span className="text-zinc-500 text-sm font-normal hidden group-open:inline">Hide</span>
-          </summary>
-          <div className="px-6 pb-6 space-y-4 -mt-2">
-            <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{wakeUpContent}</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/wiki"
-                className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
-              >
-                Learn more →
-              </Link>
-              {instance.campaignRef === 'bruised-banana' && (
-                <>
-                  <span className="text-zinc-500 text-sm">•</span>
-                  <Link
-                    href="/campaign/twine"
-                    className="inline-block text-sm text-emerald-400 hover:text-emerald-300 transition"
-                  >
-                    Browse initiation story (read-only)
-                  </Link>
-                </>
-              )}
-              {player && instance.campaignRef && (
-                <>
-                  <span className="text-zinc-500 text-sm">•</span>
-                  <span className="text-zinc-500 text-sm">Have a question?</span>
-                  <LibraryRequestButton context={{ campaignRef: instance.campaignRef }} />
-                </>
-              )}
-            </div>
-            {(instance.theme || instance.targetDescription) && (
-              <details className="mt-1">
-                <summary className="text-sm text-emerald-400 cursor-pointer hover:text-emerald-300">
-                  Theme &amp; target (extra)
-                </summary>
-                <div className="mt-3 space-y-2 text-zinc-400 text-sm">
-                  {instance.theme && <p>{instance.theme}</p>}
-                  {instance.targetDescription && <p>{instance.targetDescription}</p>}
-                </div>
-              </details>
-            )}
-          </div>
-        </details>
 
         {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
 

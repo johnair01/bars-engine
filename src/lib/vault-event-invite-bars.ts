@@ -8,6 +8,8 @@ import { EVENT_INVITE_BAR_TYPE } from '@/lib/event-invite-story/schema'
 export type VaultEventInviteBarRow = {
   id: string
   title: string
+  description: string
+  storyContent: string | null
   partifulUrl: string | null
   eventSlug: string | null
   campaignRef: string | null
@@ -17,6 +19,8 @@ export type VaultEventInviteBarRow = {
 const select = {
   id: true,
   title: true,
+  description: true,
+  storyContent: true,
   partifulUrl: true,
   eventSlug: true,
   campaignRef: true,
@@ -47,7 +51,11 @@ export async function loadEventInviteBarsForStewards(
       take: 32,
       select,
     })
-    return rows.map((r) => ({ ...r, updatedAt: r.createdAt }))
+    return rows.map((r) => ({
+      ...r,
+      description: r.description ?? '',
+      updatedAt: r.createdAt,
+    }))
   }
 
   const memberships = await db.instanceMembership.findMany({
@@ -85,5 +93,9 @@ export async function loadEventInviteBarsForStewards(
     select,
   })
 
-  return rows.map((r) => ({ ...r, updatedAt: r.createdAt }))
+  return rows.map((r) => ({
+    ...r,
+    description: r.description ?? '',
+    updatedAt: r.createdAt,
+  }))
 }

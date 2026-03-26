@@ -67,6 +67,12 @@ export default async function GameboardPage(props: {
               Portals
             </Link>
             <Link
+              href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
+              className="text-sm text-zinc-500 hover:text-teal-400 transition-colors"
+            >
+              Stalls
+            </Link>
+            <Link
               href="/event"
               className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
             >
@@ -140,9 +146,17 @@ export default async function GameboardPage(props: {
           )}
         </section>
 
-        <h2 className="text-lg font-bold text-white mb-2">Campaign gameboard</h2>
+        <h2 className="text-lg font-bold text-white mb-2">Featured campaign field</h2>
         <p className="text-zinc-400 text-sm mb-6">
-          Complete campaign quests here. Each completion draws a new quest.
+          Instance deck — eight live draws for this residency period. To <strong className="text-zinc-300">list</strong>{' '}
+          your own BARs and quests, use{' '}
+          <Link
+            href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
+            className="text-teal-400/90 hover:text-teal-300 underline-offset-2 hover:underline"
+          >
+            Campaign stalls
+          </Link>
+          .
         </p>
 
         {message && (

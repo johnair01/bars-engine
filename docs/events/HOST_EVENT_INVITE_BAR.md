@@ -23,8 +23,10 @@ Use this when you want **RSVP on Partiful** and a **short in-app doorway** (JSON
 ## 4. Seeding / ops
 
 1. Choose an **immutable** `id` (changing it breaks shared links).
-2. Run the seed script or `upsert` via admin tooling when bootstrapping; after that, prefer the Vault form for Partiful + slug.
-3. Paste **`https://<host>/invite/event/<id>`** into Partiful — see [PARTIFUL_ENGINE_LINKS.md](./PARTIFUL_ENGINE_LINKS.md).
+2. Run **`npm run seed:event-invite-bar`** when bootstrapping (or `upsert` via admin tooling). Optional: set **`EIP_PARTIFUL_APR4_URL`** / **`EIP_PARTIFUL_APR5_URL`** in `.env.local` for real Partiful URLs before seeding.
+3. Run **`npm run verify:event-invite-seed`** — see [EIP_T7_VERIFICATION.md](./EIP_T7_VERIFICATION.md) (T7 gate).
+4. After that, prefer the **Vault** form for Partiful + slug tweaks without re-seeding.
+5. Paste **`https://<host>/invite/event/<id>`** into Partiful — see [PARTIFUL_ENGINE_LINKS.md](./PARTIFUL_ENGINE_LINKS.md).
 
 ## 5. Spec references
 
