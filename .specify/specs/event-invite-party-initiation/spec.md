@@ -81,9 +81,9 @@ This spec **extends** the JSON CYOA doorway in [EVENT_INVITE_BAR_CYOA_MVP.md](..
 
 ## Acceptance criteria
 
-- [ ] Two distinct **event slugs** (e.g. `apr-4-dance`, `apr-5-game`) resolve to **two distinct** initiation routes and **two published** Adventures per segment.
-- [ ] A public **event_invite** BAR can be configured with **partifulUrl** + **eventSlug** and presents **RSVP** + **initiation** without requiring login for the doorway.
-- [ ] URLs are **copy-paste stable** and documented for operators (see `docs/events/`).
+- [x] Two distinct **event slugs** (e.g. `apr-4-dance`, `apr-5-game`) resolve to **two distinct** initiation routes and **two published** Adventures per segment.
+- [x] A public **event_invite** BAR can be configured with **partifulUrl** + **eventSlug** and presents **RSVP** + **initiation** without requiring login for the doorway.
+- [x] URLs are **copy-paste stable** and documented for operators (see `docs/events/`).
 
 ---
 

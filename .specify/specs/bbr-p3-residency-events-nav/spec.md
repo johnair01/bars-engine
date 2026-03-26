@@ -18,5 +18,5 @@ Close [BACKLOG.md](../../backlog/BACKLOG.md) **BBR P3**: surface **events** on t
 
 ## Acceptance
 
-- [ ] Hub shows events callout for `ref=bruised-banana` only.
-- [ ] Incognito not required; logged-in QA: NOW → Events nav → `/event`; compass Show Up + BB shows collective link.
+- [x] Hub shows events callout for `ref=bruised-banana` only.
+- [x] Incognito not required; logged-in QA: NOW → Events nav → `/event`; compass Show Up + BB shows collective link.
