@@ -208,6 +208,8 @@ model Player {
   /// Tracks authorship for narrative sovereignty audit trail — see CampaignLoreEntry model.
   loreEntriesCreated             CampaignLoreEntry[]         @relation("LoreEntriesCreated")
   chapterProgress                PlayerChapterProgress[]
+  seedsCreated                   Seed[]                      @relation("SeedsCreated")
+  seedUsageEvents                SeedUsageEvent[]            @relation("SeedUsageEvents")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -3969,4 +3971,65 @@ model ChapterMilestone {
 
   @@index([bookRef])
   @@map("chapter_milestones")
+}
+
+// Seed: Shareable template links for creating artifacts
+model Seed {
+  id                 String   @id @default(cuid())
+  token              String   @unique // Short shareable token (e.g., abc123xyz)
+  creatorId          String
+  sourceArtifactId   String? // BAR/Quest/Campaign that seed generates from
+  sourceArtifactType String? // BAR | QUEST | CAMPAIGN
+
+  // Template configuration
+  templateData       String   @db.Text // JSON: template values for artifact creation
+  customizableFields String   @default("[]") // JSON array: which fields user can customize
+
+  // Usage configuration
+  usageMode          String   @default("both") // instant | customize | both
+  maxUses            Int? // null = unlimited uses
+  currentUses        Int      @default(0)
+  expiresAt          DateTime?
+
+  // Provenance & context
+  parentSeedId       String? // Seed lineage: which seed this was created from
+  generationCount    Int      @default(1) // How many generations deep (1 = original)
+  campaignRef        String? // Campaign context for seed
+
+  // Metadata
+  visibility         String   @default("unlisted") // public | unlisted | private
+  tags               String   @default("[]") // JSON array: categorization tags
+  description        String?  @db.Text // Human-readable seed description
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  creator            Player          @relation("SeedsCreated", fields: [creatorId], references: [id])
+  parentSeed         Seed?           @relation("SeedLineage", fields: [parentSeedId], references: [id])
+  childSeeds         Seed[]          @relation("SeedLineage")
+  usageEvents        SeedUsageEvent[]
+
+  @@index([token])
+  @@index([creatorId])
+  @@index([visibility])
+  @@map("seeds")
+}
+
+// Seed Usage Event: Track when seeds are used to create artifacts
+model SeedUsageEvent {
+  id                String   @id @default(cuid())
+  seedId            String
+  userId            String? // null if used by anonymous/unauthenticated user
+  createdArtifactId String? // ID of BAR/Quest/Campaign created
+  artifactType      String? // BAR | QUEST | CAMPAIGN
+  mode              String   // instant | customize
+  customizations    String?  @db.Text // JSON: what fields were customized (if customize mode)
+  createdAt         DateTime @default(now())
+
+  seed Seed     @relation(fields: [seedId], references: [id], onDelete: Cascade)
+  user Player?  @relation("SeedUsageEvents", fields: [userId], references: [id])
+
+  @@index([seedId])
+  @@index([userId])
+  @@map("seed_usage_events")
 }
