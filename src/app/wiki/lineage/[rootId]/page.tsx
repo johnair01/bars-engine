@@ -64,6 +64,9 @@ export default async function LineageExplorerPage({ params, searchParams }: Page
 
   // Get statistics
   const stats = await getLineageStats(rootId, entityType);
+  if (!stats) {
+    notFound(); // Lineage feature is stubbed, return 404
+  }
 
   // Handle export formats
   if (format === 'json') {

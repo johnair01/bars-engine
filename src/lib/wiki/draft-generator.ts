@@ -64,6 +64,9 @@ export async function generateWikiDraft(
 
     // Get lineage statistics
     const stats = await getLineageStats(artifactId, artifactType);
+    if (!stats) {
+      return { error: 'Wiki lineage features are temporarily offline - cannot generate draft' };
+    }
 
     // Build context for AI
     const context = buildContext(lineage, stats, maxLineageDepth);

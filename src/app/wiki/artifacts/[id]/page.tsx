@@ -55,6 +55,9 @@ export default async function WikiArtifactPage({ params, searchParams }: PagePro
 
   // Get lineage statistics
   const stats = await getLineageStats(id, detectedType);
+  if (!stats) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12">

@@ -74,11 +74,12 @@ function loadRegistry(): { registry: Registry; etag: string } {
   }
 
   const content = fs.readFileSync(registryPath, 'utf-8');
-  cachedRegistry = JSON.parse(content);
-  cacheETag = generateETag(cachedRegistry);
+  const registry: Registry = JSON.parse(content);
+  cachedRegistry = registry;
+  cacheETag = generateETag(registry);
   cacheTimestamp = now;
 
-  return { registry: cachedRegistry, etag: cacheETag };
+  return { registry, etag: cacheETag };
 }
 
 function filterRoutes(
