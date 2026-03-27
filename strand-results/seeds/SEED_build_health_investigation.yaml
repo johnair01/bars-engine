@@ -1,0 +1,46 @@
+problem: |
+  Vercel Preview deployment blocked by multiple TypeScript errors:
+  - 35+ errors in src/lib/wiki/lineage-queries.ts (outdated schema references)
+  - Null safety errors in wiki pages that use lineage queries
+  - Potentially more hidden issues after DeckLibrary schema migration
+
+  Root cause unclear: Is this legacy code? Schema drift? Missing migration updates?
+
+  Need to:
+  1. Understand scope of schema inconsistencies across codebase
+  2. Identify which features are actually used vs abandoned
+  3. Fix or remove broken code systematically
+  4. Unblock DeckLibrary Preview deployment
+
+context:
+  files:
+    - prisma/schema.prisma (current schema)
+    - src/lib/wiki/lineage-queries.ts (35+ errors, currently stubbed)
+    - src/app/wiki/artifacts/[id]/page.tsx (uses lineage queries)
+    - src/app/wiki/lineage/[rootId]/page.tsx (uses lineage queries)
+    - src/lib/wiki/draft-generator.ts (uses lineage queries)
+    - src/components/wiki/LineageVisualization.tsx (uses lineage queries)
+
+  recent_changes:
+    - DeckLibrary schema migration added (20260326194224)
+    - BarDeck.instanceId removed, replaced with libraryId + deckType
+    - All code changes deployed and backward-compatible
+    - Staging database schema applied successfully
+    - Build blocked by unrelated TypeScript errors
+
+  constraints:
+    - Must unblock Preview deployment quickly
+    - Cannot break existing functionality
+    - DeckLibrary migration is priority, wiki features are secondary
+
+agents:
+  - researcher: Survey codebase for schema drift patterns
+  - architect: Assess wiki lineage feature usage and value
+  - fair_witness: Document findings without bias
+  - coordinator: Synthesize recommendations
+
+outcome_criteria:
+  - Clear diagnosis of why these errors exist
+  - Decision matrix: fix vs stub vs delete for each broken feature
+  - Action plan to unblock deployment
+  - Prevention strategy for future schema drift
