@@ -860,6 +860,294 @@ Future enhancement: Add "Generate Wiki Draft" button to artifact pages (`/wiki/a
 
 ---
 
+## Phase 5: Seed Generation System
+
+The seed system provides shareable template links that let people create their own version of artifacts.
+
+### Core Concept
+
+**Seeds are shareable template links** - Generate a seed from any artifact (BAR, Quest, Campaign), share the link, and others can use it to create their own customized version.
+
+**Use Cases:**
+1. **Campaign Organizer** creates "Workshop Planning Quest" → generates seed → shares link → people create customized versions
+2. **Admin** creates starter quests → generates seeds → puts links in onboarding → new users get instant quests
+3. **Community Member** makes great quest → seeds it → shares in campaign → others adapt for their context
+
+### Dual-Mode System
+
+**Instant Mode:**
+```
+/seed/use/[token]?mode=instant
+→ Creates artifact immediately with template defaults
+→ Shows success page with link to created artifact
+→ Fast, zero-friction sharing
+```
+
+**Customize Mode (default):**
+```
+/seed/use/[token]?mode=customize
+→ Shows form to customize template values
+→ User can modify: title, description, domain, etc.
+→ Preview before creation
+→ Adapts template to user's context
+```
+
+**Both Mode:**
+- Seed creator chooses `usageMode: "both"`
+- Users can pick instant or customize when they click the link
+- Most flexible option
+
+### Database Schema
+
+```typescript
+model Seed {
+  id                 String   @id @default(cuid())
+  token              String   @unique // Short shareable token
+  creatorId          String
+  sourceArtifactId   String?  // BAR/Quest/Campaign source
+  sourceArtifactType String?  // BAR | QUEST | CAMPAIGN
+
+  // Template configuration
+  templateData       String   @db.Text // JSON template
+  customizableFields String   @default("[]") // Which fields can be customized
+
+  // Usage configuration
+  usageMode          String   @default("both") // instant | customize | both
+  maxUses            Int?     // null = unlimited
+  currentUses        Int      @default(0)
+  expiresAt          DateTime?
+
+  // Provenance
+  parentSeedId       String?  // Seed lineage
+  generationCount    Int      @default(1) // Generation depth
+
+  // Metadata
+  visibility         String   @default("unlisted")
+  description        String?  @db.Text
+  tags               String   @default("[]")
+
+  creator            Player   @relation("SeedsCreated", fields: [creatorId], references: [id])
+  usageEvents        SeedUsageEvent[]
+}
+
+model SeedUsageEvent {
+  id                String   @id @default(cuid())
+  seedId            String
+  userId            String?  // null = anonymous
+  createdArtifactId String?  // Generated artifact ID
+  artifactType      String?  // BAR | QUEST | CAMPAIGN
+  mode              String   // instant | customize
+  customizations    String?  @db.Text // JSON: what was customized
+
+  seed Seed     @relation(fields: [seedId], references: [id])
+  user Player?  @relation(fields: [userId], references: [id])
+}
+```
+
+### API Routes
+
+**Create Seed:**
+```bash
+POST /api/seeds/create
+Content-Type: application/json
+
+{
+  "artifactId": "bar_123",
+  "artifactType": "BAR",
+  "usageMode": "both",
+  "visibility": "unlisted",
+  "maxUses": 100,
+  "description": "Workshop planning template"
+}
+
+Response:
+{
+  "id": "seed_abc",
+  "token": "xyz123",
+  "shareableUrl": "/seed/use/xyz123"
+}
+```
+
+**Get Seed Details:**
+```bash
+GET /api/seeds/:token
+
+Response:
+{
+  "id": "seed_abc",
+  "token": "xyz123",
+  "sourceArtifactType": "BAR",
+  "templateData": { ... },
+  "customizableFields": ["title", "description", "allyshipDomain"],
+  "usageMode": "both",
+  "visibility": "unlisted",
+  "currentUses": 5,
+  "maxUses": 100,
+  "creator": { "id": "player_123", "name": "Alice" }
+}
+```
+
+**Use Seed:**
+```bash
+POST /api/seeds/use/:token
+Content-Type: application/json
+
+# Instant mode
+{
+  "mode": "instant"
+}
+
+# Customize mode
+{
+  "mode": "customize",
+  "customizations": {
+    "title": "My Workshop Plan",
+    "description": "Adapted for my community",
+    "allyshipDomain": "GATHERING_RESOURCES"
+  }
+}
+
+Response:
+{
+  "artifactId": "bar_new456",
+  "artifactType": "BAR",
+  "mode": "customize"
+}
+```
+
+### Frontend Pages
+
+**Create Seed:**
+```
+/seeds/create?artifactId=bar_123&artifactType=BAR
+→ Form to configure seed options
+→ Select usage mode, visibility, max uses
+→ Generate shareable link
+→ Copy-to-clipboard functionality
+```
+
+**Use Seed:**
+```
+/seed/use/[token]?mode=instant|customize
+→ Instant: auto-creates artifact and redirects
+→ Customize: shows form to edit template
+→ Success page with link to created artifact
+```
+
+### TypeScript API
+
+```typescript
+import {
+  generateSeed,
+  useSeed,
+  getSeedByToken,
+  getSeedStats,
+} from '@/lib/seeds';
+
+// Generate seed from BAR
+const result = await generateSeed('bar_123', 'BAR', 'player_id', {
+  usageMode: 'both',
+  visibility: 'unlisted',
+  maxUses: 100,
+  customizableFields: ['title', 'description', 'allyshipDomain'],
+});
+
+// Use seed in instant mode
+const artifact = await useSeed('xyz123', {
+  mode: 'instant',
+});
+
+// Use seed in customize mode
+const artifact = await useSeed('xyz123', {
+  userId: 'player_456',
+  mode: 'customize',
+  customizations: {
+    title: 'My Custom BAR',
+    description: 'Adapted for my needs',
+  },
+});
+
+// Get seed statistics
+const stats = await getSeedStats('seed_abc');
+// Returns: totalUses, remainingUses, instantUses, customizeUses, uniqueUsers
+```
+
+### Provenance Tracking
+
+Every artifact created from a seed stores provenance:
+
+```typescript
+CustomBar.seedMetabolization = {
+  seedId: "seed_abc",
+  seedToken: "xyz123",
+  mode: "customize",
+  metabolizedAt: "2026-03-26T...",
+  customizations: {
+    title: "My Workshop Plan",
+    allyshipDomain: "GATHERING_RESOURCES"
+  }
+}
+```
+
+This allows:
+- Tracking which artifacts came from which seeds
+- Analyzing seed effectiveness (conversion rates)
+- Building seed lineage trees
+- Crediting original creators
+
+### Registry Integration
+
+All seed routes are registered in `/api/registry`:
+
+```json
+{
+  "routes": [
+    {
+      "method": "POST",
+      "pattern": "/api/seeds/create",
+      "entity": "SEED",
+      "agentDiscoverable": true
+    },
+    {
+      "method": "GET",
+      "pattern": "/api/seeds/:token",
+      "entity": "SEED",
+      "agentDiscoverable": true
+    },
+    {
+      "method": "POST",
+      "pattern": "/api/seeds/use/:token",
+      "entity": "SEED",
+      "agentDiscoverable": true
+    }
+  ]
+}
+```
+
+### Future Enhancements
+
+**Seed Discovery:**
+- `/seeds` - Browse public seeds
+- Search by tags, artifact type, creator
+- Featured seed collections
+
+**Seed Analytics:**
+- Track conversion rates (views → uses)
+- Most popular seeds
+- Usage patterns over time
+
+**Seed Variants:**
+- Fork existing seeds
+- Create seed from seed (meta-templates)
+- Seed collections (multiple templates in one link)
+
+**Integration with Artifact Pages:**
+- "Share as Seed" button on BAR/Quest detail pages
+- One-click seed generation with smart defaults
+- Embedded seed usage widgets
+
+---
+
 ## Next Steps
 
 1. **Annotate existing routes** - Start with high-priority player-facing routes
