@@ -5,8 +5,9 @@ Complete guide to using the BARS Strand system for development-time context mana
 ## Table of Contents
 
 - [Overview](#overview)
-- [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Installation](#installation)
+- [API Configuration](#api-configuration)
 - [Concepts](#concepts)
 - [Usage](#usage)
 - [Fork-Space Configuration](#fork-space-configuration)
@@ -33,10 +34,43 @@ A **strand** is a development context that:
 
 - **CLI Tool**: Command-line interface for all strand operations
 - **Claude Plugin**: Natural language interface via Claude Desktop
+- **Multi-Provider Support**: Work with Anthropic, OpenAI, or budget models
 - **Fork-Space**: Configurable file access boundaries
 - **Issue Linking**: Connect strands to GitHub issues
 - **JSON Output**: Automation-friendly output format
 - **Status Tracking**: Monitor strand lifecycle
+
+---
+
+## Quick Start
+
+### 5-Minute Setup
+
+```bash
+# 1. Navigate to repository
+cd ~/code/bars-engine
+
+# 2. Install CLI dependencies
+uv pip install -r cli/bars-strand/requirements.txt
+
+# 3. Initialize configuration
+uv run python cli/bars-strand/bars_strand.py config init
+
+# 4. Set your API key (choose one)
+export ANTHROPIC_API_KEY=your-api-key-here
+# OR
+export OPENAI_API_KEY=your-api-key-here
+
+# 5. Verify setup
+uv run python cli/bars-strand/bars_strand.py config check
+
+# 6. Create your first strand
+uv run python cli/bars-strand/bars_strand.py create my-feature \
+  --description "Implement user authentication" \
+  --type feature
+```
+
+That's it! You're ready to use strands.
 
 ---
 
@@ -48,6 +82,10 @@ A **strand** is a development context that:
 - uv (Python package manager)
 - Git
 - Claude Desktop (optional, for plugin)
+- API key from one of:
+  - [Anthropic](https://console.anthropic.com/)
+  - [OpenAI](https://platform.openai.com/api-keys)
+  - Budget providers (DeepSeek, Together AI, etc.)
 
 ### Step 1: Install CLI Tool
 
@@ -68,16 +106,56 @@ chmod +x cli/bars-strand/bars_strand.py
 uv run python cli/bars-strand/bars_strand.py --version
 ```
 
-### Step 2: Create Strands Directory
+### Step 2: Configure API Access
 
 ```bash
-# From repository root
-cd ~/code/bars-engine
-mkdir -p .strands
-echo '*.yaml' > .strands/.gitignore
+# Initialize configuration file
+uv run python cli/bars-strand/bars_strand.py config init
+
+# This creates .bars-strand.yml in your repository root
 ```
 
-### Step 3: Install Claude Plugin (Optional)
+### Step 3: Set API Key
+
+Choose your provider and set the corresponding environment variable:
+
+**Anthropic (Claude)**:
+```bash
+export ANTHROPIC_API_KEY=your-api-key-here
+```
+
+**OpenAI**:
+```bash
+export OPENAI_API_KEY=your-api-key-here
+```
+
+**Budget Models** (DeepSeek, Qwen, etc.):
+```bash
+export OPENAI_COMPATIBLE_API_KEY=your-api-key-here
+```
+
+Add to your shell profile (~/.zshrc, ~/.bashrc) to persist:
+```bash
+echo 'export ANTHROPIC_API_KEY=your-api-key-here' >> ~/.zshrc
+```
+
+### Step 4: Verify Setup
+
+```bash
+uv run python cli/bars-strand/bars_strand.py config check
+```
+
+You should see:
+```
+Configuration:
+  ℹ Default provider: anthropic
+  ℹ API key configured for anthropic
+  ℹ Model: claude-sonnet-4-5-20250929-v1:0
+
+✓ Configuration is valid
+```
+
+### Step 5: Install Claude Plugin (Optional)
 
 The Claude plugin is already in place at `.claude/plugins/bars-strand/`.
 
@@ -85,45 +163,127 @@ Restart Claude Desktop to load the plugin.
 
 ---
 
-## Quick Start
+## API Configuration
 
-### Create Your First Strand
+### Configuration File
+
+The `.bars-strand.yml` file controls API settings. Create it with:
 
 ```bash
-# Create a feature strand
-uv run python cli/bars-strand/bars_strand.pycreate user-auth \
-  --description "Implement user authentication system" \
-  --type feature \
-  --status active
-
-# Link to GitHub issue
-uv run python cli/bars-strand/bars_strand.pylink user-auth https://github.com/johnair01/bars-engine/issues/21
-
-# View details
-uv run python cli/bars-strand/bars_strand.pyshow user-auth
+uv run python cli/bars-strand/bars_strand.py config init
 ```
 
-### List Active Strands
+### Supported Providers
 
-```bash
-# List all strands
-uv run python cli/bars-strand/bars_strand.pylist
+#### 1. Anthropic (Claude)
 
-# Filter by status
-uv run python cli/bars-strand/bars_strand.pylist --status active
+Default configuration for Claude models:
 
-# Filter by type
-uv run python cli/bars-strand/bars_strand.pylist --type feature
+```yaml
+api:
+  default_provider: anthropic
+  anthropic:
+    api_key: ${ANTHROPIC_API_KEY}
+    model: claude-sonnet-4-5-20250929-v1:0
+    max_tokens: 8192
+    temperature: 0.7
 ```
 
-### Update Strand Status
+**Get API Key**: https://console.anthropic.com/
 
+#### 2. OpenAI (GPT)
+
+Configuration for OpenAI models:
+
+```yaml
+api:
+  default_provider: openai
+  openai:
+    api_key: ${OPENAI_API_KEY}
+    model: gpt-4-turbo-preview
+    max_tokens: 4096
+    temperature: 0.7
+```
+
+**Get API Key**: https://platform.openai.com/api-keys
+
+#### 3. Budget Models (OpenAI-Compatible)
+
+For cost-effective models via HuggingFace, Together AI, vLLM, etc.:
+
+**DeepSeek-V3** ($0.10/1M tokens):
+```yaml
+api:
+  default_provider: openai_compatible
+  openai_compatible:
+    api_key: ${DEEPSEEK_API_KEY}
+    base_url: https://api.deepseek.com/v1
+    model: deepseek-chat
+    max_tokens: 8192
+    temperature: 0.7
+```
+
+**Qwen2.5-Coder-32B** via Together AI ($0.05-0.10/1M):
+```yaml
+api:
+  default_provider: openai_compatible
+  openai_compatible:
+    api_key: ${TOGETHER_API_KEY}
+    base_url: https://api.together.xyz/v1
+    model: Qwen/Qwen2.5-Coder-32B-Instruct
+    max_tokens: 8192
+    temperature: 0.7
+```
+
+**Self-Hosted (vLLM/SGLang)**:
+```yaml
+api:
+  default_provider: openai_compatible
+  openai_compatible:
+    api_key: your-local-api-key
+    base_url: http://localhost:8000/v1
+    model: your-model-name
+    max_tokens: 8192
+    temperature: 0.7
+```
+
+### Configuration Commands
+
+**Initialize config**:
 ```bash
-# Mark as completed
-uv run python cli/bars-strand/bars_strand.pyupdate user-auth --status completed
+uv run python cli/bars-strand/bars_strand.py config init
+```
 
-# Add description
-uv run python cli/bars-strand/bars_strand.pyupdate user-auth --description "Authentication system complete with OAuth2"
+**Check configuration**:
+```bash
+uv run python cli/bars-strand/bars_strand.py config check
+```
+
+**Change provider**:
+```bash
+uv run python cli/bars-strand/bars_strand.py config set-provider openai
+```
+
+**Show configuration** (API keys redacted):
+```bash
+uv run python cli/bars-strand/bars_strand.py config show
+```
+
+### Environment Variables
+
+API keys are set via environment variables:
+
+| Provider | Environment Variable |
+|----------|---------------------|
+| Anthropic | `ANTHROPIC_API_KEY` |
+| OpenAI | `OPENAI_API_KEY` |
+| OpenAI-Compatible | `OPENAI_COMPATIBLE_API_KEY` |
+
+Set permanently in your shell profile:
+```bash
+# ~/.zshrc or ~/.bashrc
+export ANTHROPIC_API_KEY=your-api-key-here
+export OPENAI_API_KEY=your-openai-key-here
 ```
 
 ---
@@ -165,6 +325,8 @@ fork_space:
     - "*.pyc"
   file_patterns:
     - "*.py"
+    - "*.ts"
+    - "*.tsx"
     - "*.md"
     - "*.json"
 ```
@@ -177,16 +339,17 @@ fork_space:
 
 ```bash
 # Basic creation
-uv run python cli/bars-strand/bars_strand.pycreate my-feature --description "My feature description"
+uv run python cli/bars-strand/bars_strand.py create my-feature \
+  --description "My feature description"
 
 # Specify type and status
-uv run python cli/bars-strand/bars_strand.pycreate my-bugfix \
+uv run python cli/bars-strand/bars_strand.py create my-bugfix \
   --description "Fix validation error" \
   --type bugfix \
   --status active
 
 # JSON output for automation
-uv run python cli/bars-strand/bars_strand.pycreate my-experiment \
+uv run python cli/bars-strand/bars_strand.py create my-experiment \
   --description "Test new algorithm" \
   --type experiment \
   --json
@@ -196,31 +359,31 @@ uv run python cli/bars-strand/bars_strand.pycreate my-experiment \
 
 ```bash
 # List all strands
-uv run python cli/bars-strand/bars_strand.pylist
+uv run python cli/bars-strand/bars_strand.py list
 
 # Filter by status
-uv run python cli/bars-strand/bars_strand.pylist --status active
-uv run python cli/bars-strand/bars_strand.pylist --status completed
+uv run python cli/bars-strand/bars_strand.py list --status active
+uv run python cli/bars-strand/bars_strand.py list --status completed
 
 # Filter by type
-uv run python cli/bars-strand/bars_strand.pylist --type feature
-uv run python cli/bars-strand/bars_strand.pylist --type bugfix
+uv run python cli/bars-strand/bars_strand.py list --type feature
+uv run python cli/bars-strand/bars_strand.py list --type bugfix
 
 # Combine filters
-uv run python cli/bars-strand/bars_strand.pylist --status active --type feature
+uv run python cli/bars-strand/bars_strand.py list --status active --type feature
 
 # JSON output
-uv run python cli/bars-strand/bars_strand.pylist --json
+uv run python cli/bars-strand/bars_strand.py list --json
 ```
 
 ### Viewing Strand Details
 
 ```bash
 # Show full details
-uv run python cli/bars-strand/bars_strand.pyshow my-feature
+uv run python cli/bars-strand/bars_strand.py show my-feature
 
 # JSON output
-uv run python cli/bars-strand/bars_strand.pyshow my-feature --json
+uv run python cli/bars-strand/bars_strand.py show my-feature --json
 ```
 
 Output includes:
@@ -235,38 +398,42 @@ Output includes:
 
 ```bash
 # Update status
-uv run python cli/bars-strand/bars_strand.pyupdate my-feature --status completed
+uv run python cli/bars-strand/bars_strand.py update my-feature --status completed
 
 # Update description
-uv run python cli/bars-strand/bars_strand.pyupdate my-feature --description "New description"
+uv run python cli/bars-strand/bars_strand.py update my-feature \
+  --description "New description"
 
 # Multiple updates
-uv run python cli/bars-strand/bars_strand.pyupdate my-feature \
+uv run python cli/bars-strand/bars_strand.py update my-feature \
   --status paused \
   --description "Waiting for API changes"
 
 # JSON output
-uv run python cli/bars-strand/bars_strand.pyupdate my-feature --status completed --json
+uv run python cli/bars-strand/bars_strand.py update my-feature \
+  --status completed --json
 ```
 
 ### Linking to GitHub Issues
 
 ```bash
 # Link to issue
-uv run python cli/bars-strand/bars_strand.pylink my-feature https://github.com/johnair01/bars-engine/issues/21
+uv run python cli/bars-strand/bars_strand.py link my-feature \
+  https://github.com/johnair01/bars-engine/issues/21
 
 # Verify link
-uv run python cli/bars-strand/bars_strand.pyshow my-feature
+uv run python cli/bars-strand/bars_strand.py show my-feature
 
 # JSON output
-uv run python cli/bars-strand/bars_strand.pylink my-feature https://github.com/johnair01/bars-engine/issues/21 --json
+uv run python cli/bars-strand/bars_strand.py link my-feature \
+  https://github.com/johnair01/bars-engine/issues/21 --json
 ```
 
 ### Deleting Strands
 
 ```bash
 # Delete with confirmation
-uv run python cli/bars-strand/bars_strand.pydelete my-feature
+uv run python cli/bars-strand/bars_strand.py delete my-feature
 
 # Confirm with 'y' when prompted
 ```
@@ -292,6 +459,7 @@ fork_space:
     - "*.log"
   file_patterns:
     - "*.py"
+    - "*.ts"
     - "*.md"
     - "*.json"
   max_depth: 5
@@ -329,6 +497,7 @@ allowed_paths:
   - tests/features/<feature_name>/
 file_patterns:
   - "*.py"
+  - "*.ts"
   - "*.md"
 ```
 
@@ -339,6 +508,7 @@ allowed_paths:
   - tests/
 file_patterns:
   - "*.py"
+  - "*.ts"
 read_only_paths:
   - docs/
 ```
@@ -444,7 +614,8 @@ The plugin translates natural language requests into CLI commands, making strand
 **Recommended workflow**:
 ```bash
 # Create strand
-uv run python cli/bars-strand/bars_strand.pycreate feature-x --description "..." --type feature
+uv run python cli/bars-strand/bars_strand.py create feature-x \
+  --description "..." --type feature
 
 # Create git branch
 git checkout -b feature-x
@@ -454,7 +625,7 @@ git add .
 git commit -m "feat: Implement feature X"
 
 # Mark strand as completed
-uv run python cli/bars-strand/bars_strand.pyupdate feature-x --status completed
+uv run python cli/bars-strand/bars_strand.py update feature-x --status completed
 
 # Merge branch
 git checkout main
@@ -482,6 +653,44 @@ jobs:
 
 ## Troubleshooting
 
+### API Configuration Issues
+
+**Problem**: `API key not set` error
+
+**Solution**:
+```bash
+# Set your API key environment variable
+export ANTHROPIC_API_KEY=your-api-key-here
+
+# Verify it's set
+echo $ANTHROPIC_API_KEY
+
+# Check configuration
+uv run python cli/bars-strand/bars_strand.py config check
+```
+
+**Problem**: `No configuration found for provider`
+
+**Solution**:
+```bash
+# Initialize configuration
+uv run python cli/bars-strand/bars_strand.py config init
+
+# Check configuration
+uv run python cli/bars-strand/bars_strand.py config check
+```
+
+**Problem**: Wrong provider configured
+
+**Solution**:
+```bash
+# Change provider
+uv run python cli/bars-strand/bars_strand.py config set-provider anthropic
+
+# Or edit .bars-strand.yml directly
+vim .bars-strand.yml
+```
+
 ### CLI Installation Issues
 
 **Problem**: `ModuleNotFoundError: No module named 'click'`
@@ -489,10 +698,10 @@ jobs:
 **Solution**:
 ```bash
 cd cli/bars-strand
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
-**Problem**: `Permission denied` when running `bars-strand`
+**Problem**: `Permission denied` when running bars-strand
 
 **Solution**:
 ```bash
@@ -504,7 +713,7 @@ chmod +x cli/bars-strand/bars_strand.py
 **Problem**: `Error: Strand 'my-feature' not found`
 
 **Solution**:
-- Verify strand exists: `uv run python cli/bars-strand/bars_strand.pylist`
+- Verify strand exists: `uv run python cli/bars-strand/bars_strand.py list`
 - Check spelling of strand name
 - Ensure you're in the repository root
 
@@ -545,7 +754,8 @@ chmod +x cli/bars-strand/bars_strand.py
 **List active feature strands**:
 ```bash
 #!/bin/bash
-uv run python cli/bars-strand/bars_strand.pylist --status active --type feature --json | jq -r '.[].name'
+uv run python cli/bars-strand/bars_strand.py list \
+  --status active --type feature --json | jq -r '.[].name'
 ```
 
 **Auto-create strand from branch**:
@@ -554,7 +764,7 @@ uv run python cli/bars-strand/bars_strand.pylist --status active --type feature 
 BRANCH=$(git branch --show-current)
 if [[ $BRANCH == feature/* ]]; then
   STRAND_NAME=${BRANCH#feature/}
-  uv run python cli/bars-strand/bars_strand.pycreate "$STRAND_NAME" \
+  uv run python cli/bars-strand/bars_strand.py create "$STRAND_NAME" \
     --description "Branch: $BRANCH" \
     --type feature \
     --status active
@@ -567,12 +777,14 @@ All commands support `--json` flag for structured output:
 
 ```bash
 # Create strand and capture output
-OUTPUT=$(uv run python cli/bars-strand/bars_strand.pycreate my-feature --description "..." --json)
+OUTPUT=$(uv run python cli/bars-strand/bars_strand.py create my-feature \
+  --description "..." --json)
 STRAND_NAME=$(echo "$OUTPUT" | jq -r '.name')
 CREATED_AT=$(echo "$OUTPUT" | jq -r '.created_at')
 
 # List and filter with jq
-uv run python cli/bars-strand/bars_strand.pylist --json | jq '.[] | select(.status == "active")'
+uv run python cli/bars-strand/bars_strand.py list --json | \
+  jq '.[] | select(.status == "active")'
 ```
 
 ---
@@ -582,9 +794,9 @@ uv run python cli/bars-strand/bars_strand.pylist --json | jq '.[] | select(.stat
 - [CLI README](../cli/bars-strand/README.md) - CLI-specific documentation
 - [Plugin README](../.claude/plugins/bars-strand/README.md) - Plugin usage guide
 - [GitHub Issue #21](https://github.com/johnair01/bars-engine/issues/21) - Implementation details
-- [IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md) - Implementation summary
+- [Example Configuration](.bars-strand.yml.example) - Configuration file template
 
 ---
 
-*BARS Strand System - Version 1.0.0*
-*Last Updated: 2026-03-27*
+*BARS Strand System - Version 1.1.0*
+*Last Updated: 2026-03-26*

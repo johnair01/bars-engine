@@ -1,0 +1,78 @@
+# .bars-strand.yml - BARS Strand Configuration
+# Copy this file to .bars-strand.yml and configure for your environment
+
+# API Provider Configuration
+# Supports: anthropic, openai, openai-compatible (for HuggingFace, vLLM, etc.)
+api:
+  # Default provider (anthropic, openai, openai-compatible)
+  default_provider: anthropic
+
+  # Anthropic Configuration
+  anthropic:
+    # Get your API key from: https://console.anthropic.com/
+    # Set via environment variable: ANTHROPIC_API_KEY
+    api_key: ${ANTHROPIC_API_KEY}
+    model: claude-sonnet-4-5-20250929-v1:0
+    max_tokens: 8192
+    temperature: 0.7
+
+  # OpenAI Configuration
+  openai:
+    # Get your API key from: https://platform.openai.com/api-keys
+    # Set via environment variable: OPENAI_API_KEY
+    api_key: ${OPENAI_API_KEY}
+    model: gpt-4-turbo-preview
+    max_tokens: 4096
+    temperature: 0.7
+
+  # OpenAI-Compatible Configuration (HuggingFace, vLLM, SGLang, etc.)
+  openai_compatible:
+    # Set via environment variable: OPENAI_COMPATIBLE_API_KEY
+    api_key: ${OPENAI_COMPATIBLE_API_KEY}
+    # Base URL for your endpoint
+    base_url: https://api.together.xyz/v1
+    # Model identifier
+    model: Qwen/Qwen2.5-Coder-32B-Instruct
+    max_tokens: 8192
+    temperature: 0.7
+
+# Strand Defaults
+defaults:
+  type: feature
+  status: active
+  fork_space:
+    allowed_paths:
+      - src/
+      - tests/
+    excluded_paths:
+      - "**/__pycache__/"
+      - "*.pyc"
+      - "*.log"
+    file_patterns:
+      - "*.py"
+      - "*.ts"
+      - "*.tsx"
+      - "*.md"
+      - "*.json"
+
+# Repository Configuration
+repository:
+  root: .
+  strands_dir: .strands
+
+# Budget-Conscious Provider Examples:
+#
+# 1. DeepSeek-V3 (37B, $0.10/1M tokens)
+#    api_key: ${DEEPSEEK_API_KEY}
+#    base_url: https://api.deepseek.com/v1
+#    model: deepseek-chat
+#
+# 2. Qwen2.5-Coder-32B (via Together AI, $0.05-0.10/1M)
+#    api_key: ${TOGETHER_API_KEY}
+#    base_url: https://api.together.xyz/v1
+#    model: Qwen/Qwen2.5-Coder-32B-Instruct
+#
+# 3. Self-hosted vLLM/SGLang
+#    api_key: your-local-api-key
+#    base_url: http://localhost:8000/v1
+#    model: your-model-name

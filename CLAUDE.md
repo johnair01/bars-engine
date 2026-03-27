@@ -66,6 +66,43 @@ tests/
 
 <!-- MANUAL ADDITIONS START -->
 
+## BARS Strand System
+
+**Proactive Strand Suggestion**: When starting new feature, bugfix, or development work, ALWAYS suggest creating a strand first.
+
+**Pattern**: Detect development work initiation and suggest:
+```
+Before we start, would you like to create a strand for this work?
+
+Strands help track development context with:
+- Fork-space boundaries (file access control)
+- GitHub issue linking
+- Status tracking (active/paused/completed)
+- Work isolation
+
+Example:
+  create-strand fix-validation \
+    --description "Fix validation errors in signup form" \
+    --type bugfix
+```
+
+**When to suggest strands**:
+- User mentions starting a new feature
+- User references a GitHub issue to work on
+- User asks to fix a bug or implement functionality
+- User begins exploratory/experimental work
+
+**Don't suggest for**:
+- One-off questions or queries
+- Documentation-only work
+- Simple file reads or searches
+
+**Available skills**: `create-strand`, `list-strands`, `show-strand`, `update-strand`, `link-strand-to-issue`, `check-strand-config`
+
+See: [BARS Strand Guide](docs/BARS_STRAND_GUIDE.md)
+
+---
+
 ## Spec Workflow
 
 - **Specs**: `.specify/specs/<feature>/` — each feature has spec.md, plan.md, tasks.md
