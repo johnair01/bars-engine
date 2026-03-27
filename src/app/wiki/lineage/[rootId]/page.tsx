@@ -68,15 +68,8 @@ export default async function LineageExplorerPage({ params, searchParams }: Page
     notFound(); // Lineage feature is stubbed, return 404
   }
 
-  // Handle export formats
-  if (format === 'json') {
-    return new Response(JSON.stringify(lineage, null, 2), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="lineage-${rootId}.json"`,
-      },
-    });
-  }
+  // Note: JSON export format removed - would need to be an API route, not a page
+  // When lineage is restored, create /api/wiki/lineage/[rootId]/export route
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12">
