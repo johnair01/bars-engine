@@ -8,6 +8,20 @@ import { parseCampaignRef } from '@/lib/campaign-subcampaigns'
 import fs from 'fs'
 import path from 'path'
 
+/**
+ * @page /campaign
+ * @entity CAMPAIGN
+ * @description Legacy campaign entry point - shows Twine passage or redirects to grammatical initiation for Bruised Banana
+ * @permissions authenticated
+ * @searchParams ref:string (campaign reference, optional, defaults to active instance or 'bruised-banana')
+ * @searchParams ritual:string ('true' for ritual mode, optional)
+ * @searchParams segment:string ('player' or 'sponsor', optional, defaults to 'player')
+ * @relationships CAMPAIGN (instance, adventure, passages), PLAYER (subcampaign domain)
+ * @dimensions WHO:player, WHAT:campaign entry, WHERE:campaign, ENERGY:ritual
+ * @example /campaign?ref=bruised-banana&segment=sponsor
+ * @agentDiscoverable false
+ */
+
 const FALLBACK_START = 'Center_Witness'
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 

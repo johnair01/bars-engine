@@ -10,6 +10,19 @@ import { EventInvitePartyActions } from '@/components/event-invite/EventInvitePa
 import { EventInviteStoryReader } from '@/components/event-invite/EventInviteStoryReader'
 import { eventInviteCtasWithIntake } from '@/lib/event-invite-story/default-cta'
 
+/**
+ * @page /invite/event/:barId
+ * @entity EVENT
+ * @description Public event invitation page - displays event story with RSVP actions (Partiful, intake)
+ * @permissions public (read), authenticated+permissions (edit)
+ * @params barId:string (path, required) - Event invite BAR identifier
+ * @searchParams note:string (optional) - Sender's personal note (max 280 chars)
+ * @relationships displays EVENT_INVITE_BAR, links to Partiful RSVP and CYOA intake adventure
+ * @energyCost 0 (invitation viewing)
+ * @dimensions WHO:forgerId+viewer, WHAT:EVENT, WHERE:invitation, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /invite/event/bar_evt_123?note=Hope%20to%20see%20you%20there!
+ * @agentDiscoverable false
+ */
 type Props = {
     params: Promise<{ barId: string }>
     searchParams: Promise<{ note?: string }>

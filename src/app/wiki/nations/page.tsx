@@ -1,6 +1,17 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+/**
+ * @page /wiki/nations
+ * @entity WIKI
+ * @description Wiki page - Nations - all nations with element/channel mapping and four move tunings
+ * @permissions public
+ * @relationships lists Nation entries with element, emotional channel, and wakeUp/cleanUp/growUp/showUp moves
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+nations, ENERGY:elements+channels, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /wiki/nations
+ * @agentDiscoverable true
+ */
 export default async function NationsPage() {
   const nations = await db.nation.findMany({
     where: { archived: false },

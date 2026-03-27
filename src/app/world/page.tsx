@@ -1,3 +1,13 @@
+/**
+ * @page /world
+ * @entity CAMPAIGN
+ * @description World/spatial map entry page - redirects to player's active campaign instance room
+ * @permissions authenticated
+ * @relationships CAMPAIGN (Instance), PLAYER (membership)
+ * @dimensions WHO:player, WHAT:spatial navigation, WHERE:world map, ENERGY:instance access
+ * @example /world
+ * @agentDiscoverable false
+ */
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer } from '@/lib/auth'
 import { dbBase } from '@/lib/db'

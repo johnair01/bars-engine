@@ -2,6 +2,16 @@ import { db } from "@/lib/db"
 import Link from "next/link"
 import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
 
+/**
+ * @page /admin/adventures
+ * @entity QUEST
+ * @description Manage Twine-compatible narrative adventures for onboarding and CYOA quests
+ * @permissions admin
+ * @relationships CONTAINS (passages)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/adventures
+ * @agentDiscoverable false
+ */
 export default async function AdventuresAdminPage() {
     const adventures = await db.adventure.findMany({
         orderBy: { createdAt: 'desc' },

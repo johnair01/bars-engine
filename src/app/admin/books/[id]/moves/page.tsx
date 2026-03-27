@@ -4,6 +4,17 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BookMovesList } from './BookMovesList'
 
+/**
+ * @page /admin/books/:bookId/moves
+ * @entity WIKI
+ * @description View and manage move proposals extracted from book
+ * @permissions admin
+ * @params bookId:string (path, required)
+ * @relationships CONTAINS (book contains move proposals)
+ * @dimensions WHO:admin, WHAT:WIKI, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/books/book_123/moves
+ * @agentDiscoverable false
+ */
 export default async function BookMovesPage({
   params,
 }: {

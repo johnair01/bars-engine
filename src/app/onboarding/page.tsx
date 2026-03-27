@@ -3,6 +3,17 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { OnboardingForm } from './OnboardingForm'
 
+/**
+ * @page /onboarding
+ * @entity PLAYER
+ * @description Legacy onboarding page - redirects to orientation adventure if configured, else shows nation/archetype form
+ * @permissions authenticated
+ * @relationships loads orientation adventure (config.orientationQuestId), or falls back to nation/archetype selection form
+ * @energyCost 0 (onboarding wizard)
+ * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:onboarding, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /onboarding
+ * @agentDiscoverable false
+ */
 export default async function OnboardingPage() {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value

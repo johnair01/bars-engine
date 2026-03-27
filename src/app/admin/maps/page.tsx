@@ -2,6 +2,16 @@ import { listSpatialMaps } from '@/actions/spatial-maps'
 import Link from 'next/link'
 import { CreateMapForm } from './CreateMapForm'
 
+/**
+ * @page /admin/maps
+ * @entity SYSTEM
+ * @description Create and manage tile-based spatial maps for campaign regions, encounter spaces, and lobby navigation
+ * @permissions admin
+ * @relationships CONTAINS (map rooms with anchors)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:mapType, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/maps
+ * @agentDiscoverable false
+ */
 export default async function AdminMapsPage() {
   const maps = await listSpatialMaps()
 

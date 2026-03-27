@@ -5,6 +5,20 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import type { IChingCastContext } from '@/lib/iching-cast-context'
 
+/**
+ * @page /iching
+ * @entity SYSTEM
+ * @description I Ching (Book of Changes) casting ritual - ancient divination with optional campaign context
+ * @permissions authenticated
+ * @searchParams instanceId:string (optional) - Campaign instance for context
+ * @searchParams campaignRef:string (optional) - Campaign reference key
+ * @searchParams threadId:string (optional) - Story thread identifier
+ * @relationships performs hexagram casting with optional CAMPAIGN context, records cast history
+ * @energyCost 0 (divination tool, no game state change)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:divination, ENERGY:wisdom, PERSONAL_THROUGHPUT:wake_up
+ * @example /iching?instanceId=inst_001&campaignRef=bruised-banana
+ * @agentDiscoverable false
+ */
 export default async function IChingPage(props: {
     searchParams: Promise<{ instanceId?: string; campaignRef?: string; threadId?: string }>
 }) {

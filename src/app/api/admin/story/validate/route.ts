@@ -17,6 +17,19 @@ async function requireAdmin() {
   return null
 }
 
+/**
+ * @route POST /api/admin/story/validate
+ * @entity CAMPAIGN
+ * @description Validate IR story nodes (structural + semantic checks)
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships VALIDATES (IR story nodes), SUPPORTS (twee compile + publish)
+ * @energyCost 0 (validation only)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none, PERSONAL_THROUGHPUT:CLEAN_UP
+ * @example /api/admin/story/validate
+ * @agentDiscoverable true
+ */
 export async function POST(request: NextRequest) {
   const authError = await requireAdmin()
   if (authError) {

@@ -4,6 +4,17 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { processPendingDonation } from '@/actions/donate'
 import { SelfReportDonationForm } from './SelfReportDonationForm'
 
+/**
+ * @page /event/donate
+ * @entity EVENT
+ * @description Campaign donation page - self-report donations to receive redemption packs
+ * @permissions public (donation links), authenticated (pack rewards)
+ * @relationships links to active CAMPAIGN instance, creates redemption packs, processes pending donations
+ * @energyCost 0 (donation tracking, reward packs awarded post-donation)
+ * @dimensions WHO:playerId, WHAT:EVENT, WHERE:fundraiser, ENERGY:vibulon_packs, PERSONAL_THROUGHPUT:show_up
+ * @example /event/donate
+ * @agentDiscoverable false
+ */
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
   return new Intl.NumberFormat('en-US', {

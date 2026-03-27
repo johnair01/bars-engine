@@ -165,7 +165,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
             const dailyBlock = sceneAtlasDailyBindBlocked(creator.storyProgress)
             if (dailyBlock) return { error: dailyBlock }
             const cardOk = await db.barDeckCard.findFirst({
-                where: { id: sceneGridCardId, deck: { instanceId: sceneGridInstanceId } },
+                where: { id: sceneGridCardId, deck: { library: { instanceId: sceneGridInstanceId } } },
                 select: { id: true },
             })
             if (!cardOk) return { error: 'Scene Atlas card not found for this deck.' }

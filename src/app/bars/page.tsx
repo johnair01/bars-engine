@@ -4,6 +4,17 @@ import { listMyBars, listReceivedBars, listSentBars } from '@/actions/bars'
 import Link from 'next/link'
 import { BarListThumb } from '@/components/bars/BarListThumb'
 
+/**
+ * @page /bars
+ * @entity BAR
+ * @description Inspirations page listing player's BARs (created, received, sent)
+ * @permissions authenticated
+ * @energyCost 0 (read-only view)
+ * @dimensions WHO:currentPlayer, WHAT:BAR, WHERE:allyshipDomain
+ * @relationships displays FORK_OF lineage, shows DERIVED_FROM history
+ * @example /bars
+ * @agentDiscoverable false
+ */
 export default async function BarsPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')

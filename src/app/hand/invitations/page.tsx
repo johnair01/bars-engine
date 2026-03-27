@@ -6,6 +6,17 @@ import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
 import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultInvitationBarsList } from '@/components/hand/VaultInvitationBarsList'
 
+/**
+ * @page /hand/invitations
+ * @entity BAR
+ * @description Vault invitations room showing invitation BARs forged by player - copy invite/claim URLs to share with others
+ * @permissions authenticated
+ * @relationships BAR (invitation type), PLAYER (vault data, inviter)
+ * @dimensions WHO:player, WHAT:invitations room, WHERE:vault, ENERGY:invitations, PERSONAL_THROUGHPUT:invitation_count
+ * @example /hand/invitations
+ * @agentDiscoverable false
+ */
+
 export default async function HandInvitationsRoomPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/conclave/guided')

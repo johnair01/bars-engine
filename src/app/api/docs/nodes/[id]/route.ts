@@ -1,3 +1,15 @@
+/**
+ * @route GET /api/docs/nodes/:id
+ * @entity WIKI
+ * @description Retrieve a documentation node by CUID or slug
+ * @permissions public
+ * @params id:string (path, required) - DocNode CUID or slug
+ * @relationships WIKI (DocNode graph), SYSTEM (provenance)
+ * @dimensions WHO:reader, WHAT:doc content, WHERE:wiki graph, ENERGY:knowledge access
+ * @example /api/docs/nodes/c1234567890123456789012345
+ * @example /api/docs/nodes/campaign-bruised-banana
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 

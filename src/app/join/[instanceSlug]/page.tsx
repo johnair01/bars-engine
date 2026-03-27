@@ -4,6 +4,18 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { GuestOnboardingWizard } from './GuestOnboardingWizard'
 
+/**
+ * @page /join/:instanceSlug
+ * @entity CAMPAIGN
+ * @description Guest onboarding wizard for joining a campaign instance
+ * @permissions authenticated
+ * @params instanceSlug:string (path, required) - Campaign instance slug
+ * @relationships loads CAMPAIGN instance, creates player enrollment, sets up initial profile
+ * @energyCost 0 (onboarding wizard)
+ * @dimensions WHO:playerId, WHAT:CAMPAIGN, WHERE:onboarding, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /join/bruised-banana
+ * @agentDiscoverable false
+ */
 export default async function JoinPage({
   params,
 }: {

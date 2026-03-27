@@ -4,6 +4,16 @@ import { ArrowRight, Settings, Users, Sparkles, BookOpen, FileText } from 'lucid
 import { OnboardingFlowTemplate } from './OnboardingFlowTemplate'
 import { OnboardingDraftEditor } from './OnboardingDraftEditor'
 
+/**
+ * @page /admin/onboarding
+ * @entity QUEST
+ * @description Manage onboarding flow templates with orientation threads and gated threads by nation/archetype
+ * @permissions admin
+ * @relationships CONTAINS (orientation threads, gated threads with Twine stories)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:nation+archetype, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/onboarding
+ * @agentDiscoverable false
+ */
 export default async function AdminOnboardingPage() {
     // Fetch orientation threads
     const orientationThreads = await (db.questThread.findMany as any)({

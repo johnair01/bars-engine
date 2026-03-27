@@ -3,6 +3,19 @@ import { redirect } from 'next/navigation'
 import { getRoleManifest, fillUnfilledRoles, grantRoleToPlayer } from '@/actions/governance'
 import { db } from '@/lib/db'
 
+/**
+ * @page /admin/governance
+ * @entity PLAYER
+ * @description Role management - fill unfilled roles, grant roles to players, view role manifest
+ * @permissions admin
+ * @searchParams error:string (optional)
+ * @searchParams message:string (optional)
+ * @relationships LINKED_TO (players with role assignments)
+ * @dimensions WHO:admin+targetPlayer, WHAT:PLAYER, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/governance?message=Role+granted
+ * @agentDiscoverable false
+ */
+
 // ---------------------------------------------------------------------------
 // Server actions
 // ---------------------------------------------------------------------------

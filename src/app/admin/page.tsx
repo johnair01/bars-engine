@@ -3,6 +3,15 @@ import { AdminTiltControl } from '@/components/admin/AdminTiltControl'
 import { AdminResetZone } from '@/components/admin/AdminResetZone'
 import { AdminPlayerSpawner } from '@/components/admin/AdminPlayerSpawner'
 
+/**
+ * @page /admin
+ * @entity SYSTEM
+ * @description Game Master control center with stewardship moves (Wake Up/Clean Up/Grow Up/Show Up) and quick access dashboard
+ * @permissions admin
+ * @dimensions WHO:admin, WHAT:SYSTEM, PERSONAL_THROUGHPUT:all-stages
+ * @example /admin
+ * @agentDiscoverable false
+ */
 export default async function AdminDashboard() {
     const globalState = await getGlobalState()
 

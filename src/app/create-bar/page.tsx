@@ -4,6 +4,19 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
+/**
+ * @page /create-bar
+ * @entity BAR
+ * @description Create new BAR - requires complete profile (nationId + archetypeId)
+ * @permissions authenticated, profile_complete
+ * @searchParams setup:string (optional) - Setup mode flag ("true")
+ * @searchParams from321:string (optional) - Shadow work entry flag ("1")
+ * @relationships creates BAR, requires PLAYER with nationId+archetypeId
+ * @energyCost variable (depends on allyship domain selected)
+ * @dimensions WHO:playerId+nationId+archetypeId, WHAT:BAR, WHERE:allyshipDomain, ENERGY:vibulon, PERSONAL_THROUGHPUT:create
+ * @example /create-bar?setup=true&from321=1
+ * @agentDiscoverable false
+ */
 export default async function CreateBarPage({ searchParams }: { searchParams: Promise<{ setup?: string; from321?: string }> }) {
     const { setup, from321 } = await searchParams
     const isSetup = setup === 'true'

@@ -1,3 +1,16 @@
+/**
+ * @route POST /api/growth-scenes/resolve
+ * @entity QUEST
+ * @description Resolve a growth scene with player choice, potentially advancing altitude and minting vibeulons
+ * @permissions owner
+ * @params scene_id:string (body, required) - GrowthScene identifier
+ * @params choice:string (body, required) - Choice key from scene DSL
+ * @relationships PLAYER (scene owner), QUEST (GrowthScene), SYSTEM (emotional state, vibeulons)
+ * @energyCost -1
+ * @dimensions WHO:playerId, WHAT:scene resolution, WHERE:growth pathway, ENERGY:vibeulon mint + altitude advance
+ * @example POST /api/growth-scenes/resolve with {scene_id:"abc123",choice:"transcend"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

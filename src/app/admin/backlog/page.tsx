@@ -3,6 +3,16 @@ import { GAME_MASTER_FACES } from '@/lib/quest-grammar/types'
 import Link from 'next/link'
 import { BacklogListClient } from './BacklogListClient'
 
+/**
+ * @page /admin/backlog
+ * @entity SYSTEM
+ * @description Spec Kit backlog items with Game Master face ownership assignment
+ * @permissions admin
+ * @searchParams ownerFace:string (GAME_MASTER_FACES values, optional)
+ * @dimensions WHO:admin+face, WHAT:SYSTEM, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/backlog?ownerFace=Coordinator
+ * @agentDiscoverable false
+ */
 export default async function AdminBacklogPage(props: {
   searchParams: Promise<{ ownerFace?: string }>
 }) {

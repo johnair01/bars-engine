@@ -25,6 +25,19 @@ async function requireAdmin() {
   return null
 }
 
+/**
+ * @route GET /api/admin/onboarding/draft
+ * @entity CAMPAIGN
+ * @description Fetch raw Twee source for onboarding draft
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships IMPLEMENTS (campaign flow), CONTAINS (passages)
+ * @energyCost 0 (read-only)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none
+ * @example /api/admin/onboarding/draft
+ * @agentDiscoverable true
+ */
 export async function GET() {
   const authError = await requireAdmin()
   if (authError) {
@@ -40,6 +53,19 @@ export async function GET() {
   }
 }
 
+/**
+ * @route PUT /api/admin/onboarding/draft
+ * @entity CAMPAIGN
+ * @description Replace entire Twee source for onboarding draft (validates before writing)
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships IMPLEMENTS (campaign flow), VALIDATES (Twee syntax + flow structure)
+ * @energyCost 0 (admin content editing)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none, PERSONAL_THROUGHPUT:CLEAN_UP
+ * @example /api/admin/onboarding/draft
+ * @agentDiscoverable true
+ */
 export async function PUT(request: NextRequest) {
   const authError = await requireAdmin()
   if (authError) {

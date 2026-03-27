@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/docs/nodes/:id/merge
+ * @entity WIKI
+ * @description Merge source doc node into target node, preserving provenance
+ * @permissions authenticated
+ * @params id:string (path, required) - Source DocNode identifier
+ * @params targetId:string (body, required) - Target DocNode identifier
+ * @relationships WIKI (DocNode merge graph)
+ * @dimensions WHO:author, WHAT:merged content, WHERE:wiki graph, ENERGY:knowledge consolidation
+ * @example POST /api/docs/nodes/source123/merge with {targetId:"target456"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { mergeDocNode } from '@/actions/doc-node'
 

@@ -3,6 +3,17 @@ import { redirect } from 'next/navigation'
 import { StitcherWizard } from './components/StitcherWizard'
 import Link from 'next/link'
 
+/**
+ * @page /admin/twine/stitcher
+ * @entity QUEST
+ * @description Twine stitcher wizard - compose Twine stories with nation/playbook/quest context
+ * @permissions admin
+ * @searchParams id:string (existing story to edit, optional)
+ * @relationships COMPOSES (nations, playbooks, quests into Twine story)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:nation+playbook, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/twine/stitcher?id=story_123
+ * @agentDiscoverable false
+ */
 export default async function StitcherPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
     const { id } = await searchParams
     const context = await getStitcherContext(id)

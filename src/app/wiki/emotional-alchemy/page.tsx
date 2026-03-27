@@ -2,6 +2,17 @@ import Link from 'next/link'
 import { ALL_CANONICAL_MOVES, getMoveFamily } from '@/lib/quest-grammar/move-engine'
 import { SHENG_CYCLE, KE_CYCLE } from '@/lib/alchemy/wuxing'
 
+/**
+ * @page /wiki/emotional-alchemy
+ * @entity WIKI
+ * @description Wiki page - Emotional Alchemy quest design reference - 5 elements, WAVE stages, 15 canonical moves, choice privileging
+ * @permissions public
+ * @relationships documents 5 elements/channels, nation-element mapping, WAVE stages, transcend/generate/control move families, Wuxing cycles
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+quest_design, ENERGY:alchemy, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/emotional-alchemy
+ * @agentDiscoverable true
+ */
 const NATION_ELEMENT_MAP: Record<string, string> = {
   Argyra: 'metal',
   Pyrakanth: 'fire',

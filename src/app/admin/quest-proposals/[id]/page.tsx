@@ -11,6 +11,17 @@ import Link from 'next/link'
 
 type Proposal = Awaited<ReturnType<typeof getQuestProposal>>
 
+/**
+ * @page /admin/quest-proposals/:proposalId
+ * @entity QUEST
+ * @description Quest proposal detail with edit, review (approve/reject/defer), and publish actions
+ * @permissions admin
+ * @params proposalId:string (path, required)
+ * @relationships DERIVED_FROM (BAR source)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/quest-proposals/prop_123
+ * @agentDiscoverable false
+ */
 export default function QuestProposalDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()

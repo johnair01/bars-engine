@@ -1,8 +1,15 @@
 import Link from 'next/link'
 
 /**
- * Hub: player-facing “how it works” articles.
- * Link new guides here as you write them; conceptual pages (moves, nations) are listed for discovery.
+ * @page /wiki/player-guides
+ * @entity WIKI
+ * @description Wiki page - Player guides hub - index of all player-facing guides organized by category (Start here, Features, Concepts, Campaign, Reference)
+ * @permissions public
+ * @relationships lists all player guide wiki pages with status (live/planned) and blurbs
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+player_guides, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/player-guides
+ * @agentDiscoverable true
  */
 const GUIDES = {
   'Start here': [

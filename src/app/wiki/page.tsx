@@ -2,6 +2,17 @@ import Link from 'next/link'
 import { getCurrentPlayer } from '@/lib/auth'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
+/**
+ * @page /wiki
+ * @entity WIKI
+ * @description Wiki index page showing all game documentation sections: player guides, rules, concepts, and technical references
+ * @permissions public
+ * @relationships WIKI (documentation pages)
+ * @dimensions WHO:player, WHAT:wiki index, WHERE:wiki, ENERGY:knowledge_base
+ * @example /wiki
+ * @agentDiscoverable false
+ */
+
 const SECTIONS = [
   {
     title: 'Player guides',

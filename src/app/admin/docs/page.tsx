@@ -2,6 +2,15 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { PromoteDocButton } from './PromoteDocButton'
 
+/**
+ * @page /admin/docs
+ * @entity WIKI
+ * @description Documentation node management - promote validated to canonical, merge duplicates
+ * @permissions admin
+ * @dimensions WHO:admin, WHAT:WIKI, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/docs
+ * @agentDiscoverable false
+ */
 export default async function AdminDocsPage() {
     const nodes = await db.docNode.findMany({
         orderBy: { updatedAt: 'desc' },

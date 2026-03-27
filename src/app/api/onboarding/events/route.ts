@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/onboarding/events
+ * @entity SYSTEM
+ * @description Log onboarding analytics events for observability
+ * @permissions public
+ * @params event:string (body, required) - Event name
+ * @params payload:object (body, optional) - Event payload
+ * @relationships SYSTEM (analytics logging)
+ * @dimensions WHO:player session, WHAT:event log, WHERE:onboarding flow, ENERGY:observability
+ * @example POST /api/onboarding/events with {event:"started_intake",payload:{timestamp:123}}
+ * @agentDiscoverable false
+ */
 import { NextResponse } from 'next/server'
 
 /**

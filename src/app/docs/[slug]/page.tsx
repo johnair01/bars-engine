@@ -3,6 +3,18 @@ import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 
+/**
+ * @page /docs/:slug
+ * @entity WIKI
+ * @description Knowledge base doc node - canonical or validated documentation pages
+ * @permissions public (read-only)
+ * @params slug:string (path, required) - DocNode slug
+ * @relationships displays DocNode, optionally links to DocQuest for evidence submission
+ * @energyCost 0 (read-only documentation)
+ * @dimensions WHO:viewer, WHAT:WIKI, WHERE:knowledge_base, ENERGY:learning, PERSONAL_THROUGHPUT:wake_up
+ * @example /docs/how-to-create-bars
+ * @agentDiscoverable true
+ */
 export default async function DocPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
 

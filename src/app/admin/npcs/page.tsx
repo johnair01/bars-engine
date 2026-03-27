@@ -15,6 +15,17 @@ const STATUS_COLORS: Record<string, string> = {
 
 const TIER_LABELS: Record<number, string> = { 1: 'T1', 2: 'T2', 3: 'T3', 4: 'T4' }
 
+/**
+ * @page /admin/npcs
+ * @entity NPC
+ * @description NPC constitutions list with status and tier filtering - Regent Game Master oversight console
+ * @permissions admin
+ * @searchParams status:string (draft|active|suspended|archived, optional)
+ * @searchParams tier:number (1-4, optional)
+ * @dimensions WHO:admin, WHAT:NPC, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/npcs?status=active&tier=2
+ * @agentDiscoverable false
+ */
 export default function NpcsPage() {
   const [npcs, setNpcs] = useState<Npc[]>([])
   const [statusFilter, setStatusFilter] = useState('all')

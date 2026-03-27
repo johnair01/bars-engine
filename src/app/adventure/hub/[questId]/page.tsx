@@ -12,6 +12,17 @@ const MOVE_LABELS: Record<string, string> = {
 }
 
 /**
+ * @page /adventure/hub/:questId
+ * @entity QUEST
+ * @description Hub for quests with multiple adventures - player chooses which adventure path (by move type) to start
+ * @permissions authenticated
+ * @params questId:string (quest ID, required)
+ * @searchParams ref:string (campaign reference, optional)
+ * @relationships QUEST (quest), ADVENTURE (multiple linked by moveType)
+ * @dimensions WHO:player, WHAT:adventure selection, WHERE:quest hub, ENERGY:moveType
+ * @example /adventure/hub/quest-123?ref=bruised-banana
+ * @agentDiscoverable false
+ *
  * Hub for quests with multiple adventures.
  * Player chooses which adventure (by move type) to start.
  */

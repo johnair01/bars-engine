@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/onboarding/state
+ * @entity PLAYER
+ * @description Retrieve current onboarding state for authenticated player
+ * @permissions authenticated
+ * @query playerId:string (optional) - Override player ID (for admin)
+ * @relationships PLAYER (onboarding state), SEED (Nation, Archetype), CAMPAIGN (domain preference)
+ * @dimensions WHO:playerId, WHAT:onboarding state, WHERE:intake flow, ENERGY:character creation
+ * @example /api/onboarding/state
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getOnboardingState } from '@/actions/onboarding'

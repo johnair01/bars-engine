@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/library/requests/:id
+ * @entity WIKI
+ * @description Retrieve a library request by ID with resolution details
+ * @permissions public
+ * @params id:string (path, required) - LibraryRequest identifier
+ * @relationships WIKI (LibraryRequest, DocNode), QUEST (BacklogItem, DocQuest)
+ * @dimensions WHO:requester context, WHAT:request status, WHERE:library system, ENERGY:fulfillment tracking
+ * @example /api/library/requests/abc123
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 

@@ -11,6 +11,16 @@ const ALLYSHIP_DOMAINS = [
   'SKILLFUL_ORGANIZING',
 ] as const
 
+/**
+ * @page /admin/quest-from-context
+ * @entity QUEST
+ * @description Generate quests from campaign context (instance, Kotter stage, allyship domain)
+ * @permissions admin
+ * @relationships LINKED_TO (instance with campaign context)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:allyshipDomain+kotterStage, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/quest-from-context
+ * @agentDiscoverable false
+ */
 export default async function AdminQuestFromContextPage() {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value

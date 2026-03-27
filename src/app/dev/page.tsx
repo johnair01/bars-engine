@@ -1,6 +1,18 @@
 import { getAllPlayers, switchIdentity } from '@/actions/dev'
 import { redirect } from 'next/navigation'
 
+/**
+ * @page /dev
+ * @entity SYSTEM
+ * @description Dev tools - identity switcher for development mode
+ * @permissions dev_mode_only (NODE_ENV=development OR ENABLE_DEV_TOOLS=true)
+ * @relationships lists all PLAYER accounts, switches current session identity
+ * @energyCost 0 (dev tooling, no game state)
+ * @dimensions WHO:all_players, WHAT:SYSTEM, WHERE:dev_tools, ENERGY:N/A, PERSONAL_THROUGHPUT:N/A
+ * @example /dev
+ * @agentDiscoverable false
+ * @experimental true
+ */
 export default async function DevPage() {
     if (process.env.NODE_ENV !== 'development' && process.env.ENABLE_DEV_TOOLS !== 'true') {
         return (

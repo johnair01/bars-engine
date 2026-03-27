@@ -2,6 +2,17 @@ import { getSpatialMap } from '@/actions/spatial-maps'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+/**
+ * @page /admin/maps/:mapId
+ * @entity SYSTEM
+ * @description Spatial map detail with type, dimensions, and link to editor
+ * @permissions admin
+ * @params mapId:string (path, required)
+ * @relationships CONTAINS (map rooms)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:mapType, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/maps/map_123
+ * @agentDiscoverable false
+ */
 export default async function MapDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const map = await getSpatialMap(id)

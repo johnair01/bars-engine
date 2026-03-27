@@ -6,6 +6,16 @@ import Link from 'next/link'
 
 export const maxDuration = 120 // 2 min for book analysis (large books)
 
+/**
+ * @page /admin/books
+ * @entity WIKI
+ * @description Upload PDFs to Quest Library, extract text, and trigger AI analysis for quest generation
+ * @permissions admin
+ * @relationships CONTAINS (books contain quests and moves)
+ * @dimensions WHO:admin, WHAT:WIKI, WHERE:allyshipDomain, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/books
+ * @agentDiscoverable false
+ */
 export default async function AdminBooksPage() {
   let books: Awaited<ReturnType<typeof listBooks>> = []
   let listError: string | null = null

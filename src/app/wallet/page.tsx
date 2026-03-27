@@ -13,6 +13,17 @@ import { getPlayerAlchemyState } from '@/actions/alchemy'
 import { AlchemyStateWidget } from '@/components/AlchemyStateWidget'
 import { WidgetErrorBoundary } from '@/components/WidgetErrorBoundary'
 
+/**
+ * @page /wallet
+ * @entity PLAYER
+ * @description Player wallet - vibulon balance, token inventory, P2P transfer, redemption packs, emotional alchemy state, appreciations, local liquidity
+ * @permissions authenticated
+ * @relationships displays player's vibulon tokens, instance participations, redemption packs, alchemy state, transfer history, appreciations
+ * @energyCost 0 (wallet viewing)
+ * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:wallet, ENERGY:vibulon+alchemy_state, PERSONAL_THROUGHPUT:reflect
+ * @example /wallet
+ * @agentDiscoverable false
+ */
 export default async function WalletPage() {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value

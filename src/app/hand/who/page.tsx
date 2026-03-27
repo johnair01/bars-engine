@@ -6,6 +6,17 @@ import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
 import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultWhoContactsSection } from '@/components/hand/VaultWhoContactsSection'
 
+/**
+ * @page /hand/who
+ * @entity BAR
+ * @description Vault Who room showing people and moments named from event bingo and Wake Up moves - private BARs to open, tend, or play
+ * @permissions authenticated
+ * @relationships BAR (who/contact BARs), PLAYER (vault data), EVENT (bingo contacts)
+ * @dimensions WHO:player, WHAT:who room, WHERE:vault, ENERGY:contacts, PERSONAL_THROUGHPUT:contact_count
+ * @example /hand/who
+ * @agentDiscoverable false
+ */
+
 export default async function HandWhoRoomPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/conclave/guided')

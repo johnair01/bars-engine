@@ -4,6 +4,16 @@ import { DashboardAvatarWithModal } from '@/components/DashboardAvatarWithModal'
 import { AssignAvatarForm } from '@/components/admin/AssignAvatarForm'
 import { getAdminWorldData } from '@/actions/admin'
 
+/**
+ * @page /admin/avatars
+ * @entity PLAYER
+ * @description Avatar gallery showing player sprites with nation and archetype assignments - verify sprite composition
+ * @permissions admin
+ * @relationships displays PLAYER with nation and archetype associations
+ * @dimensions WHO:players, WHAT:PLAYER, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/avatars
+ * @agentDiscoverable false
+ */
 export default async function AdminAvatarsPage() {
     const [players, [nations, archetypes]] = await Promise.all([
         db.player.findMany({

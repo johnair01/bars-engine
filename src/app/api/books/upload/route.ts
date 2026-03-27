@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/books/upload
+ * @entity SYSTEM
+ * @description Admin-only upload for book PDF files to Vercel Blob storage
+ * @permissions authenticated
+ * @params bookId:string (clientPayload, required) - Book identifier
+ * @relationships SYSTEM (Book records), PLAYER (admin role)
+ * @dimensions WHO:admin, WHAT:PDF blob, WHERE:books storage, ENERGY:library expansion
+ * @example POST /api/books/upload with {bookId:"abc123"} in clientPayload
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'

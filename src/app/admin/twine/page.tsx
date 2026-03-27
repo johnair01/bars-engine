@@ -7,6 +7,18 @@ import { CreateFromTemplateForm } from './CreateFromTemplateForm'
 import { TwineStoryFilters } from './TwineStoryFilters'
 import { Suspense } from 'react'
 
+/**
+ * @page /admin/twine
+ * @entity QUEST
+ * @description Twine story management - upload, filter (published/draft), search, toggle publish/template status, create from template
+ * @permissions admin
+ * @searchParams status:string (all|published|draft, optional)
+ * @searchParams search:string (title search, optional)
+ * @relationships CONTAINS (Twine stories)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/twine?status=published&search=onboarding
+ * @agentDiscoverable false
+ */
 export default async function AdminTwinePage({
     searchParams
 }: {

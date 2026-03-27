@@ -26,6 +26,17 @@ import { EventCrewSurface } from '@/components/event/EventCrewSurface'
 import { BruisedBananaApr2026EventBlocks } from './BruisedBananaApr2026EventBlocks'
 import { CreateEventButton } from './CreateEventButton'
 
+/**
+ * @page /event
+ * @entity EVENT
+ * @description Campaign hub - story (Wake Up), fundraiser progress, scheduled events, invite management
+ * @permissions public (Wake Up section), authenticated (Show Up actions), admin (event editing)
+ * @relationships displays active CAMPAIGN instance, lists EventArtifacts, manages event invites, links to spatial world venue
+ * @energyCost 0 (campaign hub navigation)
+ * @dimensions WHO:playerId+admin, WHAT:EVENT, WHERE:campaign_hub, ENERGY:fundraiser+kotter_stage, PERSONAL_THROUGHPUT:wake_up+show_up
+ * @example /event
+ * @agentDiscoverable true
+ */
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
 

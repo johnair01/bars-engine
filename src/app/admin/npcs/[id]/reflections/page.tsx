@@ -19,6 +19,17 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: 'bg-red-900/50 text-red-400',
 }
 
+/**
+ * @page /admin/npcs/:npcId/reflections
+ * @entity NPC
+ * @description NPC reflection management with status filtering, approve/reject actions, and review tracking
+ * @permissions admin
+ * @params npcId:string (path, required)
+ * @relationships CONTAINS (NPC reflections by status)
+ * @dimensions WHO:admin, WHAT:NPC, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/npcs/npc_123/reflections
+ * @agentDiscoverable false
+ */
 export default function NpcReflectionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [reflections, setReflections] = useState<Reflection[]>([])

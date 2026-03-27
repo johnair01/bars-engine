@@ -5,12 +5,16 @@ import { NARRATIVE_META_LINKS, NARRATIVE_SPACE_SECTIONS } from '@/lib/narrative-
 import { SpaceCard } from '@/components/narrative-os/SpaceCard'
 
 /**
- * Game map — Narrative OS v0: four spaces (Library, Dojo, Forest, Forge).
- * Optional WCGS move tags on links; throughput moves are cross-cutting (see narrative-os spec).
- * Vault stays in global nav (/hand); Forge space links there for integration work.
- * Deep link: /game-map#space-library (etc.)
+ * @page /game-map
+ * @entity SYSTEM
+ * @description Narrative OS v0 game map - four spaces (Library, Dojo, Forest, Forge) with Wake/Clean/Grow/Show Up moves
+ * @permissions authenticated, game_account_ready
+ * @relationships displays NARRATIVE_SPACE_SECTIONS, links to /narrative/:space pages
+ * @energyCost 0 (navigation hub)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:narrative_os, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /game-map#space-library
+ * @agentDiscoverable false
  */
-
 export default async function GameMapPage() {
   const player = await getCurrentPlayer()
   if (!player || !isGameAccountReady(player)) {

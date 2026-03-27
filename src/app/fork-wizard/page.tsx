@@ -1,6 +1,17 @@
 import { ForkWizard } from './ForkWizard'
 import Link from 'next/link'
 
+/**
+ * @page /fork-wizard
+ * @entity SYSTEM
+ * @description Step-by-step wizard for forking and self-hosting BARs Engine
+ * @permissions public
+ * @relationships guides user through GitHub fork, Vercel deployment, database setup
+ * @energyCost 0 (wizard navigation)
+ * @dimensions WHO:N/A, WHAT:SYSTEM, WHERE:fork_wizard, ENERGY:N/A, PERSONAL_THROUGHPUT:show_up
+ * @example /fork-wizard
+ * @agentDiscoverable false
+ */
 export default function ForkWizardPage() {
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">

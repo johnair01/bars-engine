@@ -1,3 +1,13 @@
+/**
+ * @page /wiki/ui-style-guide
+ * @entity WIKI
+ * @description UI design principles and style guide for BARS Engine interface
+ * @permissions public
+ * @relationships WIKI (documentation system)
+ * @dimensions WHO:designers+developers, WHAT:style guide, WHERE:wiki, ENERGY:design documentation
+ * @example /wiki/ui-style-guide
+ * @agentDiscoverable true
+ */
 import Link from 'next/link'
 
 export default function UIStyleGuidePage() {

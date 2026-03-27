@@ -3,6 +3,18 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { LoginForm } from './LoginForm'
 
+/**
+ * @page /login
+ * @entity PLAYER
+ * @description Login page - email-based authentication with optional returnTo redirect
+ * @permissions public
+ * @searchParams returnTo:string (optional) - Post-login redirect URL
+ * @relationships authenticates PLAYER, redirects to /conclave/onboarding if profile incomplete
+ * @energyCost 0 (authentication)
+ * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:auth, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /login?returnTo=/create-bar
+ * @agentDiscoverable false
+ */
 export default async function LoginPage({
     searchParams,
 }: {

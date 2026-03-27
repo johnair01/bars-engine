@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/events/:eventId/ics
+ * @entity EVENT
+ * @description Download single-event iCalendar (.ics) file for calendar integration
+ * @permissions authenticated
+ * @params eventId:string (path, required) - Event artifact identifier
+ * @relationships EVENT (EventArtifact), PLAYER (host/participant access)
+ * @dimensions WHO:player access, WHAT:calendar data, WHERE:event context, ENERGY:participation
+ * @example /api/events/abc123/ics
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
@@ -8,10 +19,6 @@ function safeFilename(title: string): string {
   const t = title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 60) || 'event'
   return `${t}.ics`
 }
-
-/**
- * Download single-event iCalendar (.ics). Requires login + host/participant access.
- */
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ eventId: string }> }

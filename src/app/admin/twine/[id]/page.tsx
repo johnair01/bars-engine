@@ -6,6 +6,17 @@ import { BindingForm } from './BindingForm'
 import { DeleteBindingButton } from './DeleteBindingButton'
 import type { ParsedTwineStory } from '@/lib/twine-parser'
 
+/**
+ * @page /admin/twine/:storyId
+ * @entity QUEST
+ * @description Twine story detail with passage count, bindings to nations/playbooks, and link to IR editor
+ * @permissions admin
+ * @params storyId:string (path, required)
+ * @relationships CONTAINS (passages, bindings to nation/playbook)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:nation+playbook, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/twine/story_123
+ * @agentDiscoverable false
+ */
 export default async function AdminTwineDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const story = await getStoryForAdmin(id)

@@ -4,6 +4,18 @@ import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { ChargeExploreFlow } from '@/components/charge-capture/ChargeExploreFlow'
 
+/**
+ * @page /capture/explore/:barId
+ * @entity BAR
+ * @description Explore flow for captured charge - deepening reflection on emotional capture
+ * @permissions owner
+ * @params barId:string (charge_capture BAR ID, required)
+ * @relationships BAR (charge_capture type, owned by player)
+ * @dimensions WHO:player, WHAT:charge exploration, WHERE:capture, ENERGY:barId
+ * @example /capture/explore/bar-charge-123
+ * @agentDiscoverable false
+ */
+
 export default async function ChargeExplorePage({
   params,
 }: {

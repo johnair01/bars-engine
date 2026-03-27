@@ -4,6 +4,18 @@ import { db } from '@/lib/db'
 import { listEventArtifactsForStewardship } from '@/actions/campaign-invitation'
 import { AdminEventStewardshipEditForm } from '@/components/admin/AdminEventStewardshipEditForm'
 
+/**
+ * @page /admin/campaign-events/:eventId
+ * @entity EVENT
+ * @description Edit event artifact metadata, schedule, hosts, and campaign linkage
+ * @permissions admin
+ * @params eventId:string (path, required)
+ * @searchParams instanceId:string (required)
+ * @relationships LINKED_TO (campaign), CONTAINS (host actors)
+ * @dimensions WHO:admin+hosts, WHAT:EVENT, WHERE:campaignContext, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/campaign-events/evt_123?instanceId=inst_456
+ * @agentDiscoverable false
+ */
 export default async function AdminCampaignEventDetailPage({
   params,
   searchParams,

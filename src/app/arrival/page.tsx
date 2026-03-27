@@ -5,8 +5,16 @@ import { db } from '@/lib/db'
 import { getPlayerThreads } from '@/actions/quest-thread'
 
 /**
- * INV-3: Personalized arrival screen for players who signed up via invitation.
- * Greets by name, names who invited them, shows nation/archetype, and pins one first quest.
+ * @page /arrival
+ * @entity PLAYER
+ * @description Personalized arrival screen for new players (post-signup onboarding)
+ * @permissions authenticated (requires active player session)
+ * @energyCost 0 (onboarding view)
+ * @dimensions WHO:currentPlayer+invitedBy, WHAT:PLAYER, WHERE:nation_archetype
+ * @relationships displays PLAYER who invited, shows chosen NATION and ARCHETYPE
+ * @example /arrival
+ * @agentDiscoverable false
+ * @note INV-3: Greets by name, shows who invited them, displays nation/archetype, pins first quest
  */
 export default async function ArrivalPage() {
   const cookieStore = await cookies()

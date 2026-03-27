@@ -2,6 +2,16 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import { MergeAdventuresForm } from './MergeAdventuresForm'
 
+/**
+ * @page /admin/adventures/merge
+ * @entity QUEST
+ * @description Combine multiple adventures into one with passage prefix to avoid ID collisions
+ * @permissions admin
+ * @relationships CONTAINS (merged adventure contains passages from multiple sources)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/adventures/merge
+ * @agentDiscoverable false
+ */
 export default async function MergeAdventuresPage() {
   const adventures = await db.adventure.findMany({
     orderBy: { createdAt: 'desc' },

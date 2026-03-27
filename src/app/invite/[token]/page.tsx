@@ -3,6 +3,18 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { InviteSignupForm } from './InviteSignupForm'
 
+/**
+ * @page /invite/:token
+ * @entity PLAYER
+ * @description Invitation signup page - accepts invite token, creates player account with prefilled profile
+ * @permissions public (invite token required)
+ * @params token:string (path, required) - Invite token
+ * @relationships validates Invite (status=active), creates PLAYER account, optionally prefills nation/archetype from forger or invitation target
+ * @energyCost 0 (account creation, invitation acceptance)
+ * @dimensions WHO:forgerId+invitationTargetId, WHAT:PLAYER, WHERE:invitation, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /invite/abc123xyz
+ * @agentDiscoverable false
+ */
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = await params
 

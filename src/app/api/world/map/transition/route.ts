@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/world/map/transition
+ * @entity SYSTEM
+ * @description Resolve narrative transitions between Narrative OS spaces (deterministic, non-persisted in v0)
+ * @permissions public
+ * @params fromSpace:string (body, required) - Source space ID (library/dojo/forest/forge)
+ * @params toSpace:string (body, required) - Target space ID (library/dojo/forest/forge)
+ * @params reason:string (body, optional) - Transition reason (reserved for future)
+ * @params context:string (body, optional) - Transition context (reserved for future)
+ * @relationships SYSTEM (Narrative OS space graph)
+ * @dimensions WHO:player navigation, WHAT:transition narrative, WHERE:space edges, ENERGY:movement flow
+ * @example POST /api/world/map/transition with {fromSpace:"library",toSpace:"dojo"}
+ * @agentDiscoverable true
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveMapTransition } from '@/lib/narrative-os/transitions'
 import { isSpaceId } from '@/lib/narrative-os/types'

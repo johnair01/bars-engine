@@ -4,6 +4,16 @@ import Link from 'next/link'
 import { GenerateTemplateButton } from './GenerateTemplateButton'
 import { getActiveInstance } from '@/actions/instance'
 
+/**
+ * @page /admin/templates
+ * @entity QUEST
+ * @description Template library - generate draft Adventures from reusable templates with campaign context
+ * @permissions admin
+ * @relationships GENERATES (Adventure from template)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:campaignRef, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/templates
+ * @agentDiscoverable false
+ */
 export default async function TemplatesAdminPage() {
   const [templates, instance] = await Promise.all([
     listTemplates(),

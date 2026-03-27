@@ -3,6 +3,17 @@ import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+/**
+ * @page /conclave/space
+ * @entity SYSTEM
+ * @description Conclave space selection - lists available spatial maps (lobby or other)
+ * @permissions authenticated
+ * @relationships lists all spatial maps, filters by mapType=lobby
+ * @energyCost 0 (read-only navigation)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:conclave, ENERGY:presence, PERSONAL_THROUGHPUT:gather
+ * @example /conclave/space
+ * @agentDiscoverable false
+ */
 export default async function ConclaveSpacePage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/conclave')

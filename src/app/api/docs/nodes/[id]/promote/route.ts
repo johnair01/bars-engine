@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/docs/nodes/:id/promote
+ * @entity WIKI
+ * @description Promote a doc node to canonical status in the knowledge graph
+ * @permissions authenticated
+ * @params id:string (path, required) - DocNode identifier
+ * @relationships WIKI (canonical status)
+ * @dimensions WHO:curator, WHAT:canonical content, WHERE:wiki authority, ENERGY:knowledge elevation
+ * @example POST /api/docs/nodes/abc123/promote
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { promoteDocNode } from '@/actions/doc-node'
 

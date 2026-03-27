@@ -3,6 +3,19 @@ import { getPassage } from '@/lib/story'
 import { redirect } from 'next/navigation'
 import { StoryChoices } from '../StoryChoices'
 
+/**
+ * @page /story/:id
+ * @entity SYSTEM
+ * @description Legacy story passage player - displays passage text with choices (replaced by Twine adventures)
+ * @permissions authenticated
+ * @params id:string (path, required) - Passage identifier
+ * @relationships loads story passage, displays choices, triggers actions
+ * @energyCost 0 (legacy story navigation)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:story, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /story/invitation
+ * @agentDiscoverable false
+ * @experimental true
+ */
 export default async function DynamicStoryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const player = await getCurrentPlayer()

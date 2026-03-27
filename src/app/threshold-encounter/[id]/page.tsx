@@ -3,6 +3,18 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+/**
+ * @page /threshold-encounter/:id
+ * @entity QUEST
+ * @description Threshold encounter viewer - displays GM face encounter passages with twee export
+ * @permissions authenticated, owner_only
+ * @params id:string (path, required) - ThresholdEncounter identifier
+ * @relationships loads ThresholdEncounter (playerId must match), parses twee passages, exports .twee file
+ * @energyCost 0 (encounter viewing)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:threshold_encounter, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /threshold-encounter/enc_123
+ * @agentDiscoverable false
+ */
 export default async function ThresholdEncounterPage({
   params,
 }: {

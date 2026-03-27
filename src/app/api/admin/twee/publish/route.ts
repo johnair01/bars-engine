@@ -41,6 +41,19 @@ function parseIrDraft(irDraft: string): { nodes: IRNode[]; title?: string; start
   }
 }
 
+/**
+ * @route POST /api/admin/twee/publish
+ * @entity CAMPAIGN
+ * @description Publish IR draft to Twee, update story + create versioned snapshot
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships DERIVED_FROM (IR nodes), VALIDATES (story + Twee), CONTAINS (compiled version)
+ * @energyCost 0 (admin content publishing)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none, PERSONAL_THROUGHPUT:SHOW_UP
+ * @example /api/admin/twee/publish
+ * @agentDiscoverable true
+ */
 export async function POST(request: NextRequest) {
   const authResult = await requireAdmin()
   if ('error' in authResult) {

@@ -2,6 +2,18 @@ import { db } from '@/lib/db'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 
+/**
+ * @page /invite/claim/:barId
+ * @entity BAR
+ * @description Legacy invite claim redirect - redirects BAR-based invites to /invite/:token
+ * @permissions public
+ * @params barId:string (path, required) - BAR identifier
+ * @relationships looks up BAR with inviteId, redirects to /invite/:token
+ * @energyCost 0 (redirect only)
+ * @dimensions WHO:N/A, WHAT:BAR, WHERE:invitation, ENERGY:N/A, PERSONAL_THROUGHPUT:N/A
+ * @example /invite/claim/bar_123 → redirects to /invite/abc123xyz
+ * @agentDiscoverable false
+ */
 export default async function InviteClaimPage({ params }: { params: Promise<{ barId: string }> }) {
     const { barId } = await params
 

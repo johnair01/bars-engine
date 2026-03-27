@@ -60,22 +60,27 @@ export async function loadSceneGridDeckView(
       id: true,
       slug: true,
       name: true,
-      barDeck: {
+      deckLibrary: {
         select: {
-          id: true,
-          cards: {
-            orderBy: [{ suit: 'asc' }, { rank: 'asc' }],
+          decks: {
+            where: { deckType: 'SCENE_ATLAS' },
             select: {
               id: true,
-              suit: true,
-              rank: true,
-              promptTitle: true,
-              promptText: true,
-              bindings: {
-                where: { authorActorId: playerId, status: 'active' },
-                take: 1,
+              cards: {
+                orderBy: [{ suit: 'asc' }, { rank: 'asc' }],
                 select: {
-                  bar: { select: { id: true, title: true, visibility: true, creatorId: true } },
+                  id: true,
+                  suit: true,
+                  rank: true,
+                  promptTitle: true,
+                  promptText: true,
+                  bindings: {
+                    where: { authorActorId: playerId, status: 'active' },
+                    take: 1,
+                    select: {
+                      bar: { select: { id: true, title: true, visibility: true, creatorId: true } },
+                    },
+                  },
                 },
               },
             },
@@ -85,7 +90,8 @@ export async function loadSceneGridDeckView(
     },
   })
 
-  if (!instance?.barDeck) {
+  const deck = instance?.deckLibrary?.decks[0]
+  if (!deck) {
     return { ok: false, reason: 'not_found' }
   }
 
@@ -96,7 +102,7 @@ export async function loadSceneGridDeckView(
   }
 
   let filledCount = 0
-  for (const c of instance.barDeck.cards) {
+  for (const c of deck.cards) {
     const b = c.bindings[0]?.bar
     let boundBar: { id: string; title: string } | null = null
     if (b && b.creatorId === playerId && (b.visibility === 'private' || b.visibility === 'public')) {
@@ -125,7 +131,7 @@ export async function loadSceneGridDeckView(
 
   return {
     ok: true,
-    deckId: instance.barDeck.id,
+    deckId: deck.id,
     instance: { id: instance.id, slug: instance.slug, name: instance.name },
     polarities,
     cardsBySuit,

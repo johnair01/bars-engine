@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/character-creator/:id/export
+ * @entity PLAYER
+ * @description Export player's completed character sheet as formatted HTML for printing or sharing
+ * @permissions owner
+ * @params id:string (path, required) - PlayerPlaybook identifier
+ * @relationships PLAYER (PlayerPlaybook), SEED (Archetype, Nation)
+ * @dimensions WHO:playerId, WHAT:character sheet, WHERE:character creation, ENERGY:identity artifact
+ * @example /api/character-creator/abc123/export
+ * @agentDiscoverable true
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

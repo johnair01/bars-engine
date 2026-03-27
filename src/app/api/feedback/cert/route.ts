@@ -4,9 +4,18 @@ import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
 
 /**
- * POST /api/feedback/cert
- * Logs certification quest feedback. API-first: no revalidatePath, no server action.
- * Used by TwineQuestModal and PassageRenderer to avoid kick-to-dashboard.
+ * @route POST /api/feedback/cert
+ * @entity QUEST
+ * @description Logs certification quest feedback to filesystem for creator review
+ * @permissions authenticated
+ * @query questId:string (optional) - Quest identifier
+ * @query passageName:string (optional) - Twine passage name
+ * @query feedback:string (required) - Player feedback text
+ * @relationships VALIDATES (QUEST), provides feedback for QUEST improvement
+ * @energyCost 0 (write feedback, no game state change)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:N/A, ENERGY:feedback, PERSONAL_THROUGHPUT:reflection
+ * @example POST /api/feedback/cert {questId:"cert_001",passageName:"ending",feedback:"Great quest!"}
+ * @agentDiscoverable true
  */
 export async function POST(request: NextRequest) {
     const player = await getCurrentPlayer()

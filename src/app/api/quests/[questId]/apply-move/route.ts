@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import { applyNationMoveWithState } from '@/actions/nation-moves'
 
+/**
+ * @route POST /api/quests/:questId/apply-move
+ * @entity QUEST
+ * @description Apply a nation move to a quest (Wake Up/Clean Up/Grow Up/Show Up)
+ * @permissions authenticated, participant_in_quest
+ * @params questId:string (path, required)
+ * @body moveKey:string (required), inputs:object (optional)
+ * @relationships modifies QUEST state, affects nation move progression
+ * @energyCost variable (depends on move type, typically 1-10 vibulon)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:allyshipDomain, ENERGY:move, PERSONAL_THROUGHPUT:moveType
+ * @example POST /api/quests/quest_456/apply-move {"moveKey": "wake_up_insight", "inputs": {"reflection": "..."}}
+ * @agentDiscoverable true
+ */
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ questId: string }> }

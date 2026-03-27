@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /wiki/cyoa-adventure
+ * @entity WIKI
+ * @description Wiki page - Your Adventure Path - how CYOA intake and spoke adventure system works
+ * @permissions public
+ * @relationships documents CYOA intake phases, four move types, spoke adventure generation, NPC encounters, resuming progress
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+player_guide, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/cyoa-adventure
+ * @agentDiscoverable true
+ */
 export const metadata = {
   title: 'Your Adventure Path — Wiki',
   description: 'How the CYOA intake and spoke adventure system works for players.',

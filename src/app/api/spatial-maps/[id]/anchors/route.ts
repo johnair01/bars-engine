@@ -1,3 +1,34 @@
+/**
+ * @route GET /api/spatial-maps/:id/anchors
+ * @entity SYSTEM
+ * @description List all anchors in a spatial map (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - SpatialMap identifier
+ * @relationships SYSTEM (SpatialMap, MapRoom, Anchor)
+ * @dimensions WHO:admin, WHAT:anchor list, WHERE:spatial map, ENERGY:map navigation
+ * @example /api/spatial-maps/map123/anchors
+ * @agentDiscoverable true
+ */
+
+/**
+ * @route POST /api/spatial-maps/:id/anchors
+ * @entity SYSTEM
+ * @description Create a new anchor in a spatial map room (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - SpatialMap identifier
+ * @params roomId:string (body, required) - MapRoom identifier
+ * @params anchorType:string (body, required) - Anchor type
+ * @params tileX:number (body, required) - X coordinate
+ * @params tileY:number (body, required) - Y coordinate
+ * @params label:string (body, optional) - Anchor label
+ * @params linkedId:string (body, optional) - Linked entity ID
+ * @params linkedType:string (body, optional) - Linked entity type
+ * @params config:string (body, optional) - Anchor configuration JSON
+ * @relationships SYSTEM (SpatialMap, MapRoom, Anchor)
+ * @dimensions WHO:admin creator, WHAT:anchor creation, WHERE:map room, ENERGY:map construction
+ * @example POST /api/spatial-maps/map123/anchors with {roomId:"room1",anchorType:"portal",tileX:5,tileY:3}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db, dbBase } from '@/lib/db'

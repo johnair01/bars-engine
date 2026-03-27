@@ -8,6 +8,21 @@ import { PassageRenderer } from './PassageRenderer'
 import { normalizeTwineStory } from '@/lib/schemas'
 import { TwineErrorBoundary } from '@/components/TwineErrorBoundary'
 
+/**
+ * @page /adventures/:id/play
+ * @entity QUEST
+ * @description Twine-based interactive story player with progression tracking and quest completion
+ * @permissions authenticated
+ * @params id:string (twine story ID, required)
+ * @searchParams questId:string (linked quest ID, optional)
+ * @searchParams threadId:string (quest thread ID, optional)
+ * @searchParams ritual:string ('true' for ritual mode, optional)
+ * @relationships QUEST (questId), TWINE_STORY (story), PLAYER (run state)
+ * @dimensions WHO:player, WHAT:twine passage, WHERE:story, ENERGY:currentPassageId
+ * @example /adventures/story-abc/play?questId=quest-123&ritual=true
+ * @agentDiscoverable false
+ */
+
 export default async function TwinePlayPage({
     params,
     searchParams

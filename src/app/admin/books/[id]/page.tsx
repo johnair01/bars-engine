@@ -21,6 +21,17 @@ function statusBadge(status: string) {
   )
 }
 
+/**
+ * @page /admin/books/:bookId
+ * @entity WIKI
+ * @description Book detail hub with metadata, status, praxis, TOC, and quest analysis progress
+ * @permissions admin
+ * @params bookId:string (path, required)
+ * @relationships CONTAINS (quests, moves, chunks)
+ * @dimensions WHO:admin, WHAT:WIKI, WHERE:praxis, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/books/book_123
+ * @agentDiscoverable false
+ */
 export default async function AdminBookHubPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
   const book = await getAdminBookForHub(id)

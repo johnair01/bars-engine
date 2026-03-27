@@ -8,6 +8,17 @@ import { MicroTwineWizard } from '@/components/admin/MicroTwineWizard'
 import { UpgradeQuestToCYOAFlow } from '@/components/admin/UpgradeQuestToCYOAFlow'
 import { BarAttachmentForm } from '@/components/admin/BarAttachmentForm'
 
+/**
+ * @page /admin/quests/:questId
+ * @entity QUEST
+ * @description Edit quest with title, description, type, reward, inputs, nation/trigram filters, move grants, BAR attachments, and CYOA upgrade
+ * @permissions admin
+ * @params questId:string (path, required)
+ * @relationships GRANTS (moves), LINKED_TO (BARs), UPGRADES_TO (CYOA)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:nation+trigram, ENERGY:reward, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/quests/quest_123
+ * @agentDiscoverable false
+ */
 export default function EditQuestPage() {
     const params = useParams<{ id: string }>()
     const router = useRouter()

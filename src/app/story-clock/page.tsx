@@ -4,10 +4,15 @@ import { AdminClockControls } from '@/components/admin/AdminClockControls'
 import Link from 'next/link'
 
 /**
- * Story Clock reads live DB state (GlobalState, quests, archetypes). It must not be
- * statically generated at `next build` — that runs Prisma during prerender and fails
- * when DATABASE_URL / Accelerate is unreachable (P6008) or breaks CI without a DB.
- * @see https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering
+ * @page /story-clock
+ * @entity SYSTEM
+ * @description Story clock timeline - displays current period quests with hexagram/archetype associations and admin controls
+ * @permissions public (read), admin (pause/advance controls)
+ * @relationships displays GlobalState clock position, quests by period, completion bonuses
+ * @energyCost 0 (read-only clock display)
+ * @dimensions WHO:N/A, WHAT:SYSTEM, WHERE:story_clock, ENERGY:quest_rewards, PERSONAL_THROUGHPUT:N/A
+ * @example /story-clock
+ * @agentDiscoverable true
  */
 export const dynamic = 'force-dynamic'
 

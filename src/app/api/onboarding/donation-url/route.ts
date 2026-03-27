@@ -1,3 +1,13 @@
+/**
+ * @route GET /api/onboarding/donation-url
+ * @entity CAMPAIGN
+ * @description Retrieve campaign donation URL for active instance (Stripe, Venmo, CashApp, or PayPal)
+ * @permissions public
+ * @relationships CAMPAIGN (Instance payment URLs)
+ * @dimensions WHO:donor, WHAT:payment URL, WHERE:campaign context, ENERGY:contribution flow
+ * @example /api/onboarding/donation-url
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { getActiveInstance } from '@/actions/instance'
 

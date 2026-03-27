@@ -4,6 +4,17 @@ import { getAdminThread, upsertQuestThread, deleteThread, getAdminQuests, update
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/journeys/thread/:id
+ * @entity QUEST
+ * @description Edit quest thread (sequential) with title, description, type, completion reward, allowed playbooks, and quest sequencing
+ * @permissions admin
+ * @params id:string (path, required)
+ * @relationships CONTAINS (sequenced quests in thread)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:archetype, ENERGY:completionReward, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/journeys/thread/thread_123
+ * @agentDiscoverable false
+ */
 export default function EditThreadPage() {
     const params = useParams<{ id: string }>()
     const router = useRouter()

@@ -1,0 +1,152 @@
+problem: |
+  Deep linking and API registration for bars-engine needs ontological grounding.
+
+  The system has rich provenance (BARs fork from BARs, quests spawn from seeds,
+  wikis reference artifacts), but no unified way to:
+  1. Navigate these relationships via URLs
+  2. Expose the micro-ontologies to agents
+  3. Audit what's linkable vs what's hidden
+
+  Current state: Ad-hoc linking, no registry, hard for agents to discover routes.
+
+  Felt-sense question: How do we make the invisible lineage visible?
+
+goal: |
+  Design deep linking system that traces energy flow and provenance.
+
+  System should:
+  - Encode WHO/WHAT/WHERE/Energy/Move in every URL
+  - Expose micro-ontologies (permissions, relationships, energy costs)
+  - Support wiki integration (artifacts as first-class linkable entities)
+  - Enable seed generation (shareable transmission packages)
+  - Audit frontend for linkability gaps
+
+  Technical requirements:
+  - Decorator-based explicit registry (JSDoc annotations on route handlers)
+  - Build-time validation (ensure all routes have metadata)
+  - Server startup introspection (Next.js API routes only, FastAPI out of scope)
+  - Comprehensive URL scheme (query params encode state like Kibana RISON)
+  - Dual-mode seeds (instant-use + customizable templates)
+  - Collaborative wiki (agent-generated drafts, human refinement)
+  - Full semantic metadata (descriptions, entity relationships, permissions)
+  - Audit scope: everything (player + admin + experimental pages)
+
+agents:
+  - shaman          # Felt-sense ontology, energy flow, metaphor
+  - architect       # System design, technical implementation, patterns
+  - ontologist      # Micro-ontology capture, semantic precision
+  - researcher      # Investigate existing Next.js introspection tools, URL schema patterns
+  - coordinator     # Synthesis and deliverables
+
+context:
+  game_ontology:
+    dimensions:
+      - "WHO: Nation, Playbook, creator identity"
+      - "WHAT: CustomBar (quests), artifacts, seeds"
+      - "WHERE: allyshipDomain (GATHERING_RESOURCES, DIRECT_ACTION, RAISE_AWARENESS, SKILLFUL_ORGANIZING)"
+      - "Energy: Vibulon, InstanceParticipation.localBalance, emotional alchemy moves"
+      - "Personal throughput: Wake Up/Clean Up/Grow Up/Show Up"
+
+    provenance_model:
+      - "parentBarId, forkRootId, forkDepth, branchTag (evolution)"
+      - "collapsedFromQuest, collapsedFromInstance (origin)"
+      - "proposedByAgentId (agent-generated content)"
+      - "invitedByPlayerId, forgerId (social lineage)"
+
+    artifacts:
+      - "BARs (atomic seed objects)"
+      - "Quests (CustomBar with type='quest_seed')"
+      - "Campaigns (Instance with associated quests)"
+      - "Seeds (shareable generation templates)"
+      - "Wiki pages (knowledge base, to be built)"
+      - "Events, Daemons, NPCs, Twine stories"
+
+    relationships:
+      - "DERIVED_FROM (quest from BAR)"
+      - "FORK_OF (BAR lineage)"
+      - "VALIDATES (artifact validates specification)"
+      - "IMPLEMENTS (artifact implements spec)"
+      - "SUPPORTS (artifact supports another)"
+
+  current_state:
+    backend:
+      - "Next.js 14+ App Router (production backend)"
+      - "API routes: src/app/api/** (TypeScript + Prisma)"
+      - "FastAPI backend exists but is NOT deployed (local dev only)"
+      - "Examples: /api/bars/:id, /api/backlog, /api/quests/:questId/apply-move"
+
+    frontend:
+      - "Pages: src/app/**/page.tsx"
+      - "Examples: /bars/:id?share=external, /campaigns/landing/:slug"
+      - "searchParams used for state (see src/app/bars/[id]/page.tsx:23)"
+
+    database:
+      - "PostgreSQL via Prisma ORM"
+      - "Schema: prisma/schema.prisma (31k+ lines)"
+      - "Rich provenance fields already exist"
+
+    missing:
+      - "No centralized API registry"
+      - "No autodocs or introspection system"
+      - "No decorator/annotation system for route metadata"
+      - "No build-time validation"
+      - "Wiki system not yet built"
+
+  architectural_constraints:
+    - "Next.js only (FastAPI out of scope)"
+    - "Decorator-based registry (explicit, not inferred)"
+    - "Build-time extraction and validation"
+    - "Zero runtime overhead (pre-computed registry)"
+    - "Must handle serverless cold starts"
+    - "Deep link everything (player + admin + experimental)"
+
+  reference_systems:
+    - "Elastic Logstash Kibana: RISON format for encoding complex state"
+    - "REST conventions: resource paths, query params, HTTP methods"
+    - "OpenAPI/Swagger: schema introspection patterns"
+    - "GraphQL: relationship traversal and schema introspection"
+
+strand_type: research
+
+expected_deliverables:
+  ontological_grounding:
+    - "Shaman's felt-sense framing: deep links as provenance threads in living web"
+    - "5-dimensional encoding: how WHO/WHAT/WHERE/Energy/Move map to URLs"
+    - "Energy flow visualization: how to trace artifact lineage"
+    - "Metaphor system: technical concepts expressed in game language"
+
+  technical_design:
+    - "URL schema specification (pattern per entity type)"
+    - "Query param encoding strategy (state serialization)"
+    - "Decorator annotation format (JSDoc structure)"
+    - "Registry JSON schema (micro-ontology format)"
+    - "Build-time validator design (AST parsing or regexp-based)"
+    - "Registry API endpoint specification (/api/registry)"
+
+  implementation_roadmap:
+    - "Phase 1: Decorator system + build-time extraction"
+    - "Phase 2: Frontend audit tool (identify missing annotations)"
+    - "Phase 3: Registry API endpoint"
+    - "Phase 4: Wiki integration layer"
+    - "Phase 5: Seed generation system"
+
+  example_annotations:
+    - "Annotated route handler examples (GET /api/bars/:id)"
+    - "Frontend page examples (bars/[id]/page.tsx)"
+    - "Complex state encoding examples (expanded panels, filters)"
+
+acceptance_criteria:
+  - "Design grounded in game's 5-dimensional ontology (not just technical URLs)"
+  - "Registry captures micro-ontologies deterministically (permissions, relationships, energy)"
+  - "URLs encode provenance and relationships (visible lineage)"
+  - "System scales to 'everything linkable' (100+ routes)"
+  - "Shaman perspective integrated (not pure architect thinking)"
+  - "Python execution file included for strand composition"
+  - "Deliverables include both felt-sense framing AND technical specs"
+
+metadata:
+  project: bars-engine
+  working_directory: /Users/nathan.neibauer/code/bars-engine
+  created_at: 2026-03-26
+  created_by: Claude Sonnet 4.5
+  context: "Plan mode brainstorming session - need strand for deep design work"

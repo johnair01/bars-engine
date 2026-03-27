@@ -4,6 +4,17 @@ import Link from 'next/link'
 import { getBlessedObjectsForPlayer, getBlessedObjectDisplayName } from '@/lib/blessed-objects'
 import { db } from '@/lib/db'
 
+/**
+ * @page /reliquary
+ * @entity PLAYER
+ * @description Reliquary - blessed objects earned through inner work (EFA, 321, quests, campaign completion)
+ * @permissions authenticated
+ * @relationships displays player's BlessedObject collection with provenance (instance, Kotter stage, earned date)
+ * @energyCost 0 (read-only collection view)
+ * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:reliquary, ENERGY:blessed_objects, PERSONAL_THROUGHPUT:reflect
+ * @example /reliquary
+ * @agentDiscoverable false
+ */
 export default async function ReliquaryPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')

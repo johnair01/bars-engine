@@ -13,6 +13,19 @@ async function requireAdmin(): Promise<string> {
   return playerId
 }
 
+/**
+ * @route PATCH /api/backlog/:id
+ * @entity BAR
+ * @description Update backlog item status or owner face (admin only)
+ * @permissions admin
+ * @params id:string (path, required)
+ * @body status:string (optional), ownerFace:string (optional)
+ * @relationships modifies SpecKitBacklogItem
+ * @energyCost 0 (admin operation)
+ * @dimensions WHO:admin, WHAT:BAR, WHERE:backlog
+ * @example PATCH /api/backlog/item_123 {"status": "done", "ownerFace": "shaman"}
+ * @agentDiscoverable true
+ */
 export async function PATCH(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }

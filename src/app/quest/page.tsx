@@ -4,6 +4,17 @@ import { db } from '@/lib/db'
 import { QuestForm } from './QuestForm'
 import Link from 'next/link'
 
+/**
+ * @page /quest
+ * @entity QUEST
+ * @description Active quest display and completion - shows first assigned quest respecting nation/playbook gating
+ * @permissions authenticated, game_account_ready
+ * @relationships loads active PlayerQuest (status=assigned) with gating validation, displays quest form
+ * @energyCost variable (depends on quest completion rewards)
+ * @dimensions WHO:playerId+nationId+archetypeId, WHAT:QUEST, WHERE:quest_play, ENERGY:quest_rewards, PERSONAL_THROUGHPUT:grow_up+show_up
+ * @example /quest
+ * @agentDiscoverable false
+ */
 export default async function QuestPage() {
     const player = await getCurrentPlayer()
     if (!player) return redirect('/conclave/guided')

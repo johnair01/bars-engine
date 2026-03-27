@@ -18,6 +18,19 @@ async function requireAdmin() {
   return null
 }
 
+/**
+ * @route POST /api/admin/twee/compile
+ * @entity CAMPAIGN
+ * @description Compile IR story nodes to Twee format (with round-trip validation)
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships DERIVED_FROM (IR nodes), VALIDATES (Twee syntax), SUPPORTS (twee publish)
+ * @energyCost 0 (compile-time operation)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none, PERSONAL_THROUGHPUT:CLEAN_UP
+ * @example /api/admin/twee/compile
+ * @agentDiscoverable true
+ */
 export async function POST(request: NextRequest) {
   const authError = await requireAdmin()
   if (authError) {

@@ -6,6 +6,18 @@ import { SharePreview } from './SharePreview'
 import { ClaimShareForm } from './ClaimShareForm'
 import type { Metadata } from 'next'
 
+/**
+ * @page /bar/share/:token
+ * @entity BAR
+ * @description External BAR share landing page with preview and claim/login flow for recipients outside the game
+ * @permissions public
+ * @params token:string (share token, required)
+ * @relationships BAR (shared bar), PLAYER (fromUser, claimedById), CAMPAIGN (instance)
+ * @dimensions WHO:recipient, WHAT:bar share, WHERE:external, ENERGY:shareToken
+ * @example /bar/share/abc123xyz
+ * @agentDiscoverable false
+ */
+
 const BASE_URL =
     typeof process.env.NEXT_PUBLIC_APP_URL === 'string'
         ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')

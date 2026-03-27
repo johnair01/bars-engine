@@ -7,6 +7,18 @@ import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { LobbyCanvas } from '../LobbyCanvas'
 
+/**
+ * @page /lobby/:roomSlug
+ * @entity SYSTEM
+ * @description Lobby spatial room - multiplayer canvas with avatar movement and anchors
+ * @permissions authenticated
+ * @params roomSlug:string (path, required) - Room slug from spatial map
+ * @relationships loads spatial map room with tilemap and anchors, renders player avatars
+ * @energyCost 0 (lobby presence, no game state change)
+ * @dimensions WHO:playerId+avatarConfig, WHAT:SYSTEM, WHERE:lobby, ENERGY:N/A, PERSONAL_THROUGHPUT:gather
+ * @example /lobby/main-room
+ * @agentDiscoverable false
+ */
 export default async function LobbyRoomPage({
   params,
 }: {

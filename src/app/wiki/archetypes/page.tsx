@@ -1,6 +1,17 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+/**
+ * @page /wiki/archetypes
+ * @entity WIKI
+ * @description Wiki page - Archetypes (playbooks) with primary WAVE stage and four moves
+ * @permissions public
+ * @relationships lists all Archetype entries with wakeUp/cleanUp/growUp/showUp moves
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/archetypes
+ * @agentDiscoverable true
+ */
 export default async function ArchetypesPage() {
   const playbooks = await db.archetype.findMany({
     orderBy: { name: 'asc' },

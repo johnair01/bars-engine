@@ -6,6 +6,25 @@ import { getAdventureProgress } from '@/actions/adventure-progress'
 import { AdventurePlayer } from './AdventurePlayer'
 
 /**
+ * @page /adventure/:id/play
+ * @entity QUEST
+ * @description Adventure-based play interface for passage-driven quest completion (e.g. from .twee import)
+ * @permissions authenticated
+ * @params id:string (adventure ID, required)
+ * @searchParams questId:string (linked quest ID, optional)
+ * @searchParams threadId:string (quest thread ID, optional)
+ * @searchParams ritual:string ('true' for ritual mode, optional)
+ * @searchParams preview:string ('1' for admin preview, optional)
+ * @searchParams start:string (starting passage nodeId, optional)
+ * @searchParams ref:string (campaign reference, optional)
+ * @searchParams returnTo:string (return URL, optional)
+ * @searchParams hexagram:string (hexagram ID for portal, optional)
+ * @searchParams face:string (portal face, optional)
+ * @relationships ADVENTURE (adventure), QUEST (linkedQuestId), CAMPAIGN (campaignRef)
+ * @dimensions WHO:player, WHAT:adventure passage, WHERE:adventure, ENERGY:currentNodeId
+ * @example /adventure/abc123/play?questId=quest-456&ref=bruised-banana&start=Node-1
+ * @agentDiscoverable false
+ *
  * Adventure-based play (Passage → Quest completion).
  * Used when a quest's thread has adventureId (e.g. from .twee import).
  * Reaching a completion passage (linkedQuestId + no choices) calls completeQuest.

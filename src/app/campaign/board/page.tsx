@@ -9,6 +9,18 @@ import {
 } from '@/lib/campaign-map'
 import { CampaignMapChrome } from './CampaignMapChrome'
 
+/**
+ * @page /campaign/board
+ * @entity CAMPAIGN
+ * @description Campaign gameboard showing field slots, domain regions, phase header, and activity indicators
+ * @permissions authenticated
+ * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @relationships CAMPAIGN (instance), QUEST (gameboard slots), PLAYER (membership)
+ * @dimensions WHO:player, WHAT:campaign gameboard, WHERE:campaign, ENERGY:period, PERSONAL_THROUGHPUT:active_slots
+ * @example /campaign/board?ref=bruised-banana
+ * @agentDiscoverable false
+ */
+
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 export default async function GameboardPage(props: {

@@ -1,6 +1,17 @@
 import Link from 'next/link'
 import { QuestGrammarAdminContent } from './QuestGrammarAdminContent'
 
+/**
+ * @page /admin/quest-grammar
+ * @entity QUEST
+ * @description Quest generation via CYOA flow or form view - generates QuestPacket with Emotional Alchemy Signature and Epiphany Bridge
+ * @permissions admin
+ * @searchParams appendTo:string (adventureId, optional)
+ * @relationships GENERATES (QuestPacket), IMPORTS (Twee files to Adventure+QuestThread)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:segment, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/quest-grammar?appendTo=adv_123
+ * @agentDiscoverable false
+ */
 export default async function QuestGrammarAdminPage({
   searchParams,
 }: {

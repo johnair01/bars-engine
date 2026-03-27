@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/npc-constitutions/:id/request-update
+ * @entity NPC
+ * @description Request a constitutional update for an NPC with proposed changes (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @params proposedChanges:object (body, required) - Proposed changes to constitution
+ * @relationships NPC (constitution mutation), DAEMON (governance)
+ * @dimensions WHO:admin requester, WHAT:update proposal, WHERE:system layer, ENERGY:agent evolution
+ * @example POST /api/npc-constitutions/npc123/request-update with {identity:{...}}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

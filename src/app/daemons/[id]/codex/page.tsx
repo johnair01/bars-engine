@@ -5,6 +5,18 @@ import { getDaemonCodexForPlayer } from '@/actions/daemons'
 import type { DaemonEvolutionEntry } from '@/lib/daemon-evolution'
 import { DaemonCodexForm } from './DaemonCodexForm'
 
+/**
+ * @page /daemons/:id/codex
+ * @entity DAEMON
+ * @description Daemon codex page showing evolution log and allowing player to add entries about their relationship with the daemon
+ * @permissions authenticated
+ * @params id:string (daemon ID, required)
+ * @relationships DAEMON (evolution log), PLAYER (daemon ownership)
+ * @dimensions WHO:player, WHAT:daemon codex, WHERE:daemon, ENERGY:evolution_entries
+ * @example /daemons/daemon-123/codex
+ * @agentDiscoverable false
+ */
+
 type Props = { params: Promise<{ id: string }> }
 
 export default async function DaemonCodexPage({ params }: Props) {

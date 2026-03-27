@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/threshold-encounter/:id/export
+ * @entity QUEST
+ * @description Export a threshold encounter as downloadable Twee file
+ * @permissions owner
+ * @params id:string (path, required) - ThresholdEncounter identifier
+ * @relationships QUEST (ThresholdEncounter), PLAYER (owner)
+ * @dimensions WHO:playerId, WHAT:Twee export, WHERE:encounter context, ENERGY:story artifact
+ * @example /api/threshold-encounter/enc123/export
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

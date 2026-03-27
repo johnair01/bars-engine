@@ -2,6 +2,15 @@ import { getAdminSpriteAssets } from '@/actions/admin'
 import Link from 'next/link'
 import { SpriteAssetsClient } from './SpriteAssetsClient'
 
+/**
+ * @page /admin/avatars/assets
+ * @entity PLAYER
+ * @description Browse and upload sprite layer assets (base, nation_body, playbook_outfit, nation_accent, playbook_accent)
+ * @permissions admin
+ * @dimensions WHO:admin, WHAT:PLAYER, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/avatars/assets
+ * @agentDiscoverable false
+ */
 export default async function AdminSpriteAssetsPage() {
     const data = await getAdminSpriteAssets()
 

@@ -4,6 +4,17 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { GraveyardClient } from './GraveyardClient'
 
+/**
+ * @page /graveyard
+ * @entity QUEST
+ * @description Graveyard - dormant quest management, recycle quests back to ACTIVE with Nation move
+ * @permissions authenticated
+ * @relationships lists dormant QUEST entries (status=dormant), supports Nation-based revival
+ * @energyCost variable (Metal Nation has special resurrection moves)
+ * @dimensions WHO:playerId+nationId, WHAT:QUEST, WHERE:graveyard, ENERGY:quest_lifecycle, PERSONAL_THROUGHPUT:clean_up
+ * @example /graveyard
+ * @agentDiscoverable false
+ */
 export default async function GraveyardPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')

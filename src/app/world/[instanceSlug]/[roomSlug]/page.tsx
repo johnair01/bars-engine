@@ -1,3 +1,15 @@
+/**
+ * @page /world/:instanceSlug/:roomSlug
+ * @entity CAMPAIGN
+ * @description Spatial world room canvas for instance-based gameplay with avatar movement
+ * @permissions authenticated, game_account_ready
+ * @params instanceSlug:string (path, required) - Campaign instance slug
+ * @params roomSlug:string (path, required) - Room slug within spatial map
+ * @relationships CAMPAIGN (Instance, SpatialMap, SpatialRoom), PLAYER (avatar config, membership)
+ * @dimensions WHO:player+avatar, WHAT:spatial room, WHERE:campaign instance, ENERGY:room navigation
+ * @example /world/lobby/main-hall
+ * @agentDiscoverable false
+ */
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { dbBase } from '@/lib/db'

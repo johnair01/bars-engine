@@ -6,6 +6,16 @@ import {
     isAuthBypassEmailVerificationEnabled
 } from '@/lib/mvp-flags'
 
+/**
+ * @route GET /api/health
+ * @entity SYSTEM
+ * @description Health check endpoint for monitoring, uptime verification, and system status
+ * @permissions public
+ * @energyCost 0 (monitoring only)
+ * @dimensions WHO:system, WHAT:SYSTEM
+ * @example /api/health
+ * @agentDiscoverable true
+ */
 export async function GET() {
     try {
         const [playerCount, barCount, customBarCount, nationCount, archetypeCount, vibulonCount] = await Promise.all([

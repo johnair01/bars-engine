@@ -5,6 +5,18 @@ import { get8PortalsForCampaign } from '@/actions/campaign-portals'
 import { CampaignHubView } from '@/components/campaign/CampaignHubView'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 
+/**
+ * @page /campaign/hub
+ * @entity CAMPAIGN
+ * @description Campaign hub showing 8 hexagram portals, milestone guidance, recent captures, and intake adventure
+ * @permissions authenticated
+ * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @relationships CAMPAIGN (instance), QUEST (portals), BAR (captures), ADVENTURE (intake)
+ * @dimensions WHO:player, WHAT:campaign hub, WHERE:campaign, ENERGY:portal_selection
+ * @example /campaign/hub?ref=bruised-banana
+ * @agentDiscoverable false
+ */
+
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 const PASSAGE_EMIT_ROOT_IDS = ['passage_WakeUp_Emit', 'passage_CleanUp_Emit', 'passage_ShowUp_Emit']

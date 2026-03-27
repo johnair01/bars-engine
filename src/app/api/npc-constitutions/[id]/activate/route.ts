@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/npc-constitutions/:id/activate
+ * @entity NPC
+ * @description Activate an NPC constitution to begin its operational lifecycle (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @relationships NPC (constitution state), DAEMON (activation)
+ * @dimensions WHO:admin activator, WHAT:activation event, WHERE:system layer, ENERGY:agent awakening
+ * @example POST /api/npc-constitutions/npc123/activate
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

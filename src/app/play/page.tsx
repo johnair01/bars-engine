@@ -4,9 +4,15 @@ import { redirect } from 'next/navigation'
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
 
 /**
- * /play — short guided loop (Charge → Scene Atlas → I Ching). Same pattern as the two-channel hub, step-by-step.
- * Logged-in players see this page (no redirect); **Play** tab / hub remains `/adventures`.
- * Unauthenticated: send to guided conclave (capture/deck need an account in practice).
+ * @page /play
+ * @entity SYSTEM
+ * @description Short guided creative loop - Charge → Scene Atlas → I Ching (three-step creative practice)
+ * @permissions authenticated
+ * @relationships links to /capture, /creator-scene-deck, /iching
+ * @energyCost 0 (creative practice hub)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:creative_loop, ENERGY:creative, PERSONAL_THROUGHPUT:create+wake_up
+ * @example /play
+ * @agentDiscoverable false
  */
 export default async function PlayPage() {
   const player = await getCurrentPlayer()

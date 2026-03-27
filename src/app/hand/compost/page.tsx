@@ -5,6 +5,17 @@ import { loadCompostEligibleBars } from '@/lib/vault-queries'
 import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
 import { VaultCompostClient } from '@/components/hand/VaultCompostClient'
 
+/**
+ * @page /hand/compost
+ * @entity BAR
+ * @description Vault compost room for metabolizing BARs no longer needed - salvage lines that matter, release the rest with care
+ * @permissions authenticated
+ * @relationships BAR (compost-eligible), PLAYER (vault data)
+ * @dimensions WHO:player, WHAT:compost room, WHERE:vault, ENERGY:compost, PERSONAL_THROUGHPUT:compost_count
+ * @example /hand/compost
+ * @agentDiscoverable false
+ */
+
 export default async function HandCompostRoomPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/conclave/guided')

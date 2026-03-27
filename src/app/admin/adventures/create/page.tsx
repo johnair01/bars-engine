@@ -2,6 +2,15 @@ import { AdminPageHeader } from "@/app/admin/components/AdminPageHeader"
 import { CreateAdventureForm } from "./CreateAdventureForm"
 import Link from "next/link"
 
+/**
+ * @page /admin/adventures/create
+ * @entity QUEST
+ * @description Create new Twine narrative campaign or quest adventure
+ * @permissions admin
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/adventures/create
+ * @agentDiscoverable false
+ */
 export default function CreateAdventurePage() {
     return (
         <div className="space-y-6 max-w-2xl">

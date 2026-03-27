@@ -40,12 +40,29 @@ async function main() {
   })
   console.log(`  Instance: ${instance.id} (${instance.slug})`)
 
-  const deck = await db.barDeck.upsert({
+  // Step 1: Ensure DeckLibrary exists
+  const library = await db.deckLibrary.upsert({
     where: { instanceId: instance.id },
     update: {},
     create: { instanceId: instance.id },
   })
-  console.log(`  BarDeck: ${deck.id}`)
+  console.log(`  DeckLibrary: ${library.id}`)
+
+  // Step 2: Upsert Scene Atlas BarDeck
+  const deck = await db.barDeck.upsert({
+    where: {
+      libraryId_deckType: {
+        libraryId: library.id,
+        deckType: 'SCENE_ATLAS',
+      },
+    },
+    update: {},
+    create: {
+      libraryId: library.id,
+      deckType: 'SCENE_ATLAS',
+    },
+  })
+  console.log(`  BarDeck: ${deck.id} (type: SCENE_ATLAS)`)
 
   const prompts = allSceneGridPrompts()
   for (const row of prompts) {

@@ -2,6 +2,16 @@ import Link from 'next/link'
 import { getPendingSpriteReviews, approveSpriteReview } from '@/actions/sprite-review'
 import { RejectButton } from './SpriteReviewClient'
 
+/**
+ * @page /admin/sprites/review
+ * @entity PLAYER
+ * @description Sprite review queue - approve or reject generated sprites before going live
+ * @permissions admin
+ * @relationships LINKED_TO (players with pending sprites)
+ * @dimensions WHO:admin+player, WHAT:PLAYER, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/sprites/review
+ * @agentDiscoverable false
+ */
 export default async function SpriteReviewPage() {
     const pending = await getPendingSpriteReviews()
 

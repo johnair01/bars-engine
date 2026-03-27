@@ -14,6 +14,20 @@ import {
   type SoilKind,
 } from '@/lib/bar-seed-metabolization'
 
+/**
+ * @page /bars/garden
+ * @entity BAR
+ * @description BAR garden showing player's seeds with filtering by soil type, maturity phase, and composted status
+ * @permissions authenticated
+ * @searchParams soil:string (soil kind filter - 'all' or SOIL_KIND, optional)
+ * @searchParams maturity:string (maturity phase filter - 'all' or MATURITY_PHASE, optional)
+ * @searchParams composted:string ('1' or 'true' to include composted, optional)
+ * @relationships BAR (seeds owned by player)
+ * @dimensions WHO:player, WHAT:seed collection, WHERE:garden, ENERGY:maturity_phase, PERSONAL_THROUGHPUT:seed_count
+ * @example /bars/garden?soil=fertile&maturity=growing&composted=1
+ * @agentDiscoverable false
+ */
+
 function parseSoil(v: string | undefined): BarGardenFilters['soil'] {
   if (!v || v === 'all') return 'all'
   if ((SOIL_KINDS as readonly string[]).includes(v)) return v as SoilKind

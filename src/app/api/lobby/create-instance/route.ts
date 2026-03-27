@@ -1,3 +1,18 @@
+/**
+ * @route POST /api/lobby/create-instance
+ * @entity CAMPAIGN
+ * @description Create a new campaign instance with generated BARs from birthday onboarding flow
+ * @permissions authenticated
+ * @params slug:string (body, required) - Unique campaign slug
+ * @params name:string (body, required) - Campaign name
+ * @params vibeData:object (body, required) - Vibe configuration (birthdayPersonName, vibeWords, desiredFeeling, energyLevel)
+ * @params goalData:object (body, required) - Goal configuration (primaryGoal, secondaryGoals, domainType, campaignDuration)
+ * @params sourceInstanceId:string (body, optional) - Source instance for template
+ * @relationships CAMPAIGN (Instance creation), BAR (generated CustomBars), PLAYER (creator)
+ * @dimensions WHO:creator, WHAT:instance + BARs, WHERE:lobby system, ENERGY:campaign seed
+ * @example POST /api/lobby/create-instance with full vibeData + goalData
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

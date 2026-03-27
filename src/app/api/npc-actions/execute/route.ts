@@ -1,3 +1,18 @@
+/**
+ * @route POST /api/npc-actions/execute
+ * @entity NPC
+ * @description Execute an NPC action with verb and payload (admin-only)
+ * @permissions authenticated
+ * @params npcId:string (body, required) - NPC constitution identifier
+ * @params verb:string (body, required) - Action verb
+ * @params payload:object (body, optional) - Action payload
+ * @params sceneId:string (body, optional) - Scene context identifier
+ * @params requiresRegentApproval:boolean (body, optional) - Whether action requires regent approval
+ * @relationships NPC (constitution), DAEMON (action execution), SYSTEM (approval flow)
+ * @dimensions WHO:admin executor, WHAT:NPC action, WHERE:scene context, ENERGY:agent action
+ * @example POST /api/npc-actions/execute with {npcId:"npc123",verb:"grant_resource",payload:{amount:5}}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

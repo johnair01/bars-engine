@@ -1,3 +1,20 @@
+/**
+ * @route POST /api/threshold-encounter/generate
+ * @entity QUEST
+ * @description Generate a threshold encounter (Twine story) from I Ching hexagram and GM face
+ * @permissions authenticated
+ * @params sceneType:string (body, optional) - Scene type: "transcend", "generate", or "control" (default: "transcend")
+ * @params hexagramId:number (body, optional) - I Ching hexagram ID
+ * @params gmFace:string (body, optional) - GM face: shaman/challenger/regent/architect/diplomat/sage (default: "shaman")
+ * @params nationSlug:string (body, optional) - Nation slug
+ * @params archetypeSlug:string (body, optional) - Archetype slug
+ * @params barCandidateSeeds:string[] (body, optional) - BAR seed suggestions
+ * @params beatMode:string (body, optional) - Beat mode: "minimal" or "canonical" (default: "canonical")
+ * @relationships QUEST (ThresholdEncounter), PLAYER (session), SEED (I Ching, Archetype, Nation)
+ * @dimensions WHO:playerId, WHAT:encounter generation, WHERE:threshold space, ENERGY:story generation
+ * @example POST /api/threshold-encounter/generate with {sceneType:"transcend",gmFace:"shaman"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { generateThresholdEncounter } from '@/lib/threshold-encounter/generator'

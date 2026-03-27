@@ -2,6 +2,16 @@ import { getDiscoveryQuests } from '@/actions/quest-pools'
 import Link from 'next/link'
 import { DiscoveryQueue } from './DiscoveryQueue'
 
+/**
+ * @page /admin/discovery
+ * @entity QUEST
+ * @description Discovery queue for Wake Up quests from book analysis - review, reassign pool, or reject
+ * @permissions admin
+ * @relationships DERIVED_FROM (book analysis)
+ * @dimensions WHO:admin, WHAT:QUEST, ENERGY:moveType, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/discovery
+ * @agentDiscoverable false
+ */
 export default async function AdminDiscoveryPage() {
   const result = await getDiscoveryQuests()
   const quests = 'quests' in result ? result.quests : []

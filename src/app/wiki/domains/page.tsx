@@ -4,6 +4,17 @@ import { DOMAIN_ESSENCE, STAGE_PHRASINGS_WARM } from '@/lib/domain-context'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import type { AllyshipDomain } from '@/lib/kotter'
 
+/**
+ * @page /wiki/domains
+ * @entity WIKI
+ * @description Wiki page - Allyship Domains (WHERE) - four domains with Kotter stage invitation phrasings
+ * @permissions public
+ * @relationships documents GATHERING_RESOURCES, SKILLFUL_ORGANIZING, RAISE_AWARENESS, DIRECT_ACTION domains with Kotter stage mappings
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+domains, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/domains
+ * @agentDiscoverable true
+ */
 const DOMAIN_DEFINITIONS: Record<string, { problem: string; when: string }> = {
   GATHERING_RESOURCES: {
     problem: 'Time, attention, skills, and presence—that which allows life to unfold',

@@ -5,6 +5,16 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/world/archetype/:archetypeId
+ * @entity SYSTEM
+ * @description Archetype (playbook) editor with full archetype configuration and metadata
+ * @permissions admin
+ * @params archetypeId:string (path, required)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:archetype, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/world/archetype/archetype_123
+ * @agentDiscoverable false
+ */
 export default function ArchetypeEditorPage() {
     const params = useParams()
     const router = useRouter()

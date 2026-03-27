@@ -6,9 +6,18 @@ import { db } from '@/lib/db'
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 /**
- * Map router — fixes /map 404s (Phase 5.2).
- * Redirects based on type param or falls back to campaign lobby / game-map.
- * @see .specify/specs/game-map-path-generation-audit/IMPLEMENTATION_PLAN.md
+ * @page /map
+ * @entity SYSTEM
+ * @description Map router - redirects to wallet, hand, adventure, or campaign hub based on type parameter
+ * @permissions authenticated
+ * @searchParams type:string (optional) - Map type: vibeulon, thread, story
+ * @searchParams threadId:string (optional) - Thread identifier for type=thread
+ * @searchParams adventureId:string (optional) - Adventure identifier for type=story
+ * @relationships redirects to /wallet, /hand, /adventure/:id/play, or /campaign/hub based on params
+ * @energyCost 0 (router only)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:router, ENERGY:N/A, PERSONAL_THROUGHPUT:N/A
+ * @example /map?type=vibeulon → redirects to /wallet
+ * @agentDiscoverable false
  */
 export default async function MapPage(props: {
   searchParams: Promise<{ type?: string; threadId?: string; adventureId?: string }>

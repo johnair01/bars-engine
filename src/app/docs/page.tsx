@@ -3,6 +3,17 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
+/**
+ * @page /docs
+ * @entity WIKI
+ * @description Player handbook index - documentation built from library requests and community evidence
+ * @permissions public (read-only)
+ * @relationships lists all DocNode entries (canonical, validated, draft), supports LibraryRequest creation
+ * @energyCost 0 (read-only documentation index)
+ * @dimensions WHO:viewer, WHAT:WIKI, WHERE:knowledge_base, ENERGY:learning, PERSONAL_THROUGHPUT:wake_up
+ * @example /docs
+ * @agentDiscoverable true
+ */
 export default async function DocsIndexPage() {
     const [nodes, player] = await Promise.all([
         db.docNode.findMany({

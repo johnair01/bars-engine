@@ -3,6 +3,16 @@ import { listCampaignSeeds, createCampaignSeed, promoteCampaignBarToInstance } f
 import { CampaignSeedCreateForm } from './CampaignSeedCreateForm'
 import { CampaignSeedList } from './CampaignSeedList'
 
+/**
+ * @page /admin/campaign-seeds
+ * @entity CAMPAIGN
+ * @description Create and water campaign BARs through six-face watering process
+ * @permissions admin
+ * @relationships DERIVED_FROM (BARs), PROMOTES_TO (campaign instances)
+ * @dimensions WHO:admin, WHAT:CAMPAIGN, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/campaign-seeds
+ * @agentDiscoverable false
+ */
 export default async function AdminCampaignSeedsPage() {
   const seeds = await listCampaignSeeds()
 

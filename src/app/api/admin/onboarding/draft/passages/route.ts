@@ -26,6 +26,19 @@ async function requireAdmin() {
 
 const EXCLUDED = new Set(['StoryTitle', 'StoryData'])
 
+/**
+ * @route GET /api/admin/onboarding/draft/passages
+ * @entity CAMPAIGN
+ * @description List all passages in the onboarding draft Twee file
+ * @permissions admin
+ * @params none
+ * @query none
+ * @relationships CONTAINS (passage nodes), IMPLEMENTS (campaign flow)
+ * @energyCost 0 (read-only)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none
+ * @example /api/admin/onboarding/draft/passages
+ * @agentDiscoverable true
+ */
 export async function GET() {
   const authError = await requireAdmin()
   if (authError) {

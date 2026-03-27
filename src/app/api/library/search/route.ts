@@ -1,3 +1,17 @@
+/**
+ * @route GET /api/library/search
+ * @entity WIKI
+ * @description Search documentation nodes by query text, type, and scope
+ * @permissions public
+ * @query q:string (optional) - Search query text
+ * @query type:string (optional) - Filter by node type
+ * @query scope:string (optional) - Filter by scope
+ * @query limit:number (optional) - Result limit (default: 10)
+ * @relationships WIKI (DocNode search)
+ * @dimensions WHO:searcher, WHAT:search query, WHERE:wiki graph, ENERGY:knowledge discovery
+ * @example /api/library/search?q=BAR&type=glossary&limit=5
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { searchDocNodes } from '@/actions/library'
 

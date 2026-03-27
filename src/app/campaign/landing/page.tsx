@@ -7,6 +7,19 @@ import { loadBruisedBananaQuestMapCard } from '@/lib/campaign-hub/bruised-banana
 import { getAvailableFaceMovesForStage } from '@/lib/gm-face-moves-availability'
 import { KOTTER_STAGES } from '@/lib/kotter'
 
+/**
+ * @page /campaign/landing
+ * @entity CAMPAIGN
+ * @description Campaign spoke landing page showing quest map, GM face moves, and portal context for specific campaign stage
+ * @permissions authenticated
+ * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @searchParams spoke:string (spoke index 0-7, optional, defaults to 0)
+ * @relationships CAMPAIGN (portal spoke, quest map), QUEST (spoke quests)
+ * @dimensions WHO:player, WHAT:spoke landing, WHERE:campaign, ENERGY:spokeIndex, PERSONAL_THROUGHPUT:available_moves
+ * @example /campaign/landing?ref=bruised-banana&spoke=3
+ * @agentDiscoverable false
+ */
+
 const DEFAULT_CAMPAIGN_REF = 'bruised-banana'
 
 export default async function CampaignLandingPage(props: {

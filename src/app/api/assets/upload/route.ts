@@ -1,4 +1,19 @@
 /**
+ * @route POST /api/assets/upload
+ * @entity BAR
+ * @description Client-side upload for BAR assets streaming directly to Vercel Blob storage (images, PDFs)
+ * @permissions authenticated
+ * @params barId:string (clientPayload, required) - BAR identifier
+ * @params side:string (clientPayload, optional) - Card side ("front" or "back")
+ * @params intention:string (clientPayload, optional) - Upload intention/purpose
+ * @relationships BAR (CustomBar owner), PLAYER (creator/admin access)
+ * @energyCost 0
+ * @dimensions WHO:creatorId/admin, WHAT:asset blob, WHERE:BAR attachment, ENERGY:media provenance
+ * @example POST /api/assets/upload with multipart payload
+ * @agentDiscoverable true
+ */
+
+/**
  * Default client-side upload for BAR assets. All photo and media uploads
  * MUST use this route — files stream directly from browser to Vercel Blob,
  * avoiding FUNCTION_PAYLOAD_TOO_LARGE. Do not send files through server actions.

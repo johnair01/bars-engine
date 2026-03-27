@@ -4,6 +4,23 @@ import { getCurrentPlayer } from '@/lib/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+/**
+ * @page /quest/create
+ * @entity QUEST
+ * @description Quest creation wizard - guided quest design with optional GM face moves and Kotter stage context
+ * @permissions authenticated, profile_complete
+ * @searchParams from:string (optional) - Source: gameboard, 321
+ * @searchParams questId:string (optional) - Gameboard quest context
+ * @searchParams slotId:string (optional) - Gameboard slot context
+ * @searchParams campaignRef:string (optional) - Campaign reference for Kotter context
+ * @searchParams gmFaceMoveId:string (optional) - Pre-selected GM face move
+ * @searchParams hexagramId:string (optional) - Pre-selected I Ching hexagram for Kotter stage
+ * @relationships creates QUEST, optionally links to gameboard slot, uses campaign Kotter context
+ * @energyCost variable (depends on quest design)
+ * @dimensions WHO:playerId+nationId+archetypeId, WHAT:QUEST, WHERE:quest_creation, ENERGY:creative, PERSONAL_THROUGHPUT:create
+ * @example /quest/create?from=gameboard&questId=q123&slotId=s456&campaignRef=bruised-banana
+ * @agentDiscoverable false
+ */
 export default async function CreateQuestPage(props: {
   searchParams: Promise<{
     from?: string

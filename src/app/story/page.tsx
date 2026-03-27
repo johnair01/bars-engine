@@ -3,6 +3,18 @@ import { getPassage } from '@/lib/story'
 import { redirect } from 'next/navigation'
 import { StoryChoices } from './StoryChoices'
 
+/**
+ * @page /story
+ * @entity SYSTEM
+ * @description Legacy story entry point - starts at 'invitation' passage (replaced by Twine adventures)
+ * @permissions authenticated
+ * @relationships loads 'invitation' passage, displays story choices
+ * @energyCost 0 (legacy story navigation)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:story, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /story
+ * @agentDiscoverable false
+ * @experimental true
+ */
 export default async function StoryPage() {
     const player = await getCurrentPlayer()
     if (!player) return redirect('/conclave')

@@ -2,6 +2,18 @@ import Link from 'next/link'
 import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { InstanceCreationWizard } from './InstanceCreationWizard'
 
+/**
+ * @page /lobby/new
+ * @entity CAMPAIGN
+ * @description Create new campaign instance wizard - optionally copy from existing instance
+ * @permissions authenticated, admin
+ * @searchParams copyFrom:string (optional) - Instance slug to copy config from
+ * @relationships creates new CAMPAIGN instance, optionally copies from existing instance
+ * @energyCost 0 (admin creation wizard)
+ * @dimensions WHO:admin, WHAT:CAMPAIGN, WHERE:lobby, ENERGY:N/A, PERSONAL_THROUGHPUT:create
+ * @example /lobby/new?copyFrom=bruised-banana
+ * @agentDiscoverable false
+ */
 export default async function NewInstancePage({
   searchParams,
 }: {

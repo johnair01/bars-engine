@@ -2,6 +2,18 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getMvpProfileSetupData, saveMvpProfileSetup } from '@/actions/mvp-onboarding'
 
+/**
+ * @page /onboarding/profile
+ * @entity PLAYER
+ * @description Profile completion page - select nation and archetype to unlock quest/BAR creation
+ * @permissions authenticated
+ * @searchParams error:string (optional) - Error code: missing, invalid, save_failed
+ * @relationships updates PLAYER with nationId + archetypeId
+ * @energyCost 0 (profile setup)
+ * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:onboarding, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /onboarding/profile?error=missing
+ * @agentDiscoverable false
+ */
 const ERROR_MESSAGES: Record<string, string> = {
     missing: 'Please choose both a nation and an archetype.',
     invalid: 'That selection is no longer available. Please choose again.',

@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { advanceForgeSession } from '@/actions/forge'
 
+/**
+ * @route PATCH /api/admin/forge/:id
+ * @entity QUEST
+ * @description Advance a Forge session through emotional alchemy moves
+ * @permissions admin
+ * @params id:string (path, required) - Forge session ID
+ * @query none
+ * @relationships CONTAINS (forge moves), DERIVED_FROM (initial seed)
+ * @energyCost variable (emotional energy metabolized during move)
+ * @dimensions WHO:forgerId, WHAT:QUEST, WHERE:DIRECT_ACTION, ENERGY:vibulon, PERSONAL_THROUGHPUT:stage
+ * @example /api/admin/forge/forge_123
+ * @agentDiscoverable true
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

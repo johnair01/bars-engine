@@ -10,6 +10,19 @@ import { VaultCampaignInviteBars } from '@/components/hand/VaultCampaignInviteBa
 import { VaultSummaryStrip } from '@/components/hand/VaultSummaryStrip'
 import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
 
+/**
+ * @page /hand
+ * @entity SYSTEM
+ * @description Vault lobby showing player's personal workspace: charges, quests, BARs, compost, invites, and 4-move dashboard
+ * @permissions authenticated
+ * @searchParams quest:string (quest ID to highlight, optional)
+ * @relationships BAR (charges, drafts, BARs), QUEST (player quests), CAMPAIGN (invites), EVENT (invite BARs)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:vault lobby, WHERE:hand, ENERGY:move_dashboard, PERSONAL_THROUGHPUT:vault_counts
+ * @example /hand?quest=quest-123
+ * @agentDiscoverable false
+ */
+
 export default async function HandPage(props: { searchParams: Promise<{ quest?: string }> }) {
     const searchParams = await props.searchParams
     const highlightQuestId = searchParams.quest ?? null

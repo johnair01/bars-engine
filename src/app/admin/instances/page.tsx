@@ -5,6 +5,19 @@ import { listPromotedMoves } from '@/actions/move-proposals'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceListWithEdit } from '@/components/admin/InstanceListWithEdit'
 
+/**
+ * @page /admin/instances
+ * @entity CAMPAIGN
+ * @description Configure event/fundraiser campaign instances with Kotter stages and moves without changing core engine
+ * @permissions admin
+ * @searchParams error:string (optional)
+ * @searchParams saved:string (optional)
+ * @searchParams active:string (optional)
+ * @relationships CONTAINS (promoted moves), LINKED_TO (active instance)
+ * @dimensions WHO:admin, WHAT:CAMPAIGN, WHERE:kotterStage, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/instances?saved=true
+ * @agentDiscoverable false
+ */
 export default async function AdminInstancesPage({
   searchParams,
 }: {

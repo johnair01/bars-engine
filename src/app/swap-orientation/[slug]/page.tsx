@@ -11,6 +11,18 @@ import { parseSwapEventIntakeJson } from '@/lib/swap-event-intake'
 import { swapOrientationInitialPassageId } from '@/lib/swap-orientation-branch'
 import { EventInviteStoryReader } from '@/components/event-invite/EventInviteStoryReader'
 
+/**
+ * @page /swap-orientation/:slug
+ * @entity EVENT
+ * @description Clothing swap orientation CYOA - short story branch before RSVP (returning players get short path)
+ * @permissions public
+ * @params slug:string (path, required) - Swap event instance slug
+ * @relationships loads swap event instance with intake, displays event story with RSVP/donation CTAs
+ * @energyCost 0 (orientation reading)
+ * @dimensions WHO:playerId_optional, WHAT:EVENT, WHERE:swap_orientation, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /swap-orientation/pdx-art-swap-2026
+ * @agentDiscoverable false
+ */
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

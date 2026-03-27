@@ -4,6 +4,18 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { SwapRsvpForm } from './SwapRsvpForm'
 
+/**
+ * @page /swap-rsvp/:slug
+ * @entity EVENT
+ * @description Light RSVP form for swap event - email + notes only (no full game onboarding)
+ * @permissions public
+ * @params slug:string (path, required) - Swap event instance slug
+ * @relationships creates swap RSVP record for instance (stores email + notes for organizers)
+ * @energyCost 0 (RSVP submission)
+ * @dimensions WHO:N/A, WHAT:EVENT, WHERE:swap_rsvp, ENERGY:N/A, PERSONAL_THROUGHPUT:N/A
+ * @example /swap-rsvp/pdx-art-swap-2026
+ * @agentDiscoverable false
+ */
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

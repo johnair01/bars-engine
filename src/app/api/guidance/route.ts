@@ -3,13 +3,19 @@ import { getActorGuidance } from '@/lib/simulation/guidance'
 import { loadFlowBySlug } from '@/lib/simulation/flowLoader'
 
 /**
- * GET /api/guidance?flowId=...&nodeId=...&role=librarian
- *
- * Returns simulated actor guidance for the current flow node.
- * Optional: visited, events (comma-separated) for richer Witness/Collaborator responses.
- *
- * Flow slugs: bruised-banana, campaign-intro, identity-selection, intended-impact-bar,
- *             orientation-linear, orientation-bar
+ * @route GET /api/guidance
+ * @entity QUEST
+ * @description Returns simulated actor guidance for the current flow node
+ * @permissions public
+ * @query flowId:string (required, flow slug like bruised-banana)
+ * @query nodeId:string (required, current node ID)
+ * @query role:string (optional, actor role: librarian|witness|collaborator, default: librarian)
+ * @query visited:string (optional, comma-separated visited nodes)
+ * @query events:string (optional, comma-separated event IDs)
+ * @energyCost 0 (simulation/guidance)
+ * @dimensions WHO:actor_role, WHAT:QUEST, WHERE:flow_context
+ * @example /api/guidance?flowId=bruised-banana&nodeId=start&role=librarian
+ * @agentDiscoverable true
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

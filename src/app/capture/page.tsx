@@ -4,6 +4,18 @@ import { cookies } from 'next/headers'
 import { ChargeCaptureForm } from '@/components/charge-capture/ChargeCaptureForm'
 import { getTodayCharge } from '@/actions/charge-capture'
 
+/**
+ * @page /capture
+ * @entity BAR
+ * @description Charge capture page for daily Brave Act of Resistance - naming emotional charge before it fades
+ * @permissions authenticated
+ * @relationships BAR (charge_capture type, today's charge)
+ * @energyCost 1
+ * @dimensions WHO:player, WHAT:charge capture, WHERE:capture, ENERGY:emotional_charge, PERSONAL_THROUGHPUT:daily_charge
+ * @example /capture
+ * @agentDiscoverable false
+ */
+
 export default async function CapturePage() {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value

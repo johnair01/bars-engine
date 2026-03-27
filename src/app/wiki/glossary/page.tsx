@@ -1,6 +1,17 @@
 import Link from 'next/link'
 import { KOTTER_STAGES } from '@/lib/kotter'
 
+/**
+ * @page /wiki/glossary
+ * @entity WIKI
+ * @description Wiki page - Glossary - core terms (Vibeulon, BAR, Yellow Brick Road, Kotter stages, stewardship, quest, compost)
+ * @permissions public
+ * @relationships documents core game concepts with definitions and cross-references to detailed wiki pages
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+glossary, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/glossary
+ * @agentDiscoverable true
+ */
 export default function GlossaryPage() {
   return (
     <div className="space-y-6">

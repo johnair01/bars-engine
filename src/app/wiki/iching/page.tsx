@@ -2,6 +2,17 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getHexagramStructure } from '@/lib/iching-struct'
 
+/**
+ * @page /wiki/iching
+ * @entity WIKI
+ * @description Wiki page - I Ching Guidebook - all 64 hexagrams with upper/lower trigrams and mapped archetypes
+ * @permissions public
+ * @relationships lists 64 hexagrams from BAR table with trigram structure and archetype mappings (element-based)
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+iching, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/iching
+ * @agentDiscoverable true
+ */
 type ArchetypeInfo = { id: string; name: string }
 
 function extractElement(description: string | null) {

@@ -4,6 +4,17 @@ import Link from 'next/link'
 import { BookQuestReviewList } from './BookQuestReviewList'
 import { ExportForTwineButton } from './ExportForTwineButton'
 
+/**
+ * @page /admin/books/:bookId/quests
+ * @entity QUEST
+ * @description Review and approve quests extracted from book, export to Twine
+ * @permissions admin
+ * @params bookId:string (path, required)
+ * @relationships DERIVED_FROM (quests extracted from book chunks), EXPORTS_TO (Twine adventure)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/books/book_123/quests
+ * @agentDiscoverable false
+ */
 export default async function BookQuestsReviewPage({
   params,
 }: {

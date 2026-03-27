@@ -16,6 +16,18 @@ function slotOrder(nodeId: string): number {
     return 99
 }
 
+/**
+ * @page /admin/adventures/:adventureId/passages/:passageId/edit
+ * @entity QUEST
+ * @description Edit passage text, choices, and quest linkage with authoring context (face, campaign, preceding passages)
+ * @permissions admin
+ * @params adventureId:string (path, required)
+ * @params passageId:string (path, required)
+ * @relationships CONTAINS (passage belongs to adventure), LINKED_TO (passage can link to quest)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:campaignRef, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/adventures/adv_123/passages/pass_456/edit
+ * @agentDiscoverable false
+ */
 export default async function EditPassagePage({
     params
 }: {

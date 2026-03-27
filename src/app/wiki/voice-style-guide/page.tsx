@@ -1,3 +1,13 @@
+/**
+ * @page /wiki/voice-style-guide
+ * @entity WIKI
+ * @description Librarian Campaign voice and tone guide for narrative content
+ * @permissions public
+ * @relationships WIKI (documentation system), CAMPAIGN (Bruised Banana voice)
+ * @dimensions WHO:writers+designers, WHAT:voice guide, WHERE:wiki, ENERGY:narrative documentation
+ * @example /wiki/voice-style-guide
+ * @agentDiscoverable true
+ */
 import Link from 'next/link'
 
 export default function VoiceStyleGuidePage() {

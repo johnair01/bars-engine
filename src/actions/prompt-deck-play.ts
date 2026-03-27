@@ -89,7 +89,7 @@ export async function drawPromptCard(deckId: string, instanceSlug: string): Prom
   if (!did || !slug) return { ok: false, error: 'Missing deck or instance.' }
 
   const deck = await db.barDeck.findFirst({
-    where: { id: did, instance: { slug } },
+    where: { id: did, library: { instance: { slug } } },
     select: { id: true },
   })
   if (!deck) return { ok: false, error: 'Deck not found for this Scene Atlas.' }
@@ -162,10 +162,25 @@ export async function discardPromptCardForQuest(
 
   const card = await db.barDeckCard.findUnique({
     where: { id: cid },
-    select: { id: true, deckId: true, rank: true, deck: { select: { instance: { select: { slug: true } } } } },
+    select: {
+      id: true,
+      deckId: true,
+      rank: true,
+      deck: {
+        select: {
+          library: {
+            select: {
+              instance: {
+                select: { slug: true },
+              },
+            },
+          },
+        },
+      },
+    },
   })
   if (!card) return { ok: false, error: 'Card not found.' }
-  if (card.deck.instance.slug !== slug) return { ok: false, error: 'Card is not from this Scene Atlas instance.' }
+  if (card.deck.library.instance.slug !== slug) return { ok: false, error: 'Card is not from this Scene Atlas instance.' }
 
   if (card.rank === 13 && wildFamily) {
     if (!WILD_FAMILIES.includes(wildFamily as (typeof WILD_FAMILIES)[number])) {

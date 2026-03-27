@@ -4,6 +4,17 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { requestGameFork } from '@/actions/fork-game'
 
+/**
+ * @page /fork-game
+ * @entity SYSTEM
+ * @description Fork game BAR - request export of instance config for self-hosted deployment
+ * @permissions authenticated
+ * @relationships creates InstanceExportRequest for default instance, links to fork wizard and guide
+ * @energyCost variable (completing fork BAR awards vibulon)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:fork, ENERGY:fork_resistance, PERSONAL_THROUGHPUT:show_up
+ * @example /fork-game
+ * @agentDiscoverable false
+ */
 export default async function ForkGamePage() {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value

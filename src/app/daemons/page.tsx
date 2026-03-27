@@ -4,6 +4,17 @@ import Link from 'next/link'
 import { getPlayerDaemons } from '@/actions/daemons'
 import { DaemonListClient } from './DaemonListClient'
 
+/**
+ * @page /daemons
+ * @entity DAEMON
+ * @description Daemon list showing player's collectible entities that extend their move set - discovered via 321 Wake Up
+ * @permissions authenticated
+ * @relationships DAEMON (player daemons), PLAYER (summons)
+ * @dimensions WHO:player, WHAT:daemon list, WHERE:daemons, ENERGY:summon_status, PERSONAL_THROUGHPUT:daemon_count
+ * @example /daemons
+ * @agentDiscoverable false
+ */
+
 export default async function DaemonsPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')

@@ -47,6 +47,19 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+/**
+ * @route PATCH /api/admin/onboarding/draft/passages/:id
+ * @entity CAMPAIGN
+ * @description Update a Twee passage in the onboarding draft (name, body, links)
+ * @permissions admin
+ * @params id:string (path, required) - Passage name/ID
+ * @query none
+ * @relationships CONTAINS (passage links), IMPLEMENTS (campaign flow)
+ * @energyCost 0 (admin content editing)
+ * @dimensions WHO:adminId, WHAT:CAMPAIGN, WHERE:GATHERING_RESOURCES, ENERGY:none, PERSONAL_THROUGHPUT:CLEAN_UP
+ * @example /api/admin/onboarding/draft/passages/Start
+ * @agentDiscoverable true
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

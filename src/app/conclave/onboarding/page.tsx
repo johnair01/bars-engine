@@ -3,6 +3,17 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 /**
+ * @page /conclave/onboarding
+ * @entity SYSTEM
+ * @description Onboarding controller that finds player's orientation quest and launches Twine/Adventure player
+ * @permissions authenticated
+ * @searchParams reset:string ('true' to reset, optional)
+ * @searchParams ritual:string ('true' for ritual mode, optional)
+ * @relationships PLAYER (orientation progress), QUEST (orientation threads), ADVENTURE (Twine stories)
+ * @dimensions WHO:player, WHAT:onboarding redirect, WHERE:conclave, ENERGY:orientation_quest
+ * @example /conclave/onboarding?reset=true&ritual=true
+ * @agentDiscoverable false
+ *
  * Onboarding Controller
  *
  * Finds the player's current orientation quest and launches it in the full-screen

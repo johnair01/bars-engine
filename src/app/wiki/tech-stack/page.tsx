@@ -1,3 +1,13 @@
+/**
+ * @page /wiki/tech-stack
+ * @entity WIKI
+ * @description Technical architecture and technology stack documentation
+ * @permissions public
+ * @relationships WIKI (documentation system), SYSTEM (architecture)
+ * @dimensions WHO:developers, WHAT:tech documentation, WHERE:wiki, ENERGY:technical reference
+ * @example /wiki/tech-stack
+ * @agentDiscoverable true
+ */
 import Link from 'next/link'
 
 const FRONTEND_STACK = [

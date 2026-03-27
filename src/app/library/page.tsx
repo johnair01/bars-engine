@@ -4,6 +4,17 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { QuestLibraryBrowser } from '@/components/QuestLibraryBrowser'
 
+/**
+ * @page /library
+ * @entity QUEST
+ * @description Quest library browser - book-derived quest threads, pull to add to journey
+ * @permissions authenticated
+ * @relationships displays quest library threads, allows pulling quests into player's active journey
+ * @energyCost variable (depends on quest thread pulled)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:library, ENERGY:quest_threads, PERSONAL_THROUGHPUT:wake_up
+ * @example /library
+ * @agentDiscoverable false
+ */
 export default async function QuestLibraryPage() {
   const player = await getCurrentPlayer()
   if (!player) {

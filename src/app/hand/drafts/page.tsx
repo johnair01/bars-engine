@@ -5,6 +5,17 @@ import { VaultRoomHeader } from '@/components/hand/VaultRoomHeader'
 import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultPrivateDraftsSection } from '@/components/hand/VaultPrivateDraftsSection'
 
+/**
+ * @page /hand/drafts
+ * @entity BAR
+ * @description Vault drafts room showing work-in-progress BARs - pick up, edit, release to bowl, or publish when ready
+ * @permissions authenticated
+ * @relationships BAR (draft type), PLAYER (vault data)
+ * @dimensions WHO:player, WHAT:drafts room, WHERE:vault, ENERGY:drafts, PERSONAL_THROUGHPUT:draft_count
+ * @example /hand/drafts
+ * @agentDiscoverable false
+ */
+
 export default async function HandDraftsRoomPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/conclave/guided')

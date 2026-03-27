@@ -4,6 +4,17 @@ import { slugify } from '@/lib/spatial-world/utils'
 import { MapEditorClient } from '@/components/spatial-map-editor/MapEditorClient'
 import { notFound } from 'next/navigation'
 
+/**
+ * @page /admin/maps/:mapId/editor
+ * @entity SYSTEM
+ * @description Interactive map editor for rooms and tile anchors with linked graph nodes
+ * @permissions admin
+ * @params mapId:string (path, required)
+ * @relationships CONTAINS (rooms with anchors), LINKED_TO (graph nodes via anchors)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:spatial-coordinates, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/maps/map_123/editor
+ * @agentDiscoverable false
+ */
 export default async function MapEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const map = await getSpatialMap(id)

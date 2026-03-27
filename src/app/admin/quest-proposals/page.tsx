@@ -9,6 +9,16 @@ import { useEffect, useState, useTransition } from 'react'
 
 type Proposal = Awaited<ReturnType<typeof listQuestProposals>>[number]
 
+/**
+ * @page /admin/quest-proposals
+ * @entity QUEST
+ * @description Quest proposals from BARs with status filtering (pending/approved/rejected/deferred) and generation tool
+ * @permissions admin
+ * @relationships DERIVED_FROM (BARs)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/quest-proposals?status=pending
+ * @agentDiscoverable false
+ */
 export default function QuestProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [statusFilter, setStatusFilter] = useState<string>('pending')

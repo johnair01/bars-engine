@@ -3,6 +3,16 @@ import { db } from '@/lib/db'
 import { checkGM } from '@/actions/admin'
 import { promoteBarCandidate } from '@/actions/threshold-encounter'
 
+/**
+ * @page /admin/bar-candidates
+ * @entity BAR
+ * @description Review and promote player-submitted BAR candidates from Threshold Encounters to BAR or quest hook
+ * @permissions admin
+ * @relationships DERIVED_FROM (Threshold Encounter artifacts)
+ * @dimensions WHO:player+admin, WHAT:BAR, WHERE:vector, ENERGY:gmFace
+ * @example /admin/bar-candidates
+ * @agentDiscoverable false
+ */
 // Note: promoteBarCandidate is a server action so we can use a form
 export default async function BarCandidatesPage() {
   await checkGM()

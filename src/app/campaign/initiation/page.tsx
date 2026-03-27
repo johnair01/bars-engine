@@ -4,6 +4,19 @@ import { CampaignReader } from '../components/CampaignReader'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 
+/**
+ * @page /campaign/initiation
+ * @entity CAMPAIGN
+ * @description Campaign initiation flow for players or sponsors - interactive adventure for onboarding to Bruised Banana
+ * @permissions authenticated
+ * @searchParams segment:string ('player' or 'sponsor', optional, defaults to 'player')
+ * @searchParams shareToken:string (share token for external invites, optional)
+ * @relationships CAMPAIGN (initiation adventure)
+ * @dimensions WHO:player, WHAT:campaign initiation, WHERE:campaign, ENERGY:segment
+ * @example /campaign/initiation?segment=sponsor&shareToken=abc123
+ * @agentDiscoverable false
+ */
+
 const VALID_SEGMENTS = ['player', 'sponsor'] as const
 type Segment = (typeof VALID_SEGMENTS)[number]
 

@@ -11,6 +11,18 @@ const MOVE_LABELS: Record<string, string> = {
 
 const TIER_ORDER = ['CANONICAL', 'CANDIDATE', 'CUSTOM', 'EPHEMERAL'] as const
 
+/**
+ * @page /admin/moves
+ * @entity SYSTEM
+ * @description Manage emotional alchemy moves with tier, type, and nation filters
+ * @permissions admin
+ * @searchParams tier:string (CANONICAL|CANDIDATE|CUSTOM|EPHEMERAL, optional)
+ * @searchParams moveType:string (wakeUp|cleanUp|growUp|showUp, optional)
+ * @searchParams nation:string (nationId, optional)
+ * @dimensions WHO:admin, WHAT:SYSTEM, ENERGY:moveType, PERSONAL_THROUGHPUT:all-stages
+ * @example /admin/moves?tier=CANONICAL&moveType=wakeUp
+ * @agentDiscoverable false
+ */
 export default async function AdminMovesPage({
   searchParams,
 }: {

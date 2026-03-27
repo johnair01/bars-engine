@@ -4,6 +4,17 @@ import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
 import { BruisedBananaTwinePlayer } from '@/components/campaign/BruisedBananaTwinePlayer'
 
+/**
+ * @page /campaign/twine
+ * @entity CAMPAIGN
+ * @description Legacy Twine-based campaign onboarding player (loads from twee file)
+ * @permissions authenticated
+ * @relationships CAMPAIGN (Bruised Banana onboarding story)
+ * @dimensions WHO:player, WHAT:twine onboarding, WHERE:campaign, ENERGY:twee_passage
+ * @example /campaign/twine
+ * @agentDiscoverable false
+ */
+
 const TWEE_PATH = path.join(process.cwd(), 'content', 'twine', 'onboarding', 'bruised-banana-onboarding-draft.twee')
 
 export default async function CampaignTwinePage() {

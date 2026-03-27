@@ -1,3 +1,14 @@
+/**
+ * @page /agents
+ * @entity SYSTEM
+ * @description Agent console for consulting the 6 Game Master Sects (Architect, Challenger, Shaman, Regent, Diplomat, Sage)
+ * @permissions authenticated
+ * @relationships NPC (agent archetypes)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:agent consultation, WHERE:agent console, ENERGY:agent response
+ * @example /agents
+ * @agentDiscoverable false
+ */
 'use client'
 
 import { useState } from 'react'

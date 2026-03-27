@@ -5,6 +5,18 @@ import type { CustomBar } from '@prisma/client'
 import { QuestForm } from '../QuestForm'
 import Link from 'next/link'
 
+/**
+ * @page /quest/:questId
+ * @entity QUEST
+ * @description Quest detail and play page with gating logic (nation/trigram restrictions), thread position, and completion flow
+ * @permissions authenticated
+ * @params questId:string (quest ID, required)
+ * @relationships QUEST (quest details), PLAYER (assignments, gating), THREAD (position tracking)
+ * @dimensions WHO:player, WHAT:quest play, WHERE:quest, ENERGY:quest_progress, PERSONAL_THROUGHPUT:thread_position
+ * @example /quest/quest-123
+ * @agentDiscoverable false
+ */
+
 function questPassesGating(
   q: { allowedNations: string | null; allowedTrigrams: string | null },
   player: NonNullable<Awaited<ReturnType<typeof getCurrentPlayer>>>

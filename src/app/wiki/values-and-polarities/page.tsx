@@ -1,3 +1,13 @@
+/**
+ * @page /wiki/values-and-polarities
+ * @entity WIKI
+ * @description Canonical documentation on values vs polarities framework
+ * @permissions public
+ * @relationships WIKI (documentation system)
+ * @dimensions WHO:players+designers, WHAT:values framework, WHERE:wiki, ENERGY:conceptual documentation
+ * @example /wiki/values-and-polarities
+ * @agentDiscoverable true
+ */
 import Link from 'next/link'
 
 /**

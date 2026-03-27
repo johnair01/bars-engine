@@ -179,6 +179,8 @@ model Player {
   milestonesApproved           CampaignMilestone[]         @relation("MilestoneApprovals")
   milestoneContributions       MilestoneContribution[]     @relation("MilestoneContributions")
   marketplaceProfiles          PlayerMarketplaceProfile[]
+  friendshipInvitationsSent    FriendshipInvitation[]      @relation("FriendshipInvitationsSent")
+  friendshipInvitationsCompleted FriendshipInvitation[]    @relation("FriendshipInvitationsCompleted")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -386,9 +388,10 @@ model CustomBar {
   campaignInvitation       CampaignInvitation? // one BAR can carry one role invitation
   carriedWeightResults     CarriedWeight[]      @relation("CarriedWeightBar")
   roleOrientations         Role[]               @relation("RoleOrientationTemplate")
-  playerRoleGrants         PlayerRole[]         @relation("PlayerRoleGrantBar")
-  spokeSession             SpokeSession?        @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
-  marketplaceStallListing  MarketplaceStallSlot? @relation("MarketplaceListedBar")
+  playerRoleGrants                     PlayerRole[]              @relation("PlayerRoleGrantBar")
+  spokeSession                         SpokeSession?             @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
+  marketplaceStallListing              MarketplaceStallSlot?     @relation("MarketplaceListedBar")
+  friendshipInvitationsAsInvitationBar FriendshipInvitation[]
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
@@ -717,6 +720,37 @@ model BarShareExternal {
   @@index([fromUserId, createdAt])
   @@index([expiresAt])
   @@map("bar_share_externals")
+}
+
+/// Master of Friendship: High-trust phone-based invitations using friendship deck cards
+model FriendshipInvitation {
+  id                 String    @id @default(cuid())
+  senderId           String
+  friendPhone        String? // High-trust contact info (optional, for analytics)
+  cardId             String // BarDeckCard used for this invitation
+  customPrompt       String?   @db.Text // Player's edited prompt (overrides card default)
+  personalMessage    String    @db.Text // "I drew this card for you because..."
+  campaignInstanceId String // Campaign recruiting to
+  invitationBarId    String // Generated BAR from prompt (friend completes this)
+  shareToken         String    @unique // Token for /friendship/join/[token]
+  vibeulonCost       Int // Cost paid at send time
+  status             String    @default("pending") // pending | completed | expired
+  completedAt        DateTime?
+  completedById      String? // Which player completed invitation
+  expiresAt          DateTime // 72 hours default
+  createdAt          DateTime  @default(now())
+
+  sender        Player      @relation("FriendshipInvitationsSent", fields: [senderId], references: [id], onDelete: Cascade)
+  card          BarDeckCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  campaign      Instance    @relation(fields: [campaignInstanceId], references: [id], onDelete: Cascade)
+  invitationBar CustomBar   @relation(fields: [invitationBarId], references: [id], onDelete: Cascade)
+  completedBy   Player?     @relation("FriendshipInvitationsCompleted", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([senderId, createdAt])
+  @@index([campaignInstanceId])
+  @@index([shareToken])
+  @@index([status])
+  @@map("friendship_invitations")
 }
 
 model BarSocialLink {
@@ -1395,7 +1429,7 @@ model Instance {
   eventArtifacts             EventArtifact[]
   campaignPlaybook           CampaignPlaybook?
   campaignInvitations        CampaignInvitation[]
-  barDeck                    BarDeck?
+  deckLibrary                DeckLibrary? // Container for multiple BarDecks (scene-atlas + friendship decks)
   scopedNations              Nation[]                @relation("NationInstance")
   scopedArchetypes           Archetype[]             @relation("ArchetypeInstance")
   exportRequests             InstanceExportRequest[]
@@ -1420,6 +1454,7 @@ model Instance {
   /// When set, participants may read published intake (organizers always see latest draft in organizer UI)
   swapEventIntakePublishedAt DateTime?               @map("swap_event_intake_published_at")
   swapEventRsvps             SwapEventRsvp[]
+  friendshipInvitations      FriendshipInvitation[]
 
   @@map("instances")
 }
@@ -1458,16 +1493,40 @@ model InstanceExportRequest {
   @@map("instance_export_requests")
 }
 
-model BarDeck {
+/// Deck type enumeration for BarDeck variants
+enum DeckType {
+  SCENE_ATLAS
+  FRIENDSHIP_52
+  FRIENDSHIP_64
+}
+
+/// DeckLibrary: Container enabling one Instance to have multiple BarDecks of different types
+model DeckLibrary {
   id         String   @id @default(cuid())
-  instanceId String   @unique
+  instanceId String   @unique // One library per Instance
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  instance         Instance          @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  instance Instance  @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  decks    BarDeck[]
+
+  @@index([instanceId])
+  @@map("deck_libraries")
+}
+
+model BarDeck {
+  id        String   @id @default(cuid())
+  libraryId String   // References DeckLibrary instead of Instance directly
+  deckType  DeckType // Differentiator: scene-atlas, friendship-52, friendship-64
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  library          DeckLibrary       @relation(fields: [libraryId], references: [id], onDelete: Cascade)
   cards            BarDeckCard[]
   promptDeckCycles PromptDeckCycle[]
 
+  @@unique([libraryId, deckType]) // One of each type per library
+  @@index([libraryId])
   @@map("bar_decks")
 }
 
@@ -1483,9 +1542,10 @@ model BarDeckCard {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  deck         BarDeck                 @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  bindings     BarBinding[]
-  guidedDrafts SceneAtlasGuidedDraft[]
+  deck                  BarDeck                 @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  bindings              BarBinding[]
+  guidedDrafts          SceneAtlasGuidedDraft[]
+  friendshipInvitations FriendshipInvitation[]
 
   @@unique([deckId, suit, rank])
   @@index([deckId])
@@ -2985,4 +3045,27 @@ model NpcEncounter {
   @@index([spokeSessionId])
   @@index([npcId])
   @@map("npc_encounters")
+}
+
+// Wiki Draft for agent-generated documentation
+model WikiDraft {
+  id                          String   @id @default(cuid())
+  artifactId                  String
+  artifactType                String
+  title                       String
+  summary                     String   @db.Text
+  provenanceExplanation       String   @db.Text
+  relationshipDocumentation   String   @db.Text
+  usageExamples               String   @db.Text // JSON array
+  metadata                    String   @db.Text // JSON object
+  status                      String   @default("pending") // pending, approved, rejected
+  reviewNotes                 String?  @db.Text
+  reviewedBy                  String?
+  reviewedAt                  DateTime?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@index([artifactId])
+  @@index([status])
+  @@map("wiki_drafts")
 }

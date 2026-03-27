@@ -3,6 +3,17 @@ import { AdminPageHeader } from '@/app/admin/components/AdminPageHeader'
 import { getCampaignDeckAdminState } from '@/actions/admin-campaign-deck'
 import { AdminCampaignDeckWizard } from './AdminCampaignDeckWizard'
 
+/**
+ * @page /admin/campaign/:ref/deck
+ * @entity CAMPAIGN
+ * @description CYOA-style intake wizard for reproducible starter deck (hexagrams 1-8), activate cards and draw period
+ * @permissions admin
+ * @params ref:string (path, required) - campaign reference identifier
+ * @relationships CONTAINS (deck cards by status)
+ * @dimensions WHO:admin, WHAT:CAMPAIGN, WHERE:hexagram, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/campaign/bb-residency/deck
+ * @agentDiscoverable false
+ */
 export default async function AdminCampaignDeckPage({
   params,
 }: {

@@ -1,3 +1,15 @@
+/**
+ * @route GET /api/my-quests
+ * @entity QUEST
+ * @description Retrieve all active quests claimed by the current player
+ * @permissions authenticated
+ * @query nestable:string (optional) - Filter to only top-level quests (no parentId)
+ * @relationships PLAYER (claimedById), QUEST (CustomBar hierarchy)
+ * @dimensions WHO:playerId, WHAT:quest list, WHERE:player inventory, ENERGY:active work
+ * @example /api/my-quests
+ * @example /api/my-quests?nestable=true
+ * @agentDiscoverable true
+ */
 import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'

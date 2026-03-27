@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /wiki/moves
+ * @entity WIKI
+ * @description Wiki page - The 4 Moves (Personal Throughput) - Wake/Clean/Grow/Show Up with meanings and details
+ * @permissions public
+ * @relationships documents four moves as personal throughput dimensions (distinct from allyship domains)
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+moves, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /wiki/moves
+ * @agentDiscoverable true
+ */
 const MOVES = [
   {
     name: 'Wake Up',

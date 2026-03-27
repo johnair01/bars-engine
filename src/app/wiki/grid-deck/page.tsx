@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /wiki/grid-deck
+ * @entity WIKI
+ * @description Wiki page - Scene Atlas (Grid Deck) - player guide to 52-cell BAR mapping lab with polarity pairs and private workspace
+ * @permissions public
+ * @relationships documents Scene Atlas 4×13 grid with polarity pairs, BAR creation workflow, privacy model, row label derivation from nation/trigram
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+player_guide, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/grid-deck
+ * @agentDiscoverable true
+ */
 export default function WikiGridDeckPage() {
   return (
     <div className="max-w-2xl space-y-8 text-zinc-300">

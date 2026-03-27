@@ -3,6 +3,18 @@ import { notFound } from 'next/navigation'
 import { loadSwapOrganizerContext } from '@/actions/swap-event'
 import { SwapEventOrganizerClient } from './SwapEventOrganizerClient'
 
+/**
+ * @page /swap-organizer/:slug
+ * @entity EVENT
+ * @description Swap event organizer dashboard - manage intake, publishing, roles for swap event
+ * @permissions authenticated, organizer_or_admin
+ * @params slug:string (path, required) - Instance slug for swap event
+ * @relationships loads swap event instance (sub-campaign), manages intake form, publishing state, and role memberships
+ * @energyCost 0 (organizer dashboard)
+ * @dimensions WHO:playerId+admin, WHAT:EVENT, WHERE:swap_organizer, ENERGY:N/A, PERSONAL_THROUGHPUT:organize
+ * @example /swap-organizer/pdx-art-swap-2026
+ * @agentDiscoverable false
+ */
 export default async function SwapOrganizerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const ctx = await loadSwapOrganizerContext(slug)

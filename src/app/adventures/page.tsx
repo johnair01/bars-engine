@@ -10,6 +10,18 @@ import type { CustomBar, PlayerQuest } from '@prisma/client'
 import { AdventureRestartButton } from '@/components/AdventureRestartButton'
 import { derivePlayerMoveContext, MOVE_LABELS, MOVE_COLORS, type MoveType } from '@/lib/player-move-context'
 
+/**
+ * @page /adventures
+ * @entity SYSTEM
+ * @description Main play dashboard showing all active moves: shadow work, journeys, daemon work, campaigns, and Twine adventures
+ * @permissions authenticated
+ * @relationships QUEST (active threads), DAEMON (active summons), CAMPAIGN (membership), TWINE_STORY (published stories)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:move selection, WHERE:play dashboard, ENERGY:recommendedMoveType, PERSONAL_THROUGHPUT:activeThreads
+ * @example /adventures
+ * @agentDiscoverable false
+ */
+
 function MoveBadge({ move, recommended, label }: { move: MoveType; recommended: boolean; label: string }) {
   const c = MOVE_COLORS[move]
   return (

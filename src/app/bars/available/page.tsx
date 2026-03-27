@@ -1,3 +1,14 @@
+/**
+ * @page /bars/available
+ * @entity QUEST
+ * @description Quest marketplace showing all available commissions and bounties with advanced filtering (domain, nation, archetype, Kotter stage)
+ * @permissions authenticated
+ * @relationships QUEST (market quests), PLAYER (creator), CAMPAIGN (domain preferences, Kotter stages)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:quest market, WHERE:marketplace, ENERGY:filter selection, PERSONAL_THROUGHPUT:filteredQuests
+ * @example /bars/available
+ * @agentDiscoverable false
+ */
 'use client'
 
 import { getMarketContent } from '@/actions/market'

@@ -2,6 +2,18 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPublicCharacter } from '@/actions/character-creator'
 
+/**
+ * @page /character/:shareToken
+ * @entity PLAYER
+ * @description Public character sheet showing player's archetype, moves, bonds, and story answers via shareable token
+ * @permissions public
+ * @params shareToken:string (character share token, required)
+ * @relationships PLAYER (character data), PLAYBOOK (moves, bonds), ARCHETYPE
+ * @dimensions WHO:viewer, WHAT:character sheet, WHERE:public, ENERGY:shareToken
+ * @example /character/abc123xyz
+ * @agentDiscoverable false
+ */
+
 export default async function PublicCharacterPage({
   params,
 }: {

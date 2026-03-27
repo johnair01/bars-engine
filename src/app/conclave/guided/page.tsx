@@ -1,3 +1,17 @@
+/**
+ * @page /conclave/guided
+ * @entity SYSTEM
+ * @description Guided onboarding story flow with progressive auth and step tracking
+ * @permissions public
+ * @searchParams step:string (current story step, optional)
+ * @searchParams reset:string ('true' to reset onboarding, optional)
+ * @searchParams ref:string (campaign reference, optional)
+ * @searchParams returnTo:string (return URL after completion, optional)
+ * @relationships PLAYER (onboarding progress), STORY (guided narrative)
+ * @dimensions WHO:new_player, WHAT:guided onboarding, WHERE:conclave, ENERGY:step
+ * @example /conclave/guided?step=3&ref=bruised-banana&returnTo=/campaign/hub
+ * @agentDiscoverable false
+ */
 
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'

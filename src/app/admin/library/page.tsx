@@ -1,6 +1,16 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+/**
+ * @page /admin/library
+ * @entity WIKI
+ * @description Player help requests - resolve to doc node or spawn BacklogItem + DocQuest
+ * @permissions admin
+ * @relationships LINKED_TO (doc nodes, doc quests, backlog items)
+ * @dimensions WHO:admin+player, WHAT:WIKI, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/library
+ * @agentDiscoverable false
+ */
 export default async function AdminLibraryPage() {
     const requests = await db.libraryRequest.findMany({
         orderBy: { createdAt: 'desc' },

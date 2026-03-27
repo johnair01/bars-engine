@@ -54,6 +54,20 @@ function isPrismaConnectionError(err: unknown): boolean {
   return false
 }
 
+/**
+ * @page /
+ * @entity PLAYER
+ * @description Home page dashboard with journey threads, quest packs, and charge capture
+ * @permissions authenticated (redirects to /arrival if not authenticated)
+ * @searchParams ritualComplete:string (optional, indicates onboarding completion)
+ * @searchParams focusQuest:string (optional, highlights specific quest)
+ * @searchParams ref:string (optional, referral source)
+ * @energyCost 0 (read-only view)
+ * @dimensions WHO:currentPlayer, WHAT:PLAYER, WHERE:allyshipDomain, ENERGY:vibulon
+ * @relationships displays player's active QUESTs, shows appreciation feed, charge capture
+ * @example /?focusQuest=quest_123&ref=campaign_invite
+ * @agentDiscoverable false
+ */
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
   const campaignRef = searchParams.ref ?? null

@@ -1,3 +1,16 @@
+/**
+ * @route POST /api/npc-reflections/:id/review
+ * @entity NPC
+ * @description Regent review of NPC reflection (approve or reject) (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC reflection identifier
+ * @params action:string (body, required) - Review action: "approve" or "reject"
+ * @params notes:string (body, optional) - Reviewer notes
+ * @relationships NPC (reflection state), DAEMON (regent review), PLAYER (reviewer)
+ * @dimensions WHO:regent reviewer, WHAT:review decision, WHERE:reflection queue, ENERGY:governance
+ * @example POST /api/npc-reflections/ref123/review with {action:"approve",notes:"Looks good"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

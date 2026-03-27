@@ -7,6 +7,18 @@ import { isSpaceId, SPACE_IDS, type SpaceId } from '@/lib/narrative-os/types'
 import { NarrativeHeader } from '@/components/narrative-os/NarrativeHeader'
 import { SpaceCard } from '@/components/narrative-os/SpaceCard'
 
+/**
+ * @page /narrative/:space
+ * @entity SYSTEM
+ * @description Narrative OS space home - one of four spaces (library, dojo, forest, forge) with destinations and primary CTA
+ * @permissions authenticated, game_account_ready
+ * @params space:string (path, required) - SpaceId: library, dojo, forest, forge
+ * @relationships displays space home payload with primary CTA, transitions, and destination links
+ * @energyCost 0 (navigation hub)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:narrative_os+space, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /narrative/library
+ * @agentDiscoverable false
+ */
 type Props = { params: Promise<{ space: string }> }
 
 /** Only the four canonical SpaceId routes exist. */

@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /wiki/fork-your-instance
+ * @entity WIKI
+ * @description Wiki page - Fork Your Instance guide - 6-step guide to fork repo, deploy to Vercel, and run your own BARs Engine
+ * @permissions public
+ * @relationships documents GitHub fork, database setup, environment variables, Vercel deployment, config import, instance creation
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+fork_guide, ENERGY:N/A, PERSONAL_THROUGHPUT:show_up
+ * @example /wiki/fork-your-instance
+ * @agentDiscoverable true
+ */
 const STEPS = [
   {
     title: '1. Fork the repository',

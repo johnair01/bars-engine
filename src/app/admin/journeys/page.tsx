@@ -4,6 +4,16 @@ import { getAdminJourneys } from '@/actions/admin'
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/journeys
+ * @entity QUEST
+ * @description Manage quest threads (sequential) and packs (collections)
+ * @permissions admin
+ * @relationships CONTAINS (threads and packs)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/journeys
+ * @agentDiscoverable false
+ */
 export default function AdminJourneysPage() {
     const [data, setData] = useState<{ threads: any[], packs: any[] }>({ threads: [], packs: [] })
     const [isPending, startTransition] = useTransition()

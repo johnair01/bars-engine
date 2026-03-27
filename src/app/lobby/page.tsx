@@ -9,6 +9,17 @@ import Link from 'next/link'
 import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { LobbyCanvas } from './LobbyCanvas'
 
+/**
+ * @page /lobby
+ * @entity SYSTEM
+ * @description Global lobby - default spatial map entry point with avatar system
+ * @permissions authenticated
+ * @relationships loads default spatial map (config.defaultLobbyMapId), spawns player at default room
+ * @energyCost 0 (lobby presence)
+ * @dimensions WHO:playerId+avatarConfig, WHAT:SYSTEM, WHERE:lobby, ENERGY:N/A, PERSONAL_THROUGHPUT:gather
+ * @example /lobby
+ * @agentDiscoverable false
+ */
 export default async function LobbyPage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')

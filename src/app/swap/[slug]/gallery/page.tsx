@@ -4,6 +4,18 @@ import { notFound } from 'next/navigation'
 import { getSwapGalleryAccess, listSwapListings } from '@/actions/swap-listing'
 import { SwapGalleryClient } from './SwapGalleryClient'
 
+/**
+ * @page /swap/:slug/gallery
+ * @entity EVENT
+ * @description Clothing swap gallery - browse paginated swap listings with photos and metadata
+ * @permissions public (after intake published), moderator (can hide/unhide listings)
+ * @params slug:string (path, required) - Swap event instance slug
+ * @relationships lists SwapListing entries for instance, supports pagination and moderation
+ * @energyCost 0 (read-only gallery)
+ * @dimensions WHO:playerId_optional+moderator, WHAT:EVENT, WHERE:swap_gallery, ENERGY:N/A, PERSONAL_THROUGHPUT:browse
+ * @example /swap/pdx-art-swap-2026/gallery
+ * @agentDiscoverable false
+ */
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

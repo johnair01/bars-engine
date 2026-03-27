@@ -3,6 +3,20 @@ import Link from 'next/link'
 import { getCampaignLandingData } from '@/actions/campaign-landing'
 import { getDomainLabel } from '@/lib/allyship-domains'
 
+/**
+ * @page /campaigns/landing/:slug
+ * @entity CAMPAIGN
+ * @description Public campaign landing page showing campaign details, invite flow, and first quest CTA
+ * @permissions public
+ * @params slug:string (campaign instance slug, required)
+ * @searchParams invite:string (invite token, optional)
+ * @searchParams shareToken:string (BAR share token for onboarding, optional)
+ * @relationships CAMPAIGN (instance), PLAYER (inviter), BAR (share context)
+ * @dimensions WHO:invitee, WHAT:campaign landing, WHERE:campaign, ENERGY:invite_token
+ * @example /campaigns/landing/bruised-banana?invite=abc123&shareToken=xyz789
+ * @agentDiscoverable false
+ */
+
 export default async function CampaignLandingPage({
   params,
   searchParams,

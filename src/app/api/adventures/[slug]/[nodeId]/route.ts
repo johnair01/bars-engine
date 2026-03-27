@@ -1,3 +1,19 @@
+/**
+ * @route GET /api/adventures/:slug/:nodeId
+ * @entity CAMPAIGN
+ * @description Fetch a specific passage node within a CYOA adventure, with special handling for Bruised Banana campaign intake and character creation flows
+ * @permissions public
+ * @params slug:string (path, required) - Adventure slug identifier
+ * @params nodeId:string (path, required) - Passage node identifier
+ * @query ref:string (optional) - Reference context (e.g., "bruised-banana")
+ * @query preview:string (optional) - Enable draft preview ("1" for admins)
+ * @query face:string (optional) - GM face filter for portal moves
+ * @relationships CAMPAIGN (adventure), PLAYER (session), QUEST (linkedQuestId)
+ * @dimensions WHO:player session, WHAT:passage content, WHERE:adventure context, ENERGY:vibeulons
+ * @example /api/adventures/bruised-banana/BB_Intro
+ * @example /api/adventures/wake-up/signup?ref=bruised-banana
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'

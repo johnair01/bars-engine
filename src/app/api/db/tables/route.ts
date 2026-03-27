@@ -1,3 +1,13 @@
+/**
+ * @route GET /api/db/tables
+ * @entity SYSTEM
+ * @description Development-only endpoint to list database tables (disabled in production)
+ * @permissions public
+ * @relationships SYSTEM (Prisma schema)
+ * @dimensions WHO:developer, WHAT:schema inspection, WHERE:dev/preview env, ENERGY:debugging
+ * @example /api/db/tables (only in development/preview)
+ * @agentDiscoverable false
+ */
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 

@@ -4,6 +4,18 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { UnpackQuestFlow } from '@/components/quest/UnpackQuestFlow'
 
+/**
+ * @page /quest/:questId/unpack
+ * @entity QUEST
+ * @description Quest unpacking flow - reflect on developmental signal and set move type
+ * @permissions authenticated, owner_or_claimer
+ * @params questId:string (path, required) - QUEST identifier
+ * @relationships loads QUEST (creatorId or claimedById must match player), updates moveType
+ * @energyCost 0 (reflection flow, no vibulon cost)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:unpack, ENERGY:developmental_signal, PERSONAL_THROUGHPUT:grow_up
+ * @example /quest/quest_123/unpack
+ * @agentDiscoverable false
+ */
 export default async function UnpackQuestPage({
   params,
 }: {

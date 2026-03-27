@@ -7,6 +7,16 @@ import {
 import { useEffect, useState, useTransition } from 'react'
 import { AdminPlayerEditor } from '@/components/admin/AdminPlayerEditor'
 
+/**
+ * @page /admin/players
+ * @entity PLAYER
+ * @description Player management with search and editor for nation/archetype assignments
+ * @permissions admin
+ * @relationships LINKED_TO (nations, archetypes)
+ * @dimensions WHO:admin, WHAT:PLAYER, WHERE:nation+archetype, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/players
+ * @agentDiscoverable false
+ */
 export default function AdminPlayersPage() {
     const [players, setPlayers] = useState<any[]>([])
     const [worldData, setWorldData] = useState<{ nations: any[], archetypes: any[] }>({ nations: [], archetypes: [] })

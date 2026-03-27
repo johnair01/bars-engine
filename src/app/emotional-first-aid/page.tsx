@@ -6,6 +6,19 @@ import { getQuestsByPool } from '@/actions/quest-pools'
 import { EmotionalFirstAidKit } from '@/components/emotional-first-aid/EmotionalFirstAidKit'
 import { EfaQuestPoolSection } from '@/components/emotional-first-aid/EfaQuestPoolSection'
 
+/**
+ * @page /emotional-first-aid
+ * @entity QUEST
+ * @description Emotional First Aid Kit - crisis support quest pool with context-aware responses
+ * @permissions authenticated
+ * @searchParams questId:string (optional) - Quest context for emotional support
+ * @searchParams returnTo:string (optional) - Return URL after session
+ * @relationships displays EFA quest pool, loads context from questId
+ * @energyCost variable (depends on alchemy moves selected)
+ * @dimensions WHO:playerId, WHAT:QUEST, WHERE:efa, ENERGY:emotional_alchemy, PERSONAL_THROUGHPUT:clean_up+wake_up
+ * @example /emotional-first-aid?questId=quest_123&returnTo=/game-map
+ * @agentDiscoverable false
+ */
 export default async function EmotionalFirstAidPage({
     searchParams
 }: {

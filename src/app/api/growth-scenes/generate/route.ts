@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/growth-scenes/generate
+ * @entity QUEST
+ * @description Generate developmental growth scene for player using archetype, nation, and daemon state
+ * @permissions authenticated
+ * @params archetypeSlug:string (body, optional) - Archetype slug
+ * @params nationSlug:string (body, optional) - Nation slug
+ * @params campaignPhase:string (body, optional) - Campaign phase context
+ * @params sceneType:string (body, optional) - Scene type: "transcend", "generate", or "control"
+ * @relationships PLAYER (session), DAEMON (active channel/altitude), SEED (Archetype, Nation)
+ * @dimensions WHO:playerId, WHAT:growth scene, WHERE:developmental context, ENERGY:growth vector
+ * @example POST /api/growth-scenes/generate with {sceneType:"transcend"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { generateScene } from '@/lib/growth-scene/generator'

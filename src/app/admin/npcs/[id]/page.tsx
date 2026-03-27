@@ -26,6 +26,17 @@ function JsonBlock({ label, value }: { label: string; value: string }) {
   )
 }
 
+/**
+ * @page /admin/npcs/:npcId
+ * @entity NPC
+ * @description NPC constitution detail with status, tier, role, location, governance, and JSON configuration
+ * @permissions admin
+ * @params npcId:string (path, required)
+ * @relationships LINKED_TO (memories, reflections)
+ * @dimensions WHO:admin, WHAT:NPC, WHERE:currentLocation, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/npcs/npc_123
+ * @agentDiscoverable false
+ */
 export default function NpcConstitutionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [npc, setNpc] = useState<Npc | null>(null)

@@ -8,6 +8,21 @@ import {
   isAllowedEventInviteSlug,
 } from '@/lib/event-invite-party'
 
+/**
+ * @page /campaign/event/:eventSlug/initiation
+ * @entity CAMPAIGN
+ * @description Event-scoped campaign initiation flow for players or sponsors joining specific campaign events
+ * @permissions authenticated
+ * @params eventSlug:string (event slug, required)
+ * @searchParams segment:string ('player' or 'sponsor', optional, defaults to 'player')
+ * @searchParams shareToken:string (share token for external invites, optional)
+ * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @relationships CAMPAIGN (event, adventure), EVENT (event invite)
+ * @dimensions WHO:player, WHAT:event initiation, WHERE:campaign_event, ENERGY:segment
+ * @example /campaign/event/launch-party/initiation?segment=sponsor&ref=bruised-banana
+ * @agentDiscoverable false
+ */
+
 const VALID_SEGMENTS = ['player', 'sponsor'] as const
 type Segment = (typeof VALID_SEGMENTS)[number]
 

@@ -3,6 +3,18 @@ import { redirect } from 'next/navigation'
 import { CreateBarFormPage } from './CreateBarFormPage'
 import Link from 'next/link'
 
+/**
+ * @page /bars/create
+ * @entity BAR
+ * @description Forge page for creating new BARs (scraps, notes) with front and back sides
+ * @permissions authenticated
+ * @relationships BAR (creation)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:bar creation, WHERE:forge, ENERGY:new_bar
+ * @example /bars/create
+ * @agentDiscoverable false
+ */
+
 export default async function CreateBarPage() {
     const player = await getCurrentPlayer()
     if (!player) redirect('/login')

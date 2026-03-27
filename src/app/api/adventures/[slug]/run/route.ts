@@ -1,13 +1,19 @@
+/**
+ * @route GET /api/adventures/:slug/run
+ * @entity CAMPAIGN
+ * @description Retrieve run state for the current player's Twine adventure progress, including current passage and visited nodes
+ * @permissions authenticated
+ * @params slug:string (path, required) - Adventure slug (storyId)
+ * @query questId:string (optional) - Filter run state by quest context
+ * @relationships PLAYER (session), CAMPAIGN (TwineRun, TwineStory)
+ * @dimensions WHO:playerId, WHAT:passage state, WHERE:adventure context, ENERGY:progress tracking
+ * @example /api/adventures/wake-up/run
+ * @example /api/adventures/wake-up/run?questId=abc123
+ * @agentDiscoverable true
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-
-/**
- * GET /api/adventures/[slug]/run
- * Returns run state for the current player. No revalidatePath.
- * Query: questId (optional)
- * Response: { currentPassageId, visited, passage } | { error }
- */
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }

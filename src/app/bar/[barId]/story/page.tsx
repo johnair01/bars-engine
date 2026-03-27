@@ -8,6 +8,19 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { TwineLogic } from '@/lib/twine-engine'
 
+/**
+ * @page /bar/:barId/story
+ * @entity BAR
+ * @description Story reader for BAR-embedded narratives (legacy Twine or JSON passages)
+ * @permissions authenticated
+ * @params barId:string (BAR ID, required)
+ * @searchParams p:string (passage ID, optional, defaults to 'start')
+ * @relationships BAR (story content), TWINE_STORY (twineLogic)
+ * @dimensions WHO:player, WHAT:story passage, WHERE:bar, ENERGY:passageId
+ * @example /bar/bar-123/story?p=start
+ * @agentDiscoverable false
+ */
+
 type Passage = {
     id: string
     text: string

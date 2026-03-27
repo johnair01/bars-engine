@@ -4,6 +4,16 @@ import { getAdminWorldData } from '@/actions/admin'
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/world
+ * @entity SYSTEM
+ * @description World data management - nations and archetypes (playbooks) with I Ching guidebook link
+ * @permissions admin
+ * @relationships CONTAINS (nations, archetypes)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:nation+archetype, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/world
+ * @agentDiscoverable false
+ */
 export default function AdminWorldPage() {
     const [data, setData] = useState<{ nations: any[], playbooks: any[] }>({ nations: [], playbooks: [] })
     const [isPending, startTransition] = useTransition()

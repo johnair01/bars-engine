@@ -6,6 +6,18 @@ import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultPersonalQuestsBlock } from '@/components/hand/VaultPersonalQuestsBlock'
 import { PlacementModal } from '@/components/hand/PlacementModal'
 
+/**
+ * @page /hand/quests
+ * @entity QUEST
+ * @description Vault room showing unplaced personal quests
+ * @permissions authenticated
+ * @searchParams quest:string (optional, highlights specific quest)
+ * @energyCost 0 (read-only view)
+ * @dimensions WHO:currentPlayer, WHAT:QUEST, WHERE:vault, PERSONAL_THROUGHPUT:stage
+ * @relationships displays unplaced QUESTs from BARs or 321
+ * @example /hand/quests?quest=quest_123
+ * @agentDiscoverable false
+ */
 export default async function HandQuestsRoomPage(props: { searchParams: Promise<{ quest?: string }> }) {
     const searchParams = await props.searchParams
     const highlightQuestId = searchParams.quest ?? null

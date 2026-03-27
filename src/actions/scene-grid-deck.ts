@@ -125,7 +125,7 @@ export async function bindSceneGridCardToExistingBar(
   }
 
   const card = await db.barDeckCard.findFirst({
-    where: { id: cardId, deck: { instanceId } },
+    where: { id: cardId, deck: { library: { instanceId } } },
     select: { id: true },
   })
   if (!card) {

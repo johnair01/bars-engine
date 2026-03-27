@@ -1,3 +1,29 @@
+/**
+ * @route PATCH /api/spatial-maps/:id/anchors/:anchorId
+ * @entity SYSTEM
+ * @description Update an anchor in a spatial map (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - SpatialMap identifier
+ * @params anchorId:string (path, required) - Anchor identifier
+ * @params updates:object (body, required) - Partial anchor updates
+ * @relationships SYSTEM (Anchor mutation)
+ * @dimensions WHO:admin, WHAT:anchor update, WHERE:map room, ENERGY:map editing
+ * @example PATCH /api/spatial-maps/map123/anchors/anchor456 with {label:"New Portal"}
+ * @agentDiscoverable true
+ */
+
+/**
+ * @route DELETE /api/spatial-maps/:id/anchors/:anchorId
+ * @entity SYSTEM
+ * @description Delete an anchor from a spatial map (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - SpatialMap identifier
+ * @params anchorId:string (path, required) - Anchor identifier
+ * @relationships SYSTEM (Anchor deletion)
+ * @dimensions WHO:admin, WHAT:anchor removal, WHERE:map room, ENERGY:map cleanup
+ * @example DELETE /api/spatial-maps/map123/anchors/anchor456
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

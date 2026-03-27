@@ -9,7 +9,13 @@
     "clean:next": "rm -rf .next",
     "dev": "npm run db:generate && next dev --webpack",
     "dev:turbo": "npm run db:generate && next dev --turbopack",
-    "build": "tsx scripts/build-with-env.ts",
+    "validate:routes": "tsx scripts/validate-routes.ts",
+    "validate:routes:strict": "tsx scripts/validate-routes.ts --strict",
+    "build:registry": "tsx scripts/build-registry.ts",
+    "analyze:routes": "tsx scripts/analyze-annotations.ts",
+    "coverage:dashboard": "tsx scripts/generate-coverage-dashboard.ts && open public/coverage-dashboard.html",
+    "routes:report": "npm run validate:routes && npm run analyze:routes",
+    "build": "npm run validate:routes && npm run build:registry && tsx scripts/build-with-env.ts",
     "start": "next start",
     "lint": "eslint",
     "db:sync": "tsx scripts/db-sync.ts",
@@ -223,6 +229,7 @@
     "husky": "^9.1.7",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4",
+    "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }

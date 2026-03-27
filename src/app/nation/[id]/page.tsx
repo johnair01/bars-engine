@@ -2,6 +2,18 @@ import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+/**
+ * @page /nation/:id
+ * @entity PLAYER
+ * @description Nation history page - displays nation epiphany bridge with four pillars (Wake/Clean/Grow/Show Up)
+ * @permissions public
+ * @params id:string (path, required) - Nation ID or name (case-insensitive)
+ * @relationships displays Nation entry with cultural pillars and four moves
+ * @energyCost 0 (read-only nation lore)
+ * @dimensions WHO:nationId, WHAT:PLAYER, WHERE:nation_lore, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /nation/argyra
+ * @agentDiscoverable false
+ */
 export default async function NationByIdPage({ params }: { params: { id: string } }) {
     // Await params as required in Next.js 15+ (or recent 14 changes)? Assuming yes or standard access
     // Next 15 might require awaiting params if they are promises? Stick to standard for now.

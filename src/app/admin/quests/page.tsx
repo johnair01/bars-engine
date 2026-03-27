@@ -4,6 +4,16 @@ import { getAdminQuests } from '@/actions/admin'
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/quests
+ * @entity QUEST
+ * @description Quest library (Custom Bars) available for Threads or Packs
+ * @permissions admin
+ * @relationships CONTAINS (all quests)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:wake-up
+ * @example /admin/quests
+ * @agentDiscoverable false
+ */
 export default function AdminQuestsPage() {
     const [quests, setQuests] = useState<any[]>([])
     const [isPending, startTransition] = useTransition()

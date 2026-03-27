@@ -9,6 +9,17 @@ import { KernelForm } from './KernelForm'
 import { PromoteDraftButton } from '@/app/admin/adventures/[id]/PromoteDraftButton'
 import { getActiveInstance } from '@/actions/instance'
 
+/**
+ * @page /admin/campaign/:ref/author
+ * @entity CAMPAIGN
+ * @description Campaign authoring hub with passage fill status, narrative kernel, and deck generation by allyship domain
+ * @permissions admin
+ * @params ref:string (path, required) - campaign reference identifier
+ * @relationships CONTAINS (adventures by subcampaign domain), LINKED_TO (narrative kernel)
+ * @dimensions WHO:admin, WHAT:CAMPAIGN, WHERE:allyshipDomain, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/campaign/bb-residency/author
+ * @agentDiscoverable false
+ */
 export default async function CampaignAuthorPage({
   params,
 }: {

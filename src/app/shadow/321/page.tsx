@@ -4,6 +4,20 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { getChargeBar } from '@/actions/charge-capture'
 import { Shadow321Runner } from './Shadow321Runner'
 
+/**
+ * @page /shadow/321
+ * @entity SYSTEM
+ * @description 321 shadow process - 3rd person → 2nd person → 1st person integration work
+ * @permissions authenticated
+ * @searchParams chargeBarId:string (optional) - Charge BAR to use as initial prompt
+ * @searchParams returnTo:string (optional) - Return URL after completion
+ * @searchParams personalMove:string (optional) - wakeUp, cleanUp, growUp, showUp
+ * @relationships loads charge BAR if provided, creates shadow work session
+ * @energyCost variable (awards blessed object on completion)
+ * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:shadow_work, ENERGY:integration, PERSONAL_THROUGHPUT:clean_up+grow_up
+ * @example /shadow/321?chargeBarId=bar_123&returnTo=/capture&personalMove=growUp
+ * @agentDiscoverable false
+ */
 export default async function Shadow321Page(props: {
   searchParams: Promise<{ chargeBarId?: string; returnTo?: string; personalMove?: string }>
 }) {

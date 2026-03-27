@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/library/requests
+ * @entity WIKI
+ * @description Submit a library research request for documentation lookup or content generation
+ * @permissions authenticated
+ * @params requestText:string (body, required) - Request description
+ * @params requestType:string (body, required) - Request type (e.g., "lookup", "generate")
+ * @params privacy:string (body, optional) - Privacy level
+ * @params contextJson:object (body, optional) - Additional context metadata
+ * @relationships WIKI (LibraryRequest), PLAYER (requester)
+ * @dimensions WHO:requester, WHAT:request content, WHERE:library system, ENERGY:knowledge request
+ * @example POST /api/library/requests with {requestText:"Define BAR",requestType:"lookup"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { submitLibraryRequest } from '@/actions/library'
 

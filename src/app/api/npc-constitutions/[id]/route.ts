@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/npc-constitutions/:id
+ * @entity NPC
+ * @description Retrieve a specific NPC constitution by ID (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @relationships NPC (constitution definition)
+ * @dimensions WHO:admin, WHAT:NPC constitution, WHERE:system layer, ENERGY:agent inspection
+ * @example /api/npc-constitutions/npc123
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/npc-constitutions/:id/validate
+ * @entity NPC
+ * @description Validate an NPC constitution against governance rules (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @relationships NPC (constitution validation), DAEMON (governance rules)
+ * @dimensions WHO:admin validator, WHAT:validation result, WHERE:system layer, ENERGY:compliance check
+ * @example POST /api/npc-constitutions/npc123/validate
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

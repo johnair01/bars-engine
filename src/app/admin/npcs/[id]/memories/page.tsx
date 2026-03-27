@@ -12,6 +12,17 @@ const TYPE_COLORS: Record<string, string> = {
   campaign: 'bg-amber-900/40 text-amber-300',
 }
 
+/**
+ * @page /admin/npcs/:npcId/memories
+ * @entity NPC
+ * @description NPC memory management with type filtering (scene/relationship/campaign), prune old memories, mark canonical
+ * @permissions admin
+ * @params npcId:string (path, required)
+ * @relationships CONTAINS (NPC memories by type)
+ * @dimensions WHO:admin, WHAT:NPC, WHERE:memoryType, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/npcs/npc_123/memories
+ * @agentDiscoverable false
+ */
 export default function NpcMemoriesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [memories, setMemories] = useState<Memory[]>([])

@@ -1,11 +1,16 @@
 import Link from 'next/link'
 
 /**
- * Player handbook — four-move compass + success definition.
- * Spec: .specify/specs/player-handbook-orientation-system/spec.md (FR2)
- * Source of truth for player orientation copy: docs/PLAYER_SUCCESS.md
+ * @page /wiki/handbook
+ * @entity WIKI
+ * @description Wiki page - Player Handbook - four-move compass (Wake/Clean/Grow/Show Up) with success definitions and action links
+ * @permissions public
+ * @relationships documents four moves with success markers, stuckness guidance, and character frames (Nation+Archetype)
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+handbook, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up+clean_up+grow_up+show_up
+ * @example /wiki/handbook
+ * @agentDiscoverable true
  */
-
 const MOVES = [
   {
     move: 'Wake Up',

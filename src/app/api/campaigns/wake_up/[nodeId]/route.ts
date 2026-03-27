@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/campaigns/wake_up/:nodeId
+ * @entity CAMPAIGN
+ * @description Load static campaign node content from file system for Wake Up campaign
+ * @permissions public
+ * @params nodeId:string (path, required) - Node identifier matching JSON file name
+ * @relationships CAMPAIGN (static content files)
+ * @dimensions WHO:campaign context, WHAT:node content, WHERE:campaign/wake_up directory, ENERGY:narrative flow
+ * @example /api/campaigns/wake_up/BB_Intro
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'

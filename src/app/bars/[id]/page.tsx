@@ -15,6 +15,19 @@ import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
 
+/**
+ * @page /bars/:id
+ * @entity BAR
+ * @description Full BAR detail page with face/back tabs, sharing, photo upload, social links, and growth options
+ * @permissions authenticated
+ * @params id:string (BAR ID, required)
+ * @searchParams share:string ('external' for share confirmation, optional)
+ * @relationships BAR (owner/recipient), PLAYER (creator, recipients), CAMPAIGN (invitations, collapsed provenance)
+ * @dimensions WHO:player (owner/recipient), WHAT:bar detail, WHERE:bar, ENERGY:bar.id
+ * @example /bars/bar-123?share=external
+ * @agentDiscoverable false
+ */
+
 export default async function BarDetailPage({
     params,
     searchParams,

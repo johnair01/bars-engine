@@ -10,6 +10,16 @@ import { useEffect, useState, useTransition } from 'react'
 
 type Proposal = Awaited<ReturnType<typeof listAgentProposals>>[number]
 
+/**
+ * @page /admin/agent-proposals
+ * @entity NPC
+ * @description Review and approve/reject NPC-generated content proposals for market publication
+ * @permissions admin
+ * @relationships DERIVED_FROM (proposals created by NPCs with nation/archetype context)
+ * @dimensions WHO:npcCreator+admin, WHAT:BAR, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/agent-proposals
+ * @agentDiscoverable false
+ */
 export default function AgentProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [isPending, startTransition] = useTransition()

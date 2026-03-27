@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /wiki/campaign/bruised-banana
+ * @entity WIKI
+ * @description Wiki page - Bruised Banana Residency & Fundraiser campaign overview
+ * @permissions public
+ * @relationships documents bruised-banana campaign with Kotter stage, fundraiser, voice style, and house coordination
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+campaign, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
+ * @example /wiki/campaign/bruised-banana
+ * @agentDiscoverable true
+ */
 export default function BruisedBananaCampaignPage() {
   return (
     <div className="space-y-6">

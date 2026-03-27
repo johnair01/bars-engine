@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/onboarding/advance
+ * @entity PLAYER
+ * @description Advance player onboarding state by event with optional payload (nation, archetype, lens, campaign domain)
+ * @permissions authenticated
+ * @params event:string (body, required) - Onboarding event trigger
+ * @params payload:object (body, optional) - Event payload (nationId, archetypeId, lens, campaignDomainPreference)
+ * @relationships PLAYER (onboarding state machine), SEED (Nation, Archetype), CAMPAIGN (domain preference)
+ * @dimensions WHO:playerId, WHAT:state transition, WHERE:onboarding FSM, ENERGY:character finalization
+ * @example POST /api/onboarding/advance with {event:"chose_nation",payload:{nationId:"nation123"}}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { advanceOnboardingState } from '@/actions/onboarding'

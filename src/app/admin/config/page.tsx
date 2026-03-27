@@ -6,6 +6,16 @@ import { listSpatialMaps } from '@/actions/spatial-maps'
 import Link from 'next/link'
 import { FeatureFlagsForm } from './FeatureFlagsForm'
 
+/**
+ * @page /admin/config
+ * @entity SYSTEM
+ * @description System configuration with hero text, orientation quest, lobby map, feature flags, and audit logs
+ * @permissions admin
+ * @relationships LINKED_TO (Twine stories, spatial maps)
+ * @dimensions WHO:admin, WHAT:SYSTEM, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/config
+ * @agentDiscoverable false
+ */
 export default async function AdminConfigPage() {
     const cookieStore = await cookies()
     const playerId = cookieStore.get('bars_player_id')?.value

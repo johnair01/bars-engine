@@ -1,3 +1,13 @@
+/**
+ * @route GET /api/cron/abandon-sessions
+ * @entity SYSTEM
+ * @description Cron endpoint to detect and mark abandoned orientation sessions
+ * @permissions authenticated
+ * @relationships SYSTEM (OrientationSession), PLAYER (session ownership)
+ * @dimensions WHO:system cron, WHAT:session cleanup, WHERE:orientation flow, ENERGY:maintenance
+ * @example GET /api/cron/abandon-sessions (with Authorization: Bearer <CRON_SECRET>)
+ * @agentDiscoverable false
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { _detectAndMarkAbandonedSessionsCore } from '@/actions/orientation-checkpoint'
 

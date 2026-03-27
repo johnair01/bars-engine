@@ -4,6 +4,18 @@ import { notFound } from 'next/navigation'
 import { getSwapGalleryAccess } from '@/actions/swap-listing'
 import { SwapNewListingForm } from './SwapNewListingForm'
 
+/**
+ * @page /swap/:slug/new
+ * @entity EVENT
+ * @description Create new clothing swap listing - upload photos, add metadata (size, tags, notes)
+ * @permissions authenticated, swap_member (requires membership on instance or co-host role)
+ * @params slug:string (path, required) - Swap event instance slug
+ * @relationships creates SwapListing for instance with photo uploads
+ * @energyCost 0 (listing creation)
+ * @dimensions WHO:playerId+membership, WHAT:EVENT, WHERE:swap_listing, ENERGY:N/A, PERSONAL_THROUGHPUT:contribute
+ * @example /swap/pdx-art-swap-2026/new
+ * @agentDiscoverable false
+ */
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

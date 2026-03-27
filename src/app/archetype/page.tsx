@@ -5,6 +5,17 @@ import TriggerQuest from '@/components/TriggerQuest'
 import { ArchetypeHandbookContent } from '@/components/conclave/ArchetypeHandbookContent'
 import { getPlaybookForArchetype } from '@/actions/playbook'
 
+/**
+ * @page /archetype
+ * @entity PLAYER
+ * @description Player's archetype handbook showing their playbook, moves, and character abilities
+ * @permissions authenticated
+ * @relationships PLAYER (archetype), PLAYBOOK (moves)
+ * @dimensions WHO:player, WHAT:archetype handbook, WHERE:player profile, ENERGY:archetype
+ * @example /archetype
+ * @agentDiscoverable false
+ */
+
 export default async function ArchetypePage() {
     const player = await getCurrentPlayer()
     if (!player) return redirect('/')

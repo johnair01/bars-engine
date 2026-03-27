@@ -20,6 +20,17 @@ function rowToListItem(r: EventStewardshipRow): EventArtifactListItem {
   }
 }
 
+/**
+ * @page /admin/campaign-events
+ * @entity EVENT
+ * @description Manage EventArtifact rows tied to instances - metadata, schedule, campaign hosts
+ * @permissions admin
+ * @searchParams instanceId:string (optional)
+ * @relationships LINKED_TO (instance), CONTAINS (campaign context and host actors)
+ * @dimensions WHO:admin+hosts, WHAT:EVENT, WHERE:campaignContext, PERSONAL_THROUGHPUT:clean-up
+ * @example /admin/campaign-events?instanceId=inst_123
+ * @agentDiscoverable false
+ */
 export default async function AdminCampaignEventsPage({
   searchParams,
 }: {

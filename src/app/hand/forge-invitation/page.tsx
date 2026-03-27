@@ -4,6 +4,17 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import { ForgeInvitationForm } from './ForgeInvitationForm'
 
+/**
+ * @page /hand/forge-invitation
+ * @entity BAR
+ * @description Forge new invitation BAR with personalized message, nation, and Game Master face selection
+ * @permissions authenticated
+ * @relationships BAR (invitation creation), NATION, DAEMON (game master faces)
+ * @dimensions WHO:player, WHAT:invitation forge, WHERE:vault, ENERGY:invitation_creation
+ * @example /hand/forge-invitation
+ * @agentDiscoverable false
+ */
+
 const GAME_MASTER_FACES = [
     { id: 'shaman', name: 'Shaman (Earth)' },
     { id: 'challenger', name: 'Challenger (Fire)' },

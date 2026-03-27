@@ -6,6 +6,18 @@ import { loadSceneGridDeckView } from '@/lib/creator-scene-grid-deck/load-deck-v
 import { loadPromptDeckPlaySnapshot } from '@/lib/prompt-deck/load-play-snapshot'
 import { SceneDeckClient } from '@/components/creator-scene-deck/SceneDeckClient'
 
+/**
+ * @page /creator-scene-deck/:slug
+ * @entity CAMPAIGN
+ * @description Scene Atlas creator lab - grid deck for building story scenes by polarity
+ * @permissions authenticated, game_account_ready
+ * @params slug:string (path, required) - Instance slug
+ * @relationships loads scene grid deck for CAMPAIGN instance, displays polarity-sorted cards
+ * @energyCost 0 (creator tooling, no game state change)
+ * @dimensions WHO:playerId, WHAT:CAMPAIGN, WHERE:creator_lab, ENERGY:creative, PERSONAL_THROUGHPUT:create
+ * @example /creator-scene-deck/bruised-banana
+ * @agentDiscoverable false
+ */
 export default async function CreatorSceneDeckSlugPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
   const player = await getCurrentPlayer()

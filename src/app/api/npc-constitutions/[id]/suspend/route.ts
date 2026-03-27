@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/npc-constitutions/:id/suspend
+ * @entity NPC
+ * @description Suspend an active NPC constitution with reason (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @params reason:string (body, optional) - Suspension reason (default: "Suspended by Regent")
+ * @relationships NPC (constitution state), DAEMON (suspension)
+ * @dimensions WHO:admin regent, WHAT:suspension event, WHERE:system layer, ENERGY:agent pause
+ * @example POST /api/npc-constitutions/npc123/suspend with {reason:"Policy violation"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

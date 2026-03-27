@@ -15,6 +15,17 @@ const ICHING_NAMES = new Set([
     'Water (Kan)', 'Fire (Li)', 'Mountain (Gen)', 'Lake (Dui)',
 ])
 
+/**
+ * @page /admin/adventures/:adventureId
+ * @entity QUEST
+ * @description Adventure detail page with passage graph editor, settings, and template configuration
+ * @permissions admin
+ * @params adventureId:string (path, required)
+ * @relationships CONTAINS (passages), LINKED_TO (campaignRef)
+ * @dimensions WHO:admin, WHAT:QUEST, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/adventures/adv_123?preview=1
+ * @agentDiscoverable false
+ */
 export default async function AdventureDetailPage({
     params
 }: {

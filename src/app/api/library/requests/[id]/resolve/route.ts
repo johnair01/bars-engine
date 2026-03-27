@@ -1,3 +1,15 @@
+/**
+ * @route POST /api/library/requests/:id/resolve
+ * @entity WIKI
+ * @description Resolve a library request by linking it to an existing doc node
+ * @permissions authenticated
+ * @params id:string (path, required) - LibraryRequest identifier
+ * @params docNodeId:string (body, required) - Target DocNode identifier
+ * @relationships WIKI (LibraryRequest → DocNode resolution)
+ * @dimensions WHO:curator, WHAT:resolution link, WHERE:library system, ENERGY:knowledge fulfillment
+ * @example POST /api/library/requests/abc123/resolve with {docNodeId:"doc456"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { resolveLibraryRequest } from '@/actions/library'
 

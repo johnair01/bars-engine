@@ -5,6 +5,16 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 
+/**
+ * @page /admin/world/nation/:nationId
+ * @entity SYSTEM
+ * @description Nation editor with full nation configuration and metadata
+ * @permissions admin
+ * @params nationId:string (path, required)
+ * @dimensions WHO:admin, WHAT:SYSTEM, WHERE:nation, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/world/nation/nation_123
+ * @agentDiscoverable false
+ */
 export default function NationEditorPage() {
     const params = useParams()
     const router = useRouter()

@@ -9,6 +9,17 @@ const PLAYBOOKS = [
     'Mountain (Gen)', 'Wind (Xun)', 'Fire (Li)', 'Lake (Dui)'
 ]
 
+/**
+ * @page /admin/journeys/pack/:id
+ * @entity QUEST
+ * @description Edit quest pack (collection) with title, description, allowed playbooks, and quest management
+ * @permissions admin
+ * @params id:string (path, required)
+ * @relationships CONTAINS (quests in pack)
+ * @dimensions WHO:admin, WHAT:QUEST, WHERE:playbook, PERSONAL_THROUGHPUT:grow-up
+ * @example /admin/journeys/pack/pack_123
+ * @agentDiscoverable false
+ */
 export default function EditPackPage() {
     const params = useParams<{ id: string }>()
     const router = useRouter()

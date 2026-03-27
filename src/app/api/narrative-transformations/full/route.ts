@@ -1,3 +1,19 @@
+/**
+ * @route POST /api/narrative-transformations/full
+ * @entity QUEST
+ * @description Parse raw narrative text and generate full quest seed with archetype/nation context
+ * @permissions public
+ * @params rawText:string (body, required) - Raw narrative input
+ * @params archetypeKey:string (body, optional) - Archetype identifier
+ * @params moveOverrides:object (body, optional) - Four-move overrides
+ * @params useAlchemyChannelInSeed:boolean (body, optional) - Include alchemy channel
+ * @params nationName:string (body, optional) - Nation name
+ * @params archetypeName:string (body, optional) - Archetype name
+ * @relationships SEED (Archetype, Nation), QUEST (quest seed generation)
+ * @dimensions WHO:narrator, WHAT:quest seed, WHERE:narrative transformation, ENERGY:semantic parsing
+ * @example POST /api/narrative-transformations/full with {rawText:"I want to learn guitar"}
+ * @agentDiscoverable true
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import {
   runNarrativeTransformationFull,

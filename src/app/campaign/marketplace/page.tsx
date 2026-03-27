@@ -12,6 +12,20 @@ import {
   MarketplacePurchaseSlot,
 } from './MarketplaceStallActions'
 
+/**
+ * @page /campaign/marketplace
+ * @entity CAMPAIGN
+ * @description Campaign marketplace where players rent stalls to list BARs and quests for others to discover
+ * @permissions authenticated
+ * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @searchParams attach:string (BAR ID to attach to stall, optional)
+ * @relationships CAMPAIGN (instance), BAR (marketplace slots), QUEST (marketplace slots)
+ * @energyCost 0
+ * @dimensions WHO:player, WHAT:marketplace stalls, WHERE:campaign, ENERGY:stall_slots, PERSONAL_THROUGHPUT:attached_bars
+ * @example /campaign/marketplace?ref=bruised-banana&attach=bar-123
+ * @agentDiscoverable false
+ */
+
 const DEFAULT_REF = 'bruised-banana'
 
 export default async function CampaignMarketplacePage(props: {

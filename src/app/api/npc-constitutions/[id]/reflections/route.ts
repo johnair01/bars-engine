@@ -1,3 +1,30 @@
+/**
+ * @route GET /api/npc-constitutions/:id/reflections
+ * @entity NPC
+ * @description List reflections for an NPC constitution, optionally filtered by status (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @query status:string (optional) - Filter by reflection status
+ * @relationships NPC (constitution), DAEMON (reflections)
+ * @dimensions WHO:admin, WHAT:reflection list, WHERE:NPC memory, ENERGY:agent introspection
+ * @example /api/npc-constitutions/npc123/reflections?status=approved
+ * @agentDiscoverable true
+ */
+
+/**
+ * @route POST /api/npc-constitutions/:id/reflections
+ * @entity NPC
+ * @description Generate a new pending reflection for an NPC (admin-only)
+ * @permissions authenticated
+ * @params id:string (path, required) - NPC constitution identifier
+ * @params inputSummary:string (body, required) - Input context summary
+ * @params outputs:object (body, optional) - Reflection outputs (stance_update, possible_hooks, bar_affinity_shift)
+ * @params campaignId:string (body, optional) - Campaign context identifier
+ * @relationships NPC (constitution), DAEMON (reflection generation)
+ * @dimensions WHO:admin generator, WHAT:reflection artifact, WHERE:NPC memory, ENERGY:agent self-awareness
+ * @example POST /api/npc-constitutions/npc123/reflections with {inputSummary:"Action completed"}
+ * @agentDiscoverable true
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'

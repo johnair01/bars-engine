@@ -7,6 +7,17 @@ import { db } from '@/lib/db'
 import { getPlaybookForArchetype } from '@/actions/playbook'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 
+/**
+ * @page /character/create
+ * @entity PLAYER
+ * @description Ouroboros-powered character creation interview - multi-step guided flow for choosing nation, archetype, domain, and answering story questions
+ * @permissions authenticated
+ * @relationships PLAYER (interview state), NATION, ARCHETYPE, PLAYBOOK (moves)
+ * @dimensions WHO:player, WHAT:character interview, WHERE:character_creation, ENERGY:interview_step, PERSONAL_THROUGHPUT:completed_steps
+ * @example /character/create
+ * @agentDiscoverable false
+ */
+
 export default async function CharacterCreatePage() {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')

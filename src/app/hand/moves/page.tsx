@@ -1,5 +1,16 @@
 import Link from 'next/link'
 
+/**
+ * @page /hand/moves
+ * @entity SYSTEM
+ * @description Reference page explaining the 4 Moves framework (Wake Up, Clean Up, Grow Up, Show Up) - personal throughput system
+ * @permissions public
+ * @relationships SYSTEM (moves framework)
+ * @dimensions WHO:player, WHAT:moves reference, WHERE:hand, ENERGY:moves_knowledge
+ * @example /hand/moves
+ * @agentDiscoverable false
+ */
+
 const MOVES = [
   {
     name: 'Wake Up',

@@ -1,6 +1,16 @@
 import Link from 'next/link'
 
-/** Operator-facing summary; canonical runbook: docs/BRUISED_BANANA_HOUSE_INSTANCE.md */
+/**
+ * @page /wiki/campaign/bruised-banana/house
+ * @entity WIKI
+ * @description Wiki page - Bruised Banana House coordination instance (operator-facing)
+ * @permissions public
+ * @relationships documents bruised-banana-house instance with seed command and coordinator memberships
+ * @energyCost 0 (read-only wiki)
+ * @dimensions WHO:N/A, WHAT:WIKI, WHERE:wiki+campaign, ENERGY:N/A, PERSONAL_THROUGHPUT:organize
+ * @example /wiki/campaign/bruised-banana/house
+ * @agentDiscoverable true
+ */
 export default function BruisedBananaHouseWikiPage() {
   return (
     <div className="space-y-6">
