@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { elementCssVars, altitudeCssVars, SURFACE_TOKENS } from '@/lib/ui/card-tokens'
 
 type Snapshot = {
@@ -33,11 +34,16 @@ function captureSnapshot(): Snapshot {
 export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const titleId = useId()
   const messageRef = useRef<HTMLTextAreaElement>(null)
+  const [mounted, setMounted] = useState(false)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!isOpen) return
@@ -102,35 +108,42 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     }
   }, [message, pending, snapshot])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const displayUrl =
     snapshot && snapshot.pageUrl.length > 160
       ? `${snapshot.pageUrl.slice(0, 120)}…${snapshot.pageUrl.slice(-32)}`
       : snapshot?.pageUrl ?? ''
 
-  return (
+  // Portal to document.body: fixed inside <nav> (backdrop-blur) is positioned to the nav only,
+  // so the overlay was a thin strip at the top — unusable on mobile.
+  const modal = (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[200] flex flex-col bg-black/85 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        aria-label="Close"
+        className="absolute inset-0 z-0 cursor-default"
+        aria-label="Dismiss overlay"
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-lg cultivation-card rounded-xl p-0 overflow-hidden max-h-[90vh] flex flex-col"
-        style={{
-          ...elementCssVars('metal'),
-          ...altitudeCssVars('dissatisfied'),
-          backgroundColor: SURFACE_TOKENS.surfaceElevated,
-        }}
+        className="relative z-10 flex min-h-0 flex-1 flex-col p-3 sm:p-6"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-4 border-b border-zinc-800/80 shrink-0">
+        <div
+          className="cultivation-card flex max-h-[100dvh] min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl sm:max-w-2xl sm:mx-auto"
+          style={{
+            ...elementCssVars('metal'),
+            ...altitudeCssVars('dissatisfied'),
+            backgroundColor: SURFACE_TOKENS.surfaceElevated,
+          }}
+        >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-zinc-800/80 px-5 py-4">
+          <div className="min-w-0 flex-1">
           <h2 id={titleId} className="text-lg font-bold text-zinc-100">
             Share your signal
           </h2>
@@ -138,9 +151,18 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             Name what felt wrong — we capture where you are so we can trace it (same path as Share
             Your Signal).
           </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 min-h-[44px] min-w-[44px]"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {done ? (
             <p className="text-zinc-300 text-sm">Thanks — your signal was recorded.</p>
           ) : (
@@ -171,7 +193,7 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
           )}
         </div>
 
-        <div className="px-5 py-4 border-t border-zinc-800/80 flex flex-wrap gap-2 justify-end shrink-0">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-zinc-800/80 px-5 py-4">
           {done ? (
             <button
               type="button"
@@ -201,9 +223,12 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             </>
           )}
         </div>
+        </div>
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }
 
 export function SiteSignalNavTrigger() {
