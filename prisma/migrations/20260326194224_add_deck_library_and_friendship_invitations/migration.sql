@@ -19,15 +19,16 @@ CREATE INDEX "deck_libraries_instance_id_idx" ON "deck_libraries"("instance_id")
 ALTER TABLE "deck_libraries" ADD CONSTRAINT "deck_libraries_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "instances"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Data Migration Step 1: Create DeckLibrary for each Instance that has a BarDeck
+-- Qualify bar_decks columns: bare "instance_id" resolves to INSERT target deck_libraries and fails (E42703).
 INSERT INTO "deck_libraries" ("id", "instance_id", "created_at", "updated_at")
 SELECT
     gen_random_uuid()::text AS id,
-    "instance_id",
+    bd."instance_id",
     NOW() AS created_at,
     NOW() AS updated_at
-FROM "bar_decks"
-WHERE "instance_id" IS NOT NULL
-GROUP BY "instance_id";
+FROM "bar_decks" bd
+WHERE bd."instance_id" IS NOT NULL
+GROUP BY bd."instance_id";
 
 -- AlterTable: Add new columns to bar_decks
 ALTER TABLE "bar_decks"
