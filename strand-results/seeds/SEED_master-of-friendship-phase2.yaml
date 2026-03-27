@@ -1,0 +1,112 @@
+metadata:
+  name: master-of-friendship-phase2
+  description: |
+    Code audit and query pattern migration for DeckLibrary abstraction.
+    Update all BarDeck.instanceId queries to use library relation.
+    Validate Scene Atlas functionality remains intact.
+  version: 1.0.0
+  created: 2026-03-26
+  tags:
+    - schema-migration
+    - code-audit
+    - query-refactoring
+    - master-of-friendship
+
+problem:
+  statement: |
+    Phase 1 completed schema migration (DeckLibrary abstraction + FriendshipInvitation model).
+
+    Now need to:
+    1. Audit codebase for all BarDeck.instanceId queries (will break after migration)
+    2. Design query pattern updates to use library.instanceId relation
+    3. Identify files requiring changes
+    4. Validate Scene Atlas functionality won't regress
+    5. Plan seed script structure for friendship decks (52 + 64 cards)
+
+    Critical: Existing Scene Atlas must remain fully functional after changes.
+
+  context:
+    - Schema changes complete, migration SQL generated
+    - BarDeck.instanceId field will be removed in migration
+    - Need to replace with: barDeck.library.instanceId pattern
+    - Two key files identified: load-deck-view.ts, prompt-deck-play.ts
+    - Scene Atlas uses PlayerPromptHand (5 global slots) + PromptDeckCycle
+    - Friendship decks will reuse same infrastructure
+
+  constraints:
+    - Zero breaking changes to Scene Atlas functionality
+    - All queries must use library relation after migration
+    - Backward compatibility during gradual rollout
+    - Type-safe query patterns (no runtime failures)
+
+research_questions:
+  - What files contain BarDeck.instanceId queries?
+  - What query patterns are used (findUnique, findFirst, findMany)?
+  - Do any queries assume one deck per instance (will break)?
+  - What helper functions exist for deck operations?
+  - How is Scene Atlas deck currently loaded?
+  - Are there any cached queries or derived data?
+
+expected_outcomes:
+  - Complete file audit: all BarDeck.instanceId query locations
+  - Query pattern migration guide (old → new patterns)
+  - Risk assessment: queries that might break
+  - Scene Atlas regression test checklist
+  - Code change estimates per file
+  - Seed script architecture for friendship decks
+
+agents:
+  primary:
+    - researcher
+    - architect
+  supporting:
+    - fair_witness
+    - hacker
+
+files_to_reference:
+  - src/lib/creator-scene-grid-deck/load-deck-view.ts
+  - src/actions/prompt-deck-play.ts
+  - prisma/schema.prisma
+  - src/lib/db.ts
+  - Any file with: prisma.barDeck, BarDeck model imports
+
+files_to_modify:
+  - TBD (determined by audit)
+  - Likely: load-deck-view.ts, prompt-deck-play.ts
+  - Possibly: any file querying BarDeck by instanceId
+
+implementation_phases:
+  phase1_audit:
+    description: Find all BarDeck.instanceId queries
+    deliverables:
+      - Complete file list with line numbers
+      - Query type breakdown (findUnique, findFirst, etc.)
+      - Risk classification per query location
+
+  phase2_pattern_design:
+    description: Design new query patterns
+    deliverables:
+      - Before/after examples for each query type
+      - Helper function recommendations
+      - Type definitions if needed
+
+  phase3_regression_plan:
+    description: Validate Scene Atlas won't break
+    deliverables:
+      - Scene Atlas feature checklist
+      - Critical user flows to test
+      - Rollback strategy if issues found
+
+  phase4_seed_architecture:
+    description: Plan friendship deck seed scripts
+    deliverables:
+      - Card template structure (52 + 64)
+      - Metadata schema for invitation prompts
+      - Seeding strategy (DeckLibrary + BarDeck + cards)
+
+success_criteria:
+  - All BarDeck.instanceId queries identified and documented
+  - Query migration patterns designed and validated
+  - Scene Atlas regression test plan complete
+  - Zero breaking changes to existing functionality
+  - Clear roadmap for Phase 3 implementation

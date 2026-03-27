@@ -1,0 +1,531 @@
+---
+# Strand Seed: Implement BARS Strand System (Issue #21)
+# Development-time strand capabilities with CLI + plugin
+
+metadata:
+  strand_id: implement-bars-strand-cli-plugin
+  strand_type: implementation
+  created_at: 2026-03-26
+  github_issue: "https://github.com/johnair01/bars-engine/issues/21"
+  meeting_style: dialectical
+  duration_estimate: 30-45 minutes
+  agent_count: 20
+
+problem: |
+  Implement development-time strand system for bars-engine (GitHub issue #21).
+
+  DELIVERABLES:
+  1. CLI tool (bars-strand) - Primary interface for strand execution
+  2. Claude workspace plugin - Convenience wrapper around CLI
+  3. Fork-space management - Strands execute in bars-engine/.fork-space/
+  4. Git integration - Temporal anchors, branch isolation
+  5. Tests - Validate CLI and plugin functionality
+
+  ARCHITECTURE REQUIREMENTS (from issue #21):
+  - CLI-first design (plugin wraps CLI, not vice versa)
+  - Fork-space in bars-engine repo (not dodo library)
+  - Development-time usage only (no runtime deployment)
+  - BARS ontology integration (wake up/clean up/grow up/show up)
+  - P0 features: Git isolation, schema validation, progress monitoring
+
+  CONSTRAINTS:
+  - Must work with existing BARS FastAPI codebase
+  - Must integrate with existing agent factory
+  - Must feel BARS-native (invisible DODO implantation)
+  - Development-time only (runtime tracked in issue #22)
+
+context:
+  bars_repo_path: ~/code/bars-engine
+  dodo_reference_path: ~/code/claude/he360-dodo
+  github_issue_21: "https://github.com/johnair01/bars-engine/issues/21"
+  github_issue_22: "https://github.com/johnair01/bars-engine/issues/22"
+  implementation_focus:
+    - CLI tool (bars-strand command)
+    - Claude plugin (.claude/plugins/bars-strand/)
+    - Fork-space management (bars-engine/.fork-space/)
+    - Git integration (temporal anchors, branch isolation)
+    - Schema validation
+    - Progress monitoring
+  output_artifacts:
+    - cli/bars-strand (Python CLI tool)
+    - .claude/plugins/bars-strand/ (Claude plugin)
+    - tests/test_bars_strand_cli.py
+    - docs/BARS_STRAND_GUIDE.md
+
+# ============================================================================
+# PHASE 1: Requirements Analysis & Architecture Design (Dialectical Meeting #1)
+# ============================================================================
+
+phase_1:
+  name: Requirements Analysis & Architecture Design
+  duration_estimate: 8 minutes
+  temperature: 0.3
+
+  agents:
+    - name: researcher_issue_21_requirements
+      agent_type: researcher
+      role: thesis
+      temperature: 0.2
+      instructions: |
+        Extract implementation requirements from GitHub issue #21.
+
+        Read: ~/code/bars-engine (check if issue text is available locally)
+        Or analyze context provided about issue #21.
+
+        Extract:
+        1. P0 features (must-have for MVP)
+        2. CLI command structure
+        3. Plugin interface requirements
+        4. Fork-space configuration
+        5. Success criteria
+
+        Format: Structured requirements document with priorities.
+
+        CRITICAL: Be precise about what's IN scope vs OUT of scope (runtime is out).
+
+    - name: architect_cli_design_thesis
+      agent_type: architect
+      role: thesis
+      temperature: 0.3
+      previous_agents:
+        - researcher_issue_21_requirements
+      instructions: |
+        Design CLI architecture for bars-strand tool.
+
+        Design:
+        1. Command structure (run, resume, list, cleanup)
+        2. Configuration file format (.bars-strand.yml)
+        3. Fork-space directory structure
+        4. Git integration patterns
+        5. Agent factory integration
+
+        Architecture principles:
+        - CLI is standalone (no plugin dependencies)
+        - Plugin wraps CLI (calls subprocess, not import)
+        - Fork-space is bars-engine/.fork-space/
+        - BARS-native feel (use BARS ontology terms)
+
+        Format: Architecture diagram + command spec.
+
+        CRITICAL: CLI must work without plugin. Plugin is convenience layer.
+
+    - name: fair_witness_architecture_antithesis
+      agent_type: fair_witness
+      role: antithesis
+      temperature: 0.3
+      previous_agents:
+        - architect_cli_design_thesis
+      instructions: |
+        Challenge the CLI architecture design.
+
+        Questions:
+        1. Is fork-space management too complex for MVP?
+        2. Does CLI/plugin separation add unnecessary complexity?
+        3. Are we over-engineering for development-time usage?
+        4. What breaks if BARS codebase structure changes?
+        5. How does this integrate with existing BARS agent factory?
+
+        Format: Architectural risks + simpler alternatives.
+
+        CRITICAL: Protect against over-engineering. What's the MINIMUM viable?
+
+    - name: architect_architecture_synthesis
+      agent_type: architect
+      role: synthesis
+      temperature: 0.3
+      previous_agents:
+        - architect_cli_design_thesis
+        - fair_witness_architecture_antithesis
+      instructions: |
+        Reconcile architecture design with risk assessment.
+
+        Produce: Final architecture specification with:
+        1. CLI command structure (simplified if needed)
+        2. Minimum fork-space implementation
+        3. Plugin wrapper approach
+        4. Integration points with BARS
+        5. Phased implementation plan
+
+        Resolution strategy:
+        - Start with core CLI (run command only)
+        - Add fork-space basics (no advanced features)
+        - Defer complex features to post-MVP
+
+        CRITICAL: Deliverable must be implementable in this strand session.
+
+# ============================================================================
+# PHASE 2: CLI Implementation (Primary Deliverable)
+# ============================================================================
+
+phase_2:
+  name: CLI Implementation
+  duration_estimate: 10 minutes
+  temperature: 0.5
+
+  agents:
+    - name: artificer_cli_core
+      agent_type: artificer
+      role: implementation
+      temperature: 0.5
+      previous_agents:
+        - phase_1 (all agents)
+      instructions: |
+        Implement core CLI tool: cli/bars-strand
+
+        Implement:
+        1. Main CLI entry point (click or argparse)
+        2. `bars-strand run` command
+        3. Configuration loading (.bars-strand.yml)
+        4. Fork-space initialization
+        5. Agent factory integration
+        6. Basic error handling
+
+        Code structure:
+        ```
+        cli/
+          bars-strand          # Main executable
+          bars_strand/
+            __init__.py
+            cli.py             # CLI commands
+            config.py          # Configuration
+            fork_space.py      # Fork-space management
+            runner.py          # Strand execution
+        ```
+
+        Style: Python 3.11+, type hints, docstrings.
+
+        CRITICAL: CLI must be runnable standalone. Generate complete working code.
+
+    - name: artificer_fork_space_manager
+      agent_type: artificer
+      role: implementation
+      temperature: 0.5
+      previous_agents:
+        - phase_1 (all agents)
+      instructions: |
+        Implement fork-space management: cli/bars_strand/fork_space.py
+
+        Implement:
+        1. Fork-space directory creation (bars-engine/.fork-space/)
+        2. Git worktree management for isolation
+        3. Temporal anchor creation (git tags)
+        4. Branch naming (strand/{type}/{id})
+        5. Cleanup operations
+
+        Key functions:
+        - create_fork_space(strand_id) -> Path
+        - create_strand_branch(strand_id, strand_type, description) -> str
+        - tag_temporal_anchor(strand_id, tags) -> None
+        - cleanup_fork_space(strand_id) -> None
+
+        CRITICAL: Must integrate with bars-engine git repo, not dodo.
+
+    - name: fair_witness_cli_validation
+      agent_type: fair_witness
+      role: validation
+      temperature: 0.3
+      previous_agents:
+        - artificer_cli_core
+        - artificer_fork_space_manager
+      instructions: |
+        Validate CLI implementation for correctness and completeness.
+
+        Check:
+        1. Does CLI code run without errors? (syntax, imports)
+        2. Are all required functions implemented?
+        3. Does fork-space integrate with bars-engine repo correctly?
+        4. Are error cases handled gracefully?
+        5. Is configuration file format practical?
+
+        Format: Validation report with issues + fixes.
+
+        CRITICAL: Flag any code that won't work in bars-engine context.
+
+# ============================================================================
+# PHASE 3: Plugin Implementation (Secondary Deliverable)
+# ============================================================================
+
+phase_3:
+  name: Plugin Implementation
+  duration_estimate: 5 minutes
+  temperature: 0.5
+
+  agents:
+    - name: artificer_claude_plugin
+      agent_type: artificer
+      role: implementation
+      temperature: 0.5
+      previous_agents:
+        - phase_2 (all agents)
+      instructions: |
+        Implement Claude workspace plugin for bars-strand.
+
+        Create:
+        .claude/plugins/bars-strand/
+          plugin.json           # Plugin manifest
+          skills/
+            run-strand/
+              SKILL.md          # Skill documentation
+              skill.py          # Skill implementation
+            list-strands/
+              SKILL.md
+              skill.py
+
+        Plugin capabilities:
+        - /bars-strand:run - Execute strand
+        - /bars-strand:list - List active strands
+        - /bars-strand:resume - Resume paused strand
+
+        Implementation approach: Subprocess wrapper calling CLI
+
+        Example skill.py:
+        ```python
+        import subprocess
+
+        async def run_strand(problem: str, budget: int = 50000):
+            result = subprocess.run([
+                "bars-strand", "run", problem,
+                "--budget", str(budget)
+            ], capture_output=True, text=True)
+            return result.stdout
+        ```
+
+        CRITICAL: Plugin MUST wrap CLI, not duplicate implementation.
+
+    - name: fair_witness_plugin_validation
+      agent_type: fair_witness
+      role: validation
+      temperature: 0.3
+      previous_agents:
+        - artificer_claude_plugin
+      instructions: |
+        Validate plugin implementation.
+
+        Check:
+        1. Does plugin.json follow Claude plugin spec?
+        2. Do skills properly wrap CLI commands?
+        3. Is error handling adequate?
+        4. Are skill descriptions clear for users?
+
+        Format: Validation report with issues.
+
+# ============================================================================
+# PHASE 4: Integration & Testing
+# ============================================================================
+
+phase_4:
+  name: Integration & Testing
+  duration_estimate: 5 minutes
+  temperature: 0.5
+
+  agents:
+    - name: artificer_tests
+      agent_type: artificer
+      role: implementation
+      temperature: 0.5
+      previous_agents:
+        - phase_2 (all agents)
+        - phase_3 (all agents)
+      instructions: |
+        Implement tests for CLI and plugin.
+
+        Create: tests/test_bars_strand_cli.py
+
+        Test cases:
+        1. CLI configuration loading
+        2. Fork-space creation
+        3. Strand execution (mock agent factory)
+        4. Git integration (branch creation, tagging)
+        5. Cleanup operations
+
+        Use pytest. Mock external dependencies (git, agent factory).
+
+        Example:
+        ```python
+        def test_fork_space_creation():
+            manager = ForkSpaceManager("/tmp/test-bars-engine")
+            fork_path = manager.create_fork_space("test-strand-123")
+            assert fork_path.exists()
+            assert fork_path.name == ".fork-space"
+        ```
+
+    - name: artificer_documentation
+      agent_type: artificer
+      role: documentation
+      temperature: 0.5
+      previous_agents:
+        - phase_2 (all agents)
+        - phase_3 (all agents)
+      instructions: |
+        Create user documentation: docs/BARS_STRAND_GUIDE.md
+
+        Document:
+        1. Installation (pip install -e ./cli/)
+        2. Configuration (.bars-strand.yml example)
+        3. CLI usage (bars-strand run, list, resume)
+        4. Plugin usage (/bars-strand:run)
+        5. Fork-space structure
+        6. Troubleshooting
+
+        Style: Practical, example-driven, BARS ontology terms.
+
+        Include quick start:
+        ```bash
+        # Install
+        cd ~/code/bars-engine
+        pip install -e ./cli/
+
+        # Configure
+        cat > .bars-strand.yml <<EOF
+        fork_space: bars-engine
+        default_budget: 50000
+        EOF
+
+        # Run
+        bars-strand run "Investigate auth flow"
+        ```
+
+# ============================================================================
+# PHASE 5: Final Synthesis & Validation
+# ============================================================================
+
+phase_5:
+  name: Final Synthesis & Validation
+  duration_estimate: 3 minutes
+  temperature: 0.5
+
+  agents:
+    - name: coordinator_synthesis
+      agent_type: coordinator
+      role: final_synthesis
+      temperature: 0.5
+      previous_agents:
+        - phase_1 (all agents)
+        - phase_2 (all agents)
+        - phase_3 (all agents)
+        - phase_4 (all agents)
+      instructions: |
+        Synthesize all implementation artifacts into deliverable package.
+
+        Deliverables:
+        1. CLI tool (cli/bars-strand/) - Ready to install
+        2. Claude plugin (.claude/plugins/bars-strand/) - Ready to use
+        3. Tests (tests/test_bars_strand_cli.py) - Ready to run
+        4. Documentation (docs/BARS_STRAND_GUIDE.md) - Ready to read
+        5. Installation instructions
+
+        Generate: IMPLEMENTATION_SUMMARY.md with:
+        - What was implemented
+        - How to install and use
+        - What's next (post-MVP features)
+        - Reference to issue #21
+
+        CRITICAL: Provide clear next steps for integrating into bars-engine.
+
+    - name: fair_witness_final_validation
+      agent_type: fair_witness
+      role: final_validation
+      temperature: 0.3
+      previous_agents:
+        - coordinator_synthesis
+      instructions: |
+        Final validation before delivery.
+
+        Validate:
+        1. ✓ CLI tool is complete and runnable?
+        2. ✓ Plugin properly wraps CLI?
+        3. ✓ Fork-space targets bars-engine repo?
+        4. ✓ Tests cover core functionality?
+        5. ✓ Documentation is actionable?
+        6. ✓ Issue #21 requirements met?
+
+        Format: Go/No-Go decision with blockers if any.
+
+        CRITICAL: Only approve if deliverables are production-ready.
+
+# ============================================================================
+# AGENT REGISTRY
+# ============================================================================
+
+agents:
+  researcher:
+    description: Extract and analyze information from codebase/documents
+  architect:
+    description: Design system architecture and technical specifications
+  fair_witness:
+    description: Evidence-based validation and risk assessment
+  artificer:
+    description: Generate code, documentation, and implementation artifacts
+  coordinator:
+    description: Synthesize findings and produce final deliverables
+
+# ============================================================================
+# EXPECTED OUTPUTS
+# ============================================================================
+
+outputs:
+  cli_tool:
+    path: cli/bars-strand/
+    description: Complete CLI implementation
+    validation:
+      - Must be pip installable
+      - Must run standalone
+      - Must integrate with bars-engine repo
+
+  plugin:
+    path: .claude/plugins/bars-strand/
+    description: Claude workspace plugin
+    validation:
+      - Must wrap CLI (not reimplement)
+      - Must follow plugin spec
+      - Must be user-friendly
+
+  tests:
+    path: tests/test_bars_strand_cli.py
+    description: Test suite
+    validation:
+      - Must use pytest
+      - Must cover core functionality
+      - Must be runnable
+
+  documentation:
+    path: docs/BARS_STRAND_GUIDE.md
+    description: User guide
+    validation:
+      - Must include installation steps
+      - Must include examples
+      - Must be actionable
+
+  summary:
+    path: IMPLEMENTATION_SUMMARY.md
+    description: Implementation summary and next steps
+    validation:
+      - Must reference issue #21
+      - Must provide installation instructions
+      - Must list post-MVP features
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+
+notes: |
+  This strand implements GitHub issue #21 for bars-engine.
+
+  Implementation strategy:
+  1. Design CLI architecture (phase 1)
+  2. Implement CLI tool (phase 2) - PRIMARY
+  3. Implement plugin wrapper (phase 3) - SECONDARY
+  4. Create tests and docs (phase 4)
+  5. Final validation and delivery (phase 5)
+
+  Key principles:
+  - CLI-first (plugin wraps CLI)
+  - Fork-space in bars-engine repo
+  - Development-time only
+  - BARS-native feel
+  - Minimum viable implementation
+
+  Expected duration: 30-45 minutes
+  Expected agents: 20 (15 implementation, 5 validation)
+
+  Post-execution: Install CLI and test in bars-engine workspace.

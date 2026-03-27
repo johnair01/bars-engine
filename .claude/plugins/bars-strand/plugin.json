@@ -1,0 +1,122 @@
+{
+  "name": "bars-strand",
+  "version": "1.0.0",
+  "description": "Manage BARS strands - work units that track development context and progress",
+  "skills": [
+    {
+      "name": "create-strand",
+      "description": "Create a new strand with a name, description, and type",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py create {name} --description '{description}' --type {type}",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "Unique identifier for the strand",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "description",
+          "description": "Human-readable description of the strand's purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "type",
+          "description": "Type of strand (feature, bugfix, experiment, research, refactor, docs)",
+          "type": "string",
+          "required": false,
+          "default": "feature"
+        }
+      ]
+    },
+    {
+      "name": "list-strands",
+      "description": "List all strands, optionally filtered by status or type",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py list --json {filters}",
+      "parameters": [
+        {
+          "name": "status",
+          "description": "Filter by status (active, paused, completed, archived)",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "type",
+          "description": "Filter by type (feature, bugfix, experiment, research, refactor, docs)",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "show-strand",
+      "description": "Show detailed information about a specific strand",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py show {name} --json",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "Strand identifier",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "update-strand",
+      "description": "Update strand status or description",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py update {name} {updates}",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "Strand identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "description": "New status (active, paused, completed, archived)",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "description",
+          "description": "New description",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "link-strand-to-issue",
+      "description": "Link a strand to a GitHub issue",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py link {name} {issue_url}",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "Strand identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "issue_url",
+          "description": "GitHub issue URL",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "delete-strand",
+      "description": "Delete a strand",
+      "command": "cd {repo_root} && uv run python cli/bars-strand/bars_strand.py delete {name} --yes",
+      "parameters": [
+        {
+          "name": "name",
+          "description": "Strand identifier",
+          "type": "string",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

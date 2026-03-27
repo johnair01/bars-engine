@@ -1,0 +1,20 @@
+name: bars-strand-mvp
+description: Initial BARS Strand implementation
+type: feature
+status: completed
+created_at: '2026-03-27T03:04:38.120151'
+updated_at: '2026-03-27T03:05:59.443511+00:00'
+fork_space:
+  allowed_paths:
+  - src/
+  - tests/
+  excluded_paths:
+  - '**/__pycache__/'
+  - '*.pyc'
+  file_patterns:
+  - '*.py'
+  - '*.md'
+  - '*.json'
+linked_issues:
+- https://github.com/johnair01/bars-engine/issues/21
+metadata: {}

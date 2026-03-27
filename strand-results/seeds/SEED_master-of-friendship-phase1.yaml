@@ -1,0 +1,130 @@
+---
+seed_id: master-of-friendship-phase1
+version: "1.0"
+created_at: "2026-03-26"
+status: pending
+
+metadata:
+  title: "Master of Friendship - Phase 1: Schema Migration & DeckLibrary"
+  description: |
+    Implement DeckLibrary abstraction to support multiple BarDecks per campaign.
+    Add FriendshipInvitation model for high-trust phone-based invitations.
+    Migrate existing BarDeck.instanceId → BarDeck.libraryId.
+  priority: high
+  tags:
+    - schema-migration
+    - friendship-deck
+    - viral-onboarding
+    - phase-1
+
+problem:
+  statement: |
+    Current schema constraint: BarDeck has `instanceId @unique`, meaning each Instance
+    can only have ONE BarDeck. We need multiple decks per campaign (Scene Atlas +
+    friendship-52 + friendship-64).
+
+    Solution: DeckLibrary abstraction - each Instance has one DeckLibrary, which can
+    contain multiple BarDecks with different deckTypes.
+
+    Also need FriendshipInvitation model to track high-trust phone-based invitations
+    separately from generic BAR sharing.
+
+  context:
+    - Plan documented in GitHub issue #23
+    - Plan file at .claude/plans/moonlit-doodling-stearns.md
+    - Existing schema in prisma/schema.prisma
+    - Current BarDeck constraint blocks multiple deck types
+    - Scene Atlas functionality must remain unaffected
+
+  constraints:
+    - Backward compatibility: existing Scene Atlas decks must continue working
+    - Data migration: all existing BarDeck records must migrate cleanly
+    - Zero data loss during migration
+    - Prisma schema must pass validation
+    - Run migration on dev database, verify before staging
+
+agents:
+  primary:
+    - architect  # Schema design and migration strategy
+    - fair_witness  # Verify backward compatibility
+
+  supporting:
+    - researcher  # Find existing migration patterns
+    - ontologist  # Ensure data model aligns with domain
+
+coordination:
+  lead_agent: architect
+  collaboration_mode: sequential
+  review_gates:
+    - after_schema_design
+    - after_migration_script
+    - before_execution
+
+expected_outcomes:
+  deliverables:
+    - prisma/schema.prisma updated with DeckLibrary, FriendshipInvitation models
+    - BarDeck model updated (libraryId, deckType)
+    - Migration script in prisma/migrations/
+    - Data migration logic for existing BarDecks
+    - Verification script to test migration
+
+  success_criteria:
+    - Prisma schema validation passes
+    - Migration script runs without errors on dev database
+    - Existing Scene Atlas queries still work
+    - Can create multiple BarDecks per Instance via DeckLibrary
+    - All foreign key constraints properly set
+
+  verification:
+    - Run `npx prisma validate`
+    - Run migration on local dev database
+    - Query existing BarDeck records - all have libraryId
+    - Create test DeckLibrary with 3 BarDecks (scene-atlas, friendship-52, friendship-64)
+    - Verify Scene Atlas UI still loads deck correctly
+
+files_to_modify:
+  - prisma/schema.prisma
+  - prisma/migrations/YYYYMMDDHHMMSS_add_deck_library.sql (new)
+
+files_to_reference:
+  - .claude/plans/moonlit-doodling-stearns.md
+  - src/lib/creator-scene-grid-deck/load-deck-view.ts
+  - src/actions/prompt-deck-play.ts
+
+research_questions:
+  - What existing migration patterns exist in prisma/migrations/?
+  - How are BarDeck queries currently structured?
+  - Which actions/components directly query BarDeck.instanceId?
+  - Are there any CASCADE constraints that need careful handling?
+
+implementation_phases:
+  phase_1_schema_design:
+    - Add DeckLibrary model
+    - Update BarDeck model (add libraryId, deckType fields)
+    - Add FriendshipInvitation model
+    - Update related model relations
+
+  phase_2_migration_script:
+    - Create DeckLibrary for each Instance with BarDeck
+    - Migrate BarDeck.instanceId to BarDeck.libraryId
+    - Set BarDeck.deckType = 'scene-atlas' for existing decks
+    - Add constraints and indexes
+
+  phase_3_verification:
+    - Run migration on dev database
+    - Test existing Scene Atlas queries
+    - Create test DeckLibrary with multiple decks
+    - Verify foreign keys and cascades work correctly
+
+notes: |
+  This is Phase 1 of a 5-phase implementation. Subsequent phases:
+  - Phase 2: Deck seeding (52 + 64 card templates)
+  - Phase 3: Send invitation flow
+  - Phase 4: Friend landing page
+  - Phase 5: Complete-for-self integration
+
+  Critical: This migration affects core infrastructure. Fair_witness review is essential
+  to ensure no regression in existing Scene Atlas functionality.
+
+  Use existing migration patterns from the codebase - check prisma/migrations/ for
+  reference on how complex schema changes have been handled previously.
