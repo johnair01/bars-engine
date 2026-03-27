@@ -122,13 +122,6 @@ export function QuestWizard({
         setFormData((prev: Record<string, unknown>) => ({ ...prev, kotterHexagramId: h }))
     }, [initialKotterHexagramId])
 
-    // Handlers
-    const handleTemplateSelect = (template: QuestTemplate) => {
-        setSelectedTemplate(template)
-        setFormData({ ...formData, templateId: template.id, category: template.category })
-        setStep(2)
-    }
-
     const canProceedFromStep1 = gameboardContext
         ? !!selectedTemplate
         : !!formData.moveType && !!allyshipDomain && !!selectedTemplate

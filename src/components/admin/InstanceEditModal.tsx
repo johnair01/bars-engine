@@ -26,6 +26,7 @@ type Instance = {
   venmoUrl: string | null
   cashappUrl: string | null
   paypalUrl: string | null
+  donationButtonLabel?: string | null
   moveIds?: string
   sourceInstanceId?: string | null
   parentInstanceId?: string | null
@@ -277,6 +278,16 @@ export function InstanceEditModal({
             <div className="space-y-1 md:col-span-2">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">PayPal Link</label>
               <input name="paypalUrl" defaultValue={instance.paypalUrl ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Donate button label (optional)</label>
+              <input
+                name="donationButtonLabel"
+                defaultValue={instance.donationButtonLabel ?? ''}
+                placeholder="Donate"
+                className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white"
+              />
             </div>
 
             <div className="space-y-1">

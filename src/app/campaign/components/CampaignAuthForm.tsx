@@ -8,10 +8,18 @@ interface CampaignAuthFormProps {
     campaignState: Record<string, any>
 }
 
+function hasShareToken(state: Record<string, unknown>): boolean {
+    const t = state?.shareToken
+    return typeof t === 'string' && t.trim().length > 0
+}
+
 export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [mode, setMode] = useState<'signup' | 'login'>('signup')
+    /** Shared BAR flows should land on login first—recipient likely already has an account. */
+    const [mode, setMode] = useState<'signup' | 'login'>(() =>
+        hasShareToken(campaignState as Record<string, unknown>) ? 'login' : 'signup'
+    )
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 

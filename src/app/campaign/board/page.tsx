@@ -7,6 +7,8 @@ import {
   getDomainRegionCounts,
   getFieldActivityIndicators,
 } from '@/lib/campaign-map'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignMapChrome } from './CampaignMapChrome'
 
 /**
@@ -64,45 +66,32 @@ export default async function GameboardPage(props: {
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col font-sans tracking-tight">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <div className="flex flex-wrap justify-between items-start gap-3 mb-6">
           <Link
             href="/game-map"
-            className="text-sm text-zinc-500 hover:text-white transition-colors"
+            className="text-sm text-zinc-500 hover:text-white transition-colors min-h-[44px] inline-flex items-center"
           >
             ← Game Map
           </Link>
-          <div className="flex gap-4">
-            <Link
-              href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
-              className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
-            >
+          <nav
+            aria-label="Campaign shortcuts"
+            className="flex flex-wrap justify-end gap-2 max-w-full lg:max-w-[42rem]"
+          >
+            <CampaignOutlineNavButton href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}>
               Portals
-            </Link>
-            <Link
+            </CampaignOutlineNavButton>
+            <CampaignOutlineNavButton
               href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
-              className="text-sm text-zinc-500 hover:text-teal-400 transition-colors"
             >
               Stalls
-            </Link>
-            <Link
-              href="/event"
-              className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
-            >
-              Support the Residency →
-            </Link>
-            <Link
-              href={`/campaign/twine?ref=${encodeURIComponent(campaignRef)}`}
-              className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
-            >
+            </CampaignOutlineNavButton>
+            <CampaignDonateButton campaignRef={campaignRef} />
+            <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
+            <CampaignOutlineNavButton href={`/campaign/twine?ref=${encodeURIComponent(campaignRef)}`}>
               Campaign story
-            </Link>
-            <Link
-              href={ichingCampaignHref}
-              className="text-sm text-zinc-500 hover:text-amber-400 transition-colors"
-            >
-              Cast I Ching for this field →
-            </Link>
-          </div>
+            </CampaignOutlineNavButton>
+            <CampaignOutlineNavButton href={ichingCampaignHref}>I Ching →</CampaignOutlineNavButton>
+          </nav>
         </div>
 
         <header className="mb-8 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/40">

@@ -4,6 +4,8 @@
 
 Allow **admins** and **campaign instance owners** (same rules as link editing) to update **headline** (`title`), **subtitle** (`description`), and **CYOA JSON** (`storyContent` on `CustomBar`) from the public invite URL and from **Hand → Vault**, without seeds-only workflows.
 
+**See also:** [campaign-onboarding-cyoa](../campaign-onboarding-cyoa/spec.md) — unified ontology (campaign + invite onboarding CYOA) and **LEGO / prompt-driven builder**; invite `storyContent` is **Phase B–D**; campaign CYOA authoring **Phase E**. This spec covers **where** saves happen until the builder ships.
+
 **Out of scope (v1):** Custom labels for "RSVP on Partiful →" / "Begin initiation →" (remain fixed in `EventInvitePartyActions`).
 
 ## Data model

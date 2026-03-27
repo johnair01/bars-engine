@@ -218,8 +218,8 @@ function generateEpiphanyNodeText(
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
   const transcendenceDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
 
   const templates: Record<EpiphanyBeatType, string> = {
     orientation: `**Orientation** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}`,
@@ -250,8 +250,8 @@ function generateKotterNodeText(
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
   const winsDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
 
   const templates: Record<KotterBeatType, string> = {
     urgency: `**1. Urgency** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}\n\nWe need to create urgency around this need.`,

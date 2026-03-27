@@ -14,9 +14,6 @@ import {
   STEPS,
   FACE_OPTIONS,
   EXPERIENCE_OPTIONS,
-  SATISFACTION_OPTIONS,
-  DISSATISFACTION_OPTIONS,
-  SHADOW_VOICE_OPTIONS,
   MOVE_OPTIONS,
   LIFE_STATE_OPTIONS,
   Q3_SEP,
@@ -73,7 +70,6 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   const [expectedMovesCustom, setExpectedMovesCustom] = useState('')
   const [playerPOV, setPlayerPOV] = useState<{ p1?: string; p2?: string; p3?: string; p4?: string; p5?: string; p6?: string }>({})
   const [preview, setPreview] = useState<SerializableQuestPacket | null>(null)
-  const [overviewResult, setOverviewResult] = useState<{ objectives: string[]; tweeSource: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [aiStatus, setAiStatus] = useState<'idle' | 'pending' | 'error'>('idle')
   const [aiError, setAiError] = useState<string | null>(null)
@@ -109,7 +105,6 @@ export function UpgradeQuestToCYOAFlow({ questId, quest, existingAdventureId }: 
   async function handleContinue() {
     setError(null)
     if (isGenerateStep) {
-      setOverviewResult(null)
       const effectiveSegment: SegmentVariant = segment === 'both' ? 'player' : segment
       const result = await compileQuestWithPrivilegingAction({
         unpackingAnswers: { ...answers, q6Context: q6Context || undefined },

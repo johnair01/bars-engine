@@ -99,7 +99,7 @@ export function AdminPlayerEditor({ player, players = [], worldData, onClose, on
         })
     }
 
-    const handleUpdateProfile = async (field: 'nationId' | 'playbookId', value: string) => {
+    const handleUpdateProfile = async (field: 'nationId' | 'archetypeId', value: string) => {
         startTransition(async () => {
             try {
                 await updatePlayerProfile(player.id, { [field]: value })
@@ -216,8 +216,8 @@ export function AdminPlayerEditor({ player, players = [], worldData, onClose, on
                             <div className="space-y-1.5">
                                 <label className="text-xs text-zinc-400">Archetype</label>
                                 <select
-                                    value={player.playbookId || ''}
-                                    onChange={(e) => handleUpdateProfile('playbookId', e.target.value)}
+                                    value={player.archetypeId || ''}
+                                    onChange={(e) => handleUpdateProfile('archetypeId', e.target.value)}
                                     disabled={isPending}
                                     className="w-full bg-zinc-900 border border-zinc-800 text-sm text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 transition-all"
                                 >

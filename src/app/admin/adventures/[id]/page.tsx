@@ -9,6 +9,7 @@ import { PromoteDraftButton } from "./PromoteDraftButton"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getFaceForNodeId, isPlaceholderText } from "@/lib/template-library"
+import { summarizeAdventurePassageGraph } from "@/lib/story-graph/adventurePassagesGraph"
 
 const ICHING_NAMES = new Set([
     'Heaven (Qian)', 'Earth (Kun)', 'Thunder (Zhen)', 'Wind (Xun)',
@@ -53,6 +54,15 @@ export default async function AdventureDetailPage({
     }
 
     const namedArchetypes = allArchetypes.filter((a) => !ICHING_NAMES.has(a.name))
+
+    const graphRows = adventure.passages.map((p) => ({
+        nodeId: p.nodeId,
+        choicesJson: p.choices || "[]",
+    }))
+    const { nodes: graphNodes, validation: graphValidation } = summarizeAdventurePassageGraph(
+        graphRows,
+        adventure.startNodeId
+    )
 
     return (
         <div className="space-y-6">
@@ -174,7 +184,68 @@ export default async function AdventureDetailPage({
                     )}
                 </div>
 
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-6">
+                    {graphNodes.length > 0 ? (
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                            <div className="px-4 py-3 border-b border-zinc-800 bg-zinc-950">
+                                <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">CYOA graph (UGA)</h3>
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Choice counts, broken outgoing targets, and in-degree per node. Special targets signup / Game_Login are allowed.
+                                </p>
+                                {!graphValidation.ok ? (
+                                    <ul className="mt-2 text-xs text-red-400 list-disc list-inside space-y-0.5">
+                                        {graphValidation.errors.map((e, i) => (
+                                            <li key={`ge-${i}`}>{e.message}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="mt-2 text-xs text-emerald-500/90">Graph edges: no dangling targets.</p>
+                                )}
+                                {graphValidation.warnings.length > 0 ? (
+                                    <ul className="mt-2 text-xs text-amber-400/90 list-disc list-inside space-y-0.5">
+                                        {graphValidation.warnings.map((w, i) => (
+                                            <li key={`gw-${i}`}>{w.message}</li>
+                                        ))}
+                                    </ul>
+                                ) : null}
+                            </div>
+                            <table className="w-full text-left font-sans tracking-tight text-sm">
+                                <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400">
+                                    <tr>
+                                        <th className="p-3 font-normal">Node ID</th>
+                                        <th className="p-3 font-normal text-right">Choices</th>
+                                        <th className="p-3 font-normal text-right">Broken</th>
+                                        <th className="p-3 font-normal text-right">In</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                                    {graphNodes.map((row) => (
+                                        <tr key={row.nodeId} className={row.brokenOutgoingCount > 0 ? "bg-red-950/20" : ""}>
+                                            <td className="p-3 font-mono text-indigo-300">
+                                                <span className="inline-flex items-center gap-2">
+                                                    {row.nodeId}
+                                                    {adventure.startNodeId === row.nodeId ? (
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                            Start
+                                                        </span>
+                                                    ) : null}
+                                                </span>
+                                            </td>
+                                            <td className="p-3 text-right tabular-nums">{row.choiceCount}</td>
+                                            <td className="p-3 text-right tabular-nums text-zinc-400">
+                                                {row.brokenOutgoingCount > 0 ? (
+                                                    <span className="text-red-400 font-medium">{row.brokenOutgoingCount}</span>
+                                                ) : (
+                                                    "0"
+                                                )}
+                                            </td>
+                                            <td className="p-3 text-right tabular-nums text-zinc-400">{row.inDegree}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : null}
                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
                         <table className="w-full text-left font-sans tracking-tight">
                             <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 text-sm">

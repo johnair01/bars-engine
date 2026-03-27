@@ -8,20 +8,20 @@
 - [x] Cross-link from `campaign-kotter-domains/spec.md` and `campaign-domain-decks/spec.md` (Related specs)
 - [x] Register in `.specify/backlog/BACKLOG.md` (row CHS)
 - [x] Register **BB-APR26** (1.16.2) for Apr 4–5 ops/QA/comms — [TEST_PLAN_PARTY_AND_INTAKE.md](./TEST_PLAN_PARTY_AND_INTAKE.md) §7 + [prompt](../../backlog/prompts/bb-apr-2026-party-ops.md)
-- [ ] Optional: one-pager in `docs/` or `FOUNDATIONS.md` pointer
+- [x] Optional: one-pager in `docs/` or `FOUNDATIONS.md` pointer — see [FOUNDATIONS.md](../../../FOUNDATIONS.md) § Campaign hub, spokes, and landings
 
 ## Decisions → schema
 
 - [x] Persist hub draw on `Instance.campaignHubState` (v1 JSON: 8 spokes × hexagram + changing lines + face); invalidate when `kotterStage` changes — migration `20260318140000_add_instance_campaign_hub_state`
 - [ ] Campaign **deck topology** enum: `BAR52` | `CAMPAIGN64` (names TBD) + creator UX
-- [ ] **Alchemy trace** storage decision (JSON vs table) + privacy defaults
-- [ ] **CYOA persistence:** choose **session-only (A)** vs **checkpoint + revalidate (B)** vs **snapshot-gated resume (C)**; document in CYOA runner
+- [x] **Alchemy trace** storage decision (JSON vs table) + privacy defaults — [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) § Alchemy trace (v1 JSON on `storyProgress.state`)
+- [x] **CYOA persistence:** choose **session-only (A)** vs **checkpoint + revalidate (B)** vs **snapshot-gated resume (C)**; document in CYOA runner — [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) § CYOA progress persistence (portal = B-lite; target B)
 
 ## CYOA inventory (critical)
 
-- [ ] **Template index** doc: template id → spoke pattern → emissions (BAR types, quest stubs) → vault slots consumed
+- [x] **Template index** doc: template id → spoke pattern → emissions (BAR types, quest stubs) → vault slots consumed — starter matrix [TEMPLATE_INDEX.md](./TEMPLATE_INDEX.md)
 - [x] **Vault gate:** **hard block** + **modal compost** mini-game ([vault-compost-minigame-modal](../vault-compost-minigame-modal/spec.md) stub → full spec)
-- [ ] Epiphany-bridge **minimum viable** graph: parameterized by `spokeIndex`, `hexagramId`, `periodTheme`
+- [x] Epiphany-bridge **minimum viable** graph: parameterized by `spokeIndex`, `hexagramId`, `periodTheme` — CYOA_SPOKE generator + cache key (`::s{spokeIndex}`) + `launchSpokeAdventure` portal context
 
 ## Creator
 
@@ -32,7 +32,7 @@
 
 - [x] Hub UI: `/campaign/hub` — 8 spokes → CYOA + link to landing card; `/campaign/lobby` redirects here
 - [x] Landing page: `/campaign/landing?ref=&spoke=0..7` — card copy + BB quest map when `bruised-banana`; hexagram context; roster placeholder
-- [ ] Wire **emotional alchemy** from CYOA context into quest/BAR generation (`emotionalAlchemy` continuity)
+- [x] Wire **emotional alchemy** from CYOA context into quest/BAR generation (`emotionalAlchemy` continuity) — hub journey fields on `storyProgress.state` + `pickGmLensFromStoryState` (`lens` → `hub_portal_face` → `active_face`)
 
 ## Event invite BAR + JSON CYOA (MVP)
 
@@ -52,5 +52,5 @@ Source of truth for steps: [TEST_PLAN_PARTY_AND_INTAKE.md](./TEST_PLAN_PARTY_AND
 
 ## Verification
 
-- [ ] `npm run check`
-- [ ] Playtest script: full vault → attempt spoke → expect gate
+- [ ] `npm run check` (repo-wide; fix CHS-touched paths on failure)
+- [x] Playtest script: full vault → attempt spoke → expect gate — [PLAYTEST_VAULT_GATE.md](./PLAYTEST_VAULT_GATE.md)

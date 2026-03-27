@@ -22,8 +22,16 @@ import { slugifyName } from '@/lib/avatar-utils'
 import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { resolveTemplates } from '@/lib/template-resolver'
-import { finalizeAdventureNodePayload } from '@/lib/cyoa/filter-choices'
+import {
+    finalizeAdventureNodePayload,
+    revalidateCampaignPortalRoomChoices,
+} from '@/lib/cyoa/filter-choices'
 import { getFaceMoveContent, moveFromEmitNodeId, EMIT_NODE_IDS } from '@/lib/cyoa/face-move-passages'
+import {
+    hubJourneyPatchToStateFields,
+    parseHubJourneyFromSearchParams,
+    persistPlayerHubJourneyPatch,
+} from '@/lib/campaign-hub/hub-journey-state'
 
 const DEFAULT_WAKE_UP = `The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.
 Your awareness and participation help the collective thrive.`
@@ -99,7 +107,7 @@ async function getBruisedBananaNode(nodeId: string): Promise<{ id: string; text:
         let text = instance?.showUpContent ?? DEFAULT_SHOW_UP
         const hasDonateUrl = !!(instance?.stripeOneTimeUrl || instance?.venmoUrl || instance?.cashappUrl || instance?.paypalUrl)
         if (hasDonateUrl) {
-            text += '\n\n[Contribute to the campaign](/event/donate) — donate before or after playing.'
+            text += '\n\n[Contribute to the campaign](/event/donate/wizard) — donate before or after playing.'
         }
         const chunks = chunkIntoSlides(text)
         if (chunks.length > 1) {
@@ -124,7 +132,7 @@ async function getBruisedBananaNode(nodeId: string): Promise<{ id: string; text:
         let text = instance?.showUpContent ?? DEFAULT_SHOW_UP
         const hasDonateUrl = !!(instance?.stripeOneTimeUrl || instance?.venmoUrl || instance?.cashappUrl || instance?.paypalUrl)
         if (hasDonateUrl) {
-            text += '\n\n[Contribute to the campaign](/event/donate) — donate before or after playing.'
+            text += '\n\n[Contribute to the campaign](/event/donate/wizard) — donate before or after playing.'
         }
         const chunks = chunkIntoSlides(text)
         const idx = parseInt(nodeId.replace('BB_ShowUp_', ''), 10)
@@ -357,7 +365,7 @@ function buildTemplateContext(instance: Awaited<ReturnType<typeof getActiveInsta
             showUpContent: instance?.showUpContent ?? DEFAULT_SHOW_UP,
             storyBridgeCopy: instance?.storyBridgeCopy ?? '',
             introText,
-            donateLink: hasDonateUrl ? '\n\n[Contribute to the campaign](/event/donate) — donate before or after playing.' : ''
+            donateLink: hasDonateUrl ? '\n\n[Contribute to the campaign](/event/donate/wizard) — donate before or after playing.' : ''
         },
         mvpSeedVibeulons: MVP_SEED_VIBEULONS
     }
@@ -548,8 +556,36 @@ export async function GET(
             return NextResponse.json({ error: 'Node not found' }, { status: 404 })
         }
 
-        const choices = JSON.parse(passage.choices) as { text: string; targetId: string }[]
+        let choices = JSON.parse(passage.choices) as { text: string; targetId: string }[]
         const isCompletionPassage = !!passage.linkedQuestId && (!choices || choices.length === 0)
+
+        const campaignRefForPortal = ref ?? adventure.campaignRef ?? null
+        if (campaignRefForPortal && /^Room_\d+$/.test(nodeId) && slug.startsWith('campaign-portal-')) {
+            const inst = await db.instance.findFirst({
+                where: {
+                    OR: [{ campaignRef: campaignRefForPortal }, { slug: campaignRefForPortal }],
+                },
+                select: { schoolsAdventureId: true },
+            })
+            choices = revalidateCampaignPortalRoomChoices(nodeId, choices, {
+                adventureSlug: slug,
+                schoolsAdventureId: inst?.schoolsAdventureId ?? null,
+            })
+        }
+
+        if (sessionPlayer && /^Portal_[1-8]$/.test(nodeId)) {
+            const hubPatch = parseHubJourneyFromSearchParams(searchParams, nodeId)
+            if (hubPatch) {
+                try {
+                    await persistPlayerHubJourneyPatch(
+                        sessionPlayer.id,
+                        hubJourneyPatchToStateFields(hubPatch),
+                    )
+                } catch {
+                    // Ignore parse/update errors
+                }
+            }
+        }
 
         const depthMatch = nodeId.match(/^depth_\d+_(shaman|challenger|regent|architect|diplomat|sage)$/)
         if (depthMatch) {
@@ -656,6 +692,20 @@ export async function GET(
         if (portalMove && portalFace) {
             const faceMoveContent = getFaceMoveContent(portalFace, portalMove)
             if (faceMoveContent) {
+                if (sessionPlayer) {
+                    try {
+                        const hubPatch = parseHubJourneyFromSearchParams(searchParams, nodeId)
+                        const patch = hubPatch
+                            ? hubJourneyPatchToStateFields({
+                                  ...hubPatch,
+                                  lastSpokeMove: portalMove,
+                              })
+                            : { last_spoke_move: portalMove }
+                        await persistPlayerHubJourneyPatch(sessionPlayer.id, patch)
+                    } catch {
+                        // Ignore parse/update errors
+                    }
+                }
                 return NextResponse.json(
                     finalizeAdventureNodePayload(
                         {

@@ -308,26 +308,43 @@ export async function getDashboardRedirectForPlayer(playerId: string): Promise<s
         return '/'
     }
 
-    const progress = await db.threadProgress.findFirst({
+    /** Hidden journeys — do not auto-open their current quest on signup redirect. */
+    const skipThreadIds = new Set(['k-space-librarian-thread'])
+
+    const progressList = await db.threadProgress.findMany({
         where: {
             playerId,
             completedAt: null,
-            thread: { threadType: 'orientation' }
+            thread: { threadType: 'orientation' },
         },
         include: {
             thread: {
                 include: {
                     quests: {
                         orderBy: { position: 'asc' },
-                        include: { quest: true }
-                    }
-                }
-            }
-        }
+                        include: { quest: true },
+                    },
+                },
+            },
+        },
     })
+
+    const candidates = progressList.filter((p) => !skipThreadIds.has(p.threadId))
+    if (candidates.length === 0) return applyHomePreference('/')
+
+    const bbExact = candidates.find((p) => p.threadId === `bruised-banana-orientation-${playerId}`)
+    const bbOther = candidates.find((p) => p.threadId.startsWith('bruised-banana-orientation-'))
+    const rest = candidates
+        .filter((p) => p !== bbExact && p !== bbOther)
+        .sort(
+            (a, b) =>
+                a.thread.createdAt.getTime() - b.thread.createdAt.getTime()
+        )
+    const progress = bbExact ?? bbOther ?? rest[0]
     if (!progress) return applyHomePreference('/')
+
     const currentThreadQuest = progress.thread.quests.find(
-        q => q.position === progress.currentPosition
+        (q) => q.position === progress.currentPosition
     )
     if (!currentThreadQuest) return applyHomePreference('/')
     return `/?focusQuest=${currentThreadQuest.questId}`

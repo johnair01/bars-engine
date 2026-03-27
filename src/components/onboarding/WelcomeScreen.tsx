@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { completeOnboardingStep } from '@/actions/onboarding'
 
 export function WelcomeScreen() {

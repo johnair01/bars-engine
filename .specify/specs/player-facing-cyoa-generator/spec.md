@@ -30,6 +30,8 @@ Let **players** (not only admins) generate **personal or campaign-shaped CYOA** 
 3. **Improve / expand** — Player opens existing Adventure (where permitted) and requests **branch expansion** with diff/review.
 4. **Teach-from-experience** — Player turns a **completed quest path** into a **teaching CYOA** (exportable, credited).
 
+**See also:** [campaign-branch-seeds](../campaign-branch-seeds/spec.md) — a **narrow slice** for **live** campaign passages: players **plant** seeds at a `nodeId` (prominent on broken paths, quiet “suggest a branch” otherwise), **water** with role-weighted visibility, stewards **metabolize** into `Passage` rows under [UGA](../unified-cyoa-graph-authoring/spec.md) validation. Complements **Improve / expand** before the full generator M1–M4 ships.
+
 ---
 
 ## Conceptual model (WHO / WHAT / WHERE / Energy / Moves)

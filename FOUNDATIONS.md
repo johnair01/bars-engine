@@ -247,6 +247,10 @@ The initial product surface — **Massing Allyship** — is a guided 30-day expe
 
 Originally conceived as a book for Kickstarter backers, the format evolved into an app-delivered experience. The book's content is the substrate; the app is the vehicle.
 
+## Campaign hub, spokes, and landings
+
+Residency-style campaigns can expose a **hub** with **eight spokes** (I Ching–ordered portals). Each spoke is a short **CYOA** that bridges the player toward **collective** work; **landings** present the spoke as a **card** in the campaign deck mental model. Spec authority: [.specify/specs/campaign-hub-spoke-landing-architecture/spec.md](.specify/specs/campaign-hub-spoke-landing-architecture/spec.md). Runtime logging (persistence, alchemy trace JSON): [CHS_RUNTIME_DECISIONS.md](.specify/specs/campaign-hub-spoke-landing-architecture/CHS_RUNTIME_DECISIONS.md). Player **plant/water** kernels from spokes: [.specify/specs/spoke-move-seed-beds/spec.md](.specify/specs/spoke-move-seed-beds/spec.md).
+
 ## What This Project Is
 BARs Engine is an ecology:
 - kernels (BARs)

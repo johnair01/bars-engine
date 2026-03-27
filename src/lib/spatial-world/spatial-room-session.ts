@@ -27,9 +27,20 @@ export type MountedSpatialRoomSession = {
  * Imperative API: mount Pixi + RoomRenderer for one spatial layout.
  * Caller owns lifecycle — pair every mount with dispose (e.g. React effect cleanup).
  */
+/** Pixi resizeTo can fail or behave badly when the container has 0×0 layout (flex/routing race). */
+async function waitForNonZeroSize(el: HTMLElement, maxMs = 3000): Promise<void> {
+  const start = Date.now()
+  while (el.clientWidth < 2 || el.clientHeight < 2) {
+    if (Date.now() - start > maxMs) return
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+  }
+}
+
 export async function mountSpatialRoomSession(
   input: SpatialRoomMountInput,
 ): Promise<MountedSpatialRoomSession> {
+  await waitForNonZeroSize(input.container)
+
   const app = new Application()
   await app.init({
     backgroundColor: 0x09090b,

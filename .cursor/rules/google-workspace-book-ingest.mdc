@@ -1,0 +1,13 @@
+---
+description: Import a pasted Google Doc/Drive link into Admin Books via ingest script
+alwaysApply: false
+---
+
+# Google Workspace → Admin Books
+
+When the user pastes a **Google Workspace** link (`docs.google.com`, `drive.google.com`, or `spreadsheets.google.com`) and wants it in the library / BAR pipeline (not just a local mirror):
+
+1. Run **`npm run ingest:google-book`** with **`--start '<url>'`**, or on **macOS** omit `--start` if they already copied the link (clipboard via `pbpaste`).
+2. The script prints an **Admin** URL — open that (`/admin/books/{id}`) so they can use **Analyze** like a PDF-extracted book.
+
+Requires `.env.local`: `DATABASE_URL` and the same Google credentials as `mirror:google-workspace` (see `scripts/google-workspace-mirror/README.md`). Analysis still needs `OPENAI_API_KEY` in the backend when they run Analyze.

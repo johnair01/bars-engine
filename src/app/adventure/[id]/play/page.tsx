@@ -34,11 +34,48 @@ export default async function AdventurePlayPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; preview?: string; start?: string; ref?: string; returnTo?: string; hexagram?: string; face?: string }>
+  searchParams: Promise<{
+    questId?: string
+    threadId?: string
+    ritual?: string
+    preview?: string
+    start?: string
+    ref?: string
+    returnTo?: string
+    hexagram?: string
+    face?: string
+    spoke?: string
+    kotterStage?: string
+  }>
 }) {
   const { id: adventureId } = await params
-  const { questId, threadId, ritual, preview, start: startParam, ref: campaignRef, returnTo, hexagram, face: portalFace } = await searchParams
+  const {
+    questId,
+    threadId,
+    ritual,
+    preview,
+    start: startParam,
+    ref: campaignRef,
+    returnTo,
+    hexagram,
+    face: portalFace,
+    spoke: spokeParam,
+    kotterStage: kotterStageParam,
+  } = await searchParams
   const hexagramId = hexagram ? parseInt(hexagram, 10) || undefined : undefined
+  const spokeParsed =
+    spokeParam !== undefined && spokeParam !== '' ? parseInt(spokeParam, 10) : NaN
+  const portalSpokeIndex =
+    Number.isFinite(spokeParsed) && spokeParsed >= 0 && spokeParsed <= 7
+      ? spokeParsed
+      : undefined
+  const kotterParsed =
+    kotterStageParam !== undefined && kotterStageParam !== ''
+      ? parseInt(kotterStageParam, 10)
+      : NaN
+  const portalKotterStage = Number.isFinite(kotterParsed)
+    ? Math.max(1, Math.min(8, kotterParsed))
+    : undefined
   const isRitual = ritual === 'true'
   const isPreview = preview === '1'
   const player = await getCurrentPlayer()
@@ -85,14 +122,16 @@ export default async function AdventurePlayPage({
       ? progress.currentNodeId
       : startNodeId
 
-  // For portal adventure: resolve schoolsAdventureId for Grow Up navigation
+  // Campaign instance: schools adventure + display name for hub context strip
   let schoolsAdventureId: string | null = null
+  let campaignDisplayName: string | undefined
   if (campaignRef) {
     const instance = await db.instance.findFirst({
       where: { OR: [{ campaignRef }, { slug: campaignRef }] },
-      select: { schoolsAdventureId: true },
+      select: { schoolsAdventureId: true, name: true },
     })
     schoolsAdventureId = instance?.schoolsAdventureId ?? null
+    campaignDisplayName = instance?.name?.trim() || undefined
   }
 
   return (
@@ -129,6 +168,9 @@ export default async function AdventurePlayPage({
           returnTo={returnTo ?? undefined}
           portalHexagramId={hexagramId}
           portalFace={portalFace ?? undefined}
+          portalSpokeIndex={portalSpokeIndex}
+          portalKotterStage={portalKotterStage}
+          campaignDisplayName={campaignDisplayName}
         />
       </div>
     </div>

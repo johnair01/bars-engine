@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { parseTwee } from '@/lib/twee-parser'
 import {
     extractTokenSets,
@@ -74,6 +75,9 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
             if (passage.name === 'Arrival') {
                 logOnboardingEvent('orientation_viewed', {})
             }
+            if (passage.name === 'Donate Handoff') {
+                logOnboardingEvent('donate_handoff_viewed', {})
+            }
             const tags = passage.tags ?? []
             const emits = extractEmitsFromTags(tags)
             const isChoiceResult = tags.some((t) => t === 'choice' || t.includes('emotional-alchemy'))
@@ -126,6 +130,15 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
         async (target: string, linkLabel?: string) => {
             if (!story) return
             setError(null)
+
+            // Donation handoff → same-tab residency donate (before NOW dashboard)
+            if (target === 'EventDonate') {
+                logOnboardingEvent('donate_handoff_open_donate', { campaignId: CAMPAIGN_ID })
+                router.push(
+                    `/event/donate/wizard?ref=${encodeURIComponent(CAMPAIGN_ID)}&source=onboarding`
+                )
+                return
+            }
 
             // BeginPlay: redirect to sign-in or dashboard (bruised-banana-onboarding-draft)
             if (target === 'BeginPlay') {
@@ -298,8 +311,9 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
             .then((r) => (r.ok ? r.json() : { url: null }))
             .then((d) => d?.url)
             .catch(() => null)
-        const url = baseUrl || '/event/donate'
+        const url = baseUrl || '/event/donate/wizard'
         const params = new URLSearchParams({
+            ref: CAMPAIGN_ID,
             source: state.donationSource ?? '',
             tier: state.donationTier ?? '',
             lens: state.lens ?? '',
@@ -395,11 +409,37 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
     const externalDonateLink = links.find((l) => isExternalDonateLink(l.target))
     const normalLinks = links.filter((l) => !isExternalDonateLink(l.target) && l.target !== 'Signup' && l.target !== 'Preview')
 
-    return (
-        <div className="w-full max-w-2xl mx-auto space-y-8 animate-in fade-in relative min-h-[60vh] flex flex-col items-center justify-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl shadow-2xl">
-            <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{currentPassage.name}</div>
+    /** Match Forge (`/bars/create`) shell: private draft lands in Vault. */
+    const isForgeBarStep = currentPassage.name === 'Create a BAR'
+    const shellClass = isForgeBarStep
+        ? 'max-w-xl border-zinc-700 bg-zinc-950/80'
+        : 'max-w-2xl border-zinc-800 bg-zinc-950/50'
 
-            <div className="prose prose-invert prose-lg max-w-none w-full text-left font-sans space-y-4">
+    const proseBlock = (
+        <div
+            className={
+                isForgeBarStep
+                    ? 'bg-zinc-900/50 border border-zinc-700 rounded-xl p-5 sm:p-6 space-y-4 w-full'
+                    : 'prose prose-invert prose-lg max-w-none w-full text-left font-sans space-y-4'
+            }
+        >
+            {isForgeBarStep && (
+                <div className="space-y-1 border-b border-zinc-800 pb-4">
+                    <p className="text-xs uppercase tracking-widest text-zinc-500">Orientation · Forge</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">Create a BAR</h2>
+                    <p className="text-zinc-500 text-sm">
+                        Same kind of artifact as <span className="text-zinc-400">Vault → Forge</span>: a scrap or note that can grow into a card, quest, or compost later. Saved as a{' '}
+                        <strong className="text-zinc-300">private draft</strong> in your Vault when you continue.
+                    </p>
+                </div>
+            )}
+            <div
+                className={
+                    isForgeBarStep
+                        ? 'space-y-4 text-left font-sans prose prose-invert prose-sm max-w-none text-zinc-300'
+                        : ''
+                }
+            >
                 {parts.map((part, i) =>
                     typeof part === 'string' ? (
                         <ReactMarkdown
@@ -414,6 +454,20 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                         >
                             {interpolate(part, displayState)}
                         </ReactMarkdown>
+                    ) : part.key === 'barContent' && isForgeBarStep ? (
+                        <div key={i} className="space-y-2">
+                            <label htmlFor="bb-bar-content" className="text-xs uppercase text-zinc-500">
+                                Your intention
+                            </label>
+                            <textarea
+                                id="bb-bar-content"
+                                value={state[part.key] ?? ''}
+                                onChange={(e) => handleInputChange(part.key, e.target.value)}
+                                placeholder={part.placeholder ?? ''}
+                                rows={5}
+                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[120px] resize-y"
+                            />
+                        </div>
                     ) : (
                         <div key={i} className="my-4">
                             <input
@@ -427,12 +481,51 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                     )
                 )}
             </div>
+        </div>
+    )
+
+    return (
+        <div
+            className={`w-full ${shellClass} mx-auto space-y-8 animate-in fade-in relative min-h-[60vh] flex flex-col items-center justify-center p-6 sm:p-8 rounded-2xl shadow-2xl`}
+        >
+            {!isForgeBarStep && (
+                <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{currentPassage.name}</div>
+            )}
+
+            {proseBlock}
 
             {error && (
                 <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg w-full">{error}</div>
             )}
 
             <div className="w-full pt-8 flex flex-col gap-3 max-w-md">
+                {currentPassage.name === 'Onboarding Complete' && hasPlayer && (
+                    <Link
+                        href="/hand"
+                        className="w-full text-left bg-amber-950/30 border border-amber-800/60 hover:border-amber-600 hover:bg-amber-950/50 text-amber-100 p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center"
+                    >
+                        <span>Open Vault (Hand)</span>
+                        <span className="text-amber-400">→</span>
+                    </Link>
+                )}
+                {currentPassage.name === 'First Quest Stub' && hasPlayer && (
+                    <Link
+                        href="/#active-quests"
+                        className="w-full text-left bg-emerald-950/25 border border-emerald-800/50 hover:border-emerald-600 hover:bg-emerald-950/40 text-emerald-100 p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center"
+                    >
+                        <span>Open starter quests on dashboard</span>
+                        <span className="text-emerald-400">→</span>
+                    </Link>
+                )}
+                {currentPassage.name === 'Donate Handoff' && (
+                    <Link
+                        href={`/event/donate/wizard?ref=${encodeURIComponent(CAMPAIGN_ID)}&source=onboarding`}
+                        className="w-full text-left bg-green-950/30 border border-green-800/55 hover:border-green-600 hover:bg-green-950/45 text-green-100 p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center"
+                    >
+                        <span>Open contribution wizard (same tab)</span>
+                        <span className="text-green-400">→</span>
+                    </Link>
+                )}
                 {normalLinks.map((link, i) => (
                     <button
                         key={i}
@@ -444,6 +537,11 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
                         <span className="text-purple-500/0 group-hover:text-purple-500 transition-colors relative z-10">→</span>
                     </button>
                 ))}
+                {isForgeBarStep && (
+                    <p className="text-xs text-zinc-600 px-1">
+                        Next: you&apos;ll see how to extend this BAR into a quest, compost it, or spin up a daemon in later orientation beats (Vault + quests).
+                    </p>
+                )}
                 {externalDonateLink && (
                     <button
                         onClick={handleExternalDonateClick}

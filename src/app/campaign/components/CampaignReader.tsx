@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { CampaignAuthForm } from './CampaignAuthForm'
 import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
 import { CampaignPassageEditModal } from './CampaignPassageEditModal'
 import { GuidancePanel } from '@/components/simulation/GuidancePanel'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
 import { chunkIntoSlides, getBaseNodeId } from '@/lib/slide-chunker'
+import { takeQuest } from '@/actions/quest-stewardship'
+import { CopyableProse } from '@/components/ui/CopyableProse'
+import { CopyTextButton } from '@/components/ui/CopyTextButton'
 
 interface CampaignChoice {
     text: string
@@ -20,6 +25,8 @@ interface CampaignNode {
     choices: CampaignChoice[]
     stepIndex?: number
     totalSteps?: number
+    /** Library / book passage — quest BAR to assign via `takeQuest` */
+    linkedQuestId?: string
 }
 
 /** Pre-signup demo orientation (DOP) — step cap + handoff fields for signup JSON */
@@ -171,6 +178,9 @@ export function CampaignReader({
     shareToken,
     demoHandoff,
 }: CampaignReaderProps) {
+    const router = useRouter()
+    const [questTakePending, startQuestTake] = useTransition()
+    const [questTakeError, setQuestTakeError] = useState<string | null>(null)
     const [currentNode, setCurrentNode] = useState<CampaignNode | null>(null)
     const [loading, setLoading] = useState(true)
     const [fetchError, setFetchError] = useState<string | null>(null)
@@ -215,6 +225,15 @@ export function CampaignReader({
         [campaignState, demoHandoff]
     )
 
+    const donateCampaignRef = useMemo(
+        () =>
+            campaignRef ??
+            (typeof campaignState.ref === 'string' && campaignState.ref ? campaignState.ref : undefined) ??
+            demoHandoff?.campaignRef ??
+            undefined,
+        [campaignRef, campaignState.ref, demoHandoff?.campaignRef]
+    )
+
     const fetchNode = async (nodeId: string) => {
         setLoading(true)
         setFetchError(null)
@@ -229,14 +248,22 @@ export function CampaignReader({
             }
 
             if (res.ok) {
-                const node = await res.json()
+                const node = (await res.json()) as CampaignNode & { linkedQuestId?: string }
 
                 // Process macros right as we load the node
                 const { cleanText, updates } = processMacros(node.text, campaignState)
 
                 const newState = { ...campaignState, ...updates }
                 setCampaignState(newState)
-                setCurrentNode(node)
+                setQuestTakeError(null)
+                setCurrentNode({
+                    id: node.id,
+                    text: node.text,
+                    choices: node.choices,
+                    stepIndex: node.stepIndex,
+                    totalSteps: node.totalSteps,
+                    linkedQuestId: node.linkedQuestId,
+                })
                 setRenderedText(cleanText)
                 setSlideIndex(0)
 
@@ -273,6 +300,12 @@ export function CampaignReader({
             return
         }
 
+        if (choice.targetId.startsWith('redirect:')) {
+            const path = choice.targetId.slice('redirect:'.length)
+            if (path) router.push(path)
+            return
+        }
+
         if (demoHandoff) {
             const nextStep = demoStepsUsed + 1
             if (demoHandoff.maxSteps != null && nextStep > demoHandoff.maxSteps) {
@@ -293,11 +326,12 @@ export function CampaignReader({
                     Create an account to continue your path and unlock quests, BARs, and the full Conclave.
                 </p>
                 <CampaignAuthForm campaignState={enrichedCampaignState} />
-                <div className="flex flex-wrap justify-center gap-4 text-sm pt-2">
-                    <Link href="/event/donate" className="text-green-400 hover:text-green-300">
-                        Support the campaign →
-                    </Link>
-                    <Link href="/" className="text-zinc-500 hover:text-zinc-300">
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                    <CampaignDonateButton campaignRef={donateCampaignRef} />
+                    <Link
+                        href="/"
+                        className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium border border-zinc-600 bg-zinc-900/50 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
+                    >
                         Home
                     </Link>
                 </div>
@@ -377,18 +411,78 @@ export function CampaignReader({
                     </div>
                 </div>
             )}
-            <div className="prose prose-invert prose-lg max-w-none w-full text-left font-sans">
-                <ReactMarkdown
-                    components={{
-                        a: ({ href, children }) => (
-                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                                {children}
-                            </a>
-                        )
-                    }}
+            <CopyableProse
+                textToCopy={displayText}
+                copyAriaLabel="Copy passage text"
+                className="w-full text-left font-sans"
+            >
+                <div className="prose prose-invert prose-lg max-w-none w-full text-left font-sans">
+                    <ReactMarkdown
+                        components={{
+                            a: ({ href, children }) => (
+                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                    {children}
+                                </a>
+                            )
+                        }}
+                    >
+                        {displayText}
+                    </ReactMarkdown>
+                </div>
+            </CopyableProse>
+
+            {currentNode.linkedQuestId && (
+                <div className="w-full rounded-xl border border-emerald-900/50 bg-emerald-950/20 px-4 py-3 space-y-2">
+                    <div className="flex justify-end">
+                        <CopyTextButton
+                            text={
+                                'Practice quest (library)\n\nTake stewardship to track this BAR in your Vault — same quest as the book thread.'
+                            }
+                            aria-label="Copy practice quest description"
+                        />
+                    </div>
+                    <p className="text-sm font-medium text-emerald-200">Practice quest (library)</p>
+                    <p className="text-xs text-zinc-500">
+                        Take stewardship to track this BAR in your Vault — same quest as the book thread.
+                    </p>
+                    {questTakeError && (
+                        <div className="flex justify-end items-start gap-2">
+                            <p className="text-xs text-red-400 flex-1">{questTakeError}</p>
+                            <CopyTextButton text={questTakeError} aria-label="Copy error message" />
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        disabled={questTakePending}
+                        onClick={() => {
+                            setQuestTakeError(null)
+                            startQuestTake(async () => {
+                                const r = await takeQuest(currentNode.linkedQuestId!)
+                                if ('error' in r) {
+                                    setQuestTakeError(r.error)
+                                    return
+                                }
+                                router.push(`/bars/${currentNode.linkedQuestId}`)
+                            })
+                        }}
+                        className="inline-flex items-center justify-center rounded-lg bg-emerald-800/80 hover:bg-emerald-700 disabled:opacity-50 px-4 py-2 text-sm font-semibold text-white transition"
+                    >
+                        {questTakePending ? 'Working…' : 'Take quest'}
+                    </button>
+                </div>
+            )}
+
+            <div
+                className="w-full flex flex-wrap items-center justify-center gap-2 pt-2 pb-1 border-t border-zinc-800/60"
+                aria-label="Support the residency"
+            >
+                <CampaignDonateButton campaignRef={donateCampaignRef} />
+                <Link
+                    href="/event"
+                    className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 border border-transparent hover:border-zinc-700 transition-colors"
                 >
-                    {displayText}
-                </ReactMarkdown>
+                    Event page
+                </Link>
             </div>
 
             {useSlideMode ? (

@@ -18,6 +18,30 @@ import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { RoomCanvas } from './RoomCanvas'
 
+function parseSpawnpointJson(raw: string): { x: number; y: number } {
+  try {
+    const o = JSON.parse(raw) as { x?: unknown; y?: unknown }
+    if (!o || typeof o !== 'object') return { x: 5, y: 5 }
+    const x = o.x
+    const y = o.y
+    const nx = typeof x === 'number' && Number.isFinite(x) ? Math.floor(x) : 5
+    const ny = typeof y === 'number' && Number.isFinite(y) ? Math.floor(y) : 5
+    return { x: nx, y: ny }
+  } catch {
+    return { x: 5, y: 5 }
+  }
+}
+
+function parseTilemapJson(raw: string): Record<string, { floor?: string; impassable?: boolean; object?: string }> {
+  try {
+    const o = JSON.parse(raw) as unknown
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return {}
+    return o as Record<string, { floor?: string; impassable?: boolean; object?: string }>
+  } catch {
+    return {}
+  }
+}
+
 export default async function WorldRoomPage({
   params,
 }: {
@@ -60,8 +84,19 @@ export default async function WorldRoomPage({
     )
   }
 
-  const spawnpoint = JSON.parse(instance.spatialMap.spawnpoint) as { roomIndex: number; x: number; y: number }
-  const tilemap = JSON.parse(room.tilemap) as Record<string, { floor?: string; impassable?: boolean; object?: string }>
+  const spawnpoint = parseSpawnpointJson(instance.spatialMap.spawnpoint)
+  const tilemap = parseTilemapJson(room.tilemap)
+  if (Object.keys(tilemap).length === 0) {
+    return (
+      <div className="min-h-screen bg-black text-zinc-400 flex items-center justify-center px-6 text-center max-w-lg mx-auto">
+        <p>
+          Room tile data is missing or invalid. Re-seed the lobby map (e.g.{' '}
+          <code className="text-zinc-300">npx tsx scripts/seed-bar-lobby-world.ts</code>) or check MapRoom.tilemap
+          in the database.
+        </p>
+      </div>
+    )
+  }
 
   const allRooms = rooms.map(r => ({ id: r.id, name: r.name, slug: r.slug ?? slugify(r.name) }))
 

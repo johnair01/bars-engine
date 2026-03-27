@@ -26,7 +26,7 @@ export const getCurrentPlayer = cache(async () => {
             }
         })
         return player
-    } catch (e) {
+    } catch {
         return null
     }
 })

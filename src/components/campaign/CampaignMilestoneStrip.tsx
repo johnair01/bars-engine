@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { CampaignMilestoneGuidance } from '@/lib/bruised-banana-milestone'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
 
 type Props = {
   data: CampaignMilestoneGuidance
@@ -63,6 +64,10 @@ export function CampaignMilestoneStrip({ data, variant = 'dashboard' }: Props) {
           </div>
         </div>
       )}
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <CampaignDonateButton campaignRef={snapshot.campaignRef} />
+      </div>
 
       {primary && (
         <div className="space-y-2">

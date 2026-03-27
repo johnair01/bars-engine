@@ -125,12 +125,8 @@ function extractPrimaryChannel(q4: string | string[], q5: string): EmotionalChan
 }
 
 function extractLabels(text: string): string[] {
-  const words = text
-    .replace(/[.,!?;:]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 2)
   const emotional = new Set<string>()
-  for (const [channel, keywords] of Object.entries(CHANNEL_KEYWORDS)) {
+  for (const [, keywords] of Object.entries(CHANNEL_KEYWORDS)) {
     for (const kw of keywords) {
       if (text.toLowerCase().includes(kw)) {
         emotional.add(kw)
@@ -218,8 +214,8 @@ function generateEpiphanyNodeText(
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
   const transcendenceDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
 
   const templates: Record<EpiphanyBeatType, string> = {
     orientation: `**Orientation** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}`,
@@ -250,8 +246,8 @@ function generateKotterNodeText(
   const framing = segment === 'player' ? playerFraming : sponsorFraming
 
   const winsDonationLine = isAuthenticated
-    ? `[Contribute to the campaign](/event/donate) — thank you for supporting the cause.`
-    : `[Contribute to the campaign](/event/donate) — donate before or after creating your account.`
+    ? `[Contribute to the campaign](/event/donate/wizard) — thank you for supporting the cause.`
+    : `[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`
 
   const templates: Record<KotterBeatType, string> = {
     urgency: `**1. Urgency** — ${answers.q1}\n\nRight now: ${q3Display}\n\n${framing}\n\nWe need to create urgency around this need.`,
@@ -266,7 +262,7 @@ function generateKotterNodeText(
   return templates[beatType]
 }
 
-function buildAnchors(beatType: BeatType, index: number): NodeAnchors {
+function buildAnchors(beatType: BeatType): NodeAnchors {
   const anchors: NodeAnchors = {}
   const isFirst = beatType === 'orientation' || beatType === 'urgency'
   const isLast = beatType === 'consequence' || beatType === 'anchor'
@@ -555,7 +551,7 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
       },
       text,
       choices,
-      anchors: buildAnchors(beatType, index),
+      anchors: buildAnchors(beatType),
       isActionNode,
       ...(isActionNode && { actionType }),
       branchDepth: 0,
@@ -609,15 +605,15 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
 
   const telemetryHooks = {
     questStarted: () => {},
-    nodeViewed: (_nodeId: string) => {},
-    choiceSelected: (_from: string, _to: string) => {},
+    nodeViewed: () => {},
+    choiceSelected: () => {},
     donationClicked: () => {},
     donationCompleted: () => {},
   }
 
   const moveMap: QuestPacket['moveMap'] = privilegeContext
     ? Object.fromEntries(
-        nodes.map((n, i) => {
+        nodes.map((n) => {
           const choicesWithMove = n.choices
             .map((c, ci) => (c.moveId ? ([ci, c.moveId] as const) : null))
             .filter((x): x is [number, string] => x !== null)

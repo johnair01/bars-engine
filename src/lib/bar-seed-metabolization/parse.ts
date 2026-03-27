@@ -1,4 +1,4 @@
-import type { MaturityPhase, SeedMetabolizationState, SoilKind } from './types'
+import type { MaturityPhase, SeedMetabolizationState } from './types'
 import { isMaturityPhase, isSoilKind } from './types'
 
 const DEFAULT_MATURITY: MaturityPhase = 'captured'

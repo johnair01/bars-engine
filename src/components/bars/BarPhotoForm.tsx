@@ -39,7 +39,7 @@ export function BarPhotoForm({ customBarId, assets, onUploaded }: BarPhotoFormPr
   const [isPending, setIsPending] = useState(false)
   const [rotatingId, setRotatingId] = useState<string | null>(null)
 
-  const { front, back, imageAssets } = getFrontBackAssets(assets)
+  const { front, back } = getFrontBackAssets(assets)
   const canAddFront = !front
   const canAddBack = !back
 

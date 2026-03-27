@@ -121,3 +121,12 @@ export type SpaceHomePayload = {
   /** Hash target on /game-map for deep links */
   gameMapHash: `space-${SpaceId}`
 }
+
+/** POST /api/campaigns/:campaignId/seed/:space — mock seed acknowledgment (v0). */
+export type CampaignSeedResponse = {
+  ok: true
+  campaignId: string
+  space: SpaceId
+  message: string
+  token: string
+}

@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { advanceOuroborosInterview } from '@/actions/ouroboros-interview'
-import type { OuroborosInterviewState, OuroborosNodeId } from '@/lib/ouroboros-interview'
+import type { OuroborosInterviewState } from '@/lib/ouroboros-interview'
 
 const LENS_OPTIONS = [
   { value: 'understanding', label: 'Understanding', desc: 'I want to see more clearly' },

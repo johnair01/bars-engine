@@ -40,7 +40,8 @@ const CERT_QUEST_IDS = [
     'cert-campaign-map-phase-1-v1',
     'cert-admin-books-compass-compact-ui-v1',
     'cert-now-event-vault-qol-v1',
-    'cert-campaign-marketplace-slots-v1'
+    'cert-campaign-marketplace-slots-v1',
+    'cert-donation-self-service-wizard-v1'
 ]
 
 async function seed() {
@@ -862,7 +863,7 @@ async function seed() {
         {
             name: 'STEP_5',
             pid: '6',
-            text: '### Step 5: Donation link\n\nWhen instance has donate URLs configured, BB_ShowUp should include a link to /event/donate. (If no donate URLs, skip this step.)',
+            text: '### Step 5: Donation link\n\nWhen instance has donate URLs configured, BB_ShowUp should include a link to /event/donate/wizard (or /event/donate). (If no donate URLs, skip this step.)',
             cleanText: '### Step 5: Donation link\n\nDonate link when configured.',
             links: [{ label: 'Next', target: 'STEP_6' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
@@ -3192,7 +3193,7 @@ async function seed() {
         { name: 'START', pid: '1', text: 'Prepare the party for the Bruised Banana Fundraiser by verifying Bounties and Donation Packs. Create a bounty, complete it, and redeem a pack.', cleanText: 'Verify Bounties and Donation Packs.', links: [{ label: 'Begin', target: 'STEP_1' }] },
         { name: 'STEP_1', pid: '2', text: '### Step 1: Create a bounty\n\n[Open Create Quest](/quest/create). Choose Collective scope, enable **Bounty mode**, set stake (e.g. 3), max completions (1), reward (1). Publish. Confirm the quest appears on [The Market](/bars/available) with a **Bounty** badge.', cleanText: 'Create a bounty.', links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
         { name: 'STEP_2', pid: '3', text: '### Step 2: Complete the bounty\n\nHave another player (or a second account) claim and complete your bounty. Confirm they receive the staked vibeulons from escrow (not a new mint).', cleanText: 'Complete the bounty.', links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
-        { name: 'STEP_3', pid: '4', text: '### Step 3: Redeem a pack\n\n[Donate](/event/donate) (self-report) or have an admin create a pack for you. [Open your Wallet](/wallet). Confirm **Redemption Packs** appear. Click **Redeem** on a pack. Confirm vibeulons are minted.', cleanText: 'Redeem a pack.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
+        { name: 'STEP_3', pid: '4', text: '### Step 3: Redeem a pack\n\n[Contribute](/event/donate/wizard) (wizard → self-report) or have an admin create a pack for you. [Open your Wallet](/wallet). Confirm **Redemption Packs** appear. Click **Redeem** on a pack. Confirm vibeulons are minted.', cleanText: 'Redeem a pack.', links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }] },
         { name: 'FEEDBACK', pid: '5', text: '### Report an Issue\n\nSomething isn\'t working? Describe what you encountered.', cleanText: 'Report an Issue.', links: [], tags: ['feedback'] },
         { name: 'END_SUCCESS', pid: '6', text: 'Bounties and Donation Packs verified. You can create bounties, complete them for staked payout, and redeem packs for vibeulons. Complete this quest to receive your reward.', cleanText: 'Verification complete.', links: [] },
     ]
@@ -3779,6 +3780,114 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${cmsSlug}`)
+
+    // --- Certification: Donation self-service wizard (DSW) Phase 1–2 ---
+    const dswTitle = 'Certification: Donation Self-Service Wizard V1'
+    const dswSlug = 'cert-donation-self-service-wizard-v1'
+
+    const dswPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify the **donation wizard**: branching **money / time / space / host**, tiered money → donate prefill, optional **milestone** echo (contribution + `dsw_meta`), optional **quest BAR** echo, and `[DSW]` notes on honor donations.',
+            cleanText: 'DSW verification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Wizard branches\n\nOpen [`/event/donate/wizard`](/event/donate/wizard). Confirm **Money**, **Time**, **Space**, and **Host / organize** each show sensible copy and CTAs (marketplace uses dynamic `campaignRef` where configured).',
+            cleanText: 'Step 1: Branches.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Money → donate\n\nChoose **Money**, pick a tier, optionally add narrative and (if milestones exist) link an **active milestone**. Continue to [`/event/donate`](/event/donate) and confirm **amount** and hidden/query DSW fields prefill.',
+            cleanText: 'Step 2: Money handoff.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Record + echo\n\nAfter a test self-report (dev/synthetic), confirm the `Donation` row: **`note`** contains `[DSW]` when wizard fields were present; **`dsw_meta`** JSON includes `milestoneId` / `echoQuestId` when used; and an **active** milestone’s `currentValue` increased when a milestone was linked.',
+            cleanText: 'Step 3: DB echo.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Host path\n\nFrom the wizard, open **Host / organize**. Confirm checklist + links to **Event hub**, wizard, and direct donate are present.',
+            cleanText: 'Step 4: Host.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'DSW verification complete. Guided contributions, milestone math, and steward echoes are wired. Complete this quest for your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const dswParsedJson = JSON.stringify({
+        title: dswTitle,
+        startPassage: 'START',
+        passages: dswPassages
+    })
+
+    const dswStory = await db.twineStory.upsert({
+        where: { slug: dswSlug },
+        update: {
+            title: dswTitle,
+            parsedJson: dswParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: dswTitle,
+            slug: dswSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Donation self-service wizard (seed-cyoa-certification-quests.ts)',
+            parsedJson: dswParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: dswSlug },
+        update: {
+            title: dswTitle,
+            description: 'Verify DSW branches, donate prefill, dsw_meta + milestone contribution, host checklist.',
+            reward: 1,
+            twineStoryId: dswStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/donation-self-service-wizard/spec.md'
+        },
+        create: {
+            id: dswSlug,
+            title: dswTitle,
+            description: 'Verify DSW branches, donate prefill, dsw_meta + milestone contribution, host checklist.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: dswStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/donation-self-service-wizard/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${dswSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

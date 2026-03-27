@@ -3,7 +3,6 @@
  * Every face move produces a BAR (CustomBar). See .specify/specs/game-master-face-moves/spec.md
  */
 
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
 
 export const FACE_MOVE_TYPES = {
   shaman: ['create_ritual', 'name_shadow_belief'] as const,

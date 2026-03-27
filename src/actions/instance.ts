@@ -153,6 +153,8 @@ export async function upsertInstance(formData: FormData): Promise<void> {
     const venmoUrl = (formData.get('venmoUrl') as string | null)?.trim() || null
     const cashappUrl = (formData.get('cashappUrl') as string | null)?.trim() || null
     const paypalUrl = (formData.get('paypalUrl') as string | null)?.trim() || null
+    const donationButtonLabelRaw = (formData.get('donationButtonLabel') as string | null)?.trim() || null
+    const donationButtonLabel = donationButtonLabelRaw && donationButtonLabelRaw.length > 0 ? donationButtonLabelRaw.slice(0, 120) : null
     const isEventMode = formData.get('isEventMode') === 'on'
 
     const goalAmountCents = toCents(formData.get('goalAmount'))
@@ -216,6 +218,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           venmoUrl,
           cashappUrl,
           paypalUrl,
+          donationButtonLabel,
           isEventMode,
           goalAmountCents,
           kotterStage,
@@ -243,6 +246,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           venmoUrl,
           cashappUrl,
           paypalUrl,
+          donationButtonLabel,
           isEventMode,
           goalAmountCents,
           kotterStage,
@@ -267,6 +271,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           venmoUrl,
           cashappUrl,
           paypalUrl,
+          donationButtonLabel,
           isEventMode,
           goalAmountCents,
           kotterStage,

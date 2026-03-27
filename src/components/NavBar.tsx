@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/actions/logout'
+import { SiteSignalNavTrigger } from '@/components/feedback/SiteSignalModal'
 
 export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthenticated: boolean }) {
     const pathname = usePathname()
@@ -66,12 +67,15 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 )}
             </div>
 
-            <form action={logout}>
-                <button className="text-red-900 hover:text-red-500 hover:bg-red-950/30 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] sm:text-xs">
-                    <span className="hidden sm:inline">Disconnect</span>
-                    <span className="sm:hidden">Exit</span>
-                </button>
-            </form>
+            <div className="flex items-center gap-1 sm:gap-2">
+                {isAuthenticated ? <SiteSignalNavTrigger /> : null}
+                <form action={logout}>
+                    <button className="text-red-900 hover:text-red-500 hover:bg-red-950/30 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] sm:text-xs">
+                        <span className="hidden sm:inline">Disconnect</span>
+                        <span className="sm:hidden">Exit</span>
+                    </button>
+                </form>
+            </div>
         </nav>
     )
 }

@@ -44,11 +44,6 @@ export function IntentionUpdateModal({
         ? directText.trim()
         : null
 
-  const canSubmit =
-    (mode === 'direct' && directText.trim()) ||
-    (mode === 'options' && selectedOption) ||
-    mode === 'guided'
-
   async function handleSubmit() {
     if (mode === 'guided') return // Guided uses onComplete
     const text = mode === 'options' ? selectedOption : directText.trim()

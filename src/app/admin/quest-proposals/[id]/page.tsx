@@ -8,6 +8,7 @@ import {
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { QuestOpsNav } from '@/components/admin/QuestOpsNav'
 
 type Proposal = Awaited<ReturnType<typeof getQuestProposal>>
 
@@ -81,8 +82,9 @@ export default function QuestProposalDetailPage() {
 
   if (!proposal) {
     return (
-      <div className="p-8 text-zinc-500">
-        {isPending ? 'Loading...' : 'Proposal not found'}
+      <div className="max-w-2xl mx-auto space-y-8 p-8">
+        <QuestOpsNav />
+        <div className="text-zinc-500">{isPending ? 'Loading...' : 'Proposal not found'}</div>
       </div>
     )
   }

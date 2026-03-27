@@ -30,6 +30,22 @@ export default async function CampaignHubPage(props: {
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
 
+  const isAdmin = player.roles.some((r: { role: { key: string } }) => r.role.key === 'admin')
+  const instanceForSteward = await db.instance.findFirst({
+    where: { OR: [{ campaignRef }, { slug: campaignRef }] },
+    select: { id: true },
+  })
+  const stewardship = instanceForSteward
+    ? await db.instanceMembership.findFirst({
+        where: {
+          playerId: player.id,
+          instanceId: instanceForSteward.id,
+          roleKey: { in: ['owner', 'steward'] },
+        },
+      })
+    : null
+  const showFundraisingSettings = isAdmin || !!stewardship
+
   const [result, milestoneGuidance, recentCapture, intakeAdventure] = await Promise.all([
     get8PortalsForCampaign(campaignRef),
     getCampaignMilestoneGuidance(player.id, { campaignRef }),
@@ -72,6 +88,7 @@ export default async function CampaignHubPage(props: {
       milestoneGuidance={milestoneGuidance}
       recentCapture={recentCapture ?? undefined}
       intakeAdventureId={intakeAdventure?.id ?? null}
+      showFundraisingSettings={showFundraisingSettings}
     />
   )
 }

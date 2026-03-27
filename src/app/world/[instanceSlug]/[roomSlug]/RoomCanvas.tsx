@@ -153,7 +153,12 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
     setProximateAnchor(anchor)
 
     // Step onto a portal tile → navigate immediately
-    if (anchor?.anchorType === 'portal' && anchor.tileX === playerPos.x && anchor.tileY === playerPos.y) {
+    if (
+      anchor &&
+      (anchor.anchorType === 'portal' || anchor.anchorType === 'campaign_portal') &&
+      anchor.tileX === playerPos.x &&
+      anchor.tileY === playerPos.y
+    ) {
       portalNavigateRef.current(anchor)
     }
   }, [playerPos, lastMoveDirection])
@@ -239,7 +244,8 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
 
   const promptPixel = proximateAnchor && rendererRef.current
     ? (() => {
-        const { left, top } = rendererRef.current.worldToScreen(proximateAnchor.tileX, proximateAnchor.tileY)
+        const { left, top } = rendererRef.current!.worldToScreen(proximateAnchor.tileX, proximateAnchor.tileY)
+        if (!Number.isFinite(left) || !Number.isFinite(top)) return null
         return { left, top: top - 36 }
       })()
     : null

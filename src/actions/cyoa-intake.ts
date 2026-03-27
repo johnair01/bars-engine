@@ -426,7 +426,12 @@ export async function launchSpokeAdventure(
 
   const session = await db.spokeSession.findFirst({
     where: { id: spokeSessionId, playerId: player.id },
-    select: { gmFace: true, moveType: true, campaignRef: true, portalId: true },
+    select: {
+      gmFace: true,
+      moveType: true,
+      campaignRef: true,
+      portal: { select: { slotIndex: true, hexagramId: true } },
+    },
   })
   if (!session) return { error: 'Session not found' }
 
@@ -435,10 +440,27 @@ export async function launchSpokeAdventure(
     return { error: 'Session routing incomplete — intake may still be processing' }
   }
 
+  const inst = await db.instance.findFirst({
+    where: { OR: [{ campaignRef }, { slug: campaignRef }] },
+    select: { kotterStage: true },
+  })
+  const hubSpoke =
+    session.portal != null
+      ? {
+          spokeIndex: session.portal.slotIndex,
+          hexagramId: session.portal.hexagramId ?? 1,
+          kotterStage:
+            typeof inst?.kotterStage === 'number' && Number.isFinite(inst.kotterStage)
+              ? Math.max(1, Math.min(8, inst.kotterStage))
+              : 1,
+        }
+      : undefined
+
   const result = await findOrGenerateSpokeAdventure(
     gmFace as GmFaceKey,
     moveType as IntakeMoveType,
     campaignRef,
+    hubSpoke,
   )
   if (!result) return { error: 'No spoke Adventure available for this campaign yet' }
 

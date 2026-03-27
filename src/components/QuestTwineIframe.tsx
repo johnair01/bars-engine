@@ -9,7 +9,7 @@ interface QuestTwineIframeProps {
 
 export function QuestTwineIframe({ htmlArtifact, onComplete }: QuestTwineIframeProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    const [isReady, setIsReady] = useState(false)
+    const [, setIsReady] = useState(false)
 
     // Construct the full runner HTML
     // We wrap the story data in a minimal SugarCube-esque player

@@ -15,6 +15,8 @@ import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
 import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
 import { CastIChingModal } from '@/components/CastIChingModal'
 import { CyoaBarLedgerSheet } from '@/components/cyoa/CyoaBarLedgerSheet'
+import { CopyableProse } from '@/components/ui/CopyableProse'
+import { CopyTextButton } from '@/components/ui/CopyTextButton'
 
 interface Choice {
   text: string
@@ -55,6 +57,10 @@ interface Props {
   returnTo?: string
   portalHexagramId?: number
   portalFace?: string
+  portalSpokeIndex?: number
+  portalKotterStage?: number
+  /** Instance display name when playing from campaign hub */
+  campaignDisplayName?: string
 }
 
 export function AdventurePlayer({
@@ -70,6 +76,9 @@ export function AdventurePlayer({
   returnTo,
   portalHexagramId,
   portalFace,
+  portalSpokeIndex,
+  portalKotterStage,
+  campaignDisplayName,
 }: Props) {
   const [currentNode, setCurrentNode] = useState<Node | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,6 +127,16 @@ export function AdventurePlayer({
       const params = new URLSearchParams()
       if (isPreview) params.set('preview', '1')
       if (portalFace) params.set('face', portalFace)
+      if (campaignRef) params.set('ref', campaignRef)
+      if (portalHexagramId != null && Number.isFinite(portalHexagramId)) {
+        params.set('hexagram', String(portalHexagramId))
+      }
+      if (portalSpokeIndex != null && portalSpokeIndex >= 0 && portalSpokeIndex <= 7) {
+        params.set('spoke', String(portalSpokeIndex))
+      }
+      if (portalKotterStage != null && Number.isFinite(portalKotterStage)) {
+        params.set('kotterStage', String(portalKotterStage))
+      }
       const qs = params.toString()
       const url = `/api/adventures/${adventureSlug}/${nodeId}${qs ? `?${qs}` : ''}`
       const res = await fetch(url)
@@ -166,7 +185,17 @@ export function AdventurePlayer({
   useEffect(() => {
     fetchNode(startNodeId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adventureSlug, startNodeId, questId, threadId])
+  }, [
+    adventureSlug,
+    startNodeId,
+    questId,
+    threadId,
+    campaignRef,
+    portalFace,
+    portalHexagramId,
+    portalSpokeIndex,
+    portalKotterStage,
+  ])
 
   useEffect(() => {
     if (currentNode?.metadata?.actionType === 'bar_emit') {
@@ -306,7 +335,10 @@ export function AdventurePlayer({
   if (error && !currentNode) {
     return (
       <div className="space-y-4 text-center p-8 border border-zinc-800 rounded-xl">
-        <p className="text-red-400">{error}</p>
+        <div className="flex justify-center items-start gap-2">
+          <p className="text-red-400 flex-1 min-w-0">{error}</p>
+          <CopyTextButton text={error} aria-label="Copy error message" />
+        </div>
         <button
           onClick={() => fetchNode(startNodeId)}
           className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm"
@@ -319,6 +351,8 @@ export function AdventurePlayer({
 
   if (!currentNode) return null
 
+  const showHubContextStrip = Boolean(campaignRef?.trim())
+
   const slides = chunkIntoSlides(currentNode.text)
   const useSlideMode = slides.length > 1
   const displayText = useSlideMode ? slides[slideIndex] : currentNode.text
@@ -327,7 +361,39 @@ export function AdventurePlayer({
     <div
       className={`space-y-8 animate-in fade-in duration-500 ${!isPreview ? 'pb-32 sm:pb-36' : ''}`}
     >
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+      {showHubContextStrip ? (
+        <div
+          role="region"
+          aria-label="Campaign hub context"
+          className="rounded-lg border border-zinc-700/90 bg-zinc-950/90 px-3 py-2.5 sm:px-4 flex flex-wrap items-center justify-between gap-3"
+        >
+          <p className="text-xs text-zinc-400 min-w-0 flex-1 leading-relaxed">
+            <span className="text-zinc-100 font-medium">
+              {campaignDisplayName?.trim() ? campaignDisplayName.trim() : campaignRef}
+            </span>
+            {portalSpokeIndex !== undefined ? (
+              <span className="text-zinc-500"> · Spoke {portalSpokeIndex + 1} of 8</span>
+            ) : null}
+            {portalHexagramId != null ? (
+              <span className="text-zinc-500"> · Hexagram {portalHexagramId}</span>
+            ) : null}
+            {portalKotterStage != null ? (
+              <span className="text-zinc-500"> · Collective stage {portalKotterStage}</span>
+            ) : null}
+          </p>
+          <Link
+            href={`/campaign/hub?ref=${encodeURIComponent(campaignRef!)}`}
+            className="shrink-0 text-sm font-medium text-purple-400 hover:text-purple-300 min-h-[44px] inline-flex items-center"
+          >
+            Back to hub →
+          </Link>
+        </div>
+      ) : null}
+      <CopyableProse
+        textToCopy={displayText}
+        copyAriaLabel={useSlideMode ? 'Copy visible passage text' : 'Copy passage text'}
+        className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none"
+      >
         <ReactMarkdown
           components={{
             a: ({ href, children }) => {
@@ -358,7 +424,7 @@ export function AdventurePlayer({
         >
           {displayText}
         </ReactMarkdown>
-      </div>
+      </CopyableProse>
 
       {useSlideMode ? (
         <div className="flex items-center justify-between">
@@ -534,8 +600,9 @@ export function AdventurePlayer({
       )}
 
       {error && !error.includes('gameboard') && (
-        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl flex justify-end items-start gap-2">
+          <p className="text-red-400 text-sm flex-1 min-w-0">{error}</p>
+          <CopyTextButton text={error} aria-label="Copy error message" />
         </div>
       )}
 

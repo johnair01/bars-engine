@@ -135,9 +135,6 @@ export async function drawFromDeck(
     cycleId: `${instanceId}-${domain}-${Date.now()}`,
   }
 
-  const getAvailable = (items: { id: string; moveType: string | null }[]) =>
-    items.filter((d) => !exclude.has(d.id) && !cycle.playedQuestIds.includes(d.id))
-
   if (slotMoveTypes != null && slotMoveTypes.length > 0) {
     let { items } = await getCampaignDomainDeckWithMoveTypes(
       instanceId,

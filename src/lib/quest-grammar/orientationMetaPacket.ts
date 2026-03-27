@@ -18,10 +18,7 @@
  */
 
 import { GAME_MASTER_FACES, FACE_META } from './types'
-import {
-  compileFaceSubPacketWithConvergence,
-  faceSubPacketTerminalId,
-} from './orientationFaceSubPacket'
+import { compileFaceSubPacketWithConvergence } from './orientationFaceSubPacket'
 import type {
   GameMasterFace,
   SerializableQuestPacket,

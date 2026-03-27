@@ -14,7 +14,7 @@
  */
 
 import { redirect } from 'next/navigation'
-import { db } from '@/lib/db'
+
 import { cookies } from 'next/headers'
 import { StoryReader } from './components/StoryReader'
 import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
@@ -90,7 +90,7 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
                 startedAt: new Date(),
                 lastActiveAt: new Date()
             }
-    } catch (e) {
+    } catch {
         // Fallback
         progress = {
             currentNodeId: 'intro_001',
@@ -114,7 +114,8 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
     if (!player.nationId && (effectiveNodeId.startsWith('playbook') || effectiveNodeId === 'conclusion' || effectiveNodeId === 'dashboard')) {
         effectiveNodeId = 'nation_select'
     }
-    if (!player.playbookId && (effectiveNodeId === 'conclusion' || effectiveNodeId === 'dashboard')) {
+    // Player.archetypeId is canonical (not playbookId — that field does not exist on Prisma Player).
+    if (!player.archetypeId && (effectiveNodeId === 'conclusion' || effectiveNodeId === 'dashboard')) {
         effectiveNodeId = 'playbook_select'
     }
     if (requestedStep && requestedStep !== effectiveNodeId) {

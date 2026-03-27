@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { CopyTextButton } from '@/components/ui/CopyTextButton'
 
 const REQUEST_TYPES = [
     { value: 'rules', label: 'Rules' },
@@ -73,14 +74,28 @@ export function LibraryRequestModal({
                             ×
                         </button>
                     </div>
-                    <p className="text-sm text-zinc-400">
-                        Librarians in the Conclave are interested in making sure the information you need is readily available. If we have an answer, you&apos;ll get a link. Otherwise, we&apos;ll create a DocQuest for the community.
-                    </p>
+                    <div className="space-y-2">
+                        <div className="flex justify-end">
+                            <CopyTextButton
+                                text="Librarians in the Conclave are interested in making sure the information you need is readily available. If we have an answer, you'll get a link. Otherwise, we'll create a DocQuest for the community."
+                                aria-label="Copy introduction"
+                            />
+                        </div>
+                        <p className="text-sm text-zinc-400">
+                            Librarians in the Conclave are interested in making sure the information you need is readily available. If we have an answer, you&apos;ll get a link. Otherwise, we&apos;ll create a DocQuest for the community.
+                        </p>
+                    </div>
 
                     {result ? (
                         <div className="space-y-3">
                             {result.status === 'resolved' ? (
-                                <div className="bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-4">
+                                <div className="bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-4 space-y-2">
+                                    <div className="flex justify-end">
+                                        <CopyTextButton
+                                            text={`We found an answer!\n\n${result.docTitle}\n/docs/${result.docSlug}`}
+                                            aria-label="Copy result summary"
+                                        />
+                                    </div>
                                     <p className="text-emerald-200 font-medium">We found an answer!</p>
                                     <Link
                                         href={`/docs/${result.docSlug}`}
@@ -91,6 +106,14 @@ export function LibraryRequestModal({
                                 </div>
                             ) : (
                                 <div className="bg-purple-950/30 border border-purple-900/50 rounded-lg p-4 space-y-3">
+                                    <div className="flex justify-end">
+                                        <CopyTextButton
+                                            text={
+                                                'No match yet. A new doc page and DocQuest were created. The DocQuest is in your Active Quests. Complete it to submit evidence and build the answer.'
+                                            }
+                                            aria-label="Copy result summary"
+                                        />
+                                    </div>
                                     <p className="text-purple-200 font-medium">No match yet. A new doc page and DocQuest were created.</p>
                                     <div className="flex flex-wrap gap-3">
                                         <Link
@@ -119,9 +142,14 @@ export function LibraryRequestModal({
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">
-                                    What do you need help with?
-                                </label>
+                                <div className="flex justify-between items-center gap-2 mb-1">
+                                    <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold">
+                                        What do you need help with?
+                                    </label>
+                                    {requestText.trim() ? (
+                                        <CopyTextButton text={requestText} aria-label="Copy request text" />
+                                    ) : null}
+                                </div>
                                 <textarea
                                     value={requestText}
                                     onChange={(e) => setRequestText(e.target.value)}
@@ -132,9 +160,15 @@ export function LibraryRequestModal({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">
-                                    Type
-                                </label>
+                                <div className="flex justify-between items-center gap-2 mb-1">
+                                    <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold">
+                                        Type
+                                    </label>
+                                    <CopyTextButton
+                                        text={REQUEST_TYPES.find((t) => t.value === requestType)?.label ?? requestType}
+                                        aria-label="Copy request type"
+                                    />
+                                </div>
                                 <select
                                     value={requestType}
                                     onChange={(e) => setRequestType(e.target.value)}
@@ -148,8 +182,9 @@ export function LibraryRequestModal({
                                 </select>
                             </div>
                             {error && (
-                                <div className="text-sm text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg px-3 py-2">
-                                    {error}
+                                <div className="text-sm text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg px-3 py-2 flex justify-end items-start gap-2">
+                                    <p className="flex-1 min-w-0">{error}</p>
+                                    <CopyTextButton text={error} aria-label="Copy error message" />
                                 </div>
                             )}
                             <div className="flex gap-3">

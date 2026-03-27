@@ -100,6 +100,8 @@ Campaign
 - **Alchemy trace schema**: extend `storyProgress`, quest tags, or dedicated `PlayerCampaignPath` model.  
 - **Epiphany bridge**: minimum template count (1 parameterized graph vs 8 bespoke).
 
+**Runtime decisions (persistence, alchemy JSON):** [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) · **Template matrix:** [TEMPLATE_INDEX.md](./TEMPLATE_INDEX.md) · **Vault gate playtest:** [PLAYTEST_VAULT_GATE.md](./PLAYTEST_VAULT_GATE.md)
+
 **Strand consult (Bruised Banana runway):** [STRAND_CONSULT_BRUISED_BANANA.md](./STRAND_CONSULT_BRUISED_BANANA.md)  
 **QA + party invite + intake:** [TEST_PLAN_PARTY_AND_INTAKE.md](./TEST_PLAN_PARTY_AND_INTAKE.md) · **Partiful copy:** [docs/events/bruised-banana-apr-2026-partiful-copy.md](../../docs/events/bruised-banana-apr-2026-partiful-copy.md) · **BAR invite CYOA MVP:** [EVENT_INVITE_BAR_CYOA_MVP.md](./EVENT_INVITE_BAR_CYOA_MVP.md)
 
@@ -107,6 +109,7 @@ Campaign
 
 ## References
 
+- Player **plant / water** campaign kernels from **hub spokes** (four move beds, first-mover anchor): [spoke-move-seed-beds](../spoke-move-seed-beds/spec.md).  
 - Kotter × domain matrix: [campaign-kotter-domains](../campaign-kotter-domains/spec.md).  
 - Domain decks / gameboard draw: [campaign-domain-decks](../campaign-domain-decks/spec.md).  
 - Vault limits copy and behavior: [vault-page-experience](../vault-page-experience/spec.md), `src/lib/vault-limits.ts`.  

@@ -109,7 +109,7 @@ export function normalizeTwineStory(rawJson: any): CanonicalTwineStory {
     let startPassageId = '1'
     try {
         startPassageId = getStartPassageId(parsed)
-    } catch (e) {
+    } catch {
         // Safe fallback if passages exist
         if (parsed.passages.length > 0) {
             startPassageId = parsed.passages[0].name || parsed.passages[0].pid || '1'

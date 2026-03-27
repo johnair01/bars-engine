@@ -16,7 +16,6 @@
 
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
 import type {
-  TransformationMove,
   MoveCategory,
   WcgsStage,
   TypicalOutputType,

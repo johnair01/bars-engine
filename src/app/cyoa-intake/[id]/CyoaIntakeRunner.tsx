@@ -11,7 +11,6 @@ import type {
   IntakeCheckInData,
   IntakeChoiceLogEntry,
   IntakeCheckInAnswers,
-  IntakeMoveType,
 } from '@/lib/cyoa-intake/intakeSurface'
 import type { EmotionChannel, AlchemyAltitude } from '@/lib/alchemy/types'
 
@@ -175,11 +174,10 @@ function rehydrateState(
 
 function derivePhaseFromSaved({
   checkInDone,
-  hasProgress: _hasProgress,
   completed,
 }: {
   checkInDone: boolean
-  hasProgress: boolean
+  hasProgress?: boolean
   completed: boolean
 }): Phase {
   if (completed) return 'complete'

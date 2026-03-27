@@ -91,6 +91,7 @@ const instanceHubSelect = {
   campaignRef: true,
   slug: true,
   campaignHubState: true,
+  donationButtonLabel: true,
 } satisfies Prisma.InstanceSelect
 
 async function ensurePersistedHubDraw(inst: {
@@ -133,6 +134,8 @@ export async function get8PortalsForCampaign(
       campaignRefResolved: string
       /** Six face moves for strict lockstep (current Kotter stage). */
       faceMoves: readonly GmFaceStageMove[]
+      /** Optional label for primary donate CTA (e.g. hub). */
+      donateButtonLabel: string | null
     }
   | { error: string }
 > {
@@ -226,6 +229,7 @@ export async function get8PortalsForCampaign(
       portalStartNodeIds: PORTAL_START_NODE_IDS,
       campaignRefResolved: refResolved,
       faceMoves,
+      donateButtonLabel: inst.donationButtonLabel ?? null,
     }
   } catch (e) {
     console.error('[get8PortalsForCampaign]', e)

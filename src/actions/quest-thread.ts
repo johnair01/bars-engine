@@ -14,6 +14,8 @@ const DEPRECATED_THREAD_IDS = new Set([
     'bruised-banana-orientation-DIRECT_ACTION',
     'bruised-banana-orientation-RAISE_AWARENESS',
     'bruised-banana-orientation-SKILLFUL_ORGANIZING',
+    /** Library request tutorial — not assigned until product-ready; cert quest covers verification. */
+    'k-space-librarian-thread',
 ])
 const DEPRECATED_THREAD_TITLES = new Set(['Welcome Aboard'])
 
@@ -356,7 +358,7 @@ export async function assignOrientationThreads(
             const questIds: string[] = []
             if (primary?.id) questIds.push(primary.id)
             optional.forEach((q) => q.id && questIds.push(q.id))
-            questIds.push('bb-explore-market-quest', 'k-space-librarian-quest')
+            questIds.push('bb-explore-market-quest')
 
             const perPlayerThreadId = `bruised-banana-orientation-${playerId}`
             const creator = await db.player.findFirst({ where: { roles: { some: { role: { key: 'admin' } } } } }) ?? await db.player.findFirst()
@@ -368,7 +370,7 @@ export async function assignOrientationThreads(
                 create: {
                     id: perPlayerThreadId,
                     title: 'Help the Bruised Banana',
-                    description: 'Short wins after initiation. Domain-biased starter quests, then Explore the Market and Request from Library.',
+                    description: 'Short wins after initiation. Domain-biased starter quests, then Explore the Market.',
                     threadType: 'orientation',
                     creatorType: 'system',
                     creatorId: creator.id,

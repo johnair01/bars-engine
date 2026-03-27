@@ -97,6 +97,7 @@ Wire **ending CTAs** (`endingCtas` / defaults) so the JSON doorway and **Partifu
 | [`twine-authoring-ir`](../twine-authoring-ir/spec.md) / `src/lib/twine-authoring-ir` | **C** — `validateIrStory` |
 | [`event-invite-party-initiation`](../event-invite-party-initiation/spec.md) | Invite URL + Partiful + initiation; **R4** content |
 | [`player-event-creation`](../player-event-creation/spec.md) | Events data model; **feeds** invites; future per-event graphs consume **R2/R3** |
+| [`campaign-branch-seeds`](../campaign-branch-seeds/spec.md) | Player **seeds** on `CampaignReader` nodes; steward **metabolize** must pass the same **B** graph validation as admin saves |
 
 ---
 

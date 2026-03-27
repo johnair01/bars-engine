@@ -47,7 +47,7 @@ export function useStoryNavigation(initialNode: StoryNode | null, initialProgres
                 })
             })
 
-            const result = await response.json()
+            await response.json()
 
             // Update progress with rewards
             const newProgress: StoryProgress = {

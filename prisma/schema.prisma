@@ -181,6 +181,7 @@ model Player {
   marketplaceProfiles          PlayerMarketplaceProfile[]
   friendshipInvitationsSent    FriendshipInvitation[]      @relation("FriendshipInvitationsSent")
   friendshipInvitationsCompleted FriendshipInvitation[]    @relation("FriendshipInvitationsCompleted")
+  eventBingoCards              EventBingoCard[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -1398,6 +1399,8 @@ model Instance {
   venmoUrl              String?
   cashappUrl            String?
   paypalUrl             String?
+  /// Optional label for primary donate CTAs (e.g. "Support the residency")
+  donationButtonLabel   String?
   donationPackRateCents Int?                    @default(100) // 100 = 1 pack per $1
   packConfig            String? // JSON: { packTypes: { [key]: { vibeulonAmount?: number, vibeulonMin?: number, vibeulonMax?: number } } }
   startDate             DateTime?
@@ -1455,6 +1458,8 @@ model Instance {
   swapEventIntakePublishedAt DateTime?               @map("swap_event_intake_published_at")
   swapEventRsvps             SwapEventRsvp[]
   friendshipInvitations      FriendshipInvitation[]
+  /// Community Character corpus (v1 JSON) — bingo prompts per campaign instance
+  communityCharacterCorpus   Json?                   @map("community_character_corpus")
 
   @@map("instances")
 }
@@ -1737,6 +1742,10 @@ model EventArtifact {
   visibility            String    @default("campaign_visible") // private | campaign_visible | public
   status                String    @default("draft") // draft | scheduled | live | completed | recorded | archived
   recordingUrl          String?
+  /// Optional JSON overrides for donation CTAs (Venmo, etc.) — merged over Instance defaults in event UI
+  donationCtaOverrides  Json?
+  /// Bingo prize config (JSON) — e.g. vibeulon mint, custom description
+  bingoConfig           Json?                   @map("bingo_config")
   createdByActorId      String
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -1749,6 +1758,7 @@ model EventArtifact {
   invites             EventInvite[]
   participants        EventParticipant[]
   campaignInvitations CampaignInvitation[]
+  eventBingoCards     EventBingoCard[]
 
   @@index([linkedCampaignId])
   @@index([instanceId])
@@ -1756,6 +1766,27 @@ model EventArtifact {
   @@index([status])
   @@index([startTime])
   @@map("event_artifacts")
+}
+
+/// Player bingo card for an event (3×3 prompts from Community Character corpus).
+model EventBingoCard {
+  id             String    @id @default(cuid())
+  playerId       String    @map("player_id")
+  eventId        String    @map("event_id")
+  campaignRef    String    @map("campaign_ref")
+  squares        Json      @default("[]")
+  completedLines Json      @default("[]") @map("completed_lines")
+  prizeClaimedAt DateTime? @map("prize_claimed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  player Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  event  EventArtifact @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, eventId])
+  @@index([playerId])
+  @@index([eventId, campaignRef])
+  @@map("event_bingo_cards")
 }
 
 model EventParticipant {
@@ -1938,6 +1969,8 @@ model Donation {
   provider        String           @default("manual")
   externalId      String?
   note            String?
+  /// DSW Phase 2: { milestoneId?, echoQuestId? } for structured echo (honor donations).
+  dswMeta         Json?            @map("dsw_meta")
   createdAt       DateTime         @default(now())
   instance        Instance         @relation(fields: [instanceId], references: [id], onDelete: Cascade)
   player          Player?          @relation(fields: [playerId], references: [id])

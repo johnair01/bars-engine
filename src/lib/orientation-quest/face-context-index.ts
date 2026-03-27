@@ -21,7 +21,6 @@
  */
 
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
-import type { TransformationMove } from '@/lib/transformation-move-registry/types'
 
 // ---------------------------------------------------------------------------
 // Types

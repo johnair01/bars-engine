@@ -38,7 +38,7 @@ export function CampaignModal({
     campaignEntry,
     activeInstance,
     eventGoal = 0,
-    eventCurrent = 0,
+    eventCurrent: _eventCurrent = 0,
     eventPct = 0,
     formattedEventCurrent = '$0',
     formattedEventGoal = '$0',

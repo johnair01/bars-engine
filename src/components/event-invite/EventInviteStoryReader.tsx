@@ -5,6 +5,8 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import type { EventInviteEndingCta, EventInviteStory } from '@/lib/event-invite-story/schema'
 import { EVENT_INVITE_DEFAULT_CTAS } from '@/lib/event-invite-story/default-cta'
+import { CopyableProse } from '@/components/ui/CopyableProse'
+import { CopyTextButton } from '@/components/ui/CopyTextButton'
 
 export type { EventInviteEndingCta }
 
@@ -40,8 +42,12 @@ export function EventInviteStoryReader({
 
     const passage = byId.get(currentId)
     if (!passage) {
+        const misconfiguredMsg = 'Story is misconfigured (missing passage). Please try again later.'
         return (
-            <p className="text-red-400 text-sm">Story is misconfigured (missing passage). Please try again later.</p>
+            <div className="flex justify-end items-start gap-2">
+                <p className="text-red-400 text-sm flex-1">{misconfiguredMsg}</p>
+                <CopyTextButton text={misconfiguredMsg} aria-label="Copy message" />
+            </div>
         )
     }
 
@@ -75,6 +81,12 @@ export function EventInviteStoryReader({
                 {barDescription ? (
                     <p className="text-sm text-zinc-500 max-w-lg mx-auto">{barDescription}</p>
                 ) : null}
+                <div className="flex justify-end max-w-lg mx-auto w-full">
+                    <CopyTextButton
+                        text={barDescription.trim() ? `${barTitle}\n\n${barDescription}` : barTitle}
+                        aria-label="Copy event title and description"
+                    />
+                </div>
             </header>
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 sm:p-8">
@@ -89,12 +101,22 @@ export function EventInviteStoryReader({
                         </button>
                     </div>
                 ) : null}
-                <div className="prose prose-invert prose-zinc prose-sm max-w-none">
+                <CopyableProse
+                    textToCopy={passage.text}
+                    copyAriaLabel="Copy passage text"
+                    className="prose prose-invert prose-zinc prose-sm max-w-none"
+                >
                     <ReactMarkdown>{passage.text}</ReactMarkdown>
-                </div>
+                </CopyableProse>
 
                 {passage.ending ? (
                     <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
+                        <div className="flex justify-end">
+                            <CopyTextButton
+                                text={`Your path\n\n${passage.ending.role}\n\n${passage.ending.description}`}
+                                aria-label="Copy ending summary"
+                            />
+                        </div>
                         <p className="text-xs uppercase tracking-widest text-purple-400">Your path</p>
                         <p className="text-lg font-semibold text-white">{passage.ending.role}</p>
                         <p className="text-zinc-400 text-sm">{passage.ending.description}</p>
@@ -134,10 +156,21 @@ export function EventInviteStoryReader({
             </div>
 
             {footerNote !== null ? (
-                <p className="text-center text-[10px] text-zinc-600">
-                    {footerNote ??
-                        'No account needed for this preview. Save the link for April 5.'}
-                </p>
+                <div className="flex flex-col items-center gap-1 max-w-lg mx-auto">
+                    <div className="flex justify-end w-full">
+                        <CopyTextButton
+                            text={
+                                footerNote ??
+                                'No account needed for this preview. Save the link for April 5.'
+                            }
+                            aria-label="Copy footer note"
+                        />
+                    </div>
+                    <p className="text-center text-[10px] text-zinc-600">
+                        {footerNote ??
+                            'No account needed for this preview. Save the link for April 5.'}
+                    </p>
+                </div>
             ) : null}
         </div>
     )

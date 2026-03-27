@@ -65,7 +65,7 @@ export function GuidancePanel({
       }
       setGuidance(g)
       setExpanded(true)
-    } catch (e) {
+    } catch {
       setError('Could not load guidance')
       if (!hideOnError) setGuidance(null)
     } finally {

@@ -1,4 +1,4 @@
-import { CreateBarForm } from "@/components/CreateBarForm"
+
 import { CreateBarPageClient } from "@/components/CreateBarPageClient"
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'

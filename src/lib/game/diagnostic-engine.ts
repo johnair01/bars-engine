@@ -12,9 +12,7 @@ import {
     ELEMENTS,
     ELEMENT_TO_NATION,
     ARCHETYPE_KEYS,
-    VALID_SIGNAL_KEYS,
     type ElementKey,
-    type ArchetypeKey,
 } from './nations'
 
 export interface DiagnosticState {

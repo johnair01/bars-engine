@@ -9,9 +9,9 @@
 
 ## Phase 2 — Admin graph UX
 
-- [ ] **UG-2.1** — Adventure detail: **Node map** table (nodeId, #choices, broken targets).
+- [x] **UG-2.1** — Adventure detail: **Node map** table (nodeId, #choices, broken targets).
 - [x] **UG-2.2** — Choice editor: **target suggestions** (`datalist`) from `listCampaignPassageNodeIds` (+ `signup` / `Game_Login`).
-- [ ] **UG-2.3** — Implement or finish **`linkFrom`** on `createPassage` per [admin-cyoa-preview-draft-wizard](../admin-cyoa-preview-draft-wizard/spec.md).
+- [x] **UG-2.3** — Implement or finish **`linkFrom`** on `createPassage` per [admin-cyoa-preview-draft-wizard](../admin-cyoa-preview-draft-wizard/spec.md).
 - [ ] **UG-2.4** — Optional: `?preview=1` on adventures API for DRAFT play (same spec).
 
 ## Phase 3 — Invite content

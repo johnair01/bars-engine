@@ -5,6 +5,7 @@ import { db, dbBase } from '@/lib/db'
 import type { EventArtifactListItem } from '@/lib/event-artifact-list-types'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { eventDonationCtaOverridesSchema } from '@/lib/donation-cta-schema'
 
 async function getPlayerId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -476,6 +477,69 @@ export async function updateEventArtifactDetails(
 }
 
 /**
+ * Event hosts/stewards: optional JSON overrides for donation links (same permission as event details edit).
+ * Pass `null` for `raw` to clear overrides and inherit from Instance.
+ */
+export async function updateEventDonationCtaOverrides(
+  instanceId: string,
+  eventArtifactId: string,
+  raw: unknown
+): Promise<{ success: true } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+  if (!(await canInviteToEventArtifact(playerId, eventArtifactId, instanceId))) {
+    return { error: 'You do not have permission to edit this event' }
+  }
+
+  const instRow = await db.instance.findUnique({
+    where: { id: instanceId },
+    select: { campaignRef: true },
+  })
+  const cref = instRow?.campaignRef ?? null
+  const orBranches: Prisma.EventArtifactWhereInput[] = [
+    { instanceId },
+    { campaign: { instanceId } },
+  ]
+  if (cref) {
+    orBranches.push({ instance: { is: { campaignRef: cref } } })
+    orBranches.push({ campaign: { instance: { is: { campaignRef: cref } } } })
+  }
+  const artifact = await db.eventArtifact.findFirst({
+    where: { id: eventArtifactId, OR: orBranches },
+    select: { id: true },
+  })
+  if (!artifact) return { error: 'Event not found on this instance' }
+
+  if (raw === null) {
+    await db.eventArtifact.update({
+      where: { id: eventArtifactId },
+      data: { donationCtaOverrides: Prisma.DbNull },
+    })
+    revalidatePath('/event')
+    revalidatePath('/admin/campaign-events')
+    return { success: true }
+  }
+
+  const parsed = eventDonationCtaOverridesSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((e) => e.message).join('; ') || 'Invalid overrides' }
+  }
+  const data = parsed.data
+  if (Object.keys(data).length === 0) {
+    return { error: 'Nothing to save' }
+  }
+
+  await db.eventArtifact.update({
+    where: { id: eventArtifactId },
+    data: { donationCtaOverrides: data as Prisma.InputJsonValue },
+  })
+
+  revalidatePath('/event')
+  revalidatePath('/admin/campaign-events')
+  return { success: true }
+}
+
+/**
  * Replace campaign host list (JSON player ids). **Global admin only** — transitional handoff tool.
  */
 export async function updateEventCampaignHosts(
@@ -524,6 +588,7 @@ export type EventDetailsForEdit =
       locationDetails: string | null
       visibility: string
       status: string
+      donationCtaOverrides: Record<string, unknown> | null
     }
   | { error: string }
 
@@ -561,9 +626,15 @@ export async function getEventArtifactDetailsForEdit(
       locationDetails: true,
       visibility: true,
       status: true,
+      donationCtaOverrides: true,
     },
   })
   if (!ev) return { error: 'Event not found on this instance' }
+  const rawOverrides = ev.donationCtaOverrides
+  const donationCtaOverrides =
+    rawOverrides != null && typeof rawOverrides === 'object' && !Array.isArray(rawOverrides)
+      ? (rawOverrides as Record<string, unknown>)
+      : null
   return {
     title: ev.title,
     description: ev.description,
@@ -572,6 +643,7 @@ export async function getEventArtifactDetailsForEdit(
     locationDetails: ev.locationDetails,
     visibility: ev.visibility,
     status: ev.status,
+    donationCtaOverrides,
   }
 }
 

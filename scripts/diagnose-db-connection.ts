@@ -147,6 +147,75 @@ async function main() {
         console.log(`   Error: ${(e as Error).message}`)
     }
 
+    // Prisma migrate history — recent activity on this physical DB (not a full "who reset" proof)
+    console.log('')
+    console.log('📦 PRISMA MIGRATIONS (this database)')
+    console.log('─'.repeat(50))
+    try {
+        const latest = await client.$queryRaw<{ migration_name: string; finished_at: Date }[]>`
+            SELECT migration_name, finished_at
+            FROM _prisma_migrations
+            WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL
+            ORDER BY finished_at DESC
+            LIMIT 1
+        `
+        if (latest[0]) {
+            const t = latest[0].finished_at instanceof Date ? latest[0].finished_at.toISOString() : String(latest[0].finished_at)
+            console.log(`   Latest applied: ${latest[0].migration_name}`)
+            console.log(`   Finished at:    ${t}`)
+        } else {
+            console.log('   No finished migrations found (empty _prisma_migrations or new DB).')
+        }
+        const last24h = await client.$queryRaw<{ migration_name: string; finished_at: Date }[]>`
+            SELECT migration_name, finished_at
+            FROM _prisma_migrations
+            WHERE finished_at IS NOT NULL
+              AND rolled_back_at IS NULL
+              AND finished_at > NOW() - INTERVAL '24 hours'
+            ORDER BY finished_at DESC
+        `
+        if (last24h.length === 0) {
+            console.log('   Migrations applied in last 24h: none')
+        } else {
+            console.log(`   Migrations applied in last 24h: ${last24h.length}`)
+            for (const m of last24h.slice(0, 15)) {
+                const t = m.finished_at instanceof Date ? m.finished_at.toISOString() : String(m.finished_at)
+                console.log(`     • ${m.migration_name} @ ${t}`)
+            }
+            if (last24h.length > 15) console.log(`     … and ${last24h.length - 15} more`)
+        }
+    } catch (e) {
+        const msg = (e as Error).message
+        if (msg.includes('does not exist') || msg.includes('42P01')) {
+            console.log(
+                '   No _prisma_migrations table — migrate history unavailable (db push–only DB, or non-standard schema).',
+            )
+        } else {
+            console.log(`   Could not read _prisma_migrations: ${msg}`)
+        }
+    }
+
+    // Data recency hint (optional — empty DB or all-new rows may indicate wrong instance)
+    console.log('')
+    console.log('📅 DATA RECENCY (players)')
+    console.log('─'.repeat(50))
+    try {
+        const agg = await client.$queryRaw<{ min_c: Date | null; max_c: Date | null }[]>`
+            SELECT MIN("createdAt") AS min_c, MAX("createdAt") AS max_c FROM players
+        `
+        const row = agg[0]
+        if (row?.min_c != null) {
+            const min = row.min_c instanceof Date ? row.min_c.toISOString() : String(row.min_c)
+            const max = row.max_c instanceof Date ? row.max_c.toISOString() : String(row.max_c)
+            console.log(`   Oldest player createdAt: ${min}`)
+            console.log(`   Newest player createdAt: ${max}`)
+        } else {
+            console.log('   (no players rows)')
+        }
+    } catch (e) {
+        console.log(`   Could not query players: ${(e as Error).message}`)
+    }
+
     console.log('')
     console.log('To verify: Compare "Database identity" and row counts to what you expect.')
     console.log('')

@@ -8,7 +8,6 @@ import {
     startEmotionalFirstAidSession
 } from '@/actions/emotional-first-aid'
 import {
-    FIRST_AID_MINT_AMOUNT,
     VibesEmergencyTag,
 } from '@/lib/emotional-first-aid'
 import { FirstAidTwinePlayer } from './FirstAidTwinePlayer'
@@ -267,7 +266,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
                         <Shadow321Form
                             embedded
                             contextQuestId={contextQuestId ?? undefined}
-                            onComplete={(_metadata) => {
+                            onComplete={() => {
                                 setTwineVariables({ protocol: 'shadow-321' })
                                 setStage('resolution')
                             }}

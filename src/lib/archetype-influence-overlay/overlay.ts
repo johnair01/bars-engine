@@ -4,7 +4,7 @@
  */
 
 import type { ArchetypeInfluenceProfile } from './types'
-import type { QuestSeed, QuestSeedArc } from '@/lib/transformation-move-registry/types'
+import type { QuestSeed } from '@/lib/transformation-move-registry/types'
 
 /**
  * Applies archetype influence overlay to a quest seed.

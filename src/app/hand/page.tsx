@@ -1,8 +1,8 @@
-import { db } from '@/lib/db'
+
 import { redirect } from 'next/navigation'
 import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import Link from 'next/link'
-import { PlacementModal } from '@/components/hand/PlacementModal'
+
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
 import { loadAcceptedInvitesForVault, loadVaultCoreData } from '@/lib/vault-queries'
 import { loadEventInviteBarsForStewards } from '@/lib/vault-event-invite-bars'

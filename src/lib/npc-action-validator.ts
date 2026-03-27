@@ -48,7 +48,6 @@ export function validateNpcAction(
     status: string
     limits: string
   },
-  _context?: { sceneId?: string; campaignPhase?: string }
 ): NpcActionValidationResult {
   // Must be a known verb
   if (!VALID_VERBS.includes(action.verb as NpcVerb)) {

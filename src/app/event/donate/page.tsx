@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { getActiveInstance } from '@/actions/instance'
+import { z } from 'zod'
+import { getInstanceForDonation } from '@/lib/donation-instance'
 import { getCurrentPlayer } from '@/lib/auth'
 import { processPendingDonation } from '@/actions/donate'
 import { SelfReportDonationForm } from './SelfReportDonationForm'
@@ -15,6 +16,9 @@ import { SelfReportDonationForm } from './SelfReportDonationForm'
  * @example /event/donate
  * @agentDiscoverable false
  */
+const DSW_ALLOWED_PATH = new Set(['money', 'time', 'space'])
+const DSW_ALLOWED_TIER = new Set(['small', 'medium', 'large', 'custom'])
+
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
   return new Intl.NumberFormat('en-US', {
@@ -31,17 +35,51 @@ const PROVIDER_LINKS = [
   { key: 'stripeOneTimeUrl' as const, label: 'Stripe (Card)', color: 'bg-indigo-600 hover:bg-indigo-500' },
 ] as const
 
-export default async function DonatePage() {
-  const instance = await getActiveInstance()
+const cuidSchema = z.string().cuid()
+
+export default async function DonatePage(props: {
+  searchParams: Promise<{
+    amount?: string
+    dswPath?: string
+    dswTier?: string
+    dswNarrative?: string
+    dswMilestoneId?: string
+    dswEchoQuestId?: string
+    /** Campaign context from DSW / campaign CTAs (Phase 3). */
+    ref?: string
+  }>
+}) {
+  const sp = await props.searchParams
+  const refParam = sp.ref?.trim()
+  const wizardBackHref = refParam
+    ? `/event/donate/wizard?ref=${encodeURIComponent(refParam)}`
+    : '/event/donate/wizard'
+  const amount = sp.amount?.trim()
+  const rawPath = sp.dswPath?.trim()
+  const rawTier = sp.dswTier?.trim()
+  let dswNarrative = sp.dswNarrative?.trim() ?? ''
+  if (dswNarrative.length > 280) dswNarrative = dswNarrative.slice(0, 280)
+  const rawMilestone = sp.dswMilestoneId?.trim() ?? ''
+  const rawEchoQuest = sp.dswEchoQuestId?.trim() ?? ''
+  const safePath = rawPath && DSW_ALLOWED_PATH.has(rawPath) ? rawPath : undefined
+  const safeTier = rawTier && DSW_ALLOWED_TIER.has(rawTier) ? rawTier : undefined
+  const safeNarrative = dswNarrative || undefined
+  const safeMilestoneId = cuidSchema.safeParse(rawMilestone).success ? rawMilestone : undefined
+  const safeEchoQuestId = cuidSchema.safeParse(rawEchoQuest).success ? rawEchoQuest : undefined
+  const instance = await getInstanceForDonation(refParam ?? null)
   const player = await getCurrentPlayer()
 
   if (!instance) {
+    const title = refParam ? 'Campaign not found' : 'No active instance'
+    const detail = refParam
+      ? `No residency instance matches ref “${refParam}”. Check the link or ask a steward.`
+      : 'The donation page isn&apos;t configured yet.'
     return (
       <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 flex items-center justify-center">
         <div className="max-w-xl w-full space-y-6 text-center">
           <div className="text-4xl">🧩</div>
-          <h1 className="text-2xl font-bold text-white">No active instance</h1>
-          <p className="text-zinc-500">The donation page isn&apos;t configured yet.</p>
+          <h1 className="text-2xl font-bold text-white">{title}</h1>
+          <p className="text-zinc-500">{detail}</p>
           <Link href="/event" className="inline-block px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200">
             ← Back to event
           </Link>
@@ -66,6 +104,16 @@ export default async function DonatePage() {
           <h1 className="text-3xl font-bold text-white">Donate to {instance.name}</h1>
           <p className="text-zinc-400 text-sm">
             Choose a payment method below, then self-report your donation to receive BARs (redemption packs) you can redeem for vibeulons.
+          </p>
+          <p className="text-sm">
+            <Link
+              href={wizardBackHref}
+              className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+            >
+              Guided wizard
+            </Link>
+            <span className="text-zinc-600"> — </span>
+            <span className="text-zinc-500">money or services (time, space)</span>
           </p>
         </header>
 
@@ -105,7 +153,17 @@ export default async function DonatePage() {
           <p className="text-zinc-400 text-sm">
             After donating, enter the amount below. You&apos;ll receive BARs (redemption packs) based on your donation. {!player && 'You&apos;ll need to sign in or create an account to complete this.'}
           </p>
-          <SelfReportDonationForm instanceId={instance.id} instanceName={instance.name} isLoggedIn={!!player} />
+          <SelfReportDonationForm
+            instanceId={instance.id}
+            instanceName={instance.name}
+            isLoggedIn={!!player}
+            defaultAmount={amount || undefined}
+            dswPath={safePath}
+            dswTier={safeTier}
+            dswNarrative={safeNarrative}
+            dswMilestoneId={safeMilestoneId}
+            dswEchoQuestId={safeEchoQuestId}
+          />
         </section>
       </div>
     </div>

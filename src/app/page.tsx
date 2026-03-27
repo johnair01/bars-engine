@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { StarterQuestBoard } from '@/components/StarterQuestBoard'
-import { DashboardCaster } from '@/components/DashboardCaster'
+
 import { QuestThread } from '@/components/QuestThread'
 import { QuestPack } from '@/components/QuestPack'
 import { ensureWallet } from '@/actions/economy'
@@ -45,6 +45,41 @@ import {
   needsCampaignOnboardingRoute,
   resolveDefaultCampaignRef,
 } from '@/lib/campaign-player-home'
+import {
+  buildMilestoneSnapshot,
+  type CampaignMilestoneGuidance,
+  type GuidedAction,
+  type InstanceLikeForSnapshot,
+} from '@/lib/bruised-banana-milestone'
+
+/** Prefer full BBMT guidance; otherwise show fundraising + donate CTA when an active BB/event instance exists. */
+function residencyProgressForDashboardHeader(
+  guidance: CampaignMilestoneGuidance | null,
+  instance: InstanceLikeForSnapshot | null | undefined,
+  campaignRef: string
+): CampaignMilestoneGuidance | null {
+  if (guidance) return guidance
+  if (!instance) return null
+  const isBb =
+    campaignRef === 'bruised-banana' ||
+    (instance.campaignRef ?? '') === 'bruised-banana' ||
+    (instance.slug ?? '') === 'bruised-banana'
+  if (!instance.isEventMode && !isBb) return null
+  const snapshot = buildMilestoneSnapshot(instance, { campaignRefOverride: campaignRef })
+  if (!snapshot) return null
+  const q = encodeURIComponent(campaignRef)
+  const guidedActions: GuidedAction[] = [
+    {
+      kind: 'event',
+      label: 'Support the residency',
+      href: `/event/donate/wizard?ref=${q}&source=now`,
+      hint: 'Honor reporting, wizard paths for money / time / space, and fundraiser context.',
+    },
+    { kind: 'event', label: 'Event hub', href: `/event?ref=${q}` },
+    { kind: 'campaign', label: 'Campaign', href: `/campaign?ref=${q}` },
+  ]
+  return { snapshot, guidedActions }
+}
 
 function isPrismaConnectionError(err: unknown): boolean {
   const e = err as { code?: string; name?: string; message?: string }
@@ -312,7 +347,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   await ensureWallet(playerId)
   const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
-  const isRitualComplete = hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
+  // isRitualComplete: hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
 
   const potentialDelegates = await db.player.findMany({
     where: { id: { not: playerId } },
@@ -383,7 +418,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   })
 
   const globalState = await getGlobalState()
-  const globalStage = Math.max(1, Math.min(8, globalState.currentPeriod || Math.ceil(globalState.storyClock / 8)))
+  // globalStage: Math.max(1, Math.min(8, globalState.currentPeriod || Math.ceil(globalState.storyClock / 8)))
 
   // Get onboarding status
   const onboardingStatus = await getOnboardingStatus()
@@ -453,6 +488,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
   const defaultCampaignRef = resolveDefaultCampaignRef(activeInstance?.campaignRef)
+  const residencyProgressStrip = residencyProgressForDashboardHeader(
+    milestoneGuidance,
+    activeInstance,
+    defaultCampaignRef
+  )
   const useCampaignOnboarding = needsCampaignOnboardingRoute(player, hasActiveOrientationThread)
   const playerCampaignHomeHref = campaignHomePath({
     campaignRef: defaultCampaignRef,
@@ -513,6 +553,10 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           questCount={completedBars.length}
         />
 
+        {residencyProgressStrip && (
+          <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
+        )}
+
         {/* 2. ORIENTATION COMPASS — first structural block after identity; governs the session (PMI G1) */}
         <OrientationCompass
           {...compassProps}
@@ -554,10 +598,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           activeInstanceId={activeInstance?.id ?? null}
           campaignHomeHref={playerCampaignHomeHref}
         />
-
-        {milestoneGuidance && (
-          <CampaignMilestoneStrip data={milestoneGuidance} variant="dashboard" />
-        )}
 
         {/* Appreciations received — social layer after self-orientation (G5) */}
         {appreciations.length > 0 && (

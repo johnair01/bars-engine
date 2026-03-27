@@ -7,7 +7,7 @@ interface Choice {
     targetId: string
 }
 
-export function StoryChoices({ passageId, choices, action }: { passageId: string, choices: Choice[], action?: string }) {
+export function StoryChoices({ passageId, choices, action: _action }: { passageId: string, choices: Choice[], action?: string }) {
     // We don't strictly need useActionState if we just want to submit, 
     // but it's good practice for loading states.
     // Although submitChoice redirects, so loading state helps UX.

@@ -69,7 +69,8 @@ async function bumpKotterStageInTx(
  * When an **active** milestone has a numeric **targetValue** and **currentValue** has reached it,
  * mark the milestone complete and advance the campaign instance’s `kotterStage` by 1 (cap 8).
  */
-async function maybeCompleteMilestoneAndAdvanceKotter(milestoneId: string): Promise<void> {
+/** Exported for honor-system donations that record `MilestoneContribution` outside `recordContribution`. */
+export async function maybeCompleteMilestoneAndAdvanceKotter(milestoneId: string): Promise<void> {
   await db.$transaction(async (tx) => {
     const m = await tx.campaignMilestone.findUnique({
       where: { id: milestoneId },

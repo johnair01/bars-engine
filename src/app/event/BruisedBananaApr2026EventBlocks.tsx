@@ -157,7 +157,7 @@ export async function BruisedBananaApr2026EventBlocks() {
             Enter the 8 paths (hub) →
           </Link>
           <Link
-            href="/event/donate"
+            href="/event/donate/wizard?ref=bruised-banana"
             className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-green-700/70 hover:bg-green-600 text-white text-sm font-bold border border-green-600/40"
           >
             Donate

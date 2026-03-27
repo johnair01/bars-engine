@@ -96,6 +96,8 @@ export default async function TwinePlayPage({
     const feedbackSourceStep = isFeedbackPassage && visited.length >= 2 ? visited[visited.length - 2] : undefined
 
     // Avatar preview for Build Your Character: derive on-the-fly when player has nation+playbook but no avatarConfig
+    const isAdmin = player.roles?.some((r) => r.role.key === 'admin') ?? false
+
     const isBuildCharQuest = questId === 'build-character-quest'
     let avatarPreviewConfig: string | null = null
     if (isBuildCharQuest && player && !player.avatarConfig && player.nationId && player.archetypeId) {
@@ -139,6 +141,7 @@ export default async function TwinePlayPage({
                         feedbackSourceStep={feedbackSourceStep}
                         player={player}
                         avatarPreviewConfig={avatarPreviewConfig}
+                        isAdmin={isAdmin}
                     />
                 </TwineErrorBoundary>
             </div>

@@ -60,7 +60,7 @@ export async function runSeed(prisma: PrismaClient) {
     }
 
     // 3. Create Admin Invite
-    const adminInvite = await prisma.invite.upsert({
+    await prisma.invite.upsert({
         where: { token: 'ANTIGRAVITY' },
         update: {},
         create: {

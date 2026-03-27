@@ -22,8 +22,8 @@ export default async function StoryClockPage() {
 
     const currentPeriodQuests = questsByPeriod[currentPeriod] || []
     const previousPeriodQuests = Object.entries(questsByPeriod)
-        .filter(([period, _]) => parseInt(period) < currentPeriod)
-        .flatMap(([_, quests]) => quests)
+        .filter(([period]) => parseInt(period) < currentPeriod)
+        .flatMap(([, quests]) => quests)
         .filter(q => !q.firstCompleter) // Only incomplete quests
 
     return (

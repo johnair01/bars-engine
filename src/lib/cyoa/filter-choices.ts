@@ -3,6 +3,21 @@ import { SIGNUP_CHOICE_TARGET_IDS } from '@/lib/cyoa/types'
 export type MinimalChoice = { text: string; targetId: string; moveType?: string }
 
 /**
+ * CHS checkpoint + revalidate (B): campaign portal `Room_*` choices depend on current instance context.
+ * Hide Grow Up → schools when no schools adventure is linked (matches AdventurePlayer routing).
+ */
+export function revalidateCampaignPortalRoomChoices(
+  nodeId: string,
+  choices: MinimalChoice[],
+  opts: { adventureSlug: string; schoolsAdventureId: string | null },
+): MinimalChoice[] {
+  const isCampaignPortal = opts.adventureSlug.startsWith('campaign-portal-')
+  if (!isCampaignPortal || !/^Room_\d+$/.test(nodeId)) return choices
+  if (opts.schoolsAdventureId) return choices
+  return choices.filter((c) => c.targetId !== 'schools')
+}
+
+/**
  * Remove cold-signup / login-only choices when the player already has a session.
  * If that would leave no choices, provide a safe "Continue" to the Vault (dashboard path).
  */

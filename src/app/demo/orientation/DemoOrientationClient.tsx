@@ -16,7 +16,14 @@ export function DemoOrientationClient({ config }: { config: ResolvedDemoOrientat
           {config.label ? ` · ${config.label}` : null}
         </div>
         <div className="flex flex-wrap gap-3 justify-end text-xs">
-          <Link href="/event/donate" className="text-green-400 hover:text-green-300">
+          <Link
+            href={
+              config.campaignRef
+                ? `/event/donate/wizard?ref=${encodeURIComponent(config.campaignRef)}`
+                : '/event/donate/wizard'
+            }
+            className="text-green-400 hover:text-green-300"
+          >
             Support the campaign →
           </Link>
           <Link href="/wiki/donation-guide" className="text-zinc-500 hover:text-zinc-300">

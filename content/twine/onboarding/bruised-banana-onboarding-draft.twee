@@ -455,6 +455,8 @@ Your presence is now part of the system.
 
 The campaign knows who you are, how you tend to move, and where your energy wants to go.
 
+Your intention BAR is in **your Vault** as a private draft (same lane as Forge). Open **Hand / Vault** after play to see it, refine it, or extend it later.
+
 From here, the next quests can connect your intention with real opportunities inside the residency.
 
 [[Begin play|First Quest Stub]]
@@ -462,7 +464,7 @@ From here, the next quests can connect your intention with real opportunities in
 :: First Quest Stub [post-onboarding stub]
 Your first quests await on the dashboard.
 
-After you sign in, you'll see **Strengthen the Residency** and other starter quests tailored to your path. Choose your first move:
+When you're signed in, use **Open starter quests on dashboard** below to jump straight to **Active Quests** (same list: **Strengthen the Residency**, invites, offers, and the rest). Choose your first move:
 
 • **Strengthen the Residency** — Contribute support, invite an ally, share feedback, or share the campaign
 • **Invite an Ally** — Bring someone aligned into the story
@@ -471,7 +473,15 @@ After you sign in, you'll see **Strengthen the Residency** and other starter que
 • **Contribute Financially** — Support the residency directly
 • **Submit Feedback** — Shape the system through your experience
 
-[[Begin play|BeginPlay]]
+[[Next: support opportunity|Donate Handoff]]
+
+:: Donate Handoff [post-onboarding donate-handoff]
+**Everyone** who plays through this residency gets a clear chance to support the campaign before landing on the NOW dashboard.
+
+Open the **donation page** to give financially (honor system), use the **self-service wizard** for money / time / space, or skip straight to the dashboard if now isn’t the moment.
+
+[[Open donation page|EventDonate]]
+[[Continue to NOW dashboard|BeginPlay]]
 
 :: BeginPlay [post-onboarding redirect]
 [TOKEN] SET begin_play=1

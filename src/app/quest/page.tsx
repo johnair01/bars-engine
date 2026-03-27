@@ -38,7 +38,7 @@ export default async function QuestPage() {
             try {
                 const allowed = JSON.parse(q.allowedNations) as string[]
                 if (allowed.length > 0 && player.nation && !allowed.includes(player.nation.name)) return false
-            } catch (e) { }
+            } catch { }
         }
         // Playbook gating
         if (q.allowedTrigrams) {
@@ -48,7 +48,7 @@ export default async function QuestPage() {
                     const playerTrigram = player.archetype.name.split(' ')[0]
                     if (!allowed.includes(playerTrigram)) return false
                 }
-            } catch (e) { }
+            } catch { }
         }
         return true
     })

@@ -135,6 +135,8 @@ export default async function BarSharePage({ params }: Props) {
         )
     }
 
+    const returnToShare = `/bar/share/${token}`
+
     // Not logged in — show preview + login/signup
     return (
         <div className="min-h-screen bg-black text-zinc-200 flex items-center justify-center p-6">
@@ -142,13 +144,17 @@ export default async function BarSharePage({ params }: Props) {
                 <SharePreview share={share} />
                 <div className="flex flex-col gap-3">
                     <Link
-                        href={`/conclave?redirect=/bar/share/${token}`}
+                        href={`/login?returnTo=${encodeURIComponent(returnToShare)}`}
                         className="block w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-center"
                     >
                         Log in
                     </Link>
                     <Link
-                        href={share.instanceId && share.instance ? `/campaigns/landing/${share.instance.slug}?shareToken=${token}` : `/conclave?signup=1&redirect=/bar/share/${token}`}
+                        href={
+                            share.instanceId && share.instance
+                                ? `/campaigns/landing/${share.instance.slug}?shareToken=${encodeURIComponent(token)}`
+                                : `/conclave/guided?returnTo=${encodeURIComponent(returnToShare)}`
+                        }
                         className="block w-full py-3 rounded-xl border border-zinc-600 hover:border-zinc-500 text-zinc-300 font-medium text-center"
                     >
                         {share.instanceId ? 'Continue to campaign' : 'Sign up'}

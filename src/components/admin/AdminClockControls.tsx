@@ -28,7 +28,7 @@ export function AdminClockControls({ isPaused }: AdminClockControlsProps) {
 
     const handlePauseResume = () => {
         startTransition(async () => {
-            const res = isPaused ? await resumeStoryClock() : await pauseStoryClock()
+            await (isPaused ? resumeStoryClock() : pauseStoryClock())
             setFeedback(isPaused ? 'Clock resumed' : 'Clock paused')
             router.refresh()
             setTimeout(() => setFeedback(null), 2000)

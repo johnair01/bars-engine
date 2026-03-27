@@ -1,5 +1,8 @@
 import assert from 'node:assert'
-import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
+import {
+  applyAuthenticatedChoicePolicy,
+  revalidateCampaignPortalRoomChoices,
+} from '@/lib/cyoa/filter-choices'
 
 {
   const anonymous = applyAuthenticatedChoicePolicy(
@@ -30,6 +33,29 @@ import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
   )
   assert.equal(mixed.length, 1)
   assert.equal(mixed[0].targetId, 'next')
+}
+
+{
+  const roomChoices = [
+    { text: 'Wake', targetId: 'WakeUp_Emit' },
+    { text: 'Grow', targetId: 'schools' },
+  ]
+  const withSchools = revalidateCampaignPortalRoomChoices('Room_1', roomChoices, {
+    adventureSlug: 'campaign-portal-bruised-banana',
+    schoolsAdventureId: 'school-id',
+  })
+  assert.equal(withSchools.length, 2)
+  const noSchools = revalidateCampaignPortalRoomChoices('Room_1', roomChoices, {
+    adventureSlug: 'campaign-portal-bruised-banana',
+    schoolsAdventureId: null,
+  })
+  assert.equal(noSchools.length, 1)
+  assert.equal(noSchools[0].targetId, 'WakeUp_Emit')
+  const notRoom = revalidateCampaignPortalRoomChoices('Portal_1', roomChoices, {
+    adventureSlug: 'campaign-portal-x',
+    schoolsAdventureId: null,
+  })
+  assert.equal(notRoom.length, 2)
 }
 
 console.log('filter-choices ok')

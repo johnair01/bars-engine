@@ -53,7 +53,7 @@ function HexagramLines({ id, animate }: { id: number, animate: boolean }) {
     )
 }
 
-export function CastingRitual({ mode = 'page', onComplete, onCancel, castingContext = null }: CastingRitualProps) {
+export function CastingRitual({ mode = 'page', onComplete, onCancel: _onCancel, castingContext = null }: CastingRitualProps) {
     const router = useRouter()
     const [phase, setPhase] = useState<'ready' | 'casting' | 'revealed' | 'accepted'>('ready')
     const [hexagram, setHexagram] = useState<Hexagram | null>(null)

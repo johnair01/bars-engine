@@ -56,8 +56,8 @@ async function seed() {
     {
       name: 'STEP_2',
       pid: '3',
-      text: '### Step 2: Donation page\n\nClick **Donate** or [go to /event/donate](/event/donate). Confirm you see provider links (Venmo, Cash App, PayPal, Stripe) if configured, and a "Self-report donation" form.',
-      cleanText: '### Step 2: Donation page\n\nClick **Donate** or [go to /event/donate](/event/donate). Confirm you see provider links (Venmo, Cash App, PayPal, Stripe) if configured, and a "Self-report donation" form.',
+      text: '### Step 2: Contribution flow\n\nOpen [/event/donate/wizard](/event/donate/wizard) (guided paths), then continue to the direct page for payment links and self-report. Confirm you see provider links (Venmo, Cash App, PayPal, Stripe) if configured, and a "Self-report donation" form.',
+      cleanText: '### Step 2: Contribution flow\n\nOpen [/event/donate/wizard](/event/donate/wizard) (guided paths), then continue to the direct page for payment links and self-report. Confirm you see provider links (Venmo, Cash App, PayPal, Stripe) if configured, and a "Self-report donation" form.',
       links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }],
     },
     {

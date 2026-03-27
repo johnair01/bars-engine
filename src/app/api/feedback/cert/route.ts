@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
+import { isCertificationQuestId } from '@/lib/certification-quest'
 
 /**
  * @route POST /api/feedback/cert
@@ -37,6 +38,15 @@ export async function POST(request: NextRequest) {
 
     const questId = typeof body.questId === 'string' ? body.questId : 'unknown'
     const passageName = typeof body.passageName === 'string' ? body.passageName : 'unknown'
+
+    const isAdmin =
+        player.roles?.some((r: { role: { key: string } }) => r.role?.key === 'admin') ?? false
+    if (!isCertificationQuestId(questId) && !isAdmin) {
+        return NextResponse.json(
+            { error: 'Certification feedback is only available for certification quests.' },
+            { status: 403 }
+        )
+    }
 
     try {
         const feedbackDir = path.join(process.cwd(), '.feedback')

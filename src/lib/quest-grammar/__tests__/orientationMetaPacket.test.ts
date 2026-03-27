@@ -93,7 +93,6 @@ function testFaceSubPacketsReachableFromHub() {
   const packet = compileOrientationMetaPacket()
   const hub = packet.nodes.find((n) => n.id === 'orient_face_hub')!
   const hubTargetIds = new Set(hub.choices.map((c) => c.targetId))
-  const nodeIds = new Set(packet.nodes.map((n) => n.id))
 
   for (const face of GAME_MASTER_FACES) {
     // Each face should have at least one node reachable from the hub

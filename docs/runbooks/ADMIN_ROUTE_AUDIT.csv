@@ -1,0 +1,59 @@
+route,sidebar,purpose,move,faces,loop,decision
+/admin,yes,Dashboard control center,cross,"Sage,Architect",global ops,keep
+/admin/onboarding,yes,Onboarding templates,Wake,"Diplomat,Architect",onboarding flow,keep
+/admin/instances,yes,Instances and campaign ref,Wake,"Regent,Architect",instance to event,keep
+/admin/campaign-events,yes,Event list,Clean,"Regent,Challenger",EventArtifact,keep
+/admin/campaign-events/[eventId],yes,Event edit,Clean,"Regent,Challenger",scheduling hosts,keep
+/admin/governance,yes,Governance,Wake,"Regent,Sage",policy,keep
+/admin/campaign-seeds,yes,Campaign seeds,Grow,Architect,portal onboarding,keep
+/admin/journeys,yes,Journeys index,Grow,Architect,quest threads,keep
+/admin/journeys/thread/[id],yes,Thread detail,Grow,Architect,threads,keep
+/admin/journeys/pack/[id],yes,Pack detail,Grow,Architect,packs,keep
+/admin/quests,yes,Quest catalog,Grow,Architect,quest BARs,merge
+/admin/quests/[id],yes,Quest detail,Grow,Architect,quests,merge
+/admin/players,yes,Players,Wake,"Regent,Challenger",auth accounts,keep
+/admin/avatars,yes,Avatars,Grow,Architect,character,keep
+/admin/avatars/assets,yes,Sprite assets,Grow,Architect,ARDS,keep
+/admin/world,yes,World index,Wake,Architect,nations archetypes,keep
+/admin/world/nation/[id],yes,Nation edit,Wake,Architect,nations,keep
+/admin/world/archetype/[id],yes,Archetype edit,Wake,Architect,playbooks,keep
+/admin/first-aid,yes,Repair tools,Clean,"Regent,Challenger",recovery,keep
+/admin/forge,yes,Agent forge,Grow,"Sage,Architect",AI agents,keep
+/admin/twine,yes,Twine list,Grow,Architect,CYOA,keep
+/admin/twine/[id],yes,Twine detail,Grow,Architect,bindings,integrate
+/admin/twine/[id]/ir,yes,IR authoring,Grow,Architect,CMA IR,integrate
+/admin/twine/stitcher,yes,Stitcher,Grow,Architect,merge passages,integrate
+/admin/books,yes,Books list,Grow,"Diplomat,Architect",book pipeline,keep
+/admin/books/[id],yes,Book hub,Grow,Architect,PDF,keep
+/admin/books/[id]/quests,yes,Book quests,Grow,Architect,export twine,keep
+/admin/books/[id]/moves,yes,Book moves,Grow,Architect,move extraction,keep
+/admin/moves,yes,Move admin,Wake,Architect,grammar,keep
+/admin/discovery,yes,Discovery queue,Grow,"Shaman,Architect",library,keep
+/admin/maps,yes,Maps list,Grow,Architect,spatial,keep
+/admin/maps/[id],yes,Map detail,Grow,Architect,maps,keep
+/admin/maps/[id]/editor,yes,Map editor,Grow,Architect,anchors,keep
+/admin/adventures,yes,Adventures list,Grow,Architect,CYOA,keep
+/admin/adventures/create,yes,Create adventure,Grow,Architect,new CYOA,keep
+/admin/adventures/[id],yes,Adventure detail,Grow,Architect,passages,keep
+/admin/adventures/merge,yes,Merge adventures,Clean,"Challenger,Architect",data repair,keep
+/admin/adventures/[id]/passages/create,yes,Create passage,Grow,Architect,graph,keep
+/admin/adventures/[id]/passages/[passageId]/edit,yes,Edit passage,Grow,Architect,CYOA content,keep
+/admin/templates,yes,Template library,Grow,"Architect,Diplomat",templates,keep
+/admin/quest-grammar,yes,Quest grammar UI,Grow,"Architect,Sage",charge to quest,merge
+/admin/quest-from-context,yes,Quest from context,Grow,Architect,BQGE,merge
+/admin/quest-proposals,yes,Proposals queue,Grow,"Regent,Architect",BAR to quest,merge
+/admin/quest-proposals/[id],yes,Proposal detail,Grow,Architect,review,merge
+/admin/agent-proposals,yes,Agent proposals,Grow,"Sage,Architect",NPC,keep
+/admin/backlog,yes,Spec backlog,cross,Sage,dev process,keep
+/admin/library,yes,Admin library,Wake,Diplomat,praxis,keep
+/admin/docs,yes,Admin docs,Wake,Sage,runbooks,keep
+/admin/config,yes,App config,Clean,"Regent,Challenger",app_config,keep
+/admin/npcs,yes,NPC list,Grow,"Architect,Sage",NPC sim,keep
+/admin/npcs/[id],yes,NPC detail,Grow,Architect,NPC profile,keep
+/admin/npcs/[id]/reflections,yes,NPC reflections,Grow,"Shaman,Architect",memory,keep
+/admin/npcs/[id]/memories,yes,NPC memories,Grow,Architect,memory,keep
+/admin/bar-candidates,yes,BAR candidates,Grow,"Regent,Challenger",threshold BAR,keep
+/admin/sprites/review,yes,Sprite queue,Grow,Architect,avatar pipeline,keep
+/admin/campaign/[ref]/author,orphan,Campaign author,Grow,Architect,campaign deck,integrate
+/admin/campaign/[ref]/deck,orphan,Deck wizard,Grow,Architect,Kotter deck,integrate
+/admin/campaign/[ref]/community-character,orphan,Community character,Grow,Diplomat,campaign character,integrate

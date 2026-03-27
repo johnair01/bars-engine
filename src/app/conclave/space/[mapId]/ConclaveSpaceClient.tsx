@@ -56,8 +56,8 @@ export function ConclaveSpaceClient({
   mapName,
   realmData,
   playerId,
-  playerName,
-  playerAvatarConfig,
+  playerName: _playerName,
+  playerAvatarConfig: _playerAvatarConfig,
 }: Props) {
   const [entered, setEntered] = useState(false)
   const [entering, setEntering] = useState(false)

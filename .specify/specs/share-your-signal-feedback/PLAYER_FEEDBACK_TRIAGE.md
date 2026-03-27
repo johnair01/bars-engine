@@ -148,6 +148,12 @@ for (let i = 1; i <= 64; i++) {
 
 ---
 
+## Site signal (nav)
+
+Reports from the global nav warning control use the same JSONL file with `questId: "system-feedback"` and `passageName: "Site signal (nav)"`. Filter alongside Share Your Signal lines when triaging.
+
+---
+
 ## Reference
 
 - [GM_CONSULT_AND_PLAN.md](./GM_CONSULT_AND_PLAN.md) — Game Master consultation

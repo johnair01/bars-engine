@@ -55,6 +55,12 @@ After implementing:
 
 - [ ] Completed tasks checked off in tasks.md
 - [ ] `npm run build` and `npm run check` pass
+- [ ] **Human summary** — In the PR, ticket, or chat where you report the work, add a **short plain-language wrap-up** so anyone can understand without reading every file:
+  - **What changed** (1–3 sentences)
+  - **Why it matters** for players, stewards, or ops
+  - **How to try it** (URLs, `npm run …`, seeds) when relevant
+  - Optional **“like I’m five”** line: the idea in very simple words, no jargon  
+  Technical diffs stay the source of truth; this is additive.
 
 ## Example
 

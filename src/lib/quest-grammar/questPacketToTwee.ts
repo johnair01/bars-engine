@@ -4,7 +4,7 @@
  * Emits moveMap in StoryData when present (for future runtime filtering).
  */
 
-import type { SerializableQuestPacket, QuestNode, Choice } from './types'
+import type { SerializableQuestPacket, Choice } from './types'
 
 function escapeTweeText(text: string): string {
   return text.replace(/\r\n/g, '\n').trim()

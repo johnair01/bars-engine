@@ -1,5 +1,7 @@
 # Agent Workflows — Run from Cursor
 
+**Content + copy workflows (Twine, cert feedback, seeds, event UI):** see [CONTENT_AGENT_PLAYBOOK.md](./CONTENT_AGENT_PLAYBOOK.md) for pre-flight, workflow table, Twine pass, and JSONL triage rhythm.
+
 Agent scripts (Sage brief, parallel feature work, etc.) can run from Cursor's terminal without a separate backend process. When the backend is down, scripts auto-start it in the background.
 
 ## Run from Cursor (default)

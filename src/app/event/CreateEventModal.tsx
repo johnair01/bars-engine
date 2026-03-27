@@ -51,7 +51,7 @@ export function CreateEventModal({
   const [success, setSuccess] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   /** Campaign just created in this session (before parent props refresh). */
-  const [extraCampaigns, setExtraCampaigns] = useState<CampaignOption[]>([])
+  const [extraCampaigns] = useState<CampaignOption[]>([])
 
   const mergedCampaigns = useMemo(
     () => [...campaigns, ...extraCampaigns],

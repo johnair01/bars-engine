@@ -32,7 +32,7 @@ export type BranchedQuestPacket = SerializableQuestPacket & {
 }
 
 function stripTelemetry(p: QuestPacket): SerializableQuestPacket {
-  const { telemetryHooks: _, ...rest } = p
+  const { telemetryHooks: _telemetryHooks, ...rest } = p
   return rest
 }
 
@@ -41,7 +41,7 @@ function estimatePacketTokens(packet: SerializableQuestPacket): number {
 }
 
 function toQuestCompileInput(input: BranchedPathInput): QuestCompileInput {
-  const { primaryBranchAxis: _, ...rest } = input
+  const { primaryBranchAxis: _primaryBranchAxis, ...rest } = input
   return rest
 }
 

@@ -26,7 +26,6 @@ export function ProgressTracker({ currentStep, vibeulonsEarned }: ProgressTracke
                 {steps.map((step, index) => {
                     const isCompleted = index < currentIndex
                     const isCurrent = index === currentIndex
-                    const isUpcoming = index > currentIndex
 
                     return (
                         <div key={step.key} className="flex items-center flex-1">

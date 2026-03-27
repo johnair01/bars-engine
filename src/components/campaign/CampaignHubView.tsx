@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import type { PortalData } from '@/actions/campaign-portals'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
@@ -15,6 +17,8 @@ export type CampaignHubPayload = {
   portalStartNodeIds: string[]
   campaignRefResolved: string
   faceMoves: readonly GmFaceStageMove[]
+  /** Primary donate button label when configured on Instance */
+  donateButtonLabel?: string | null
 }
 
 type RecentCapture = {
@@ -34,6 +38,8 @@ type Props = {
   recentCapture?: RecentCapture
   /** CYOA_INTAKE adventure id for this campaign, if seeded */
   intakeAdventureId?: string | null
+  /** Show link to `/campaign/[ref]/fundraising` for owners/stewards/admins */
+  showFundraisingSettings?: boolean
 }
 
 const MOVE_LABEL: Record<string, string> = {
@@ -46,7 +52,14 @@ const MOVE_LABEL: Record<string, string> = {
  * Campaign residency hub — 8 spokes (portals) into CYOA + landing cards.
  * @see .specify/specs/campaign-hub-spoke-landing-architecture/spec.md
  */
-export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCapture, intakeAdventureId }: Props) {
+export function CampaignHubView({
+  campaignRef,
+  data,
+  milestoneGuidance,
+  recentCapture,
+  intakeAdventureId,
+  showFundraisingSettings,
+}: Props) {
   const {
     portals,
     campaignName,
@@ -55,6 +68,7 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
     portalStartNodeIds,
     campaignRefResolved,
     faceMoves,
+    donateButtonLabel,
   } = data
   const stageInfo = KOTTER_STAGES[kotterStage as keyof typeof KOTTER_STAGES]
 
@@ -62,39 +76,40 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
     <div className="min-h-screen bg-black text-zinc-200 font-sans">
       <div className="max-w-4xl mx-auto px-4 py-12 space-y-10">
         <header className="space-y-2">
-          <div className="flex flex-wrap justify-between items-center gap-2">
+          <div className="flex flex-wrap justify-between items-start gap-3">
             <Link
               href="/game-map"
-              className="text-xs text-zinc-600 hover:text-zinc-400 transition"
+              className="text-xs text-zinc-600 hover:text-zinc-400 transition min-h-[44px] inline-flex items-center"
             >
               ← Game Map
             </Link>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href={`/campaign/board?ref=${encodeURIComponent(campaignRef)}`}
-                className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
-              >
+            <nav
+              aria-label="Campaign shortcuts"
+              className="flex flex-wrap justify-end gap-2 max-w-full lg:max-w-[40rem]"
+            >
+              <CampaignOutlineNavButton href={`/campaign/board?ref=${encodeURIComponent(campaignRef)}`}>
                 Featured field
-              </Link>
-              <Link
+              </CampaignOutlineNavButton>
+              <CampaignOutlineNavButton
                 href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}`}
-                className="text-sm text-zinc-500 hover:text-teal-400 transition-colors"
               >
                 Stalls
-              </Link>
-              <Link
-                href={`/campaign/twine?ref=${campaignRef}`}
-                className="text-sm text-zinc-500 hover:text-purple-400 transition-colors"
-              >
+              </CampaignOutlineNavButton>
+              <CampaignDonateButton campaignRef={campaignRef}>
+                {donateButtonLabel?.trim() ? donateButtonLabel.trim() : 'Donate'}
+              </CampaignDonateButton>
+              {showFundraisingSettings ? (
+                <CampaignOutlineNavButton
+                  href={`/campaign/${encodeURIComponent(campaignRef)}/fundraising`}
+                >
+                  Fundraising settings
+                </CampaignOutlineNavButton>
+              ) : null}
+              <CampaignOutlineNavButton href={`/campaign/twine?ref=${campaignRef}`}>
                 Campaign story
-              </Link>
-              <Link
-                href="/event"
-                className="text-sm text-zinc-500 hover:text-amber-400/90 transition-colors"
-              >
-                Residency events
-              </Link>
-            </div>
+              </CampaignOutlineNavButton>
+              <CampaignOutlineNavButton href="/event">Residency events</CampaignOutlineNavButton>
+            </nav>
           </div>
           <p className="text-[10px] uppercase tracking-widest text-zinc-600">Campaign hub</p>
           <h1 className="text-3xl font-bold text-white tracking-tight">{campaignName}</h1>
@@ -168,41 +183,52 @@ export function CampaignHubView({ campaignRef, data, milestoneGuidance, recentCa
         )}
 
         <section>
-          <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-4">8 spokes</h2>
+          <h2 className="text-xs uppercase tracking-widest text-zinc-500 mb-2">8 spokes</h2>
+          <p className="text-sm text-zinc-400 max-w-3xl mb-4 leading-relaxed">
+            Each spoke is a short choose-your-own path. Inside, you&apos;ll pick a move (Wake Up, Clean Up, or Show
+            Up), optionally leave a BAR, then return to this hub or open your landing card for this spoke.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {portals.map((portal, idx) => {
               const startNodeId = portalStartNodeIds[idx] ?? `Portal_${idx + 1}`
               const enterHref = portalAdventureId
-                ? `/adventure/${portalAdventureId}/play?start=${encodeURIComponent(startNodeId)}&ref=${encodeURIComponent(campaignRefResolved)}${portal.hexagramId ? `&hexagram=${portal.hexagramId}` : ''}${portal.primaryFace ? `&face=${portal.primaryFace}` : ''}`
+                ? `/adventure/${portalAdventureId}/play?start=${encodeURIComponent(startNodeId)}&ref=${encodeURIComponent(campaignRefResolved)}&spoke=${idx}&kotterStage=${kotterStage}${portal.hexagramId ? `&hexagram=${portal.hexagramId}` : ''}${portal.primaryFace ? `&face=${portal.primaryFace}` : ''}`
                 : null
               const landingHref = `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${idx}`
               return (
                 <div
                   key={`${portal.hexagramId}-${idx}`}
-                  className="rounded-xl border border-purple-800/50 bg-zinc-900/40 p-4 hover:border-purple-600/60 transition-colors flex flex-col"
+                  className="rounded-xl border border-purple-800/50 bg-zinc-900/40 p-4 hover:border-purple-600/60 transition-colors flex flex-col gap-2"
                 >
-                  <p className="text-[10px] uppercase tracking-widest text-purple-400 mb-1">
-                    Spoke {idx + 1} · {portal.name}
-                  </p>
-                  <p className="text-sm text-zinc-300 line-clamp-2 mb-2">{portal.flavor}</p>
-                  <p className="text-xs text-zinc-500 mb-1 line-clamp-3">{portal.pathHint}</p>
-                  <div className="mb-3" />
-                  <div className="mt-auto flex flex-col gap-2">
+                  <p className="text-[10px] uppercase tracking-widest text-purple-400/90">Spoke {idx + 1} of 8</p>
+                  <p className="text-base font-semibold text-zinc-100 leading-snug">{portal.name}</p>
+                  {portal.flavor ? (
+                    <p className="text-sm text-zinc-300 line-clamp-3 leading-relaxed">{portal.flavor}</p>
+                  ) : null}
+                  {portal.pathHint ? (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-zinc-600 mb-0.5">Path hint</p>
+                      <p className="text-xs text-zinc-500 line-clamp-3 leading-relaxed">{portal.pathHint}</p>
+                    </div>
+                  ) : null}
+                  <div className="mt-auto pt-2 flex flex-col gap-2">
                     {enterHref ? (
                       <Link
                         href={enterHref}
-                        className="inline-block text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors"
+                        className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 rounded-lg border border-purple-600/70 bg-purple-950/50 text-sm font-semibold text-purple-100 hover:border-purple-500 hover:bg-purple-950/70 transition-colors text-center"
                       >
-                        Enter CYOA →
+                        Step into spoke {idx + 1} →
                       </Link>
                     ) : (
-                      <span className="text-xs text-zinc-600 italic">CYOA not linked — seed:portal-adventure</span>
+                      <span className="text-xs text-zinc-600 italic min-h-[44px] inline-flex items-center">
+                        CYOA not linked — seed:portal-adventure
+                      </span>
                     )}
                     <Link
                       href={landingHref}
-                      className="inline-block text-xs font-medium text-amber-400/90 hover:text-amber-300 transition-colors"
+                      className="inline-flex items-center justify-center min-h-[44px] text-xs font-medium text-amber-400/90 hover:text-amber-300 transition-colors"
                     >
-                      Landing card →
+                      Visit landing card (skip CYOA) →
                     </Link>
                   </div>
                 </div>

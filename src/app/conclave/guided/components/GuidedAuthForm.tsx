@@ -83,7 +83,14 @@ export function GuidedAuthForm({ campaignRef, returnTo }: { campaignRef?: string
                 </button>
 
                 <div className="text-center pt-4">
-                    <a href="/login" className="text-xs text-zinc-500 hover:text-white transition">
+                    <a
+                        href={
+                            returnTo
+                                ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+                                : '/login'
+                        }
+                        className="text-xs text-zinc-500 hover:text-white transition"
+                    >
                         Already have an account? Log In
                     </a>
                 </div>

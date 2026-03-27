@@ -99,6 +99,8 @@ export default async function EventPage() {
   const worldVenue = await getWorldVenueEntryForInstance(instance.id)
   const wakeUpContent = instance.wakeUpContent ?? DEFAULT_WAKE_UP
   const showUpContent = instance.showUpContent ?? DEFAULT_SHOW_UP
+  const refForDonate = instance.campaignRef?.trim() || instance.slug?.trim() || 'bruised-banana'
+  const donateWizardHref = `/event/donate/wizard?ref=${encodeURIComponent(refForDonate)}`
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12">
@@ -229,7 +231,7 @@ export default async function EventPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link
-                  href="/event/donate"
+                  href={donateWizardHref}
                   className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
                 >
                   Donate
@@ -412,7 +414,7 @@ export default async function EventPage() {
             <p className="text-zinc-500 text-sm whitespace-pre-wrap">{showUpContent}</p>
             <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               <Link
-                href="/event/donate"
+                href={donateWizardHref}
                 className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600/80 hover:bg-green-500/80 text-white font-bold border border-green-500/50"
               >
                 Donate

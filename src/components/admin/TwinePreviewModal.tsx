@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
+import type { ParsedTwineStory } from '@/lib/twine-parser'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 
 interface TwinePreviewModalProps {

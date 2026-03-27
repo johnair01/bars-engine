@@ -81,7 +81,7 @@ function parseTwineLogic(twineLogic?: string | null): TwineLogic | null {
     }
 }
 
-export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes, campaignDomainPreference = [], isAdmin }: QuestDetailModalProps) {
+export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted, isLocked, completedMoveTypes: _completedMoveTypes, campaignDomainPreference = [], isAdmin }: QuestDetailModalProps) {
     const isBlocked = quest.status === 'blocked'
     const router = useRouter()
     const pathname = usePathname()

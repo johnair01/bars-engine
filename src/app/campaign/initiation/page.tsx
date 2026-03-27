@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignReader } from '../components/CampaignReader'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
@@ -64,13 +65,9 @@ export default async function CampaignInitiationPage(props: {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col items-center font-sans tracking-tight">
-      <div className="w-full max-w-2xl flex justify-end mb-4">
-        <Link
-          href="/event"
-          className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
-        >
-          Support the Residency →
-        </Link>
+      <div className="w-full max-w-2xl flex flex-wrap justify-end gap-2 mb-4">
+        <CampaignDonateButton campaignRef="bruised-banana" />
+        <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
       </div>
       <div className="flex-1 w-full max-w-2xl flex items-center justify-center">
         <CampaignReader

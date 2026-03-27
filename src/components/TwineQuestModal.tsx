@@ -8,6 +8,7 @@ import Link from 'next/link'
 import type { ParsedTwineStory, ParsedPassage } from '@/lib/twine-parser'
 import { OnboardingRecommendation } from './onboarding/OnboardingRecommendation'
 import { AdminFeedbackInput } from './AdminFeedbackInput'
+import { isCertificationQuestId } from '@/lib/certification-quest'
 
 interface TwineQuestModalProps {
     isOpen: boolean
@@ -40,6 +41,7 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
 
     const feedbackStorageKey = questId ? `cert-feedback-${questId}` : null
     const prevPassageRef = useRef<string | null>(null)
+    const allowCertFeedback = isCertificationQuestId(questId) || !!isAdmin
     const isFeedbackPassage = currentPassageName === 'FEEDBACK'
 
     // Persist feedback text to sessionStorage so it survives unexpected navigations
@@ -301,6 +303,32 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                     {/* Active passage */}
                     {currentPassage && !loading && !completed && (() => {
                         const isFeedbackPassage = currentPassage.name === 'FEEDBACK' || (currentPassage.tags && (currentPassage.tags as string[]).includes('feedback'))
+
+                        if (isFeedbackPassage && questId && !allowCertFeedback) {
+                            return (
+                                <div className="space-y-6 animate-in fade-in duration-500">
+                                    <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">
+                                        {currentPassage.name}
+                                    </div>
+                                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+                                        <p className="text-zinc-400 text-sm leading-relaxed">
+                                            Issue reporting is enabled for certification quests only. Use{' '}
+                                            <Link href="/docs" className="text-purple-400 hover:text-purple-300 underline">
+                                                docs
+                                            </Link>{' '}
+                                            or support channels if you need help.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleBack}
+                                        disabled={isPending}
+                                        className="w-full py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
+                                    >
+                                        ← Back to Previous Step
+                                    </button>
+                                </div>
+                            )
+                        }
 
                         if (isFeedbackPassage && questId) {
                             return (

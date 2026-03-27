@@ -378,7 +378,7 @@ export function StarterQuestBoard({
     view: 'available' | 'active' | 'completed'
 }) {
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
     const [localCompleted, setLocalCompleted] = useState<string[]>(completedBars.map(cb => cb.id))
     const [localActive, setLocalActive] = useState<string[]>(activeBars)
 

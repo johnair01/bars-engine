@@ -4,6 +4,10 @@ import { db } from "@/lib/db"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import {
+    simulateRowsAfterCreatePassage,
+    validateFullAdventurePassagesGraph,
+} from "@/lib/story-graph/adventurePassagesGraph"
 
 const createPassageSchema = z.object({
     adventureId: z.string(),
@@ -48,6 +52,55 @@ export async function createPassage(prevState: any, formData: FormData) {
             if (!linkFrom || !linkFrom.passageId || !linkFrom.nodeId) linkFrom = null
         } catch {
             linkFrom = null
+        }
+    }
+
+    const [adventure, existingPassages] = await Promise.all([
+        db.adventure.findUnique({
+            where: { id: result.data.adventureId },
+            select: { startNodeId: true },
+        }),
+        db.passage.findMany({
+            where: { adventureId: result.data.adventureId },
+            select: { nodeId: true, choices: true },
+        }),
+    ])
+
+    const existingRows = existingPassages.map((p) => ({
+        nodeId: p.nodeId,
+        choicesJson: p.choices || "[]",
+    }))
+
+    let linkSim: { mode: "after" | "branch"; sourceNodeId: string; choiceIndex?: number } | null = null
+    if (linkFrom) {
+        const fp = await db.passage.findUnique({
+            where: { id: linkFrom.passageId, adventureId: result.data.adventureId },
+            select: { nodeId: true },
+        })
+        if (!fp) {
+            return {
+                success: false,
+                message: "Connect-from passage was not found in this adventure.",
+            }
+        }
+        linkSim = {
+            mode: linkFrom.mode,
+            sourceNodeId: fp.nodeId,
+            choiceIndex: linkFrom.mode === "branch" ? linkFrom.choiceIndex : undefined,
+        }
+    }
+
+    const simulated = simulateRowsAfterCreatePassage(
+        existingRows,
+        result.data.nodeId,
+        result.data.choicesJson,
+        linkSim
+    )
+    const graphCheck = validateFullAdventurePassagesGraph(simulated, adventure?.startNodeId ?? null)
+    if (!graphCheck.ok) {
+        return {
+            success: false,
+            message: graphCheck.errors.map((e) => e.message).join(" "),
         }
     }
 

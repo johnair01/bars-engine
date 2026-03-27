@@ -10,6 +10,9 @@ import { OnboardingRecommendation } from '@/components/onboarding/OnboardingReco
 import { QuestInputs } from '@/components/QuestInputs'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { Avatar } from '@/components/Avatar'
+import { isCertificationQuestId } from '@/lib/certification-quest'
+import { CopyableProse } from '@/components/ui/CopyableProse'
+import { CopyTextButton } from '@/components/ui/CopyTextButton'
 
 interface Props {
     storyId: string
@@ -25,6 +28,7 @@ interface Props {
     feedbackSourceStep?: string
     player?: { name: string; avatarConfig?: string | null; pronouns?: string | null }
     avatarPreviewConfig?: string | null
+    isAdmin?: boolean
 }
 
 export function PassageRenderer({
@@ -40,7 +44,8 @@ export function PassageRenderer({
     isRitual,
     feedbackSourceStep,
     player,
-    avatarPreviewConfig
+    avatarPreviewConfig,
+    isAdmin = false,
 }: Props) {
     const [isPending, startTransition] = useTransition()
     const [emitted, setEmitted] = useState<string[]>([])
@@ -57,6 +62,7 @@ export function PassageRenderer({
 
     const displayPassage = overridePassage ?? passage
     const isFeedbackPassage = displayPassage.name === 'FEEDBACK' || (displayPassage.tags && displayPassage.tags.includes('feedback'))
+    const allowCertFeedback = isCertificationQuestId(questId) || isAdmin
     const effectiveFeedbackSourceStep =
         isFeedbackPassage && overrideVisited && overrideVisited.length >= 2
             ? overrideVisited[overrideVisited.length - 2]
@@ -281,10 +287,33 @@ export function PassageRenderer({
             {/* Passage name */}
             <div className="text-xs text-zinc-600 font-mono uppercase tracking-widest">{displayPassage.name}</div>
 
-            {/* Feedback passage (Report Issue branch) */}
-            {isFeedbackPassage && questId ? (
+            {/* Feedback passage (Report Issue branch) — certification quests + admin only */}
+            {isFeedbackPassage && questId && !allowCertFeedback ? (
                 <div className="space-y-6">
                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8">
+                        <p className="text-zinc-400 text-sm leading-relaxed">
+                            Issue reporting is enabled for certification quests only. See{' '}
+                            <Link href="/docs" className="text-purple-400 hover:text-purple-300 underline">
+                                documentation
+                            </Link>{' '}
+                            for help.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleBack}
+                        disabled={isPending}
+                        className="w-full py-3 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl hover:border-zinc-600"
+                    >
+                        ← Back to Previous Step
+                    </button>
+                </div>
+            ) : isFeedbackPassage && questId ? (
+                <div className="space-y-6">
+                    <CopyableProse
+                        textToCopy={rawContent}
+                        copyAriaLabel="Copy passage text"
+                        className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8"
+                    >
                         <ReactMarkdown
                             components={{
                                 a: ({ href, children }) => (
@@ -296,10 +325,18 @@ export function PassageRenderer({
                         >
                             {(displayPassage as { text?: string }).text ?? displayPassage.cleanText}
                         </ReactMarkdown>
-                    </div>
+                    </CopyableProse>
                     {feedbackSubmitted ? (
                         <div className="space-y-4 pt-4 border-t border-zinc-800/50">
-                            <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
+                            <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center space-y-2">
+                                <div className="flex justify-end">
+                                    <CopyTextButton
+                                        text={
+                                            'Thank you. Your feedback has been logged.\n\nThe team will triage this as a bug to fix.'
+                                        }
+                                        aria-label="Copy confirmation message"
+                                    />
+                                </div>
                                 <p className="text-green-400 font-bold">Thank you. Your feedback has been logged.</p>
                                 <p className="text-zinc-400 text-sm mt-1">The team will triage this as a bug to fix.</p>
                             </div>
@@ -339,7 +376,10 @@ export function PassageRenderer({
                                 />
                             </div>
                             {error && (
-                                <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg">{error}</div>
+                                <div className="p-3 bg-red-900/20 text-red-400 text-sm rounded-lg flex justify-end items-start gap-2">
+                                    <p className="flex-1 min-w-0">{error}</p>
+                                    <CopyTextButton text={error} aria-label="Copy error message" />
+                                </div>
                             )}
                             <div className="flex gap-3">
                             <button
@@ -378,7 +418,11 @@ export function PassageRenderer({
                                 <p className="text-zinc-500 text-sm">Derived from your nation and archetype</p>
                             </div>
                         </div>
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+                        <CopyableProse
+                            textToCopy={rawContent}
+                            copyAriaLabel="Copy passage text"
+                            className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none"
+                        >
                             <ReactMarkdown
                                 components={{
                                     a: ({ href, children }) => (
@@ -390,7 +434,7 @@ export function PassageRenderer({
                             >
                                 {(displayPassage as { text?: string }).text ?? displayPassage.cleanText}
                             </ReactMarkdown>
-                        </div>
+                        </CopyableProse>
                         <div className="space-y-3">
                             {displayPassage.links?.map((link, i) => (
                                 <button
@@ -431,7 +475,11 @@ export function PassageRenderer({
                 <>
                     {/* Passage content — use text for markdown links, fallback to cleanText; slide mode for long text */}
                     <div className="space-y-4">
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none">
+                                <CopyableProse
+                                    textToCopy={displayContent}
+                                    copyAriaLabel={useSlideMode ? 'Copy visible passage text' : 'Copy passage text'}
+                                    className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none"
+                                >
                                     <ReactMarkdown
                                         components={{
                                             a: ({ href, children }) => (
@@ -443,7 +491,7 @@ export function PassageRenderer({
                                     >
                                         {displayContent}
                                     </ReactMarkdown>
-                                </div>
+                                </CopyableProse>
                                 {useSlideMode && (
                                     <div className="flex items-center justify-between">
                                         <button
@@ -487,7 +535,10 @@ export function PassageRenderer({
                     {/* Error */}
                     {error && (
                         <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl space-y-3">
-                            <p className="text-red-400 text-sm">{error}</p>
+                            <div className="flex justify-end items-start gap-2">
+                                <p className="text-red-400 text-sm flex-1 min-w-0">{error}</p>
+                                <CopyTextButton text={error} aria-label="Copy error message" />
+                            </div>
                             {error.includes('gameboard') && (
                                 <Link
                                     href="/campaign/board?ref=bruised-banana"

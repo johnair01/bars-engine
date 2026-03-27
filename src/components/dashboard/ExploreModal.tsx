@@ -2,7 +2,6 @@
 
 import { useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 
 type ExploreModalProps = {
     open: boolean
@@ -66,7 +65,6 @@ export function ExploreModal({ open, onClose }: ExploreModalProps) {
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Grow Up</div>
                         <div className="text-zinc-200 font-bold">Quest Library</div>
                     </Link>
-                    <LibraryRequestButton />
                 </div>
                 <Link
                     href="/game-map"

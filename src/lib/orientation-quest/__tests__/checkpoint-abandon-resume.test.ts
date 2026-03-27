@@ -24,7 +24,6 @@ import {
   getPacketProgress,
   deriveResumeNodeId,
   buildResumeBanner,
-  buildResumeLabel,
   classifySessionForResume,
   serializePacket,
 } from '../checkpoint'

@@ -8,6 +8,29 @@ import { db } from '@/lib/db'
 import { resolveMoveForContext } from '@/lib/quest-grammar'
 import type { EmotionalAlchemyResult } from './types'
 
+const GM_LENS_KEYS = new Set([
+  'shaman',
+  'challenger',
+  'regent',
+  'architect',
+  'diplomat',
+  'sage',
+])
+
+/** Prefer orientation lens, then hub portal face, then active_face from CYOA depth nodes. */
+export function pickGmLensFromStoryState(
+  state: Record<string, unknown> | undefined,
+): string | undefined {
+  if (!state) return undefined
+  const candidates = [state.lens, state.hub_portal_face, state.active_face]
+  for (const c of candidates) {
+    if (typeof c !== 'string' || !c.trim()) continue
+    const k = c.trim().toLowerCase()
+    if (GM_LENS_KEYS.has(k)) return k
+  }
+  return undefined
+}
+
 async function getLensFromPlayer(playerId: string): Promise<string | undefined> {
   const player = await db.player.findUnique({
     where: { id: playerId },
@@ -15,8 +38,8 @@ async function getLensFromPlayer(playerId: string): Promise<string | undefined> 
   })
   if (!player?.storyProgress) return undefined
   try {
-    const parsed = JSON.parse(player.storyProgress) as { state?: { lens?: string } }
-    return parsed?.state?.lens
+    const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
+    return pickGmLensFromStoryState(parsed?.state)
   } catch {
     return undefined
   }

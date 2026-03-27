@@ -240,7 +240,7 @@ Rules:
 - Each node should feel like part of one continuous story.
 - Follow the Voice Style Guide: presence first, confident tone, economical with words.
 - CRITICAL: Transform the creator unpacking answers into narrative. NEVER reproduce Q1–Q6 answers verbatim — weave them into story. The unpacking answers are raw material, not copy.
-- For action nodes (wins, build_on, anchor): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.${authHint}`
+- For action nodes (wins, build_on, anchor): preserve the action link ([Contribute to the campaign](/event/donate/wizard)) but wrap it in compelling narrative prose.${authHint}`
       : `You are a narrative designer for a choose-your-own-adventure quest. Your task is to turn the prompt context into grammatical, emotionally coherent story text for each beat.
 
 Rules:
@@ -250,14 +250,14 @@ Rules:
 - Each node should feel like part of one continuous story.
 - Follow the Voice Style Guide: presence first, confident tone, economical with words.
 - CRITICAL: Transform the creator unpacking answers into narrative. NEVER reproduce Q1–Q6 answers verbatim — weave them into story. The unpacking answers are raw material, not copy.
-- For action nodes (transcendence, consequence): preserve the action link ([Contribute to the campaign](/event/donate)) but wrap it in compelling narrative prose.
+- For action nodes (transcendence, consequence): preserve the action link ([Contribute to the campaign](/event/donate/wizard)) but wrap it in compelling narrative prose.
 
 Grammatical example (generate structure like this — 6 beats, each 2–4 sentences):
 - Orientation: Scene-setting from unpacking. "You are entering a living world mid-formation. Your participation matters."
 - Rising engagement: Dissatisfied state creates energy. "What would have to be true?"
 - Tension: Gap between from-state and to-state. Shadow voices surface.
 - Integration: Aligned action translates channel into movement. Threshold is near.
-- Transcendence: Moment of commitment. Include [Contribute to the campaign](/event/donate) wrapped in narrative.
+- Transcendence: Moment of commitment. Include [Contribute to the campaign](/event/donate/wizard) wrapped in narrative.
 - Consequence: "You are now an Early Believer." Structural consequence.${authHint}`
 
     const framing = effectiveInput.segment === 'player'
@@ -277,7 +277,7 @@ ${hasLensChoice ? '2' : '1'}. Coalition — who will contribute? Use shadow voic
 ${hasLensChoice ? '3' : '2'}. Vision — what does success look like? Satisfied state, "What would have to be true?"
 ${hasLensChoice ? '4' : '3'}. Communicate — share the need, aligned action, spread the message.
 ${hasLensChoice ? '5' : '4'}. Obstacles — what blocks progress? Dissatisfied state, shadow voices as real obstacles.
-${hasLensChoice ? '6' : '5'}. Wins — first milestone reached. Include the action link: [Contribute to the campaign](/event/donate). Wrap it in narrative.
+${hasLensChoice ? '6' : '5'}. Wins — first milestone reached. Include the action link: [Contribute to the campaign](/event/donate/wizard). Wrap it in narrative.
 ${hasLensChoice ? '7' : '6'}. Build On — scale the wins. Iterate and amplify. Include action link if relevant.
 ${hasLensChoice ? '8' : '7'}. Anchor — sustainable change. Contribution logged. Identity transformation: "You are now an Early Believer."
 
@@ -291,7 +291,7 @@ ${hasLensChoice ? '0. Lens choice — Invite the player to choose their developm
 ${hasLensChoice ? '2' : '1'}. Rising engagement — the dissatisfied state creates rising energy. "What would have to be true?"
 ${hasLensChoice ? '3' : '2'}. Tension — the gap between from-state and to-state is real. Shadow voices surface.
 ${hasLensChoice ? '4' : '3'}. Integration — aligned action translates the primary channel into movement. The threshold is near.
-${hasLensChoice ? '5' : '4'}. Transcendence — cross the threshold. Moment of commitment. Include action link: [Contribute to the campaign](/event/donate). Wrap in narrative.
+${hasLensChoice ? '5' : '4'}. Transcendence — cross the threshold. Moment of commitment. Include action link: [Contribute to the campaign](/event/donate/wizard). Wrap in narrative.
 ${hasLensChoice ? '6' : '5'}. Consequence — structural consequence. Identity transformation: "You are now an Early Believer." Unlock: founders thread, patron updates.
 
 Return ${hasLensChoice ? 7 : 6} refined node texts (nodeTexts array), one per node.`

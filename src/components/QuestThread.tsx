@@ -1,6 +1,6 @@
 'use client'
 
-import { startThread, advanceThread, archiveThread } from '@/actions/quest-thread'
+import { startThread, archiveThread } from '@/actions/quest-thread'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getCampaignRef } from '@/lib/campaign-subcampaigns'

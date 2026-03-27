@@ -45,6 +45,7 @@ npx tsx scripts/with-env.ts "tsx scripts/assign-player-to-all-campaign-hosts.ts"
 
 - [PLAYER_EVENT_CREATION.md](./PLAYER_EVENT_CREATION.md) — in-app **create** gathering (hosts/stewards).
 - [admin-stewardship-four-moves spec](../../.specify/specs/admin-stewardship-four-moves/spec.md)
+- [Admin page composting & agent evolution](../../.specify/specs/admin-page-composting-agent-evolution/spec.md) — **composting** admin surfaces, **bounded agent** roles, and **purpose-review** loops (extends stewardship).
 
 ## Privacy note
 

@@ -11,7 +11,7 @@ interface AlchemyCasterProps {
     isSpecial?: boolean
 }
 
-export function AlchemyCaster({ moveName, moveKey, description, icon, isSpecial }: AlchemyCasterProps) {
+export function AlchemyCaster({ moveName, moveKey: _moveKey, description, icon, isSpecial }: AlchemyCasterProps) {
     const [isPending, startTransition] = useTransition()
     const [feedback, setFeedback] = useState<string | null>(null)
 

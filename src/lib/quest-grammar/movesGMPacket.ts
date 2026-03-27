@@ -22,12 +22,12 @@ const MOVE_TEXTS: Record<string, string> = {
   growUp: `**Grow Up** — Expand capacity. Learn, practice, and integrate new ways of being.`,
   showUp: `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
 
-[Contribute to the campaign](/event/donate) — donate before or after creating your account.`,
+[Contribute to the campaign](/event/donate/wizard) — donate before or after creating your account.`,
 }
 
 const SHOW_UP_AUTHENTICATED = `**Show Up** — Take action. Contribute to the campaign. Your participation matters.
 
-[Contribute to the campaign](/event/donate) — your support goes directly to the cause.`
+[Contribute to the campaign](/event/donate/wizard) — your support goes directly to the cause.`
 
 /** Loop ids are lowercase `wakeup` … `showup`; align with MOVE_TEXTS keys. */
 const MOVE_TEXT_BY_LOOP_ID: Record<string, string> = {

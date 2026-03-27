@@ -1,5 +1,5 @@
 /**
- * Spoke Adventure generator — first-hit AI generation + cache by (gmFace, moveType, campaignRef).
+ * Spoke Adventure generator — first-hit AI generation + cache by (gmFace, moveType, campaignRef[, spokeIndex]).
  *
  * findOrGenerateSpokeAdventure():
  *   1. Check DB for existing CYOA_SPOKE Adventure matching (gmFace, moveType, campaignRef)
@@ -73,6 +73,13 @@ const MOVE_TYPE_DESCRIPTORS: Record<IntakeMoveType, string> = {
 // buildIntakePromptContext
 // ---------------------------------------------------------------------------
 
+/** When the spoke is launched from a campaign hub portal or intake (slot + hex + Kotter stage). */
+export type HubSpokePromptContext = {
+  spokeIndex: number
+  hexagramId: number
+  kotterStage: number
+}
+
 export interface IntakePromptContext {
   gmFace: GmFaceKey
   moveType: IntakeMoveType
@@ -81,12 +88,14 @@ export interface IntakePromptContext {
   campaignDescription: string
   gmFaceDescriptor: string
   moveTypeDescriptor: string
+  hubSpoke?: HubSpokePromptContext
 }
 
 export async function buildIntakePromptContext(
   gmFace: GmFaceKey,
   moveType: IntakeMoveType,
   campaignRef: string,
+  hubSpoke?: HubSpokePromptContext,
 ): Promise<IntakePromptContext> {
   // Fetch campaign context from the CYOA_INTAKE Adventure's description
   // (no standalone Campaign model — campaigns are identified by string refs)
@@ -103,6 +112,7 @@ export async function buildIntakePromptContext(
     campaignDescription: intakeAdventure?.description ?? '',
     gmFaceDescriptor: GM_FACE_DESCRIPTORS[gmFace],
     moveTypeDescriptor: MOVE_TYPE_DESCRIPTORS[moveType],
+    ...(hubSpoke != null ? { hubSpoke } : {}),
   }
 }
 
@@ -111,13 +121,24 @@ export async function buildIntakePromptContext(
 // ---------------------------------------------------------------------------
 
 function buildSpokePrompt(ctx: IntakePromptContext): string {
+  const hubPlacement =
+    ctx.hubSpoke != null
+      ? `
+
+Structural placement (authoring metadata — do not name these system labels to the player):
+- Collective pacing stage (Kotter 1–8): ${ctx.hubSpoke.kotterStage}
+- Hub wheel spoke (0–7): ${ctx.hubSpoke.spokeIndex}
+- I Ching hexagram id for this spoke (1–64): ${ctx.hubSpoke.hexagramId}
+Let this placement subtly color stakes and imagery; avoid exposition about "stages", "spokes", or divination.`
+      : ''
+
   return `You are generating a short CYOA (Choose Your Own Adventure) text for a player in the "${ctx.campaignName}" campaign.
 
 Campaign context: ${ctx.campaignDescription || 'A community-centered campaign for growth and action.'}
 
 This adventure is tailored to a player whose current energy resonates with:
 - Theme: ${ctx.gmFaceDescriptor}
-- Personal move: ${ctx.moveTypeDescriptor}
+- Personal move: ${ctx.moveTypeDescriptor}${hubPlacement}
 
 Requirements:
 - 4–8 passage nodes total (including start and 1–2 terminal endings)
@@ -191,19 +212,24 @@ export async function findOrGenerateSpokeAdventure(
   gmFace: GmFaceKey,
   moveType: IntakeMoveType,
   campaignRef: string,
+  hubSpoke?: HubSpokePromptContext,
 ): Promise<FindOrGenerateResult | null> {
-  // 1. Check cache with SD ladder reroute
-  const cached = await findCachedSpoke(gmFace, moveType, campaignRef)
+  const cached = await findCachedSpoke(gmFace, moveType, campaignRef, hubSpoke)
   if (cached) {
     return { adventureId: cached.adventureId, generated: false, gmFace: cached.gmFace, moveType }
   }
 
-  // 2. Not cached — generate for the exact (gmFace, moveType) combination
-  const ctx = await buildIntakePromptContext(gmFace, moveType, campaignRef)
+  const ctx = await buildIntakePromptContext(gmFace, moveType, campaignRef, hubSpoke)
   const generated = await generateSpokeAdventureContent(ctx)
   if (!generated) return null
 
-  const adventureId = await persistSpokeAdventure(generated, gmFace, moveType, campaignRef)
+  const adventureId = await persistSpokeAdventure(
+    generated,
+    gmFace,
+    moveType,
+    campaignRef,
+    hubSpoke,
+  )
   if (!adventureId) return null
 
   return { adventureId, generated: true, gmFace, moveType }
@@ -213,34 +239,66 @@ export async function findOrGenerateSpokeAdventure(
 // findCachedSpoke — DB lookup with SD ladder reroute
 // ---------------------------------------------------------------------------
 
+function spokeScopedCacheKey(
+  face: GmFaceKey,
+  move: IntakeMoveType,
+  spokeIndex: number,
+): string {
+  return `${face}::${move}::s${spokeIndex}`
+}
+
 async function findCachedSpoke(
   gmFace: GmFaceKey,
   moveType: IntakeMoveType,
   campaignRef: string,
+  hubSpoke?: HubSpokePromptContext,
 ): Promise<{ adventureId: string; gmFace: GmFaceKey } | null> {
   const candidates = await db.adventure.findMany({
     where: { adventureType: 'CYOA_SPOKE', campaignRef, status: 'ACTIVE' },
     select: { id: true, playbookTemplate: true },
   })
 
-  // Build lookup: (gmFace::moveType) → adventureId
   const map = new Map<string, string>()
   for (const c of candidates) {
     try {
-      const meta = JSON.parse(c.playbookTemplate ?? '{}') as { gmFace?: string; moveType?: string }
-      if (meta.gmFace && meta.moveType) {
-        const k = `${meta.gmFace}::${meta.moveType}`
-        if (!map.has(k)) map.set(k, c.id)
+      const meta = JSON.parse(c.playbookTemplate ?? '{}') as {
+        gmFace?: string
+        moveType?: string
+        spokeIndex?: number
+      }
+      if (!meta.gmFace || !meta.moveType) continue
+      const legacyKey = `${meta.gmFace}::${meta.moveType}`
+      if (!map.has(legacyKey)) map.set(legacyKey, c.id)
+      if (
+        typeof meta.spokeIndex === 'number' &&
+        meta.spokeIndex >= 0 &&
+        meta.spokeIndex <= 7
+      ) {
+        const sk = spokeScopedCacheKey(
+          meta.gmFace as GmFaceKey,
+          meta.moveType as IntakeMoveType,
+          meta.spokeIndex,
+        )
+        if (!map.has(sk)) map.set(sk, c.id)
       }
     } catch { /* skip malformed */ }
   }
 
-  // SD ladder reroute: try exact face first, then ascend
   const startIdx = SD_LADDER.indexOf(gmFace)
   for (let i = startIdx; i < SD_LADDER.length; i++) {
     const candidateFace = SD_LADDER[i]
-    const adventureId = map.get(`${candidateFace}::${moveType}`)
-    if (adventureId) return { adventureId, gmFace: candidateFace }
+    if (
+      hubSpoke != null &&
+      hubSpoke.spokeIndex >= 0 &&
+      hubSpoke.spokeIndex <= 7
+    ) {
+      const scoped = map.get(
+        spokeScopedCacheKey(candidateFace, moveType, hubSpoke.spokeIndex),
+      )
+      if (scoped) return { adventureId: scoped, gmFace: candidateFace }
+    }
+    const legacy = map.get(`${candidateFace}::${moveType}`)
+    if (legacy) return { adventureId: legacy, gmFace: candidateFace }
   }
 
   return null
@@ -255,8 +313,20 @@ async function persistSpokeAdventure(
   gmFace: GmFaceKey,
   moveType: IntakeMoveType,
   campaignRef: string,
+  hubSpoke?: HubSpokePromptContext,
 ): Promise<string | null> {
   const slug = `spoke-${campaignRef}-${gmFace}-${moveType}-${Date.now()}`
+
+  const templateMeta: Record<string, unknown> = {
+    gmFace,
+    moveType,
+    generatedAt: new Date().toISOString(),
+  }
+  if (hubSpoke != null) {
+    templateMeta.spokeIndex = hubSpoke.spokeIndex
+    templateMeta.hexagramId = hubSpoke.hexagramId
+    templateMeta.kotterStage = hubSpoke.kotterStage
+  }
 
   try {
     const adventure = await db.adventure.create({
@@ -268,7 +338,7 @@ async function persistSpokeAdventure(
         campaignRef,
         status: 'ACTIVE',
         startNodeId: content.startNodeId,
-        playbookTemplate: JSON.stringify({ gmFace, moveType, generatedAt: new Date().toISOString() }),
+        playbookTemplate: JSON.stringify(templateMeta),
         passages: {
           create: content.passages.map((p) => ({
             nodeId: p.nodeId,

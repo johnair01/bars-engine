@@ -302,10 +302,18 @@ export class RoomRenderer {
 
   isWalkable(x: number, y: number): boolean {
     // Portal anchors are always passable — stepping on them triggers room transition
-    if (this.anchors.some(a => a.anchorType === 'portal' && a.tileX === x && a.tileY === y)) {
+    if (
+      this.anchors.some(
+        a =>
+          (a.anchorType === 'portal' || a.anchorType === 'campaign_portal') &&
+          a.tileX === x &&
+          a.tileY === y
+      )
+    ) {
       return true
     }
-    const tile = this.tilemap[`${x}, ${y}`] ?? this.tilemap[`${x},${y}`]
+    // Keys are seeded as `${x},${y}` (no space after comma)
+    const tile = this.tilemap[`${x},${y}`] ?? this.tilemap[`${x}, ${y}`]
     if (!tile) return false
     return !tile.impassable
   }

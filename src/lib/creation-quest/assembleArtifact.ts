@@ -5,7 +5,7 @@
  * No AI. See .specify/specs/creation-quest-bootstrap/spec.md
  */
 
-import type { CreationQuestNode, AssembleInputs, Artifact } from './types'
+import type { AssembleInputs, Artifact } from './types'
 
 /**
  * Assemble creation quest nodes into artifact format.

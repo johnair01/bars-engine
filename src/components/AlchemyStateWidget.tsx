@@ -31,9 +31,9 @@ interface Props {
   playerId: string
 }
 
-export function AlchemyStateWidget({ initialState, playerId }: Props) {
+export function AlchemyStateWidget({ initialState, playerId: _playerId }: Props) {
   const router = useRouter()
-  const [state, setState] = useState<AlchemyState | null>(initialState)
+  const [state] = useState<AlchemyState | null>(initialState)
   const [launching, startLaunch] = useTransition()
   const [sceneId, setSceneId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

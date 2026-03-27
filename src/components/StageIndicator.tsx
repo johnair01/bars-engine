@@ -69,7 +69,7 @@ interface StageProgressCardProps {
 
 export function StageProgressCard({
     stage,
-    questTitle,
+    questTitle: _questTitle,
     canAdvance = false,
     affinityMatch = false,
     onAdvance

@@ -42,7 +42,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { playerId, player, isAdmin, dbError, errorMessage } = await getCurrentPlayerSafe({ includeRoles: true });
+  const { playerId, isAdmin, dbError } = await getCurrentPlayerSafe({ includeRoles: true });
 
   return (
     <html lang="en">

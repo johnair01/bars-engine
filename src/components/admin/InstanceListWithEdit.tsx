@@ -28,6 +28,7 @@ type Instance = {
   venmoUrl: string | null
   cashappUrl: string | null
   paypalUrl: string | null
+  donationButtonLabel?: string | null
   moveIds?: string
   sourceInstanceId?: string | null
   parentInstanceId?: string | null

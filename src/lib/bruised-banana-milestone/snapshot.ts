@@ -14,6 +14,8 @@ export type InstanceLikeForSnapshot = {
   startDate: Date | null
   endDate: Date | null
   allyshipDomain: string | null
+  /** When true, event-mode instance may show fundraising strip outside BB ref. */
+  isEventMode?: boolean
 }
 
 function clamp01(n: number): number {

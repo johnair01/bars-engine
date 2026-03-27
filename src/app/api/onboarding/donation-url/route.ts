@@ -8,24 +8,26 @@
  * @example /api/onboarding/donation-url
  * @agentDiscoverable true
  */
-import { NextResponse } from 'next/server'
-import { getActiveInstance } from '@/actions/instance'
+import { NextResponse, type NextRequest } from 'next/server'
+import { getInstanceForDonation } from '@/lib/donation-instance'
 
 /**
  * Return the campaign's donation URL for external donate link.
  * Uses Instance.stripeOneTimeUrl or first available payment URL.
+ * Optional `?ref=` scopes to the Instance with that `campaignRef` (e.g. bruised-banana).
  */
-export async function GET() {
-    try {
-        const instance = await getActiveInstance()
-        const url =
-            instance?.stripeOneTimeUrl ||
-            instance?.venmoUrl ||
-            instance?.cashappUrl ||
-            instance?.paypalUrl ||
-            null
-        return NextResponse.json({ url })
-    } catch {
-        return NextResponse.json({ url: null })
-    }
+export async function GET(request: NextRequest) {
+  try {
+    const ref = request.nextUrl.searchParams.get('ref')?.trim() || null
+    const instance = await getInstanceForDonation(ref)
+    const url =
+      instance?.stripeOneTimeUrl ||
+      instance?.venmoUrl ||
+      instance?.cashappUrl ||
+      instance?.paypalUrl ||
+      null
+    return NextResponse.json({ url })
+  } catch {
+    return NextResponse.json({ url: null })
+  }
 }
