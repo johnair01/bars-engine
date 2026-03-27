@@ -98,8 +98,7 @@ async function useSeedForCampaign(
       data: {
         instanceId: campaign.id,
         playerId: creatorId,
-        role: 'admin',
-        status: 'active',
+        roleKey: 'admin',
       },
     });
 
