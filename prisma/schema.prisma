@@ -182,6 +182,19 @@ model Player {
   friendshipInvitationsSent    FriendshipInvitation[]      @relation("FriendshipInvitationsSent")
   friendshipInvitationsCompleted FriendshipInvitation[]    @relation("FriendshipInvitationsCompleted")
   eventBingoCards              EventBingoCard[]
+  latentAllyshipIntakes        LatentAllyshipIntake[]
+  allyshipIntakesWatered       LatentAllyshipIntake[] @relation("AllyshipIntakeWateredBy")
+  /// K-space / player feedback: BacklogItem rows submitted by this player
+  submittedBacklogItems        BacklogItem[]           @relation("BacklogItemSubmittedBy")
+  /// SMB: first-mover anchor on spoke move bed
+  spokeMoveBedsAnchored        SpokeMoveBed[]          @relation("SpokeMoveBedAnchoredBy")
+  spokeMoveBedKernelsPlanted   SpokeMoveBedKernel[]    @relation("SpokeMoveBedKernelPlantedBy")
+  /// CCV: GM-authored contribution annotations created by this player
+  contributionAnnotationsCreated ContributionAnnotation[] @relation("ContributionAnnotationCreatedBy")
+  /// CCV: Campaign slots created by this player
+  campaignSlotsCreated         CampaignSlot[]          @relation("CampaignSlotCreatedBy")
+  /// CCV: Player's contribution records across campaigns
+  contributionRecords          ContributionRecord[]    @relation("PlayerContributions")
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -393,9 +406,52 @@ model CustomBar {
   spokeSession                         SpokeSession?             @relation("SpokeBarSeeds", fields: [spokeSessionId], references: [id], onDelete: SetNull)
   marketplaceStallListing              MarketplaceStallSlot?     @relation("MarketplaceListedBar")
   friendshipInvitationsAsInvitationBar FriendshipInvitation[]
+  /// ECI: allyship interview submissions from event_invite CYOA (emergent campaign intake).
+  latentAllyshipIntakes                LatentAllyshipIntake[]
+  /// SMB: canonical spoke-emitted BAR anchor for a move bed
+  spokeMoveBedAnchor                 SpokeMoveBed?             @relation("SpokeMoveBedAnchor")
+  spokeMoveBedKernelRows             SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelBar")
+  spokeMoveBedKernelSources          SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelSource")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
+}
+
+/// Emergent campaign from BAR interview (ECI) — structured path through invite CYOA before child campaign exists.
+model LatentAllyshipIntake {
+  id              String    @id @default(cuid())
+  customBarId     String
+  /// Logged-in submitter when available.
+  playerId        String?
+  /// Browser-stable id (localStorage) for anonymous correlation / dedupe hints.
+  clientSessionId String?
+  /// `EventInviteStory.id` at submit time (template versioning).
+  storyId         String
+  /// Last passage id (usually ending).
+  endingPassageId String
+  /// JSON: { steps: { passageId, choiceLabel, nextPassageId }[] }
+  pathJson        String    @db.Text
+  /// Denormalized from invite URL ?note= for steward context.
+  senderNote      String?   @db.Text
+  status          String    @default("submitted") // submitted | watered (ECI-B)
+  /// When set, this intake was watered into a child campaign instance.
+  spawnedInstanceId String? @map("spawned_instance_id")
+  wateredAt         DateTime? @map("watered_at")
+  wateredByPlayerId String? @map("watered_by_player_id")
+  stewardNotes      String? @db.Text @map("steward_notes")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  customBar       CustomBar @relation(fields: [customBarId], references: [id], onDelete: Cascade)
+  player          Player?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  spawnedInstance Instance? @relation("AllyshipIntakeSpawnedInstance", fields: [spawnedInstanceId], references: [id], onDelete: SetNull)
+  wateredBy       Player?   @relation("AllyshipIntakeWateredBy", fields: [wateredByPlayerId], references: [id], onDelete: SetNull)
+
+  @@index([customBarId, createdAt])
+  @@index([playerId])
+  @@index([customBarId, clientSessionId])
+  @@index([spawnedInstanceId])
+  @@map("latent_allyship_intakes")
 }
 
 model NextActionBridge {
@@ -1374,6 +1430,12 @@ model TwineBinding {
   @@map("twine_bindings")
 }
 
+/// CHS campaign backbone: fixed 52 or 64 content slots; draw uses only bound slots (see campaign-hub-spoke-landing-architecture spec).
+enum CampaignDeckTopology {
+  CAMPAIGN_DECK_52
+  CAMPAIGN_DECK_64
+}
+
 model Instance {
   id                    String                  @id @default(cuid())
   slug                  String                  @unique
@@ -1442,6 +1504,8 @@ model Instance {
   portalAdventure            Adventure?              @relation("InstancePortalAdventure", fields: [portalAdventureId], references: [id], onDelete: SetNull)
   /// v1 JSON: { v, kotterStage, spokes: [{ hexagramId, changingLines, primaryFace }], updatedAt } — one draw per Kotter stage (campaign hub)
   campaignHubState           Json?
+  /// Hub / landing deck shape (52 roster vs 64 lattice). Runtime routing uses canonical spoke index; topology gates slot grid & templates.
+  campaignDeckTopology       CampaignDeckTopology    @default(CAMPAIGN_DECK_52) @map("campaign_deck_topology")
   /// WMC admin Deck CYOA wizard — last applied intake JSON (DeckIntakeV1) for reproducible deck generation
   deckAuthoringIntake        Json?
   schoolsAdventureId         String? // FK to Adventure: 6-face schools CYOA (Grow Up from room)
@@ -1460,6 +1524,8 @@ model Instance {
   friendshipInvitations      FriendshipInvitation[]
   /// Community Character corpus (v1 JSON) — bingo prompts per campaign instance
   communityCharacterCorpus   Json?                   @map("community_character_corpus")
+  /// ECI-B: child campaigns spawned from watered allyship intakes
+  latentAllyshipIntakesSpawned LatentAllyshipIntake[] @relation("AllyshipIntakeSpawnedInstance")
 
   @@map("instances")
 }
@@ -2274,9 +2340,16 @@ model BacklogItem {
   status               String          @default("new") // new, triaged, in_progress, done, wontfix
   linkedDocNodeId      String?
   linkedDocQuestId     String?
+  /// share_your_signal | site_signal_nav | certification | library_spawn | manual
+  source               String          @default("manual")
+  submittedByPlayerId  String?         @map("submitted_by_player_id")
+  /// Optional JSON: pageUrl, sentiment, quest meta, etc.
+  contextJson          String?         @db.Text @map("context_json")
   sourceLibraryRequest LibraryRequest? @relation("BacklogItemSpawnedBy")
+  submittedBy          Player?         @relation("BacklogItemSubmittedBy", fields: [submittedByPlayerId], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([source, createdAt])
   @@map("backlog_items")
 }
 
@@ -3018,6 +3091,50 @@ model SpokeSession {
   @@map("spoke_sessions")
 }
 
+/// SMB — Spoke move seed beds: four throughput slots per (campaignRef, spokeIndex).
+model SpokeMoveBed {
+  id                   String    @id @default(cuid())
+  campaignRef          String    @map("campaign_ref")
+  spokeIndex           Int       @map("spoke_index")
+  /// wakeUp | cleanUp | growUp | showUp
+  moveType             String    @map("move_type")
+  /// Canonical spoke-emitted BAR (usually type vibe) — first mover only
+  anchorBarId          String?   @unique @map("anchor_bar_id")
+  anchoredByPlayerId   String?   @map("anchored_by_player_id")
+  anchoredAt           DateTime? @map("anchored_at")
+  anchorReassignedById String?   @map("anchor_reassigned_by_id")
+  anchorReassignedAt   DateTime? @map("anchor_reassigned_at")
+  anchorReassignReason String?   @map("anchor_reassign_reason") @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  anchorBar         CustomBar?           @relation("SpokeMoveBedAnchor", fields: [anchorBarId], references: [id], onDelete: SetNull)
+  anchoredBy        Player?              @relation("SpokeMoveBedAnchoredBy", fields: [anchoredByPlayerId], references: [id], onDelete: SetNull)
+  additionalKernels SpokeMoveBedKernel[]
+
+  @@unique([campaignRef, spokeIndex, moveType])
+  @@index([campaignRef, spokeIndex])
+  @@map("spoke_move_beds")
+}
+
+/// SMB — `campaign_kernel` plants in a move bed (abundance / many trees per bed).
+model SpokeMoveBedKernel {
+  id          String   @id @default(cuid())
+  bedId       String   @map("bed_id")
+  kernelBarId String   @unique @map("kernel_bar_id")
+  plantedById String   @map("planted_by_id")
+  sourceBarId String?  @map("source_bar_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  bed       SpokeMoveBed @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  kernelBar CustomBar    @relation("SpokeMoveBedKernelBar", fields: [kernelBarId], references: [id], onDelete: Cascade)
+  plantedBy Player       @relation("SpokeMoveBedKernelPlantedBy", fields: [plantedById], references: [id], onDelete: Cascade)
+  sourceBar CustomBar?   @relation("SpokeMoveBedKernelSource", fields: [sourceBarId], references: [id], onDelete: SetNull)
+
+  @@index([bedId])
+  @@map("spoke_move_bed_kernels")
+}
+
 /// A public campaign goal, player-proposed and admin-approved.
 /// Tracks aggregate progress toward a named outcome.
 model CampaignMilestone {
@@ -3101,4 +3218,114 @@ model WikiDraft {
   @@index([artifactId])
   @@index([status])
   @@map("wiki_drafts")
+}
+
+// ============================================================
+// CCV — Campaign Contribution Visibility (seed_0ad7b87a2df5)
+// ============================================================
+
+/// GM annotation: marks an existing tracked action as a meaningful campaign contribution
+/// and provides a GM-written label for player-facing display.
+/// Soft-archive via status='retired' preserves historical player records.
+model ContributionAnnotation {
+  id          String   @id @default(cuid())
+  campaignRef String
+  /// Type of tracked action: quest | bar | milestone | adventure
+  actionType  String
+  /// FK to the specific action (CustomBar.id, CampaignMilestone.id, Adventure.id, etc.)
+  actionId    String
+  /// GM-authored label shown to players in their contribution list
+  gmLabel     String
+  /// active | retired — soft archive; retired keeps historical records but blocks new completions
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+
+  createdBy Player @relation("ContributionAnnotationCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([campaignRef, actionType, actionId])
+  @@index([campaignRef, status])
+  @@map("contribution_annotations")
+}
+
+/// Sub-campaign slot: organizes campaign content into a navigable hierarchy.
+/// Max nesting: campaign → branch (level 1) → sub-branch (level 2) → adventure container (level 3).
+model CampaignSlot {
+  id           String   @id @default(cuid())
+  campaignRef  String
+  /// Null for top-level branches; set for nested slots
+  parentSlotId String?
+  /// Nesting depth: 1=branch, 2=sub-branch, 3=adventure container
+  level        Int      @default(1)
+  title        String
+  description  String?  @db.Text
+  /// JSON array of Adventure IDs linked to this slot
+  adventureIds String   @default("[]")
+  /// active | archived — soft archive
+  status       String   @default("active")
+  sortOrder    Int      @default(0)
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  parentSlot CampaignSlot?  @relation("CampaignSlotChildren", fields: [parentSlotId], references: [id], onDelete: SetNull)
+  childSlots CampaignSlot[] @relation("CampaignSlotChildren")
+  createdBy  Player         @relation("CampaignSlotCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([campaignRef, parentSlotId])
+  @@index([campaignRef, status])
+  @@map("campaign_slots")
+}
+
+/// A player's completed action counted as a campaign contribution.
+/// Records are created when a player completes a GM-annotated quest/BAR/milestone/adventure.
+/// status='retired' is a soft archive — records are still counted in progress, but the
+/// source action is no longer available to new players.
+model ContributionRecord {
+  id         String   @id @default(cuid())
+  /// The campaign this contribution rolls up to (e.g. "bruised-banana")
+  campaignRef String
+  /// The player who earned this contribution
+  playerId   String
+  /// Type of tracked action: quest | bar | milestone | adventure
+  sourceType String
+  /// ID of the completed quest / CustomBar / CampaignMilestone / Adventure
+  sourceId   String
+  /// GM-authored label (copied from ContributionAnnotation.gmLabel at record creation)
+  gmLabel    String   @default("")
+  /// active | retired — soft archive; retired records still count toward progress
+  status     String   @default("active")
+  earnedAt   DateTime @default(now())
+
+  player Player @relation("PlayerContributions", fields: [playerId], references: [id], onDelete: Cascade)
+
+  /// One record per player per action — prevents double-counting
+  @@unique([campaignRef, playerId, sourceType, sourceId])
+  @@index([campaignRef, playerId])
+  @@index([campaignRef, status])
+  @@map("contribution_records")
+}
+
+/// GM-curated milestone marker with a narrative text block.
+/// Generated by the conversational intake wizard; fully editable post-generation.
+/// Triggers display of narrativeText when a player's contribution count reaches triggerCount.
+model CampaignMilestoneMarker {
+  id            String   @id @default(cuid())
+  /// The campaign this milestone belongs to (e.g. "bruised-banana")
+  campaignRef   String
+  /// Display name (editable post-generation)
+  name          String
+  /// Number of contributions required to show this narrative to the player
+  triggerCount  Int
+  /// Generated narrative text (editable post-generation)
+  narrativeText String   @db.Text
+  /// active | retired — soft archive
+  status        String   @default("active")
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([campaignRef, status])
+  @@map("campaign_milestone_markers")
 }

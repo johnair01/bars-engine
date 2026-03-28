@@ -39,6 +39,8 @@ import { getLibraryQuestsForMove } from '@/actions/library-discover'
 import { NationProvider } from '@/lib/ui/nation-provider'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
+import { getCampaignContributionProgress } from '@/actions/campaign-contributions'
+import { ContributionProgressBar } from '@/components/campaign/ContributionProgressBar'
 import { derivePlayerMoveContext } from '@/lib/player-move-context'
 import {
   campaignHomePath,
@@ -464,6 +466,14 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     milestoneGuidance = null
   }
 
+  // Sub-AC 3: fetch player's contribution progress for milestone narrative display.
+  // Fail-soft — dashboard renders without it if DB is unavailable.
+  const defaultCampaignRefEarly = resolveDefaultCampaignRef(activeInstance?.campaignRef)
+  const contributionProgress = await getCampaignContributionProgress(
+    defaultCampaignRefEarly,
+    playerId,
+  ).catch(() => null)
+
   // Derive move context via shared utility (G17 — single source of truth)
   const moveCtx = derivePlayerMoveContext({
     quests: player.quests,
@@ -487,7 +497,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
-  const defaultCampaignRef = resolveDefaultCampaignRef(activeInstance?.campaignRef)
+  const defaultCampaignRef = defaultCampaignRefEarly
   const residencyProgressStrip = residencyProgressForDashboardHeader(
     milestoneGuidance,
     activeInstance,
@@ -555,6 +565,16 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         {residencyProgressStrip && (
           <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
+        )}
+
+        {/* Sub-AC 3: Contribution progress + milestone narrative (CCV system).
+            Shown below the fundraising strip when the player has contribution data.
+            Derived from CampaignMilestoneMarker.narrativeText via getCampaignContributionProgress. */}
+        {contributionProgress && (
+          <ContributionProgressBar
+            progress={contributionProgress}
+            campaignRef={defaultCampaignRef}
+          />
         )}
 
         {/* 2. ORIENTATION COMPASS — first structural block after identity; governs the session (PMI G1) */}

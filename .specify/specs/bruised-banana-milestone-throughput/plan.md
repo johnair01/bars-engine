@@ -16,6 +16,22 @@ Implement per [.specify/specs/bruised-banana-milestone-throughput/spec.md](./spe
 | Config | [`src/actions/config.ts`](../../src/actions/config.ts) (`resolvePostOnboardingBoardPath`) |
 | Game loop | [`src/actions/quest-placement.ts`](../../src/actions/quest-placement.ts), `addQuestToCampaign` per [game-loop spec](../game-loop-bars-quest-thread-campaign/spec.md) |
 
+## North star path (traceability)
+
+**Purpose:** Tie the **priority ladder** in [`computeGuidedActions`](../../src/lib/bruised-banana-milestone/guided-actions.ts) to an **intended completion** and **what the player can see move**. Update this table when guidance rules change.
+
+| Player state (precondition) | Primary guided action (first CTA) | Intended completion | Progress / signal |
+|----------------------------|-----------------------------------|----------------------|-------------------|
+| `onboardingComplete === false` | Continue campaign onboarding → `/campaign?ref=` | Finish orientation / initiation / first campaign quests until server marks onboarding complete | Next visit: primary CTA **promotes** past onboarding (vault → board → hub ladder) |
+| Vault drafts or unplaced at cap | Vault compost → `/hand/compost` (or Hand) | Free capacity per [vault-limits](../../src/lib/vault-limits.ts) | Primary CTA **no longer** vault-first; player unblocked for board/hub |
+| Onboarding ok, vault ok, **no** gameboard participation | Pick a slot → `/campaign/board?ref=` | Claim / bid / steward a slot (`getOrCreateGameboardSlots` participation) | `hasGameboardParticipation` true → hub becomes primary; board shows player’s slot |
+| Onboarding ok, vault ok, **has** gameboard participation | Campaign hub → `/campaign/hub?ref=` | Enter a spoke CYOA, landing, or collective route without dead links | `campaignHubState` / spoke progress where persisted; **no** broken passage targets ([UGA](../unified-cyoa-graph-authoring/spec.md)) |
+| **Secondary** (filled after primary) | Event, Market, Campaign story, Gameboard | Contextual engagement | Fundraiser % moves on **donation** paths (`/event/donate/wizard`); Kotter label from **Instance** |
+
+**Known gaps (do not paper over):** If hub/spoke completion **does not** yet update `MilestoneSnapshot` fields, the North star still requires **honest** signals elsewhere in the same session (e.g. donation line, board state, onboarding promotion). File a follow-up task if **no** row applies after step 4 of the verification quest.
+
+---
+
 ## Phases
 
 ### Phase 1 — Data + rules module (no UI)

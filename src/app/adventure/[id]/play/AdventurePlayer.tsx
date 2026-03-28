@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,9 +9,12 @@ import { saveAdventureProgress, getAdventureProgress } from '@/actions/adventure
 import { emitBarFromPassage } from '@/actions/emit-bar-from-passage'
 import { createBarFromMoveChoice } from '@/actions/create-bar-from-move-choice'
 import { generateQuestFromReading } from '@/actions/generate-quest'
+import { plantSeedFromSpoke } from '@/actions/plant-seed-from-spoke'
 import { saveCyoaHexagramSnapshot } from '@/actions/cyoa-artifact-ledger'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
+import { buildOnboardingUrl } from '@/lib/safe-return-to'
+import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
 import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
 import { CastIChingModal } from '@/components/CastIChingModal'
 import { CyoaBarLedgerSheet } from '@/components/cyoa/CyoaBarLedgerSheet'
@@ -23,6 +26,8 @@ interface Choice {
   targetId: string
   moveType?: string
   blueprintKey?: string
+  /** CYOA face picker — applied before fetch; persists for subsequent portal nodes */
+  setFace?: string
 }
 
 interface Node {
@@ -92,8 +97,12 @@ export function AdventurePlayer({
   const [barDescription, setBarDescription] = useState('')
   const [generatingPortalQuest, setGeneratingPortalQuest] = useState(false)
   const [portalQuestGenerated, setPortalQuestGenerated] = useState<{ title: string; questId?: string } | null>(null)
+  const [spokeSeedBarId, setSpokeSeedBarId] = useState<string | null>(null)
   const [ledger, setLedger] = useState<CyoaArtifactLedgerEntry[]>([])
   const [hexLine, setHexLine] = useState<string | null>(null)
+  /** In-flow GM face from portal passages (overrides URL `face` after picker) */
+  const [pickedFace, setPickedFace] = useState<string | null>(null)
+  const pickedFaceRef = useRef<string | null>(null)
   const router = useRouter()
 
   const refreshLedger = useCallback(async () => {
@@ -115,18 +124,31 @@ export function AdventurePlayer({
     void refreshLedger()
   }, [refreshLedger])
 
+  useEffect(() => {
+    pickedFaceRef.current = null
+    setPickedFace(null)
+  }, [adventureId, startNodeId])
+
   const isBarEmitNode = currentNode?.metadata?.actionType === 'bar_emit'
   const isCastIChingNode =
     currentNode?.metadata?.actionType === 'cast_iching' &&
     currentNode?.metadata?.castIChingTargetId
 
-  const fetchNode = async (nodeId: string) => {
+  const fetchNode = async (
+    nodeId: string,
+    opts?: { faceOverride?: string }
+  ) => {
     setLoading(true)
     setError(null)
     try {
+      const faceForApi =
+        opts?.faceOverride?.trim() ||
+        pickedFaceRef.current?.trim() ||
+        portalFace?.trim() ||
+        undefined
       const params = new URLSearchParams()
       if (isPreview) params.set('preview', '1')
-      if (portalFace) params.set('face', portalFace)
+      if (faceForApi) params.set('face', faceForApi)
       if (campaignRef) params.set('ref', campaignRef)
       if (portalHexagramId != null && Number.isFinite(portalHexagramId)) {
         params.set('hexagram', String(portalHexagramId))
@@ -153,6 +175,18 @@ export function AdventurePlayer({
         await saveAdventureProgress(adventureId, nodeId, {})
       }
 
+      // Auto-plant seed BAR when a spoke terminal node is reached
+      if (node.choices.length === 0 && portalSpokeIndex != null && campaignRef && !isPreview) {
+        void plantSeedFromSpoke({
+          campaignRef,
+          spokeIndex: portalSpokeIndex,
+          hexagramId: portalHexagramId ?? undefined,
+          portalFace: faceForApi,
+        }).then((r) => {
+          if ('success' in r) setSpokeSeedBarId(r.barId)
+        })
+      }
+
       // Check: completion passage with matching quest → complete
       if (
         node.isCompletionPassage &&
@@ -170,8 +204,7 @@ export function AdventurePlayer({
         if (result && 'error' in result) {
           setError(result.error)
         } else {
-          const ritualParam = isRitual ? '?ritual=true' : ''
-          router.push(`/conclave/onboarding${ritualParam}`)
+          router.push(buildOnboardingUrl({ returnTo: returnTo ?? undefined, ritual: !!isRitual }))
         }
       }
     } catch (e) {
@@ -240,6 +273,10 @@ export function AdventurePlayer({
       passageNodeId: currentNode.id,
       campaignRef: campaignRef ?? undefined,
       blueprintKey: currentNode.metadata?.blueprintKey,
+      spokeIndex:
+        portalSpokeIndex != null && portalSpokeIndex >= 0 && portalSpokeIndex <= 7
+          ? portalSpokeIndex
+          : undefined,
     })
     setBarSubmitting(false)
     if ('error' in result) {
@@ -250,7 +287,7 @@ export function AdventurePlayer({
     const nextId =
       currentNode.metadata?.nextTargetId ??
       currentNode.choices[0]?.targetId
-    if (nextId) fetchNode(nextId)
+    if (nextId) void fetchNode(nextId)
     else router.push('/hand')
   }
 
@@ -260,6 +297,7 @@ export function AdventurePlayer({
       if (questId) params.set('questId', questId)
       if (threadId) params.set('threadId', threadId)
       if (campaignRef) params.set('ref', campaignRef)
+      if (returnTo) params.set('returnTo', returnTo)
       const qs = params.toString()
       const returnPath = `/adventure/${adventureId}/play${qs ? `?${qs}` : ''}`
       router.push(`/login?returnTo=${encodeURIComponent(returnPath)}`)
@@ -270,7 +308,12 @@ export function AdventurePlayer({
       return
     }
     if (choice.targetId.startsWith('redirect:')) {
-      const path = choice.targetId.slice(9)
+      let path = choice.targetId.slice(9)
+      const cref = campaignRef?.trim()
+      if (cref && !path.includes('ref=')) {
+        const sep = path.includes('?') ? '&' : '?'
+        path = `${path}${sep}ref=${encodeURIComponent(cref)}`
+      }
       let url = path
       const returnToVal = returnTo ?? (campaignRef ? `/campaign/hub?ref=${campaignRef}` : null)
       if (returnToVal) {
@@ -281,8 +324,19 @@ export function AdventurePlayer({
       return
     }
     if (choice.targetId === 'schools' && schoolsAdventureId && currentNode) {
+      if (choice.setFace) {
+        pickedFaceRef.current = choice.setFace
+        setPickedFace(choice.setFace)
+      }
       const refPart = campaignRef ? `&ref=${encodeURIComponent(campaignRef)}` : ''
-      const roomReturn = `/adventure/${adventureId}/play?start=${encodeURIComponent(currentNode.id)}${refPart}`
+      const faceForSchool =
+        choice.setFace?.trim() ||
+        pickedFaceRef.current?.trim() ||
+        portalFace?.trim()
+      const facePart = faceForSchool
+        ? `&face=${encodeURIComponent(faceForSchool)}`
+        : ''
+      const roomReturn = `/adventure/${adventureId}/play?start=${encodeURIComponent(currentNode.id)}${refPart}${facePart}`
       router.push(`/adventure/${schoolsAdventureId}/play?returnTo=${encodeURIComponent(roomReturn)}`)
       return
     }
@@ -308,7 +362,12 @@ export function AdventurePlayer({
       await refreshLedger()
     }
 
-    fetchNode(choice.targetId)
+    if (choice.setFace) {
+      pickedFaceRef.current = choice.setFace
+      setPickedFace(choice.setFace)
+    }
+    const faceOverride = choice.setFace?.trim() || undefined
+    void fetchNode(choice.targetId, faceOverride ? { faceOverride } : undefined)
   }
 
   const displayChoices = useMemo(
@@ -352,6 +411,12 @@ export function AdventurePlayer({
   if (!currentNode) return null
 
   const showHubContextStrip = Boolean(campaignRef?.trim())
+  const portalFaceLabel = useMemo(() => {
+    const raw = pickedFace?.trim() || portalFace?.trim()
+    if (!raw) return null
+    const key = raw as GameMasterFace
+    return FACE_META[key]?.label ?? raw
+  }, [pickedFace, portalFace])
 
   const slides = chunkIntoSlides(currentNode.text)
   const useSlideMode = slides.length > 1
@@ -376,6 +441,9 @@ export function AdventurePlayer({
             ) : null}
             {portalHexagramId != null ? (
               <span className="text-zinc-500"> · Hexagram {portalHexagramId}</span>
+            ) : null}
+            {portalFaceLabel ? (
+              <span className="text-zinc-500"> · GM face: {portalFaceLabel}</span>
             ) : null}
             {portalKotterStage != null ? (
               <span className="text-zinc-500"> · Collective stage {portalKotterStage}</span>
@@ -528,56 +596,45 @@ export function AdventurePlayer({
                 <p className="text-green-400 font-bold">Quest completed!</p>
                 <p className="text-zinc-400 text-sm mt-1">Redirecting...</p>
               </div>
-            ) : portalHexagramId && campaignRef ? (
+            ) : portalSpokeIndex != null && campaignRef ? (
               <div className="space-y-3">
-                {portalQuestGenerated ? (
-                  <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl space-y-3">
-                    <p className="text-green-400 font-medium text-sm">Quest generated: {portalQuestGenerated.title}</p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Link
-                        href="/hand/quests"
-                        className="flex-1 text-center py-2 px-3 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
-                      >
-                        View in Vault →
-                      </Link>
-                      {portalQuestGenerated.questId ? (
-                        <Link
-                          href={`/campaign/marketplace?ref=${encodeURIComponent(campaignRef)}&attach=${encodeURIComponent(portalQuestGenerated.questId)}`}
-                          className="flex-1 text-center py-2 px-3 bg-teal-900/80 hover:bg-teal-800 text-teal-100 text-sm font-medium rounded-lg transition-colors border border-teal-800/50"
-                        >
-                          List on marketplace →
-                        </Link>
-                      ) : null}
-                      <Link
-                        href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
-                        className="flex-1 text-center py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
-                      >
-                        Return to hub →
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <>
+                {spokeSeedBarId && (
+                  <p className="text-xs text-emerald-500 text-center">
+                    Seed planted — keep watering to grow it into a quest.
+                  </p>
+                )}
+                <Link
+                  href={`/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${portalSpokeIndex}`}
+                  className="block w-full text-center py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
+                >
+                  Continue to landing card →
+                </Link>
+                {portalHexagramId && (
+                  portalQuestGenerated ? (
+                    <p className="text-green-400 text-sm text-center">
+                      Quest generated: {portalQuestGenerated.title}
+                    </p>
+                  ) : (
                     <button
                       onClick={() => void handleGeneratePortalQuest()}
                       disabled={generatingPortalQuest}
-                      className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-medium rounded-xl transition-colors"
+                      className="w-full py-2 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-50 transition-colors"
                     >
-                      {generatingPortalQuest ? 'Generating quest…' : `Generate quest from Hexagram ${portalHexagramId} →`}
+                      {generatingPortalQuest ? 'Generating quest…' : `Generate quest from Hexagram ${portalHexagramId}`}
                     </button>
-                    <Link
-                      href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
-                      className="block w-full text-center py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
-                    >
-                      Skip — return to lobby
-                    </Link>
-                  </>
+                  )
                 )}
+                <Link
+                  href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
+                  className="block w-full text-center py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+                >
+                  Return to hub
+                </Link>
               </div>
             ) : (
               <button
                 onClick={() =>
-                  router.push(isRitual ? '/conclave/onboarding?ritual=true' : '/conclave/onboarding')
+                  router.push(buildOnboardingUrl({ returnTo: returnTo ?? undefined, ritual: !!isRitual }))
                 }
                 className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl"
               >

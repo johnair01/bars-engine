@@ -2,7 +2,7 @@
  * Shared Prisma loaders for Vault lobby (`/hand`) and room pages (`/hand/charges`, …).
  * @see .specify/specs/vault-page-experience/spec.md
  */
-import { db } from '@/lib/db'
+import { dbBase } from '@/lib/db'
 import { daysAgoDate, VAULT_ROOM_LIST_CAP, VAULT_SERVER_LIST_CAP, VAULT_STALE_DAYS } from '@/lib/vault-ui'
 import { whoContactGrammarOrFilter } from '@/lib/vault-who-contacts'
 
@@ -54,7 +54,7 @@ export function compostEligibleWhere(playerId: string) {
 }
 
 export async function loadCompostEligibleBars(playerId: string) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: compostEligibleWhere(playerId),
         orderBy: { createdAt: 'asc' },
         select: {
@@ -105,7 +105,7 @@ const invitationSelect = {
 } as const
 
 async function fetchChargeBarsSelect(playerId: string, take: number) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: {
             creatorId: playerId,
             type: 'charge_capture',
@@ -118,7 +118,7 @@ async function fetchChargeBarsSelect(playerId: string, take: number) {
 }
 
 async function fetchUnplacedQuestsSelect(playerId: string, take: number) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: unplacedPersonalQuestWhere(playerId),
         orderBy: { createdAt: 'desc' },
         take,
@@ -127,7 +127,7 @@ async function fetchUnplacedQuestsSelect(playerId: string, take: number) {
 }
 
 async function fetchPrivateDraftsFull(playerId: string, take: number) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: genericPrivateDraftWhere(playerId),
         orderBy: { createdAt: 'desc' },
         take,
@@ -143,7 +143,7 @@ const whoContactSelect = {
 } as const
 
 async function fetchWhoContactBarsSelect(playerId: string, take: number) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: whoContactVaultWhere(playerId),
         orderBy: { createdAt: 'desc' },
         take,
@@ -152,7 +152,7 @@ async function fetchWhoContactBarsSelect(playerId: string, take: number) {
 }
 
 async function fetchInvitationBarsSelect(playerId: string, take: number) {
-    return db.customBar.findMany({
+    return dbBase.customBar.findMany({
         where: {
             creatorId: playerId,
             inviteId: { not: null },
@@ -185,19 +185,19 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         whoContactBars,
         invitationBars,
     ] = await Promise.all([
-        db.customBar.count({
+        dbBase.customBar.count({
             where: { creatorId: playerId, type: 'charge_capture', status: 'active' },
         }),
-        db.customBar.count({ where: genericPrivateDraftWhere(playerId) }),
-        db.customBar.count({ where: whoContactVaultWhere(playerId) }),
-        db.customBar.count({
+        dbBase.customBar.count({ where: genericPrivateDraftWhere(playerId) }),
+        dbBase.customBar.count({ where: whoContactVaultWhere(playerId) }),
+        dbBase.customBar.count({
             where: { ...draftWhere(playerId), createdAt: { lt: staleDate } },
         }),
-        db.customBar.count({
+        dbBase.customBar.count({
             where: { creatorId: playerId, inviteId: { not: null }, status: 'active' },
         }),
-        db.customBar.count({ where: unplacedPersonalQuestWhere(playerId) }),
-        db.customBar.count({
+        dbBase.customBar.count({ where: unplacedPersonalQuestWhere(playerId) }),
+        dbBase.customBar.count({
             where: {
                 ...unplacedPersonalQuestWhere(playerId),
                 createdAt: { lt: staleDate },
@@ -241,7 +241,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
 export type VaultCoreData = Awaited<ReturnType<typeof loadVaultCoreData>>
 
 export async function loadAcceptedInvitesForVault(playerId: string) {
-    return db.invite.findMany({
+    return dbBase.invite.findMany({
         where: { forgerId: playerId, status: 'used' },
         include: { players: { select: { id: true, name: true, createdAt: true } } },
         orderBy: { usedAt: 'desc' },

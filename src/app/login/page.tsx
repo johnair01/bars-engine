@@ -2,6 +2,16 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { LoginForm } from './LoginForm'
+import { buildOnboardingUrl, isSafeAppPath } from '@/lib/safe-return-to'
+
+/**
+ * Donate wizard + self-report are usable without nation/playbook; do not trap those URLs
+ * behind /conclave/onboarding or players loop: login → onboarding → … → login?returnTo=donate.
+ */
+function isDonateFlowReturnTo(returnTo: string | undefined): boolean {
+  if (!returnTo || !isSafeAppPath(returnTo)) return false
+  return returnTo === '/event/donate' || returnTo.startsWith('/event/donate?') || returnTo.startsWith('/event/donate/')
+}
 
 /**
  * @page /login
@@ -9,7 +19,7 @@ import { LoginForm } from './LoginForm'
  * @description Login page - email-based authentication with optional returnTo redirect
  * @permissions public
  * @searchParams returnTo:string (optional) - Post-login redirect URL
- * @relationships authenticates PLAYER, redirects to /conclave/onboarding if profile incomplete
+ * @relationships authenticates PLAYER; incomplete profile → /conclave/onboarding unless returnTo is a public donate path
  * @energyCost 0 (authentication)
  * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:auth, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
  * @example /login?returnTo=/create-bar
@@ -32,10 +42,11 @@ export default async function LoginPage({
             select: { id: true, nationId: true, archetypeId: true }
         })
         if (player) {
-            if (!player.nationId || !player.archetypeId) {
-                redirect('/conclave/onboarding')
+            const profileIncomplete = !player.nationId || !player.archetypeId
+            if (profileIncomplete && !isDonateFlowReturnTo(returnTo)) {
+                redirect(buildOnboardingUrl({ returnTo: returnTo && isSafeAppPath(returnTo) ? returnTo : undefined }))
             }
-            redirect(returnTo && returnTo.startsWith('/') ? returnTo : '/')
+            redirect(returnTo && isSafeAppPath(returnTo) ? returnTo : '/')
         }
     }
 

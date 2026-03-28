@@ -1,6 +1,7 @@
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { isSafeAppPath } from '@/lib/safe-return-to'
 import Link from 'next/link'
 import { getAdventureProgress } from '@/actions/adventure-progress'
 import { AdventurePlayer } from './AdventurePlayer'
@@ -79,7 +80,23 @@ export default async function AdventurePlayPage({
   const isRitual = ritual === 'true'
   const isPreview = preview === '1'
   const player = await getCurrentPlayer()
-  if (!player) redirect('/login')
+  if (!player) {
+    const u = new URLSearchParams()
+    if (questId) u.set('questId', questId)
+    if (threadId) u.set('threadId', threadId)
+    if (ritual === 'true') u.set('ritual', 'true')
+    if (preview === '1') u.set('preview', '1')
+    if (startParam) u.set('start', startParam)
+    if (campaignRef) u.set('ref', campaignRef)
+    if (returnTo && isSafeAppPath(returnTo)) u.set('returnTo', returnTo)
+    if (hexagram) u.set('hexagram', hexagram)
+    if (portalFace) u.set('face', portalFace)
+    if (spokeParam !== undefined && spokeParam !== '') u.set('spoke', spokeParam)
+    if (kotterStageParam !== undefined && kotterStageParam !== '') u.set('kotterStage', kotterStageParam)
+    const qs = u.toString()
+    const back = qs ? `/adventure/${adventureId}/play?${qs}` : `/adventure/${adventureId}/play`
+    redirect(`/login?returnTo=${encodeURIComponent(back)}`)
+  }
 
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
   const allowDraft = isPreview && isAdmin
@@ -114,11 +131,20 @@ export default async function AdventurePlayPage({
     startNodeId = adventure.passages[0]?.nodeId ?? 'Start'
   }
 
-  // Resume from saved progress if available and node still exists
+  // Resume from saved progress when the node still exists — unless this navigation is
+  // CHS hub → spoke (`/campaign/spoke/:index` redirects with `spoke` + `start=Portal_N`).
+  // The portal adventure shares one progress row per player; without this, finishing
+  // (or idling on) a terminal / hub-only node makes every later spoke re-entry resume
+  // there instead of at the correct Portal_* root.
   const progress = await getAdventureProgress(adventureId)
   const nodeIds = new Set(adventure.passages.map((p) => p.nodeId))
-  const effectiveStartNodeId =
-    progress?.currentNodeId && nodeIds.has(progress.currentNodeId)
+  const isChsHubSpokeEntry =
+    portalSpokeIndex !== undefined &&
+    !!startParam &&
+    nodeIds.has(startParam)
+  const effectiveStartNodeId = isChsHubSpokeEntry
+    ? startParam
+    : progress?.currentNodeId && nodeIds.has(progress.currentNodeId)
       ? progress.currentNodeId
       : startNodeId
 

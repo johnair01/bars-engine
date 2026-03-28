@@ -1,0 +1,119 @@
+seed_id: creator-milestone-interview
+version: "1.0"
+created: "2026-03-27"
+ambiguity_score: 0.14
+
+interview_session: interview_20260327_195515
+interview_rounds: 8
+
+goal: >
+  Build the Creator Milestone Interview system — a structured step wizard that
+  a campaign creator completes to seed BARs and archetype template structures
+  onto their campaign. The wizard mirrors the 3-2-1 UX pattern (structured Q&A,
+  one question at a time). Questions are gated by campaign archetype (one GM-authored
+  template per archetype, shared across campaigns of that type). Completing the
+  interview always seeds ≥1 BAR onto the campaign. Retaking layers additional BARs
+  without wiping prior seeds.
+
+problem_statement: >
+  Campaign creators have no structured pathway to seed their campaign with
+  meaningful BARs derived from their specific goals and campaign archetype.
+  The milestone interview closes the loop between "campaign exists" and
+  "campaign has seeded work" — turning the creator's intentions into
+  in-game artifacts that players can act on.
+
+actors:
+  campaign_creator:
+    role: "The player who owns/created the campaign"
+    gate: "Must be campaign owner or admin; must have a campaign with a campaignArchetype"
+  gm:
+    role: "Game Master — authors question templates per campaign archetype"
+    gate: "admin or gm role in DB"
+  supporter:
+    role: "Future Phase 2 — out of scope for MVP"
+    note: "Supporters who complete the interview fork into sub-campaigns"
+
+constraints:
+  - TypeScript, Next.js 14+, Prisma/PostgreSQL — brownfield, extend existing system
+  - Rules-based/deterministic BAR generator for MVP; AI personalization is Phase 2
+  - Anonymous access OK via shareToken (like /character/[shareToken] pattern)
+  - Retaking the interview layers additional BARs — no re-seed/wipe behavior
+  - One canonical interview per campaign (creator only); idempotent; retakes stack
+  - GM authors questions at campaign-archetype level (one template per archetype type)
+  - Supporter sub-campaign forking is Phase 2 (out of scope)
+  - npm run build + npm run check must pass
+
+acceptance_criteria:
+  - Interview wizard exists at /campaign/[campaignRef]/interview with step-by-step UX
+  - Wizard is gated by campaign archetype — correct question set loads per archetype
+  - Questions are rendered one at a time (3-2-1 style) with progress indicator
+  - Completing the interview seeds ≥1 BAR (type seeded_campaign_bar) onto the campaign
+  - CampaignMilestone record created with completedAt, campaignRef, barIds[], interviewAnswers JSON
+  - Retaking the interview creates additional BARs without removing existing seed BARs
+  - Campaign creator can access the interview without a full account (shareToken path)
+  - GM can author and edit question templates per campaign archetype at /admin/interview-templates
+  - MilestoneInterviewTemplate model exists with archetypeKey, questions JSON array
+  - Interview completion shows summary screen: BARs seeded + "Continue to campaign" CTA
+  - npm run build + npm run check pass
+
+phases:
+  - id: "CMI-1"
+    name: "Schema + Migration"
+    description: >
+      Add MilestoneInterviewTemplate model (archetypeKey, questions JSON, status).
+      Add CampaignMilestone model (campaignRef, creatorId, completedAt, barIds JSON, answers JSON).
+    outputs:
+      - prisma/schema.prisma updated
+      - migration: add_milestone_interview_schema
+
+  - id: "CMI-2"
+    name: "Server actions + BAR generator"
+    description: >
+      getMilestoneInterviewTemplate(campaignArchetype): template or null
+      createMilestoneInterview(input): CampaignMilestone + seeded BARs
+      retakeMilestoneInterview(input): additional BARs stacked on existing milestone
+      Rules-based BAR generator: deterministic from question answers + archetype
+    outputs:
+      - src/actions/milestone-interview.ts
+      - src/lib/milestone-interview/generate-bars.ts
+
+  - id: "CMI-3"
+    name: "Interview wizard UI"
+    description: >
+      Step wizard at /campaign/[campaignRef]/interview
+      Mirrors 3-2-1 UX: one question per step, progress bar, back navigation.
+      Anonymous access via shareToken; redirects to account creation on BAR seed.
+      Completion screen shows seeded BARs + "Continue to campaign hub" CTA.
+    outputs:
+      - src/app/campaign/[campaignRef]/interview/page.tsx
+      - src/app/campaign/[campaignRef]/interview/InterviewWizard.tsx
+
+  - id: "CMI-4"
+    name: "Admin question template editor"
+    description: >
+      GM editor at /admin/interview-templates
+      Create/edit templates per campaign archetype.
+      Questions: add/remove/reorder; each question has type (text | select) and answer options.
+    outputs:
+      - src/app/admin/interview-templates/page.tsx
+      - src/app/admin/interview-templates/[archetypeKey]/page.tsx
+      - src/actions/milestone-interview.ts (admin CRUD additions)
+
+resolved_decisions:
+  generator_type: rules_based_deterministic
+  auth_model: anonymous_ok_sharetoken
+  retake_behavior: additive_no_wipe
+  question_authoring: campaign_archetype_level
+  scope: creator_interview_only_phase_1
+  supporter_subcamp: phase_2
+
+metadata:
+  version: "1.0"
+  created: "2026-03-27"
+  ambiguity_score: 0.14
+  interview_source: "interview_20260327_195515 (8 rounds)"
+  spec_ref: ".specify/specs/creator-milestone-interview/spec.md"
+  backlog_id: "1.63 | CMI"
+  depends_on:
+    - "CHS (0.49.2) — campaign hub/spoke architecture"
+    - "src/actions/campaign-bar.ts — BAR creation patterns"

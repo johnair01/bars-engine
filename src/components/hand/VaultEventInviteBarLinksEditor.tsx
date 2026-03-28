@@ -5,6 +5,13 @@ import { useCallback, useEffect, useState, useTransition } from 'react'
 import { EVENT_INVITE_ALLOWED_SLUGS } from '@/lib/event-invite-party'
 import { updateEventInviteBarLinks } from '@/app/hand/event-invite-bar-actions'
 
+function eventSlugSelectValue(slug: string): string {
+  const t = slug.trim()
+  if (!t) return ''
+  if ((EVENT_INVITE_ALLOWED_SLUGS as readonly string[]).includes(t)) return t
+  return `__other:${t}`
+}
+
 type Props = {
   barId: string
   initialPartifulUrl: string | null
@@ -18,13 +25,13 @@ export function VaultEventInviteBarLinksEditor({
 }: Props) {
   const router = useRouter()
   const [partifulUrl, setPartifulUrl] = useState(initialPartifulUrl ?? '')
-  const [eventSlug, setEventSlug] = useState(initialEventSlug ?? '')
+  const [eventSlug, setEventSlug] = useState(() => (initialEventSlug ?? '').trim())
   const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
   useEffect(() => {
     setPartifulUrl(initialPartifulUrl ?? '')
-    setEventSlug(initialEventSlug ?? '')
+    setEventSlug((initialEventSlug ?? '').trim())
   }, [initialPartifulUrl, initialEventSlug])
 
   const onSubmit = useCallback(
@@ -34,7 +41,7 @@ export function VaultEventInviteBarLinksEditor({
       const fd = new FormData()
       fd.set('barId', barId)
       fd.set('partifulUrl', partifulUrl)
-      fd.set('eventSlug', eventSlug)
+      fd.set('eventSlug', eventSlug.trim())
       startTransition(async () => {
         const r = await updateEventInviteBarLinks(fd)
         if (r.ok) {
@@ -50,7 +57,7 @@ export function VaultEventInviteBarLinksEditor({
 
   const dirty =
     partifulUrl.trim() !== (initialPartifulUrl ?? '').trim() ||
-    (eventSlug.trim() || '') !== (initialEventSlug ?? '').trim()
+    eventSlug.trim() !== (initialEventSlug ?? '').trim()
 
   return (
     <form onSubmit={onSubmit} className="mt-2 space-y-2 rounded-md border border-zinc-800/80 bg-zinc-950/40 p-3">
@@ -72,12 +79,7 @@ export function VaultEventInviteBarLinksEditor({
         <span className="text-[11px] text-zinc-400">Event slug (initiation)</span>
         <select
           name="eventSlug"
-          value={
-            eventSlug &&
-            !(EVENT_INVITE_ALLOWED_SLUGS as readonly string[]).includes(eventSlug)
-              ? `__other:${eventSlug}`
-              : eventSlug
-          }
+          value={eventSlugSelectValue(eventSlug)}
           onChange={(e) => {
             const v = e.target.value
             setEventSlug(v.startsWith('__other:') ? v.slice('__other:'.length) : v)
@@ -90,12 +92,14 @@ export function VaultEventInviteBarLinksEditor({
               {slug}
             </option>
           ))}
-          {eventSlug.trim() &&
-          !(EVENT_INVITE_ALLOWED_SLUGS as readonly string[]).includes(eventSlug.trim()) ? (
-            <option value={`__other:${eventSlug.trim()}`}>
-              {eventSlug.trim()} (current, not in preset list)
-            </option>
-          ) : null}
+          {(() => {
+            const t = eventSlug.trim()
+            return t && !(EVENT_INVITE_ALLOWED_SLUGS as readonly string[]).includes(t) ? (
+              <option value={`__other:${t}`}>
+                {t} (current, not in preset list)
+              </option>
+            ) : null
+          })()}
         </select>
       </label>
       <div className="flex flex-wrap items-center gap-2 pt-1">

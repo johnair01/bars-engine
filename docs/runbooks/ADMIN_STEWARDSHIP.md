@@ -11,6 +11,10 @@ This runbook matches [`.specify/specs/admin-stewardship-four-moves/spec.md`](../
 | **Grow up** | Author / extend content | Quests, Twine, decks, proposals | `/admin/adventures`, `/admin/twine`, `/admin/quest-proposals` |
 | **Show up** | Ship to players | Active instance, `/event`, invites | `/event`, [`PLAYER_EVENT_CREATION.md`](./PLAYER_EVENT_CREATION.md) |
 
+## Campaign onboarding (invites = CYOA)
+
+Stewards and owners edit **event invite** stories with the **visual builder** (or JSON) on the public invite URL and in Vault — see [CAMPAIGN_ONBOARDING_CYOA.md](./CAMPAIGN_ONBOARDING_CYOA.md) and [.specify/specs/campaign-onboarding-cyoa/spec.md](../../.specify/specs/campaign-onboarding-cyoa/spec.md).
+
 ## Six Game Master faces × admin jobs
 
 | Face | Example admin jobs |

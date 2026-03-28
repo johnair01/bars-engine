@@ -1,7 +1,5 @@
 'use server'
 
-import { promises as fs } from 'fs'
-import path from 'path'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isCampaignQuest } from '@/lib/quest-scope'
@@ -18,6 +16,7 @@ import {
     derivePolaritiesFromNationArchetype,
     mergeStoryProgressGridPolarities,
 } from '@/lib/creator-scene-grid-deck/polarities'
+import { persistPlayerFeedbackToBacklog } from '@/lib/feedback/persist-player-feedback-to-backlog'
 
 /**
  * Checks the status of a specific quest for the current player.
@@ -408,42 +407,12 @@ export async function completeQuestForPlayer(
             }
         }
 
-        // IF FEEDBACK QUEST: persist to .feedback before delete so triage can process it
+        // Repeatable feedback quest: drop assignment if present (Share Your Signal persists after tx — see below).
+        // Use deleteMany: dashboard adds system-feedback to the visible list without always inserting PlayerQuest;
+        // delete() would throw P2025 and fail completion on mobile/prod for those players.
         if (questId === 'system-feedback') {
-            try {
-                const player = await tx.player.findUnique({
-                    where: { id: playerId },
-                    select: { name: true }
-                })
-                const sentiment = (inputs as Record<string, unknown>)?.sentiment ?? 'N/A'
-                const clarity = (inputs as Record<string, unknown>)?.clarity ?? 'N/A'
-                const transmission = (inputs as Record<string, unknown>)?.feedback ?? ''
-                const feedbackText = [
-                    `Resonance: ${sentiment} | Clarity: ${clarity}`,
-                    transmission ? `\n\nTransmission: ${transmission}` : ''
-                ].join('')
-                const feedbackDir = path.join(process.cwd(), '.feedback')
-                await fs.mkdir(feedbackDir, { recursive: true })
-                const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
-                const entry = {
-                    timestamp: new Date().toISOString(),
-                    playerId,
-                    playerName: player?.name ?? 'Unknown',
-                    questId: 'system-feedback',
-                    passageName: 'Share Your Signal',
-                    feedback: feedbackText.trim() || 'No text provided'
-                }
-                await fs.appendFile(feedbackFile, JSON.stringify(entry) + '\n')
-            } catch (err) {
-                console.error('[QuestEngine] Failed to persist Share Your Signal feedback:', err)
-            }
-            await tx.playerQuest.delete({
-                where: {
-                    playerId_questId: {
-                        playerId,
-                        questId: 'system-feedback'
-                    }
-                }
+            await tx.playerQuest.deleteMany({
+                where: { playerId, questId: 'system-feedback' },
             })
         }
 
@@ -457,6 +426,43 @@ export async function completeQuestForPlayer(
     }, {
         timeout: 10000 // Increase timeout to 10s for intensive operations
     })
+
+    // Share Your Signal → durable BacklogItem (+ best-effort JSONL for local triage)
+    if (result && !('error' in result) && questId === 'system-feedback') {
+        try {
+            const p = await db.player.findUnique({
+                where: { id: playerId },
+                select: { name: true },
+            })
+            const sentiment = (inputs as Record<string, unknown>)?.sentiment ?? 'N/A'
+            const clarity = (inputs as Record<string, unknown>)?.clarity ?? 'N/A'
+            const transmission = (inputs as Record<string, unknown>)?.feedback ?? ''
+            const feedbackText = [
+                `Resonance: ${sentiment} | Clarity: ${clarity}`,
+                transmission ? `\n\nTransmission: ${transmission}` : '',
+            ]
+                .join('')
+                .trim() || 'No text provided'
+            const persist = await persistPlayerFeedbackToBacklog({
+                source: 'share_your_signal',
+                playerId,
+                playerName: p?.name,
+                questId: 'system-feedback',
+                passageName: 'Share Your Signal',
+                feedback: feedbackText,
+                context: {
+                    sentiment,
+                    clarity,
+                    transmission: typeof transmission === 'string' ? transmission : JSON.stringify(transmission),
+                },
+            })
+            if ('error' in persist) {
+                console.error('[QuestEngine] Share Your Signal backlog persist failed:', persist.error)
+            }
+        } catch (err) {
+            console.error('[QuestEngine] Failed to persist Share Your Signal to backlog:', err)
+        }
+    }
 
     // Tetris: on key completion, cascade unblock root + siblings
     if (result && !('error' in result) && quest.isKeyUnblocker) {

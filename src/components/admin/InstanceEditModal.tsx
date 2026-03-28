@@ -2,8 +2,10 @@
 
 import { useMemo } from 'react'
 import { upsertInstance } from '@/actions/instance'
+import { CAMPAIGN_DECK_TOPOLOGY_OPTIONS } from '@/lib/campaign-deck-topology'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { isBruisedBananaHouseInstance, parseHouseGoalData } from '@/lib/bruised-banana-house-state'
+import type { CampaignDeckTopology } from '@/lib/campaign-deck-topology'
 
 type Instance = {
   id: string
@@ -32,6 +34,7 @@ type Instance = {
   parentInstanceId?: string | null
   linkedInstanceId?: string | null
   goalData?: string | null
+  campaignDeckTopology?: CampaignDeckTopology
 }
 
 type PromotedMove = { id: string; key: string; name: string }
@@ -149,6 +152,26 @@ export function InstanceEditModal({
             <div className="space-y-1">
               <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref</label>
               <input name="campaignRef" defaultValue={instance.campaignRef ?? ''} className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                Campaign deck topology (hub / landings)
+              </label>
+              <select
+                name="campaignDeckTopology"
+                defaultValue={instance.campaignDeckTopology ?? 'CAMPAIGN_DECK_52'}
+                className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white"
+              >
+                {CAMPAIGN_DECK_TOPOLOGY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-zinc-500 mt-1">
+                {CAMPAIGN_DECK_TOPOLOGY_OPTIONS.find((o) => o.value === (instance.campaignDeckTopology ?? 'CAMPAIGN_DECK_52'))?.hint}
+              </p>
             </div>
 
             {showHouseState && (

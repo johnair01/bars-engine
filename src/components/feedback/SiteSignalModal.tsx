@@ -43,6 +43,9 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
   useEffect(() => {
     setMounted(true)
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [])
 
   useEffect(() => {

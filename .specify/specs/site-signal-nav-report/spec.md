@@ -1,5 +1,7 @@
 # Site signal — global nav warning + modal (Share Your Signal pipeline)
 
+**Related:** [cert-feedback-blob-persistence](../cert-feedback-blob-persistence/spec.md) (CFB) — durable Blob persistence for the same JSONL-shaped pipeline on Vercel. [campaign-hub-spatial-map](../campaign-hub-spatial-map/spec.md) (HSM) — example triage outcome from **site-signal (nav)** on `/campaign/hub`.
+
 ## What you’re building (plain language)
 
 Players need a **friction-safe** way to report “something is wrong here” **without leaving the page psychologically** (no hunt for the feedback quest). A **warning affordance** beside **Exit** opens a **modal** that **captures where they are** (a structured snapshot of the URL and page context—not necessarily a pixel screenshot) and **ships that signal into the same artifact stream** as **Share Your Signal** (`questId: system-feedback`) so **cert-feedback triage** and backlog hygiene stay **one pipeline**.

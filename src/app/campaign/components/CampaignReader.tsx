@@ -8,7 +8,8 @@ import { CampaignAuthForm } from './CampaignAuthForm'
 import { OnboardingAvatarPreview } from './OnboardingAvatarPreview'
 import { CampaignPassageEditModal } from './CampaignPassageEditModal'
 import { GuidancePanel } from '@/components/simulation/GuidancePanel'
-import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { chunkIntoSlides, getBaseNodeId } from '@/lib/slide-chunker'
 import { takeQuest } from '@/actions/quest-stewardship'
 import { CopyableProse } from '@/components/ui/CopyableProse'
@@ -40,9 +41,12 @@ export type DemoHandoffConfig = {
 
 interface CampaignReaderProps {
     initialNode: CampaignNode
+    /** When omitted, fetches default `wake-up` adventure; passage edit never shows without an explicit slug from the server. */
     adventureSlug?: string
     campaignRef?: string
     isAdmin?: boolean
+    /** Steward/owner/admin (server-computed); `CampaignPassageEditModal` + passage actions. */
+    canEditPassages?: boolean
     flowId?: string
     /** When present: after signup redirect to /bar/share/[token] to claim BAR share */
     shareToken?: string
@@ -171,13 +175,15 @@ function processMacros(text: string, currentState: Record<string, any>): { clean
 
 export function CampaignReader({
     initialNode,
-    adventureSlug = 'wake-up',
+    adventureSlug: adventureSlugProp,
     campaignRef,
     isAdmin = false,
+    canEditPassages = false,
     flowId,
     shareToken,
     demoHandoff,
 }: CampaignReaderProps) {
+    const adventureSlugForFetch = adventureSlugProp ?? 'wake-up'
     const router = useRouter()
     const [questTakePending, startQuestTake] = useTransition()
     const [questTakeError, setQuestTakeError] = useState<string | null>(null)
@@ -238,13 +244,17 @@ export function CampaignReader({
         setLoading(true)
         setFetchError(null)
         try {
-            const refParam = campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''
+            const params = new URLSearchParams()
+            if (campaignRef) params.set('ref', campaignRef)
+            if (isAdmin) params.set('preview', '1')
+            const qs = params.toString()
+            const query = qs ? `?${qs}` : ''
             // Try fetching from the DB first using the new dynamic route
-            let res = await fetch(`/api/adventures/${adventureSlug}/${nodeId}${refParam}`)
+            let res = await fetch(`/api/adventures/${adventureSlugForFetch}/${nodeId}${query}`)
 
             // Fallback to static JSON if DB route 404s (for backwards compatibility while migrating)
             if (!res.ok) {
-                res = await fetch(`/api/campaigns/${adventureSlug}/${nodeId}${refParam}`)
+                res = await fetch(`/api/campaigns/${adventureSlugForFetch}/${nodeId}${query}`)
             }
 
             if (res.ok) {
@@ -325,15 +335,12 @@ export function CampaignReader({
                 <p className="text-zinc-400 text-sm text-center leading-relaxed">
                     Create an account to continue your path and unlock quests, BARs, and the full Conclave.
                 </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                    <CampaignDonateCta campaignRef={donateCampaignRef ?? undefined} />
+                </div>
                 <CampaignAuthForm campaignState={enrichedCampaignState} />
                 <div className="flex flex-wrap justify-center gap-3 pt-2">
-                    <CampaignDonateButton campaignRef={donateCampaignRef} />
-                    <Link
-                        href="/"
-                        className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium border border-zinc-600 bg-zinc-900/50 text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
-                    >
-                        Home
-                    </Link>
+                    <CampaignOutlineNavButton href="/">Home</CampaignOutlineNavButton>
                 </div>
             </div>
         )
@@ -378,7 +385,7 @@ export function CampaignReader({
     const displayText = useSlideMode ? slides[slideIndex] : renderedText
 
     const baseNodeId = getBaseNodeId(currentNode.id)
-    const showEdit = isAdmin && !!adventureSlug
+    const showEdit = canEditPassages && !!adventureSlugProp
 
     return (
         <div className="w-full max-w-2xl mx-auto space-y-8 animate-in fade-in relative min-h-[60vh] flex flex-col items-center justify-center p-8 border border-zinc-800 bg-zinc-950/50 rounded-2xl shadow-2xl">
@@ -476,13 +483,8 @@ export function CampaignReader({
                 className="w-full flex flex-wrap items-center justify-center gap-2 pt-2 pb-1 border-t border-zinc-800/60"
                 aria-label="Support the residency"
             >
-                <CampaignDonateButton campaignRef={donateCampaignRef} />
-                <Link
-                    href="/event"
-                    className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 border border-transparent hover:border-zinc-700 transition-colors"
-                >
-                    Event page
-                </Link>
+                <CampaignDonateCta campaignRef={donateCampaignRef} />
+                <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
             </div>
 
             {useSlideMode ? (
@@ -540,12 +542,12 @@ export function CampaignReader({
                     role="librarian"
                 />
             )}
-            {showEdit && (
+            {showEdit && adventureSlugProp && (
                 <CampaignPassageEditModal
                     isOpen={editModalOpen}
                     onClose={() => setEditModalOpen(false)}
                     nodeId={baseNodeId}
-                    adventureSlug={adventureSlug!}
+                    adventureSlug={adventureSlugProp}
                     initialText={renderedText}
                     initialChoices={availableChoices}
                     onSaved={() => fetchNode(currentNode.id)}

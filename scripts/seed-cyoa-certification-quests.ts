@@ -41,7 +41,8 @@ const CERT_QUEST_IDS = [
     'cert-admin-books-compass-compact-ui-v1',
     'cert-now-event-vault-qol-v1',
     'cert-campaign-marketplace-slots-v1',
-    'cert-donation-self-service-wizard-v1'
+    'cert-donation-self-service-wizard-v1',
+    'cert-spoke-move-seed-beds-v1'
 ]
 
 async function seed() {
@@ -3888,6 +3889,114 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${dswSlug}`)
+
+    // --- Certification: Spoke move seed beds (SMB) ---
+    const smbTitle = 'Certification: Spoke Move Seed Beds V1'
+    const smbSlug = 'cert-spoke-move-seed-beds-v1'
+
+    const smbPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify **spoke nursery**: hub → spoke CYOA → BAR emit → four **beds** per spoke; **flagship** (first mover) + **additional seeds** (`campaign_kernel`) + vault **watering**; admin may clear flagship.',
+            cleanText: 'SMB verification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Hub → spoke → emit\n\nOpen [`/campaign/hub`](/campaign/hub) with a campaign ref, enter one **spoke**, complete the path, and **emit a BAR** on a move (Wake / Clean / Show). Confirm the BAR lands in your vault.',
+            cleanText: 'Step 1: Emit.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Nursery\n\nOpen [`/campaign/{ref}/spoke/{n}/seeds`](/campaign/bruised-banana/spoke/0/seeds) (adjust ref/spoke). Confirm **four beds** and **flagship** claim for the move you emitted.',
+            cleanText: 'Step 2: Nursery.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Additional seed + water\n\nWith a **second BAR** in your vault, plant an **additional** seed on one bed. Open **Vault** and confirm **watering** progress can advance on that `campaign_kernel` per existing six-face rules.',
+            cleanText: 'Step 3: Plant + water.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Admin override\n\nAs **admin** or **steward**, use **Admin: clear flagship** on a bed (or document the action) to confirm governance.',
+            cleanText: 'Step 4: Admin.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '8',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: 'Report an Issue.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '7',
+            text: 'SMB verification complete. Collective seed path from spokes is wired. Complete this quest for your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const smbParsedJson = JSON.stringify({
+        title: smbTitle,
+        startPassage: 'START',
+        passages: smbPassages
+    })
+
+    const smbStory = await db.twineStory.upsert({
+        where: { slug: smbSlug },
+        update: {
+            title: smbTitle,
+            parsedJson: smbParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: smbTitle,
+            slug: smbSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Spoke move seed beds (seed-cyoa-certification-quests.ts)',
+            parsedJson: smbParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: smbSlug },
+        update: {
+            title: smbTitle,
+            description: 'Verify spoke nursery, flagship anchor, additional campaign_kernel plants, watering, admin clear.',
+            reward: 1,
+            twineStoryId: smbStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/spoke-move-seed-beds/spec.md'
+        },
+        create: {
+            id: smbSlug,
+            title: smbTitle,
+            description: 'Verify spoke nursery, flagship anchor, additional campaign_kernel plants, watering, admin clear.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: smbStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/spoke-move-seed-beds/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${smbSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @page /bars/available
  * @entity QUEST
@@ -9,7 +11,6 @@
  * @example /bars/available
  * @agentDiscoverable false
  */
-'use client'
 
 import { getMarketContent } from '@/actions/market'
 import { updateCampaignDomainPreference } from '@/actions/campaign-domain-preference'

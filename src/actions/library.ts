@@ -218,7 +218,10 @@ export async function submitLibraryRequest(
             severity,
             area: requestType,
             status: 'new',
-            linkedDocNodeId: docNode.id
+            linkedDocNodeId: docNode.id,
+            source: 'library_spawn',
+            submittedByPlayerId: player.id,
+            contextJson: JSON.stringify({ libraryRequestId: request.id }),
         }
     })
 

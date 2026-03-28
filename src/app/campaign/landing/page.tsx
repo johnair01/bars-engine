@@ -31,7 +31,10 @@ export default async function CampaignLandingPage(props: {
   if (Number.isNaN(spokeIndex)) redirect(`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`)
 
   const player = await getCurrentPlayer()
-  if (!player) redirect('/login')
+  if (!player) {
+    const returnPath = `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${spokeIndex}`
+    redirect(`/login?returnTo=${encodeURIComponent(returnPath)}`)
+  }
 
   const ctx = await getSpokeLandingContext(campaignRef, spokeIndex)
   if ('error' in ctx) {
@@ -98,6 +101,26 @@ export default async function CampaignLandingPage(props: {
             portalTheme: null,
           }}
         />
+
+        <section className="rounded-xl border border-purple-900/50 bg-purple-950/25 px-5 py-5 space-y-3">
+          <p className="text-[10px] uppercase tracking-widest text-purple-400/90">Spoke path</p>
+          <p className="text-sm text-zinc-300 leading-relaxed">
+            When you are ready, continue into this spoke&apos;s CYOA. Hexagram / face context for the portal is taken
+            from the campaign hub draw (same as entering from the hub).
+          </p>
+          <Link
+            href={`/campaign/spoke/${spokeIndex}?ref=${encodeURIComponent(campaignRef)}`}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-500 transition-colors"
+          >
+            Continue into spoke CYOA →
+          </Link>
+          <Link
+            href={`/campaign/${encodeURIComponent(campaignRef)}/spoke/${spokeIndex}/seeds`}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-2.5 text-sm font-medium text-emerald-200/95 hover:bg-emerald-900/30 transition-colors"
+          >
+            Spoke nursery (plant seeds) →
+          </Link>
+        </section>
 
         <section className="text-xs text-zinc-600 border border-dashed border-zinc-800 rounded-xl p-4">
           <p className="uppercase tracking-widest mb-2 text-zinc-500">Presence</p>

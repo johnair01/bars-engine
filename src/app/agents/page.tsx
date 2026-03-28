@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @page /agents
  * @entity SYSTEM
@@ -9,7 +11,6 @@
  * @example /agents
  * @agentDiscoverable false
  */
-'use client'
 
 import { useState } from 'react'
 import {

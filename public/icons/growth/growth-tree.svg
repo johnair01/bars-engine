@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Root system -->
+  <path d="M10 23 Q12 21.5 14 23" stroke-opacity="0.4"/>
+  <path d="M11.5 22.5 L10.5 21" stroke-opacity="0.35"/>
+  <path d="M12.5 22.5 L13.5 21" stroke-opacity="0.35"/>
+  <!-- Trunk — substantial -->
+  <line x1="12" y1="21" x2="12" y2="10" stroke-width="2.5"/>
+  <!-- Main canopy crown — full and layered -->
+  <path d="M12 10 C12 10 4.5 12.5 3.5 8 C2.5 3.5 7.5 1 12 3 C16.5 1 21.5 3.5 20.5 8 C19.5 12.5 12 10 12 10 Z" fill="currentColor" fill-opacity="0.45" stroke="currentColor" stroke-width="1"/>
+  <!-- Inner canopy highlight -->
+  <path d="M12 8 C12 8 8 9.5 7 7 C8 4.5 10 3.5 12 4.5 C14 3.5 16 4.5 17 7 C16 9.5 12 8 12 8 Z" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+  <!-- Fruit dots — bearing fruit, quest-ready -->
+  <circle cx="7.5"  cy="7.5"  r="1"   fill="currentColor" fill-opacity="0.9" stroke="none"/>
+  <circle cx="16.5" cy="7"    r="1"   fill="currentColor" fill-opacity="0.9" stroke="none"/>
+  <circle cx="12"   cy="5.5"  r="1"   fill="currentColor" fill-opacity="0.9" stroke="none"/>
+  <circle cx="9.5"  cy="5"    r="0.7" fill="currentColor" fill-opacity="0.7" stroke="none"/>
+  <circle cx="14.5" cy="5.5"  r="0.7" fill="currentColor" fill-opacity="0.7" stroke="none"/>
+</svg>

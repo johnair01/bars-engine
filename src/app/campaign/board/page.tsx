@@ -7,7 +7,7 @@ import {
   getDomainRegionCounts,
   getFieldActivityIndicators,
 } from '@/lib/campaign-map'
-import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignMapChrome } from './CampaignMapChrome'
 
@@ -67,12 +67,7 @@ export default async function GameboardPage(props: {
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col font-sans tracking-tight">
       <div className="w-full max-w-4xl mx-auto">
         <div className="flex flex-wrap justify-between items-start gap-3 mb-6">
-          <Link
-            href="/game-map"
-            className="text-sm text-zinc-500 hover:text-white transition-colors min-h-[44px] inline-flex items-center"
-          >
-            ← Game Map
-          </Link>
+          <CampaignOutlineNavButton href="/game-map">← Game Map</CampaignOutlineNavButton>
           <nav
             aria-label="Campaign shortcuts"
             className="flex flex-wrap justify-end gap-2 max-w-full lg:max-w-[42rem]"
@@ -85,7 +80,7 @@ export default async function GameboardPage(props: {
             >
               Stalls
             </CampaignOutlineNavButton>
-            <CampaignDonateButton campaignRef={campaignRef} />
+            <CampaignDonateCta campaignRef={campaignRef} />
             <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
             <CampaignOutlineNavButton href={`/campaign/twine?ref=${encodeURIComponent(campaignRef)}`}>
               Campaign story

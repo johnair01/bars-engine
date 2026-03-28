@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignReader } from '@/app/campaign/components/CampaignReader'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { playerCanEditCampaignAdventure } from '@/lib/campaign-passage-permissions'
 import {
   eventInitiationAdventureSlug,
   isAllowedEventInviteSlug,
@@ -69,19 +72,29 @@ export default async function EventScopedInitiationPage({ params, searchParams }
 
   const player = await getCurrentPlayer()
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
+  const canEditPassages = player
+    ? await playerCanEditCampaignAdventure(
+        player.id,
+        player.roles?.map((r: { role: { key: string } }) => ({ role: r.role })) ?? [],
+        adventureSlug
+      )
+    : false
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col items-center font-sans tracking-tight">
-      <div className="w-full max-w-2xl flex justify-between gap-4 mb-4 flex-wrap">
-        <Link
+      <div className="w-full max-w-2xl flex flex-wrap justify-between items-start gap-3 mb-4">
+        <CampaignOutlineNavButton
           href={`/event#${eventSlug === 'apr-4-dance' ? 'apr-4' : 'apr-5'}`}
-          className="text-sm text-zinc-500 hover:text-fuchsia-400 transition-colors"
         >
           ← Event context
-        </Link>
-        <Link href="/event" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
-          Support the Residency →
-        </Link>
+        </CampaignOutlineNavButton>
+        <div className="flex flex-wrap gap-2 justify-end">
+          <CampaignOutlineNavButton href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}>
+            Portals
+          </CampaignOutlineNavButton>
+          <CampaignDonateCta campaignRef={campaignRef} />
+          <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
+        </div>
       </div>
       <div className="flex-1 w-full max-w-2xl flex items-center justify-center">
         <CampaignReader
@@ -93,6 +106,7 @@ export default async function EventScopedInitiationPage({ params, searchParams }
           adventureSlug={adventureSlug}
           campaignRef={campaignRef}
           isAdmin={isAdmin}
+          canEditPassages={canEditPassages}
           flowId={campaignRef}
           shareToken={shareToken ?? undefined}
         />

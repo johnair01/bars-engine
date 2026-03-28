@@ -18,6 +18,8 @@ In **BARs Engine**, **campaigns need onboarding**: a structured path from “out
 
 **Admin / campaign CYOA** (`CampaignReader` on `/campaign`, initiation routes, `Adventure` + `Passage` rows) and **event-invite CYOA** (`EventInviteStory` on `CustomBar.storyContent`, `EventInviteStoryReader` on `/invite/event/[barId]`) are **not separate product universes**. They are **facets of the same ontological flow**: **campaign-scoped story that onboards people**—whether they arrive via **invite link**, **campaign hub**, or **event initiation**. Implementation details differ (schema, permissions, URLs); the **authoring experience and mental model** should **converge** over time so operators are not learning “three different CYOA systems.”
 
+**Conclave convergence:** Historically **`/conclave/*`** was the story-shaped front door for the same residency narrative; it created a **parallel navigation class** vs **campaign** (`ref`, hub, spokes). **Canonical onboarding ontology** is **campaign-scoped** — see [campaign-hub-spoke-landing-architecture § Conclave as legacy campaign entry](../campaign-hub-spoke-landing-architecture/spec.md#conclave-as-legacy-campaign-entry). New CTAs and flows should not introduce new Conclave dependencies.
+
 **Depends on / related:**
 
 - [event-invite-inline-editing](../event-invite-inline-editing/spec.md) — where invite fields may be edited today (Vault, public URL).
@@ -31,7 +33,7 @@ In **BARs Engine**, **campaigns need onboarding**: a structured path from “out
 
 Ship a **LEGO + prompt-driven builder** for **CYOA onboarding content**—first targeting **event invites** (highest pain: raw JSON), then **reusing the same interaction patterns** (passage list, choices, preview, prompts) for **campaign / admin campaign CYOA** where policy allows—so **stewards, owners, and admins** compose branching stories **without** JSON or Twine soup, with **preview parity** to player readers.
 
-**Problem today:** Invite stories are edited as **JSON** (`EventInviteBarContentEditor`). Campaign passages use **admin-gated** modals (`CampaignPassageEditModal`) tied to `upsertCampaignPassage`—ergonomic for neither stewards nor most operators. The **reader** UIs are decent; **authoring** is fragmented and ontology-opaque.
+**Problem today:** Invite stories are edited as **JSON** (`EventInviteBarContentEditor`). Campaign passages use the same modal (`CampaignPassageEditModal`) with **role-scoped** server actions (`campaign-passage-permissions`); **draft preview** on fetch remains admin-only. The **reader** UIs are decent; **authoring** is still fragmented vs invites until more shared LEGO ships.
 
 ---
 
@@ -49,9 +51,9 @@ Ship a **LEGO + prompt-driven builder** for **CYOA onboarding content**—first 
 
 | Surface | Reader | Authoring today | Target |
 |---------|--------|-----------------|--------|
-| Event invite | `EventInviteStoryReader`, `/invite/event/[barId]` | JSON in Vault + inline | **LEGO builder** + preview (Phase B) |
-| Campaign / initiation CYOA | `CampaignReader`, `/campaign`, initiation URLs | Admin-only `CampaignPassageEditModal` + `campaign-passage` | **Same builder patterns** + permission policy (Phase E) |
-| Campaign chrome (hub, board, …) | N/A (navigation + CTAs) | Text links; donate not always prominent | **Visible buttons** + **persistent donate / support** aligned with residency (see § Funding ⊆ onboarding) |
+| Event invite | `EventInviteStoryReader`, `/invite/event/[barId]` | Visual builder + Advanced JSON; **shared** [`CampaignBranchChoicesEditor`](../../../src/components/onboarding-cyoa-builder/CampaignBranchChoicesEditor.tsx) for choice rows | Preview via `EventInviteStoryReader` (Phase B–D) |
+| Campaign / initiation CYOA | `CampaignReader`, `/campaign`, initiation URLs | `CampaignPassageEditModal` + `campaign-passage`; **admin, or instance owner/steward** when adventure **`campaignRef`** matches membership (see `campaign-passage-permissions.ts`) | **Same builder patterns** + invite reuse where shapes align |
+| Campaign chrome (hub, board, …) | N/A (navigation + CTAs) | **`CampaignDonateCta`** + **`CampaignOutlineNavButton`** on hub/board/twine/initiation/`/campaign`; **`/event`** header strip + **`CampaignDonateButton`** in fundraiser sections | **Phase F** shipped — emerald primary + wiki secondary; wizard `?ref=` per DSW |
 | Twine / admin grammar | Various | Admin tools | **Out of this spec** unless we explicitly merge later |
 
 ---
@@ -76,9 +78,10 @@ Ship a **LEGO + prompt-driven builder** for **CYOA onboarding content**—first 
 
 - DB: `CustomBar.storyContent` → validated `EventInviteStory`; builder ⇄ JSON round-trip (see prior event-invite builder detail in git history or inline-editing spec).
 
-### Campaign CYOA (Phase E — same spec, later implementation)
+### Campaign CYOA (Phase E)
 
-- DB: `Passage` rows on `Adventure` linked to campaign/instance; reuse **graph editing** UX from invite builder where shapes align; **permissions** may expand beyond today’s admin-only—**explicit product + security sign-off** (steward editing campaign copy is powerful).
+- DB: `Passage` rows on `Adventure`; **`playerCanEditCampaignAdventure`** gates `campaign-passage` server actions: **admin** always (ACTIVE adventure); **owner/steward** only when adventure **`campaignRef`** is set and matches an **`Instance`** the player belongs to. **`campaignRef` null** → passage edits **admin-only** (orphan / tooling graphs).
+- UI: shared **`CampaignBranchChoicesEditor`**; **`CampaignReader`** uses server-computed **`canEditPassages`**; **draft preview** on fetch remains **admin-only** (`preview=1`).
 
 ### Unification
 
@@ -127,10 +130,12 @@ Ship a **LEGO + prompt-driven builder** for **CYOA onboarding content**—first 
 
 ## Open questions
 
-1. **Steward** edit on **invites** and/or **campaign passages** — same policy or different?
-2. **Adventure** selection: which campaign adventure slug is “the” onboarding graph for a given instance?
+1. ~~**Steward** edit on **invites**~~ — **Resolved (Phase A):** [`playerCanEditEventInviteBar`](../../../src/lib/event-invite-bar-permissions.ts) allows **admin** or **instance owner / steward** (matching `campaignRef`).
+2. ~~**Campaign `Passage` roles**~~ — **Resolved (Phase E):** [`playerCanEditCampaignAdventure`](../../../src/lib/campaign-passage-permissions.ts) mirrors invite policy; **E1** onboarding slugs are whichever **ACTIVE** adventures the app serves for `/campaign` and initiation routes with **`campaignRef`** set (see [tasks § E1](./tasks.md)).
 3. Mobile authoring priority?
-4. **Single shared component** for “Support / Donate” on all campaign surfaces (`CampaignDonateCta`) vs per-page styling—**recommend** shared primitive for Sage consistency.
+4. ~~**Shared donate primitive**~~ — **Resolved (Phase F):** [`CampaignDonateCta`](../../../src/components/campaign/CampaignDonateCta.tsx) + [`CampaignDonateButton`](../../../src/components/campaign/CampaignDonateButton.tsx) on campaign surfaces; runbook § Support chrome.
+
+**Runbook:** [CAMPAIGN_ONBOARDING_CYOA.md](../../../docs/runbooks/CAMPAIGN_ONBOARDING_CYOA.md)
 
 ---
 

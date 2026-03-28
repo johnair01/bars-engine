@@ -10,25 +10,25 @@
 
 ## Phase 1 — Data & contracts
 
-- [ ] Decide **persistence**: `SpokeMoveBed` + `SpokeMoveBedKernel` tables vs `Instance` JSON — migration if tables
-- [ ] Define **anchor uniqueness**: unique partial index on `(campaignRef, spokeIndex, moveType)` where anchor set
-- [ ] Implement `getSpokeMoveBeds` + types (`BedSnapshot`)
-- [ ] Implement `plantKernelFromBar` (first-mover, `additional`, BAR ownership)
-- [ ] Implement **spoke BAR provenance** query for anchor eligibility
-- [ ] **Spoke completion gate**: durable progress only after BAR emit (portal adventure)
-- [ ] `adminReassignBedAnchor` + role check (admin; stewards TBD)
+- [x] Decide **persistence**: `SpokeMoveBed` + `SpokeMoveBedKernel` tables vs `Instance` JSON — migration if tables
+- [x] Define **anchor uniqueness**: `@@unique([campaignRef, spokeIndex, moveType])` + `@unique` on `anchorBarId`
+- [x] Implement `getSpokeMoveBeds` + types (`BedSnapshot`)
+- [x] Implement `plantKernelFromBar` (first-mover, `additional`, BAR ownership)
+- [x] Implement **spoke BAR provenance** — `emitBarFromPassage` stamps `agentMetadata.spokePortal`; `isBarEligibleSpokeAnchor`
+- [ ] **Spoke completion gate**: durable progress only after BAR emit (portal adventure) — deferred; see spec FR2 / CHS alignment
+- [x] `adminReassignBedAnchor` + role check (admin + instance **owner/steward**)
 
 ## Phase 1 — UI
 
-- [ ] Nursery surface (four beds for one `spokeIndex`)
-- [ ] Plant flow: pick BAR → confirm → kernel created
-- [ ] Water: link to existing watering UX or embed face progress
-- [ ] Copy pass: seed / bed / water (avoid jargon)
+- [x] Nursery surface (four beds for one `spokeIndex`) — `/campaign/[ref]/spoke/[n]/seeds`
+- [x] Plant flow: pick BAR → confirm → kernel created
+- [x] Water: link to vault (`/hand`) + face progress summary on list
+- [x] Copy pass: seed / bed / water (player-facing; “flagship” for anchor)
 
 ## Verification
 
-- [ ] `cert-spoke-move-seed-beds-v1` + seed script hook
-- [ ] `npm run check` && `npm run build`
+- [x] `cert-spoke-move-seed-beds-v1` + seed script hook
+- [x] `npm run check` && `npm run build` (plus `npx tsx src/lib/__tests__/spoke-move-beds.test.ts`)
 
 ## Phase 2 (defer)
 

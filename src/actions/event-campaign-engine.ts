@@ -12,6 +12,11 @@ import {
   type EventKotterContext,
   type EpiphanyBridgeContext,
 } from '@/lib/event-kotter'
+import {
+  EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN,
+  EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION,
+  isEventCampaignType,
+} from '@/lib/event-campaign-types'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -31,6 +36,11 @@ export interface CreateEventCampaignInput {
   topic: string
   primaryDomain: string
   productionGrammar: 'kotter' | 'epiphany_bridge'
+  /**
+   * `event_production` — dated gatherings (EventArtifact) attach here.
+   * `awareness_content_run` — raise-awareness / social prompt sprint; **no** EventArtifact rows (use QuestThread + CHS).
+   */
+  campaignType?: string
   targetArchetypes?: string[]
   targetMoves?: string[]
   developmentalLens?: string
@@ -49,12 +59,23 @@ export async function createEventCampaign(
     return { error: 'You do not have permission to create a campaign for this instance' }
   }
 
+  const rawType = input.campaignType?.trim() || EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION
+  if (!isEventCampaignType(rawType)) {
+    return { error: 'Invalid campaign type' }
+  }
+
+  const primaryDomain =
+    rawType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN ? 'RAISE_AWARENESS' : input.primaryDomain
+  const productionGrammar =
+    rawType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN ? 'epiphany_bridge' : input.productionGrammar
+
   const campaign = await db.eventCampaign.create({
     data: {
       campaignContext: input.campaignContext,
       topic: input.topic,
-      primaryDomain: input.primaryDomain,
-      productionGrammar: input.productionGrammar,
+      primaryDomain,
+      productionGrammar,
+      campaignType: rawType,
       hostActorIds: JSON.stringify([playerId]),
       targetArchetypes: JSON.stringify(input.targetArchetypes ?? []),
       targetMoves: JSON.stringify(input.targetMoves ?? []),
@@ -65,10 +86,13 @@ export async function createEventCampaign(
     select: { id: true },
   })
 
+  const threadTitlePrefix =
+    rawType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN ? 'Awareness run' : 'Production'
+
   // Create a linked production quest thread
   const thread = await db.questThread.create({
     data: {
-      title: `Production: ${input.campaignContext} — ${input.topic}`,
+      title: `${threadTitlePrefix}: ${input.campaignContext} — ${input.topic}`,
       creatorId: playerId,
       eventCampaignId: campaign.id,
       status: 'active',
@@ -85,9 +109,16 @@ export async function createEventCampaign(
 // getEventCampaignsForInstance
 // ---------------------------------------------------------------------------
 
-export async function getEventCampaignsForInstance(instanceId: string): Promise<
-  Array<{ id: string; topic: string; campaignContext: string; primaryDomain: string }>
-> {
+export type EventCampaignListRow = {
+  id: string
+  topic: string
+  campaignContext: string
+  primaryDomain: string
+  campaignType: string
+  productionThreadId: string | null
+}
+
+export async function getEventCampaignsForInstance(instanceId: string): Promise<EventCampaignListRow[]> {
   const inst = await db.instance.findUnique({
     where: { id: instanceId },
     select: { campaignRef: true },
@@ -97,10 +128,24 @@ export async function getEventCampaignsForInstance(instanceId: string): Promise<
     where: cref
       ? { OR: [{ instanceId }, { instance: { campaignRef: cref } }] }
       : { instanceId },
-    select: { id: true, topic: true, campaignContext: true, primaryDomain: true },
+    select: {
+      id: true,
+      topic: true,
+      campaignContext: true,
+      primaryDomain: true,
+      campaignType: true,
+      productionThread: { select: { id: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
-  return campaigns
+  return campaigns.map((c) => ({
+    id: c.id,
+    topic: c.topic,
+    campaignContext: c.campaignContext,
+    primaryDomain: c.primaryDomain,
+    campaignType: c.campaignType,
+    productionThreadId: c.productionThread?.id ?? null,
+  }))
 }
 
 // ---------------------------------------------------------------------------
@@ -140,9 +185,16 @@ export async function createEventArtifact(
 
   const campaign = await db.eventCampaign.findUnique({
     where: { id: input.campaignId },
-    select: { id: true, instanceId: true },
+    select: { id: true, instanceId: true, campaignType: true },
   })
   if (!campaign) return { error: 'Campaign not found' }
+
+  if (campaign.campaignType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN) {
+    return {
+      error:
+        'This campaign is an awareness / social content run — it does not use calendar gatherings. Use the production quest thread and campaign hub spokes instead.',
+    }
+  }
 
   if (campaign.instanceId && campaign.instanceId !== input.instanceId) {
     return { error: 'This campaign is not linked to this instance' }
@@ -216,6 +268,7 @@ export interface EventCampaignView {
   campaignContext: string
   topic: string
   primaryDomain: string
+  campaignType: string
   productionGrammar: string
   status: string
   hostActorIds: string[]
@@ -250,6 +303,7 @@ export async function getEventCampaignWithArtifacts(
       campaignContext: true,
       topic: true,
       primaryDomain: true,
+      campaignType: true,
       productionGrammar: true,
       status: true,
       hostActorIds: true,
@@ -289,6 +343,7 @@ export async function getEventCampaignWithArtifacts(
     campaignContext: campaign.campaignContext,
     topic: campaign.topic,
     primaryDomain: campaign.primaryDomain,
+    campaignType: campaign.campaignType,
     productionGrammar: campaign.productionGrammar,
     status: campaign.status,
     hostActorIds: parseJsonArray(campaign.hostActorIds),

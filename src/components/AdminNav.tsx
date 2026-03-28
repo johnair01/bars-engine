@@ -40,6 +40,7 @@ const SECTIONS: {
     hint: 'Fix drift & config',
     items: [
       { name: 'Campaign events', href: '/admin/campaign-events', icon: '📅' },
+      { name: 'Allyship intakes', href: '/admin/allyship-intakes', icon: '🤝' },
       { name: 'Config', href: '/admin/config', icon: '⚙️' },
       { name: 'First Aid', href: '/admin/first-aid', icon: '🩺' },
     ],
@@ -74,7 +75,10 @@ const SECTIONS: {
     id: 'sage',
     title: 'Sage — meta',
     hint: 'Specs & backlog',
-    items: [{ name: 'Backlog', href: '/admin/backlog', icon: '📌' }],
+    items: [
+      { name: 'Backlog', href: '/admin/backlog', icon: '📌' },
+      { name: 'Player signals', href: '/admin/player-signal-backlog', icon: '📡' },
+    ],
   },
 ]
 

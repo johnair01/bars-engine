@@ -46,6 +46,7 @@ export async function onPlayerQuestCompletion(
     }
 
     revalidatePath('/campaign/board')
+    revalidatePath('/campaign/hub')
     revalidatePath('/')
     return { success: true }
   } catch (e) {

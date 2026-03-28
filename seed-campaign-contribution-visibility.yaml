@@ -1,0 +1,289 @@
+goal: Build a campaign contribution visibility system and sub-campaign slot navigation
+  for the bars-engine campaign hub, using Bruised Banana Residency as the test campaign
+  — enabling players to see how they contribute to a campaign and GMs to organize
+  branching sub-campaigns that guide players to learn about projects and get involved.
+task_type: code
+brownfield_context:
+  project_type: brownfield
+  context_references:
+  - path: src/actions/playbook-cyoa.ts
+    role: reference
+    summary: Existing adventure and playbook action patterns to follow for contribution
+      actions
+  - path: src/app/admin/adventures/[id]/page.tsx
+    role: reference
+    summary: GM editor pattern for campaign slot management UI
+  - path: prisma/schema.prisma
+    role: primary
+    summary: Database schema to extend with Campaign, CampaignSlot, ContributionRecord,
+      Milestone models
+  - path: src/actions/admin.ts
+    role: reference
+    summary: checkGM() pattern for owner + collaborator GM permission checks
+  - path: src/app/character-creator/[id]/CharacterCreatorRunner.tsx
+    role: reference
+    summary: Step wizard pattern to follow for conversational intake wizard
+  - path: src/lib/quest-grammar/
+    role: reference
+    summary: Existing quest and BAR tracking infrastructure to surface as contribution
+      sources
+  - path: src/app/page.tsx
+    role: reference
+    summary: Dashboard hub where campaign contribution summary will be rendered
+  existing_patterns:
+  - API-first design — define action signatures and return types before wiring UI
+  - Server actions pattern from src/actions/ for data mutations
+  - Step wizard pattern (intro → steps → complete) from CharacterCreatorRunner
+  - checkGM() for admin OR gm role gating
+  - camelCase column naming in Prisma schema
+  - Prisma migrate deploy for schema changes
+  existing_dependencies:
+  - Next.js 16
+  - React 19
+  - TypeScript
+  - Prisma ORM
+  - Existing adventure/quest/BAR/milestone tracking models
+constraints:
+- 'Nesting capped at 3 levels deep: campaign → branch → sub-branch → adventures (no
+  further)'
+- Sub-campaign slot count is open-ended per campaign
+- Owner and collaborator GMs can both create and manage sub-campaign slots
+- Progress rolls up to campaign level only — no per-branch completion counts shown
+  on hub
+- Cross-player visibility is aggregated only — no individual breakdowns
+- Milestone narratives generated during conversational wizard intake, not authored
+  separately or auto-generated at view time
+- Milestones and narratives are fully editable post-generation — rename, rewrite,
+  add, remove anytime
+- Removed milestones and adventures use soft archive — existing player records retained
+  and counted, marked retired, unavailable to new players
+- Must integrate with existing adventure, quest, BAR, and milestone tracking infrastructure
+- Next.js 16 / React 19 / TypeScript / Prisma stack (existing bars-engine)
+acceptance_criteria:
+- 'Player sees three-layer contribution display on campaign hub: progress bar, milestone
+  narrative summary, and link to full detail'
+- Player can view full completed-actions list with GM-written labels at /campaign/[ref]/my-contributions
+- Progress bar driven by automatic completion count as fraction of available actions
+  across all branches
+- GM-curated milestone markers trigger narrative text when player reaches them
+- Sub-campaign slot renders a landing page showing branch theme and available actions
+  (curated collection)
+- Player can enter a specific adventure/quest flow from a sub-campaign slot landing
+  page
+- Completing an adventure flow within a slot credits the contribution to the parent
+  campaign
+- Conversational wizard interviews GM about campaign and produces both milestone markers
+  and narrative text
+- GM can edit generated milestones and narratives after wizard completes — rename,
+  rewrite, add, remove
+- GM can annotate which existing tracked actions (quests, BARs, milestones) count
+  as meaningful contributions
+- Campaign hub shows aggregated campaign-wide contribution total (e.g. 42 contributions
+  from 12 players)
+- Soft archive preserves contribution records when GM removes milestones or adventures
+  — marked retired, still counted in progress
+- Sub-campaign slots support up to 3 levels of nesting (campaign → branch → sub-branch
+  → adventures)
+- Collaborator GMs can manage sub-campaign slots within campaigns they are invited
+  to
+ontology_schema:
+  name: CampaignContributionHub
+  description: Domain model for campaign contribution tracking, sub-campaign slot
+    navigation, milestone management, and player progress visibility within a hierarchical
+    campaign structure.
+  fields:
+  - name: Campaign
+    type: object
+    description: Top-level campaign entity (e.g. Bruised Banana Residency) with theme,
+      goals, and aggregate stats
+    required: true
+  - name: CampaignSlot
+    type: object
+    description: A sub-campaign slot representing a branch or sub-branch within the
+      campaign hierarchy, max 3 levels deep
+    required: true
+  - name: CampaignSlot.parentSlotId
+    type: string
+    description: Reference to parent slot for nesting (null for top-level branches)
+    required: true
+  - name: CampaignSlot.level
+    type: number
+    description: Nesting depth (1=branch, 2=sub-branch, 3=adventure container)
+    required: true
+  - name: CampaignSlot.title
+    type: string
+    description: GM-authored display name for the branch
+    required: true
+  - name: CampaignSlot.description
+    type: string
+    description: Branch theme and context shown on landing page
+    required: true
+  - name: CampaignSlot.adventureIds
+    type: array
+    description: Adventures linked to this slot that players can enter
+    required: true
+  - name: ContributionRecord
+    type: object
+    description: A player's completed action that counts as a campaign contribution
+    required: true
+  - name: ContributionRecord.playerId
+    type: string
+    description: The player who earned this contribution
+    required: true
+  - name: ContributionRecord.campaignId
+    type: string
+    description: The parent campaign this contribution rolls up to
+    required: true
+  - name: ContributionRecord.sourceType
+    type: string
+    description: Type of tracked action — quest, bar, milestone, or adventure completion
+    required: true
+  - name: ContributionRecord.sourceId
+    type: string
+    description: Reference to the specific completed action
+    required: true
+  - name: ContributionRecord.gmLabel
+    type: string
+    description: GM-authored label describing this contribution
+    required: true
+  - name: ContributionRecord.status
+    type: string
+    description: Active or retired — soft archive status
+    required: true
+  - name: Milestone
+    type: object
+    description: GM-curated milestone marker with narrative text, generated by intake
+      wizard
+    required: true
+  - name: Milestone.campaignId
+    type: string
+    description: The campaign this milestone belongs to
+    required: true
+  - name: Milestone.name
+    type: string
+    description: Milestone display name (editable post-generation)
+    required: true
+  - name: Milestone.triggerCount
+    type: number
+    description: Number of contributions required to trigger this milestone
+    required: true
+  - name: Milestone.narrativeText
+    type: string
+    description: Generated narrative shown when player reaches this milestone (editable)
+    required: true
+  - name: Milestone.status
+    type: string
+    description: Active or retired — soft archive status
+    required: true
+  - name: CampaignProgress
+    type: object
+    description: Computed player progress at campaign level
+    required: true
+  - name: CampaignProgress.completedCount
+    type: number
+    description: Number of contributions the player has completed
+    required: true
+  - name: CampaignProgress.availableCount
+    type: number
+    description: Total available actions across all branches
+    required: true
+  - name: CampaignProgress.unlockedMilestones
+    type: array
+    description: Milestone IDs the player has triggered
+    required: true
+  - name: CampaignAggregate
+    type: object
+    description: Campaign-wide aggregated stats visible to all players
+    required: true
+  - name: CampaignAggregate.totalContributions
+    type: number
+    description: Sum of all player contributions
+    required: true
+  - name: CampaignAggregate.totalContributors
+    type: number
+    description: Count of distinct contributing players
+    required: true
+  - name: ContributionAnnotation
+    type: object
+    description: GM annotation marking an existing tracked action type as a meaningful
+      contribution for this campaign
+    required: true
+  - name: ContributionAnnotation.campaignId
+    type: string
+    description: Campaign this annotation applies to
+    required: true
+  - name: ContributionAnnotation.actionType
+    type: string
+    description: The type of existing tracked action (quest, bar, milestone)
+    required: true
+  - name: ContributionAnnotation.actionId
+    type: string
+    description: Reference to the specific action instance
+    required: true
+evaluation_principles:
+- name: contribution_clarity
+  description: Player can understand their campaign contribution status within 3 seconds
+    of viewing the hub (progress bar + milestone narrative)
+  weight: 0.9
+- name: gm_authoring_efficiency
+  description: GM can set up a complete campaign with branches, milestones, and narratives
+    through the conversational wizard without manual data entry
+  weight: 0.8
+- name: hierarchy_navigation
+  description: Sub-campaign slots clearly convey the branch theme and available actions,
+    guiding players into playable flows
+  weight: 0.85
+- name: data_integrity
+  description: Soft archive preserves historical contribution records when milestones
+    or adventures are removed, never losing player progress
+  weight: 0.95
+- name: existing_infra_reuse
+  description: Implementation leverages existing adventure, quest, BAR, and milestone
+    tracking rather than rebuilding
+  weight: 0.8
+- name: privacy_compliance
+  description: Players never see individual contribution breakdowns of other players,
+    only aggregated campaign totals
+  weight: 0.9
+- name: editability
+  description: GM can modify all wizard-generated content (milestones, narratives,
+    slot structure) at any time without re-running intake
+  weight: 0.75
+exit_conditions:
+- name: player_contribution_visible
+  description: Player can view their contribution to Bruised Banana Residency at three
+    layers of detail
+  criteria: Hub shows progress bar and milestone narrative; /campaign/[ref]/my-contributions
+    shows full labeled list
+- name: sub_campaign_navigation
+  description: Sub-campaign slots render landing pages with branch themes and link
+    into playable adventure flows
+  criteria: Player clicks slot, sees curated collection, enters adventure, completes
+    it, contribution credited to parent campaign
+- name: gm_intake_wizard
+  description: Conversational wizard produces milestones and narratives from GM interview
+  criteria: GM runs wizard for Bruised Banana Residency and receives editable milestones
+    with narrative text
+- name: contribution_annotation
+  description: GM can annotate existing tracked actions as meaningful contributions
+  criteria: Completed quests, BARs, and milestones appear in player contribution records
+    with GM labels
+- name: nesting_enforcement
+  description: Slot hierarchy enforced at max 3 levels
+  criteria: Attempting to nest beyond campaign → branch → sub-branch → adventures
+    is prevented
+- name: soft_archive
+  description: Removing milestones or adventures preserves existing player records
+  criteria: Retired contributions remain counted in progress bar and visible as retired
+    in detail view
+- name: aggregated_visibility
+  description: Campaign hub shows aggregated contribution stats
+  criteria: All players see total contributions and contributor count without individual
+    breakdowns
+metadata:
+  seed_id: seed_0ad7b87a2df5
+  version: 1.0.0
+  created_at: '2026-03-28T00:54:56.724189Z'
+  ambiguity_score: 0.1205
+  interview_id: interview_20260328_000103
+  parent_seed_id: null

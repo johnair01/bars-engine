@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
@@ -8,6 +11,13 @@ import {
   listEventArtifactsForInstance,
 } from '@/actions/campaign-invitation'
 import { getEventCampaignsForInstance } from '@/actions/event-campaign-engine'
+import {
+  EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN,
+  awarenessContentRunLabel,
+  isCalendarEventCampaignType,
+} from '@/lib/event-campaign-types'
+
+const AWARENESS_RUNS_SECTION_TITLE = 'Awareness & social content runs'
 import { getWorldVenueEntryForInstance } from '@/actions/spatial-maps'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InviteButton } from './InviteButton'
@@ -25,6 +35,7 @@ import { LibraryRequestButton } from '@/components/LibraryRequestButton'
 import { EventCrewSurface } from '@/components/event/EventCrewSurface'
 import { BruisedBananaApr2026EventBlocks } from './BruisedBananaApr2026EventBlocks'
 import { CreateEventButton } from './CreateEventButton'
+import { CreateAwarenessRunButton } from './CreateAwarenessRunButton'
 
 /**
  * @page /event
@@ -89,6 +100,10 @@ export default async function EventPage() {
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
   const eventArtifacts = await listEventArtifactsForInstance(instance.id)
   const eventCampaigns = await getEventCampaignsForInstance(instance.id)
+  const calendarEventCampaigns = eventCampaigns.filter((c) => isCalendarEventCampaignType(c.campaignType))
+  const awarenessContentRuns = eventCampaigns.filter(
+    (c) => c.campaignType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+  )
   const canSendEventInvites =
     !!player && (await canInviteToAnyEventOnInstance(player.id, instance.id))
   const canCreateCampaign =
@@ -100,7 +115,6 @@ export default async function EventPage() {
   const wakeUpContent = instance.wakeUpContent ?? DEFAULT_WAKE_UP
   const showUpContent = instance.showUpContent ?? DEFAULT_SHOW_UP
   const refForDonate = instance.campaignRef?.trim() || instance.slug?.trim() || 'bruised-banana'
-  const donateWizardHref = `/event/donate/wizard?ref=${encodeURIComponent(refForDonate)}`
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12">
@@ -230,18 +244,69 @@ export default async function EventPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link
-                  href={donateWizardHref}
-                  className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold"
+                <CampaignDonateButton
+                  campaignRef={refForDonate}
+                  className="flex-1 w-full justify-center px-5 py-3 rounded-xl text-base"
                 >
-                  Donate
-                </Link>
+                  {instance.donationButtonLabel?.trim() || 'Donate'}
+                </CampaignDonateButton>
               </div>
             </div>
           </details>
         )}
 
         {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
+
+        {awarenessContentRuns.length > 0 && (
+          <section className="bg-teal-950/20 border border-teal-900/40 rounded-2xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold text-white">{AWARENESS_RUNS_SECTION_TITLE}</h2>
+                <p className="text-zinc-500 text-sm mt-1">
+                  Production quest threads for raise-awareness / social prompt sprints. These do <strong className="text-zinc-400">not</strong>{' '}
+                  appear as calendar gatherings below — add dated events only under an{' '}
+                  <span className="font-mono text-xs text-zinc-500">event_production</span> campaign.
+                </p>
+              </div>
+              {canCreateCampaign && (
+                <CreateAwarenessRunButton instanceId={instance.id} instanceName={instance.name} />
+              )}
+            </div>
+            <ul className="space-y-2 rounded-xl bg-black/25 border border-teal-900/30 p-3">
+              {awarenessContentRuns.map((run) => (
+                <li
+                  key={run.id}
+                  className="rounded-lg border border-teal-900/25 bg-black/30 px-4 py-3 text-sm text-zinc-300"
+                >
+                  <div className="font-medium text-teal-100">{run.campaignContext}</div>
+                  <div className="text-zinc-500 text-xs mt-0.5">{run.topic}</div>
+                  {run.productionThreadId && isAdmin ? (
+                    <Link
+                      href={`/admin/journeys/thread/${encodeURIComponent(run.productionThreadId)}`}
+                      className="inline-block mt-2 text-xs text-teal-400 hover:text-teal-300"
+                    >
+                      Open production thread (admin) →
+                    </Link>
+                  ) : run.productionThreadId ? (
+                    <p className="mt-2 text-[11px] text-zinc-600">
+                      Production thread exists — ask an admin to attach daily prompt quests under Journeys.
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {awarenessContentRuns.length === 0 && canCreateCampaign && (
+          <section className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p className="text-sm text-zinc-500">
+              <span className="text-zinc-400 font-medium">Social / awareness sprint?</span> Add an{' '}
+              {awarenessContentRunLabel().toLowerCase()} — it stays out of the calendar list below.
+            </p>
+            <CreateAwarenessRunButton instanceId={instance.id} instanceName={instance.name} />
+          </section>
+        )}
 
         <section className="bg-amber-950/15 border border-amber-900/35 rounded-2xl p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -255,7 +320,7 @@ export default async function EventPage() {
               <CreateEventButton
                 instanceId={instance.id}
                 instanceName={instance.name}
-                campaigns={eventCampaigns}
+                campaigns={calendarEventCampaigns}
                 canCreateCampaign={canCreateCampaign}
               />
             )}
@@ -413,12 +478,12 @@ export default async function EventPage() {
           <div className="px-6 pb-6 space-y-4 -mt-2">
             <p className="text-zinc-500 text-sm whitespace-pre-wrap">{showUpContent}</p>
             <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-              <Link
-                href={donateWizardHref}
-                className="flex-1 text-center px-5 py-3 rounded-xl bg-green-600/80 hover:bg-green-500/80 text-white font-bold border border-green-500/50"
+              <CampaignDonateButton
+                campaignRef={refForDonate}
+                className="flex-1 w-full min-w-[160px] justify-center px-5 py-3 rounded-xl text-base"
               >
-                Donate
-              </Link>
+                {instance.donationButtonLabel?.trim() || 'Donate'}
+              </CampaignDonateButton>
               <InviteButton />
               {player ? (
                 <Link href="/" className="flex-1 text-center px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold">

@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignReader } from '../components/CampaignReader'
 import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { playerCanEditCampaignAdventure } from '@/lib/campaign-passage-permissions'
 
 /**
  * @page /campaign/initiation
@@ -62,11 +63,20 @@ export default async function CampaignInitiationPage(props: {
   const isAdmin = !!player?.roles?.some(
     (r: { role: { key: string } }) => r.role.key === 'admin'
   )
+  const canEditPassages = player
+    ? await playerCanEditCampaignAdventure(
+        player.id,
+        player.roles?.map((r: { role: { key: string } }) => ({ role: r.role })) ?? [],
+        adventureSlug
+      )
+    : false
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col items-center font-sans tracking-tight">
       <div className="w-full max-w-2xl flex flex-wrap justify-end gap-2 mb-4">
-        <CampaignDonateButton campaignRef="bruised-banana" />
+        <CampaignOutlineNavButton href="/campaign/hub?ref=bruised-banana">Portals</CampaignOutlineNavButton>
+        <CampaignOutlineNavButton href="/campaign/board?ref=bruised-banana">Featured field</CampaignOutlineNavButton>
+        <CampaignDonateCta campaignRef="bruised-banana" />
         <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
       </div>
       <div className="flex-1 w-full max-w-2xl flex items-center justify-center">
@@ -79,6 +89,7 @@ export default async function CampaignInitiationPage(props: {
           adventureSlug={adventureSlug}
           campaignRef="bruised-banana"
           isAdmin={isAdmin}
+          canEditPassages={canEditPassages}
           flowId="bruised-banana"
           shareToken={shareToken ?? undefined}
         />

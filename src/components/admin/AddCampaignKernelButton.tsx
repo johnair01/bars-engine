@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createEventCampaign } from '@/actions/event-campaign-engine'
+import {
+  EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN,
+  EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION,
+} from '@/lib/event-campaign-types'
 
 const PRIMARY_DOMAINS = [
   'GATHERING_RESOURCES',
@@ -22,6 +26,9 @@ export function AddCampaignKernelButton({ instanceId }: { instanceId: string }) 
   const [campaignTopic, setCampaignTopic] = useState('')
   const [campaignDomain, setCampaignDomain] = useState<string>(PRIMARY_DOMAINS[0])
   const [grammar, setGrammar] = useState<'kotter' | 'epiphany_bridge'>('kotter')
+  const [campaignKind, setCampaignKind] = useState<
+    typeof EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION | typeof EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+  >(EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -39,15 +46,20 @@ export function AddCampaignKernelButton({ instanceId }: { instanceId: string }) 
       instanceId,
       campaignContext: ctx,
       topic,
-      primaryDomain: campaignDomain,
-      productionGrammar: grammar,
+      primaryDomain: campaignKind === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN ? 'RAISE_AWARENESS' : campaignDomain,
+      productionGrammar: campaignKind === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN ? 'epiphany_bridge' : grammar,
+      campaignType: campaignKind,
     })
     setPending(false)
     if ('error' in res) {
       setError(res.error)
       return
     }
-    setSuccess('Production campaign and quest thread created.')
+    setSuccess(
+      campaignKind === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+        ? 'Awareness content run and quest thread created.'
+        : 'Production campaign and quest thread created.'
+    )
     setCampaignContext('')
     setCampaignTopic('')
     router.refresh()
@@ -77,10 +89,11 @@ export function AddCampaignKernelButton({ instanceId }: { instanceId: string }) 
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-start gap-2">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Add production campaign</h2>
+                  <h2 className="text-lg font-bold text-white">Add event campaign</h2>
                   <p className="text-xs text-zinc-500 mt-1">
                     Creates an <span className="font-mono text-zinc-400">EventCampaign</span> and a production{' '}
-                    <span className="font-mono text-zinc-400">QuestThread</span> for this instance.
+                    <span className="font-mono text-zinc-400">QuestThread</span>. Calendar gatherings attach only to{' '}
+                    <span className="font-mono text-zinc-500">event_production</span>.
                   </p>
                 </div>
                 <button
@@ -103,6 +116,25 @@ export function AddCampaignKernelButton({ instanceId }: { instanceId: string }) 
 
               <form onSubmit={handleSubmit} className="space-y-3 border border-zinc-800 rounded-xl p-4">
                 <label className="block space-y-1">
+                  <span className="text-xs text-zinc-400">Campaign kind</span>
+                  <select
+                    value={campaignKind}
+                    onChange={(e) =>
+                      setCampaignKind(
+                        e.target.value === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+                          ? EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+                          : EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION
+                      )
+                    }
+                    className="w-full rounded-lg bg-black/50 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+                  >
+                    <option value={EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION}>Production (calendar gatherings)</option>
+                    <option value={EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN}>
+                      Awareness / social content run (no calendar rows)
+                    </option>
+                  </select>
+                </label>
+                <label className="block space-y-1">
                   <span className="text-xs text-zinc-400">Campaign name (context)</span>
                   <input
                     required
@@ -122,31 +154,35 @@ export function AddCampaignKernelButton({ instanceId }: { instanceId: string }) 
                     placeholder="e.g. Residency nights"
                   />
                 </label>
-                <label className="block space-y-1">
-                  <span className="text-xs text-zinc-400">Primary domain</span>
-                  <select
-                    value={campaignDomain}
-                    onChange={(e) => setCampaignDomain(e.target.value)}
-                    className="w-full rounded-lg bg-black/50 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
-                  >
-                    {PRIMARY_DOMAINS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs text-zinc-400">Production grammar</span>
-                  <select
-                    value={grammar}
-                    onChange={(e) => setGrammar(e.target.value as 'kotter' | 'epiphany_bridge')}
-                    className="w-full rounded-lg bg-black/50 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
-                  >
-                    <option value="kotter">Kotter</option>
-                    <option value="epiphany_bridge">Epiphany bridge</option>
-                  </select>
-                </label>
+                {campaignKind === EVENT_CAMPAIGN_TYPE_EVENT_PRODUCTION && (
+                  <>
+                    <label className="block space-y-1">
+                      <span className="text-xs text-zinc-400">Primary domain</span>
+                      <select
+                        value={campaignDomain}
+                        onChange={(e) => setCampaignDomain(e.target.value)}
+                        className="w-full rounded-lg bg-black/50 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+                      >
+                        {PRIMARY_DOMAINS.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block space-y-1">
+                      <span className="text-xs text-zinc-400">Production grammar</span>
+                      <select
+                        value={grammar}
+                        onChange={(e) => setGrammar(e.target.value as 'kotter' | 'epiphany_bridge')}
+                        className="w-full rounded-lg bg-black/50 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+                      >
+                        <option value="kotter">Kotter</option>
+                        <option value="epiphany_bridge">Epiphany bridge</option>
+                      </select>
+                    </label>
+                  </>
+                )}
                 <button
                   type="submit"
                   disabled={pending}

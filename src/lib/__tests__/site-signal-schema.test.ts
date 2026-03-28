@@ -33,6 +33,23 @@ function run() {
   })
   assert(!bad.success, 'reject empty')
 
+  // SCL-B6: site-signal smoke — cert triage can reference spec path in message body
+  const scl = siteSignalInputSchema.safeParse({
+    pageUrl: 'http://localhost:3000/campaign/hub?ref=bruised-banana',
+    pathname: '/campaign/hub',
+    search: '?ref=bruised-banana',
+    message:
+      'SCL site-signal-card-club-chs-portal-bar-journey: hub → landing → Wake path + PostWake library CTAs OK after deploy.',
+  })
+  assert(scl.success, 'SCL-shaped site-signal payload parses')
+  if (scl.success) {
+    const block = formatSiteSignalFeedbackBlock(scl.data)
+    assert(
+      block.includes('site-signal-card-club-chs-portal-bar-journey'),
+      'spec id in formatted block for triage',
+    )
+  }
+
   // eslint-disable-next-line no-console -- test runner
   console.log('site-signal-schema tests passed')
 }

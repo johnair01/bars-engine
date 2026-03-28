@@ -3,12 +3,10 @@
 import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
-import {
-  contextualizeHexagramForPortal,
-  getFaceForLine,
-} from '@/lib/portal-context'
+import { contextualizeHexagramForPortal } from '@/lib/portal-context'
 import type { AllyshipDomain } from '@/lib/kotter'
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import { draw8PortalCasts } from '@/lib/campaign-hub/draw-portal-spokes'
 import {
   type CampaignHubStateV1,
   hubStateMatchesKotter,
@@ -33,35 +31,6 @@ export type PortalData = {
 }
 
 type CastResult = { hexagramId: number; changingLines: number[]; primaryFace: GameMasterFace }
-
-/**
- * Cast a single hexagram with simulated changing lines (1–3 lines).
- * Only portals with changing lines are revealed per spec.
- */
-function castHexagramWithChangingLines(): CastResult {
-  const lines = Array.from({ length: 6 }, () => (Math.random() < 0.5 ? 0 : 1))
-  const hexagramId = 1 + lines.reduce<number>((acc, bit, i) => acc + bit * Math.pow(2, i), 0)
-  const clampedId = Math.max(1, Math.min(64, hexagramId))
-
-  const changeCount = 1 + Math.floor(Math.random() * 3)
-  const indices: number[] = []
-  while (indices.length < changeCount) {
-    const i = Math.floor(Math.random() * 6)
-    if (!indices.includes(i)) indices.push(i)
-  }
-  indices.sort((a, b) => a - b)
-  const changingLines = indices.map((i) => i + 1)
-  const primaryFace = getFaceForLine(changingLines[0]!)
-
-  return { hexagramId: clampedId, changingLines, primaryFace }
-}
-
-/**
- * Draw 8 portal casts, each with changing lines. Only paths with changing lines are shown.
- */
-function draw8PortalCasts(): CastResult[] {
-  return Array.from({ length: 8 }, () => castHexagramWithChangingLines())
-}
 
 /**
  * Cast 8 hexagrams for the campaign lobby portals.

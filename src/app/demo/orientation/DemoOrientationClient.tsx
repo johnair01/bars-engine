@@ -1,8 +1,8 @@
 'use client'
 
 import { CampaignReader } from '@/app/campaign/components/CampaignReader'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import type { ResolvedDemoOrientationLink } from '@/lib/demo-orientation/resolve'
-import Link from 'next/link'
 
 export function DemoOrientationClient({ config }: { config: ResolvedDemoOrientationLink }) {
   const initialNode = { id: config.startNodeId, text: '', choices: [] as { text: string; targetId: string }[] }
@@ -15,20 +15,8 @@ export function DemoOrientationClient({ config }: { config: ResolvedDemoOrientat
           to save progress.
           {config.label ? ` · ${config.label}` : null}
         </div>
-        <div className="flex flex-wrap gap-3 justify-end text-xs">
-          <Link
-            href={
-              config.campaignRef
-                ? `/event/donate/wizard?ref=${encodeURIComponent(config.campaignRef)}`
-                : '/event/donate/wizard'
-            }
-            className="text-green-400 hover:text-green-300"
-          >
-            Support the campaign →
-          </Link>
-          <Link href="/wiki/donation-guide" className="text-zinc-500 hover:text-zinc-300">
-            How donations work
-          </Link>
+        <div className="flex flex-wrap gap-2 justify-end">
+          <CampaignDonateCta campaignRef={config.campaignRef ?? undefined} />
         </div>
       </div>
       <CampaignReader
