@@ -35,6 +35,7 @@ Point to **live** docs rather than duplicating schedules:
 | Event hub / donate | `src/app/event/**` | shaman_read, diplomat_guide |
 | Cert / QA quests | `scripts/seed-cyoa-certification-quests.ts` | One quest per edit; `architect_compile` discipline |
 | Invite CYOA | `CustomBar.storyContent` (see [EIP](../event-invite-party-initiation/spec.md)) | narrative-quality + inline editing spec |
+| Allyship intake (emergent Support campaigns) | [`allyship-intake-thunder.template.json`](../../../src/lib/event-invite-story/templates/allyship-intake-thunder.template.json); ops [EMERGENT_ALLYSHIP_INTAKE_OPS.md](../../../docs/runbooks/EMERGENT_ALLYSHIP_INTAKE_OPS.md) | BBM pillars + **ECI** [.specify/specs/emergent-campaign-bar-interview/spec.md](../emergent-campaign-bar-interview/spec.md) |
 
 ## Metabolism workflow (Cursor)
 

@@ -1,13 +1,11 @@
 'use server'
 
-import { promises as fs } from 'fs'
-import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
+import { persistPlayerFeedbackToBacklog } from '@/lib/feedback/persist-player-feedback-to-backlog'
 
 /**
  * Logs certification quest feedback from any logged-in player.
- * Used when testers report issues during verification quests.
- * Writes to .feedback/cert_feedback.jsonl for agents/developers to triage.
+ * Persists to `BacklogItem` (durable) and best-effort `.feedback/cert_feedback.jsonl`.
  *
  * @deprecated Prefer POST /api/feedback/cert (API-first, no server action revalidation).
  * TwineQuestModal and PassageRenderer now use fetch() to avoid kick-to-dashboard.
@@ -24,24 +22,19 @@ export async function logCertificationFeedback(
     const trimmed = feedback?.trim()
     if (!trimmed) return { error: 'Feedback is required' }
 
-    try {
-        const feedbackDir = path.join(process.cwd(), '.feedback')
-        await fs.mkdir(feedbackDir, { recursive: true })
+    const persisted = await persistPlayerFeedbackToBacklog({
+        source: 'certification',
+        playerId: player.id,
+        playerName: player.name,
+        questId,
+        passageName,
+        feedback: trimmed,
+    })
 
-        const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
-        const entry = {
-            timestamp: new Date().toISOString(),
-            playerId: player.id,
-            playerName: player.name,
-            questId,
-            passageName,
-            feedback: trimmed
-        }
-
-        await fs.appendFile(feedbackFile, JSON.stringify(entry) + '\n')
-        return { success: true }
-    } catch (error) {
-        console.error('Failed to log certification feedback:', error)
-        return { error: 'Failed to write feedback' }
+    if ('error' in persisted) {
+        console.error('Failed to log certification feedback:', persisted.error)
+        return { error: 'Failed to save feedback' }
     }
+
+    return { success: true, backlogItemId: persisted.backlogItemId }
 }

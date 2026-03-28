@@ -8,20 +8,14 @@ Agent workflows (Sage consult, strand, sage:brief, bars-agents MCP) require `OPE
 
 **Dev-first backend URL:** Assume **local** FastAPI (`http://127.0.0.1:8000`) for MCP, scripts, and agent work unless the task is explicitly about deployed agents. `NEXT_PUBLIC_BACKEND_URL` in `.env.local` is shared with the Python MCP health probe — if it points at Railway, MCP may probe production first; the probe **falls back to local `127.0.0.1:8000`** once if the primary fails. To **force** MCP to local only, set **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`**. If **`call_mcp_tool` fails**, do **not** silently skip bars-agents: run `npm run verify:bars-agents-mcp`, start `npm run dev:backend`, reload MCP, retry, or **ask the user** — see `docs/AGENT_WORKFLOWS.md` § MCP availability.
 
-## Database Synchronization
+## Database / Prisma
 
-When you modify the file `prisma/schema.prisma`, you MUST automatically run:
+When you modify `prisma/schema.prisma`:
 
-```bash
-npm run db:sync
-```
+1. Run **`npm run db:sync`** — regenerates Prisma Client; in **local dev** it may run `db push` (see `scripts/db-sync.ts`). **Production-like** runs skip auto-push on purpose.
+2. **Before committing** a schema change that ships: **`npx prisma migrate dev --name describe_change`** and commit the new `prisma/migrations/...` SQL **with** the schema. Deploy uses **`prisma migrate deploy`** — it only sees committed migrations.
 
-This ensures:
-1. The database schema is updated (via `prisma db push`)
-2. The Prisma Client is regenerated with new types
-3. Other developers on different machines receive updates seamlessly
-
-Do not wait for the user to ask; execute this as a post-modification step.
+Do not wait for the user to ask for (1). For the full workflow (panic reduction, push vs migrate): **`.agents/skills/prisma-migration-discipline/SKILL.md`**.
 
 ---
 
@@ -38,6 +32,7 @@ When **creating or expanding** a spec kit—not only implementing one—read **`
 - **`.agents/skills/spec-kit-translator/SKILL.md`** — Natural language → spec kit; template, verification quests, backlog sync
 - **`.specify/spec-template.md`** — Required sections for new `spec.md` files
 - **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
+- **`.agents/skills/prisma-migration-discipline/SKILL.md`** — migrate vs push vs deploy; when editing `schema.prisma`
 - **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference
 - **`docs/SYNTHETIC_VS_REAL.md`** — How to switch between local and Vercel databases
 - **`Makefile`** — Run `make help` to see all available development commands

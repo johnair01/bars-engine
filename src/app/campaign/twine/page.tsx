@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
 import { BruisedBananaTwinePlayer } from '@/components/campaign/BruisedBananaTwinePlayer'
-import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 
 /**
@@ -57,7 +57,7 @@ export default async function CampaignTwinePage(props: {
                 <CampaignOutlineNavButton href={`/campaign/board?ref=${encodeURIComponent(campaignRef)}`}>
                     Featured field
                 </CampaignOutlineNavButton>
-                <CampaignDonateButton campaignRef={campaignRef} />
+                <CampaignDonateCta campaignRef={campaignRef} />
                 <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
             </nav>
             <div className="flex-1 w-full max-w-2xl flex items-center justify-center">

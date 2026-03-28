@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getAppConfig } from '@/actions/config'
 import { getInstanceDbReadiness, listInstances, upsertInstance } from '@/actions/instance'
 import { listPromotedMoves } from '@/actions/move-proposals'
+import { CAMPAIGN_DECK_TOPOLOGY_OPTIONS } from '@/lib/campaign-deck-topology'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceListWithEdit } from '@/components/admin/InstanceListWithEdit'
 
@@ -152,6 +153,20 @@ export default async function AdminInstancesPage({
           <div className="space-y-1">
             <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign ref (default when /campaign has no ref)</label>
             <input name="campaignRef" placeholder="bruised-banana" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Campaign deck topology (hub / landings)</label>
+            <select name="campaignDeckTopology" className="w-full bg-black border border-zinc-800 rounded px-3 py-2 text-white" defaultValue="CAMPAIGN_DECK_52">
+              {CAMPAIGN_DECK_TOPOLOGY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-zinc-500 mt-1">
+              Pick a deck shape for campaign hub / landings (52 = roster pack, 64 = lattice). Only slots you bind later enter the draw pool.
+            </p>
           </div>
 
           <div className="space-y-1">

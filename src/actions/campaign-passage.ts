@@ -4,15 +4,25 @@ import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { validateAdventurePassagesGraph } from '@/lib/story-graph/adventurePassagesGraph'
+import {
+  playerCanEditCampaignAdventure,
+  type PlayerRoleRow,
+} from '@/lib/campaign-passage-permissions'
 
-async function requireAdmin(): Promise<string> {
+async function requireCampaignPassageEditor(adventureSlug: string): Promise<string> {
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
   if (!playerId) throw new Error('Not logged in')
-  const adminRole = await db.playerRole.findFirst({
-    where: { playerId, role: { key: 'admin' } },
+
+  const player = await db.player.findUnique({
+    where: { id: playerId },
+    include: { roles: { include: { role: true } } },
   })
-  if (!adminRole) throw new Error('Admin access required')
+  if (!player) throw new Error('Not logged in')
+
+  const roles: PlayerRoleRow[] = player.roles.map((r) => ({ role: r.role }))
+  const ok = await playerCanEditCampaignAdventure(playerId, roles, adventureSlug)
+  if (!ok) throw new Error('Not authorized to edit passages for this campaign adventure')
   return playerId
 }
 
@@ -23,7 +33,7 @@ export async function getCampaignPassageForEdit(
   adventureSlug: string,
   nodeId: string
 ): Promise<{ text: string; choices: { text: string; targetId: string }[] } | null> {
-  await requireAdmin()
+  await requireCampaignPassageEditor(adventureSlug)
 
   const adventure = await db.adventure.findFirst({
     where: { slug: adventureSlug, status: 'ACTIVE' },
@@ -47,13 +57,13 @@ export async function getCampaignPassageForEdit(
 }
 
 /**
- * All passage node ids for an active adventure (admin) — for CYOA target picker.
+ * All passage node ids for an active adventure — for CYOA target picker (steward/owner/admin per adventure).
  */
 export async function listCampaignPassageNodeIds(
   adventureSlug: string
 ): Promise<{ nodeIds: string[] } | { error: string }> {
   try {
-    await requireAdmin()
+    await requireCampaignPassageEditor(adventureSlug)
     const adventure = await db.adventure.findFirst({
       where: { slug: adventureSlug, status: 'ACTIVE' },
       select: { id: true },
@@ -73,7 +83,7 @@ export async function listCampaignPassageNodeIds(
 
 /**
  * Upsert campaign passage. Creates if missing, updates if exists.
- * Requires admin. Used for in-context campaign editing.
+ * Requires steward/owner/admin per `campaign-passage-permissions`. Used for in-context campaign editing.
  */
 export async function upsertCampaignPassage(
   adventureSlug: string,
@@ -81,7 +91,7 @@ export async function upsertCampaignPassage(
   data: { text: string; choices: { text: string; targetId: string }[] }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
-    await requireAdmin()
+    await requireCampaignPassageEditor(adventureSlug)
 
     const adventure = await db.adventure.findFirst({
       where: { slug: adventureSlug, status: 'ACTIVE' },
@@ -126,6 +136,8 @@ export async function upsertCampaignPassage(
     })
 
     revalidatePath('/campaign')
+    revalidatePath('/campaign/initiation')
+    revalidatePath('/campaign/event', 'layout')
     return { success: true }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to save'

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { setActiveInstance, updateInstanceKotterStage, updateInstanceFundraise } from '@/actions/instance'
+import type { CampaignDeckTopology } from '@/lib/campaign-deck-topology'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { InstanceEditModal } from './InstanceEditModal'
 import { InviteToRoleModal } from './InviteToRoleModal'
@@ -34,6 +35,7 @@ type Instance = {
   parentInstanceId?: string | null
   linkedInstanceId?: string | null
   goalData?: string | null
+  campaignDeckTopology?: CampaignDeckTopology
   childInstances?: Instance[]
 }
 

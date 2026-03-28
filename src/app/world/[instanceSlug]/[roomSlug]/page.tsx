@@ -15,22 +15,18 @@ import { getCurrentPlayer, isGameAccountReady } from '@/lib/auth'
 import { dbBase } from '@/lib/db'
 import { slugify } from '@/lib/spatial-world/utils'
 import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
+import { resolveSpawnForRoom } from '@/lib/spatial-world/spawn-resolver'
 import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
+import { getSpokeStatesForRoom } from '@/actions/campaign-spoke-states'
+import {
+  canAccessNationRoom,
+  formatNationKeyForDisplay,
+  getPlayerNationKey,
+  isNationRestrictedRoom,
+  resolveNationGateBypass,
+} from '@/lib/world/nation-room-gate'
+import { NationRoomBlocked } from '@/components/world/NationRoomBlocked'
 import { RoomCanvas } from './RoomCanvas'
-
-function parseSpawnpointJson(raw: string): { x: number; y: number } {
-  try {
-    const o = JSON.parse(raw) as { x?: unknown; y?: unknown }
-    if (!o || typeof o !== 'object') return { x: 5, y: 5 }
-    const x = o.x
-    const y = o.y
-    const nx = typeof x === 'number' && Number.isFinite(x) ? Math.floor(x) : 5
-    const ny = typeof y === 'number' && Number.isFinite(y) ? Math.floor(y) : 5
-    return { x: nx, y: ny }
-  } catch {
-    return { x: 5, y: 5 }
-  }
-}
 
 function parseTilemapJson(raw: string): Record<string, { floor?: string; impassable?: boolean; object?: string }> {
   try {
@@ -84,8 +80,14 @@ export default async function WorldRoomPage({
     )
   }
 
-  const spawnpoint = parseSpawnpointJson(instance.spatialMap.spawnpoint)
   const tilemap = parseTilemapJson(room.tilemap)
+  const roomsOrdered = rooms.map(r => ({ slug: r.slug ?? slugify(r.name) }))
+  const spawnpoint = resolveSpawnForRoom(
+    instance.spatialMap.spawnpoint,
+    room.slug ?? slugify(room.name),
+    roomsOrdered,
+    tilemap
+  )
   if (Object.keys(tilemap).length === 0) {
     return (
       <div className="min-h-screen bg-black text-zinc-400 flex items-center justify-center px-6 text-center max-w-lg mx-auto">
@@ -98,7 +100,31 @@ export default async function WorldRoomPage({
     )
   }
 
-  const allRooms = rooms.map(r => ({ id: r.id, name: r.name, slug: r.slug ?? slugify(r.name) }))
+  const playerNationKey = getPlayerNationKey(player)
+  const isAdmin = player.roles.some((r) => r.role.key === 'admin')
+  const bypassNationGate = resolveNationGateBypass(isAdmin)
+  const roomNationKey = room.nationKey ?? null
+  const roomType = room.roomType ?? null
+  if (
+    isNationRestrictedRoom(roomType) &&
+    roomNationKey &&
+    !canAccessNationRoom(roomNationKey, playerNationKey, bypassNationGate)
+  ) {
+    return (
+      <NationRoomBlocked
+        instanceSlug={instanceSlug}
+        nationDisplayName={formatNationKeyForDisplay(roomNationKey)}
+      />
+    )
+  }
+
+  const allRooms = rooms.map((r) => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug ?? slugify(r.name),
+    roomType: r.roomType ?? null,
+    nationKey: r.nationKey ?? null,
+  }))
 
   const anchors = room.anchors.map(a => ({
     id: a.id,
@@ -118,6 +144,12 @@ export default async function WorldRoomPage({
 
   const spatialBindKey = computeSpatialBindKey(room.id, tilemap, anchors)
 
+  // Fetch spoke states only for rooms that have spoke_portal anchors
+  const hasSpokePortals = anchors.some(a => a.anchorType === 'spoke_portal')
+  const spokeSeedStates = hasSpokePortals && instance.campaignRef
+    ? await getSpokeStatesForRoom(instance.campaignRef, player.id)
+    : undefined
+
   return (
     <RoomCanvas
       spatialBindKey={spatialBindKey}
@@ -132,6 +164,9 @@ export default async function WorldRoomPage({
       instanceSlug={instanceSlug}
       spawnX={spawnpoint.x}
       spawnY={spawnpoint.y}
+      spokeSeedStates={spokeSeedStates}
+      playerNationKey={playerNationKey}
+      bypassNationGate={bypassNationGate}
     />
   )
 }

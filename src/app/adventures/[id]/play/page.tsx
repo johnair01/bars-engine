@@ -1,5 +1,6 @@
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { isSafeAppPath } from '@/lib/safe-return-to'
 import { getOrCreateRun } from '@/actions/twine'
 import { getWorldData } from '@/actions/onboarding'
 import { db } from '@/lib/db'
@@ -28,13 +29,22 @@ export default async function TwinePlayPage({
     searchParams
 }: {
     params: Promise<{ id: string }>,
-    searchParams: Promise<{ questId?: string, threadId?: string, ritual?: string }>
+    searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; returnTo?: string }>
 }) {
     const { id: storyId } = await params
-    const { questId, threadId, ritual } = await searchParams
+    const { questId, threadId, ritual, returnTo } = await searchParams
     const isRitual = ritual === 'true'
     const player = await getCurrentPlayer()
-    if (!player) redirect('/login')
+    if (!player) {
+        const u = new URLSearchParams()
+        if (questId) u.set('questId', questId)
+        if (threadId) u.set('threadId', threadId)
+        if (ritual === 'true') u.set('ritual', 'true')
+        if (returnTo && isSafeAppPath(returnTo)) u.set('returnTo', returnTo)
+        const qs = u.toString()
+        const back = qs ? `/adventures/${storyId}/play?${qs}` : `/adventures/${storyId}/play`
+        redirect(`/login?returnTo=${encodeURIComponent(back)}`)
+    }
 
     const result = await getOrCreateRun(storyId, questId)
     if (!result) redirect('/adventures')
@@ -138,6 +148,7 @@ export default async function TwinePlayPage({
                         quest={quest as any}
                         threadId={threadId}
                         isRitual={isRitual}
+                        postOnboardingReturnTo={returnTo && isSafeAppPath(returnTo) ? returnTo : undefined}
                         feedbackSourceStep={feedbackSourceStep}
                         player={player}
                         avatarPreviewConfig={avatarPreviewConfig}

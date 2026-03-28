@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Root spread -->
+  <path d="M9 22 Q12 20.5 15 22" stroke-opacity="0.4"/>
+  <path d="M12 22 L12 20" stroke-opacity="0.4"/>
+  <!-- Trunk — thicker base -->
+  <line x1="12" y1="20" x2="12" y2="5" stroke-width="1.8"/>
+  <!-- Left lower branch -->
+  <line x1="12" y1="17" x2="5.5" y2="13"/>
+  <!-- Left lower foliage -->
+  <path d="M5.5 13 C3 11 2.5 6 6 5.5 C8.5 5 8.5 10.5 5.5 13" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1"/>
+  <!-- Right upper branch -->
+  <line x1="12" y1="13" x2="18.5" y2="9"/>
+  <!-- Right upper foliage -->
+  <path d="M18.5 9 C21 7 21.5 2 18 1.5 C15.5 1 15.5 6.5 18.5 9" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1"/>
+  <!-- Top foliage crown -->
+  <path d="M12 5 C10 3 10 0.5 12 0.5 C14 0.5 14 3 12 5" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-width="1"/>
+</svg>

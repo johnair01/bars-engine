@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Ground line -->
+  <path d="M7 22 L17 22" stroke-opacity="0.35"/>
+  <!-- Trunk -->
+  <line x1="12" y1="22" x2="12" y2="7"/>
+  <!-- Left branch -->
+  <line x1="12" y1="16" x2="7" y2="12"/>
+  <!-- Left leaf cluster -->
+  <path d="M7 12 C5 10 5 6 8 5.5 C10 5 9.5 9 7 12" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1"/>
+  <!-- Right branch -->
+  <line x1="12" y1="13" x2="17" y2="10"/>
+  <!-- Right leaf cluster -->
+  <path d="M17 10 C19 8 19.5 4 16.5 3.5 C14.5 3 14.5 7 17 10" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1"/>
+  <!-- Top apical bud -->
+  <circle cx="12" cy="6.5" r="1.5" fill="currentColor" fill-opacity="0.6" stroke="none"/>
+</svg>

@@ -1,0 +1,58 @@
+{
+  "id": "guest-journey-v1",
+  "start": "guest_start",
+  "passages": [
+    {
+      "id": "guest_start",
+      "text": "You're invited into **this residency's story**. Pick what you need right now — you can reach the other paths later from the event or campaign pages.",
+      "choices": [
+        { "label": "Help before the night (pre-production)", "next": "guest_preprod" },
+        { "label": "Learn how the game and app work", "next": "guest_learn" },
+        { "label": "I'm ready to create my account", "next": "guest_ending_signup" }
+      ]
+    },
+    {
+      "id": "guest_preprod",
+      "text": "**Pre-production** — Showing up early matters: share the invite, coordinate rides, offer setup or teardown, or ask the host what would help. You're part of the field before doors open.",
+      "choices": [
+        { "label": "Show me how the app works", "next": "guest_learn" },
+        { "label": "I'm ready to sign up", "next": "guest_ending_signup" }
+      ]
+    },
+    {
+      "id": "guest_learn",
+      "text": "**Learn the app** — BARs are charges you metabolize into quests; the **vault** holds drafts; **vibeulons** reward showing up. When you're curious, use the wiki.\n\n- [Glossary](/wiki/glossary)\n- [Bruised Banana campaign](/wiki/campaign/bruised-banana)\n- [The four moves](/wiki/moves)",
+      "choices": [{ "label": "Create my account", "next": "guest_ending_signup" }]
+    },
+    {
+      "id": "guest_ending_signup",
+      "text": "**You're set.** Use the buttons below to join, see events, or step into the hub — your path stays open anytime.",
+      "ending": {
+        "role": "Guest",
+        "description": "Choose an outbound step: account creation, events, or the campaign hub."
+      }
+    }
+  ],
+  "endingCtas": [
+    {
+      "href": "/signup",
+      "label": "Create account →",
+      "className": "bg-purple-600 hover:bg-purple-500 text-white"
+    },
+    {
+      "href": "/event",
+      "label": "Campaign & events →",
+      "className": "bg-amber-600/90 hover:bg-amber-500 text-white"
+    },
+    {
+      "href": "/campaign/hub?ref=bruised-banana",
+      "label": "Campaign hub (8 paths) →",
+      "className": "bg-zinc-700 hover:bg-zinc-600 text-zinc-100 border border-zinc-500"
+    },
+    {
+      "href": "/wiki/glossary",
+      "label": "Open glossary →",
+      "className": "border border-zinc-600 hover:border-zinc-500 text-zinc-200"
+    }
+  ]
+}

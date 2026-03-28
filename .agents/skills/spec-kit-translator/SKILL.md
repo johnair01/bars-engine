@@ -38,7 +38,8 @@ When a user provides a high-level request, follow this interaction protocol:
 2. **Clarify Surface Area**: Ask what UI points are affected.
 3. **Clarify Governance**: Ask how admins or systems control this feature.
 4. **Clarify API Surface**: Ask what actions or routes this feature exposes. Route Handler (external consumers, webhooks) or Server Action (forms, React)? Define signatures before implementation.
-5. **Draft the Spec**: Compile these into a `.specify/specs/` structure. Use the [Spec Template](.specify/spec-template.md).
+5. **Clarify persistence shipping**: If Prisma/schema changes are implied, say so in the spec (**§ Persisted data & Prisma**) and add a **tasks.md** item for **`prisma migrate dev`** + committing `prisma/migrations/`. Read [.agents/skills/prisma-migration-discipline/SKILL.md](../prisma-migration-discipline/SKILL.md).
+6. **Draft the Spec**: Compile these into a `.specify/specs/` structure. Use the [Spec Template](.specify/spec-template.md).
 
 ## Verification Quests (UX Features) — Required
 
@@ -70,6 +71,7 @@ When drafting specs, use [.specify/spec-template.md](.specify/spec-template.md).
 | **API Contracts** | Any action or route — define input/output shape before FRs |
 | **Route vs Action** | Document which surfaces use Route Handler vs Server Action |
 | **Scaling Checklist** | AI, upload, or filesystem — reference [deftness-development/reference.md](.agents/skills/deftness-development/reference.md) |
+| **Persisted data & Prisma** | Any `schema.prisma` change — use template section + [prisma-migration-discipline](../prisma-migration-discipline/SKILL.md); tasks must include migration file + commit |
 
 ## Prompt Template: Natural Language to Spec
 When generating a Spec Kit prompt for the agent itself, use this structure:
@@ -94,6 +96,7 @@ You are a Spec Kit agent responsible for [Objective].
 
 ## Checklist (API-First Order)
 - [ ] API contract (input/output) defined in spec or plan
+- [ ] If Prisma schema changes: **§ Persisted data & Prisma** in spec; **migrate dev** task in `tasks.md`; migration SQL committed with schema
 - [ ] Server Action or Route Handler implemented first
 - [ ] UI wired to action/route
 - [ ] Run `npm run build` and `npm run check` — fail-fix

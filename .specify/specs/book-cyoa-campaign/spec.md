@@ -16,6 +16,7 @@ Deliver a **CYOA-shaped in-app experience** of steward-curated library books, st
 | [unified-cyoa-graph-authoring](../unified-cyoa-graph-authoring/spec.md) | Graph validation, dangling targets—**align** Passage saves when UGA ships overlap |
 | [campaign-onboarding-cyoa](../campaign-onboarding-cyoa/spec.md) | Shared CYOA ontology; **steward** book campaigns vs **invite** CYOA—facets, not a second graph model |
 | [player-facing-cyoa-generator](../player-facing-cyoa-generator/spec.md) | **Out of scope** for v1: this feature is **steward-seeded** from books, not player-authored CYOA |
+| [library-conditioned-gm-generation](../library-conditioned-gm-generation/spec.md) | **Related:** runtime **GM faces** ground on same `Book` corpus during passage generation (cite-or-silence)—complements library→quest extraction |
 
 **Code anchors:** `src/actions/book-to-thread.ts`, `src/app/campaign/components/CampaignReader.tsx`, `src/app/campaign/page.tsx`, `src/lib/quest-adventure.ts`, Prisma `Adventure`, `Passage`, `QuestThread.adventureId`, `Passage.linkedQuestId`, `QuestAdventureLink`.
 

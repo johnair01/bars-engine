@@ -7,8 +7,15 @@ import type { EventInviteEndingCta, EventInviteStory } from '@/lib/event-invite-
 import { EVENT_INVITE_DEFAULT_CTAS } from '@/lib/event-invite-story/default-cta'
 import { CopyableProse } from '@/components/ui/CopyableProse'
 import { CopyTextButton } from '@/components/ui/CopyTextButton'
+import { submitAllyshipIntake } from '@/actions/allyship-intake'
 
 export type { EventInviteEndingCta }
+
+export type AllyshipChoiceStep = {
+    passageId: string
+    choiceLabel: string
+    nextPassageId: string
+}
 
 type Props = {
     barTitle: string
@@ -20,6 +27,15 @@ type Props = {
     footerNote?: string | null
     /** Override default ending CTAs (Partiful, donate, hub, etc.) */
     endingCtas?: readonly EventInviteEndingCta[]
+    /** ECI: persist interview path when guest reaches an ending (Thunder / allyship-intake-* stories). */
+    barId?: string
+    persistAllyshipIntake?: boolean
+    /** From invite URL `?note=` — stored on intake for stewards. */
+    senderNote?: string | null
+}
+
+function intakeStorageKey(barId: string, storyId: string) {
+    return `eci-intake-submitted:${barId}:${storyId}`
 }
 
 export function EventInviteStoryReader({
@@ -29,18 +45,72 @@ export function EventInviteStoryReader({
     initialPassageId,
     footerNote,
     endingCtas,
+    barId,
+    persistAllyshipIntake = false,
+    senderNote = null,
 }: Props) {
     const byId = useMemo(() => new Map(story.passages.map((p) => [p.id, p])), [story.passages])
     const effectiveStart = initialPassageId ?? story.start
     const [currentId, setCurrentId] = useState(effectiveStart)
     const [history, setHistory] = useState<string[]>([])
+    const [choiceSteps, setChoiceSteps] = useState<AllyshipChoiceStep[]>([])
+    const [clientSessionId, setClientSessionId] = useState<string | undefined>(undefined)
 
     useEffect(() => {
         setCurrentId(effectiveStart)
         setHistory([])
+        setChoiceSteps([])
     }, [effectiveStart, story.id])
 
+    useEffect(() => {
+        if (!persistAllyshipIntake || !barId || typeof window === 'undefined') return
+        const k = `allyship-intake-csid-${barId}`
+        let v = localStorage.getItem(k)
+        if (!v) {
+            v = crypto.randomUUID()
+            localStorage.setItem(k, v)
+        }
+        setClientSessionId(v)
+    }, [persistAllyshipIntake, barId])
+
     const passage = byId.get(currentId)
+
+    useEffect(() => {
+        if (!passage?.ending || !persistAllyshipIntake || !barId) return
+        if (typeof window === 'undefined') return
+        const sk = intakeStorageKey(barId, story.id)
+        const existing = sessionStorage.getItem(sk)
+        if (existing && existing !== 'pending') return
+        if (existing === 'pending') return
+        sessionStorage.setItem(sk, 'pending')
+
+        void (async () => {
+            const r = await submitAllyshipIntake({
+                barId,
+                storyId: story.id,
+                endingPassageId: currentId,
+                steps: choiceSteps,
+                clientSessionId,
+                senderNote: senderNote ?? undefined,
+            })
+            if (r.ok) {
+                sessionStorage.setItem(sk, r.id)
+            } else {
+                sessionStorage.removeItem(sk)
+                console.warn('[allyship-intake]', r.error)
+            }
+        })()
+    }, [
+        passage?.ending,
+        persistAllyshipIntake,
+        barId,
+        story.id,
+        currentId,
+        choiceSteps,
+        clientSessionId,
+        senderNote,
+    ])
+
     if (!passage) {
         const misconfiguredMsg = 'Story is misconfigured (missing passage). Please try again later.'
         return (
@@ -53,10 +123,15 @@ export function EventInviteStoryReader({
 
     const restart = () => {
         setHistory([])
+        setChoiceSteps([])
         setCurrentId(effectiveStart)
+        if (typeof window !== 'undefined' && barId) {
+            sessionStorage.removeItem(intakeStorageKey(barId, story.id))
+        }
     }
 
-    const goToPassage = (nextId: string) => {
+    const goToPassage = (nextId: string, choiceLabel: string) => {
+        setChoiceSteps((s) => [...s, { passageId: currentId, choiceLabel, nextPassageId: nextId }])
         setHistory((h) => [...h, currentId])
         setCurrentId(nextId)
     }
@@ -66,6 +141,7 @@ export function EventInviteStoryReader({
             if (h.length === 0) return h
             const prev = h[h.length - 1]!
             setCurrentId(prev)
+            setChoiceSteps((st) => st.slice(0, -1))
             return h.slice(0, -1)
         })
     }
@@ -145,7 +221,7 @@ export function EventInviteStoryReader({
                             <button
                                 key={c.next + c.label}
                                 type="button"
-                                onClick={() => goToPassage(c.next)}
+                                onClick={() => goToPassage(c.next, c.label)}
                                 className="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/80 border border-zinc-700 hover:border-amber-700/60 hover:bg-zinc-800 text-zinc-100 text-sm font-medium transition-colors"
                             >
                                 {c.label}

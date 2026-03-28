@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { appendCyoaArtifactBar } from '@/actions/cyoa-artifact-ledger'
+import { parsePortalMoveFromBlueprintKey } from '@/lib/spoke-move-beds'
 
 export type EmitBarFromPassageResult =
   | { success: true; barId: string }
@@ -21,6 +22,8 @@ export async function emitBarFromPassage(input: {
   passageNodeId: string
   campaignRef?: string | null
   blueprintKey?: string
+  /** SMB: hub portal spoke index 0–7; stamps agentMetadata for anchor eligibility */
+  spokeIndex?: number | null
 }): Promise<EmitBarFromPassageResult> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
@@ -38,6 +41,19 @@ export async function emitBarFromPassage(input: {
     })
     allyshipDomain = instance?.allyshipDomain ?? instance?.primaryCampaignDomain ?? null
   }
+
+  const spokeMove =
+    campaignRef &&
+    input.spokeIndex != null &&
+    Number.isFinite(input.spokeIndex) &&
+    input.spokeIndex >= 0 &&
+    input.spokeIndex <= 7
+      ? parsePortalMoveFromBlueprintKey(input.blueprintKey)
+      : null
+  const spokePortal =
+    campaignRef && spokeMove != null
+      ? { campaignRef, spokeIndex: input.spokeIndex as number, moveType: spokeMove }
+      : null
 
   try {
     const bar = await db.customBar.create({
@@ -58,6 +74,8 @@ export async function emitBarFromPassage(input: {
           sourceType: 'passage_adventure',
           adventureId: input.adventureId,
           passageNodeId: input.passageNodeId,
+          blueprintKey: input.blueprintKey,
+          ...(spokePortal ? { spokePortal } : {}),
         }),
       },
     })

@@ -2,7 +2,7 @@
  * Campaign stewards: surface event_invite BARs they own or that match their instance campaignRef.
  * @see .specify/backlog/BACKLOG.md row BBR (P0)
  */
-import { db } from '@/lib/db'
+import { dbBase } from '@/lib/db'
 import { EVENT_INVITE_BAR_TYPE } from '@/lib/event-invite-story/schema'
 
 export type VaultEventInviteBarRow = {
@@ -41,7 +41,7 @@ export async function loadEventInviteBarsForStewards(
   options?: LoadEventInviteBarsOptions
 ): Promise<VaultEventInviteBarRow[]> {
   if (options?.includeAllForAdmin) {
-    const rows = await db.customBar.findMany({
+    const rows = await dbBase.customBar.findMany({
       where: {
         type: EVENT_INVITE_BAR_TYPE,
         archivedAt: null,
@@ -58,7 +58,7 @@ export async function loadEventInviteBarsForStewards(
     }))
   }
 
-  const memberships = await db.instanceMembership.findMany({
+  const memberships = await dbBase.instanceMembership.findMany({
     where: {
       playerId,
       roleKey: { in: ['owner', 'steward'] },
@@ -81,7 +81,7 @@ export async function loadEventInviteBarsForStewards(
     orClause.push({ campaignRef: { in: [...refs] } })
   }
 
-  const rows = await db.customBar.findMany({
+  const rows = await dbBase.customBar.findMany({
     where: {
       type: EVENT_INVITE_BAR_TYPE,
       archivedAt: null,

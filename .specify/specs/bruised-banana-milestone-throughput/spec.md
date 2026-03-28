@@ -47,6 +47,42 @@ This spec addresses the gap where **milestone logic exists in data and admin** (
 
 ---
 
+## North star loop (v1 product contract)
+
+**Definition:** After sign-in, a Bruised Banana player can follow **one prioritized guided action** from [`computeGuidedActions`](../../src/lib/bruised-banana-milestone/guided-actions.ts), finish a **concrete** in-app step, and **not** get lost between hub, board, and story — with **at least one** path where **collective progress** (fundraiser line, gameboard participation, or onboarding completion) **visibly or structurally** advances.
+
+**Loop (repeatable value):**
+
+| Step | Player experience | Spec / code anchor |
+|------|-------------------|---------------------|
+| **1. Orient** | See **where the residency is** (Kotter stage, fundraiser line, dates) on dashboard **or** hub. | `MilestoneSnapshot` + [`CampaignMilestoneStrip`](../../src/components/campaign/CampaignMilestoneStrip.tsx) |
+| **2. Act** | Tap the **first** guided action (max three shown) — onboarding, vault relief, gameboard slot, or hub — not a flat grid of equal CTAs. | `getCampaignMilestoneGuidance` → [`computeGuidedActions`](../../src/lib/bruised-banana-milestone/guided-actions.ts) |
+| **3. Complete** | Finish the step the link implies (e.g. claim a board slot, complete onboarding rail, compost, donate via `/event/donate/wizard`, complete a spoke CYOA when that is the primary path). | Gameboard actions, DSW, CHS spoke flows — **traceability:** [plan.md § North star path](./plan.md#north-star-path-traceability) |
+| **4. Signal** | See **movement** when the underlying data moves: e.g. **fundraising line** after money donation, **new slot state** on board, **onboardingComplete** so the next primary action promotes to hub/board/event. | Instance fields + strip copy; no fabricated % |
+
+**Non-goals for this loop (v1):**
+
+- **Full [CHS](../campaign-hub-spoke-landing-architecture/spec.md)** — all eight spokes, I Ching period draw, vault modal gate, and deck topology are **not** required for the North star; **one** spoke or hub entry as *a* guided destination is enough until CHS hardens.
+- **Perfect milestone accounting** — every quest click does not need to map to `kotterStage`; **admin/steward** may still advance stage. The loop must stay **honest** (no fake ticks).
+- **AI-personalized** next-action copy (templates + rules only).
+
+**Verification quest (manual — run after hub, guidance, donation, or gameboard changes):**
+
+1. Log in as a test player with BB **`ref`** (e.g. `bruised-banana` / instance default).
+2. Open **dashboard** or **`/campaign/hub?ref=…`**: confirm **milestone strip** shows stage + fundraiser line (if goal set).
+3. Note the **first** guided action label + href; navigate there with **`ref` preserved** where applicable.
+4. Complete the implied step (shortest path):
+   - **Onboarding incomplete:** finish until onboarding flag clears; confirm guided actions **change** (promotion to vault → board → hub ladder).
+   - **Vault cap:** compost or free a slot; confirm vault actions **no longer** dominate primary CTA.
+   - **No gameboard participation:** pick or bid a slot; reload hub/dashboard — confirm participation state allows **hub** as primary (or document gap if detection lags).
+   - **Hub as primary:** enter **one** spoke or collective path; confirm no **“Could not load this step”** / dead `targetId` (see [UGA](../unified-cyoa-graph-authoring/spec.md) if broken).
+5. **Collective signal:** trigger at least one of: **donation** (wizard or self-report) so **fundraiser line** updates, or **visible** board/hub state change; if **no** field updates, file a **single** follow-up task or backlog row (do not silently pass).
+6. Optional repeat next day: same player should recognize **rhythm** (strip + primary CTA still coherent).
+
+**Traceability table** (priority ladder → completion → signal) lives in [plan.md § North star path](./plan.md#north-star-path-traceability).
+
+---
+
 ## User stories
 
 ### P1 — See the residency milestone
@@ -98,7 +134,8 @@ This spec addresses the gap where **milestone logic exists in data and admin** (
 
 - [ ] `spec.md` / `plan.md` / `tasks.md` complete; **linked specs** updated (see tasks).
 - [ ] `npm run build` && `npm run check` pass.
-- [ ] Playtest: new player can name **one** action they took that **felt** like it moved the residency.
+- [ ] **North star verification quest** (§ above) executed; pass recorded or gaps filed as one follow-up each.
+- [ ] Playtest: new player can name **one** action they took that **felt** like it moved the residency (subjective check complements the quest).
 
 ---
 
@@ -107,3 +144,4 @@ This spec addresses the gap where **milestone logic exists in data and admin** (
 | Date | |
 |------|--|
 | 2026-03-22 | Initial spec kit — Sage consult: campaign doesn’t land; bridge milestones ↔ player guidance. |
+| 2026-03-27 | **North star loop** (v1 contract), verification quest, plan traceability table; tasks **BBMT-NS**. |

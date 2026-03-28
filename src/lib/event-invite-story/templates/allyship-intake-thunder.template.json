@@ -1,0 +1,78 @@
+{
+  "id": "allyship-intake-thunder-v1",
+  "start": "thunder_welcome",
+  "passages": [
+    {
+      "id": "thunder_welcome",
+      "text": "You were sent here by someone who cares about you. This is a **short allyship interview** — not a form that grades you, and not therapy.\n\nWe use it so **Bruised Banana** stewards can shape **real support** (including a future **Support** campaign hub) without guessing what you need.\n\n**Invitation, not extraction** — skip anything that feels like too much; your inviter can catch the rest in conversation.",
+      "choices": [
+        { "label": "Learn about Bruised Banana first", "next": "thunder_bb_bridge" },
+        { "label": "Begin the interview", "next": "thunder_open" }
+      ]
+    },
+    {
+      "id": "thunder_bb_bridge",
+      "text": "**Bruised Banana** is a residency-shaped campaign: creative practice, mutual aid, and an **honest economy** (time, money, space — all optional, all visible).\n\nYou're not being sold anything. If you only read one thing, use the wiki.\n\n- [Campaign on the wiki](/wiki/campaign/bruised-banana)\n- [The four moves](/wiki/moves)",
+      "choices": [{ "label": "Continue to the interview", "next": "thunder_open" }]
+    },
+    {
+      "id": "thunder_open",
+      "text": "We'll move in small steps. Pick the line that fits **closest** — there's no wrong answer.",
+      "choices": [
+        { "label": "Work or income just shifted hard (layoff, firing, forced change)", "next": "thunder_asks" },
+        { "label": "Something else heavy landed (health, family, housing, grief)", "next": "thunder_asks" },
+        { "label": "I'd rather not name it — take me to the next questions", "next": "thunder_asks" }
+      ]
+    },
+    {
+      "id": "thunder_asks",
+      "text": "**What would help** if allies showed up well?\n\nYou're choosing **tone**, not signing up for tasks yet. Stewards and your inviter can follow up for specifics.\n\nThink: witness, practical help, advocacy, introductions, rest.",
+      "choices": [
+        { "label": "Mostly **witness** — see me without fixing me", "next": "thunder_boundaries" },
+        { "label": "**Practical** — meals, childcare, rides, money navigation", "next": "thunder_boundaries" },
+        { "label": "**Advocacy / network** — intros, letters, showing up beside me", "next": "thunder_boundaries" },
+        { "label": "**Mixed** — I need more than one kind of help", "next": "thunder_boundaries" }
+      ]
+    },
+    {
+      "id": "thunder_boundaries",
+      "text": "**Boundaries** keep solidarity trustworthy. What should people **avoid** — even with good intentions?\n\nIf nothing here fits, tell your inviter in your own words.",
+      "choices": [
+        { "label": "Don't share my story publicly without consent", "next": "thunder_close" },
+        { "label": "Don't flood me with advice — ask before solving", "next": "thunder_close" },
+        { "label": "Don't ghost after one nice gesture — I need follow-through", "next": "thunder_close" },
+        { "label": "I'll name boundaries directly with my inviter", "next": "thunder_close" }
+      ]
+    },
+    {
+      "id": "thunder_close",
+      "text": "**Thank you.** What you chose here is enough to **start**. Stewards can **water** this signal into a **Support** campaign (hub + spokes) when the field is ready — with **urgency** framed as care, not panic.\n\nSign up if you want tools, quests, and the vault. You can always return to the hub and events without owing the room anything.",
+      "ending": {
+        "role": "Allyship interview",
+        "description": "Thunder intake v1 — branch choices are qualitative signal until ECI persists structured answers."
+      }
+    }
+  ],
+  "endingCtas": [
+    {
+      "href": "/signup",
+      "label": "Create account →",
+      "className": "bg-purple-600 hover:bg-purple-500 text-white"
+    },
+    {
+      "href": "/campaign/hub?ref=bruised-banana",
+      "label": "Bruised Banana hub →",
+      "className": "bg-teal-700 hover:bg-teal-600 text-white"
+    },
+    {
+      "href": "/event/donate/wizard?ref=bruised-banana",
+      "label": "Support the residency →",
+      "className": "bg-emerald-600 hover:bg-emerald-500 text-white"
+    },
+    {
+      "href": "/event",
+      "label": "Events & calendar →",
+      "className": "bg-amber-600/90 hover:bg-amber-500 text-white"
+    }
+  ]
+}

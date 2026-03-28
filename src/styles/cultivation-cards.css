@@ -220,6 +220,80 @@
   z-index: 0;
 }
 
+/* ─── Growth Stage Track ─────────────────────────────────────────────────────
+   Used by SeedGrowthCard to show all four cultivation stages with element-
+   colored pips for each stage. Pip color comes from --pip-color / --pip-glow
+   set inline by the component; progress bar fill uses --element-frame from
+   the parent CultivationCard.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.growth-stage-track__pip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition:
+    background  200ms ease-out,
+    border-color 200ms ease-out,
+    box-shadow  200ms ease-out;
+}
+
+/* Active (current) pip — element-colored glow */
+.growth-stage-track__pip--active {
+  background: color-mix(in srgb, var(--pip-color, #3f3f46) 18%, transparent);
+  border-color: color-mix(in srgb, var(--pip-color, #3f3f46) 70%, transparent);
+  box-shadow:
+    0 0 8px 2px color-mix(in srgb, var(--pip-glow, transparent) 35%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Complete (past) pip — muted element tint */
+.growth-stage-track__pip--complete {
+  background: color-mix(in srgb, var(--pip-color, #3f3f46) 10%, transparent);
+  border-color: color-mix(in srgb, var(--pip-color, #3f3f46) 35%, transparent);
+}
+
+/* ─── Within-Stage Progress Bar ──────────────────────────────────────────────
+   Thin bar below the pip track showing fractional progress within the current
+   stage. Fill uses --element-frame so it always matches the card element.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.growth-stage-progress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.growth-stage-progress__fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--element-frame, #3f3f46);
+  transition: width 500ms ease-out;
+  will-change: width;
+}
+
+/* ─── Growth Stage Art Window ────────────────────────────────────────────────
+   Centered stage illustration inside the CultivationCard art window.
+   Icon inherits currentColor from the element palette set on the parent.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.growth-stage-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Soft inner vignette keeps the icon reading cleanly against the gradient */
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--element-glow, transparent) 8%, transparent) 0%,
+    transparent 70%
+  );
+}
+
 /* ─── Reduced Motion Overrides ────────────────────────────────────────────────
    All animations pause. Haptic / audio are non-motion and still fire. ──────── */
 

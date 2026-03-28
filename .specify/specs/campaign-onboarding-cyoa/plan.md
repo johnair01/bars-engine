@@ -18,8 +18,8 @@ Implement per [`.specify/specs/campaign-onboarding-cyoa/spec.md`](./spec.md).
 ## Phase E — Campaign CYOA authoring (same patterns)
 
 1. Map **which** `Adventure`/passages are “campaign onboarding” for an instance (product decision).
-2. Reuse **shared** passage/choice UI; adapter to `upsertCampaignPassage` or successor action with **new permission matrix** (steward/owner scoped).
-3. Align `CampaignReader` preview with builder draft (client preview).
+2. Reuse **shared** passage/choice UI — [`CampaignBranchChoicesEditor`](../../../src/components/onboarding-cyoa-builder/CampaignBranchChoicesEditor.tsx) in **`CampaignPassageEditModal`** and **`EventInviteStoryBuilder`**; `upsertCampaignPassage` + **steward/owner** gate ([`campaign-passage-permissions`](../../../src/lib/campaign-passage-permissions.ts)).
+3. **Deferred:** Align `CampaignReader` **client** preview with builder draft (admin `preview=1` on API today).
 
 ## Phase F — Residency funding & campaign chrome (ontology: funding ⊆ onboarding)
 

@@ -51,11 +51,12 @@ import {
   })
   assert.equal(noSchools.length, 1)
   assert.equal(noSchools[0].targetId, 'WakeUp_Emit')
-  const notRoom = revalidateCampaignPortalRoomChoices('Portal_1', roomChoices, {
+  const portalNoSchools = revalidateCampaignPortalRoomChoices('Portal_1', roomChoices, {
     adventureSlug: 'campaign-portal-x',
     schoolsAdventureId: null,
   })
-  assert.equal(notRoom.length, 2)
+  assert.equal(portalNoSchools.length, 1)
+  assert.equal(portalNoSchools[0].targetId, 'WakeUp_Emit')
 }
 
 console.log('filter-choices ok')

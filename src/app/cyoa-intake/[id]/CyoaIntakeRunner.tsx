@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createDailyCheckIn } from '@/actions/alchemy'
 import { saveIntakeProgress, completeIntakeSession, launchSpokeAdventure } from '@/actions/cyoa-intake'
+import { plantSeedFromCyoa } from '@/actions/plant-seed-from-cyoa'
 import type {
   IntakeAdventureData,
   IntakePassage,
@@ -85,6 +86,13 @@ type State = {
    * and are intentionally NOT exposed here.
    */
   spokeSessionId: string | null
+  /**
+   * Set after plantSeedFromCyoa succeeds — the CustomBar.id of the planted seed.
+   * Displayed in the complete phase as a confirmation that the seed was planted.
+   */
+  barId: string | null
+  /** Non-fatal error from seed planting — shown in complete phase, does not block navigation. */
+  plantError: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -188,10 +196,16 @@ function derivePhaseFromSaved({
 function CompleteScene({
   campaignRef,
   spokeSessionId,
+  barId,
+  plantError,
   onContinue,
 }: {
   campaignRef: string | null
   spokeSessionId: string | null
+  /** CustomBar.id of the planted seed, or null if planting failed / not yet run. */
+  barId: string | null
+  /** Non-fatal error from seed planting — shown as a warning, does not block navigation. */
+  plantError: string | null
   onContinue: () => void
 }) {
   const router = useRouter()
@@ -218,6 +232,25 @@ function CompleteScene({
       <p className="text-stone-400 text-sm leading-relaxed max-w-sm mx-auto">
         The intake is complete. The journey you&apos;re being called toward is being prepared.
       </p>
+
+      {/* ── Seed planted confirmation ─────────────────────────────────── */}
+      {barId && (
+        <div className="mx-auto max-w-sm rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-5 py-4 text-left">
+          <p className="text-xs uppercase tracking-widest text-emerald-500 mb-1">Seed planted 🌱</p>
+          <p className="text-stone-300 text-sm leading-relaxed">
+            A seed has been set in the earth. It will grow as you water it through your daily
+            practice — check-in, alchemy, quest work, and community flow.
+          </p>
+        </div>
+      )}
+
+      {/* Non-fatal planting error (shown as a soft warning, does not block) */}
+      {plantError && !barId && (
+        <p className="text-xs text-amber-400/80 max-w-xs mx-auto">
+          Note: seed planting encountered an issue ({plantError}). Your progress was still saved.
+        </p>
+      )}
+
       {campaignRef && (
         <p className="text-xs text-stone-500 max-w-xs mx-auto">
           You&apos;re part of the <span className="text-amber-500">{campaignRef}</span> campaign.
@@ -226,32 +259,50 @@ function CompleteScene({
       {launchError && (
         <p className="text-xs text-red-400">{launchError}</p>
       )}
-      {spokeSessionId ? (
-        <button
-          type="button"
-          onClick={handleLaunch}
-          disabled={isPending}
-          className="mt-6 px-8 py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-stone-100 rounded-lg font-medium transition-colors"
-        >
-          {isPending ? 'Preparing your adventure…' : 'Begin your Adventure →'}
-        </button>
-      ) : campaignRef ? (
-        <button
-          type="button"
-          onClick={() => router.push(`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`)}
-          className="mt-6 px-8 py-3 bg-amber-700/80 hover:bg-amber-600 text-stone-100 rounded-lg font-medium transition-colors"
-        >
-          Enter the campaign hub →
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onContinue}
-          className="mt-6 px-8 py-3 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg font-medium transition-colors border border-stone-600"
-        >
-          Return to Dashboard
-        </button>
-      )}
+
+      <div className="flex flex-col gap-3 items-center">
+        {spokeSessionId ? (
+          <button
+            type="button"
+            onClick={handleLaunch}
+            disabled={isPending}
+            className="px-8 py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-stone-100 rounded-lg font-medium transition-colors w-full max-w-xs"
+          >
+            {isPending ? 'Preparing your adventure…' : 'Begin your Adventure →'}
+          </button>
+        ) : campaignRef ? (
+          <button
+            type="button"
+            onClick={() => router.push(`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`)}
+            className="px-8 py-3 bg-amber-700/80 hover:bg-amber-600 text-stone-100 rounded-lg font-medium transition-colors w-full max-w-xs"
+          >
+            Enter the campaign hub →
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onContinue}
+            className="px-8 py-3 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg font-medium transition-colors border border-stone-600 w-full max-w-xs"
+          >
+            Return to Dashboard
+          </button>
+        )}
+
+        {/* Secondary action: view planted seed in the landing if barId is available */}
+        {barId && campaignRef && (
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&seed=${encodeURIComponent(barId)}`,
+              )
+            }
+            className="text-xs text-stone-500 hover:text-stone-300 transition-colors underline underline-offset-2"
+          >
+            View your seed →
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -279,6 +330,8 @@ export function CyoaIntakeRunner({ adventure, playbook, todayCheckIn, playerId, 
     saving: false,
     saveError: null,
     spokeSessionId: null,
+    barId: null,
+    plantError: null,
   })
 
   // -------------------------------------------------------------------------
@@ -409,7 +462,20 @@ export function CyoaIntakeRunner({ adventure, playbook, todayCheckIn, playerId, 
             // graceful degradation ensures the player is not stuck.
           }
 
-          advance({ saving: false, phase: 'complete', spokeSessionId: completedSpokeSessionId })
+          // Plant the seed BAR from the now-completed intake playbook.
+          // plantSeedFromCyoa is idempotent — safe to call even if the playbook
+          // was already completed (e.g. page refresh during the complete phase).
+          let barId: string | null = null
+          let plantError: string | null = null
+          const plantResult = await plantSeedFromCyoa(playbook.id)
+          if ('success' in plantResult && plantResult.success) {
+            barId = plantResult.barId
+          } else if ('error' in plantResult) {
+            // Non-fatal — surface in complete UI but do not block navigation
+            plantError = plantResult.error
+          }
+
+          advance({ saving: false, phase: 'complete', spokeSessionId: completedSpokeSessionId, barId, plantError })
         } catch (err) {
           advance({
             saving: false,
@@ -532,6 +598,8 @@ export function CyoaIntakeRunner({ adventure, playbook, todayCheckIn, playerId, 
           <CompleteScene
             campaignRef={adventure.campaignRef}
             spokeSessionId={state.spokeSessionId}
+            barId={state.barId}
+            plantError={state.plantError}
             onContinue={() => router.push('/')}
           />
         )}

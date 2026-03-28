@@ -3,7 +3,7 @@ import { SIGNUP_CHOICE_TARGET_IDS } from '@/lib/cyoa/types'
 export type MinimalChoice = { text: string; targetId: string; moveType?: string }
 
 /**
- * CHS checkpoint + revalidate (B): campaign portal `Room_*` choices depend on current instance context.
+ * CHS checkpoint + revalidate (B): campaign portal `Room_*` and `Portal_*` choices depend on instance context.
  * Hide Grow Up → schools when no schools adventure is linked (matches AdventurePlayer routing).
  */
 export function revalidateCampaignPortalRoomChoices(
@@ -12,7 +12,8 @@ export function revalidateCampaignPortalRoomChoices(
   opts: { adventureSlug: string; schoolsAdventureId: string | null },
 ): MinimalChoice[] {
   const isCampaignPortal = opts.adventureSlug.startsWith('campaign-portal-')
-  if (!isCampaignPortal || !/^Room_\d+$/.test(nodeId)) return choices
+  const isPortalOrRoom = /^Room_\d+$/.test(nodeId) || /^Portal_[1-8]$/.test(nodeId)
+  if (!isCampaignPortal || !isPortalOrRoom) return choices
   if (opts.schoolsAdventureId) return choices
   return choices.filter((c) => c.targetId !== 'schools')
 }

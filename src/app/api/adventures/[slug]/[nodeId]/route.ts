@@ -560,7 +560,9 @@ export async function GET(
         const isCompletionPassage = !!passage.linkedQuestId && (!choices || choices.length === 0)
 
         const campaignRefForPortal = ref ?? adventure.campaignRef ?? null
-        if (campaignRefForPortal && /^Room_\d+$/.test(nodeId) && slug.startsWith('campaign-portal-')) {
+        const isPortalEntryOrRoom =
+            /^Room_\d+$/.test(nodeId) || /^Portal_[1-8]$/.test(nodeId)
+        if (campaignRefForPortal && isPortalEntryOrRoom && slug.startsWith('campaign-portal-')) {
             const inst = await db.instance.findFirst({
                 where: {
                     OR: [{ campaignRef: campaignRefForPortal }, { slug: campaignRefForPortal }],
@@ -685,6 +687,7 @@ export async function GET(
             castIChingTargetId?: string
             moveType?: string
             beat?: string
+            nextTargetId?: string
         } | null
 
         // Face × move override: inject face-specific text + barTemplate for emit nodes
@@ -706,6 +709,8 @@ export async function GET(
                         // Ignore parse/update errors
                     }
                 }
+                const emitNext =
+                    metadata?.nextTargetId?.trim() || EMIT_NODE_IDS.hubReturn
                 return NextResponse.json(
                     finalizeAdventureNodePayload(
                         {
@@ -719,7 +724,7 @@ export async function GET(
                                     defaultTitle: faceMoveContent.barTitle,
                                     defaultDescription: faceMoveContent.barPrompt,
                                 },
-                                nextTargetId: EMIT_NODE_IDS.hubReturn,
+                                nextTargetId: emitNext,
                             },
                         },
                         isAuthed

@@ -57,6 +57,19 @@ See [deftness-development/reference.md](.agents/skills/deftness-development/refe
 
 - [Scaling, perf, security, backward compatibility]
 
+## Persisted data & Prisma (required when schema changes)
+
+> **Process contract:** Shipping a schema change without a committed migration breaks deploys (`migrate deploy`) and causes production 500s. See [.agents/skills/prisma-migration-discipline/SKILL.md](../.agents/skills/prisma-migration-discipline/SKILL.md).
+
+| Check | Done |
+|-------|------|
+| Prisma models/enums/fields named in **Design Decisions** or **API Contracts** | |
+| **`tasks.md`** includes: create migration (`npx prisma migrate dev --name …`), commit `prisma/migrations/…` with `schema.prisma` | |
+| **Verification**: `npm run db:sync` after schema edit (regenerates client); `npm run check` | |
+| **Human** glanced at new `migration.sql` (additive vs destructive) | |
+
+**Do not** rely on `db push` alone for changes that merge to main / deploy.
+
 ## Scaling Checklist (when AI, upload, filesystem)
 
 | Touchpoint | Mitigation |
@@ -81,3 +94,4 @@ See [deftness-development/reference.md](.agents/skills/deftness-development/refe
 ## References
 
 - [Relevant code paths, docs]
+- Prisma workflow: [prisma-migration-discipline skill](../.agents/skills/prisma-migration-discipline/SKILL.md), [fail-fix-workflow](../../.cursor/rules/fail-fix-workflow.mdc)

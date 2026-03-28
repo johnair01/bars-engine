@@ -67,10 +67,14 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 )}
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
                 {isAuthenticated ? <SiteSignalNavTrigger /> : null}
-                <form action={logout}>
-                    <button className="text-red-900 hover:text-red-500 hover:bg-red-950/30 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] sm:text-xs">
+                <span className="hidden sm:inline h-6 w-px shrink-0 bg-zinc-800" aria-hidden />
+                <form action={logout} className="shrink-0">
+                    <button
+                        type="submit"
+                        className="text-red-900 hover:text-red-500 hover:bg-red-950/30 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest min-w-[44px] min-h-[44px] flex items-center justify-center text-[10px] sm:text-xs"
+                    >
                         <span className="hidden sm:inline">Disconnect</span>
                         <span className="sm:hidden">Exit</span>
                     </button>

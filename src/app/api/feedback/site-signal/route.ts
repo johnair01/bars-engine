@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
   formatSiteSignalFeedbackBlock,
   siteSignalInputSchema,
 } from '@/lib/feedback/site-signal-schema'
+import { persistPlayerFeedbackToBacklog } from '@/lib/feedback/persist-player-feedback-to-backlog'
 
 const PASSAGE_NAME = 'Site signal (nav)'
 const QUEST_ID = 'system-feedback'
@@ -55,24 +54,26 @@ export async function POST(request: NextRequest) {
 
   const feedback = formatSiteSignalFeedbackBlock({ ...data, isAdmin })
 
-  try {
-    const feedbackDir = path.join(process.cwd(), '.feedback')
-    await fs.mkdir(feedbackDir, { recursive: true })
+  const persisted = await persistPlayerFeedbackToBacklog({
+    source: 'site_signal_nav',
+    playerId: player.id,
+    playerName: player.name,
+    questId: QUEST_ID,
+    passageName: PASSAGE_NAME,
+    feedback,
+    context: {
+      pageUrl: data.pageUrl,
+      pathname: data.pathname,
+      search: data.search,
+      documentTitle: data.documentTitle,
+      isAdmin,
+    },
+  })
 
-    const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
-    const entry = {
-      timestamp: new Date().toISOString(),
-      playerId: player.id,
-      playerName: player.name,
-      questId: QUEST_ID,
-      passageName: PASSAGE_NAME,
-      feedback,
-    }
-
-    await fs.appendFile(feedbackFile, JSON.stringify(entry) + '\n')
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Failed to log site signal:', error)
-    return NextResponse.json({ error: 'Failed to write feedback' }, { status: 500 })
+  if ('error' in persisted) {
+    console.error('Failed to persist site signal:', persisted.error)
+    return NextResponse.json({ error: 'Failed to save feedback' }, { status: 500 })
   }
+
+  return NextResponse.json({ success: true, backlogItemId: persisted.backlogItemId })
 }

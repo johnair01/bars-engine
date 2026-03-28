@@ -41,6 +41,27 @@ const ANCHOR_COLORS: Record<string, number> = {
   giacomo_npc:      0xdc2626,
   nation_embassy:   0x2563eb,
   campaign_portal:  0xd4a017,  // gold — campaign threshold
+  spoke_portal:     0x8b5cf6,  // violet — CHS spoke exit
+}
+
+/**
+ * When multiple anchors are within Chebyshev distance 1, pick the best "Interact" target.
+ * Same-tile always wins; otherwise closer Manhattan distance, then higher priority.
+ * (Fixes Card Club: campaign_portal at (7,1) was shadowing librarian at (7,2).)
+ */
+const PROXIMITY_PRIORITY: Record<string, number> = {
+  librarian_npc: 110,
+  giacomo_npc: 110,
+  nation_embassy: 105,
+  bar_table: 100,
+  quest_board: 95,
+  anomaly: 95,
+  cyoa_quest: 90,
+  spoke_portal: 88,
+  npc_slot: 85,
+  crafting_forge: 82,
+  portal: 40,
+  campaign_portal: 35,
 }
 
 type PlayerDirection = 'north' | 'south' | 'east' | 'west'
@@ -269,7 +290,11 @@ export class RoomRenderer {
       g.rect(4, 4, this.tileSize - 8, this.tileSize - 8).fill(color)
       g.x = anchor.tileX * this.tileSize
       g.y = anchor.tileY * this.tileSize
-      if (anchor.anchorType === 'portal' || anchor.anchorType === 'campaign_portal') {
+      if (
+        anchor.anchorType === 'portal' ||
+        anchor.anchorType === 'campaign_portal' ||
+        anchor.anchorType === 'spoke_portal'
+      ) {
         g.eventMode = 'static'
         g.cursor = 'pointer'
         const data = anchor
@@ -283,9 +308,25 @@ export class RoomRenderer {
   onPortalActivate(cb: (anchor: AnchorData) => void) { this._onPortalActivate = cb }
 
   getProximateAnchor(playerX: number, playerY: number): AnchorData | null {
-    return this.anchors.find(a =>
-      Math.abs(a.tileX - playerX) <= 1 && Math.abs(a.tileY - playerY) <= 1
-    ) ?? null
+    const nearby = this.anchors.filter(
+      (a) => Math.abs(a.tileX - playerX) <= 1 && Math.abs(a.tileY - playerY) <= 1
+    )
+    if (nearby.length === 0) return null
+
+    const pri = (t: string) => PROXIMITY_PRIORITY[t] ?? 50
+    const manhattan = (a: AnchorData) => Math.abs(a.tileX - playerX) + Math.abs(a.tileY - playerY)
+
+    const onTile = nearby.filter((a) => a.tileX === playerX && a.tileY === playerY)
+    if (onTile.length > 0) {
+      return [...onTile].sort((a, b) => pri(b.anchorType) - pri(a.anchorType))[0] ?? null
+    }
+
+    return [...nearby].sort((a, b) => {
+      const ma = manhattan(a)
+      const mb = manhattan(b)
+      if (ma !== mb) return ma - mb
+      return pri(b.anchorType) - pri(a.anchorType)
+    })[0] ?? null
   }
 
   private _onAgentClick?: (agent: AgentData) => void
@@ -305,7 +346,9 @@ export class RoomRenderer {
     if (
       this.anchors.some(
         a =>
-          (a.anchorType === 'portal' || a.anchorType === 'campaign_portal') &&
+          (a.anchorType === 'portal' ||
+            a.anchorType === 'campaign_portal' ||
+            a.anchorType === 'spoke_portal') &&
           a.tileX === x &&
           a.tileY === y
       )

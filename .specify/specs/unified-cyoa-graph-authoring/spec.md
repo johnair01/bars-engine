@@ -17,7 +17,7 @@ This spec **does not replace** existing specs; it **integrates** them and names 
 | # | Name | Storage / entry | Runtime | Validation today |
 |---|------|-----------------|---------|------------------|
 | **A** | **Invite doorway JSON CYOA** | `CustomBar.storyContent` (`type: event_invite`) | `EventInviteStoryReader` + `parseEventInviteStory` | Closed graph: `start` ∈ passages; every `choice.next` ∈ passage ids |
-| **B** | **Campaign / initiation passages** | `Adventure` + `Passage` (`nodeId`, `choices` JSON) | `CampaignReader` → `GET /api/adventures/[slug]/[nodeId]` | **Weak** at edit time: `upsertCampaignPassage` does not verify targets exist |
+| **B** | **Campaign / initiation passages** | `Adventure` + `Passage` (`nodeId`, `choices` JSON) | `CampaignReader` → `GET /api/adventures/[slug]/[nodeId]` | **Author-time:** `upsertCampaignPassage` + `validateFullAdventurePassagesGraph` block dangling `targetId`; admin node map + datalist ([`adventurePassagesGraph`](../../../src/lib/story-graph/adventurePassagesGraph.ts)) |
 | **C** | **Twine IR draft** | `TwineStory.irDraft` → compile to Twee | `parseTwee` / adventure play | `validateIrStory` — missing `next_node` targets fail publish |
 | **D** | **CMA modular graph** | Strand / charge JSON (`CmaStory`) | `cmaStoryToIrNodes` → Twee | `validateQuestGraph` — start, ends, choice arms, reachability |
 
@@ -29,7 +29,7 @@ This spec **does not replace** existing specs; it **integrates** them and names 
 
 `CampaignReader` fetches the **next** node by id; if no `Passage` row exists for that `nodeId`, the API returns non-OK and the UI shows **“Could not load this step.”** (see `src/app/campaign/components/CampaignReader.tsx`).
 
-Admins can set `targetId` to any string in `CampaignPassageEditModal` / `upsertCampaignPassage` without **author-time** validation that the target passage exists. That is distinct from **invite JSON**, where `parseEventInviteStory` **rejects** invalid `next` ids (story fails closed → `notFound()` on public invite).
+**Historical:** `targetId` was free text; **now** `upsertCampaignPassage` rejects unknown targets (UG-1.3). **Invite JSON** still uses `parseEventInviteStory` for closed graphs (`notFound()` on public invite when invalid).
 
 ---
 
@@ -53,7 +53,7 @@ Define a **normalized directed graph** (conceptual; implementation may be adapte
 
 ### R2 — Unified validation API (server + CI)
 
-- **Shared module** (new): e.g. `src/lib/story-graph/validateDirectedGraph.ts` — given nodes + edges + start, report:
+- **Shared module:** [`src/lib/story-graph/validateDirectedGraph.ts`](../../../src/lib/story-graph/validateDirectedGraph.ts) — given nodes + edges + start, report:
   - undefined targets (broken links)
   - unreachable nodes (warnings)
   - missing start
@@ -98,17 +98,34 @@ Wire **ending CTAs** (`endingCtas` / defaults) so the JSON doorway and **Partifu
 | [`event-invite-party-initiation`](../event-invite-party-initiation/spec.md) | Invite URL + Partiful + initiation; **R4** content |
 | [`player-event-creation`](../player-event-creation/spec.md) | Events data model; **feeds** invites; future per-event graphs consume **R2/R3** |
 | [`campaign-branch-seeds`](../campaign-branch-seeds/spec.md) | Player **seeds** on `CampaignReader` nodes; steward **metabolize** must pass the same **B** graph validation as admin saves |
+| **Guest journey template** | [`docs/events/EVENT_INVITE_GUEST_JOURNEY_TEMPLATE.md`](../../../docs/events/EVENT_INVITE_GUEST_JOURNEY_TEMPLATE.md) — blessed `event_invite` JSON (R4); `scripts/apply-invite-template.ts` |
+
+---
+
+## Modular graph validation alignment (CMA / IR vs directed-graph core)
+
+**Policy:** One **conceptual** contract (R1); multiple **validators** that must not contradict on shared notions (defined targets, reachability). Full mechanical merge of IR/CMA into `validateDirectedGraph` is **non-goal v1**; this table is the integration contract.
+
+| Source | Module | Role vs `validateDirectedGraph` |
+|--------|--------|----------------------------------|
+| **Campaign `Passage[]`** | [`validateFullAdventurePassagesGraph`](../../../src/lib/story-graph/adventurePassagesGraph.ts) | **Calls** `validateDirectedGraph` after parsing `choices` → edges; blocks save on errors. |
+| **Event invite JSON** | [`parseEventInviteStory`](../../../src/lib/event-invite-story/schema.ts) | **Separate** closed-graph check (ids + `next`); same *idea* as dangling-edge detection; optional future adapter → `validateDirectedGraph` for lint only. |
+| **Twine IR** | [`validateIrStory`](../../../src/lib/twine-authoring-ir/validateIrStory.ts) | **Peer** — validates `next_node` targets and IR structure **before** Twee compile; does not import `validateDirectedGraph` today. |
+| **CMA `CmaStory`** | [`validateQuestGraph`](../../../src/lib/modular-cyoa-graph/validateQuestGraph.ts) | **Peer** — start, End nodes, choice arms, reachability; tuned for palette node kinds. **After** `cmaStoryToIrNodes`, IR stage uses `validateIrStory`. |
+
+**Future (UG-4.2):** If player-authored graphs persist as passages, run **`validateFullAdventurePassagesGraph`** (or shared adapter) before commit.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] Documented **artifact table** (this spec) is reflected in onboarding / runbook for admins (“which CYOA am I editing?”).
-- [ ] **Campaign passage** saves cannot leave **dangling `targetId`** without an explicit author warning or block (configurable).
-- [ ] Admin UI exposes **node list + target picker** for at least **initiation / campaign** adventures (reuse or extend `CampaignPassageEditModal` + admin passage create).
-- [ ] **Invite** stories have a **blessed template or generator** that passes `parseEventInviteStory` and covers the three guest outcomes.
-- [ ] **validateIrStory** / **validateQuestGraph** either call into or are documented as **peers** of the shared graph validator (no contradictory rules).
-- [ ] `npm run build` and `npm run check` pass after implementation phases.
+- [x] Documented **artifact table** (this spec) + **guest journey** runbook: [`docs/events/EVENT_INVITE_GUEST_JOURNEY_TEMPLATE.md`](../../../docs/events/EVENT_INVITE_GUEST_JOURNEY_TEMPLATE.md); admin CYOA = **Adventures** in Admin (`/admin/adventures`).
+- [x] **Campaign passage** saves **block** dangling **`targetId`** (`upsertCampaignPassage` + `validateFullAdventurePassagesGraph`).
+- [x] Admin UI: **node map** + **target datalist** + `linkFrom` on create passage (`CampaignPassageEditModal`, adventure detail).
+- [x] **Invite** blessed template: [`event-invite-guest-journey.template.json`](../../../src/lib/event-invite-story/templates/event-invite-guest-journey.template.json) + `parseEventInviteStory` test; three guest outcomes (R4).
+- [x] **validateIrStory** / **validateQuestGraph** documented as **peers** of the shared validator (§ Modular graph validation alignment above); no requirement to dedupe implementations in v1.
+- [x] **`GET /api/adventures/[slug]/[nodeId]?preview=1`** for admins + **`CampaignReader`** appends `preview=1` when `isAdmin` (DRAFT campaign play).
+- [ ] `npm run build` and `npm run check` pass after implementation phases (verify each release).
 
 ---
 

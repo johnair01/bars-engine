@@ -7,9 +7,16 @@ import { useSpatialRoomSession } from '@/lib/spatial-world/useSpatialRoomSession
 import { enterRoom, heartbeat } from '@/actions/room-presence'
 import { getIntentAgentsForRoom } from '@/actions/intent-agents'
 import { AnchorModal } from '@/components/world/AnchorModal'
+import type { SpokeState } from '@/actions/campaign-spoke-states'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
 import { MapAvatarGate } from '@/components/world/MapAvatarGate'
 import { DPadOverlay } from '@/components/world/DPadOverlay'
+import { NationRoomGateOverlay } from '@/components/world/NationRoomGateOverlay'
+import type { WorldRoomNavMeta } from '@/lib/world/nation-room-gate'
+import {
+  canAccessNationRoom,
+  formatNationKeyForDisplay,
+} from '@/lib/world/nation-room-gate'
 
 type RoomCanvasProps = {
   /** Canonical spatial bind from computeSpatialBindKey (server or client). */
@@ -26,13 +33,28 @@ type RoomCanvasProps = {
     tilemap: Record<string, { floor?: string; impassable?: boolean; object?: string }>
     anchors: AnchorData[]  // AnchorData includes config?: string | null
   }
-  allRooms: { id: string; name: string; slug: string }[]
+  allRooms: WorldRoomNavMeta[]
   instanceSlug: string
   spawnX: number
   spawnY: number
+  spokeSeedStates?: SpokeState[]
+  playerNationKey: string | null
+  /** Admin or server-only SKIP_NATION_GATE — see nation-room-gate.ts */
+  bypassNationGate: boolean
 }
 
-export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlug, spawnX, spawnY }: RoomCanvasProps) {
+export function RoomCanvas({
+  spatialBindKey,
+  player,
+  room,
+  allRooms,
+  instanceSlug,
+  spawnX,
+  spawnY,
+  spokeSeedStates,
+  playerNationKey,
+  bypassNationGate,
+}: RoomCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -43,14 +65,39 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
   const [modalKey, setModalKey] = useState(0)
   const [agents, setAgents] = useState<AgentData[]>([])
   const [selectedAgent, setSelectedAgent] = useState<AgentData | null>(null)
+  const [nationGateBlock, setNationGateBlock] = useState<{ nationDisplayName: string } | null>(null)
   const spriteReady = !!player.avatarConfig
 
   const posRef = useRef(playerPos)
   posRef.current = playerPos
 
+  const navigateToWorldRoom = useCallback(
+    (targetSlug: string) => {
+      const meta = allRooms.find((r) => r.slug === targetSlug)
+      if (meta?.roomType === 'nation_room' && meta.nationKey) {
+        if (!canAccessNationRoom(meta.nationKey, playerNationKey, bypassNationGate)) {
+          setNationGateBlock({ nationDisplayName: formatNationKeyForDisplay(meta.nationKey) })
+          return
+        }
+      }
+      setNationGateBlock(null)
+      router.push(`/world/${instanceSlug}/${targetSlug}`)
+    },
+    [allRooms, playerNationKey, bypassNationGate, instanceSlug, router]
+  )
+
   // Stable ref so the playerPos effect never needs to expand its deps
   const portalNavigateRef = useRef<(anchor: AnchorData) => void>(() => {})
   portalNavigateRef.current = (anchor: AnchorData) => {
+    // Spoke portals: same affordance as stepping onto the tile — open chooser modal.
+    // (Do not router.push here: a pointerdown on the Pixi anchor was bypassing the modal
+    // and felt like "kicked back" or broken CTAs — see SCL / world lobby parity.)
+    if (anchor.anchorType === 'spoke_portal') {
+      setModalAnchor(anchor)
+      setModalKey((k) => k + 1)
+      return
+    }
+
     // Campaign portal — routes to /campaign/hub (or custom href via config)
     if (anchor.anchorType === 'campaign_portal') {
       let href = '/campaign/hub'
@@ -63,20 +110,48 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
       router.push(href)
       return
     }
-    // Room-to-room portal
-    let target = allRooms.find(r => r.id === anchor.linkedId)
-    if (!target && anchor.config) {
-      try {
-        const cfg = JSON.parse(anchor.config) as { targetSlug?: string }
-        if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
-      } catch { /* ignore */ }
+
+    if (anchor.anchorType === 'portal') {
+      if (anchor.config) {
+        try {
+          const cfg = JSON.parse(anchor.config) as {
+            externalPath?: string
+            targetInstanceSlug?: string
+            targetRoomSlug?: string
+            targetSlug?: string
+          }
+          if (typeof cfg.externalPath === 'string' && cfg.externalPath.startsWith('/')) {
+            router.push(cfg.externalPath)
+            return
+          }
+          if (cfg.targetInstanceSlug && cfg.targetRoomSlug) {
+            router.push(`/world/${cfg.targetInstanceSlug}/${cfg.targetRoomSlug}`)
+            return
+          }
+          if (cfg.targetSlug) {
+            const bySlug = allRooms.find(r => r.slug === cfg.targetSlug)
+            if (bySlug) {
+              navigateToWorldRoom(bySlug.slug)
+              return
+            }
+          }
+        } catch { /* ignore */ }
+      }
+      let target = allRooms.find(r => r.id === anchor.linkedId)
+      if (!target && anchor.config) {
+        try {
+          const cfg = JSON.parse(anchor.config) as { targetSlug?: string }
+          if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
+        } catch { /* ignore */ }
+      }
+      if (!target && anchor.label?.startsWith('To ')) {
+        const labelName = anchor.label.slice(3).toLowerCase()
+        target = allRooms.find(
+          r => r.name.toLowerCase() === labelName || r.slug === labelName.replace(/\s+/g, '-')
+        )
+      }
+      if (target) navigateToWorldRoom(target.slug)
     }
-    // Fallback: match label "To <Room Name>" against room names
-    if (!target && anchor.label?.startsWith('To ')) {
-      const labelName = anchor.label.slice(3).toLowerCase()
-      target = allRooms.find(r => r.name.toLowerCase() === labelName || r.slug === labelName.replace(/\s+/g, '-'))
-    }
-    if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
   }
   const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -152,14 +227,24 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
     const anchor = rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null
     setProximateAnchor(anchor)
 
-    // Step onto a portal tile → navigate immediately
+    // Step onto a portal tile → navigate immediately (spoke_portal shows modal instead)
     if (
       anchor &&
-      (anchor.anchorType === 'portal' || anchor.anchorType === 'campaign_portal') &&
+      (anchor.anchorType === 'portal' ||
+        anchor.anchorType === 'campaign_portal') &&
       anchor.tileX === playerPos.x &&
       anchor.tileY === playerPos.y
     ) {
       portalNavigateRef.current(anchor)
+    }
+    if (
+      anchor &&
+      anchor.anchorType === 'spoke_portal' &&
+      anchor.tileX === playerPos.x &&
+      anchor.tileY === playerPos.y
+    ) {
+      setModalAnchor(anchor)
+      setModalKey(k => k + 1)
     }
   }, [playerPos, lastMoveDirection])
 
@@ -219,28 +304,16 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
 
   const handleAnchorClick = useCallback(() => {
     if (!proximateAnchor) return
-    if (proximateAnchor.anchorType === 'campaign_portal') {
+    if (
+      proximateAnchor.anchorType === 'portal' ||
+      proximateAnchor.anchorType === 'campaign_portal'
+    ) {
       portalNavigateRef.current(proximateAnchor)
-      return
-    }
-    if (proximateAnchor.anchorType === 'portal') {
-      let target = allRooms.find(r => r.id === proximateAnchor.linkedId)
-      if (!target && proximateAnchor.config) {
-        try {
-          const cfg = JSON.parse(proximateAnchor.config) as { targetSlug?: string }
-          if (cfg.targetSlug) target = allRooms.find(r => r.slug === cfg.targetSlug)
-        } catch { /* ignore */ }
-      }
-      if (!target && proximateAnchor.label?.startsWith('To ')) {
-        const labelName = proximateAnchor.label.slice(3).toLowerCase()
-        target = allRooms.find(r => r.name.toLowerCase() === labelName || r.slug === labelName.replace(/\s+/g, '-'))
-      }
-      if (target) router.push(`/world/${instanceSlug}/${target.slug}`)
       return
     }
     setModalAnchor(proximateAnchor)
     setModalKey(k => k + 1)
-  }, [proximateAnchor, allRooms, instanceSlug, router])
+  }, [proximateAnchor])
 
   const promptPixel = proximateAnchor && rendererRef.current
     ? (() => {
@@ -274,6 +347,21 @@ export function RoomCanvas({ spatialBindKey, player, room, allRooms, instanceSlu
           anchor={modalAnchor}
           playerId={player.id}
           onClose={() => setModalAnchor(null)}
+          spokeSeedStates={spokeSeedStates}
+          worldContext={{
+            instanceSlug,
+            allRoomsNav: allRooms,
+            playerNationKey,
+            bypassNationGate,
+          }}
+        />
+      )}
+
+      {nationGateBlock && (
+        <NationRoomGateOverlay
+          instanceSlug={instanceSlug}
+          nationDisplayName={nationGateBlock.nationDisplayName}
+          onDismiss={() => setNationGateBlock(null)}
         />
       )}
 

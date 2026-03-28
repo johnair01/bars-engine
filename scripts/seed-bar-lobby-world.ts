@@ -18,6 +18,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { resolveBbCampaignClearingWorldPath } from '../src/lib/spatial-world/bb-campaign-clearing-path'
 
 const prisma = new PrismaClient()
 
@@ -87,17 +88,18 @@ const NATION_ROOMS = [
   },
 ]
 
-const TRADING_FLOOR = {
-  name: 'Card Club',
-  slug: 'card-club',
-  roomType: 'trading_floor',
-  nationKey: null,
-  backgroundUrl: '/lobby-art/card-club.png',
-  sortOrder: 4,
-  anchors: [
-    { anchorType: 'campaign_portal',  tileX: 7,  tileY: 1,  label: 'Bruised Banana Campaign', config: JSON.stringify({ campaignRef: 'bruised-banana' }) },
+function cardClubAnchors(campaignClearingHref: string) {
+  return [
+    {
+      anchorType: 'campaign_portal',
+      tileX: 7,
+      tileY: 1,
+      label: 'Bruised Banana Campaign',
+      config: JSON.stringify({ href: campaignClearingHref }),
+    },
     { anchorType: 'librarian_npc',    tileX: 7,  tileY: 2,  label: 'Regent (Librarian)' },
-    { anchorType: 'giacomo_npc',      tileX: 14, tileY: 9,  label: 'Giacomo' },
+    // Interior tile — (14,9) is map corner (impassable); no walkable neighbor within range 1 for Interact.
+    { anchorType: 'giacomo_npc',      tileX: 12, tileY: 3,  label: 'Giacomo' },
     { anchorType: 'bar_table',        tileX: 7,  tileY: 7,  label: 'Cross-Nation BAR Pool' },
     { anchorType: 'nation_embassy',   tileX: 1,  tileY: 5,  label: 'Pyrakanth Embassy',  config: JSON.stringify({ nationKey: 'pyrakanth' }) },
     { anchorType: 'nation_embassy',   tileX: 3,  tileY: 5,  label: 'Lamenth Embassy',    config: JSON.stringify({ nationKey: 'lamenth' }) },
@@ -107,7 +109,16 @@ const TRADING_FLOOR = {
     { anchorType: 'portal',           tileX: 4,  tileY: 9,  label: 'To Lamenth',         config: JSON.stringify({ targetSlug: 'lamenth-tide-hall' }) },
     { anchorType: 'portal',           tileX: 10, tileY: 9,  label: 'To Virelune',        config: JSON.stringify({ targetSlug: 'virelune-grove' }) },
     { anchorType: 'portal',           tileX: 13, tileY: 9,  label: 'To Argyra',          config: JSON.stringify({ targetSlug: 'argyra-crystal-chamber' }) },
-  ],
+  ]
+}
+
+const TRADING_FLOOR = {
+  name: 'Card Club',
+  slug: 'card-club',
+  roomType: 'trading_floor',
+  nationKey: null,
+  backgroundUrl: '/lobby-art/card-club.png',
+  sortOrder: 4,
 }
 
 async function main() {
@@ -161,6 +172,7 @@ async function main() {
     console.log(`  Created room: ${created.slug} (${created.id})`)
   }
 
+  const bbClearingHref = await resolveBbCampaignClearingWorldPath(prisma)
   const floor = await prisma.mapRoom.create({
     data: {
       mapId:         map.id,
@@ -172,7 +184,7 @@ async function main() {
       sortOrder:     TRADING_FLOOR.sortOrder,
       tilemap:       buildTilemap(15, 10),
       anchors: {
-        create: TRADING_FLOOR.anchors.map(a => ({
+        create: cardClubAnchors(bbClearingHref).map(a => ({
           anchorType: a.anchorType,
           tileX:      a.tileX,
           tileY:      a.tileY,
@@ -182,7 +194,7 @@ async function main() {
       },
     },
   })
-  console.log(`  Created room: ${floor.slug} (${floor.id})`)
+  console.log(`  Created room: ${floor.slug} (${floor.id}) — campaign_portal → ${bbClearingHref}`)
 
   // Upsert a lobby Instance so /world routing can find it
   const instance = await prisma.instance.upsert({

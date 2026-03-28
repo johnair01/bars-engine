@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { getCurrentPlayer } from '@/lib/auth'
 import { isCertificationQuestId } from '@/lib/certification-quest'
+import { persistPlayerFeedbackToBacklog } from '@/lib/feedback/persist-player-feedback-to-backlog'
 
 /**
  * @route POST /api/feedback/cert
@@ -48,24 +47,19 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    try {
-        const feedbackDir = path.join(process.cwd(), '.feedback')
-        await fs.mkdir(feedbackDir, { recursive: true })
+    const persisted = await persistPlayerFeedbackToBacklog({
+        source: 'certification',
+        playerId: player.id,
+        playerName: player.name,
+        questId,
+        passageName,
+        feedback: trimmed,
+    })
 
-        const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
-        const entry = {
-            timestamp: new Date().toISOString(),
-            playerId: player.id,
-            playerName: player.name,
-            questId,
-            passageName,
-            feedback: trimmed
-        }
-
-        await fs.appendFile(feedbackFile, JSON.stringify(entry) + '\n')
-        return NextResponse.json({ success: true })
-    } catch (error) {
-        console.error('Failed to log certification feedback:', error)
-        return NextResponse.json({ error: 'Failed to write feedback' }, { status: 500 })
+    if ('error' in persisted) {
+        console.error('Failed to log certification feedback:', persisted.error)
+        return NextResponse.json({ error: 'Failed to save feedback' }, { status: 500 })
     }
+
+    return NextResponse.json({ success: true, backlogItemId: persisted.backlogItemId })
 }

@@ -4,7 +4,7 @@
 
 Allow **admins** and **campaign instance owners** (same rules as link editing) to update **headline** (`title`), **subtitle** (`description`), and **CYOA JSON** (`storyContent` on `CustomBar`) from the public invite URL and from **Hand → Vault**, without seeds-only workflows.
 
-**See also:** [campaign-onboarding-cyoa](../campaign-onboarding-cyoa/spec.md) — unified ontology (campaign + invite onboarding CYOA) and **LEGO / prompt-driven builder**; invite `storyContent` is **Phase B–D**; campaign CYOA authoring **Phase E**. This spec covers **where** saves happen until the builder ships.
+**See also:** [campaign-onboarding-cyoa](../campaign-onboarding-cyoa/spec.md) — unified ontology (campaign + invite onboarding CYOA) and **LEGO / prompt-driven builder**; invite `storyContent` ships **Visual builder + Advanced JSON** in `EventInviteBarContentEditor` (**Phase B–D**); campaign CYOA authoring **Phase E**. This spec covers **where** saves happen and **who** may save.
 
 **Out of scope (v1):** Custom labels for "RSVP on Partiful →" / "Begin initiation →" (remain fixed in `EventInvitePartyActions`).
 
@@ -15,7 +15,7 @@ Allow **admins** and **campaign instance owners** (same rules as link editing) t
 
 ## Authorization
 
-Reuse [`playerCanEditEventInviteBar`](../../../src/lib/event-invite-bar-permissions.ts) (**admin** or **owner** on matching `campaignRef`; not steward-only or creator-only).
+Reuse [`playerCanEditEventInviteBar`](../../../src/lib/event-invite-bar-permissions.ts) (**admin** or **owner / steward** on instance matching `campaignRef`; not creator-only without membership).
 
 ## Surfaces
 

@@ -10,7 +10,8 @@ function isAdminPlayer(roles: { role: { key: string } }[] | undefined): boolean 
 
 /**
  * Returns true if the player may update this invitation BAR.
- * Admins may edit any active event_invite BAR; others must be **owner** on a matching campaign instance (not steward/creator-only).
+ * Admins: any active event_invite BAR.
+ * Others: **owner** or **steward** on the instance matching `bar.campaignRef` (aligned with Vault invite list + donation CTA).
  */
 export async function playerCanEditEventInviteBar(
   playerId: string,
@@ -35,7 +36,7 @@ export async function playerCanEditEventInviteBar(
   const membership = await db.instanceMembership.findFirst({
     where: {
       playerId,
-      roleKey: 'owner',
+      roleKey: { in: ['owner', 'steward'] },
       instance: { campaignRef: ref },
     },
     select: { id: true },

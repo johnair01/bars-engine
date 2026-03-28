@@ -33,11 +33,57 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     const playerId = player.id
     const isAdmin = !!player.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-    const [data, acceptedInvites, eventInviteBars] = await Promise.all([
+    const [coreResult, invitesResult, eventBarsResult] = await Promise.allSettled([
         loadVaultCoreData(playerId, 'lobby'),
         loadAcceptedInvitesForVault(playerId),
         loadEventInviteBarsForStewards(playerId, { includeAllForAdmin: isAdmin }),
     ])
+
+    if (coreResult.status === 'rejected') {
+        const err = coreResult.reason
+        console.error('[hand] loadVaultCoreData failed', err)
+        const msg = err instanceof Error ? err.message : String(err)
+        return (
+            <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-lg mx-auto space-y-6 flex flex-col justify-center">
+                <h1 className="text-2xl font-bold text-white">Vault couldn&apos;t load</h1>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                    The server failed while loading vault data (often DB connectivity, a pending migration, or Prisma
+                    Accelerate vs direct DB). Check the terminal where <code className="text-zinc-500">next dev</code>{' '}
+                    is running for the full stack trace.
+                </p>
+                {process.env.NODE_ENV === 'development' ? (
+                    <pre className="text-xs text-red-300/90 whitespace-pre-wrap break-words bg-zinc-950 border border-zinc-800 rounded-lg p-3 overflow-x-auto">
+                        {msg}
+                    </pre>
+                ) : null}
+                <div className="flex flex-wrap gap-3">
+                    <Link
+                        href="/"
+                        className="rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-900/40"
+                    >
+                        Home
+                    </Link>
+                    <Link
+                        href="/hand"
+                        className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/80"
+                    >
+                        Retry
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+    const data = coreResult.value
+
+    const acceptedInvites = invitesResult.status === 'fulfilled' ? invitesResult.value : []
+    if (invitesResult.status === 'rejected') {
+        console.error('[hand] loadAcceptedInvitesForVault failed', invitesResult.reason)
+    }
+
+    const eventInviteBars = eventBarsResult.status === 'fulfilled' ? eventBarsResult.value : []
+    if (eventBarsResult.status === 'rejected') {
+        console.error('[hand] loadEventInviteBarsForStewards failed', eventBarsResult.reason)
+    }
 
     const {
         chargeCount,

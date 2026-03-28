@@ -10,6 +10,7 @@ import {
   isBruisedBananaHouseInstance,
   mergeBruisedBananaHouseGoalData,
 } from '@/lib/bruised-banana-house-state'
+import { parseCampaignDeckTopology } from '@/lib/campaign-deck-topology'
 
 function toCents(raw: FormDataEntryValue | null): number | null {
   if (raw == null) return null
@@ -169,6 +170,10 @@ export async function upsertInstance(formData: FormData): Promise<void> {
         ? allyshipDomain
         : null
 
+    const campaignDeckTopology = parseCampaignDeckTopology(
+      (formData.get('campaignDeckTopology') as string | null)?.trim(),
+    )
+
     const moveIdsRaw = formData.getAll('moveIds')
     const moveIds = Array.isArray(moveIdsRaw)
       ? (moveIdsRaw as string[]).filter((id) => typeof id === 'string' && id.trim().length > 0)
@@ -223,6 +228,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          campaignDeckTopology,
           moveIds: moveIdsJson,
           ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
@@ -251,6 +257,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          campaignDeckTopology,
           moveIds: moveIdsJson,
           ...hierarchyData,
           ...(currentAmountCents == null ? {} : { currentAmountCents }),
@@ -276,6 +283,7 @@ export async function upsertInstance(formData: FormData): Promise<void> {
           goalAmountCents,
           kotterStage,
           allyshipDomain: validAllyshipDomain,
+          campaignDeckTopology,
           moveIds: moveIdsJson,
           currentAmountCents: currentAmountCents ?? 0,
           ...hierarchyData,

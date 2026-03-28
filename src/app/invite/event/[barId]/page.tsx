@@ -78,6 +78,8 @@ export default async function PublicEventInvitePage({ params, searchParams }: Pr
     const story = parseEventInviteStory(bar.storyContent)
     if (!story) notFound()
 
+    const persistAllyshipIntake = story.id.startsWith('allyship-intake')
+
     const [player, intakeAdventure] = await Promise.all([
         getCurrentPlayer(),
         bar.eventSlug
@@ -129,6 +131,9 @@ export default async function PublicEventInvitePage({ params, searchParams }: Pr
                     barDescription={bar.description}
                     story={story}
                     endingCtas={endingCtas}
+                    barId={bar.id}
+                    persistAllyshipIntake={persistAllyshipIntake}
+                    senderNote={senderNote}
                 />
             </div>
         </div>

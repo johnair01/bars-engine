@@ -1,9 +1,11 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
+import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { CampaignReader } from './components/CampaignReader'
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
+import { playerCanEditCampaignAdventure } from '@/lib/campaign-passage-permissions'
 import { parseCampaignRef } from '@/lib/campaign-subcampaigns'
 import fs from 'fs'
 import path from 'path'
@@ -119,15 +121,26 @@ export default async function CampaignPage(props: {
         }
     }
 
+    const canEditPassages =
+        player && adventureSlug
+            ? await playerCanEditCampaignAdventure(
+                  player.id,
+                  player.roles?.map((r: { role: { key: string } }) => ({ role: r.role })) ?? [],
+                  adventureSlug
+              )
+            : false
+
     return (
         <div className="min-h-screen bg-black text-white p-4 sm:p-8 flex flex-col items-center font-sans tracking-tight">
-            <div className="w-full max-w-2xl flex justify-end mb-4">
-                <Link
-                    href="/event"
-                    className="text-sm text-zinc-500 hover:text-green-400 transition-colors"
-                >
-                    Support the Residency →
-                </Link>
+            <div className="w-full max-w-2xl flex flex-wrap justify-end gap-2 mb-4">
+                <CampaignOutlineNavButton href={`/campaign/hub?ref=${encodeURIComponent(rawRef)}`}>
+                    Portals
+                </CampaignOutlineNavButton>
+                <CampaignOutlineNavButton href={`/campaign/board?ref=${encodeURIComponent(rawRef)}`}>
+                    Featured field
+                </CampaignOutlineNavButton>
+                <CampaignDonateCta campaignRef={campaignRef} />
+                <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
             </div>
             <div className="flex-1 w-full max-w-2xl flex items-center justify-center">
                 {/* We pass a dummy initial node, but CampaignReader will immediately fetch it based on id */}
@@ -136,6 +149,7 @@ export default async function CampaignPage(props: {
                     campaignRef={rawRef}
                     adventureSlug={adventureSlug}
                     isAdmin={isAdmin}
+                    canEditPassages={canEditPassages}
                 />
             </div>
         </div>

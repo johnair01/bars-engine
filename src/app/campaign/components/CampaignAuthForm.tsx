@@ -1,8 +1,9 @@
 'use client'
 
-import { useActionState, useState, useEffect } from 'react'
+import { useActionState, useState, useEffect, useMemo } from 'react'
 import { createCampaignPlayer, loginWithCampaignState } from '../actions/campaign'
 import { useRouter } from 'next/navigation'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 
 interface CampaignAuthFormProps {
     campaignState: Record<string, any>
@@ -14,6 +15,10 @@ function hasShareToken(state: Record<string, unknown>): boolean {
 }
 
 export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
+    const donateCampaignRef = useMemo(() => {
+        const r = campaignState?.ref
+        return typeof r === 'string' && r.trim() ? r.trim() : undefined
+    }, [campaignState])
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     /** Shared BAR flows should land on login first—recipient likely already has an account. */
@@ -51,6 +56,9 @@ export function CampaignAuthForm({ campaignState }: CampaignAuthFormProps) {
                         ? 'Create your resonance signature to lock in your path and enter the Conclave.'
                         : 'Log in to apply your campaign choices and unlock quests.'}
                 </p>
+                <div className="flex flex-wrap justify-center gap-2 mt-5">
+                    <CampaignDonateCta campaignRef={donateCampaignRef} />
+                </div>
             </div>
 
             <form action={mode === 'signup' ? signupAction : loginAction} className="space-y-4">

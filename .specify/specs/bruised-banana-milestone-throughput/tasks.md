@@ -2,6 +2,15 @@
 
 Spec: [.specify/specs/bruised-banana-milestone-throughput/spec.md](./spec.md) · Plan: [plan.md](./plan.md)
 
+## North star loop (v1) — contract + QA
+
+Aligned with [spec.md § North star loop](./spec.md#north-star-loop-v1-product-contract) and [plan.md § North star path](./plan.md#north-star-path-traceability).
+
+- [x] **BBMT-NS.0** — Spec + plan: North star definition, loop table, non-goals, verification quest, traceability table.
+- [ ] **BBMT-NS.1** — Keep **plan.md** traceability table in sync when `computeGuidedActions` priority or hrefs change (`src/lib/bruised-banana-milestone/guided-actions.ts`).
+- [ ] **BBMT-NS.2** — Run the **verification quest** (spec § North star); record outcome (pass / gap list) in PR description, `docs/BRUISED_BANANA_PROGRESS.md`, or a single backlog row per gap.
+- [ ] **BBMT-NS.3** — **Gap sweep:** If no step in the quest produces a **honest** collective signal (fundraiser line, board participation flip, onboarding promotion, or persisted hub/spoke state), add **one** tracked follow-up (task or BACKLOG) for the missing wiring — avoid scope creep inside BBMT without a new spec slice.
+
 ## Phase 1 — Milestone snapshot + guided-action rules
 
 - [x] **BBMT-1.1** Add `src/lib/bruised-banana-milestone/` (or `src/lib/campaign-milestone/`) with types: `MilestoneSnapshot`, `GuidedAction`.
@@ -31,4 +40,5 @@ Spec: [.specify/specs/bruised-banana-milestone-throughput/spec.md](./spec.md) ·
 ## Verification
 
 - [x] `npm run test:bb-milestone`; eslint on touched files clean; run full `npm run check` / `npm run build` before merge.
-- [ ] Playtest checklist in spec §Acceptance
+- [ ] **North star verification quest** — [spec § North star loop](./spec.md#north-star-loop-v1-product-contract) (same as **BBMT-NS.2**); check off when done.
+- [ ] Subjective playtest — spec § Acceptance (release gate): player names one action that felt like it moved the residency.

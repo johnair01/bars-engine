@@ -13,6 +13,7 @@ import { Avatar } from '@/components/Avatar'
 import { isCertificationQuestId } from '@/lib/certification-quest'
 import { CopyableProse } from '@/components/ui/CopyableProse'
 import { CopyTextButton } from '@/components/ui/CopyTextButton'
+import { buildOnboardingUrl, isSafeAppPath } from '@/lib/safe-return-to'
 
 interface Props {
     storyId: string
@@ -25,6 +26,8 @@ interface Props {
     quest?: any
     threadId?: string
     isRitual?: boolean
+    /** Same-origin path to land on after onboarding when Twine step completes */
+    postOnboardingReturnTo?: string
     feedbackSourceStep?: string
     player?: { name: string; avatarConfig?: string | null; pronouns?: string | null }
     avatarPreviewConfig?: string | null
@@ -42,6 +45,7 @@ export function PassageRenderer({
     quest,
     threadId,
     isRitual,
+    postOnboardingReturnTo,
     feedbackSourceStep,
     player,
     avatarPreviewConfig,
@@ -59,6 +63,14 @@ export function PassageRenderer({
     const [overridePassage, setOverridePassage] = useState<ParsedPassage | null>(null)
     const [overrideVisited, setOverrideVisited] = useState<string[] | null>(null)
     const router = useRouter()
+
+    function postTwineDestination(): string {
+        if (postOnboardingReturnTo && isSafeAppPath(postOnboardingReturnTo)) {
+            return buildOnboardingUrl({ returnTo: postOnboardingReturnTo, ritual: !!isRitual })
+        }
+        if (isRitual) return buildOnboardingUrl({ ritual: true })
+        return '/'
+    }
 
     const displayPassage = overridePassage ?? passage
     const isFeedbackPassage = displayPassage.name === 'FEEDBACK' || (displayPassage.tags && displayPassage.tags.includes('feedback'))
@@ -129,8 +141,7 @@ export function PassageRenderer({
         // Do not call completeQuest again.
         if (!hasActualInputs) {
             setIsSuccess(true)
-            const ritualParam = isRitual ? '?ritual=true' : ''
-            router.push(isRitual ? `/conclave/onboarding${ritualParam}` : '/')
+            router.push(postTwineDestination())
             return
         }
 
@@ -159,8 +170,7 @@ export function PassageRenderer({
                 // AUTO-ADVANCE: Instead of just refreshing, push to the controller
                 // to evaluate the next step and transition immediately.
                 if (questId) {
-                    const ritualParam = isRitual ? '?ritual=true' : ''
-                    router.push(isRitual ? `/conclave/onboarding${ritualParam}` : '/')
+                    router.push(postTwineDestination())
                 } else {
                     router.refresh()
                 }
@@ -169,8 +179,7 @@ export function PassageRenderer({
     }
 
     function handleContinue() {
-        const ritualParam = isRitual ? '?ritual=true' : ''
-        router.push(isRitual ? `/conclave/onboarding${ritualParam}` : '/')
+        router.push(postTwineDestination())
     }
 
     function handleChoice(targetPassageName: string) {
@@ -191,10 +200,8 @@ export function PassageRenderer({
                     setTimeout(() => {
                         if (result.redirect) {
                             router.push(result.redirect)
-                        } else if (isRitual) {
-                            router.push('/conclave/onboarding?ritual=true')
                         } else {
-                            router.push('/')
+                            router.push(postTwineDestination())
                         }
                     }, 1500)
                 } else if (result.redirect) {

@@ -13,9 +13,9 @@
 ## Decisions → schema
 
 - [x] Persist hub draw on `Instance.campaignHubState` (v1 JSON: 8 spokes × hexagram + changing lines + face); invalidate when `kotterStage` changes — migration `20260318140000_add_instance_campaign_hub_state`
-- [ ] Campaign **deck topology** enum: `BAR52` | `CAMPAIGN64` (names TBD) + creator UX
+- [x] Campaign **deck topology** enum + creator UX — Prisma `CampaignDeckTopology` (`CAMPAIGN_DECK_52` | `CAMPAIGN_DECK_64`) on `Instance`; admin Instances create/edit; `src/lib/campaign-deck-topology.ts` (follow-up: bound-slot persistence + template gates)
 - [x] **Alchemy trace** storage decision (JSON vs table) + privacy defaults — [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) § Alchemy trace (v1 JSON on `storyProgress.state`)
-- [x] **CYOA persistence:** choose **session-only (A)** vs **checkpoint + revalidate (B)** vs **snapshot-gated resume (C)**; document in CYOA runner — [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) § CYOA progress persistence (portal = B-lite; target B)
+- [x] **CYOA persistence:** choose **session-only (A)** vs **checkpoint + revalidate (B)** vs **snapshot-gated resume (C)**; document in CYOA runner — [CHS_RUNTIME_DECISIONS.md](./CHS_RUNTIME_DECISIONS.md) § CYOA progress persistence (portal = **(B) partial** — Room_* schools revalidation on GET node; more rules via same hook)
 
 ## CYOA inventory (critical)
 
@@ -27,6 +27,12 @@
 
 - [ ] Milestone **interview** flow spec (mirror 321 patterns); persist milestones on campaign
 - [ ] Period advance + **single cast** pipeline; assign spoke order; audit log
+
+## Navigation — Conclave → campaign (spec: [§ Conclave as legacy campaign entry](./spec.md#conclave-as-legacy-campaign-entry))
+
+- [ ] **Slice 1 — redirects:** Implement redirect table rows for `/conclave`, `/conclave/wizard`, and (with query preservation spec) `/conclave/guided`; fix unauth paths so **no redirect loops** when `/conclave` root moves; verify **first slice success criterion** in spec.
+- [ ] **Slice 2 — CTAs:** Replace or alias in-app links that point to `/conclave/guided` / `/conclave/onboarding` with **`/login?callbackUrl=…`**, **`/campaign/hub?ref=…`**, or dashboard per [dashboard-orientation-flow](../dashboard-orientation-flow/spec.md) (inventory in `grep` / runbook).
+- [ ] **Slice 3 (optional):** Re-home **`/conclave/space`** under campaign/world URLs; document spatial lobby ownership in spec.
 
 ## Runtime
 
@@ -52,5 +58,5 @@ Source of truth for steps: [TEST_PLAN_PARTY_AND_INTAKE.md](./TEST_PLAN_PARTY_AND
 
 ## Verification
 
-- [ ] `npm run check` (repo-wide; fix CHS-touched paths on failure)
+- [x] `npm run check` (repo-wide; fix CHS-touched paths on failure) — 2026-03-27: `npm run check` + `npm run build` pass; CYOA `filter-choices` + `hub-journey-state` tsx tests pass
 - [x] Playtest script: full vault → attempt spoke → expect gate — [PLAYTEST_VAULT_GATE.md](./PLAYTEST_VAULT_GATE.md)

@@ -123,7 +123,7 @@ export function CampaignInviteBarSendCard({
       {/* Steward tools — collapsed by default */}
       <details className="group">
         <summary className="cursor-pointer text-[10px] uppercase tracking-widest text-zinc-600 hover:text-zinc-400 transition-colors list-none [&::-webkit-details-marker]:hidden select-none">
-          Edit content (steward) ↓
+          Edit content (owner, steward, or admin) ↓
         </summary>
         <div className="mt-3 pt-3 border-t border-zinc-800/60 space-y-3">
           <EventInviteBarContentEditor

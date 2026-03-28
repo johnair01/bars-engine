@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getCampaignPassageForEdit, listCampaignPassageNodeIds, upsertCampaignPassage } from '@/actions/campaign-passage'
+import { CampaignBranchChoicesEditor } from '@/components/onboarding-cyoa-builder/CampaignBranchChoicesEditor'
 
 interface CampaignChoice {
   text: string
@@ -151,56 +152,13 @@ export function CampaignPassageEditModal({
                 />
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs uppercase tracking-widest text-zinc-500 font-bold">
-                    Choices (branching)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addChoice}
-                    className="text-xs text-purple-400 hover:text-purple-300 font-medium"
-                  >
-                    + Add choice
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {choices.map((choice, i) => (
-                    <div key={i} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={choice.text}
-                        onChange={(e) => updateChoice(i, 'text', e.target.value)}
-                        placeholder="Choice text"
-                        className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100"
-                      />
-                      <input
-                        type="text"
-                        value={choice.targetId}
-                        onChange={(e) => updateChoice(i, 'targetId', e.target.value)}
-                        list={datalistId}
-                        placeholder="target node id"
-                        className="w-44 min-w-0 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono"
-                        autoComplete="off"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeChoice(i)}
-                        disabled={choices.length <= 1}
-                        className="text-zinc-500 hover:text-red-400 text-sm disabled:opacity-50"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-zinc-500 mt-1">
-                  Target = next passage&apos;s <span className="font-mono text-zinc-400">nodeId</span>. Use the suggestions
-                  (existing passages + <span className="font-mono">signup</span> /{' '}
-                  <span className="font-mono">Game_Login</span>) or type a new id — you must create that passage or save will
-                  fail validation.
-                </p>
-              </div>
+              <CampaignBranchChoicesEditor
+                choices={choices}
+                datalistId={datalistId}
+                onAdd={addChoice}
+                onRemove={removeChoice}
+                onUpdate={updateChoice}
+              />
 
               <div className="flex gap-2 pt-2">
                 <button

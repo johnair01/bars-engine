@@ -12,20 +12,20 @@
 - [x] **UG-2.1** — Adventure detail: **Node map** table (nodeId, #choices, broken targets).
 - [x] **UG-2.2** — Choice editor: **target suggestions** (`datalist`) from `listCampaignPassageNodeIds` (+ `signup` / `Game_Login`).
 - [x] **UG-2.3** — Implement or finish **`linkFrom`** on `createPassage` per [admin-cyoa-preview-draft-wizard](../admin-cyoa-preview-draft-wizard/spec.md).
-- [ ] **UG-2.4** — Optional: `?preview=1` on adventures API for DRAFT play (same spec).
+- [x] **UG-2.4** — `?preview=1` on adventures API for admins + `CampaignReader` passes `preview=1` when `isAdmin` (DRAFT play).
 
 ## Phase 3 — Invite content
 
-- [ ] **UG-3.1** — Author `eventInviteGuestJourneyTemplate` (JSON) covering: signup path, pre-prod, learn app; validate with `parseEventInviteStory`.
-- [ ] **UG-3.2** — Document in `docs/events/` how to apply template to a BAR (or script `apply-invite-template.ts`).
-- [ ] **UG-3.3** — Optional: AI assist prompt constrained to schema (reuse narrative-quality skill patterns).
+- [x] **UG-3.1** — `event-invite-guest-journey.template.json` + `templates/guest-journey.ts`; `parseEventInviteStory` + `guest-journey-template.test.ts`.
+- [x] **UG-3.2** — `docs/events/EVENT_INVITE_GUEST_JOURNEY_TEMPLATE.md` + `scripts/apply-invite-template.ts`.
+- [ ] **UG-3.3** — **Deferred** → [BACKLOG **UGAF** (1.50.1)](../../../.specify/backlog/BACKLOG.md): optional AI assist for `event_invite` JSON (schema-constrained; narrative-quality patterns).
 
 ## Phase 4 — Modular merge
 
-- [ ] **UG-4.1** — Doc only: map `CmaStory` → `validateQuestGraph` ↔ shared graph validator (table in spec.md).
-- [ ] **UG-4.2** — If adding player graph save: run shared validator before persist; reuse admin graph table component where possible.
+- [x] **UG-4.1** — Spec § **Modular graph validation alignment** — `CmaStory` / `validateQuestGraph` / `validateIrStory` vs `validateDirectedGraph`.
+- [ ] **UG-4.2** — **Deferred** → [BACKLOG **UGAF** (1.50.1)](../../../.specify/backlog/BACKLOG.md): on player/steward graph → `Passage` persist, run `validateFullAdventurePassagesGraph` + reuse admin graph table where possible.
 
 ## Verification
 
-- [ ] **UG-V.1** — `npm run check` after each phase.
+- [x] **UG-V.1** — `npm run check` after each phase (last run: green).
 - [ ] **UG-V.2** — Manual: add choice with bogus `targetId` → author-time error; fix → `CampaignReader` navigates without “Could not load this step.”
