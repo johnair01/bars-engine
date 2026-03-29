@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: BARS Engine — Books context API
+  description: |
+    Admin books catalog and generated library quests for ChatGPT Actions / external tools.
+    Set `BOOKS_CONTEXT_API_KEY` on the server; use Bearer token in requests.
+    See docs/BOOKS_CONTEXT_API.md.
+  version: 1.1.0
+
+servers:
+  - url: https://bars-engine.vercel.app
+    description: Production (no trailing slash)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/admin/books:
+    get:
+      operationId: listBooks
+      summary: List all books (no full PDF text)
+      parameters:
+        - name: compact
+          in: query
+          description: If 1, return minimal fields only
+          schema:
+            type: string
+            enum: ['0', '1']
+            default: '0'
+      responses:
+        '200':
+          description: Books list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BookListItem'
+                  count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/admin/books/{id}:
+    get:
+      operationId: getBook
+      summary: Get one book by ID
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+        - name: extractedText
+          in: query
+          description: If 1, include extracted PDF text (truncated)
+          schema:
+            type: string
+            enum: ['0', '1']
+            default: '0'
+        - name: maxChars
+          in: query
+          description: Max characters of extracted text (default 80000, max 500000)
+          schema:
+            type: integer
+            default: 80000
+      responses:
+        '200':
+          description: Single book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  book:
+                    $ref: '#/components/schemas/BookDetail'
+        '404':
+          description: Book not found
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/admin/books/{id}/quests:
+    get:
+      operationId: listBookGeneratedQuests
+      summary: Generated quests from book analysis (draft/active library quests)
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+        - name: status
+          in: query
+          description: Filter by quest status
+          schema:
+            type: string
+            enum: [draft, active, archived, all]
+            default: all
+        - name: compact
+          in: query
+          description: If 1, id/title/status/moveType only
+          schema:
+            type: string
+            enum: ['0', '1']
+            default: '0'
+      responses:
+        '200':
+          description: Quests for this book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookId:
+                    type: string
+                  bookTitle:
+                    type: string
+                  bookSlug:
+                    type: string
+                  quests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GeneratedQuest'
+                  count:
+                    type: integer
+        '400':
+          description: Invalid query parameter
+        '404':
+          description: Book not found
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: Value of BOOKS_CONTEXT_API_KEY from server environment
+
+  parameters:
+    BookId:
+      name: id
+      in: path
+      required: true
+      description: Book CUID
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'
+    ServiceUnavailable:
+      description: BOOKS_CONTEXT_API_KEY not configured on server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'
+
+  schemas:
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: string
+
+    BookListItem:
+      type: object
+      additionalProperties: true
+
+    BookDetail:
+      type: object
+      additionalProperties: true
+
+    GeneratedQuest:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        moveType:
+          type: string
+      additionalProperties: true
