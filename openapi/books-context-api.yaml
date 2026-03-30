@@ -1,11 +1,11 @@
-openapi: 3.1.0
+openapi: 3.1.1
 info:
   title: BARS Engine — Books context API
   description: |
     Admin books catalog and generated library quests for ChatGPT Actions / external tools.
     Set `BOOKS_CONTEXT_API_KEY` on the server; use Bearer token in requests.
     See docs/BOOKS_CONTEXT_API.md.
-  version: 1.1.0
+  version: 1.2.0
 
 servers:
   - url: https://bars-engine.vercel.app
@@ -25,10 +25,12 @@ paths:
           description: If 1, return minimal fields only
           schema:
             type: string
-            enum: ['0', '1']
-            default: '0'
+            enum:
+              - "0"
+              - "1"
+            default: "0"
       responses:
-        '200':
+        "200":
           description: Books list
           content:
             application/json:
@@ -38,27 +40,34 @@ paths:
                   books:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BookListItem'
+                      $ref: "#/components/schemas/BookListItem"
                   count:
                     type: integer
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /api/admin/books/{id}:
     get:
       operationId: getBook
       summary: Get one book by ID
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - name: id
+          in: path
+          required: true
+          description: Book CUID
+          schema:
+            type: string
         - name: extractedText
           in: query
           description: If 1, include extracted PDF text (truncated)
           schema:
             type: string
-            enum: ['0', '1']
-            default: '0'
+            enum:
+              - "0"
+              - "1"
+            default: "0"
         - name: maxChars
           in: query
           description: Max characters of extracted text (default 80000, max 500000)
@@ -66,7 +75,7 @@ paths:
             type: integer
             default: 80000
       responses:
-        '200':
+        "200":
           description: Single book
           content:
             application/json:
@@ -74,36 +83,47 @@ paths:
                 type: object
                 properties:
                   book:
-                    $ref: '#/components/schemas/BookDetail'
-        '404':
+                    $ref: "#/components/schemas/BookDetail"
+        "404":
           description: Book not found
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /api/admin/books/{id}/quests:
     get:
       operationId: listBookGeneratedQuests
       summary: Generated quests from book analysis (draft/active library quests)
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - name: id
+          in: path
+          required: true
+          description: Book CUID
+          schema:
+            type: string
         - name: status
           in: query
           description: Filter by quest status
           schema:
             type: string
-            enum: [draft, active, archived, all]
+            enum:
+              - draft
+              - active
+              - archived
+              - all
             default: all
         - name: compact
           in: query
           description: If 1, id/title/status/moveType only
           schema:
             type: string
-            enum: ['0', '1']
-            default: '0'
+            enum:
+              - "0"
+              - "1"
+            default: "0"
       responses:
-        '200':
+        "200":
           description: Quests for this book
           content:
             application/json:
@@ -119,17 +139,17 @@ paths:
                   quests:
                     type: array
                     items:
-                      $ref: '#/components/schemas/GeneratedQuest'
+                      $ref: "#/components/schemas/GeneratedQuest"
                   count:
                     type: integer
-        '400':
+        "400":
           description: Invalid query parameter
-        '404':
+        "404":
           description: Book not found
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
 components:
   securitySchemes:
@@ -139,28 +159,19 @@ components:
       bearerFormat: API key
       description: Value of BOOKS_CONTEXT_API_KEY from server environment
 
-  parameters:
-    BookId:
-      name: id
-      in: path
-      required: true
-      description: Book CUID
-      schema:
-        type: string
-
   responses:
     Unauthorized:
       description: Missing or invalid Bearer token
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorBody'
+            $ref: "#/components/schemas/ErrorBody"
     ServiceUnavailable:
       description: BOOKS_CONTEXT_API_KEY not configured on server
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorBody'
+            $ref: "#/components/schemas/ErrorBody"
 
   schemas:
     ErrorBody:
@@ -171,11 +182,78 @@ components:
 
     BookListItem:
       type: object
-      additionalProperties: true
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        slug:
+          type: string
+        sourcePdfUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+        metadataJson:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        threadId:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - slug
+        - status
 
     BookDetail:
       type: object
-      additionalProperties: true
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        slug:
+          type: string
+        sourcePdfUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+        metadataJson:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        threadId:
+          type: string
+          nullable: true
+        extractedText:
+          type: string
+          nullable: true
+        extractedTextTruncated:
+          type: boolean
+        extractedTextCharCount:
+          type: integer
+      required:
+        - id
+        - title
+        - slug
+        - status
+        - createdAt
+        - updatedAt
 
     GeneratedQuest:
       type: object
@@ -184,8 +262,37 @@ components:
           type: string
         title:
           type: string
+        description:
+          type: string
+          nullable: true
         status:
           type: string
         moveType:
           type: string
-      additionalProperties: true
+          nullable: true
+        allyshipDomain:
+          type: string
+          nullable: true
+        nation:
+          type: string
+          nullable: true
+        archetype:
+          type: string
+          nullable: true
+        kotterStage:
+          type: string
+          nullable: true
+        lockType:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          nullable: true
+        isSystem:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - status
