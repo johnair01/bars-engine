@@ -27,6 +27,8 @@ type ThreadQuest = {
     }
 }
 
+import { CultivationCard } from '@/components/ui/CultivationCard'
+
 type ThreadProgress = {
     id: string
     currentPosition: number
@@ -95,12 +97,12 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
 
     return (
         <>
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
+            <CultivationCard stage="growing" altitude="neutral" className="p-4 space-y-3 relative overflow-hidden transition-all duration-300">
                 {/* Collapsed header - click to expand */}
                 <button
                     type="button"
                     onClick={() => setExpanded(!expanded)}
-                    className="w-full text-left flex flex-col gap-2"
+                    className="w-full text-left flex flex-col gap-2 focus:outline-none"
                 >
                     <div className="flex items-start justify-between">
                         <div>
@@ -110,35 +112,35 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                                         Ritual
                                     </span>
                                 )}
-                                <h3 className="font-bold text-white">{thread.title}</h3>
+                                <h3 className="font-bold text-white shadow-black drop-shadow-sm">{thread.title}</h3>
                             </div>
                             {thread.description && !expanded && (
-                                <p className="text-sm text-zinc-400 line-clamp-1">{thread.description}</p>
+                                <p className="text-sm text-zinc-300 line-clamp-1 opacity-90">{thread.description}</p>
                             )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <Link
                                 href={`/map?type=thread&threadId=${thread.id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-[10px] text-zinc-500 hover:text-purple-400 transition-colors"
+                                className="text-[10px] text-zinc-300 hover:text-white transition-colors uppercase tracking-widest font-mono font-bold px-2 py-1 bg-black/40 rounded-full"
                             >
                                 Map
                             </Link>
                             {thread.completionReward > 0 && (
-                                <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full">
-                                    +{thread.completionReward} ⓥ
+                                <span className="text-xs bg-black/40 text-purple-300 px-2 py-1 flex items-center gap-1 rounded-full font-bold border border-purple-500/30">
+                                    +{thread.completionReward} ♦
                                 </span>
                             )}
                             <span className="text-zinc-500 text-sm">{expanded ? '▼' : '▶'}</span>
                         </div>
                     </div>
-                    <div className="flex justify-between text-xs text-zinc-500">
+                    <div className="flex justify-between text-xs text-zinc-400 font-mono tracking-widest">
                         <span>{isComplete ? 'Complete!' : `${currentPos}/${thread.totalQuests}`}</span>
                         <span>{progressPercent}%</span>
                     </div>
-                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-2 bg-black/40 border border-zinc-800 rounded-full overflow-hidden w-full relative">
                         <div
-                            className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
+                            className={`absolute inset-y-0 left-0 transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]'}`}
                             style={{ width: `${progressPercent}%` }}
                         />
                     </div>
@@ -167,107 +169,107 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
 
                 {/* Expanded content */}
                 {expanded && (
-                <>
-                {thread.description && (
-                    <p className="text-sm text-zinc-400 pt-2 border-t border-zinc-800">{thread.description}</p>
-                )}
-                {isSetupIncomplete && thread.threadType === 'orientation' && (
-                    <Link
-                        href="/conclave/onboarding?ritual=true"
-                        className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/20 px-2 py-0.5 rounded border border-yellow-900/50"
-                    >
-                        ⚡ Enter Ritual to Unlock →
-                    </Link>
-                )}
-
-                {thread.adventure && thread.totalQuests === 0 && (
-                    <Link
-                        href={`/campaign?ref=${getCampaignRef(thread.adventure!.campaignRef, thread.adventure!.subcampaignDomain)}`}
-                        className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors bg-purple-900/20 px-2 py-0.5 rounded border border-purple-800/50"
-                    >
-                        Enter orientation →
-                    </Link>
-                )}
-
-                {/* Quest Steps */}
-                <div className="space-y-2">
-                    {thread.quests.slice(0, 5).map((tq, idx) => {
-                        const pos = idx + 1
-                        const isDone = pos < currentPos
-                        const isCurrent = pos === currentPos
-                        const isLocked = pos > currentPos
-
-                        return (
-                            <div
-                                key={tq.id}
-                                onClick={() => !isLocked && setSelectedQuest(tq)}
-                                className={`flex items-center gap-3 text-sm p-3 rounded-lg border transition-all cursor-pointer ${isCurrent
-                                    ? 'bg-purple-900/30 border-purple-500/50 text-purple-100 hover:bg-purple-900/40'
-                                    : isDone
-                                        ? 'bg-zinc-900/30 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                        : 'bg-zinc-900/30 border-zinc-800 text-zinc-400 opacity-70 cursor-not-allowed'
-                                    }`}
+                    <>
+                        {thread.description && (
+                            <p className="text-sm text-zinc-300 pt-3 mt-1 border-t border-white/10">{thread.description}</p>
+                        )}
+                        {isSetupIncomplete && thread.threadType === 'orientation' && (
+                            <Link
+                                href="/conclave/onboarding?ritual=true"
+                                className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/40 px-3 py-1.5 rounded border border-yellow-500/30"
                             >
-                                {/* Status Icon */}
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${isCurrent ? 'bg-purple-600 border-purple-400 text-white' :
-                                    isDone ? 'bg-green-900 border-green-700 text-green-400' :
-                                        'bg-zinc-800 border-zinc-700 text-zinc-600'
-                                    }`}>
-                                    {isDone ? '✓' : isCurrent ? pos : '🔒'}
-                                </div>
+                                ⚡ Enter Ritual to Unlock →
+                            </Link>
+                        )}
 
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between">
-                                        <span className={`font-medium truncate ${isDone && 'line-through'}`}>
-                                            {/* @ts-ignore - quest is joined */}
-                                            {tq.quest?.title || `Quest ${pos}`}
-                                        </span>
-                                        {/* @ts-ignore */}
-                                        {tq.quest?.reward > 0 && !isDone && (
-                                            <span className="text-xs text-yellow-500 ml-2">
+                        {thread.adventure && thread.totalQuests === 0 && (
+                            <Link
+                                href={`/campaign?ref=${getCampaignRef(thread.adventure!.campaignRef, thread.adventure!.subcampaignDomain)}`}
+                                className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 transition-colors bg-purple-900/40 px-3 py-1.5 rounded border border-purple-500/30"
+                            >
+                                Enter orientation →
+                            </Link>
+                        )}
+
+                        {/* Quest Steps */}
+                        <div className="space-y-2 mt-4">
+                            {thread.quests.slice(0, 5).map((tq, idx) => {
+                                const pos = idx + 1
+                                const isDone = pos < currentPos
+                                const isCurrent = pos === currentPos
+                                const isLocked = pos > currentPos
+
+                                return (
+                                    <div
+                                        key={tq.id}
+                                        onClick={() => !isLocked && setSelectedQuest(tq)}
+                                        className={`flex items-start md:items-center gap-3 text-sm p-3 rounded-xl border transition-all cursor-pointer ${isCurrent
+                                            ? 'bg-purple-900/40 border-purple-500/50 text-purple-100 hover:bg-purple-900/60 shadow-lg shadow-purple-900/20'
+                                            : isDone
+                                                ? 'bg-black/30 border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
+                                                : 'bg-black/20 border-transparent text-zinc-500 opacity-60 cursor-not-allowed'
+                                            }`}
+                                    >
+                                        {/* Status Icon */}
+                                        <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold border ${isCurrent ? 'bg-purple-600 border-purple-400 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]' :
+                                            isDone ? 'bg-green-900/50 border-green-500/50 text-green-400' :
+                                                'bg-zinc-900 border-zinc-700 text-zinc-600'
+                                            }`}>
+                                            {isDone ? '✓' : isCurrent ? pos : '🔒'}
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <span className={`font-bold truncate leading-tight mt-0.5 ${isDone ? 'line-through text-zinc-500' : 'text-zinc-200'}`}>
+                                                    {/* @ts-ignore - quest is joined */}
+                                                    {tq.quest?.title || `Quest ${pos}`}
+                                                </span>
                                                 {/* @ts-ignore */}
-                                                +{tq.quest.reward}ⓥ
-                                            </span>
-                                        )}
-                                    </div>
-                                    {/* @ts-ignore */}
-                                    {isCurrent && tq.quest?.description && (
-                                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                                                {tq.quest?.reward > 0 && !isDone && (
+                                                    <span className={`text-[10px] uppercase font-mono tracking-widest px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0 ${isCurrent ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30' : 'bg-black/40 text-yellow-500/70'}`}>
+                                                        {/* @ts-ignore */}
+                                                        +{tq.quest.reward}♦
+                                                    </span>
+                                                )}
+                                            </div>
                                             {/* @ts-ignore */}
-                                            {tq.quest.description}
-                                        </p>
-                                    )}
+                                            {isCurrent && tq.quest?.description && (
+                                                <p className="text-[11px] text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
+                                                    {/* @ts-ignore */}
+                                                    {tq.quest.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                            {thread.totalQuests > 5 && (
+                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono pl-14 pt-2">
+                                    +{thread.totalQuests - 5} more steps
                                 </div>
-                            </div>
-                        )
-                    })}
-                    {thread.totalQuests > 5 && (
-                        <div className="text-xs text-zinc-600 pl-11">
-                            +{thread.totalQuests - 5} more steps
+                            )}
                         </div>
-                    )}
-                </div>
 
-                {/* Actions */}
-                {!isStarted && !isComplete && !(thread.adventure && thread.totalQuests === 0) && (
-                    <button
-                        onClick={handleStart}
-                        disabled={isPending}
-                        className="w-full bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg font-medium disabled:opacity-50"
-                    >
-                        {isPending ? 'Starting...' : thread.threadType === 'orientation' ? 'Enter Ritual' : 'Start Journey'}
-                    </button>
-                )}
+                        {/* Actions */}
+                        {!isStarted && !isComplete && !(thread.adventure && thread.totalQuests === 0) && (
+                            <button
+                                onClick={handleStart}
+                                disabled={isPending}
+                                className="w-full mt-4 bg-white hover:bg-zinc-200 text-black py-3 rounded-xl font-bold disabled:opacity-50 transition-colors shadow-lg shadow-white/5 active:scale-95"
+                            >
+                                {isPending ? 'Starting...' : thread.threadType === 'orientation' ? 'Enter Ritual' : 'Start Journey'}
+                            </button>
+                        )}
 
-                {isComplete && (
-                    <div className="text-center text-green-400 text-sm font-medium py-2">
-                        ✓ Journey Archivied
-                    </div>
+                        {isComplete && (
+                            <div className="text-center text-green-400 text-[10px] uppercase tracking-widest font-mono font-bold py-3 mt-2 bg-green-900/10 rounded-lg border border-green-500/20">
+                                ✓ Journey Archivied
+                            </div>
+                        )}
+                    </>
                 )}
-                </>
-                )}
-            </div>
+            </CultivationCard>
 
             {/* Modal */}
             {selectedQuest?.quest && (

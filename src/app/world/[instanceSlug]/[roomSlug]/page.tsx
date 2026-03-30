@@ -26,6 +26,7 @@ import {
   resolveNationGateBypass,
 } from '@/lib/world/nation-room-gate'
 import { NationRoomBlocked } from '@/components/world/NationRoomBlocked'
+import { getLibraryProvenance } from '@/actions/library-provenance'
 import { RoomCanvas } from './RoomCanvas'
 
 function parseTilemapJson(raw: string): Record<string, { floor?: string; impassable?: boolean; object?: string }> {
@@ -150,6 +151,9 @@ export default async function WorldRoomPage({
     ? await getSpokeStatesForRoom(instance.campaignRef, player.id)
     : undefined
 
+  // P5: Fetch provenance for resonance gating / level handshakes
+  const artifactLedger = await getLibraryProvenance()
+
   return (
     <RoomCanvas
       spatialBindKey={spatialBindKey}
@@ -167,6 +171,7 @@ export default async function WorldRoomPage({
       spokeSeedStates={spokeSeedStates}
       playerNationKey={playerNationKey}
       bypassNationGate={bypassNationGate}
+      artifactLedger={artifactLedger}
     />
   )
 }

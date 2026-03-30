@@ -20,6 +20,7 @@ export interface CmaEdge {
   from: string
   to: string
   label?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface CmaNode {
@@ -40,8 +41,11 @@ export interface CmaFragment {
 
 export interface CmaStory {
   id?: string
+  title?: string
+  description?: string
   startId: string
   nodes: CmaNode[]
   edges: CmaEdge[]
   fragments?: CmaFragment[]
+  metadata?: Record<string, unknown>
 }

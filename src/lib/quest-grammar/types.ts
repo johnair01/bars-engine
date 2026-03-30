@@ -163,6 +163,8 @@ export interface NodeChoiceOverride {
   enabledFaces?: GameMasterFace[]
   enabledHorizontal?: PersonalMoveType[]
   obstacleActions?: Record<string, string>
+  /** Optional: additional choices to inject (e.g. Yes-And branches from Spoke Seeds) */
+  additionalChoices?: Choice[]
 }
 
 export interface LoreGate {
@@ -200,6 +202,12 @@ export interface Choice {
   targetId: string
   /** Canonical move ID for choice privileging (nation element, playbook WAVE) */
   moveId?: string
+  /** Player-facing label (in-voice) */
+  buttonLabel?: string
+  /** Optional longer line for accessibility / secondary UI */
+  voiceLine?: string
+  /** Unique key for the choice in the blueprint */
+  blueprintKey?: string
 }
 
 export type GameMasterFace = 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
@@ -248,6 +256,8 @@ export interface QuestNode {
   obstacleActions?: Record<string, string>
   /** Branch depth: 0 = spine, 1–3 = branch layers. Max 3. */
   branchDepth?: number
+  /** Variants of the body text based on available choice count. Key = choiceCount (e.g. 1, 6). */
+  bodyVariants?: Record<number, string>
 }
 
 export interface EmotionalAlchemySignature {

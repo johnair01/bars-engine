@@ -13,6 +13,8 @@ import { logShadowNameFeedback } from '@/actions/shadow-name-feedback'
 import { usePostActionRouter } from '@/hooks/usePostActionRouter'
 import { NAV } from '@/lib/navigation-contract'
 import { ArtifactCeremony } from '@/components/shadow/ArtifactCeremony'
+import { createCyoaDraftFrom321 } from '@/actions/cyoa-generator'
+import { PrivacyBadge } from '@/components/ui/PrivacyBadge'
 // ---------------------------------------------------------------------------
 // Feeling chip vocabulary — Wuxing neutral + satisfied
 // ---------------------------------------------------------------------------
@@ -24,16 +26,16 @@ type FeelingChip = {
 }
 
 const FEELING_CHIPS: FeelingChip[] = [
-  { label: 'purposeful',  channel: 'wood',  altitude: 'neutral'   },
-  { label: 'generative',  channel: 'wood',  altitude: 'satisfied' },
-  { label: 'open',        channel: 'fire',  altitude: 'neutral'   },
-  { label: 'expansive',   channel: 'fire',  altitude: 'satisfied' },
-  { label: 'grounded',    channel: 'earth', altitude: 'neutral'   },
-  { label: 'centered',    channel: 'earth', altitude: 'satisfied' },
-  { label: 'tender',      channel: 'metal', altitude: 'neutral'   },
-  { label: 'released',    channel: 'metal', altitude: 'satisfied' },
-  { label: 'discerning',  channel: 'water', altitude: 'neutral'   },
-  { label: 'trusting',    channel: 'water', altitude: 'satisfied' },
+  { label: 'purposeful', channel: 'wood', altitude: 'neutral' },
+  { label: 'generative', channel: 'wood', altitude: 'satisfied' },
+  { label: 'open', channel: 'fire', altitude: 'neutral' },
+  { label: 'expansive', channel: 'fire', altitude: 'satisfied' },
+  { label: 'grounded', channel: 'earth', altitude: 'neutral' },
+  { label: 'centered', channel: 'earth', altitude: 'satisfied' },
+  { label: 'tender', channel: 'metal', altitude: 'neutral' },
+  { label: 'released', channel: 'metal', altitude: 'satisfied' },
+  { label: 'discerning', channel: 'water', altitude: 'neutral' },
+  { label: 'trusting', channel: 'water', altitude: 'satisfied' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -57,12 +59,15 @@ type Answers = {
   // Phase 1: Be It (1st person)
   interiorVoice: string      // speaking as the mask from within
   integrationShift: string   // what shifts when held with awareness
+  // Deep Cavern
+  somaticEcho: string        // where it sits in the body and its final truth
   // Alchemy integration
   desiredFeeling: string     // "how would you want to feel?" — free text at alchemy phase
   desiredFeelingTags: FeelingChip[] // structured chips at alchemy phase (up to 2)
 }
 
 type Phase =
+  | 'pre_flight'      // choose your guide NPC
   | 'face_1'          // describe the charge
   | 'face_2'          // give it a shape
   | 'face_3'          // give it a name
@@ -71,6 +76,8 @@ type Phase =
   | 'talk_3'          // what is life like for it
   | 'talk_4'          // what would have to be true
   | 'talk_5'          // what does it fear
+  | 'ritual_choice'   // node: choice between fast path and deep cavern
+  | 'deep_cavern'     // somatic immersion (branch only)
   | 'be_1'            // let it speak from within
   | 'be_2'            // what shifts
   | 'alchemy'         // emotional alchemy reveal — dissatisfied state
@@ -79,8 +86,11 @@ type Phase =
   | 'done'
 
 const PHASE_ORDER: Phase[] = [
+  'pre_flight',
   'face_1', 'face_2', 'face_3',
   'talk_1', 'talk_2', 'talk_3', 'talk_4', 'talk_5',
+  'ritual_choice',
+  'deep_cavern',
   'be_1', 'be_2',
   'alchemy',
   'alchemy_feeling',
@@ -90,6 +100,8 @@ const PHASE_ORDER: Phase[] = [
 const DISCOVERY_PHASES: Phase[] = [
   'face_1', 'face_2', 'face_3',
   'talk_1', 'talk_2', 'talk_3', 'talk_4', 'talk_5',
+  'ritual_choice',
+  'deep_cavern',
   'be_1', 'be_2',
 ]
 
@@ -108,6 +120,70 @@ type Props = {
   /** When 321 was opened from a charge_capture BAR — compost charge on metabolizing outcomes (NEV). */
   chargeBarId?: string | null
 }
+
+// ---------------------------------------------------------------------------
+// NPC Guides for the Descent
+// ---------------------------------------------------------------------------
+
+type NPCGuide = {
+  id: string
+  name: string
+  face: 'shaman' | 'challenger' | 'regent' | 'architect' | 'diplomat' | 'sage'
+  tagline: string
+  description: string
+  color: string
+}
+
+const NPC_GUIDES: NPCGuide[] = [
+  {
+    id: 'vorm',
+    name: 'Vorm the Master Architect',
+    face: 'architect',
+    tagline: 'Precision for the Forge',
+    description: 'The ancient sys-admin of the Silver City. He sees the world as logic and systems waiting to be solved.',
+    color: 'text-orange-400',
+  },
+  {
+    id: 'ignis',
+    name: 'Ignis the Unbroken',
+    face: 'challenger',
+    tagline: 'Passion through Friction',
+    description: 'The gardener of fire. He does not coddle; he tests your commitment to the flame.',
+    color: 'text-red-400',
+  },
+  {
+    id: 'aurelius',
+    name: 'Aurelius the Law-Giver',
+    face: 'regent',
+    tagline: 'Balance at Noon',
+    description: 'The architect of fair exchange. He believes order is the only shield against chaos.',
+    color: 'text-amber-400',
+  },
+  {
+    id: 'sola',
+    name: 'Sola the Heart of Lamenth',
+    face: 'diplomat',
+    tagline: 'Beauty in Tragedy',
+    description: 'The finder of meaning. She translates the poignance of existence into relational power.',
+    color: 'text-emerald-400',
+  },
+  {
+    id: 'kaelen',
+    name: 'Kaelen the Moon-Caller',
+    face: 'shaman',
+    tagline: 'Spontaneous Growth',
+    description: 'The mythic bridge-builder. He speaks in riddles of growth and joy, inviting you to descend.',
+    color: 'text-purple-400',
+  },
+  {
+    id: 'witness',
+    name: 'The Witness',
+    face: 'sage',
+    tagline: 'The Meta-Observer',
+    description: 'The one who has worn every mask. The Sage synthesizes the whole world into a single choice.',
+    color: 'text-indigo-400',
+  },
+]
 
 // ---------------------------------------------------------------------------
 // Component
@@ -156,7 +232,8 @@ export function Shadow321Runner({
 
   // Restore from sessionStorage on mount if available
   const saved = typeof window !== 'undefined' ? loadSession() : null
-  const [phase, setPhase] = useState<Phase>(saved?.phase ?? 'face_1')
+  const [phase, setPhase] = useState<Phase>(saved?.phase ?? 'pre_flight')
+  const [guideId, setGuideId] = useState<string | null>(null)
   const PERSONAL_MOVE_TO_ALIGNED: Record<string, AlignedAction> = {
     wakeUp: 'Wake Up', cleanUp: 'Clean Up', growUp: 'Grow Up', showUp: 'Show Up',
   }
@@ -175,19 +252,51 @@ export function Shadow321Runner({
     fear: '',
     interiorVoice: '',
     integrationShift: '',
+    somaticEcho: '',
     desiredFeeling: '',
     desiredFeelingTags: [],
   })
+  const [sessionPath, setSessionPath] = useState<'fast' | 'deep' | null>(null)
 
-  // Persist to sessionStorage on every state change
   useEffect(() => {
     if (phase === 'done') return
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ phase, alignedAction, answers }))
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ phase, alignedAction, answers, sessionPath }))
     } catch {
       // storage full or private mode — silently ignore
     }
-  }, [phase, alignedAction, answers])
+  }, [phase, alignedAction, answers, sessionPath])
+
+  /**
+   * Lightweight signal computed from session answers to trigger the Ritual Fork.
+   */
+  const depthSignal = computeDepthSignal(answers)
+
+  function computeDepthSignal(ans: Answers) {
+    const fields = [
+      ans.chargeDescription,
+      ans.maskShape,
+      ans.desire,
+      ans.lifeState,
+      ans.fear,
+    ]
+    const totalChars = fields.reduce((sum, f) => sum + f.length, 0)
+    const avgLen = totalChars / (fields.length || 1)
+
+    const deepKeywords = ['fear', 'shame', 'pain', 'body', 'soul', 'never', 'always', 'truth', 'hide', 'trauma', 'dark']
+    const text = (ans.chargeDescription + ans.desire + ans.fear).toLowerCase()
+    const keywordCount = deepKeywords.reduce((count, word) => {
+      const occurrences = text.split(word).length - 1
+      return count + occurrences
+    }, 0)
+
+    // Score threshold for "Deep Cavern" offer
+    const score = (avgLen / 50) + (keywordCount * 0.5)
+    
+    if (score > 3.5) return 'deep'
+    if (score > 1.5) return 'engaged'
+    return 'surface'
+  }
 
   // Reset multi-suggest counter when charge or mask source text changes (user went back and edited)
   useEffect(() => {
@@ -203,13 +312,55 @@ export function Shadow321Runner({
   }
 
   function goNext() {
+    if (phase === 'ritual_choice') {
+      if (sessionPath === 'deep') {
+        setPhase('deep_cavern')
+      } else {
+        setPhase('be_1')
+      }
+      return
+    }
+
+    if (phase === 'deep_cavern') {
+      setPhase('be_1')
+      return
+    }
+
     const idx = PHASE_ORDER.indexOf(phase)
-    if (idx < PHASE_ORDER.length - 1) setPhase(PHASE_ORDER[idx + 1])
+    if (idx < PHASE_ORDER.length - 1) {
+      const next = PHASE_ORDER[idx + 1]
+      // Skip deep_cavern if proceeding from ritual_choice (handled above)
+      // or if somehow we land on it without deep path
+      if (next === 'deep_cavern' && phase !== 'ritual_choice') {
+        setPhase('be_1')
+      } else {
+        setPhase(next)
+      }
+    }
   }
 
   function goBack() {
+    if (phase === 'be_1') {
+      if (sessionPath === 'deep') {
+        setPhase('deep_cavern')
+      } else {
+        setPhase('ritual_choice')
+      }
+      return
+    }
+
+    if (phase === 'deep_cavern') {
+      setPhase('ritual_choice')
+      return
+    }
+
     const idx = PHASE_ORDER.indexOf(phase)
-    if (idx > 0) setPhase(PHASE_ORDER[idx - 1])
+    if (idx > 0) {
+      const prev = PHASE_ORDER[idx - 1]
+      // Skip ritual_choice/deep_cavern if going back from talk_5
+      // Wait, PHASE_ORDER has talk_5, ritual_choice, deep_cavern, be_1...
+      setPhase(prev)
+    }
   }
 
   const discoveryProgress = DISCOVERY_PHASES.includes(phase)
@@ -400,6 +551,30 @@ export function Shadow321Runner({
     })
   }
 
+  function handleDevelopStory() {
+    setError(null)
+    startTransition(async () => {
+      const metadata = deriveMetadata321(phase3, phase2, phase1)
+      const result = await createCyoaDraftFrom321({
+        metadata: {
+          title: metadata.title,
+          description: metadata.description,
+          tags: []
+        },
+        phase2: { q1: answers.chargeDescription, q3: answers.lifeState, q5: answers.rootCause, alignedAction },
+        phase3: { identityFreeText: [answers.maskShape, answers.maskName].filter(Boolean).join(' — ') },
+        shadow321Name: shadow321NameForPersist(),
+      })
+
+      if ('error' in result) {
+        setError(result.error as string)
+      } else {
+        router.push(`/cyoa/generate?draftId=${result.id}`)
+      }
+    })
+  }
+
+
   // -------------------------------------------------------------------------
   // Render — scene cards
   // -------------------------------------------------------------------------
@@ -414,14 +589,58 @@ export function Shadow321Runner({
     )
   }
 
+  if (phase === 'pre_flight') {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-medium text-zinc-100 tracking-tight">Who is guiding this descent?</h2>
+          <p className="text-sm text-zinc-500 max-w-md">
+            The 321 is a ritual extraction. Choose a Game Master to witness your shadows and forge your outcomes.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {NPC_GUIDES.map((npc) => (
+            <button
+              key={npc.id}
+              onClick={() => {
+                setGuideId(npc.id)
+                goNext()
+              }}
+              className="group relative p-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-left hover:border-zinc-500 hover:bg-zinc-800/50 transition-all duration-300"
+            >
+              <div className={`text-xs font-mono uppercase tracking-widest mb-1 ${npc.color} opacity-80`}>
+                {npc.tagline}
+              </div>
+              <div className="text-lg font-medium text-zinc-200 group-hover:text-white transition-colors">
+                {npc.name}
+              </div>
+              <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
+                {npc.description}
+              </p>
+              <div className="absolute top-4 right-4 text-zinc-700 group-hover:text-zinc-400 transition-colors">
+                →
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const selectedGuide = NPC_GUIDES.find((n) => n.id === guideId) ?? NPC_GUIDES[4] // Default to Kaelen
+
   if (phase === 'face_1') {
-    // TODO: subtext should append a privacy policy link once /privacy exists (Sage-authored, teal frame)
     return (
       <SceneCard
-        gmVoice="shaman"
-        gmLine="Something has your attention. Let's find out what it is."
+        gmVoice={selectedGuide.face}
+        gmLine={`${selectedGuide.name} acknowledges your entry. "Something has your attention. Let's find out what it is."`}
         prompt="There is something I'm carrying. When I sit with it, I notice…"
-        subtext="Write freely. This stays private."
+        subtext={
+          <>
+            Write freely. This stays private. <PrivacyBadge />
+          </>
+        }
         tone="contemplative"
         progress={discoveryProgress}
       >
@@ -443,10 +662,10 @@ export function Shadow321Runner({
   if (phase === 'face_2') {
     return (
       <SceneCard
-        gmVoice="shaman"
-        gmLine="Let it take form outside of you."
-        prompt="If this were a presence — a figure, a creature, an energy — it would be…"
-        subtext="A name, an image, a posture. Something with character."
+        gmVoice={selectedGuide.face}
+        gmLine="Let it take form outside of you. If this were a presence — a figure, a creature, an energy — what would it be?"
+        prompt="If I look at this thing closely, I see…"
+        subtext={`${selectedGuide.name} waits for the form to stabilize.`}
         tone="contemplative"
         progress={discoveryProgress}
       >
@@ -497,10 +716,10 @@ export function Shadow321Runner({
     }
     return (
       <SceneCard
-        gmVoice="shaman"
-        gmLine="Give it a name."
+        gmVoice={selectedGuide.face}
+        gmLine="A form needs a name. Not a clinical label, but a name that fits its nature. What do we call this part of you?"
         prompt="I'll call this part of me…"
-        subtext="A name helps you address it directly in the next phase."
+        subtext={`${selectedGuide.name} listens for the naming.`}
         tone="contemplative"
         progress={discoveryProgress}
       >
@@ -536,9 +755,10 @@ export function Shadow321Runner({
     const name = answers.maskName || 'this part'
     return (
       <SceneCard
-        gmVoice="challenger"
-        gmLine={`Turn toward ${name} now. Speak to it directly.`}
-        prompt={`${name}, what do you want to create?`}
+        gmVoice={selectedGuide.face}
+        gmLine={`Now we speak to ${name}. Ask it simply: what do you want from me?`}
+        prompt="The Part says: I want…"
+        subtext={`${selectedGuide.name} watches the dialogue begin.`}
         tone="charged"
         progress={discoveryProgress}
       >
@@ -561,9 +781,10 @@ export function Shadow321Runner({
   if (phase === 'talk_2') {
     return (
       <SceneCard
-        gmVoice="challenger"
-        gmLine="Push further."
-        prompt="And if you got that — what would that get you?"
+        gmVoice={selectedGuide.face}
+        gmLine="And if you got that, truly and fully... what would you have then?"
+        prompt="If I got that, then I would have…"
+        subtext={`${selectedGuide.name} probes for the deeper grain.`}
         tone="charged"
         progress={discoveryProgress}
       >
@@ -587,9 +808,10 @@ export function Shadow321Runner({
     const name = answers.maskName || 'this part'
     return (
       <SceneCard
-        gmVoice="challenger"
-        gmLine={`Let ${name} show you where it lives.`}
-        prompt="What is life like for you right now?"
+        gmVoice={selectedGuide.face}
+        gmLine={`What is it like to be ${name} right now? How does it see your life?`}
+        prompt="From the perspective of this part, life is…"
+        subtext={`${selectedGuide.name} shifts the lens.`}
         tone="charged"
         progress={discoveryProgress}
       >
@@ -612,9 +834,10 @@ export function Shadow321Runner({
   if (phase === 'talk_4') {
     return (
       <SceneCard
-        gmVoice="challenger"
-        gmLine="Step back. Look at it with compassion now."
-        prompt="What would have to be true for someone to feel this way?"
+        gmVoice={selectedGuide.face}
+        gmLine="What would have to be true for this part to feel completely safe and settled?"
+        prompt="For this part to be settled, it would need…"
+        subtext={`${selectedGuide.name} looks for the requirements of peace.`}
         tone="charged"
         progress={discoveryProgress}
       >
@@ -638,9 +861,10 @@ export function Shadow321Runner({
     const name = answers.maskName || 'this part'
     return (
       <SceneCard
-        gmVoice="challenger"
-        gmLine="Almost there."
-        prompt={`${name}, what do you fear?`}
+        gmVoice={selectedGuide.face}
+        gmLine="One last question for it: At the very bottom of everything, what is it you're most afraid would happen?"
+        prompt="At the bottom of it all, I am afraid that…"
+        subtext={`${selectedGuide.name} acknowledges the fear.`}
         tone="charged"
         progress={discoveryProgress}
       >
@@ -655,6 +879,104 @@ export function Shadow321Runner({
           onBack={goBack}
           onNext={goNext}
           nextDisabled={!answers.fear.trim()}
+          nextLabel="Enter the fork →"
+        />
+      </SceneCard>
+    )
+  }
+
+  if (phase === 'ritual_choice') {
+    const isDeep = depthSignal === 'deep'
+    const isEngaged = depthSignal === 'engaged'
+
+    const guideLines: Record<string, string> = {
+      vorm: isDeep 
+        ? "The structural load of this reflection is high. I can synthesize it now, or we can map the internal resonance first."
+        : "The pattern is stable. Choose your integration path.",
+      ignis: isDeep
+        ? "You've touched the heat. Do you want the furnace of action, or the deeper forge of the body?"
+        : "Moving at speed. Do you want to strike now, or pause for the deeper truth?",
+      aurelius: "The exchange is balanced. We may proceed to completion, or honor the somatic depth revealed here.",
+      sola: "This poignance is heavy. Do we hold it here and finish, or descend into where it truly lives?",
+      kaelen: "The moon calls you lower. Will you take the fast path of light, or the deep cavern of the somatic echo?",
+      witness: "The observer sees two paths. The fast path upward, or the ritual descent into the physical vessel.",
+    }
+
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <div className="border-l-2 border-indigo-500/40 pl-4 py-1">
+          <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">{selectedGuide.name}</span>
+          <p className="text-zinc-400 text-sm mt-1 italic leading-relaxed">
+            "{guideLines[selectedGuide.id] || "The moment of choice is here. How deep shall we go?"}"
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={() => {
+              setSessionPath('fast')
+              goNext()
+            }}
+            className="text-left p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 hover:border-zinc-600 transition-all group"
+          >
+            <p className="text-zinc-300 font-medium group-hover:text-white transition-colors">The Fast Path</p>
+            <p className="text-zinc-500 text-xs mt-1 leading-relaxed">
+              Ascend to the anabasis. Synthesize the findings into an artifact immediately.
+            </p>
+            <p className="text-purple-400 text-[10px] uppercase tracking-widest mt-3">integration focus</p>
+          </button>
+
+          <button
+            onClick={() => {
+              setSessionPath('deep')
+              goNext()
+            }}
+            className={`text-left p-6 rounded-2xl border transition-all group ${
+              isDeep ? 'border-purple-500/40 bg-purple-500/5' : 'border-zinc-800 bg-zinc-900/50'
+            } hover:border-purple-500/60`}
+          >
+            <div className="flex justify-between items-start">
+              <p className="text-zinc-300 font-medium group-hover:text-white transition-colors">The Deep Cavern</p>
+              {isDeep && (
+                <span className="bg-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-tighter shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+                  offered
+                </span>
+              )}
+            </div>
+            <p className="text-zinc-500 text-xs mt-1 leading-relaxed">
+              Descend into the somatic echo. Find exactly where this shadow sits in the vessel of the body.
+            </p>
+            <p className="text-purple-400 text-[10px] uppercase tracking-widest mt-3">ritual focus</p>
+          </button>
+        </div>
+
+        <SceneNav onBack={goBack} onNext={() => {}} />
+      </div>
+    )
+  }
+
+  if (phase === 'deep_cavern') {
+    return (
+      <SceneCard
+        gmVoice={selectedGuide.face}
+        gmLine="Now: let the masks fall. Where does this presence resonate in your physical vessel? Let it take up space."
+        prompt={`Drop your attention into your body. Where do you feel ${answers.maskName || 'this presence'}?`}
+        subtext={`${selectedGuide.name} holds the grounding field.`}
+        tone="somatized"
+        progress={discoveryProgress}
+      >
+        <SceneInput
+          value={answers.somaticEcho}
+          onChange={(v) => set('somaticEcho', v)}
+          placeholder="I feel it in my..."
+          rows={4}
+          autoFocus
+        />
+        <SceneNav
+          onBack={goBack}
+          onNext={goNext}
+          nextDisabled={!answers.somaticEcho.trim()}
+          nextLabel="Own the presence →"
         />
       </SceneCard>
     )
@@ -663,10 +985,11 @@ export function Shadow321Runner({
   if (phase === 'be_1') {
     return (
       <SceneCard
-        gmVoice="sage"
-        gmLine="Now let it speak from within you. Don't think. Just speak."
-        prompt="When I let this presence speak from inside me, it says…"
-        tone="revelatory"
+        gmVoice={selectedGuide.face}
+        gmLine={`Time to inhabit the mask. Drop the "it." Speak as ${answers.maskName} directly. "I am here, and I want you to know..."`}
+        prompt="I am here, and I want you to know…"
+        subtext={`${selectedGuide.name} witnesses the embodiment.`}
+        tone="somatized"
         progress={discoveryProgress}
       >
         <SceneInput
@@ -688,10 +1011,11 @@ export function Shadow321Runner({
   if (phase === 'be_2') {
     return (
       <SceneCard
-        gmVoice="sage"
-        gmLine="What just changed?"
+        gmVoice={selectedGuide.face}
+        gmLine="As you've given this part a voice and a face... what has shifted in your body? What feels different now?"
         prompt="When I hold this presence with awareness, I notice…"
-        tone="revelatory"
+        subtext={`${selectedGuide.name} scans the somatic field.`}
+        tone="somatized"
         progress={discoveryProgress}
       >
         <SceneInput
@@ -720,11 +1044,11 @@ export function Shadow321Runner({
     const ALIGNED_ACTIONS: AlignedAction[] = ['Wake Up', 'Clean Up', 'Grow Up', 'Show Up']
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="border-l-2 border-emerald-500/40 pl-4 py-1">
-          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Integrator</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">{selectedGuide.name}</span>
           <p className="text-zinc-400 text-sm mt-1 italic">
-            The pattern is clear now. Here is what you were carrying — and what you can alchemize it into.
+            "The pattern is clear now. Here is what you were carrying — and what you can alchemize it into."
           </p>
         </div>
 
@@ -760,11 +1084,10 @@ export function Shadow321Runner({
               <button
                 key={action}
                 onClick={() => setAlignedAction(action)}
-                className={`p-4 rounded-xl border text-left transition-all ${
-                  alignedAction === action
-                    ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 text-emerald-300'
-                    : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600 text-zinc-400'
-                }`}
+                className={`p-4 rounded-xl border text-left transition-all ${alignedAction === action
+                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 text-emerald-300'
+                  : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600 text-zinc-400'
+                  }`}
               >
                 <span className="block text-xs font-mono uppercase tracking-widest mb-1 opacity-60">
                   {action}
@@ -807,6 +1130,7 @@ export function Shadow321Runner({
     return (
       <AlchemyFeelingStep
         answers={answers}
+        selectedGuide={selectedGuide}
         onUpdate={(desiredFeeling, desiredFeelingTags) =>
           setAnswers((prev) => ({ ...prev, desiredFeeling, desiredFeelingTags }))
         }
@@ -824,11 +1148,11 @@ export function Shadow321Runner({
     const name = answers.maskName || 'this presence'
 
     return (
-      <div className="space-y-7">
+      <div className="space-y-7 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="border-l-2 border-emerald-500/40 pl-4 py-1">
-          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Integrator</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">{selectedGuide.name}</span>
           <p className="text-zinc-400 text-sm mt-1 italic">
-            The {alignedAction} is clear. Now: what do you want to do with what you&apos;ve found?
+            "The {alignedAction} is clear. Now: what do you want to do with what you&apos;ve found?"
           </p>
         </div>
 
@@ -873,7 +1197,15 @@ export function Shadow321Runner({
             onClick={handleFuelSystem}
             loading={isPending}
           />
+          <ArtifactChoice
+            title="Develop Story"
+            description="Weave this charge into a branching Choose Your Own Adventure narrative."
+            color="indigo"
+            onClick={handleDevelopStory}
+            loading={false}
+          />
         </div>
+
 
         <ArtifactChoice
           title="Witness Note"
@@ -905,11 +1237,13 @@ export function Shadow321Runner({
 
 function AlchemyFeelingStep({
   answers,
+  selectedGuide,
   onUpdate,
   onBack,
   onNext,
 }: {
   answers: Answers
+  selectedGuide: NPCGuide
   onUpdate: (text: string, tags: FeelingChip[]) => void
   onBack: () => void
   onNext: () => void
@@ -970,9 +1304,9 @@ function AlchemyFeelingStep({
   return (
     <div className="space-y-8">
       <div className="border-l-2 border-indigo-500/40 pl-4 py-1">
-        <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">Integrator</span>
+        <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">{selectedGuide.name}</span>
         <p className="text-zinc-400 text-sm mt-1 italic">
-          You&apos;ve seen what {name} was reaching for.
+          "You&apos;ve seen what {name} was reaching for."
         </p>
       </div>
 
@@ -1014,11 +1348,10 @@ function AlchemyFeelingStep({
                 <button
                   key={chip.label}
                   onClick={() => toggleChip(chip)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                    active
-                      ? 'bg-indigo-600/30 border border-indigo-500/60 text-indigo-200'
-                      : 'border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
-                  }`}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${active
+                    ? 'bg-indigo-600/30 border border-indigo-500/60 text-indigo-200'
+                    : 'border border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                    }`}
                 >
                   {chip.label}
                 </button>

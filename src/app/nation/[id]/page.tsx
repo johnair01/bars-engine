@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+import { NationHeroBanner } from '@/components/nation/NationHeroBanner'
+
 /**
  * @page /nation/:id
  * @entity PLAYER
@@ -37,48 +39,30 @@ export default async function NationByIdPage({ params }: { params: { id: string 
     if (!nation) return notFound()
 
     return (
-        <div className="min-h-screen bg-black text-zinc-100 font-sans p-6 md:p-12 selection:bg-purple-900/50">
-            <div className="max-w-4xl mx-auto space-y-12">
+        <div className="min-h-screen bg-[#0a0908] text-zinc-100 font-sans selection:bg-purple-900/50">
+            <Link href="/" className="absolute top-6 left-6 z-50 text-white/50 hover:text-white transition text-sm flex items-center gap-2 group drop-shadow-md">
+                <span className="group-hover:-translate-x-1 transition-transform">←</span> Return to Dashboard
+            </Link>
+
+            <NationHeroBanner nation={nation} />
+
+            <div className="max-w-4xl mx-auto space-y-12 p-6 md:p-12 pt-12">
                 <header>
-                    <Link href="/" className="text-zinc-500 hover:text-white transition text-sm flex items-center gap-2 mb-8 group">
-                        <span className="group-hover:-translate-x-1 transition-transform">←</span> Return to Dashboard
-                    </Link>
-
-                    {/* Epiphany Bridge Header */}
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="px-3 py-1 bg-purple-900/30 text-purple-400 rounded text-xs font-mono uppercase tracking-widest border border-purple-800">
-                            Nation History
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        {nation.imgUrl && (
-                            <div className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex-shrink-0 bg-zinc-900 relative">
-                                <img src={nation.imgUrl} alt={nation.name} className="w-full h-full object-cover" />
-                            </div>
-                        )}
-                        <div>
-                            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent mb-6">
-                                {nation.name}
-                            </h1>
-                            <div className="prose prose-invert prose-lg text-zinc-300 leading-relaxed font-serif">
-                                <p className="text-2xl font-light text-zinc-100 mb-6">
-                                    {nation.description}
-                                </p>
-                                {/* Epiphany / Story Placeholder */}
-                                <p>
-                                    Long before the Conclave gathered, the people of <strong>{nation.name}</strong> understood that reality was not fixed, but forged.
-                                    They learned that to <em>{nation.wakeUp?.split(':')[0].toLowerCase()}</em> was the first step towards true sovereignty.
-                                </p>
-                                <p>
-                                    Their history is written in the stars and the soil alike. This is where you belong if you seek to understand the deeper currents of the world.
-                                </p>
-                            </div>
-                        </div>
+                    <div className="prose prose-invert prose-lg text-zinc-300 leading-relaxed font-serif max-w-none">
+                        <p className="text-2xl font-light text-zinc-100 mb-6 font-sans">
+                            {nation.description}
+                        </p>
+                        <p>
+                            Long before the Conclave gathered, the people of <strong>{nation.name}</strong> understood that reality was not fixed, but forged.
+                            They learned that to <em>{nation.wakeUp?.split(':')[0].toLowerCase()}</em> was the first step towards true sovereignty.
+                        </p>
+                        <p>
+                            Their history is written in the stars and the soil alike. This is where you belong if you seek to understand the deeper currents of the world.
+                        </p>
                     </div>
                 </header>
 
-                <hr className="border-zinc-800" />
+                <hr className="border-zinc-800/50" />
 
                 <div className="grid gap-8">
                     {/* CULTURAL PILLARS */}

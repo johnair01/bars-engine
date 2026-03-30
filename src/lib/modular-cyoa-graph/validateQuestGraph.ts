@@ -13,6 +13,7 @@ export type QuestGraphValidationCode =
   | 'NO_END'
   | 'UNREACHABLE_END'
   | 'CHOICE_SINGLE_ARM'
+  | 'COASTER_SEQUENCE_BREAK'
 
 export interface QuestGraphIssue {
   code: QuestGraphValidationCode
@@ -167,6 +168,34 @@ export function validateQuestGraph(story: CmaStory): ValidateQuestGraphResult {
       })
     }
   }
+
+  return { ok: errors.length === 0, errors }
+}
+
+/**
+ * Validates that the story follows a "grammatical" coaster arc.
+ * Mandatory Sequence: LIFT -> DROP -> INVERSION -> BRAKE -> STATION
+ */
+export function validateCoasterAesthetics(story: CmaStory): ValidateQuestGraphResult {
+  const errors: QuestGraphIssue[] = []
+  const nodes = story.nodes
+
+  const hasTag = (tag: string) => nodes.some(n => {
+    const coasterTag = (n.metadata as any)?.coasterTag || n.id
+    return coasterTag.toUpperCase().includes(tag)
+  })
+
+  const requiredTags = ['LIFT', 'DROP', 'INVERSION', 'BRAKE', 'STATION']
+  for (const tag of requiredTags) {
+    if (!hasTag(tag)) {
+      errors.push({
+        code: 'COASTER_SEQUENCE_BREAK',
+        message: `Grammar Error: Missing **${tag}** phase. Every adventure needs a LIFT, DROP, INVERSION, BRAKE, and STATION to be grammatical.`
+      })
+    }
+  }
+
+  // TODO: More complex sequence path validation if needed for M1
 
   return { ok: errors.length === 0, errors }
 }

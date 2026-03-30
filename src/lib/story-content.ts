@@ -16,6 +16,7 @@ const getArchetypeChoice = (archetype: any): StoryChoice => ({
 })
 
 export async function getStaticStoryNode(nodeId: string, playerId?: string): Promise<StoryNode | null> {
+    if (!nodeId) return null
     const player = playerId ? await db.player.findUnique({ where: { id: playerId } }) : null
     const progress = player?.storyProgress ? JSON.parse(player.storyProgress as string) as StoryProgress : null
     const decisions = progress?.decisions || []

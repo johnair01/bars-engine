@@ -2,6 +2,10 @@
 
 import { useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { CultivationCard } from '@/components/ui/CultivationCard'
+import { lookupCardArt, QUARANTINED_CARD_KEYS } from '@/lib/ui/card-art-registry'
+import { useNation } from '@/lib/ui/nation-provider'
+import { STAGE_TOKENS, ELEMENT_TOKENS } from '@/lib/ui/card-tokens'
 
 type NationModalProps = {
     open: boolean
@@ -28,10 +32,19 @@ export function NationModal({ open, onClose, nation }: NationModalProps) {
         }
     }, [open, handleEscape])
 
+    const { element: contextElement, archetypeName } = useNation()
+    const resolvedElement = contextElement ?? 'earth'
+
     if (!open) return null
 
     const desc = nation.description?.trim().slice(0, 300)
     const truncated = nation.description && nation.description.length > 300
+
+    const artEntry = lookupCardArt(archetypeName ?? 'bold-heart', resolvedElement)
+    const isQuarantined = artEntry ? QUARANTINED_CARD_KEYS.has(artEntry.key) : false
+
+    const st = STAGE_TOKENS['seed']
+    const textAccent = ELEMENT_TOKENS[resolvedElement].textAccent
 
     return (
         <div
@@ -43,29 +56,41 @@ export function NationModal({ open, onClose, nation }: NationModalProps) {
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 onClick={onClose}
             />
-            <div className="relative max-w-md w-full rounded-2xl border border-purple-900/50 bg-zinc-950 p-6 shadow-2xl">
+            <CultivationCard stage="seed" altitude="neutral" element={resolvedElement} className="relative max-w-md w-full shadow-2xl p-0 overflow-hidden flex flex-col z-10">
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                    className="absolute right-4 top-4 rounded-lg p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors z-20 mix-blend-difference bg-black/20"
                     aria-label="Close"
                 >
                     ✕
                 </button>
-                <div className="text-[10px] uppercase tracking-widest text-purple-400 mb-2">Nation</div>
-                <h2 className="text-xl font-bold text-purple-100 mb-3">{nation.name}</h2>
-                {desc && (
-                    <p className="text-sm text-zinc-400 mb-4">
-                        {desc}
-                        {truncated && '…'}
-                    </p>
-                )}
-                <Link
-                    href={`/nation/${nation.id}`}
-                    className="block w-full py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white text-center font-medium rounded-lg transition-colors"
-                >
-                    View full page →
-                </Link>
-            </div>
+
+                {/* Modal Art Window */}
+                <div className={`card-art-window relative overflow-hidden ${st.artWindowHeight} min-h-[140px] bg-black`}>
+                    {isQuarantined && <div className="absolute inset-0 skeleton-shimmer bg-black/40" />}
+                    {artEntry && !isQuarantined && (
+                        <img src={artEntry.publicPath} className={`w-full h-full object-cover object-[center_30%] ${st.artOpacity}`} alt="" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0908] via-transparent to-transparent opacity-100" />
+                </div>
+
+                <div className="p-6 pt-2">
+                    <div className={`text-[10px] uppercase tracking-widest ${textAccent} mb-2`}>Nation</div>
+                    <h2 className={`text-xl font-bold ${textAccent} mb-3`}>{nation.name}</h2>
+                    {desc && (
+                        <p className="text-sm text-zinc-400 mb-4 font-mono leading-relaxed">
+                            {desc}
+                            {truncated && '…'}
+                        </p>
+                    )}
+                    <Link
+                        href={`/nation/${nation.id}`}
+                        className="block w-full py-3 px-4 bg-zinc-800 hover:bg-zinc-700 text-white text-center font-bold font-mono tracking-widest uppercase text-xs rounded-xl transition-colors border border-zinc-700"
+                    >
+                        View full page →
+                    </Link>
+                </div>
+            </CultivationCard>
         </div>
     )
 }

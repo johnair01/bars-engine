@@ -26,6 +26,7 @@ import {
 import { parseTwee } from '@/lib/twee-parser'
 import { resolveArchetypeKeyForTransformation } from '@/lib/archetype-keys'
 import { slugifyName } from '@/lib/avatar-utils'
+import { mapBlueprintToMetadata } from '@/lib/cyoa/blueprint-prompt-library'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,12 +54,16 @@ function serializePassageForClient(p: {
     pid?: string
     text?: string
     cleanText?: string
-    links?: { label?: string; target?: string; name?: string; link?: string }[]
+    links?: { label?: string; target?: string; name?: string; link?: string; buttonLabel?: string; voiceLine?: string; blueprintKey?: string }[]
     tags?: string[]
+    bodyVariants?: Record<number, string>
 }) {
     const links = (p.links ?? []).map((l) => ({
         label: l.label ?? l.name ?? l.target ?? '',
         target: l.target ?? l.link ?? '',
+        buttonLabel: l.buttonLabel,
+        voiceLine: l.voiceLine,
+        blueprintKey: l.blueprintKey,
     }))
     return {
         pid: p.pid ?? p.name ?? '',
@@ -67,6 +72,7 @@ function serializePassageForClient(p: {
         cleanText: p.cleanText ?? p.text ?? '',
         links,
         tags: p.tags ?? [],
+        bodyVariants: p.bodyVariants,
     }
 }
 
@@ -151,11 +157,11 @@ export async function toggleTemplateStory(storyId: string) {
 
         await db.twineStory.update({
             where: { id: storyId },
-            data: { isTemplate: !story.isTemplate }
+            data: { isTemplate: !(story as any).isTemplate } as any
         })
 
         revalidatePath('/admin/twine')
-        return { success: true, isTemplate: !story.isTemplate }
+        return { success: true, isTemplate: !(story as any).isTemplate }
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Failed'
         return { error: msg }
@@ -171,7 +177,7 @@ export async function createStoryFromTemplate(templateId: string, newTitle?: str
         const adminId = await requireAdmin()
         const template = await db.twineStory.findUnique({ where: { id: templateId } })
         if (!template) return { error: 'Template not found' }
-        if (!template.isTemplate) return { error: 'Story is not marked as template' }
+        if (!(template as any).isTemplate) return { error: 'Story is not marked as template' }
 
         const baseTitle = newTitle?.trim() || `${template.title} (copy)`
         const slug = baseTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -185,11 +191,11 @@ export async function createStoryFromTemplate(templateId: string, newTitle?: str
                 sourceType: template.sourceType,
                 sourceText: template.sourceText,
                 parsedJson: template.parsedJson,
-                irDraft: template.irDraft,
+                irDraft: (template as any).irDraft,
                 isPublished: false,
                 isTemplate: false,
                 createdById: adminId,
-            }
+            } as any
         })
 
         revalidatePath('/admin/twine')
@@ -228,7 +234,7 @@ export async function publishIrToTwineStory(
         const story = await db.twineStory.findUnique({ where: { id: storyId } })
         if (!story) return { error: 'Story not found' }
 
-        const draft = irDraft ?? story.irDraft
+        const draft = irDraft ?? (story as any).irDraft
         if (!draft || draft.trim() === '') {
             return { error: 'No irDraft provided and story has no saved irDraft' }
         }
@@ -266,9 +272,9 @@ export async function publishIrToTwineStory(
                     parsedJson: JSON.stringify(parsed),
                     sourceType: 'twee',
                     ...(irDraft ? { irDraft } : {}),
-                },
+                } as any,
             }),
-            db.compiledTweeVersion.create({
+            (db as any).compiledTweeVersion.create({
                 data: {
                     storyId,
                     tweeContent: tweeSource,
@@ -301,7 +307,7 @@ export async function saveIrDraft(
 
         await db.twineStory.update({
             where: { id: storyId },
-            data: { irDraft },
+            data: { irDraft } as any,
         })
 
         revalidatePath('/admin/twine')
@@ -319,12 +325,12 @@ export async function saveIrDraft(
 // ---------------------------------------------------------------------------
 
 export async function getCompiledVersionsForStory(storyId: string) {
-  await requireAdmin()
-  return db.compiledTweeVersion.findMany({
-    where: { storyId },
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-  })
+    await requireAdmin()
+    return (db as any).compiledTweeVersion.findMany({
+        where: { storyId },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +343,7 @@ export async function rollbackToVersion(
 ): Promise<{ success?: boolean; error?: string }> {
     try {
         await requireAdmin()
-        const version = await db.compiledTweeVersion.findFirst({
+        const version = await (db as any).compiledTweeVersion.findFirst({
             where: { id: versionId, storyId },
         })
         if (!version) return { error: 'Version not found' }
@@ -489,8 +495,23 @@ export async function listPublishedStories() {
 // PLAYER: Start or resume run (supports quest-scoped runs)
 // ---------------------------------------------------------------------------
 
-export async function getOrCreateRun(storyId: string, questId?: string | null, playerIdOverride?: string) {
+export async function getOrCreateRun(storyId: string, questId?: string | null, playerIdOverride?: string, runId?: string) {
     const playerId = playerIdOverride || await requirePlayer()
+
+    // 1. If runId is provided, attempt to fetch that specific run
+    if (runId) {
+        const specificRun = await db.twineRun.findUnique({
+            where: { id: runId },
+            include: { story: { include: { bindings: true } } }
+        })
+        if (specificRun) {
+            // Check for access in a multi-user environment (simplified for now: owner or collaborative)
+            const isOwner = specificRun.playerId === playerId
+            if (isOwner || specificRun.isCollaborative) {
+                return { run: specificRun, story: specificRun.story }
+            }
+        }
+    }
 
     const story = await db.twineStory.findUnique({
         where: { id: storyId },
@@ -519,6 +540,25 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
     })
 
     if (!run) {
+        let initialCyoaState: Record<string, any> = {}
+        const p = await db.player.findUnique({ where: { id: playerId } })
+        if (p?.storyProgress) {
+            try {
+                const prog = JSON.parse(p.storyProgress)
+                if (prog?.state?.hexagramId) {
+                    initialCyoaState.hexagram = {
+                        hexagramId: String(prog.state.hexagramId),
+                        payload: {
+                            transformedHexagramId: prog.state.transformedHexagramId,
+                            changingLines: prog.state.changingLines,
+                            faceMapping: prog.state.hexagramFaceMapping,
+                            ichingCastContext: prog.state.ichingCastContext
+                        }
+                    }
+                }
+            } catch (e) { }
+        }
+
         try {
             run = await db.twineRun.create({
                 data: {
@@ -528,7 +568,8 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
                     currentPassageId: startPassageId,
                     visited: JSON.stringify([startPassageId]),
                     firedBindings: '[]',
-                }
+                    cyoaState: Object.keys(initialCyoaState).length > 0 ? JSON.stringify(initialCyoaState) : '{}'
+                } as any
             })
         } catch (err: any) {
             // RACE CONDITION: If another concurrent request created the run
@@ -567,7 +608,9 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
         }
     }
 
-    return { run, story }
+    const cyoaState = JSON.parse((run as any).cyoaState || '{}')
+    const artifactLedger = cyoaState.artifactLedger || []
+    return { run, story, artifactLedger }
 }
 
 // ---------------------------------------------------------------------------
@@ -580,7 +623,8 @@ export async function advanceRun(
     questId?: string | null,
     playerIdOverride?: string,
     threadId?: string | null,
-    skipRevalidate?: boolean
+    skipRevalidate?: boolean,
+    blueprintKey?: string
 ) {
     const playerId = playerIdOverride || await requirePlayer()
 
@@ -615,7 +659,7 @@ export async function advanceRun(
             data: { onboardingComplete: true }
         })
         try { revalidatePath('/') } catch (e) { }
-        return { success: true, redirect: '/', emitted: [], questCompleted: false }
+        return { success: true, redirect: '/', emitted: [], questCompleted: false, artifactLedger: [] }
     }
 
     // Validate the target passage exists
@@ -626,7 +670,26 @@ export async function advanceRun(
     const visited = JSON.parse(run.visited) as string[]
     visited.push(targetPassageName)
 
-    await db.twineRun.update({
+    // Handle BAR Emission if blueprintKey is provided (CBB P4)
+    if (blueprintKey) {
+        const { emitBarFromPassage } = await import('@/actions/emit-bar-from-passage')
+        const { promptsForBlueprintKey } = await import('@/lib/cyoa/blueprint-prompt-library')
+        const prompts = promptsForBlueprintKey(blueprintKey)
+        const title = prompts[0] || `Artifact from ${targetPassageName}`
+        const description = prompts[1] || `Uncovered during your journey in ${story.title}.`
+
+        await emitBarFromPassage({
+            title,
+            description,
+            adventureId: storyId,
+            passageNodeId: run.currentPassageId,
+            blueprintKey,
+        }).catch(err => {
+            console.error('[twine] Failed to emit BAR from blueprintKey:', err)
+        })
+    }
+
+    const updated = await db.twineRun.update({
         where: { id: run.id },
         data: {
             currentPassageId: targetPassageName,
@@ -664,11 +727,18 @@ export async function advanceRun(
             ? serializePassageForClient(targetPassage as { name?: string; pid?: string; text?: string; cleanText?: string; links?: { label?: string; target?: string; name?: string; link?: string }[]; tags?: string[] })
             : undefined
 
+    // Re-fetch run to get updated cyoaState from executeBindingsForPassage
+    const finalRun = await db.twineRun.findUnique({ where: { id: run.id } })
+    const cyoaState = JSON.parse((finalRun as any)?.cyoaState || '{}')
+    const artifactLedger = cyoaState.artifactLedger || []
+
     return {
         success: true,
         emitted: bindingResult,
         questCompleted,
         redirect: null as string | null,
+        run: finalRun || run,
+        artifactLedger,
         ...(passage && { currentPassageId: targetPassageName, visited, passage }),
     }
 }
@@ -697,7 +767,7 @@ export async function revertRun(storyId: string, questId?: string | null, player
     visited.pop()
     const prevPassageName = visited[visited.length - 1]
 
-    await db.twineRun.update({
+    const updated = await db.twineRun.update({
         where: { id: run.id },
         data: {
             currentPassageId: prevPassageName,
@@ -726,7 +796,17 @@ export async function revertRun(storyId: string, questId?: string | null, player
     if (currentBeforeRevert === 'FEEDBACK') {
         const story = await db.twineStory.findUnique({ where: { id: storyId } })
         if (story) {
-            const parsed = JSON.parse(story.parsedJson) as { passages: { name?: string; pid?: string; text?: string; cleanText?: string; links?: { label?: string; target?: string; name?: string; link?: string }[]; tags?: string[] }[] }
+            const parsed = JSON.parse(story.parsedJson) as {
+                passages: {
+                    name?: string;
+                    pid?: string;
+                    text?: string;
+                    cleanText?: string;
+                    links?: { label?: string; target?: string; name?: string; link?: string; buttonLabel?: string; voiceLine?: string; blueprintKey?: string }[];
+                    tags?: string[];
+                    bodyVariants?: Record<number, string>;
+                }[]
+            }
             const prevPassage = parsed.passages?.find((p) => p.name === prevPassageName || p.pid === prevPassageName)
             if (prevPassage) {
                 passage = serializePassageForClient(prevPassage)
@@ -734,10 +814,15 @@ export async function revertRun(storyId: string, questId?: string | null, player
         }
     }
 
+    const cyoaState = JSON.parse((updated as any).cyoaState || '{}')
+    const artifactLedger = cyoaState.artifactLedger || []
+
     return {
         success: true,
         currentPassageId: prevPassageName,
         visited,
+        run: updated,
+        artifactLedger,
         ...(passage && { passage }),
     }
 }
@@ -827,10 +912,10 @@ export async function autoCompleteQuestFromTwine(questId: string, runId: string,
         await runCompletionEffectsForQuest(playerId, questId, completionInputs)
 
         // Record verification completion for backlog sync (O)
-        if (quest.backlogPromptPath) {
+        if ((quest as any).backlogPromptPath) {
             try {
                 const { recordVerificationCompletion } = await import('@/actions/verification-backlog')
-                await recordVerificationCompletion(questId, playerId, quest.backlogPromptPath)
+                await recordVerificationCompletion(questId, playerId, (quest as any).backlogPromptPath)
             } catch (e) {
                 console.error('[TWINE] Backlog recording failed:', e)
             }
@@ -887,6 +972,9 @@ async function executeBindingsForPassage(
     const run = await db.twineRun.findUnique({ where: { id: runId } })
     if (!run) return emitted
     const firedBindings = JSON.parse(run.firedBindings) as string[]
+    const cyoaState = JSON.parse((run as any).cyoaState || '{}')
+    const artifactLedger = cyoaState.artifactLedger || []
+    let ledgerDirty = false
     const newlyFiredIds: string[] = []
 
     // Load diagnostic state for scoring actions
@@ -900,7 +988,7 @@ async function executeBindingsForPassage(
 
         try {
             if (binding.actionType === 'EMIT_QUEST') {
-                await db.customBar.create({
+                const bar = await db.customBar.create({
                     data: {
                         creatorId: playerId,
                         title: payload.title,
@@ -919,8 +1007,18 @@ async function executeBindingsForPassage(
                     }
                 })
                 emitted.push(`Quest: ${payload.title}`)
+                const meta = mapBlueprintToMetadata(payload.blueprintKey || binding.actionType)
+                artifactLedger.push({
+                    kind: 'quest',
+                    id: bar.id,
+                    sourceNodeId: passageName,
+                    blueprintKey: payload.blueprintKey || binding.actionType,
+                    metadata: meta,
+                    createdAt: new Date().toISOString()
+                })
+                ledgerDirty = true
             } else if (binding.actionType === 'EMIT_BAR') {
-                await db.customBar.create({
+                const bar = await db.customBar.create({
                     data: {
                         creatorId: playerId,
                         title: payload.title,
@@ -935,6 +1033,16 @@ async function executeBindingsForPassage(
                     }
                 })
                 emitted.push(`BAR: ${payload.title}`)
+                const meta = mapBlueprintToMetadata(payload.blueprintKey || binding.actionType)
+                artifactLedger.push({
+                    kind: 'bar',
+                    id: bar.id,
+                    sourceNodeId: passageName,
+                    blueprintKey: payload.blueprintKey || binding.actionType,
+                    metadata: meta,
+                    createdAt: new Date().toISOString()
+                })
+                ledgerDirty = true
             } else if (binding.actionType === 'SET_NATION') {
                 const nationId = payload.nationId || payload.id
                 if (nationId) emitted.push(`Recommendation: ${nationId}`)
@@ -991,7 +1099,7 @@ async function executeBindingsForPassage(
                 if (archetypeKey) {
                     const raw = String(archetypeKey)
                     const playbookSlug = resolveArchetypeKeyForTransformation(raw)
-                    let playbook = await db.archetype.findFirst({
+                    let playbook = await (db as any).archetype.findFirst({
                         where: {
                             OR: [
                                 { id: raw },
@@ -1000,16 +1108,16 @@ async function executeBindingsForPassage(
                         }
                     })
                     if (!playbook && playbookSlug) {
-                        const candidates = await db.archetype.findMany({
+                        const candidates = await (db as any).archetype.findMany({
                             where: { instanceId: null },
                         })
                         playbook =
-                            candidates.find((a) => slugifyName(a.name) === playbookSlug) ?? null
+                            candidates.find((a: any) => slugifyName(a.name) === playbookSlug) ?? null
                     }
                     if (playbook) {
                         await db.player.update({
                             where: { id: playerId },
-                            data: { archetypeId: playbook.id }
+                            data: { archetypeId: playbook.id } as any
                         })
                         diagState = confirmSelection(diagState, 'archetype')
                         diagDirty = true
@@ -1032,14 +1140,16 @@ async function executeBindingsForPassage(
     }
 
     // Persist newly fired bindings + diagnostic state
-    if (newlyFiredIds.length > 0 || diagDirty) {
+    if (newlyFiredIds.length > 0 || diagDirty || ledgerDirty) {
+        if (ledgerDirty) cyoaState.artifactLedger = artifactLedger
         const updatedFired = [...firedBindings, ...newlyFiredIds]
         await db.twineRun.update({
             where: { id: run.id },
             data: {
                 firedBindings: JSON.stringify(updatedFired),
                 ...(diagDirty ? { diagnosticState: serializeDiagnosticState(diagState) } : {}),
-            }
+                ...(ledgerDirty ? { cyoaState: JSON.stringify(cyoaState) } : {})
+            } as any
         })
         if (!skipRevalidate) {
             try { revalidatePath('/') } catch (e) { }

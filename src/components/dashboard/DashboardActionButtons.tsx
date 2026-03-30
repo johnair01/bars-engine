@@ -39,6 +39,20 @@ const ACTIONS = [
     color: 'purple',
     icon: '🗺️',
   },
+  {
+    href: '/hand/library',
+    label: 'The Library',
+    description: 'Explore your curated and historical BARs provenance',
+    color: 'amber',
+    icon: '🏛️',
+  },
+  {
+    href: '/profile/mine',
+    label: 'My Museum',
+    description: 'Visit and edit your personal Trophy Room',
+    color: 'yellow',
+    icon: '💎',
+  },
 ] as const
 
 const COLOR_CLASSES = {

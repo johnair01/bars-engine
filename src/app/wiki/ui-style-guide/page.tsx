@@ -9,10 +9,53 @@
  * @agentDiscoverable true
  */
 import Link from 'next/link'
+import { CultivationCard, type ElementKey, type CardStage, type AlchemyAltitude } from '@/components/ui/CultivationCard'
+import { lookupCardArt, QUARANTINED_CARD_KEYS } from '@/lib/ui/card-art-registry'
+import { STAGE_TOKENS } from '@/lib/ui/card-tokens'
+import { PlayerArtBadge } from '@/components/player/PlayerArtBadge'
+
+function PreviewCard({
+  element,
+  altitude,
+  stage,
+  archetypeName = 'bold-heart',
+  label,
+  overrideArtEntry,
+}: {
+  element: ElementKey
+  altitude: AlchemyAltitude
+  stage: CardStage
+  archetypeName?: string
+  label?: string
+  overrideArtEntry?: any
+}) {
+  const artEntry = overrideArtEntry || lookupCardArt(archetypeName, element)
+  const safeArt = artEntry && !QUARANTINED_CARD_KEYS.has(artEntry.key) ? artEntry : null
+  const st = STAGE_TOKENS[stage]
+
+  return (
+    <CultivationCard element={element} altitude={altitude} stage={stage} className="w-56 shrink-0 transition-transform hover:scale-[1.02]">
+      <div className={`card-art-window ${st.artWindowHeight} overflow-hidden rounded-t-xl`}>
+        {safeArt && (
+          <img
+            src={safeArt.publicPath}
+            alt=""
+            aria-hidden="true"
+            className={`w-full h-full object-cover object-top ${st.artOpacity}`}
+          />
+        )}
+      </div>
+      <div className="p-4 space-y-1 relative z-10">
+        <h3 className="text-sm font-bold capitalize text-white truncate">{label ?? `${element} / ${altitude}`}</h3>
+        <div className="text-[10px] text-zinc-400 uppercase tracking-widest">{stage} stage</div>
+      </div>
+    </CultivationCard>
+  )
+}
 
 export default function UIStyleGuidePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="space-y-2">
         <div className="text-xs text-zinc-500">
           <Link href="/wiki" className="hover:text-zinc-400">Wiki</Link>
@@ -146,6 +189,50 @@ export default function UIStyleGuidePage() {
             P0 audit: <code className="text-zinc-500">UI_STYLE_SELF_AUDIT_P0.md</code>
           </li>
         </ul>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-6 overflow-hidden">
+        <div className="space-y-1">
+          <h2 className="text-sm uppercase tracking-widest text-zinc-400">Cultivation Card Art Surfaces (CASI)</h2>
+          <p className="text-zinc-400 text-sm">Visual test harness for the 5 Wuxing elements and 3 axis of state logic.</p>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-zinc-500">The 5 Elements (growing / neutral)</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+            <PreviewCard element="fire" altitude="neutral" stage="growing" />
+            <PreviewCard element="water" altitude="neutral" stage="growing" />
+            <PreviewCard element="wood" altitude="neutral" stage="growing" />
+            <PreviewCard element="metal" altitude="neutral" stage="growing" />
+            <PreviewCard element="earth" altitude="neutral" stage="growing" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-zinc-500">Altitude Strip (fire element / growing)</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+            <PreviewCard element="fire" altitude="dissatisfied" stage="growing" label="Dissatisfied" />
+            <PreviewCard element="fire" altitude="neutral" stage="growing" label="Neutral" />
+            <PreviewCard element="fire" altitude="satisfied" stage="growing" label="Satisfied" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-zinc-500">Stage Strip (fire element / satisfied)</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+            <PreviewCard element="fire" altitude="satisfied" stage="seed" label="Seed" />
+            <PreviewCard element="fire" altitude="satisfied" stage="growing" label="Growing" />
+            <PreviewCard element="fire" altitude="satisfied" stage="composted" label="Composted" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs uppercase tracking-wider text-zinc-500">Quarantine Gate (Watermarks missing safely)</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+            <PreviewCard element="metal" altitude="neutral" stage="growing" archetypeName="truth-seer" label="Argyra Truth Seer" />
+            <PreviewCard element="fire" altitude="neutral" stage="growing" archetypeName="joyful-connector" label="Pyrakanth Connector" />
+          </div>
+        </div>
       </section>
 
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">

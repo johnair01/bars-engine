@@ -61,6 +61,7 @@ export default async function AdminDashboard() {
                             { label: 'Adventures', href: '/admin/adventures' },
                             { label: 'Twine', href: '/admin/twine' },
                             { label: 'Quest proposals', href: '/admin/quest-proposals' },
+                            { label: 'CYOA proposals', href: '/admin/cyoa-proposals' },
                         ]}
                     />
                     <MoveBlock
@@ -116,6 +117,13 @@ export default async function AdminDashboard() {
                     value="BAR→Quest"
                     href="/admin/quest-proposals"
                     icon="📋"
+                />
+                <DashboardCard
+                    title="CYOA Proposals"
+                    value="Story"
+                    href="/admin/cyoa-proposals"
+                    icon="✨"
+                    color="text-purple-400"
                 />
                 <DashboardCard
                     title="Agent Proposals"

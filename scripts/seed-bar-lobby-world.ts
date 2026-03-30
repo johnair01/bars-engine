@@ -97,7 +97,13 @@ function cardClubAnchors(campaignClearingHref: string) {
       label: 'Bruised Banana Campaign',
       config: JSON.stringify({ href: campaignClearingHref }),
     },
-    { anchorType: 'librarian_npc',    tileX: 7,  tileY: 2,  label: 'Regent (Librarian)' },
+    {
+      anchorType: 'librarian_v2_npc',
+      tileX: 7,
+      tileY: 2,
+      label: 'Game Master Regent Face',
+      config: JSON.stringify({ externalPath: '/hand/library' })
+    },
     // Interior tile — (14,9) is map corner (impassable); no walkable neighbor within range 1 for Interact.
     { anchorType: 'giacomo_npc',      tileX: 12, tileY: 3,  label: 'Giacomo' },
     { anchorType: 'bar_table',        tileX: 7,  tileY: 7,  label: 'Cross-Nation BAR Pool' },

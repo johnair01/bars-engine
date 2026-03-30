@@ -13,6 +13,7 @@ import {
 import { FirstAidTwinePlayer } from './FirstAidTwinePlayer'
 import { Shadow321Form } from '@/components/shadow/Shadow321Form'
 import { TwineLogic } from '@/lib/twine-engine'
+import { PrivacyBadge } from '@/components/ui/PrivacyBadge'
 
 interface EmotionalFirstAidKitProps {
     initialContext: EmotionalFirstAidContext
@@ -211,7 +212,7 @@ export function EmotionalFirstAidKit({ initialContext, contextQuestId }: Emotion
 
                     <div className="space-y-2">
                         <label className="text-xs uppercase tracking-widest text-zinc-500 font-bold">
-                            Optional notes for the medbay log
+                            Optional notes for the medbay log <PrivacyBadge />
                         </label>
                         <textarea
                             value={issueText}

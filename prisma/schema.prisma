@@ -88,6 +88,7 @@ model Player {
   walkableSpritePath           String? // /sprites/walkable/{nationKey}-{archetypeKey}.png (set after walkable approved)
   pronouns                     String?
   attendance                   String?
+  gmFaceLevel                  Int                         @default(1) // Level 1 (Shaman) up to Level 6 (Sage)
   createdAt                    DateTime                    @default(now())
   barSharesSent                BarShare[]                  @relation("BarSharesSent")
   barSharesReceived            BarShare[]                  @relation("BarSharesReceived")
@@ -158,6 +159,7 @@ model Player {
   roomPresences                RoomPresence[]
   lastForgeTimestamp           DateTime? // Admin Agent Forge: cooldown start
   forgeSessions                ForgeSession[]
+  profileSpatialMap            ProfileSpatialMap?
   alignment                    PlayerAlignment?
   carriedWeights               CarriedWeight[]
   npcProfile                   NpcProfile?
@@ -195,6 +197,7 @@ model Player {
   campaignSlotsCreated         CampaignSlot[]          @relation("CampaignSlotCreatedBy")
   /// CCV: Player's contribution records across campaigns
   contributionRecords          ContributionRecord[]    @relation("PlayerContributions")
+  cmaGeneratorDrafts           CmaGeneratorDraft[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -336,6 +339,7 @@ model CustomBar {
   evidenceKind             String? // observation | instruction | canon_statement | spec_clause | lore | schism (when CustomBar is evidence)
   sourceBarId              String? // when set, this quest was generated from this BAR (BAR → Quest Generation Engine)
   source321SessionId       String? // when set, this quest was created from 321 session (Singleplayer Charge Metabolism)
+  cmaGeneratorDrafts       CmaGeneratorDraft[]
   proposedByAgentId        String? // when set, this BAR/quest was proposed by an agent (NPC); requires admin approval before publication
   // Provenance Stamp fields (PSS) — set at creation, immutable; persists through trades
   creatorNationKey         String?              @map("creator_nation_key") // nationKey of the creating player
@@ -1423,11 +1427,17 @@ model TwineRun {
   visited          String     @default("[]")
   firedBindings    String     @default("[]")
   diagnosticState  String?
+  cyoaState        String     @default("{}") // Holds CyoaRunState (Artifact Ledger, Hexagram, etc.)
+  agentMetadata    String?    @db.Text // JSON: contributors, branching provenance, etc.
+  isCollaborative  Boolean    @default(false)
+  parentRunId      String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   completedAt      DateTime?
   player           Player     @relation("TwineRunsPlayed", fields: [playerId], references: [id], onDelete: Cascade)
   story            TwineStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  parentRun        TwineRun?  @relation("CollaborativeForks", fields: [parentRunId], references: [id])
+  forks            TwineRun[] @relation("CollaborativeForks")
 
   @@unique([storyId, playerId, questId])
   @@index([playerId, updatedAt])
@@ -2220,8 +2230,32 @@ model AdventureTemplate {
   ownership    String   @default("system") // system | player
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  cmaGeneratorDrafts CmaGeneratorDraft[]
 
   @@map("adventure_templates")
+}
+
+model CmaGeneratorDraft {
+  id              String   @id @default(cuid())
+  userId          String
+  user            Player   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceBarId     String?
+  sourceBar       CustomBar? @relation(fields: [sourceBarId], references: [id], onDelete: SetNull)
+  templateId      String?
+  template        AdventureTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  campaignId      String?
+  instanceId      String?
+  emotionalCharge String? // fear, anger, sadness, joy, neutral
+  gmId            String? // gm lens (fallback or initial preference)
+  status          String   @default("draft") // draft, pending_review, completed, rejected
+  rationale       String?  @db.Text
+  graphJson       String   @db.Text
+  submittedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("cma_generator_drafts")
 }
 
 model PlayerPlaybook {
@@ -2867,9 +2901,57 @@ model RoomPresence {
   player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
   room   MapRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  @@unique([playerId, roomId])
-  @@index([roomId, lastSeenAt])
-  @@map("room_presence")
+  @@map("room_presences")
+}
+
+model ProfileSpatialMap {
+  id         String           @id @default(cuid())
+  playerId   String           @unique @map("player_id")
+  player     Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  name       String           @default("Personal Space")
+  spawnpoint String           // JSON: { roomId, x, y }
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+  rooms      ProfileMapRoom[]
+
+  @@map("profile_spatial_maps")
+}
+
+model ProfileMapRoom {
+  id            String             @id @default(cuid())
+  mapId         String             @map("map_id")
+  map           ProfileSpatialMap  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  name          String
+  slug          String
+  tilemap       String             @db.Text
+  roomType      String             @map("room_type") // trophy_room | library | museum
+  backgroundUrl String?            @map("background_url")
+  sortOrder     Int                @default(0) @map("sort_order")
+  anchors       ProfileMapAnchor[]
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  @@unique([mapId, slug])
+  @@index([mapId])
+  @@map("profile_map_rooms")
+}
+
+model ProfileMapAnchor {
+  id         String         @id @default(cuid())
+  roomId     String         @map("room_id")
+  room       ProfileMapRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  anchorType String         @map("anchor_type") // bar | bar_deck | portal
+  tileX      Int            @map("tile_x")
+  tileY      Int            @map("tile_y")
+  label      String?
+  linkedId   String?        @map("linked_id") // ID of the BAR or BarDeck
+  linkedType String?        @map("linked_type") // BAR | BAR_DECK
+  config     String?        @db.Text
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  @@index([roomId])
+  @@map("profile_map_anchors")
 }
 
 model SpriteAuditLog {

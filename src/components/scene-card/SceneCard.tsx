@@ -7,13 +7,14 @@
 
 import { GMVoiceLabel, type GMVoice } from './GMVoice'
 
-export type SceneTone = 'contemplative' | 'charged' | 'revelatory' | 'completion'
+export type SceneTone = 'contemplative' | 'charged' | 'revelatory' | 'completion' | 'somatized'
 
 const TONE_BORDER: Record<SceneTone, string> = {
   contemplative: 'border-zinc-800/0',
   charged:       'border-amber-900/20',
   revelatory:    'border-indigo-900/30',
   completion:    'border-emerald-900/30',
+  somatized:     'border-purple-900/40',
 }
 
 type Props = {

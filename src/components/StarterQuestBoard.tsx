@@ -9,6 +9,7 @@ import { delegateBar } from '@/actions/delegate-bar'
 import { releaseBarToSaladBowl } from '@/actions/release-bar'
 import { deleteBar } from '@/actions/quest-engine'
 import Link from 'next/link'
+import { CultivationCard } from '@/components/ui/CultivationCard'
 
 type CompletedBar = { id: string; inputs: Record<string, any> }
 
@@ -130,9 +131,7 @@ function VibeBarCard({
     })
 
     return (
-        <div className={`rounded-xl border transition-colors ${isActive
-            ? 'bg-yellow-900/20 border-yellow-700 hover:border-yellow-500'
-            : 'bg-zinc-900/40 border-zinc-700 hover:border-zinc-500'}`}>
+        <CultivationCard stage="growing" altitude="neutral" className={`w-full transition-colors ${isActive ? 'ring-2 ring-yellow-700 hover:ring-yellow-500 shadow-[0_0_15px_rgba(161,98,7,0.4)]' : 'hover:ring-1 hover:ring-zinc-500'}`}>
             <div className="flex justify-between items-center p-4">
                 <button
                     type="button"
@@ -266,7 +265,7 @@ function VibeBarCard({
                     )}
                 </div>
             )}
-        </div>
+        </CultivationCard>
     )
 }
 
@@ -274,45 +273,43 @@ function VibeBarCard({
 function StoryBarCard({ bar, isActive, onPickUp }: { bar: BarDef; isActive: boolean; onPickUp: () => void }) {
     if (isActive) {
         return (
-            <Link
-                href={`/bar/${bar.id}/story`}
-                className="block rounded-xl border bg-yellow-900/20 border-yellow-700 hover:border-yellow-500 transition-colors"
-            >
+            <Link href={`/bar/${bar.id}/story`} className="block w-full">
+                <CultivationCard stage="growing" altitude="neutral" className="w-full transition-colors ring-2 ring-yellow-700 hover:ring-yellow-500 shadow-[0_0_15px_rgba(161,98,7,0.4)]">
+                    <div className="p-4 flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-900/50 text-yellow-400 uppercase font-mono">Active</span>
+                                <h3 className="font-bold text-white">{bar.title}</h3>
+                            </div>
+                            <p className="text-xs text-zinc-400 mt-1">{bar.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-purple-400 font-mono text-sm">+{bar.reward} ♦</span>
+                            <span className="text-yellow-400">Continue →</span>
+                        </div>
+                    </div>
+                </CultivationCard>
+            </Link>
+        )
+    }
+
+    return (
+        <button onClick={onPickUp} className="block w-full text-left">
+            <CultivationCard stage="growing" altitude="neutral" className="w-full transition-colors hover:ring-1 hover:ring-purple-500">
                 <div className="p-4 flex justify-between items-center">
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-900/50 text-yellow-400 uppercase font-mono">Active</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-400 uppercase font-mono">Story</span>
                             <h3 className="font-bold text-white">{bar.title}</h3>
                         </div>
                         <p className="text-xs text-zinc-400 mt-1">{bar.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-purple-400 font-mono text-sm">+{bar.reward} ♦</span>
-                        <span className="text-yellow-400">Continue →</span>
+                        <span className="text-zinc-500 text-xs">Pick Up →</span>
                     </div>
                 </div>
-            </Link>
-        )
-    }
-
-    return (
-        <button
-            onClick={onPickUp}
-            className="block w-full text-left rounded-xl border bg-purple-900/20 border-purple-800 hover:border-purple-500 transition-colors"
-        >
-            <div className="p-4 flex justify-between items-center">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-400 uppercase font-mono">Story</span>
-                        <h3 className="font-bold text-white">{bar.title}</h3>
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">{bar.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-purple-400 font-mono text-sm">+{bar.reward} ♦</span>
-                    <span className="text-zinc-500 text-xs">Pick Up →</span>
-                </div>
-            </div>
+            </CultivationCard>
         </button>
     )
 }
@@ -320,13 +317,13 @@ function StoryBarCard({ bar, isActive, onPickUp }: { bar: BarDef; isActive: bool
 // Completed Bar Card
 function CompletedBarCard({ bar }: { bar: BarDef }) {
     return (
-        <div className="rounded-xl border bg-zinc-900/20 border-zinc-800 p-4 flex justify-between items-center opacity-75 hover:opacity-100 transition">
+        <CultivationCard stage="growing" altitude="neutral" className="w-full p-4 flex justify-between items-center opacity-75 hover:opacity-100 transition grayscale">
             <div>
                 <h3 className="font-bold text-zinc-400 line-through decoration-zinc-600">{bar.title}</h3>
                 <p className="text-xs text-zinc-600">Completed</p>
             </div>
             <span className="text-zinc-600 text-sm">✓</span>
-        </div>
+        </CultivationCard>
     )
 }
 

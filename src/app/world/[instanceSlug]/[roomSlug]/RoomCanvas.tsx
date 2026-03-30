@@ -41,6 +41,7 @@ type RoomCanvasProps = {
   playerNationKey: string | null
   /** Admin or server-only SKIP_NATION_GATE — see nation-room-gate.ts */
   bypassNationGate: boolean
+  artifactLedger: any[]
 }
 
 export function RoomCanvas({
@@ -54,6 +55,7 @@ export function RoomCanvas({
   spokeSeedStates,
   playerNationKey,
   bypassNationGate,
+  artifactLedger,
 }: RoomCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -153,6 +155,12 @@ export function RoomCanvas({
       if (target) navigateToWorldRoom(target.slug)
     }
   }
+
+  const navigateToEncounter = useCallback(() => {
+    // For now, redirect to a mock combat run
+    // In Phase 5 proper, this will create a ThresholdEncounter record
+    router.push('/adventures/challenger-combat-v1/play')
+  }, [router])
   const walkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const { rendererRef } = useSpatialRoomSession({
@@ -235,8 +243,32 @@ export function RoomCanvas({
       anchor.tileX === playerPos.x &&
       anchor.tileY === playerPos.y
     ) {
+      // P5: Resonance Check
+      if (anchor.config) {
+        try {
+            const cfg = JSON.parse(anchor.config)
+            if (cfg.requiredBlueprintKey) {
+                const hasKey = (artifactLedger || []).some(a => a.blueprintKey === cfg.requiredBlueprintKey)
+                if (!hasKey) {
+                    // console.warn("LOCKED: Missing required resonance", cfg.requiredBlueprintKey)
+                    return 
+                }
+            }
+        } catch { /* ignore */ }
+      }
       portalNavigateRef.current(anchor)
     }
+    
+    // P5: Wild Grass Logic (Encounter Spawn)
+    if (
+        anchor &&
+        anchor.anchorType === 'encounter_spawn' &&
+        anchor.tileX === playerPos.x &&
+        anchor.tileY === playerPos.y
+    ) {
+        navigateToEncounter()
+    }
+
     if (
       anchor &&
       anchor.anchorType === 'spoke_portal' &&

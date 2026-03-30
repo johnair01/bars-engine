@@ -72,7 +72,7 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
       text: moveBody,
-      choices: [{ text: 'Continue', targetId: nextId }],
+      choices: [{ text: 'Continue', targetId: nextId, blueprintKey: moveId }],
       anchors: {},
     })
   }
@@ -82,7 +82,10 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
     const meta = FACE_META[face]
     return {
       text: meta ? `${meta.label}: ${meta.role}` : face,
+      buttonLabel: meta ? `${meta.label}: ${meta.role}` : face,
+      voiceLine: meta?.mission,
       targetId: `gm_set_${face}`,
+      blueprintKey: face,
     }
   })
   nodes.push({
@@ -104,7 +107,7 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
       wordCountEstimate: 40,
       emotional: { channel: 'Neutrality', movement: 'translate' },
       text: sentence || `You chose the ${face} path.`,
-      choices: [{ text: 'Continue', targetId: 'moves_vibeulon' }],
+      choices: [{ text: 'Continue', targetId: 'moves_vibeulon', blueprintKey: `face_${face}` }],
       anchors: {},
     })
   }
@@ -128,11 +131,15 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
     emotional: { channel: 'Joy', movement: 'transcend' },
     text: COMMIT_TEXT,
     choices: isAuthenticated
-      ? [{ text: 'Continue to your Vault', targetId: 'redirect:/hand' }]
+      ? [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/hand' }]
       : [{ text: 'Continue', targetId: 'moves_signup' }],
     anchors: {},
     isActionNode: true,
     actionType: isAuthenticated ? 'complete' : 'signup',
+    bodyVariants: {
+      1: `**Commit** — You've chosen your path. The sanctuary awaits.`,
+      6: COMMIT_TEXT
+    }
   })
 
   // Signup (consequence) — omitted when authenticated (commit goes straight to Vault)

@@ -14,6 +14,33 @@ import { isCertificationQuestId } from '@/lib/certification-quest'
 import { CopyableProse } from '@/components/ui/CopyableProse'
 import { CopyTextButton } from '@/components/ui/CopyTextButton'
 import { buildOnboardingUrl, isSafeAppPath } from '@/lib/safe-return-to'
+import { AuthContext, CyoaRunState } from '@/lib/cyoa-state'
+import { CyoaArtifactModal } from '@/components/CyoaArtifactModal'
+import { CyoaRecapView } from '@/components/CyoaRecapView'
+import { YesAndDrawer } from '@/components/cyoa/YesAndDrawer'
+import { BranchingOverlay } from '@/components/cyoa/BranchingOverlay'
+import type { PersonalMoveType } from '@/lib/quest-grammar/types'
+
+function VoiceLabel({ label, buttonLabel, voiceLine }: { label: string; buttonLabel?: string; voiceLine?: string }) {
+    const displayLabel = buttonLabel ?? label
+    if (displayLabel && displayLabel.includes(':')) {
+        const [face, ...rest] = displayLabel.split(':')
+        const quote = rest.join(':').trim()
+        return (
+            <div className="flex flex-col items-start gap-0.5">
+                <span className="text-[10px] uppercase tracking-wider opacity-50 font-medium">{face}</span>
+                <span className="text-sm font-semibold">{quote}</span>
+                {voiceLine && <span className="text-xs italic opacity-40 mt-1">{voiceLine}</span>}
+            </div>
+        )
+    }
+    return (
+        <div className="flex flex-col items-start gap-0.5">
+            <span className="text-sm font-semibold">{displayLabel}</span>
+            {voiceLine && <span className="text-xs italic opacity-40 mt-1">{voiceLine}</span>}
+        </div>
+    )
+}
 
 interface Props {
     storyId: string
@@ -32,6 +59,8 @@ interface Props {
     player?: { name: string; avatarConfig?: string | null; pronouns?: string | null }
     avatarPreviewConfig?: string | null
     isAdmin?: boolean
+    authContext?: AuthContext
+    runState?: Partial<CyoaRunState>
 }
 
 export function PassageRenderer({
@@ -50,6 +79,8 @@ export function PassageRenderer({
     player,
     avatarPreviewConfig,
     isAdmin = false,
+    authContext,
+    runState,
 }: Props) {
     const [isPending, startTransition] = useTransition()
     const [emitted, setEmitted] = useState<string[]>([])
@@ -62,6 +93,8 @@ export function PassageRenderer({
     const [slideIndex, setSlideIndex] = useState(0)
     const [overridePassage, setOverridePassage] = useState<ParsedPassage | null>(null)
     const [overrideVisited, setOverrideVisited] = useState<string[] | null>(null)
+    const [showYesAndDrawer, setShowYesAndDrawer] = useState(false)
+    const [branchRunId, setBranchRunId] = useState<string | null>(null)
     const router = useRouter()
 
     function postTwineDestination(): string {
@@ -73,6 +106,8 @@ export function PassageRenderer({
     }
 
     const displayPassage = overridePassage ?? passage
+    // Clean up Twine link syntax from body text (e.g. [[Link|Target]] or [[Target]] or [[Label->Target]])
+    const cleanedContent = (displayPassage.cleanText || displayPassage.text || '').replace(/\[\[[\s\S]*?\]\]/g, '').trim()
     const isFeedbackPassage = displayPassage.name === 'FEEDBACK' || (displayPassage.tags && displayPassage.tags.includes('feedback'))
     const allowCertFeedback = isCertificationQuestId(questId) || isAdmin
     const effectiveFeedbackSourceStep =
@@ -130,15 +165,21 @@ export function PassageRenderer({
     const hasActualInputs = parsedInputs.length > 0
 
     function handleEnd() {
+        setError(null)
+
+        // If there are artifacts in the ledger, we show the recap first.
+        // The RecapView will call handleEnd again (passing forceRedirect=true) to finalize.
+        if (runState?.artifactLedger && runState.artifactLedger.length > 0 && !isSuccess) {
+            setIsSuccess(true)
+            return
+        }
+
         if (!questId) {
             router.push('/adventures')
             return
         }
 
-        setError(null)
-
         // If there are no actual inputs, the end passage auto-completes. 
-        // Do not call completeQuest again.
         if (!hasActualInputs) {
             setIsSuccess(true)
             router.push(postTwineDestination())
@@ -167,13 +208,7 @@ export function PassageRenderer({
                 setError(result.error)
             } else {
                 setIsSuccess(true)
-                // AUTO-ADVANCE: Instead of just refreshing, push to the controller
-                // to evaluate the next step and transition immediately.
-                if (questId) {
-                    router.push(postTwineDestination())
-                } else {
-                    router.refresh()
-                }
+                router.refresh()
             }
         })
     }
@@ -182,12 +217,12 @@ export function PassageRenderer({
         router.push(postTwineDestination())
     }
 
-    function handleChoice(targetPassageName: string) {
+    function handleChoice(targetPassageName: string, blueprintKey?: string) {
         setError(null)
         setEmitted([])
         startTransition(async () => {
             const skipRevalidate = targetPassageName === 'FEEDBACK'
-            const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId, skipRevalidate)
+            const result = await advanceRun(storyId, targetPassageName, questId, undefined, threadId, skipRevalidate, blueprintKey)
             if ('error' in result) {
                 setError(result.error ?? null)
             } else {
@@ -197,20 +232,25 @@ export function PassageRenderer({
                 if (result.questCompleted) {
                     setOverridePassage(null)
                     setOverrideVisited(null)
-                    setTimeout(() => {
-                        if (result.redirect) {
-                            router.push(result.redirect)
-                        } else {
-                            router.push(postTwineDestination())
-                        }
-                    }, 1500)
+                    if (result.artifactLedger && result.artifactLedger.length > 0) {
+                        setIsSuccess(true)
+                        router.refresh()
+                    } else {
+                        setTimeout(() => {
+                            if (result.redirect) {
+                                router.push(result.redirect)
+                            } else {
+                                router.push(postTwineDestination())
+                            }
+                        }, 1500)
+                    }
                 } else if (result.redirect) {
                     setOverridePassage(null)
                     setOverrideVisited(null)
                     router.push(result.redirect)
-                } else if (targetPassageName === 'FEEDBACK' && result.passage) {
-                    setOverridePassage(result.passage as ParsedPassage)
-                    if (result.visited) setOverrideVisited(result.visited)
+                } else if (targetPassageName === 'FEEDBACK' && (result as any).passage) {
+                    setOverridePassage((result as any).passage as ParsedPassage)
+                    if ((result as any).visited) setOverrideVisited((result as any).visited)
                     // Skip router.refresh() — prevents kick-to-dashboard (report-feedback-stability)
                 } else {
                     setOverridePassage(null)
@@ -227,9 +267,9 @@ export function PassageRenderer({
             const result = await revertRun(storyId, questId, undefined, skipRevalidate)
             if ('error' in result) {
                 setError(result.error ?? null)
-            } else if (skipRevalidate && result.passage) {
-                setOverridePassage(result.passage as ParsedPassage)
-                if (result.visited) setOverrideVisited(result.visited)
+            } else if (skipRevalidate && (result as any).passage) {
+                setOverridePassage((result as any).passage as ParsedPassage)
+                if ((result as any).visited) setOverrideVisited((result as any).visited)
                 // Skip router.refresh() — prevents kick-to-dashboard (report-feedback-stability)
             } else {
                 setOverridePassage(null)
@@ -250,12 +290,43 @@ export function PassageRenderer({
 
     const recommendationPayload = recommendationBinding ? JSON.parse(recommendationBinding.payload) : null
 
+    // Filter CTAs based on authentication context
+    const visibleLinks = (displayPassage.links ?? []).filter(link => {
+        // P4 (Resonance Extension): Hide links if the required resonance key is missing from ledger
+        if (link.blueprintKey) {
+            const hasArtifact = (runState?.artifactLedger ?? []).some(a => a.blueprintKey === link.blueprintKey)
+            if (!hasArtifact) return false
+        }
+
+        if (authContext?.isAuthenticated) {
+            // Hide known cold-start signup routes if already logged in
+            if (link.target === 'Game_Login' || link.target === 'signup') {
+                return false
+            }
+        }
+        return true
+    })
+
     const rawContent = (displayPassage as { text?: string }).text ?? displayPassage.cleanText
-    const slides = chunkIntoSlides(rawContent)
+
+    // P2 (Cardinality): Use variant body if available, otherwise fallback to slide-trimming hack
+    let effectiveBody = cleanedContent
+    if (displayPassage.bodyVariants && displayPassage.bodyVariants[visibleLinks.length]) {
+        effectiveBody = displayPassage.bodyVariants[visibleLinks.length]
+    }
+
+    let slides = chunkIntoSlides(effectiveBody)
+
+    // Fallback cardinality hack for older stories
+    if (!displayPassage.bodyVariants && visibleLinks.length === 1 && slides.length > 1) {
+        slides = slides.slice(0, -1)
+    }
+
     const useSlideMode = slides.length > 1
-    const displayContent = useSlideMode ? slides[slideIndex] : rawContent
-    const primaryLink = displayPassage.links?.find((l) => l.target !== 'FEEDBACK')
-    const secondaryLinks = useSlideMode && primaryLink ? displayPassage.links?.filter((l) => l.target === 'FEEDBACK') ?? [] : displayPassage.links ?? []
+    const displayContent = useSlideMode ? slides[slideIndex] : effectiveBody
+
+    const primaryLink = visibleLinks.find((l) => l.target !== 'FEEDBACK')
+    const secondaryLinks = useSlideMode && primaryLink ? visibleLinks.filter((l) => l.target === 'FEEDBACK') : visibleLinks
 
     async function handleFeedbackSubmit() {
         if (!questId || !feedbackText.trim()) return
@@ -288,6 +359,10 @@ export function PassageRenderer({
             setFeedbackPending(false)
         }
     }
+
+    // "Yes-And" Detection
+    const isCollabPassage = displayPassage.tags && (displayPassage.tags as string[]).includes('COLLAB')
+    const moveType = (displayPassage.tags?.find(t => t.startsWith('MOVE:'))?.replace('MOVE:', '') || 'showUp') as PersonalMoveType
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -389,16 +464,16 @@ export function PassageRenderer({
                                 </div>
                             )}
                             <div className="flex gap-3">
-                            <button
-                                onClick={handleFeedbackSubmit}
-                                disabled={feedbackPending || !feedbackText.trim()}
-                                className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {feedbackPending ? 'Submitting...' : 'Submit Feedback'}
-                            </button>
-                            <button
-                                onClick={handleBack}
-                                disabled={feedbackPending}
+                                <button
+                                    onClick={handleFeedbackSubmit}
+                                    disabled={feedbackPending || !feedbackText.trim()}
+                                    className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {feedbackPending ? 'Submitting...' : 'Submit Feedback'}
+                                </button>
+                                <button
+                                    onClick={handleBack}
+                                    disabled={feedbackPending}
                                     className="py-3 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors border border-zinc-800 rounded-xl"
                                 >
                                     Cancel
@@ -443,16 +518,18 @@ export function PassageRenderer({
                             </ReactMarkdown>
                         </CopyableProse>
                         <div className="space-y-3">
-                            {displayPassage.links?.map((link, i) => (
+                            {visibleLinks.map((link, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => handleChoice(link.target)}
+                                    onClick={() => handleChoice(link.target, link.blueprintKey)}
                                     disabled={isPending}
                                     className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
                                 >
-                                    <span className="text-white group-hover:text-purple-400 transition-colors">
-                                        {link.label}
-                                    </span>
+                                    <VoiceLabel
+                                        label={link.label}
+                                        buttonLabel={link.buttonLabel}
+                                        voiceLine={link.voiceLine}
+                                    />
                                 </button>
                             ))}
                             <button
@@ -482,49 +559,49 @@ export function PassageRenderer({
                 <>
                     {/* Passage content — use text for markdown links, fallback to cleanText; slide mode for long text */}
                     <div className="space-y-4">
-                                <CopyableProse
-                                    textToCopy={displayContent}
-                                    copyAriaLabel={useSlideMode ? 'Copy visible passage text' : 'Copy passage text'}
-                                    className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none"
+                        <CopyableProse
+                            textToCopy={displayContent}
+                            copyAriaLabel={useSlideMode ? 'Copy visible passage text' : 'Copy passage text'}
+                            className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 sm:p-8 prose prose-invert prose-lg max-w-none"
+                        >
+                            <ReactMarkdown
+                                components={{
+                                    a: ({ href, children }) => (
+                                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
+                                            {children}
+                                        </a>
+                                    )
+                                }}
+                            >
+                                {displayContent}
+                            </ReactMarkdown>
+                        </CopyableProse>
+                        {useSlideMode && (
+                            <div className="flex items-center justify-between">
+                                <button
+                                    onClick={() => {
+                                        if (slideIndex < slides.length - 1) {
+                                            setSlideIndex((i) => i + 1)
+                                        } else {
+                                            const primary = visibleLinks.find((l) => l.target !== 'FEEDBACK')
+                                            if (primary) handleChoice(primary.target)
+                                        }
+                                    }}
+                                    disabled={isPending}
+                                    className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 transition-colors"
                                 >
-                                    <ReactMarkdown
-                                        components={{
-                                            a: ({ href, children }) => (
-                                                <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                                                    {children}
-                                                </a>
-                                            )
-                                        }}
+                                    Continue
+                                </button>
+                                {slideIndex > 0 && (
+                                    <button
+                                        onClick={() => setSlideIndex((i) => i - 1)}
+                                        className="py-2 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors"
                                     >
-                                        {displayContent}
-                                    </ReactMarkdown>
-                                </CopyableProse>
-                                {useSlideMode && (
-                                    <div className="flex items-center justify-between">
-                                        <button
-                                            onClick={() => {
-                                                if (slideIndex < slides.length - 1) {
-                                                    setSlideIndex((i) => i + 1)
-                                                } else {
-                                                    const primaryLink = displayPassage.links.find((l) => l.target !== 'FEEDBACK')
-                                                    if (primaryLink) handleChoice(primaryLink.target)
-                                                }
-                                            }}
-                                            disabled={isPending}
-                                            className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl disabled:opacity-50 transition-colors"
-                                        >
-                                            Continue
-                                        </button>
-                                        {slideIndex > 0 && (
-                                            <button
-                                                onClick={() => setSlideIndex((i) => i - 1)}
-                                                className="py-2 px-4 text-zinc-500 hover:text-white text-sm font-medium transition-colors"
-                                            >
-                                                ← Back
-                                            </button>
-                                        )}
-                                    </div>
+                                        ← Back
+                                    </button>
                                 )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Emitted items notification (Filtered for polish) */}
@@ -583,12 +660,11 @@ export function PassageRenderer({
                         <div className="text-center space-y-6 pt-4 border-t border-zinc-800/50">
                             <div className="space-y-4">
                                 {isSuccess && (
-                                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                        <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-xl text-center">
-                                            <p className="text-green-400 font-bold text-lg">✨ Quest Completed!</p>
-                                            <p className="text-green-300/70 text-sm mt-1">Synchronizing your path...</p>
-                                        </div>
-                                    </div>
+                                    <CyoaRecapView
+                                        runState={runState}
+                                        onContinue={handleEnd}
+                                        isPending={isPending}
+                                    />
                                 )}
                                 {!isSuccess && (
                                     <>
@@ -629,13 +705,15 @@ export function PassageRenderer({
                                 {secondaryLinks.map((link, i) => (
                                     <button
                                         key={i}
-                                        onClick={() => handleChoice(link.target)}
+                                        onClick={() => handleChoice(link.target, link.blueprintKey)}
                                         disabled={isPending}
                                         className="w-full text-left p-4 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-600/50 hover:bg-zinc-800/50 transition-all disabled:opacity-50 group"
                                     >
-                                        <span className="text-white group-hover:text-purple-400 transition-colors">
-                                            {link.label}
-                                        </span>
+                                        <VoiceLabel
+                                            label={link.label}
+                                            buttonLabel={link.buttonLabel}
+                                            voiceLine={link.voiceLine}
+                                        />
                                     </button>
                                 ))}
                             </div>
@@ -650,6 +728,51 @@ export function PassageRenderer({
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Render Bottom Artifact Modal */}
+            <CyoaArtifactModal runState={runState} />
+
+            {/* "Yes-And" Affordance */}
+            {isCollabPassage && !showYesAndDrawer && (
+                <div className="fixed bottom-24 right-8 z-40 animate-in slide-in-from-right duration-700">
+                    <button
+                        onClick={() => setShowYesAndDrawer(true)}
+                        className="p-4 bg-purple-600 hover:bg-purple-500 text-white rounded-full shadow-2xl shadow-purple-500/40 transition-all active:scale-90 group"
+                    >
+                        <div className="flex items-center gap-2 px-2">
+                            <span className="text-white font-black italic uppercase tracking-tighter text-sm">Yes-And</span>
+                            <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                        </div>
+                    </button>
+                </div>
+            )}
+
+            {/* "Yes-And" Drawer */}
+            {showYesAndDrawer && (
+                <YesAndDrawer
+                    runId={storyId} // In a true multi-run world, this would be the specific runId
+                    nodeId={displayPassage.name}
+                    moveType={moveType}
+                    campaignRef="bruised-banana" // Hardcoded for now per residency context
+                    spokeIndex={0} // TBD mapping from storyId
+                    onSuccess={(newRunId) => {
+                        setBranchRunId(newRunId)
+                        setShowYesAndDrawer(false)
+                    }}
+                    onClose={() => setShowYesAndDrawer(false)}
+                />
+            )}
+
+            {/* Branching Overlay */}
+            {branchRunId && (
+                <BranchingOverlay
+                    onComplete={() => {
+                        // Redirect to the new collaborative run branch
+                        router.push(`/adventures/${storyId}/play?runId=${branchRunId}`)
+                        setBranchRunId(null)
+                    }}
+                />
             )}
         </div>
     )

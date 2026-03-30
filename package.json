@@ -84,7 +84,7 @@
     "test:scl-portal": "npx tsx src/lib/__tests__/scl-portal-verification.test.ts",
     "test:bb-milestone": "npx tsx src/lib/bruised-banana-milestone/__tests__/guided-actions.test.ts && npx tsx src/lib/bruised-banana-milestone/__tests__/snapshot.test.ts",
     "test:campaign-hub-journey": "npx tsx src/lib/campaign-hub/__tests__/hub-journey-state.test.ts && npx tsx src/lib/bar-quest-generation/__tests__/emotional-alchemy-lens.test.ts",
-  "test:growth-stage": "npx tsx src/lib/campaign-hub/__tests__/growth-stage.test.ts",
+    "test:growth-stage": "npx tsx src/lib/campaign-hub/__tests__/growth-stage.test.ts",
     "test:offer-bar": "npx tsx src/lib/offer-bar/__tests__/validate.test.ts",
     "test:vault-compost": "tsx src/lib/__tests__/vault-compost.test.ts",
     "test:shadow321-name-resolution": "npx tsx src/lib/__tests__/shadow321-name-resolution.test.ts",

@@ -90,10 +90,14 @@ async function callSage(prompt: string): Promise<string | null> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: prompt }),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(60_000),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn('Sage request failed:', res.status, res.statusText, await res.text())
+      return null
+    }
     const data = await res.json()
+    console.warn('DEBUG Sage API Response:', JSON.stringify({ ok: res.ok, status: res.status, data }, null, 2))
     return data.output?.synthesis ?? null
   } catch {
     return null
@@ -152,15 +156,15 @@ function synthesizeLocalAssessment(
     '',
     '## Compost (Archive / Deprecate)',
     '',
-    superseded.length > 0
+    ...(superseded.length > 0
       ? [
-          'Items that no longer align with current direction or have been fully superseded:',
-          '',
-          ...superseded.slice(0, 15).map((i) => `- **[${i.id}]** ${i.name} — already marked Superseded`),
-          '',
-          '**Recommendation**: Run `npm run compost:backlog` to move to [ARCHIVE.md](.specify/backlog/ARCHIVE.md).',
-        ]
-      : ['Done/Superseded items are in [ARCHIVE.md](.specify/backlog/ARCHIVE.md). Main backlog is composted.'],
+        'Items that no longer align with current direction or have been fully superseded:',
+        '',
+        ...superseded.slice(0, 15).map((i) => `- **[${i.id}]** ${i.name} — already marked Superseded`),
+        '',
+        '**Recommendation**: Run `npm run compost:backlog` to move to [ARCHIVE.md](.specify/backlog/ARCHIVE.md).',
+      ]
+      : ['Done/Superseded items are in [ARCHIVE.md](.specify/backlog/ARCHIVE.md). Main backlog is composted.']),
     '',
     '## Merge (Consolidate)',
     '',

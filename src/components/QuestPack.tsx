@@ -24,6 +24,8 @@ type PackQuest = {
     }
 }
 
+import { CultivationCard } from '@/components/ui/CultivationCard'
+
 type PackProgress = {
     id: string
     completed: string // JSON array
@@ -81,34 +83,34 @@ export function QuestPack({ pack, completedMoveTypes, focusQuest, isAdmin }: { p
     }
 
     return (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3 relative overflow-hidden">
+        <CultivationCard stage="growing" altitude="neutral" className="p-4 space-y-3 relative overflow-hidden transition-all duration-300">
             {/* Collapsed header - click to expand */}
             <button
                 type="button"
                 onClick={() => setExpanded(!expanded)}
-                className="w-full text-left flex flex-col gap-2"
+                className="w-full text-left flex flex-col gap-2 focus:outline-none"
             >
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="font-bold text-white">{pack.title}</h3>
+                        <h3 className="font-bold text-white shadow-black drop-shadow-sm">{pack.title}</h3>
                         {pack.description && !expanded && (
-                            <p className="text-sm text-zinc-400 line-clamp-1">{pack.description}</p>
+                            <p className="text-sm text-zinc-300 line-clamp-1 opacity-90">{pack.description}</p>
                         )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full">
+                        <span className="text-[10px] uppercase font-mono font-bold tracking-widest bg-black/40 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">
                             Pack
                         </span>
-                        <span className="text-zinc-500 text-sm">{expanded ? '▼' : '▶'}</span>
+                        <span className="text-zinc-400 text-sm ml-1">{expanded ? '▼' : '▶'}</span>
                     </div>
                 </div>
-                <div className="flex justify-between text-xs text-zinc-500">
+                <div className="flex justify-between text-xs text-zinc-400 font-mono tracking-widest">
                     <span>{isComplete ? 'Complete!' : `${pack.completedCount}/${pack.totalQuests}`}</span>
                     <span>{progressPercent}%</span>
                 </div>
-                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-2 bg-black/40 border border-zinc-800 rounded-full overflow-hidden w-full relative">
                     <div
-                        className={`h-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-blue-500'}`}
+                        className={`absolute inset-y-0 left-0 transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'}`}
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
@@ -137,87 +139,87 @@ export function QuestPack({ pack, completedMoveTypes, focusQuest, isAdmin }: { p
 
             {/* Expanded content */}
             {expanded && (
-            <>
-            {pack.description && (
-                <p className="text-sm text-zinc-400 pt-2 border-t border-zinc-800">{pack.description}</p>
-            )}
+                <>
+                    {pack.description && (
+                        <p className="text-sm text-zinc-300 pt-3 mt-1 border-t border-white/10">{pack.description}</p>
+                    )}
 
-            {/* Quest Grid */}
-            <div className="grid grid-cols-1 gap-2">
-                {pack.quests.map((pq) => {
-                    const isDone = pack.completedQuestIds.includes(pq.questId)
-                    return (
-                        <div
-                            key={pq.id}
-                            onClick={() => setSelectedQuest(pq)}
-                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isDone
-                                ? 'bg-green-900/10 border-green-900/30 opacity-70'
-                                : 'bg-zinc-900/50 border-zinc-800 hover:border-blue-500/30 hover:bg-zinc-800'
-                                }`}
-                        >
-                            <div className={`w-6 h-6 rounded flex items-center justify-center text-xs border ${isDone
-                                ? 'bg-green-900 text-green-400 border-green-700'
-                                : 'bg-zinc-800 text-zinc-600 border-zinc-700'
-                                }`}>
-                                {isDone ? '✓' : '○'}
-                            </div>
+                    {/* Quest Grid */}
+                    <div className="grid grid-cols-1 gap-2 mt-4">
+                        {pack.quests.map((pq) => {
+                            const isDone = pack.completedQuestIds.includes(pq.questId)
+                            return (
+                                <div
+                                    key={pq.id}
+                                    onClick={() => setSelectedQuest(pq)}
+                                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${isDone
+                                        ? 'bg-green-900/20 border-green-500/30 opacity-70'
+                                        : 'bg-black/30 border-white/10 hover:border-blue-500/30 hover:bg-black/50 shadow-sm shadow-black/20'
+                                        }`}
+                                >
+                                    <div className={`w-6 h-6 shrink-0 rounded flex items-center justify-center text-xs border ${isDone
+                                        ? 'bg-green-600/30 text-green-400 border-green-500/50'
+                                        : 'bg-black/50 text-zinc-500 border-zinc-700'
+                                        }`}>
+                                        {isDone ? '✓' : '○'}
+                                    </div>
 
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className={`font-medium truncate text-zinc-300 ${isDone && 'line-through text-zinc-500'}`}>
-                                        {/* @ts-ignore */}
-                                        {pq.quest?.title || 'Unknown Quest'}
-                                    </span>
-                                    {/* @ts-ignore */}
-                                    {!isDone && pq.quest?.reward > 0 && (
-                                        <span className="text-xs text-yellow-500 font-mono">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center text-sm gap-2">
+                                            <span className={`font-bold truncate leading-tight mt-0.5 ${isDone ? 'line-through text-zinc-500' : 'text-zinc-200'}`}>
+                                                {/* @ts-ignore */}
+                                                {pq.quest?.title || 'Unknown Quest'}
+                                            </span>
                                             {/* @ts-ignore */}
-                                            +{pq.quest.reward}ⓥ
-                                        </span>
-                                    )}
+                                            {!isDone && pq.quest?.reward > 0 && (
+                                                <span className="text-[10px] uppercase font-mono tracking-widest px-1.5 py-0.5 rounded bg-black/40 text-yellow-500/80 border border-yellow-900/30 shrink-0">
+                                                    {/* @ts-ignore */}
+                                                    +{pq.quest.reward}♦
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
+                            )
+                        })}
+                    </div>
 
-            {/* Actions */}
-            {!isStarted && !isComplete && (
-                <button
-                    onClick={handleStart}
-                    disabled={isPending}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-medium disabled:opacity-50"
-                >
-                    {isPending ? 'Starting...' : 'Open Pack'}
-                </button>
-            )}
+                    {/* Actions */}
+                    {!isStarted && !isComplete && (
+                        <button
+                            onClick={handleStart}
+                            disabled={isPending}
+                            className="w-full mt-4 bg-white text-black hover:bg-zinc-200 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors shadow-lg shadow-white/5 active:scale-95"
+                        >
+                            {isPending ? 'Starting...' : 'Open Pack'}
+                        </button>
+                    )}
 
-            <div className="space-y-2 pt-2">
-                {/* @ts-ignore */}
-                {pack.isCreator && (
-                    <button
-                        onClick={() => {
-                            // Dynamic import or pass action props?
-                            // Better to import at top, but for now assuming we can add it.
-                            // We'll add the import in a separate edit or let auto-import handle it?
-                            // No, must be explicit.
-                            // We will add the import 'recyclePack' from '@/actions/market'
-                            import('@/actions/market').then(({ recyclePack }) => {
-                                startTransition(async () => {
-                                    await recyclePack(pack.id)
-                                    // Feedback?
-                                    alert('Pack recycled to Town Square!')
-                                })
-                            })
-                        }}
-                        className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 py-2 rounded-lg text-xs"
-                    >
-                        ♻ Recycle to Market
-                    </button>
-                )}
-            </div>
-            </>
+                    <div className="space-y-2 pt-3 mt-1 border-t border-white/10">
+                        {/* @ts-ignore */}
+                        {pack.isCreator && (
+                            <button
+                                onClick={() => {
+                                    // Dynamic import or pass action props?
+                                    // Better to import at top, but for now assuming we can add it.
+                                    // We'll add the import in a separate edit or let auto-import handle it?
+                                    // No, must be explicit.
+                                    // We will add the import 'recyclePack' from '@/actions/market'
+                                    import('@/actions/market').then(({ recyclePack }) => {
+                                        startTransition(async () => {
+                                            await recyclePack(pack.id)
+                                            // Feedback?
+                                            alert('Pack recycled to Town Square!')
+                                        })
+                                    })
+                                }}
+                                className="w-full bg-black/40 hover:bg-black/60 text-zinc-400 py-2.5 rounded-xl text-xs font-bold font-mono tracking-widest uppercase border border-zinc-800 transition-colors"
+                            >
+                                ♻ Recycle to Market
+                            </button>
+                        )}
+                    </div>
+                </>
             )}
 
             {selectedQuest?.quest && (
@@ -243,6 +245,6 @@ export function QuestPack({ pack, completedMoveTypes, focusQuest, isAdmin }: { p
                     isAdmin={isAdmin}
                 />
             )}
-        </div>
+        </CultivationCard>
     )
 }

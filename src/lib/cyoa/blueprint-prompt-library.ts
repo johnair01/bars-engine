@@ -32,7 +32,38 @@ export const BLUEPRINT_PROMPT_SNIPPETS: Record<string, readonly string[]> = {
   face_sage_move_wakeUp: ['What is the meta-pattern?', 'What is this moment an instance of?'],
   face_sage_move_cleanUp: ['What is completing and what is emerging?', 'What do you need to metabolize to move forward?'],
   face_sage_move_showUp: ['What is the commitment that integrates your current understanding?', 'What becomes possible because of it?'],
+  // GM Level Handshakes (Progression Badges)
+  gm_handshake_shaman: ['The mark of one who walks between worlds.', 'The threshold of the Shaman is crossed.'],
+  gm_handshake_challenger: ['The mark of the test and the power.', 'The Arena of Tensions awaits the challenger.'],
+  gm_handshake_regent: ['The mark of order and the whole.', 'The structure of the Conclave is in your hands.'],
+  gm_handshake_architect: ['The mark of the design and the detail.', 'The blueprints of the next world are yours.'],
+  gm_handshake_diplomat: ['The mark of relationship and the field.', 'The ambassadors of the Conclave welcome you.'],
+  gm_handshake_sage: ['The mark of the meta-pattern and the integrated whole.', 'Meeting on the playground of the unknown.'],
   default: ['What matters most in this beat?', 'What would make this choice real?'],
+}
+
+export type BarClassification = {
+  type: 'perception' | 'identity' | 'relational' | 'systemic'
+  phase: 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
+}
+
+export function mapBlueprintToMetadata(blueprintKey: string): BarClassification {
+  const parts = blueprintKey.split('_')
+
+  // Extract phase (moveId)
+  let phase: BarClassification['phase'] = 'showUp'
+  if (blueprintKey.includes('wakeUp')) phase = 'wakeUp'
+  else if (blueprintKey.includes('cleanUp')) phase = 'cleanUp'
+  else if (blueprintKey.includes('growUp')) phase = 'growUp'
+
+  // Extract type (faceId)
+  let type: BarClassification['type'] = 'perception'
+  if (blueprintKey.includes('shaman') || blueprintKey.includes('sage')) type = 'perception'
+  else if (blueprintKey.includes('challenger')) type = 'identity'
+  else if (blueprintKey.includes('diplomat')) type = 'relational'
+  else if (blueprintKey.includes('architect') || blueprintKey.includes('regent')) type = 'systemic'
+
+  return { type, phase }
 }
 
 export function promptsForBlueprintKey(blueprintKey: string | undefined): readonly string[] {

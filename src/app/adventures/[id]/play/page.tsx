@@ -29,10 +29,10 @@ export default async function TwinePlayPage({
     searchParams
 }: {
     params: Promise<{ id: string }>,
-    searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; returnTo?: string }>
+    searchParams: Promise<{ questId?: string; threadId?: string; ritual?: string; returnTo?: string; runId?: string }>
 }) {
     const { id: storyId } = await params
-    const { questId, threadId, ritual, returnTo } = await searchParams
+    const { questId, threadId, ritual, returnTo, runId } = await searchParams
     const isRitual = ritual === 'true'
     const player = await getCurrentPlayer()
     if (!player) {
@@ -46,7 +46,7 @@ export default async function TwinePlayPage({
         redirect(`/login?returnTo=${encodeURIComponent(back)}`)
     }
 
-    const result = await getOrCreateRun(storyId, questId)
+    const result = await getOrCreateRun(storyId, questId, undefined, runId)
     if (!result) redirect('/adventures')
     if ('error' in result) {
         return (
@@ -106,19 +106,20 @@ export default async function TwinePlayPage({
     const feedbackSourceStep = isFeedbackPassage && visited.length >= 2 ? visited[visited.length - 2] : undefined
 
     // Avatar preview for Build Your Character: derive on-the-fly when player has nation+playbook but no avatarConfig
-    const isAdmin = player.roles?.some((r) => r.role.key === 'admin') ?? false
+    const playerAny = player as any
+    const isAdmin = playerAny.roles?.some((r: any) => r.role?.key === 'admin') ?? false
 
     const isBuildCharQuest = questId === 'build-character-quest'
     let avatarPreviewConfig: string | null = null
-    if (isBuildCharQuest && player && !player.avatarConfig && player.nationId && player.archetypeId) {
+    if (isBuildCharQuest && player && !playerAny.avatarConfig && playerAny.nationId && playerAny.archetypeId) {
         const { deriveAvatarConfig } = await import('@/lib/avatar-utils')
-        const nation = nations.find((n: { id: string }) => n.id === player.nationId)
-        const playbook = playbooks.find((p: { id: string }) => p.id === player.archetypeId)
+        const nation = nations.find((n: { id: string }) => n.id === playerAny.nationId)
+        const playbook = playbooks.find((p: { id: string }) => p.id === playerAny.archetypeId)
         avatarPreviewConfig = deriveAvatarConfig(
-            player.nationId,
-            player.archetypeId,
-            player.campaignDomainPreference,
-            { nationName: nation?.name, archetypeName: playbook?.name, pronouns: player.pronouns }
+            playerAny.nationId,
+            playerAny.archetypeId,
+            playerAny.campaignDomainPreference,
+            { nationName: nation?.name, archetypeName: playbook?.name, pronouns: playerAny.pronouns }
         )
     }
 
@@ -153,6 +154,8 @@ export default async function TwinePlayPage({
                         player={player}
                         avatarPreviewConfig={avatarPreviewConfig}
                         isAdmin={isAdmin}
+                        authContext={{ isAuthenticated: !!player, playerId: player?.id }}
+                        runState={{ artifactLedger: [] }} // TBD in Phase 2
                     />
                 </TwineErrorBoundary>
             </div>

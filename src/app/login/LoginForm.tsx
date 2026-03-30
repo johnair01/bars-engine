@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginWithState, type LoginState } from '@/actions/conclave-auth'
+import { PrivacyBadge } from '@/components/ui/PrivacyBadge'
 
 const initialState: LoginState = {}
 
@@ -23,7 +24,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
             <div className="text-center mb-8">
                 <div className="text-5xl mb-4">🔐</div>
                 <h1 className="text-2xl font-bold text-white mb-2">Sign In</h1>
-                <p className="text-zinc-400 text-sm">Use your email and password to continue your journey.</p>
+                <p className="text-zinc-400 text-sm">Use your email and password to continue your journey. <PrivacyBadge /></p>
             </div>
 
             <form action={formAction} className="space-y-4">

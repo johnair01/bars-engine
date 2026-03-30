@@ -8,6 +8,9 @@
 export interface ParsedLink {
     label: string
     target: string
+    buttonLabel?: string
+    voiceLine?: string
+    blueprintKey?: string
 }
 
 export interface ParsedPassage {
@@ -17,6 +20,7 @@ export interface ParsedPassage {
     cleanText: string  // text with links replaced by labels only
     links: ParsedLink[]
     tags: string[]
+    bodyVariants?: Record<number, string>
 }
 
 export interface ParsedTwineStory {
@@ -32,24 +36,35 @@ export interface ParsedTwineStory {
  */
 function parseLinks(text: string): ParsedLink[] {
     const links: ParsedLink[] = []
-    // Match anything between any number of brackets (at least 2)
-    const re = /\[{2,}([\s\S]*?)\]{2,}/g
+    // Match [[Label|Target]]{requires: key} or just [[Target]]
+    // Regex captures: 1: Label/Target content, 2: optional requires key
+    const re = /\[{2,}([\s\S]*?)\]{2,}(?:\{requires:\s*([^\}]+)\})?/g
     let m: RegExpExecArray | null
     while ((m = re.exec(text)) !== null) {
         const inner = m[1].trim()
+        const blueprintKey = m[2]?.trim()
 
-        // Handle Harlowe-style label->target or pipe
+        let label: string
+        let target: string
+
         if (inner.includes('->')) {
-            const [label, target] = inner.split('->')
-            links.push({ label: label.trim(), target: target.trim() })
+            const parts = inner.split('->')
+            label = parts[0].trim()
+            target = parts[1].trim()
         } else if (inner.includes('|')) {
-            const [label, target] = inner.split('|')
-            links.push({ label: label.trim(), target: target.trim() })
+            const parts = inner.split('|')
+            label = parts[0].trim()
+            target = parts[1].trim()
         } else {
-            // Handle space-separated if no arrows (some formats use [[Label Target]])
-            // But usually [[Target]]
-            links.push({ label: inner, target: inner })
+            label = inner
+            target = inner
         }
+
+        links.push({
+            label,
+            target,
+            blueprintKey: blueprintKey // Mapping the captured requires key to blueprintKey for the engine to check
+        })
     }
     return links
 }

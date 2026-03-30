@@ -26,27 +26,26 @@ Ordered within priority tiers. Not a sprint plan — a living record.
 
 ## P1 — Significant design improvements
 
-### Adaptive Scene Pacing — "Gift of Context" Engine
+### Operationalized GM NPCs & Ritual Choice — "The Descent Guide"
 **Design principle from GM session**:
 
-> "As a GM I only plan 2–3 emotional beats ahead of the players so I can be responsive to their authentic motivations. The UI should give the gift of context at the exact moment it might be needed."
+> "The 321 shouldn't just be an automated form; it should be a guided descent. Choosing your guide—whether it's the Architect for logic or the Shaman for myth—is the first act of sovereignty in the ritual."
 
 **What this means concretely**:
-- Scene cards should not frontload structure. Players should not feel the 10-scene arc from the first card
-- Context (GM voice lines, reframe language, artifact previews) should arrive *just before* the moment it becomes useful — not earlier, not as a menu
-- The system should be able to sense when a player is going deeper than expected (long answers, emotional language) and slow the pacing — fewer cards per "scene", more space
-- Concierge principle: expensive human coaching gives you individualized pacing. The agent system can approximate this through adaptive reveal
+- **NPC Guides**: The 6 GM faces are now operationalized as named NPCs (Vorm, Ignis, Aurelius, Sola, Kaelen, The Witness) with distinct worldbuilding ties to the 5 Nations.
+- **Pre-Flight Selection**: Players select their NPC guide before starting the 321. This choice determines the voice, tone, and specific branching logic of the session.
+- **Lore Integration**: The session prompts are injected with the player's Nation and Archetype context, making the 321 a lore-immersive experience rather than a generic contemplative tool.
+- **The Ritual Fork**: If a player goes deep (detected via `session_depth_signal`), the NPC guide offers a choice: metabolize the BAR immediately (fast path) or descend further into a "lower cavern" (deep path).
 
 **Deftness move**:
-> "Learning to anticipate how many scenes an emotional transformation might take."
-
-This is a game mechanic — a learnable skill for players who run 321 for others, and an architectural property of the scene card system itself. A player who has done 30 sessions begins to feel when a transformation is a 6-card arc vs a 14-card arc. The system should eventually surface this signal.
+> "Turning a static process into an agency-driven game loop."
 
 **Implementation notes**:
-- Near term: don't display total scene count upfront — show only the progress strip, no "Step 3 of 10" label
-- Near term: GM voice lines should reference what just happened (e.g., "You named it quickly. Let's stay here a moment.") — currently static
-- Medium term: build a `session_depth_signal` that detects long-form answers and can insert a "Stay here" scene before advancing
-- Longer term: the adaptive scene count itself becomes a deftness metric
+- **Near term**: Create `worldbuilding_lore.md` artifact (Done).
+- **Near term**: Update 321 Runner UI to include the NPC selection pre-flight.
+- **Medium term**: Update agent system prompts to reflect NPC identities.
+- **Medium term**: Build the `session_depth_signal` to trigger the "Ritual Fork" branching choice.
+- **Longer term**: NPCs remember past sessions, referencing previous "descents" to build long-term narrative continuity.
 
 ---
 

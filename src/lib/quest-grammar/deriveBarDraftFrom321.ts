@@ -96,15 +96,21 @@ function composeShortBody(
     const s = q1.length > 220 ? `${q1.slice(0, 217)}…` : q1
     parts.push(s)
   }
-  if (q5) {
-    const s = q5.length > 180 ? `${q5.slice(0, 177)}…` : q5
-    parts.push(`What would have to be true: ${s}`)
+
+  // Narrative flow for insight + action
+  if (q5 && aligned) {
+    parts.push(`Because ${q5.toLowerCase().replace(/\.$/, '')}, I choose: ${aligned}`)
+  } else if (aligned) {
+    parts.push(`Action: ${aligned}`)
+  } else if (q5) {
+    parts.push(`Insight: ${q5}`)
   }
-  if (aligned) parts.push(`Move toward: ${aligned}.`)
+
   if (integration) {
     const s = integration.length > 160 ? `${integration.slice(0, 157)}…` : integration
-    parts.push(`Shift when held with care: ${s}`)
+    parts.push(`*${s}*`)
   }
+
   if (!parts.length && phase3.identityFreeText?.trim()) {
     parts.push(phase3.identityFreeText.trim().slice(0, 280))
   }
@@ -115,8 +121,9 @@ function composeShortBody(
     parts.push('Shadow work captured from 321.')
   }
 
-  return parts.slice(0, 4).join('\n\n')
+  return parts.slice(0, 3).join('\n\n')
 }
+
 
 function buildSystemTitle(phase1: Phase1Identification, phase3: Phase3Taxonomic, phase2: UnpackingAnswers): string {
   const mask = (phase1.identification || '').trim()

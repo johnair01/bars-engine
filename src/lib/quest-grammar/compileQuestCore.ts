@@ -306,12 +306,14 @@ function generateChoices(
   const isFinal = beatType === 'consequence' || beatType === 'anchor'
   if (isFinal) {
     if (isAuthenticated) {
-      return [{ text: 'Continue to your Vault', targetId: 'redirect:/hand' }]
+      return [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/hand' }]
     }
-    return [{ text: 'Create my account', targetId: 'signup' }]
+    return [{ text: 'Create my account', buttonLabel: 'Sect: Create my account', targetId: 'signup' }]
   }
   if (index < nodeIds.length - 1) {
     const choiceType = nodeConfig?.choiceType ?? 'altitudinal'
+
+    let choices: Choice[] = []
 
     // Horizontal: 4 WAVE moves as choices, all targeting next spine (no depth branches)
     if (choiceType === 'horizontal') {
@@ -319,7 +321,7 @@ function generateChoices(
         ? nodeConfig.enabledHorizontal
         : ALL_WAVE_MOVES
       const targetId = nodeIds[index + 1]!
-      return enabled.map((wave) => {
+      choices = enabled.map((wave) => {
         const moves = getMovesForWaveStage(wave)
         const move = moves[0]
         const label = WAVE_LABELS[wave]
@@ -333,7 +335,7 @@ function generateChoices(
     }
 
     // Altitudinal: depth branches (6 faces) or privilegeContext or default
-    if (depthBranchIds && depthBranchIds.length > 0) {
+    else if (depthBranchIds && depthBranchIds.length > 0) {
       const faces = pickFacesForGap(index, depthBranchOrder)
       const enabledFaces = nodeConfig?.enabledFaces?.length
         ? nodeConfig.enabledFaces
@@ -343,7 +345,7 @@ function generateChoices(
         const face = m ? (m[1] as GameMasterFace) : null
         return face && enabledFaces.includes(face)
       })
-      return filteredIds.map((targetId) => {
+      choices = filteredIds.map((targetId) => {
         const m = targetId.match(/^depth_\d+_(shaman|challenger|regent|architect|diplomat|sage)$/)
         const face = m ? (m[1] as GameMasterFace) : null
         const meta = face ? FACE_META[face] : null
@@ -356,11 +358,24 @@ function generateChoices(
             : meta
               ? `${meta.label}: ${meta.role}`
               : targetId,
+          buttonLabel: obstacleText ? `${meta?.label ?? face}: ${obstacleText}` : meta ? `${meta.label}: ${meta.role}` : undefined,
+          voiceLine: meta?.mission,
           targetId,
           moveId: move?.id,
+          blueprintKey: face ?? undefined,
         }
       })
+    } else {
+      choices = [
+        { text: 'Continue', targetId: nodeIds[index + 1]! },
+      ]
     }
+
+    // Deftness: inject additional choices (e.g. Yes-And seeds) if present
+    if (nodeConfig?.additionalChoices) {
+      choices = [...choices, ...nodeConfig.additionalChoices]
+    }
+
     if (privilegeContext) {
       const privileged = selectPrivilegedChoices({
         validMoves: ALL_CANONICAL_MOVES,
@@ -368,17 +383,18 @@ function generateChoices(
         archetypeWave: privilegeContext.archetypeWave,
         limit: 4,
       })
-      const targetId = nodeIds[index + 1]
-      return privileged.map((m) => ({
-        text: m.name,
-        targetId,
-        moveId: m.id,
-      }))
+      const targetId = nodeIds[index + 1]!
+      return [
+        ...choices,
+        ...privileged.map((m) => ({
+          text: m.name,
+          targetId,
+          moveId: m.id,
+        })),
+      ]
     }
-    return [
-      { text: 'Continue', targetId: nodeIds[index + 1] },
-      { text: 'Pause and reflect', targetId: nodeIds[index] },
-    ]
+
+    return choices
   }
   return []
 }
@@ -503,23 +519,23 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
     const text =
       questModel === 'communal'
         ? generateKotterNodeText(
-            beatType as KotterBeatType,
-            signature,
-            unpackingAnswers,
-            alignedAction,
-            segment,
-            q3Display,
-            isAuthenticated
-          )
+          beatType as KotterBeatType,
+          signature,
+          unpackingAnswers,
+          alignedAction,
+          segment,
+          q3Display,
+          isAuthenticated
+        )
         : generateEpiphanyNodeText(
-            beatType as EpiphanyBeatType,
-            signature,
-            unpackingAnswers,
-            alignedAction,
-            segment,
-            q3Display,
-            isAuthenticated
-          )
+          beatType as EpiphanyBeatType,
+          signature,
+          unpackingAnswers,
+          alignedAction,
+          segment,
+          q3Display,
+          isAuthenticated
+        )
     const depthIds =
       nodeConfig?.choiceType === 'horizontal'
         ? undefined
@@ -561,6 +577,10 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
       ...(nodeConfig?.obstacleActions && Object.keys(nodeConfig.obstacleActions).length > 0 && {
         obstacleActions: nodeConfig.obstacleActions,
       }),
+      bodyVariants: (beatType === 'transcendence' || beatType === 'wins') ? {
+        1: `**Transcendence** — The path is clear. One final step.\n\n${isAuthenticated ? 'Your support is logged.' : 'Create your account to save your progress.'}`,
+        6: text // Default for high cardinality
+      } : undefined
     }
     return node
   })
@@ -604,23 +624,23 @@ export function compileQuest(input: QuestCompileInput): QuestPacket {
   }
 
   const telemetryHooks = {
-    questStarted: () => {},
-    nodeViewed: () => {},
-    choiceSelected: () => {},
-    donationClicked: () => {},
-    donationCompleted: () => {},
+    questStarted: () => { },
+    nodeViewed: () => { },
+    choiceSelected: () => { },
+    donationClicked: () => { },
+    donationCompleted: () => { },
   }
 
   const moveMap: QuestPacket['moveMap'] = privilegeContext
     ? Object.fromEntries(
-        nodes.map((n) => {
-          const choicesWithMove = n.choices
-            .map((c, ci) => (c.moveId ? ([ci, c.moveId] as const) : null))
-            .filter((x): x is [number, string] => x !== null)
-          if (choicesWithMove.length === 0) return [n.id, {}] as const
-          return [n.id, Object.fromEntries(choicesWithMove)] as const
-        })
-      )
+      nodes.map((n) => {
+        const choicesWithMove = n.choices
+          .map((c, ci) => (c.moveId ? ([ci, c.moveId] as const) : null))
+          .filter((x): x is [number, string] => x !== null)
+        if (choicesWithMove.length === 0) return [n.id, {}] as const
+        return [n.id, Object.fromEntries(choicesWithMove)] as const
+      })
+    )
     : undefined
 
   return {

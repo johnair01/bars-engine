@@ -8,6 +8,8 @@ import { ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
 import type { Shadow321NameFields } from '@/lib/shadow321-name-resolution'
 import { usePostActionRouter } from '@/hooks/usePostActionRouter'
 import { NAV } from '@/lib/navigation-contract'
+import { uploadBarAsset } from '@/lib/asset-upload-client'
+
 
 type Player = { id: string; name: string }
 type LinkableQuest = { id: string; title: string }
@@ -24,9 +26,9 @@ export type CreateBarPrefill = {
     barDraftFrom321?: boolean
 }
 export type CreateBar321Session = {
-  phase3Snapshot?: string
-  phase2Snapshot?: string
-  shadow321Name?: Shadow321NameFields
+    phase3Snapshot?: string
+    phase2Snapshot?: string
+    shadow321Name?: Shadow321NameFields
 }
 
 export function CreateBarForm({
@@ -83,6 +85,9 @@ export function CreateBarForm({
     const [state, formAction, isPending] = useActionState<any, FormData>(createCustomBar, null)
     /** Scene Atlas full vault: tabbed panels (P3 — avoid single long scroll). */
     const [atlasVaultTab, setAtlasVaultTab] = useState<'core' | 'layers' | 'advanced'>('core')
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [isUploading, setIsUploading] = useState(false)
+
 
     useEffect(() => {
         if (prefill || session321 || quickFrom321) setIsOpen(true)
@@ -105,28 +110,44 @@ export function CreateBarForm({
     }, [isOpen, players.length, linkableQuests.length])
 
     useEffect(() => {
-        if (state?.success) {
-            if (typeof window !== 'undefined') {
-                sessionStorage.removeItem('shadow321_progress')
-                sessionStorage.removeItem('shadow321_metadata')
-                sessionStorage.removeItem('shadow321_session')
-            }
-            if (sceneGridBind) {
-                onSceneGridBound?.()
-                router.refresh()
-                return
-            }
-            queueMicrotask(() => {
-                setIsOpen(false)
-                const finalVisibility = state.visibility || visibility
-                if (finalVisibility === 'private') {
-                    privateRouter.navigate({ barId: state.barId })
-                } else {
-                    publicRouter.navigate({ barId: state.barId })
+        if (state?.success && state?.barId) {
+            const finish = () => {
+                if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem('shadow321_progress')
+                    sessionStorage.removeItem('shadow321_metadata')
+                    sessionStorage.removeItem('shadow321_session')
                 }
-            })
+                if (sceneGridBind) {
+                    onSceneGridBound?.()
+                    router.refresh()
+                    return
+                }
+                queueMicrotask(() => {
+                    setIsOpen(false)
+                    const finalVisibility = state.visibility || visibility
+                    if (finalVisibility === 'private') {
+                        privateRouter.navigate({ barId: state.barId })
+                    } else {
+                        publicRouter.navigate({ barId: state.barId })
+                    }
+                })
+            }
+
+            if (selectedFile) {
+                setIsUploading(true)
+                uploadBarAsset(selectedFile, { barId: state.barId })
+                    .then(() => finish())
+                    .catch((err) => {
+                        console.error('Upload failed:', err)
+                        finish()
+                    })
+                    .finally(() => setIsUploading(false))
+            } else {
+                finish()
+            }
         }
-    }, [state, visibility, sceneGridBind, onSceneGridBound, router, privateRouter, publicRouter])
+    }, [state, visibility, selectedFile, sceneGridBind, onSceneGridBound, router, privateRouter, publicRouter])
+
 
     if (!isOpen) {
         return (
@@ -142,16 +163,16 @@ export function CreateBarForm({
 
     return (
         <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-5 space-y-4">
-                <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-4">
                 <div className="space-y-1">
                     <h3 className="font-bold text-white text-lg">
                         {sceneGridBind
                             ? 'Create a BAR for this Scene Atlas cell'
                             : quickFrom321
-                              ? 'Post from your 321'
-                              : setup
-                                ? 'The Setup'
-                                : 'Create a new Bar'}
+                                ? 'Post from your 321'
+                                : setup
+                                    ? 'The Setup'
+                                    : 'Create a new Bar'}
                     </h3>
                     {quickFrom321 && !sceneGridBind && (
                         <p className="text-xs text-zinc-500">
@@ -263,11 +284,10 @@ export function CreateBarForm({
                                     role="tab"
                                     aria-selected={atlasVaultTab === id}
                                     onClick={() => setAtlasVaultTab(id)}
-                                    className={`px-4 py-3 text-sm font-medium rounded-t-lg border border-b-0 min-h-11 transition-colors touch-manipulation ${
-                                        atlasVaultTab === id
-                                            ? 'border-zinc-600 bg-zinc-800/80 text-amber-200 border-b-transparent -mb-px z-[1]'
-                                            : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                                    }`}
+                                    className={`px-4 py-3 text-sm font-medium rounded-t-lg border border-b-0 min-h-11 transition-colors touch-manipulation ${atlasVaultTab === id
+                                        ? 'border-zinc-600 bg-zinc-800/80 text-amber-200 border-b-transparent -mb-px z-[1]'
+                                        : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                                        }`}
                                 >
                                     {label}
                                 </button>
@@ -301,11 +321,10 @@ export function CreateBarForm({
                                             ) as HTMLSelectElement
                                             if (select) select.value = ''
                                         }}
-                                        className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition min-h-11 ${
-                                            visibility === 'public'
-                                                ? 'bg-green-900/30 border-green-600 text-green-400'
-                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                        }`}
+                                        className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition min-h-11 ${visibility === 'public'
+                                            ? 'bg-green-900/30 border-green-600 text-green-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            }`}
                                     >
                                         <div className="flex flex-col items-center">
                                             <span>🌍 Public</span>
@@ -315,11 +334,10 @@ export function CreateBarForm({
                                     <button
                                         type="button"
                                         onClick={() => setVisibility('private')}
-                                        className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition min-h-11 ${
-                                            visibility === 'private'
-                                                ? 'bg-purple-900/30 border-purple-600 text-purple-400'
-                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                        }`}
+                                        className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition min-h-11 ${visibility === 'private'
+                                            ? 'bg-purple-900/30 border-purple-600 text-purple-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            }`}
                                     >
                                         🔒 Private
                                     </button>
@@ -368,11 +386,10 @@ export function CreateBarForm({
                                                     onClick={() =>
                                                         setStoryMood(storyMood === mood.key ? null : mood.key)
                                                     }
-                                                    className={`px-3 py-2 rounded-full text-xs transition min-h-11 ${
-                                                        storyMood === mood.key
-                                                            ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
-                                                            : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                                    }`}
+                                                    className={`px-3 py-2 rounded-full text-xs transition min-h-11 ${storyMood === mood.key
+                                                        ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
+                                                        : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                                        }`}
                                                 >
                                                     {mood.emoji} {mood.label}
                                                 </button>
@@ -399,11 +416,10 @@ export function CreateBarForm({
                                             onClick={() =>
                                                 setMoveType(moveType === mt.key ? null : (mt.key as typeof moveType))
                                             }
-                                            className={`py-2 px-3 rounded-lg border text-sm transition min-h-11 ${
-                                                moveType === mt.key
-                                                    ? 'bg-amber-900/30 border-amber-600 text-amber-400'
-                                                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                            }`}
+                                            className={`py-2 px-3 rounded-lg border text-sm transition min-h-11 ${moveType === mt.key
+                                                ? 'bg-amber-900/30 border-amber-600 text-amber-400'
+                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                                }`}
                                         >
                                             <span className="font-medium">{mt.label}</span>
                                             <span className="block text-xs text-zinc-500">{mt.desc}</span>
@@ -425,11 +441,10 @@ export function CreateBarForm({
                                             onClick={() =>
                                                 setAllyshipDomain(allyshipDomain === d.key ? null : d.key)
                                             }
-                                            className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${
-                                                allyshipDomain === d.key
-                                                    ? 'bg-teal-900/40 border-teal-600 text-teal-300'
-                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                            }`}
+                                            className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${allyshipDomain === d.key
+                                                ? 'bg-teal-900/40 border-teal-600 text-teal-300'
+                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
                                         >
                                             {d.label}
                                         </button>
@@ -482,11 +497,10 @@ export function CreateBarForm({
                                                             : [...prev, nation]
                                                     )
                                                 }
-                                                className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${
-                                                    selectedNations.includes(nation)
-                                                        ? 'bg-blue-900/40 border-blue-600 text-blue-300'
-                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                                }`}
+                                                className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${selectedNations.includes(nation)
+                                                    ? 'bg-blue-900/40 border-blue-600 text-blue-300'
+                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                    }`}
                                             >
                                                 {nation}
                                             </button>
@@ -518,11 +532,10 @@ export function CreateBarForm({
                                                             : [...prev, key]
                                                     )
                                                 }
-                                                className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${
-                                                    selectedArchetypeKeys.includes(key)
-                                                        ? 'bg-purple-900/40 border-purple-600 text-purple-300'
-                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                                }`}
+                                                className={`px-3 py-2 rounded-lg border text-xs transition min-h-11 ${selectedArchetypeKeys.includes(key)
+                                                    ? 'bg-purple-900/40 border-purple-600 text-purple-300'
+                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                    }`}
                                             >
                                                 {key}
                                             </button>
@@ -555,20 +568,55 @@ export function CreateBarForm({
                     </>
                 ) : quickFrom321 ? (
                     <>
-                        <p className="text-sm text-zinc-400">
-                            Lead with your words — like a post. The list title below is optional; we default one for you.
-                        </p>
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase text-zinc-500">What you want to share</label>
-                            <textarea
-                                name="description"
-                                placeholder="Say it in your voice…"
-                                required
-                                rows={6}
-                                defaultValue={prefill?.description}
-                                className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white text-base leading-relaxed"
-                            />
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-xs uppercase text-zinc-600 font-mono tracking-widest">Post Content</label>
+                                <textarea
+                                    name="description"
+                                    placeholder="What are you alchemizing?"
+                                    required
+                                    rows={4}
+                                    defaultValue={prefill?.description}
+                                    className="w-full bg-transparent border-0 border-b border-zinc-800 focus:border-emerald-500/60 outline-none text-zinc-100 text-lg leading-relaxed resize-none placeholder-zinc-700 pb-2 transition-colors"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs uppercase text-zinc-600 font-mono tracking-widest">Image (Optional)</label>
+                                <div className="flex items-center gap-3">
+                                    <label className="cursor-pointer group">
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 group-hover:border-zinc-600 group-hover:text-zinc-200 transition-all">
+                                            <span className="text-lg">📷</span>
+                                            <span className="text-xs">{selectedFile ? 'Change Photo' : 'Add Photo'}</span>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) setSelectedFile(file)
+                                            }}
+                                        />
+                                    </label>
+                                    {selectedFile && (
+                                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2 py-1">
+                                            <span className="text-[10px] text-emerald-400 font-mono truncate max-w-[120px]">
+                                                {selectedFile.name}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedFile(null)}
+                                                className="text-emerald-500 hover:text-emerald-400 text-xs"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+
                         {prefill?.source321FullText ? (
                             <details className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500">
                                 <summary className="cursor-pointer text-zinc-400 hover:text-zinc-300">
@@ -592,11 +640,10 @@ export function CreateBarForm({
                                             setAllyshipDomain(allyshipDomain === d.key ? null : d.key)
                                             setDomainError(null)
                                         }}
-                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                            allyshipDomain === d.key
-                                                ? 'bg-teal-900/40 border-teal-600 text-teal-300'
-                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                        }`}
+                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                            ? 'bg-teal-900/40 border-teal-600 text-teal-300'
+                                            : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                            }`}
                                     >
                                         {d.label}
                                     </button>
@@ -621,11 +668,10 @@ export function CreateBarForm({
                                         onClick={() =>
                                             setMoveType(moveType === mt.key ? null : (mt.key as 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'))
                                         }
-                                        className={`py-2 px-3 rounded-lg border text-sm transition ${
-                                            moveType === mt.key
-                                                ? 'bg-amber-900/30 border-amber-600 text-amber-400'
-                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                        }`}
+                                        className={`py-2 px-3 rounded-lg border text-sm transition ${moveType === mt.key
+                                            ? 'bg-amber-900/30 border-amber-600 text-amber-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            }`}
                                     >
                                         {mt.label}
                                     </button>
@@ -646,22 +692,20 @@ export function CreateBarForm({
                                 <button
                                     type="button"
                                     onClick={() => setVisibility('public')}
-                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
-                                        visibility === 'public'
-                                            ? 'bg-green-900/30 border-green-600 text-green-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                    }`}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'public'
+                                        ? 'bg-green-900/30 border-green-600 text-green-400'
+                                        : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
                                 >
                                     🌍 Public
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setVisibility('private')}
-                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
-                                        visibility === 'private'
-                                            ? 'bg-purple-900/30 border-purple-600 text-purple-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                    }`}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'private'
+                                        ? 'bg-purple-900/30 border-purple-600 text-purple-400'
+                                        : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
                                 >
                                     🔒 Private
                                 </button>
@@ -709,11 +753,10 @@ export function CreateBarForm({
                                                             : [...prev, nation]
                                                     )
                                                 }
-                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                                    selectedNations.includes(nation)
-                                                        ? 'bg-blue-900/40 border-blue-600 text-blue-300'
-                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                                }`}
+                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedNations.includes(nation)
+                                                    ? 'bg-blue-900/40 border-blue-600 text-blue-300'
+                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                    }`}
                                             >
                                                 {nation}
                                             </button>
@@ -741,11 +784,10 @@ export function CreateBarForm({
                                                             : [...prev, key]
                                                     )
                                                 }
-                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                                    selectedArchetypeKeys.includes(key)
-                                                        ? 'bg-purple-900/40 border-purple-600 text-purple-300'
-                                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                                }`}
+                                                className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedArchetypeKeys.includes(key)
+                                                    ? 'bg-purple-900/40 border-purple-600 text-purple-300'
+                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                    }`}
                                             >
                                                 {key}
                                             </button>
@@ -828,11 +870,10 @@ export function CreateBarForm({
                                                 onClick={() =>
                                                     setStoryMood(storyMood === mood.key ? null : mood.key)
                                                 }
-                                                className={`px-3 py-1 rounded-full text-xs transition ${
-                                                    storyMood === mood.key
-                                                        ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
-                                                        : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                                }`}
+                                                className={`px-3 py-1 rounded-full text-xs transition ${storyMood === mood.key
+                                                    ? 'bg-purple-900/50 border border-purple-600 text-purple-300'
+                                                    : 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                                    }`}
                                             >
                                                 {mood.emoji} {mood.label}
                                             </button>
@@ -879,11 +920,10 @@ export function CreateBarForm({
                                         ) as HTMLSelectElement
                                         if (select) select.value = ''
                                     }}
-                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
-                                        visibility === 'public'
-                                            ? 'bg-green-900/30 border-green-600 text-green-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                    }`}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'public'
+                                        ? 'bg-green-900/30 border-green-600 text-green-400'
+                                        : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
                                 >
                                     <div className="flex flex-col items-center">
                                         <span>🌍 Public</span>
@@ -893,11 +933,10 @@ export function CreateBarForm({
                                 <button
                                     type="button"
                                     onClick={() => setVisibility('private')}
-                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${
-                                        visibility === 'private'
-                                            ? 'bg-purple-900/30 border-purple-600 text-purple-400'
-                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                    }`}
+                                    className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition ${visibility === 'private'
+                                        ? 'bg-purple-900/30 border-purple-600 text-purple-400'
+                                        : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                        }`}
                                 >
                                     🔒 Private
                                 </button>
@@ -956,11 +995,10 @@ export function CreateBarForm({
                                         onClick={() =>
                                             setMoveType(moveType === mt.key ? null : (mt.key as any))
                                         }
-                                        className={`py-2 px-3 rounded-lg border text-sm transition ${
-                                            moveType === mt.key
-                                                ? 'bg-amber-900/30 border-amber-600 text-amber-400'
-                                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
-                                        }`}
+                                        className={`py-2 px-3 rounded-lg border text-sm transition ${moveType === mt.key
+                                            ? 'bg-amber-900/30 border-amber-600 text-amber-400'
+                                            : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                                            }`}
                                     >
                                         <span className="font-medium">{mt.label}</span>
                                         <span className="block text-xs text-zinc-500">{mt.desc}</span>
@@ -984,11 +1022,10 @@ export function CreateBarForm({
                                         onClick={() =>
                                             setAllyshipDomain(allyshipDomain === d.key ? null : d.key)
                                         }
-                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                            allyshipDomain === d.key
-                                                ? 'bg-teal-900/40 border-teal-600 text-teal-300'
-                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                        }`}
+                                        className={`px-3 py-1.5 rounded-lg border text-xs transition ${allyshipDomain === d.key
+                                            ? 'bg-teal-900/40 border-teal-600 text-teal-300'
+                                            : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                            }`}
                                     >
                                         {d.label}
                                     </button>
@@ -1043,11 +1080,10 @@ export function CreateBarForm({
                                                         : [...prev, nation]
                                                 )
                                             }
-                                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                                selectedNations.includes(nation)
-                                                    ? 'bg-blue-900/40 border-blue-600 text-blue-300'
-                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                            }`}
+                                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedNations.includes(nation)
+                                                ? 'bg-blue-900/40 border-blue-600 text-blue-300'
+                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
                                         >
                                             {nation}
                                         </button>
@@ -1080,11 +1116,10 @@ export function CreateBarForm({
                                                         : [...prev, key]
                                                 )
                                             }
-                                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${
-                                                selectedArchetypeKeys.includes(key)
-                                                    ? 'bg-purple-900/40 border-purple-600 text-purple-300'
-                                                    : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
-                                            }`}
+                                            className={`px-3 py-1.5 rounded-lg border text-xs transition ${selectedArchetypeKeys.includes(key)
+                                                ? 'bg-purple-900/40 border-purple-600 text-purple-300'
+                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
                                         >
                                             {key}
                                         </button>
@@ -1163,13 +1198,21 @@ export function CreateBarForm({
                     </button>
                     <button
                         type="submit"
-                        disabled={isPending}
-                        className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold disabled:opacity-50 min-h-[44px]"
+                        disabled={isPending || isUploading}
+                        className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold disabled:opacity-50 min-h-[44px] flex items-center gap-2"
                     >
-                        {isPending ? 'Creating...' : sceneGridBind ? 'Save to Scene Atlas' : 'Create Bar'}
+                        {(isPending || isUploading) ? (
+                            <>
+                                <span className="animate-spin text-lg">⏳</span>
+                                <span>{isUploading ? 'Uploading Image...' : 'Creating...'}</span>
+                            </>
+                        ) : (
+                            <span>{sceneGridBind ? 'Save to Scene Atlas' : 'Create Bar'}</span>
+                        )}
                     </button>
+
                 </div>
             </form>
-        </div>
+        </div >
     )
 }

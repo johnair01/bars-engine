@@ -23,6 +23,7 @@ import {
 } from '@/lib/character-creator/discovery-data'
 import { accumulateWeights, rankByScore, topKey, resonancePercent } from '@/lib/character-creator/scoring'
 import { CharacterCreatorAvatarPreview } from '@/components/character-creator/CharacterCreatorAvatarPreview'
+import { PrivacyBadge } from '@/components/ui/PrivacyBadge'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -545,7 +546,7 @@ function LandingScene({ onBegin }: { onBegin: () => void }) {
         />
         <p className="text-zinc-400 leading-relaxed">
           You will move through a series of scenes and choices. At the end, your archetype emerges from the pattern.
-          There are no right answers. There is only what is true for you.
+          There are no right answers. There is only what is true for you. <PrivacyBadge />
         </p>
       </div>
       <button
@@ -1032,7 +1033,7 @@ function StoryDreams({
     <div className="space-y-6">
       <div className="space-y-2">
         <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest">Your Story</p>
-        <h2 className="text-xl font-bold text-zinc-100">Dreams &amp; Goals</h2>
+        <h2 className="text-xl font-bold text-zinc-100">Dreams &amp; Goals <PrivacyBadge /></h2>
       </div>
 
       <GMVoiceBar
@@ -1089,7 +1090,7 @@ function StoryFears({
     <div className="space-y-6">
       <div className="space-y-2">
         <p className="text-xs text-zinc-600 font-mono uppercase tracking-widest">Your Story</p>
-        <h2 className="text-xl font-bold text-zinc-100">The fears you carry</h2>
+        <h2 className="text-xl font-bold text-zinc-100">The fears you carry <PrivacyBadge /></h2>
         <p className="text-zinc-400 text-sm">Select up to 3 that resonate. You can reword them in your own language.</p>
       </div>
 

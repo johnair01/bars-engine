@@ -42,6 +42,10 @@ const ANCHOR_COLORS: Record<string, number> = {
   nation_embassy:   0x2563eb,
   campaign_portal:  0xd4a017,  // gold — campaign threshold
   spoke_portal:     0x8b5cf6,  // violet — CHS spoke exit
+  bar:              0x10b981,  // emerald — curated artifact
+  bar_deck:         0xf59e0b,  // amber — curated deck
+  librarian_v2_npc: 0x06b6d4,  // cyan — the new Game Master face
+  encounter_spawn:  0xef4444,  // red — wild grass / combat trigger
 }
 
 /**
@@ -59,7 +63,10 @@ const PROXIMITY_PRIORITY: Record<string, number> = {
   cyoa_quest: 90,
   spoke_portal: 88,
   npc_slot: 85,
+  encounter_spawn: 84,
   crafting_forge: 82,
+  bar: 80,
+  bar_deck: 80,
   portal: 40,
   campaign_portal: 35,
 }
