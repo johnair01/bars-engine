@@ -1,0 +1,437 @@
+openapi: 3.1.1
+info:
+  title: BARS Engine — BAR Forge API
+  description: |
+    BAR → quest matching and BAR registry (Custom GPT). Set BARS_API_KEY on the server; Bearer auth.
+    See docs/BAR_FORGE_API.md.
+
+    **Game Master faces (canonical):** Shaman, Challenger, Regent, Architect, Diplomat, Sage.
+    Pass optional `gameMasterFace` on match/registry so the GPT keeps sect influence; registry stores it under `metadataJson.gameMasterFace`.
+
+    **Custom GPT:** Route each user turn through a face lens when helpful—Sage may delegate. Use `tags` and `x-gm-faces` below as behavioral hints, not separate HTTP APIs.
+  version: 1.1.0
+  x-gm-faces:
+    shaman:
+      mission: Mythic threshold — belonging, ritual space, bridge between worlds.
+      gptHints: Ritualize BAR naming; prefer registry save + soft match; containment before stakes.
+    challenger:
+      mission: Proving ground — action, edge, lever.
+      gptHints: Stress-test BAR; bias toward Show Up / stakes; smallest brave next move in metadata.
+    regent:
+      mission: Order — roles, rules, collective tool.
+      gptHints: Classify BAR by lock/role; validate before POST registry; legible assignments.
+    architect:
+      mission: Blueprint — strategy, backlog, sys-admin teacher.
+      gptHints: Decompose BAR; link registry ↔ quests/campaignRef; structured metadata.
+    diplomat:
+      mission: Weave — relational field, care, connector.
+      gptHints: Reframe for I/We; enrich polarity[]; consent before persisting shared BARs.
+    sage:
+      mission: Integration — emergence; may wear other faces as masks.
+      gptHints: Route which face leads; cross-face synthesis after match+registry; meta-routing.
+
+servers:
+  - url: https://bars-engine.vercel.app
+    description: Production (no trailing slash; replace if needed)
+
+tags:
+  - name: GM_Shaman
+    description: Belonging, ritual, threshold — registry & gentle matching
+  - name: GM_Challenger
+    description: Edge, proof, action — match with stakes; Show Up bias in prompts
+  - name: GM_Regent
+    description: Roles, rules — validate quest ids; ordered registry narrative
+  - name: GM_Architect
+    description: Structure, backlog — list registry; link BAR→quest→campaign in metadata
+  - name: GM_Diplomat
+    description: Relational field — polarity tags; care in copy before save
+  - name: GM_Sage
+    description: Routing & synthesis — default router; combine other tags in instructions
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/match-bar-to-quests:
+    post:
+      operationId: matchBarToQuests
+      summary: Match BAR analysis to quests (primary + up to 2 secondary)
+      tags:
+        - GM_Challenger
+        - GM_Architect
+        - GM_Sage
+      x-gm-face-primary: challenger
+      x-gm-face-notes: Weight prompts by face; optional gameMasterFace echoed in debug.matchedOn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchBarRequest"
+      responses:
+        "200":
+          description: Match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchBarResponse"
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          description: Server error
+
+  /api/bar-registry:
+    post:
+      operationId: createBarRegistryRecord
+      summary: Save BAR + analysis + optional quest ids to registry
+      tags:
+        - GM_Shaman
+        - GM_Regent
+        - GM_Diplomat
+      x-gm-face-primary: shaman
+      x-gm-face-notes: First-class BAR persistence; merge gameMasterFace into metadataJson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BarRegistryRequest"
+      responses:
+        "200":
+          description: Created id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                required:
+                  - id
+        "400":
+          description: Validation error or invalid quest ids
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+        "500":
+          description: Server error
+    get:
+      operationId: listBarRegistryRecords
+      summary: List all BAR registry rows (newest first)
+      tags:
+        - GM_Architect
+        - GM_Sage
+      x-gm-face-primary: architect
+      x-gm-face-notes: Holistic catalog; metabolize BARs across the project
+      parameters:
+        - name: limit
+          in: query
+          description: Max rows when not using sample (default 100, max 500). Ignored when sample is set.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: sample
+          in: query
+          description: If set, return this many rows in random order (max 500). Use for "give me random BARs to work with."
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 500
+        - name: includeTotal
+          in: query
+          description: If 1 or true, include totalCount (all rows in DB). Use for "how many BARs in the registry?"
+          schema:
+            type: string
+            enum:
+              - "0"
+              - "1"
+              - "true"
+              - "false"
+      responses:
+        "200":
+          description: Registry list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BarRegistryRecord"
+                  count:
+                    type: integer
+                    description: Number of rows in this response
+                  totalCount:
+                    type: integer
+                    description: Present when includeTotal=1 — total rows in bar_forge_records
+                required:
+                  - records
+                  - count
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/bar-registry/{id}:
+    get:
+      operationId: getBarRegistryRecord
+      summary: Get one registry row by id
+      tags:
+        - GM_Architect
+        - GM_Sage
+      x-gm-face-primary: sage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Registry record CUID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Single record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    $ref: "#/components/schemas/BarRegistryRecord"
+                required:
+                  - record
+        "404":
+          description: Not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: Value of BARS_API_KEY from server environment
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    ServiceUnavailable:
+      description: BARS_API_KEY not configured on server
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+  schemas:
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: string
+
+    GameMasterFace:
+      type: string
+      description: Canonical GM sect lens (see .agent/context/game-master-sects.md)
+      enum:
+        - shaman
+        - challenger
+        - regent
+        - architect
+        - diplomat
+        - sage
+
+    BarAnalysis:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - perception
+            - identity
+            - relational
+            - systemic
+        wavePhase:
+          type: string
+          enum:
+            - Wake Up
+            - Clean Up
+            - Grow Up
+            - Show Up
+        polarity:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+        - wavePhase
+        - polarity
+
+    MatchBarRequest:
+      type: object
+      properties:
+        bar:
+          type: string
+          minLength: 1
+        analysis:
+          $ref: "#/components/schemas/BarAnalysis"
+        gameMasterFace:
+          $ref: "#/components/schemas/GameMasterFace"
+        options:
+          type: object
+          properties:
+            maxResults:
+              type: integer
+              minimum: 1
+              maximum: 100
+      required:
+        - bar
+        - analysis
+
+    QuestDto:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        moveType:
+          type: string
+          nullable: true
+        lockType:
+          type: string
+          nullable: true
+        allyshipDomain:
+          type: string
+          nullable: true
+        nation:
+          type: string
+          nullable: true
+        archetype:
+          type: string
+          nullable: true
+        kotterStage:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - status
+        - kotterStage
+        - createdAt
+
+    MatchBarResponse:
+      type: object
+      properties:
+        primary:
+          oneOf:
+            - $ref: "#/components/schemas/QuestDto"
+            - type: "null"
+        secondary:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestDto"
+        debug:
+          type: object
+          properties:
+            matchedOn:
+              type: array
+              items:
+                type: string
+            confidence:
+              type: number
+          required:
+            - matchedOn
+            - confidence
+      required:
+        - primary
+        - secondary
+        - debug
+
+    BarRegistryMatches:
+      type: object
+      properties:
+        primaryQuestId:
+          type: string
+        secondaryQuestIds:
+          type: array
+          maxItems: 2
+          items:
+            type: string
+
+    BarRegistryRequest:
+      type: object
+      properties:
+        bar:
+          type: string
+          minLength: 1
+        analysis:
+          $ref: "#/components/schemas/BarAnalysis"
+        gameMasterFace:
+          $ref: "#/components/schemas/GameMasterFace"
+        matches:
+          $ref: "#/components/schemas/BarRegistryMatches"
+        source:
+          type: string
+        metadataJson:
+          type: object
+          additionalProperties: true
+      required:
+        - bar
+        - analysis
+
+    BarRegistryRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        bar:
+          type: string
+        analysisType:
+          type: string
+        wavePhase:
+          type: string
+        polarity:
+          type: array
+          items:
+            type: string
+        primaryQuestId:
+          type: string
+          nullable: true
+        secondaryQuestIds:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+          nullable: true
+        metadataJson:
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - bar
+        - analysisType
+        - wavePhase
+        - polarity
+        - secondaryQuestIds
+        - createdAt

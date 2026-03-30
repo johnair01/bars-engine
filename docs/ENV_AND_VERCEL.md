@@ -31,6 +31,7 @@ Next.js loads `.env.local` automatically. Then run `npm run dev` as usual.
 
 - **Where**: [Vercel Dashboard](https://vercel.com/dashboard) → your project → **Settings** → **Environment Variables**.
 - **What to set**: At minimum, `DATABASE_URL` (PostgreSQL connection string) and `OPENAI_API_KEY` if you use AI features. For BAR photo uploads and book PDFs: `BLOB_READ_WRITE_TOKEN` (from Vercel Blob store — create in Dashboard → Storage). Without it, uploads fail with FUNCTION_PAYLOAD_TOO_LARGE or fall back to local filesystem (which fails on Vercel). Set them for the environments you use (Production, Preview, and optionally Development if you use a separate dev database).
+- **Optional API keys (Custom GPT / scripts):** `BOOKS_CONTEXT_API_KEY` — protects `/api/admin/books` (see [BOOKS_CONTEXT_API.md](BOOKS_CONTEXT_API.md)). **`BARS_API_KEY`** — protects BAR Forge routes (`/api/match-bar-to-quests`, `/api/bar-registry`); see [BAR_FORGE_API.md](BAR_FORGE_API.md).
 - **Sync**: Production and Preview deployments use these values. Local dev uses whatever you pulled with `vercel env pull .env.local` or put in `.env`.
 - **Env scope**: Vercel lets you set different values per environment — **Production**, **Preview**, and **Development**. Each can have a different `DATABASE_URL`. If prod and local use different URLs, they hit different databases.
 

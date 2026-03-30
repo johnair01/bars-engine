@@ -412,9 +412,29 @@ model CustomBar {
   spokeMoveBedAnchor                 SpokeMoveBed?             @relation("SpokeMoveBedAnchor")
   spokeMoveBedKernelRows             SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelBar")
   spokeMoveBedKernelSources          SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelSource")
+  barForgeRecordsAsPrimary             BarForgeRecord[]          @relation("BarForgePrimaryQuest")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
+}
+
+/// BAR Forge / Custom GPT: persisted BAR analyses + quest links (no Player ownership required).
+model BarForgeRecord {
+  id                String    @id @default(cuid())
+  bar               String    @db.Text
+  analysisType      String
+  wavePhase         String
+  polarity          Json
+  primaryQuestId    String?
+  secondaryQuestIds Json
+  source            String?
+  metadataJson      Json?
+  createdAt         DateTime  @default(now())
+
+  primaryQuest CustomBar? @relation("BarForgePrimaryQuest", fields: [primaryQuestId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("bar_forge_records")
 }
 
 /// Emergent campaign from BAR interview (ECI) — structured path through invite CYOA before child campaign exists.
