@@ -133,7 +133,8 @@ Before moving on, verify:
 
 After modifying `prisma/schema.prisma`:
 
-- `npm run db:sync` — push schema, regenerate Prisma Client
+- `npx prisma migrate dev --name describe_change` — create migration; then `migrate deploy`; then `npm run db:record-schema-hash`
+- `npm run db:generate` — regenerate Prisma Client (`db:sync` also generates; neither runs `db push` — see docs/PRISMA_MIGRATE_STRATEGY.md)
 
 See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 
@@ -141,7 +142,8 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 
 - [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), [FOUNDATIONS.md](FOUNDATIONS.md)
 - [docs/DEVELOPER_ONBOARDING.md](docs/DEVELOPER_ONBOARDING.md), [docs/ENV_AND_VERCEL.md](docs/ENV_AND_VERCEL.md)
-- [docs/PRISMA_MIGRATE_STRATEGY.md](docs/PRISMA_MIGRATE_STRATEGY.md) — `migrate deploy` vs `db push`, baselining, squash
+- [docs/PRISMA_MIGRATE_STRATEGY.md](docs/PRISMA_MIGRATE_STRATEGY.md) — **`db push` forbidden**; `migrate deploy`, baselining, squash
+- [docs/DB_STRATEGY.md](docs/DB_STRATEGY.md) — migrations-only workflow
 
 <!-- MANUAL ADDITIONS END -->
 

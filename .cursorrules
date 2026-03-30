@@ -10,12 +10,16 @@ Agent workflows (Sage consult, strand, sage:brief, bars-agents MCP) require `OPE
 
 ## Database / Prisma
 
+**`prisma db push` is forbidden** — for humans and for AI. It bypasses migrations and breaks production. See **`docs/PRISMA_MIGRATE_STRATEGY.md`**.
+
 When you modify `prisma/schema.prisma`:
 
-1. Run **`npm run db:sync`** — regenerates Prisma Client; in **local dev** it may run `db push` (see `scripts/db-sync.ts`). **Production-like** runs skip auto-push on purpose.
-2. **Before committing** a schema change that ships: **`npx prisma migrate dev --name describe_change`** and commit the new `prisma/migrations/...` SQL **with** the schema. Deploy uses **`prisma migrate deploy`** — it only sees committed migrations.
+1. **`npx prisma migrate dev --name describe_change`** — commit the new `prisma/migrations/...` SQL **with** the schema.
+2. **`npx tsx scripts/with-env.ts "npx prisma migrate deploy"`** locally to apply migrations.
+3. **`npm run db:record-schema-hash`** — updates `.prisma_hash` so `db:sync` stops failing.
+4. **`npm run db:generate`** or **`npm run db:sync`** — regenerate Prisma Client (`db:sync` never runs `db push`).
 
-Do not wait for the user to ask for (1). For the full workflow (panic reduction, push vs migrate): **`.agents/skills/prisma-migration-discipline/SKILL.md`**.
+Do not wait for the user to ask. Full policy: **`docs/PRISMA_MIGRATE_STRATEGY.md`**, **`docs/DB_STRATEGY.md`**.
 
 ---
 
@@ -32,7 +36,7 @@ When **creating or expanding** a spec kit—not only implementing one—read **`
 - **`.agents/skills/spec-kit-translator/SKILL.md`** — Natural language → spec kit; template, verification quests, backlog sync
 - **`.specify/spec-template.md`** — Required sections for new `spec.md` files
 - **`.cursor/rules/fail-fix-workflow.mdc`** — Verify builds and tests before moving on (frontend, backend, database)
-- **`.agents/skills/prisma-migration-discipline/SKILL.md`** — migrate vs push vs deploy; when editing `schema.prisma`
+- **`docs/PRISMA_MIGRATE_STRATEGY.md`** — migrations only; `db push` forbidden
 - **`.cursor/rules/branch-context-nn-edits.mdc`** — Full context for this branch, cross-platform notes, quick reference
 - **`docs/SYNTHETIC_VS_REAL.md`** — How to switch between local and Vercel databases
 - **`Makefile`** — Run `make help` to see all available development commands

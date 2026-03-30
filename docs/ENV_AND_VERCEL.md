@@ -46,7 +46,7 @@ Before merging schema changes or deploying to production:
 | Check | Action |
 |-------|--------|
 | **DATABASE_URL** | Set for **Production** scope in Vercel Dashboard → Settings → Environment Variables. |
-| **Migration file** | Every schema change must have a migration file. Run `npx prisma migrate dev --name describe_change` before commit. `db push` is for local iteration only. |
+| **Migration file** | Every schema change must have a migration file. Run `npx prisma migrate dev --name describe_change` before commit. **`prisma db push` is forbidden** (see [PRISMA_MIGRATE_STRATEGY.md](PRISMA_MIGRATE_STRATEGY.md)). |
 | **Migrate deploy** | Test locally: `DATABASE_URL="<prod-url>" npx prisma migrate deploy` must succeed. If it fails, fix before merging. |
 | **Diagnose first** | If prod login fails, run `DATABASE_URL="<prod>" npm run diagnose:prod-db` before applying fixes. |
 
@@ -82,7 +82,7 @@ No speculation. Facts only. Compare the output to what you expect, then decide w
 
 ### DATABASE_URL
 
-If `DATABASE_URL` errors appear in build or Prisma commands (e.g. `npm run build`, `npm run db:push`), ensure you've run `npm run env:pull` (or have `.env` with `DATABASE_URL`). The app loads `.env.local` first; all scripts now do the same.
+If `DATABASE_URL` errors appear in build or Prisma commands (e.g. `npm run build`), ensure you've run `npm run env:pull` (or have `.env` with `DATABASE_URL`). The app loads `.env.local` first; all scripts now do the same.
 
 **Build without DATABASE_URL**: `npm run build` works even when `DATABASE_URL` is not set. In that case, it skips `prisma migrate deploy` and runs `prisma generate && next build`, so you can verify the app compiles and type-checks without a database. For a full build (including migrations), set `DATABASE_URL` via `npm run env:pull` or add it to `.env.local`.
 

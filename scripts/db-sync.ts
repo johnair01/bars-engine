@@ -27,7 +27,7 @@ function sync() {
     const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL
     const hasDbUrl = !!(process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL)
 
-    const needsPush = currentHash !== storedHash
+    const needsAttention = currentHash !== storedHash
 
     // 1. Always Generate Types
     console.log('✨ Generating Prisma Client...')
@@ -38,36 +38,25 @@ function sync() {
         process.exit(1)
     }
 
-    // 2. Conditional Push
-    if (needsPush) {
+    // 2. First run on this clone: record hash (no db push — see docs/PRISMA_MIGRATE_STRATEGY.md)
+    if (!storedHash && currentHash) {
+        writeFileSync(HASH_FILE, currentHash)
+        console.log('📝 Initialized .prisma_hash for this clone.')
+        console.log('   If the database is new or behind: npx prisma migrate deploy')
+        console.log('--- [DB Sync] Complete ---')
+        return
+    }
+
+    // 3. Schema file changed vs last recorded hash — never prisma db push
+    if (needsAttention && storedHash) {
         if (isProd) {
-            console.warn('⚠️  Schema changed in production. Skipping AUTO-PUSH for safety.')
-            console.warn('👉 Use "prisma migrate deploy" for production schema updates.')
-            // We still want to allow the build to continue if it's just a schema update, 
-            // but we absolutely NOT wipe the database.
+            console.warn('⚠️  Schema changed in production build context. Skipping DB apply.')
+            console.warn('👉 Production must use committed migrations + prisma migrate deploy.')
             return
         }
 
-        if (hasDbUrl) {
-            console.log('🚀 Schema change detected. Pushing to Database...')
-            console.warn('')
-            console.warn('⚠️  WARNING: db push bypasses migration files.')
-            console.warn('   Before shipping to production you MUST create a migration:')
-            console.warn('   npx prisma migrate dev --name describe_your_change')
-            console.warn('   Without a migration file, Vercel deploy will fail or leave')
-            console.warn('   the production DB out of sync.')
-            console.warn('')
-            try {
-                // Remove --accept-data-loss for safety.
-                execSync('npx prisma db push', { stdio: 'inherit' })
-                if (currentHash) writeFileSync(HASH_FILE, currentHash)
-                console.log('✅ Database synchronized (dev only — create a migration before shipping).')
-            } catch {
-                console.error('❌ Prisma DB Push failed. Check your DATABASE_URL.')
-                if (isProd) process.exit(1)
-            }
-        } else {
-            console.error('❌ Schema changed but DATABASE_URL is not set. DB sync cannot complete.')
+        if (!hasDbUrl) {
+            console.error('❌ Schema changed but DATABASE_URL is not set.')
             console.error('')
             console.error('To fix:')
             console.error('  • With Vercel access: npm run env:pull')
@@ -76,10 +65,25 @@ function sync() {
             console.error('See docs/ENV_AND_VERCEL.md')
             process.exit(1)
         }
-    } else {
-        console.log('⏭️ Schema unchanged. Skipping DB push.')
+
+        console.error('')
+        console.error('❌ prisma/schema.prisma changed since last recorded .prisma_hash.')
+        console.error('')
+        console.error('   prisma db push is NOT allowed — it bypasses migrations and causes drift.')
+        console.error('   Using db push (humans or AI agents) breaks the deploy contract.')
+        console.error('')
+        console.error('   Do this instead:')
+        console.error('   • Pulled schema from main:  npx prisma migrate deploy')
+        console.error('   • You edited the schema:    npx prisma migrate dev --name describe_change')
+        console.error('   Then commit the migration folder, apply migrations, and run:')
+        console.error('   • npm run db:record-schema-hash')
+        console.error('')
+        console.error('   See docs/PRISMA_MIGRATE_STRATEGY.md')
+        console.error('')
+        process.exit(1)
     }
 
+    console.log('⏭️ Schema hash matches last sync. No migration action needed.')
     console.log('--- [DB Sync] Complete ---')
 }
 

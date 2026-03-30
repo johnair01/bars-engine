@@ -48,7 +48,7 @@ export default async function AdminInstancesPage({
           <div className="font-bold">Action failed</div>
           <div className="text-sm text-red-200/80 mt-1">{sp.error}</div>
           <div className="text-xs text-red-200/60 mt-3 font-mono">
-            If this says schema is not updated: run <span className="text-red-100">prisma db push</span> against prod, then retry.
+            If this says schema is not updated: run <span className="text-red-100">prisma migrate deploy</span> against prod, then retry.
           </div>
         </section>
       )}
@@ -73,7 +73,7 @@ export default async function AdminInstancesPage({
         <section className="bg-amber-950/20 border border-amber-900/50 rounded-xl p-5 text-amber-200 space-y-2">
           <div className="font-bold">Database schema not ready</div>
           <div className="text-sm text-amber-200/80">
-            This usually means <span className="font-mono">prisma db push</span> has not been run against production since the Instances feature was added.
+            This usually means migrations have not been applied to production (<span className="font-mono">prisma migrate deploy</span>) since the Instances feature was added.
           </div>
           <div className="text-xs font-mono text-amber-200/70">
             instances table: {readiness.instancesTableReady ? 'READY' : 'MISSING'} • app_config.activeInstanceId: {readiness.appConfigActiveInstanceReady ? 'READY' : 'MISSING'}

@@ -72,9 +72,9 @@ This branch adds:
 4. Document in `docs/` if it affects setup or deployment
 
 ### Schema Changes
-- Run `npm run db:sync` after modifying `prisma/schema.prisma`
-- This pushes the schema and regenerates Prisma Client
-- If using Vercel backend, migration happens automatically on next deploy
+- `npx prisma migrate dev --name describe_change`; commit `prisma/migrations/**`; `migrate deploy`; `npm run db:record-schema-hash`
+- `npm run db:generate` or `npm run db:sync` — regenerate client only (`db push` is forbidden — see docs/PRISMA_MIGRATE_STRATEGY.md)
+- Vercel applies migrations on deploy via `prisma migrate deploy`
 
 ### Python Backend Changes
 - Run `make check` in the `backend/` directory to lint

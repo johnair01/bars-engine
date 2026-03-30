@@ -54,7 +54,7 @@ Before implementing any feature:
 After implementing:
 
 - [ ] Completed tasks checked off in tasks.md
-- [ ] If `prisma/schema.prisma` changed: migration folder committed; read [.agents/skills/prisma-migration-discipline/SKILL.md](../../.agents/skills/prisma-migration-discipline/SKILL.md) when unsure — **migrate deploy** is the production contract, not `db push` alone
+- [ ] If `prisma/schema.prisma` changed: migration folder committed — **migrate deploy** is the production contract; **`db push` is forbidden** — [docs/PRISMA_MIGRATE_STRATEGY.md](../../docs/PRISMA_MIGRATE_STRATEGY.md)
 - [ ] `npm run build` and `npm run check` pass
 - [ ] **Human summary** — In the PR, ticket, or chat where you report the work, add a **short plain-language wrap-up** so anyone can understand without reading every file:
   - **What changed** (1–3 sentences)

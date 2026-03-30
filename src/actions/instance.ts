@@ -47,7 +47,7 @@ function redirectWithMessage(path: string, params: Record<string, string>) {
 function toUserSafeErrorMessage(error: unknown): string {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2021' || error.code === 'P2022') {
-      return 'Database schema is not updated yet. Run Prisma db push against production, then retry.'
+      return 'Database schema is not updated yet. Run prisma migrate deploy against production (see docs/PRISMA_MIGRATE_STRATEGY.md), then retry.'
     }
   }
   if (error instanceof Error) return error.message || 'Unknown error'

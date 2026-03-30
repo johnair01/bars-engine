@@ -19,12 +19,11 @@ When implementing features, refactors, or migrations:
    - `cd backend && make test` or `make test-agents` — Run tests
 
    **Database (if schema changed):**
-   - `npm run db:sync` — **Always** regenerates Prisma Client; in dev it may run `db push` (see `scripts/db-sync.ts`). In prod-like env it **skips push** — that is intentional.
-   - ⚠️ **REQUIRED before any commit that ships**: `npx prisma migrate dev --name describe_change`
-     creates the migration SQL under `prisma/migrations/`. Without it, `prisma migrate deploy`
-     (e.g. Vercel) won't apply the change and 500s follow.
-   - Rule: **`db push` alone is not the shipping path.** Every schema change that merges/deploys must
-     have a committed migration file. Full mental model: [.agents/skills/prisma-migration-discipline/SKILL.md](../../.agents/skills/prisma-migration-discipline/SKILL.md).
+   - ⚠️ **`prisma db push` is forbidden.** Use migrations only — see [docs/PRISMA_MIGRATE_STRATEGY.md](../../docs/PRISMA_MIGRATE_STRATEGY.md).
+   - `npx prisma migrate dev --name describe_change` — creates SQL under `prisma/migrations/`.
+   - `npx tsx scripts/with-env.ts "npx prisma migrate deploy"` — apply locally; then `npm run db:record-schema-hash`.
+   - `npm run db:generate` or `npm run db:sync` — regenerate Prisma Client (`db:sync` never runs `db push`).
+   - Every schema change that merges/deploys must include a committed migration file, or Vercel `migrate deploy` will not apply it.
 
 2. **Stop and fix on failure** — If any command fails, fix the failure before proceeding to the next task or phase. Do not continue implementation until the failure is resolved.
 
