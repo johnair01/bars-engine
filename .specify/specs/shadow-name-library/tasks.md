@@ -10,7 +10,7 @@
 
 ## Phase 2: Feedback (optional)
 
-- [x] `ShadowNameFeedback` Prisma model + migration `20260317000000_add_shadow_name_feedback`
+- [x] `ShadowNameFeedback` Prisma model + migration `20260317000001_add_shadow_name_feedback`
 - [x] `src/actions/shadow-name-feedback.ts` — `logShadowNameFeedback` server action
 - [x] Shadow321Runner `face_3`: tracks `lastSuggestedNameRef`, emits feedback on Next (fire-and-forget)
 
