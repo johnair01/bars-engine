@@ -141,6 +141,7 @@ See [.cursor/rules/fail-fix-workflow.mdc](.cursor/rules/fail-fix-workflow.mdc).
 
 - [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), [FOUNDATIONS.md](FOUNDATIONS.md)
 - [docs/DEVELOPER_ONBOARDING.md](docs/DEVELOPER_ONBOARDING.md), [docs/ENV_AND_VERCEL.md](docs/ENV_AND_VERCEL.md)
+- [docs/PRISMA_MIGRATE_STRATEGY.md](docs/PRISMA_MIGRATE_STRATEGY.md) — `migrate deploy` vs `db push`, baselining, squash
 
 <!-- MANUAL ADDITIONS END -->
 
