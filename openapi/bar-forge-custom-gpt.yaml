@@ -1,17 +1,18 @@
 openapi: 3.1.1
 info:
-  title: BARS Engine — BAR Forge API (Custom GPT + Game Master faces)
+  title: BARS Engine — BAR Forge + GM Quest API (Custom GPT)
   description: |
-    **Import this file into Custom GPT Actions** (same paths as `bar-forge-api.yaml` plus GM guidance).
+    **Import this file into Custom GPT Actions** — single schema for BAR Forge **and** Game Master quest routes.
 
-    BAR → quest matching and BAR registry. Set BARS_API_KEY on the server; Bearer auth.
-    See docs/BAR_FORGE_API.md.
+    **BAR Forge:** match BAR → quests, list/save BAR registry (`BARS_API_KEY`, Bearer). See docs/BAR_FORGE_API.md.
+
+    **Game Master (new):** collective campaign snapshot, wave moves (`/api/game-master/move`), savvy quest resolution with **artifact prizes** (`/api/game-master/resolve-quest`). Same Bearer key as BAR Forge.
 
     **Game Master faces (canonical):** Shaman, Challenger, Regent, Architect, Diplomat, Sage.
-    Pass optional `gameMasterFace` on match/registry so the GPT keeps sect influence; registry stores it under `metadataJson.gameMasterFace`.
+    Pass optional `gameMasterFace` on match/registry; registry stores under `metadataJson.gameMasterFace`.
 
-    **Custom GPT:** Route each user turn through a face lens when helpful—Sage may delegate. Use `tags` and `x-gm-faces` below as behavioral hints, not separate HTTP APIs.
-  version: 1.1.0
+    **Custom GPT:** Route user turns through a face lens when helpful—Sage may delegate. Use `tags` and `x-gm-faces` as behavioral hints.
+  version: 1.2.0
   x-gm-faces:
     shaman:
       mission: Mythic threshold — belonging, ritual space, bridge between worlds.
@@ -212,6 +213,101 @@ paths:
           description: Not found
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/game-master/collective-context:
+    get:
+      operationId: gameMasterCollectiveContext
+      summary: Collective campaign snapshot (Kotter, domains, hub, narrative kernel)
+      description: Query instanceId OR campaignRef. If multiple instances share campaignRef, pass instanceId.
+      tags:
+        - GM_Collective
+        - GM_Architect
+      x-gm-face-notes: Orient the user to where the collective is before resolving quests
+      parameters:
+        - name: instanceId
+          in: query
+          schema:
+            type: string
+          description: Instance CUID (one of instanceId or campaignRef required)
+        - name: campaignRef
+          in: query
+          schema:
+            type: string
+          description: e.g. bruised-banana — must be unique or use instanceId
+      responses:
+        "200":
+          description: Collective context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectiveContext"
+        "400":
+          description: Missing params or ambiguous campaignRef
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Instance not found
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/game-master/move:
+    post:
+      operationId: gameMasterMove
+      summary: Wave move — per-face artifact-shaped drafts (optional player/campaign context)
+      tags:
+        - GM_Move
+        - GM_Sage
+      x-gm-face-notes: Use clean_up/wake_up for drafts; grow_up/show_up return stubs until fully implemented
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameMasterMoveRequest"
+      responses:
+        "200":
+          description: Per-face artifacts and meta (axis; patterns on wake_up)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameMasterMoveResponse"
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/game-master/resolve-quest:
+    post:
+      operationId: gameMasterResolveQuest
+      summary: Savvy quest resolution — proposals with presenting face + artifact completion prize
+      tags:
+        - GM_Resolve
+        - GM_Diplomat
+        - GM_Sage
+      x-gm-face-notes: Requires playerId, instanceId or campaignRef, and barRegistryIds and/or bars[]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveQuestRequest"
+      responses:
+        "200":
+          description: Collective + player echo + ranked proposals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveQuestResponse"
+        "400":
+          description: Validation error or ambiguous campaignRef
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Instance or player not found
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
@@ -437,3 +533,296 @@ components:
         - polarity
         - secondaryQuestIds
         - createdAt
+
+    GmWaveMove:
+      type: string
+      enum:
+        - wake_up
+        - clean_up
+        - grow_up
+        - show_up
+
+    PlayerQuestContext:
+      type: object
+      description: Grounds GM move in player + campaign reality (optional on /api/game-master/move)
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+        playerId:
+          type: string
+        nationKey:
+          type: string
+        archetypeKey:
+          type: string
+        charge:
+          type: object
+          properties:
+            text:
+              type: string
+            sourceBarId:
+              type: string
+        barRegistryIds:
+          type: array
+          items:
+            type: string
+        bars:
+          type: array
+          items:
+            type: object
+            required:
+              - bar
+              - analysis
+            properties:
+              bar:
+                type: string
+                minLength: 1
+              analysis:
+                $ref: "#/components/schemas/BarAnalysis"
+
+    GameMasterMoveRequest:
+      type: object
+      required:
+        - bar
+        - analysis
+        - move
+        - gameMasters
+      properties:
+        bar:
+          type: string
+          minLength: 1
+        analysis:
+          $ref: "#/components/schemas/BarAnalysis"
+        move:
+          $ref: "#/components/schemas/GmWaveMove"
+        gameMasters:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/GameMasterFace"
+        options:
+          type: object
+          properties:
+            maxArtifacts:
+              type: integer
+              minimum: 0
+        context:
+          $ref: "#/components/schemas/PlayerQuestContext"
+
+    GmArtifact:
+      type: object
+      description: Quest completion prize or GM draft artifact
+      required:
+        - type
+        - title
+        - description
+        - instructions
+        - charge
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        charge:
+          type: string
+        riskLevel:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        domain:
+          type: string
+          enum:
+            - internal
+            - relational
+            - systemic
+        questId:
+          type: string
+        sourceFace:
+          $ref: "#/components/schemas/GameMasterFace"
+
+    GameMasterMoveResponse:
+      type: object
+      required:
+        - bar
+        - move
+        - artifacts
+        - meta
+      properties:
+        bar:
+          type: string
+        move:
+          type: string
+        artifacts:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/GmArtifact"
+        meta:
+          type: object
+          properties:
+            axis:
+              type: object
+              properties:
+                communion:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+                agency:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+            patterns:
+              description: Present on wake_up — registry pattern summary
+              type: object
+              additionalProperties: true
+
+    QuestProposal:
+      type: object
+      required:
+        - questId
+        - presentingFace
+        - artifactPrize
+      properties:
+        questId:
+          type: string
+        presentingFace:
+          $ref: "#/components/schemas/GameMasterFace"
+        artifactPrize:
+          $ref: "#/components/schemas/GmArtifact"
+        rationale:
+          type: array
+          items:
+            type: string
+        sceneHint:
+          type: string
+
+    ResolveQuestRequest:
+      type: object
+      required:
+        - playerId
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+        playerId:
+          type: string
+        charge:
+          type: object
+          properties:
+            text:
+              type: string
+            sourceBarId:
+              type: string
+        barRegistryIds:
+          type: array
+          items:
+            type: string
+        bars:
+          type: array
+          items:
+            type: object
+            required:
+              - bar
+              - analysis
+            properties:
+              bar:
+                type: string
+                minLength: 1
+              analysis:
+                $ref: "#/components/schemas/BarAnalysis"
+        nationKey:
+          type: string
+        archetypeKey:
+          type: string
+        options:
+          type: object
+          properties:
+            maxProposals:
+              type: integer
+              minimum: 1
+              default: 3
+            preferFaces:
+              type: array
+              items:
+                $ref: "#/components/schemas/GameMasterFace"
+
+    ResolveQuestResponse:
+      type: object
+      required:
+        - collective
+        - player
+        - proposals
+        - meta
+      properties:
+        collective:
+          type: object
+          properties:
+            kotterStage:
+              type: integer
+            allyshipDomain:
+              type: string
+              nullable: true
+            campaignRef:
+              type: string
+              nullable: true
+        player:
+          type: object
+          properties:
+            nationKey:
+              type: string
+              nullable: true
+            archetypeKey:
+              type: string
+              nullable: true
+        proposals:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestProposal"
+        meta:
+          type: object
+          properties:
+            axis:
+              type: object
+              properties:
+                communion:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+                agency:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+
+    CollectiveContext:
+      type: object
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+          nullable: true
+        kotterStage:
+          type: integer
+        allyshipDomain:
+          type: string
+          nullable: true
+        primaryCampaignDomain:
+          type: string
+          nullable: true
+        campaignHubState:
+          type: object
+          additionalProperties: true
+        narrativeKernel:
+          type: string
+          nullable: true

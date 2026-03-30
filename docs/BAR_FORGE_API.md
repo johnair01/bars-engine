@@ -107,7 +107,7 @@ Response: `{ "record": { ... } }` or **404**
 ## OpenAPI
 
 - Machine-readable: [openapi/bar-forge-api.yaml](../openapi/bar-forge-api.yaml)
-- **Custom GPT (recommended import):** [openapi/bar-forge-custom-gpt.yaml](../openapi/bar-forge-custom-gpt.yaml) — same endpoints, plus **`info.x-gm-faces`**, **`tags`** per sect, and optional **`gameMasterFace`** on match/registry bodies (stored in registry `metadataJson`).
+- **Custom GPT (recommended import):** [openapi/bar-forge-custom-gpt.yaml](../openapi/bar-forge-custom-gpt.yaml) — BAR Forge routes **plus** `/api/game-master/collective-context`, `/api/game-master/move`, `/api/game-master/resolve-quest` (same `BARS_API_KEY`). Also includes **`info.x-gm-faces`**, **`tags`** per sect, and optional **`gameMasterFace`** on match/registry bodies (stored in registry `metadataJson`).
 
 ### Optional `gameMasterFace`
 
@@ -121,7 +121,7 @@ Requests may include `gameMasterFace`: `shaman` | `challenger` | `regent` | `arc
 Do this in **ChatGPT → My GPTs → [BAR Forge] → Edit**:
 
 1. **Vercel** — Set `BARS_API_KEY` for **Production**; redeploy after changes.
-2. **Actions → Schema** — Import **`openapi/bar-forge-custom-gpt.yaml`** (or `bar-forge-api.yaml`). Set **`servers[0].url`** to `https://bars-engine.vercel.app` (no trailing slash), or your deployment URL.
+2. **Actions → Schema** — Import **`openapi/bar-forge-custom-gpt.yaml`** (recommended: includes Game Master quest routes; or `bar-forge-api.yaml` for BAR Forge only). Set **`servers[0].url`** to `https://bars-engine.vercel.app` (no trailing slash), or your deployment URL.
 3. **Actions → Authentication** — **Bearer**; token = same value as `BARS_API_KEY` in Vercel. **Do not** put the key in **Instructions**.
 4. **Books API in the same GPT (optional)** — Import [openapi/books-context-api.yaml](../openapi/books-context-api.yaml) as a second Action, or merge OpenAPI files and use one secret if you unify keys.
 5. **Instructions** — Describe when to call: match → optional POST registry → GET list to reconcile. Use paths exactly as in the schema (`/api/match-bar-to-quests`, `/api/bar-registry`, …).
@@ -145,3 +145,40 @@ curl -sS "$BASE/api/bar-registry?limit=10" \
 ## Relation to in-app BARs
 
 Registry rows are **metadata** about external/analyzed BARs. Playable quests remain **`CustomBar`** rows; linking is via `primaryQuestId` / `secondaryQuestIds` on `BarForgeRecord`.
+
+## GM quest pipeline (artifacts + savvy resolution)
+
+BAR Forge endpoints above are **library match + registry**. The **BARS Engine — Game Master** layer adds:
+
+- **`POST /api/game-master/move`** — Wave moves with optional player/collective **context**; per-face artifact-shaped outputs (system drafts).
+- **`POST /api/game-master/resolve-quest`** — **Which quest** a player needs, **which NPC face** presents it, and which **artifact** is the **completion prize** — using collective position (instance / Kotter / domains), **charge**, **BARs**, **nation**, and **archetype**.
+- **`GET /api/game-master/collective-context`** — Read-only snapshot of where the **campaign** is.
+
+Product model: **GM characters** issue quests; **artifacts** are prizes on **quest completion**; **GM agents** implement APIs and system artifacts. Full contracts and types: [.specify/specs/bars-engine-game-master-move/spec.md](../.specify/specs/bars-engine-game-master-move/spec.md).
+
+**Draft OpenAPI** (implementation may lag): [openapi/bars-engine-gm-quest.yaml](../openapi/bars-engine-gm-quest.yaml).
+
+### Example: collective context
+
+```bash
+curl -sS "$BASE/api/game-master/collective-context?campaignRef=bruised-banana" \
+  -H "Authorization: Bearer $BARS_API_KEY"
+```
+
+### Example: GM move (Clean Up)
+
+```bash
+curl -sS -X POST "$BASE/api/game-master/move" \
+  -H "Authorization: Bearer $BARS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"bar":"I believe X / I fear Y","analysis":{"type":"identity","wavePhase":"Clean Up","polarity":[]},"move":"clean_up","gameMasters":["shaman","sage"]}'
+```
+
+### Example: resolve quest (needs real `playerId` + BAR source)
+
+```bash
+curl -sS -X POST "$BASE/api/game-master/resolve-quest" \
+  -H "Authorization: Bearer $BARS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"instanceId":"<cuid>","playerId":"<cuid>","bars":[{"bar":"…","analysis":{"type":"relational","wavePhase":"Wake Up","polarity":["trust"]}}]}'
+```

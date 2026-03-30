@@ -41,7 +41,7 @@ export function moveTypeMatchesWave(moveType: string | null | undefined, wavePha
   return n.includes(key)
 }
 
-function toQuestDto(row: {
+export function toQuestDto(row: {
   id: string
   title: string
   description: string
