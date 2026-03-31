@@ -327,15 +327,11 @@ export function Shadow321Runner({
     }
 
     const idx = PHASE_ORDER.indexOf(phase)
-    if (idx < PHASE_ORDER.length - 1) {
+    if (idx >= 0 && idx < PHASE_ORDER.length - 1) {
       const next = PHASE_ORDER[idx + 1]
-      // Skip deep_cavern if proceeding from ritual_choice (handled above)
-      // or if somehow we land on it without deep path
-      if (next === 'deep_cavern' && phase !== 'ritual_choice') {
-        setPhase('be_1')
-      } else {
-        setPhase(next)
-      }
+      // ritual_choice and deep_cavern are handled by early returns above; linear
+      // advance never needs to special-case deep_cavern here.
+      setPhase(next)
     }
   }
 
@@ -554,7 +550,7 @@ export function Shadow321Runner({
   function handleDevelopStory() {
     setError(null)
     startTransition(async () => {
-      const metadata = deriveMetadata321(phase3, phase2, phase1)
+      const metadata = buildMetadata()
       const result = await createCyoaDraftFrom321({
         metadata: {
           title: metadata.title,
