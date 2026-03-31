@@ -6,7 +6,6 @@ import { StarterQuestBoard } from '@/components/StarterQuestBoard'
 import { QuestThread } from '@/components/QuestThread'
 import { QuestPack } from '@/components/QuestPack'
 import { ensureWallet } from '@/actions/economy'
-import { getGlobalState } from '@/actions/world'
 import { getAppConfig } from '@/actions/config'
 import { getPlayerThreads } from '@/actions/quest-thread'
 import { getPlayerPacks } from '@/actions/quest-pack'
@@ -19,7 +18,6 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { getOnboardingStatus } from '@/actions/onboarding'
 import { getActiveInstance } from '@/actions/instance'
 import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
-import { IntentionDisplay } from '@/components/IntentionDisplay'
 // DashboardAvatarWithModal is now internal to DashboardHeader
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
@@ -34,13 +32,9 @@ import { getCampaignsForPlayer } from '@/actions/campaign-overview'
 import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsResponsibleSection'
 import { DashboardTwoChannelHub } from '@/components/dashboard/DashboardTwoChannelHub'
 import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
-import { DiscoverStrip } from '@/components/dashboard/DiscoverStrip'
-import { getLibraryQuestsForMove } from '@/actions/library-discover'
 import { NationProvider } from '@/lib/ui/nation-provider'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
-import { getCampaignContributionProgress } from '@/actions/campaign-contributions'
-import { ContributionProgressBar } from '@/components/campaign/ContributionProgressBar'
 import { derivePlayerMoveContext } from '@/lib/player-move-context'
 import {
   campaignHomePath,
@@ -268,65 +262,57 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   }
 
   if (!player) {
-    return <div className="p-8 text-white">Error: Identity corrupted. Clear cookies.</div>
+    // Cookie references a player that no longer exists — clear it and redirect to login
+    const cookieStore2 = await cookies()
+    cookieStore2.delete('bars_player_id')
+    redirect('/login')
   }
 
   // Force incomplete profiles through guided setup UNLESS they have an active orientation thread.
   // If an orientation thread is assigned, the thread system handles onboarding on the dashboard.
-  let hasActiveOrientationThread = await db.threadProgress.findFirst({
-    where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
-    include: {
-      thread: {
-        include: {
-          quests: {
-            orderBy: { position: 'asc' },
-            include: { quest: true }
-          }
+  const orientationInclude = {
+    thread: {
+      include: {
+        quests: {
+          orderBy: { position: 'asc' as const },
+          include: { quest: true }
         }
       }
     }
-  })
+  } as const
+  const orientationWhere = { playerId, completedAt: null, thread: { threadType: 'orientation' as const } }
 
-  if (!hasActiveOrientationThread) {
-    const { assignOrientationThreads } = await import('@/actions/quest-thread')
-    await assignOrientationThreads(playerId)
-
-    // Refresh the check
+  let hasActiveOrientationThread: Awaited<ReturnType<typeof db.threadProgress.findFirst>> = null
+  try {
     hasActiveOrientationThread = await db.threadProgress.findFirst({
-      where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
-      include: {
-        thread: {
-          include: {
-            quests: {
-              orderBy: { position: 'asc' },
-              include: { quest: true }
-            }
-          }
-        }
-      }
+      where: orientationWhere,
+      include: orientationInclude,
     })
-  }
 
-  // AUTO-TRIGGER: Complete the "Arrival" quest upon sign-in
-  if (!player.hasSeenWelcome) {
-    const { fireTrigger } = await import('@/actions/quest-engine')
-    await fireTrigger('SIGN_IN', { skipRevalidate: true })
-    await db.player.update({ where: { id: playerId }, data: { hasSeenWelcome: true } })
+    if (!hasActiveOrientationThread) {
+      const { assignOrientationThreads } = await import('@/actions/quest-thread')
+      await assignOrientationThreads(playerId)
+      hasActiveOrientationThread = await db.threadProgress.findFirst({
+        where: orientationWhere,
+        include: orientationInclude,
+      })
+    }
 
-    // Refresh thread one more time to show updated progress
-    hasActiveOrientationThread = await db.threadProgress.findFirst({
-      where: { playerId, completedAt: null, thread: { threadType: 'orientation' } },
-      include: {
-        thread: {
-          include: {
-            quests: {
-              orderBy: { position: 'asc' },
-              include: { quest: true }
-            }
-          }
-        }
-      }
-    })
+    // AUTO-TRIGGER: Complete the "Arrival" quest upon sign-in
+    if (!player.hasSeenWelcome) {
+      const { fireTrigger } = await import('@/actions/quest-engine')
+      await fireTrigger('SIGN_IN', { skipRevalidate: true })
+      await db.player.update({ where: { id: playerId }, data: { hasSeenWelcome: true } })
+      hasActiveOrientationThread = await db.threadProgress.findFirst({
+        where: orientationWhere,
+        include: orientationInclude,
+      })
+    }
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Home] Orientation block failed:', (err as Error)?.message)
+    }
+    // Continue with hasActiveOrientationThread = null — dashboard will still render
   }
 
   /* 
@@ -347,15 +333,21 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const focusQuest = searchParams.focusQuest
   const isAdmin = !!player?.roles?.some((r: { role: { key: string } }) => r.role.key === 'admin')
 
-  await ensureWallet(playerId)
-  const vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
-  // isRitualComplete: hasActiveOrientationThread === null || hasActiveOrientationThread.completedAt !== null
+  let vibulons = 0
+  try {
+    await ensureWallet(playerId)
+    vibulons = await db.vibulon.count({ where: { ownerId: playerId } })
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Home] Wallet/vibeulon query failed:', (err as Error)?.message)
+    }
+  }
 
   const potentialDelegates = await db.player.findMany({
     where: { id: { not: playerId } },
     select: { id: true, name: true },
     orderBy: { name: 'asc' }
-  })
+  }).catch(() => [] as { id: string; name: string }[])
   // Derive quest state from PlayerQuest table
   const completedBars = player.quests
     .filter(q => q.status === 'completed')
@@ -367,16 +359,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const activeBars = player.quests
     .filter(q => q.status === 'assigned')
     .map(q => q.questId)
-
-  // Extract player's Intention: storyProgress (updated) or completed orientation quest
-  const intentionQuest = completedBars.find(b => b.id === 'orientation-quest-1')
-  let intention: string | undefined
-  try {
-    const sp = player.storyProgress ? (JSON.parse(player.storyProgress) as Record<string, unknown>) : {}
-    intention = (sp.intention as string) || (intentionQuest?.inputs?.intention as string)
-  } catch {
-    intention = intentionQuest?.inputs?.intention as string | undefined
-  }
 
   // Ensure system feedback is always "active" for the player
   if (!activeBars.includes('system-feedback')) {
@@ -391,39 +373,24 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const customBars = await db.customBar.findMany({
     where: {
       OR: [
-        // Public + unclaimed + active
         { visibility: 'public', claimedById: null, status: 'active' },
-        // Claimed/Assigned to valid activeBars list (including private ones)
         { id: { in: activeBars } },
-        // System quests (always visible)
         { isSystem: true, status: 'active' },
-        // Completed by me
         { id: { in: completedBars.map(b => b.id) } },
-        // My drafts
         { visibility: 'private', creatorId: playerId, claimedById: null, status: 'active' },
       ]
     },
     include: { microTwine: true },
     orderBy: { createdAt: 'desc' }
-  })
+  }).catch(() => [] as any[])
 
-  // Fetch active I Ching readings for this player
   const ichingReadings = await db.playerBar.findMany({
-    where: {
-      playerId,
-      source: 'iching',
-    },
-    include: {
-      bar: true
-    },
+    where: { playerId, source: 'iching' },
+    include: { bar: true },
     orderBy: { acquiredAt: 'desc' }
-  })
+  }).catch(() => [] as any[])
 
-  const globalState = await getGlobalState()
-  // globalStage: Math.max(1, Math.min(8, globalState.currentPeriod || Math.ceil(globalState.storyClock / 8)))
-
-  // Get onboarding status
-  const onboardingStatus = await getOnboardingStatus()
+  const onboardingStatus = await getOnboardingStatus().catch(() => ({ error: 'unavailable' } as const))
 
   // FILTER BARS BY TRIGRAM (Playbook Gating)
   const visibleCustomBars = customBars.filter(bar => {
@@ -436,28 +403,27 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     }
   })
 
-  // Fetch Quest Threads and Packs
-  const threads = await getPlayerThreads()
-  const packs = await getPlayerPacks()
-
-  // Appreciations received (Phase 2)
-  const appreciationResult = await getAppreciationFeed(10)
-  const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : []
-
-  // Today's charge (strict one per day) + archive
-  const chargeResult = await getTodayCharge()
-  const todayCharge = 'success' in chargeResult ? chargeResult.bar : null
-  const archiveResult = await getChargeArchive(10)
-  const chargeArchive = 'success' in archiveResult ? archiveResult.bars : []
-
-  // Daily alchemy check-in
-  const todayCheckIn = await getTodayCheckIn(playerId).catch(() => null)
-
-  // Campaign seeds ready to promote (creator's own, complete, unpromoted)
-  const myCampaignSeeds = await listMyCampaignSeeds(playerId)
-
-  // Campaigns where player is leader/owner (Phase 3: dashboard overview)
-  const campaignsResponsible = await getCampaignsForPlayer(playerId)
+  // Fetch dashboard data — each with defensive fallback so one failure doesn't crash the page
+  const [threads, packs, appreciationResult, chargeResult, archiveResult, todayCheckIn, myCampaignSeeds, campaignsResponsible] = await Promise.all([
+    getPlayerThreads().catch(() => []),
+    getPlayerPacks().catch(() => []),
+    getAppreciationFeed(10).catch(() => ({ appreciations: [] })),
+    getTodayCharge().catch(() => ({ bar: null })),
+    getChargeArchive(10).catch(() => ({ bars: [] })),
+    getTodayCheckIn(playerId).catch(() => null),
+    listMyCampaignSeeds(playerId).catch(() => []),
+    getCampaignsForPlayer(playerId).catch(() => []),
+  ]) as [
+    Awaited<ReturnType<typeof getPlayerThreads>>,
+    Awaited<ReturnType<typeof getPlayerPacks>>,
+    any, any, any,
+    Awaited<ReturnType<typeof getTodayCheckIn>> | null,
+    Awaited<ReturnType<typeof listMyCampaignSeeds>>,
+    Awaited<ReturnType<typeof getCampaignsForPlayer>>,
+  ]
+  const appreciations = 'success' in appreciationResult ? appreciationResult.appreciations : (appreciationResult.appreciations ?? [])
+  const todayCharge = 'success' in chargeResult ? chargeResult.bar : (chargeResult.bar ?? null)
+  const chargeArchive = 'success' in archiveResult ? archiveResult.bars : (archiveResult.bars ?? [])
 
   let milestoneGuidance = null as Awaited<ReturnType<typeof getCampaignMilestoneGuidance>>
   try {
@@ -466,13 +432,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     milestoneGuidance = null
   }
 
-  // Sub-AC 3: fetch player's contribution progress for milestone narrative display.
-  // Fail-soft — dashboard renders without it if DB is unavailable.
   const defaultCampaignRefEarly = resolveDefaultCampaignRef(activeInstance?.campaignRef)
-  const contributionProgress = await getCampaignContributionProgress(
-    defaultCampaignRefEarly,
-    playerId,
-  ).catch(() => null)
 
   // Derive move context via shared utility (G17 — single source of truth)
   const moveCtx = derivePlayerMoveContext({
@@ -483,7 +443,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     archetypeId: player.archetypeId,
   })
 
-  const { completedMoveTypes, recommendedMoveType } = moveCtx
+  const { completedMoveTypes } = moveCtx
 
   const compassProps = {
     completedMoveTypes: moveCtx.completedMoveTypes,
@@ -492,8 +452,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     activeQuestCount: moveCtx.activeQuestCount,
     isSetupIncomplete: moveCtx.isSetupIncomplete,
   }
-
-  const discoverQuests = await getLibraryQuestsForMove(recommendedMoveType)
 
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
@@ -563,27 +521,21 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           questCount={completedBars.length}
         />
 
-        {residencyProgressStrip && (
-          <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
-        )}
-
-        {/* Sub-AC 3: Contribution progress + milestone narrative (CCV system).
-            Shown below the fundraising strip when the player has contribution data.
-            Derived from CampaignMilestoneMarker.narrativeText via getCampaignContributionProgress. */}
-        {contributionProgress && (
-          <ContributionProgressBar
-            progress={contributionProgress}
-            campaignRef={defaultCampaignRef}
-          />
-        )}
-
-        {/* 2. ORIENTATION COMPASS — first structural block after identity; governs the session (PMI G1) */}
+        {/* 2. ORIENTATION COMPASS — session governor; charge → 321 → BAR → plant in spoke */}
         <OrientationCompass
           {...compassProps}
           hasCheckedIn={!!todayCheckIn}
           residencyEventsHref={defaultCampaignRef === 'bruised-banana' ? '/event' : null}
         />
-        <DiscoverStrip moveType={recommendedMoveType} quests={discoverQuests} />
+
+        <DashboardTwoChannelHub
+          activeInstanceId={activeInstance?.id ?? null}
+          campaignHomeHref={playerCampaignHomeHref}
+        />
+
+        {residencyProgressStrip && (
+          <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
+        )}
 
         <p className="text-xs text-zinc-600">
           Check in · capture what&apos;s charged · follow the compass to your next move ·{' '}
@@ -614,22 +566,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         {/* Today's Charge + Archive */}
         <RecentChargeSection todayCharge={todayCharge} archive={chargeArchive} />
 
-        <DashboardTwoChannelHub
-          activeInstanceId={activeInstance?.id ?? null}
-          campaignHomeHref={playerCampaignHomeHref}
-        />
-
-        {/* Appreciations received — social layer after self-orientation (G5) */}
         {appreciations.length > 0 && (
-          <AppreciationsReceived items={appreciations} maxItems={5} />
-        )}
-
-        {/* Player Intention */}
-        {intention && (
-          <IntentionDisplay
-            intention={intention}
-            campaignDomainPreference={parseCampaignDomainPreference(player.campaignDomainPreference)}
-          />
+          <AppreciationsReceived items={appreciations} maxItems={2} />
         )}
 
       </header>

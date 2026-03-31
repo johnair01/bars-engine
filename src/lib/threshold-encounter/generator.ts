@@ -5,6 +5,7 @@ import { resolveMoveDestination } from '@/lib/alchemy/wuxing'
 import type { EmotionChannel, AlchemyAltitude } from '@/lib/alchemy/types'
 import type { SceneType } from '@/lib/growth-scene/types'
 import { buildSystemPrompt, buildUserPrompt } from './prompts'
+import { pickTemplate } from './templates'
 
 export interface GenerateThresholdEncounterOpts {
   hexagramId?: number
@@ -36,20 +37,23 @@ export async function generateThresholdEncounter(
   const beatMode = opts.beatMode ?? 'canonical'
   const gmFace = opts.gmFace ?? 'shaman'
 
-  const systemPrompt = buildSystemPrompt()
-  const userPrompt = buildUserPrompt({
-    emotionalVector: vector,
-    sceneType,
-    gmFace,
-    hexagramId: opts.hexagramId,
-    nationSlug: opts.nationSlug,
-    archetypeSlug: opts.archetypeSlug,
-    barCandidateSeeds: opts.barCandidateSeeds,
-    beatMode,
-  })
-
   let tweeSource: string
+  let storyData: string
+  let usedTemplate = false
+
+  // Try AI generation first; fall back to deterministic templates
   try {
+    const systemPrompt = buildSystemPrompt()
+    const userPrompt = buildUserPrompt({
+      emotionalVector: vector,
+      sceneType,
+      gmFace,
+      hexagramId: opts.hexagramId,
+      nationSlug: opts.nationSlug,
+      archetypeSlug: opts.archetypeSlug,
+      barCandidateSeeds: opts.barCandidateSeeds,
+      beatMode,
+    })
     const result = await generateText({
       model: getOpenAI()('gpt-4o-mini'),
       system: systemPrompt,
@@ -57,20 +61,27 @@ export async function generateThresholdEncounter(
       maxOutputTokens: beatMode === 'minimal' ? 800 : 1800,
     })
     tweeSource = result.text
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return { error: `AI generation failed: ${msg}` }
-  }
 
-  // Extract StoryData JSON from twee source
-  const storyDataMatch = tweeSource.match(/:: StoryData\s*\n([\s\S]*?)(?=\n:: |\s*$)/)
-  let storyData = '{}'
-  if (storyDataMatch) {
-    const raw = storyDataMatch[1].trim()
-    try {
-      JSON.parse(raw) // validate
-      storyData = raw
-    } catch { /* use default */ }
+    // Extract StoryData JSON from twee source
+    const storyDataMatch = tweeSource.match(/:: StoryData\s*\n([\s\S]*?)(?=\n:: |\s*$)/)
+    storyData = '{}'
+    if (storyDataMatch) {
+      const raw = storyDataMatch[1].trim()
+      try {
+        JSON.parse(raw) // validate
+        storyData = raw
+      } catch { /* use default */ }
+    }
+  } catch (err) {
+    // AI unavailable (quota, network, missing key) — use hand-crafted template
+    if (process.env.NODE_ENV === 'development') {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.warn('[threshold-encounter] AI generation failed, using template:', msg)
+    }
+    const template = pickTemplate(channel, sceneType)
+    tweeSource = template.twee
+    storyData = template.storyData
+    usedTemplate = true
   }
 
   const encounter = await db.thresholdEncounter.create({
@@ -82,7 +93,7 @@ export async function generateThresholdEncounter(
       hexagramId: opts.hexagramId ?? null,
       nationSlug: opts.nationSlug ?? null,
       archetypeSlug: opts.archetypeSlug ?? null,
-      beatMode,
+      beatMode: usedTemplate ? 'minimal' : beatMode,
       tweeSource,
       storyData,
       status: 'active',

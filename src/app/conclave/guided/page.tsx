@@ -109,7 +109,7 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
     let effectiveNodeId =
         requestedStep && (visited.has(requestedStep) || alwaysAllowedSteps.has(requestedStep))
             ? requestedStep
-            : progress.currentNodeId
+            : (progress.currentNodeId || 'intro_001')
 
     if (!player.nationId && (effectiveNodeId.startsWith('playbook') || effectiveNodeId === 'conclusion' || effectiveNodeId === 'dashboard')) {
         effectiveNodeId = 'nation_select'
