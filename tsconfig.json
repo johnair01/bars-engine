@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "scripts",
-    "src/scripts"
+    "src/scripts",
+    "chatgpt_repo_snapshot_*"
   ]
 }

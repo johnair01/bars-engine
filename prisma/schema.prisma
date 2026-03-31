@@ -417,9 +417,27 @@ model CustomBar {
   spokeMoveBedKernelRows             SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelBar")
   spokeMoveBedKernelSources          SpokeMoveBedKernel[]      @relation("SpokeMoveBedKernelSource")
   barForgeRecordsAsPrimary             BarForgeRecord[]          @relation("BarForgePrimaryQuest")
+  barMedia                             BarMedia[]
+  daemonsGrownFromBar                  Daemon[]                  @relation("DaemonSourceBar")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
+}
+
+/// Attachments uploaded to a BAR (blob URL + metadata).
+model BarMedia {
+  id        String   @id @default(cuid())
+  barId     String
+  blobUrl   String
+  kind      String // image | file
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  bar CustomBar @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  @@index([barId])
+  @@map("bar_media")
 }
 
 /// BAR Forge / Custom GPT: persisted BAR analyses + quest links (no Player ownership required).
@@ -661,6 +679,7 @@ model Daemon {
   communityScope String? // null = individual; instanceId = community scope
 
   player           Player               @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  sourceBar        CustomBar?           @relation("DaemonSourceBar", fields: [sourceBarId], references: [id], onDelete: SetNull)
   shadow321Session Shadow321Session?    @relation(fields: [shadow321SessionId], references: [id], onDelete: SetNull)
   promotedToPlayer Player?              @relation("DaemonPromotedToNpc", fields: [promotedToPlayerId], references: [id], onDelete: SetNull)
   summons          DaemonSummon[]
