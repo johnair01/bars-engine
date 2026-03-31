@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { useSeed, type SeedTemplate } from '@/lib/seeds';
+import { getCurrentPlayer } from '@/lib/auth';
 
 interface UseSeedBody {
   mode: 'instant' | 'customize';
@@ -45,8 +46,9 @@ export async function POST(
       );
     }
 
-    // TODO: Get actual user ID from session (null = anonymous)
-    const userId = undefined; // Placeholder
+    // Get user ID from session (undefined = anonymous usage allowed)
+    const player = await getCurrentPlayer();
+    const userId = player?.id;
 
     // Use seed
     const result = await useSeed(token, {

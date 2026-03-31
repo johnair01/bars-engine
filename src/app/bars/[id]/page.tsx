@@ -2,6 +2,7 @@ import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getBarDetail, getBarRecipients } from '@/actions/bars'
 import { getCampaignInvitationForBar } from '@/actions/campaign-invitation'
+import { db } from '@/lib/db'
 import Link from 'next/link'
 import { SendBarForm } from './SendBarForm'
 import { ShareOutsideForm } from './ShareOutsideForm'
@@ -14,6 +15,7 @@ import { GrowFromBar } from '@/components/bars/GrowFromBar'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
+import { GenerateSeedButton } from '@/components/bars/GenerateSeedButton'
 
 /**
  * @page /bars/:id
@@ -63,12 +65,32 @@ export default async function BarDetailPage({
     // Pending campaign role invitation for this BAR (if current user is target)
     const campaignInvitation = await getCampaignInvitationForBar(bar.id, player.id)
 
+    // Check if this BAR was created from a seed
+    const seedUsage = await db.seedUsageEvent.findFirst({
+        where: {
+            createdArtifactId: bar.id,
+            artifactType: 'BAR',
+        },
+        include: {
+            seed: {
+                include: {
+                    creator: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+    })
+
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
         <div className="min-h-screen bg-black text-zinc-200 p-4 sm:p-8">
             <div className="max-w-2xl mx-auto space-y-8">
                 {/* Provenance badges */}
-                {(bar.collapsedFromQuest || bar.collapsedFromInstance) && (
+                {(bar.collapsedFromQuest || bar.collapsedFromInstance || seedUsage) && (
                     <div className="flex flex-wrap gap-2">
                         {bar.collapsedFromQuest && (
                             <Link
@@ -84,6 +106,14 @@ export default async function BarDetailPage({
                                 className="text-xs bg-amber-900/40 text-amber-300 px-3 py-1 rounded-full hover:bg-amber-800/50 transition-colors"
                             >
                                 From campaign: {bar.collapsedFromInstance.name}
+                            </Link>
+                        )}
+                        {seedUsage && (
+                            <Link
+                                href={`/seeds/${seedUsage.seed.token}`}
+                                className="text-xs bg-green-900/40 text-green-300 px-3 py-1 rounded-full hover:bg-green-800/50 transition-colors"
+                            >
+                                🌱 From template by {seedUsage.seed.creator.name}
                             </Link>
                         )}
                     </div>
@@ -242,6 +272,17 @@ export default async function BarDetailPage({
                             Send this BAR to someone who isn&apos;t in the game yet. They get an invite link — when they sign up, the BAR is delivered to them.
                         </p>
                         <ShareOutsideForm barId={bar.id} />
+                    </section>
+                )}
+
+                {/* Generate template link (owner only) */}
+                {isOwner && (
+                    <section className="bg-purple-950/20 border border-purple-900/40 rounded-xl p-6">
+                        <h2 className="text-lg font-bold text-white mb-1">Create template link</h2>
+                        <p className="text-zinc-400 text-sm mb-4">
+                            Generate a shareable template link. Anyone with this link can create their own copy of this BAR with the same structure.
+                        </p>
+                        <GenerateSeedButton barId={bar.id} />
                     </section>
                 )}
 

@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSeed, type ArtifactType, type UsageMode, type SeedVisibility } from '@/lib/seeds';
+import { getCurrentPlayer } from '@/lib/auth';
 
 interface CreateSeedBody {
   artifactId: string;
@@ -36,6 +37,15 @@ interface CreateSeedBody {
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const player = await getCurrentPlayer();
+    if (!player) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const body = (await request.json()) as CreateSeedBody;
 
     // Validate required fields
@@ -46,8 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Get actual user ID from session
-    const creatorId = 'player_system'; // Placeholder
+    const creatorId = player.id;
 
     // Parse expiry date if provided
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : undefined;
