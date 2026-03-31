@@ -1,4 +1,11 @@
-export type BarInputType = 'text' | 'textarea' | 'select' | 'multiselect' | 'nation-select' | 'playbook-select'
+export type BarInputType =
+    | 'text'
+    | 'textarea'
+    | 'select'
+    | 'multiselect'
+    | 'nation-select'
+    | 'playbook-select'
+    | 'image'
 
 export type BarInput = {
     key: string

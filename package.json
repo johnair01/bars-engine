@@ -105,6 +105,7 @@
     "smoke:books-api": "bash scripts/smoke-books-context-api.sh",
     "report:npc321-merges": "tsx scripts/report-npc321-merges.ts",
     "diagnose:db": "tsx scripts/diagnose-db-connection.ts",
+    "feedback:export-blob": "tsx scripts/export-cert-feedback-blob.ts",
     "diagnose:connection": "tsx scripts/connection-forensics.ts",
     "diagnose:prod-db": "tsx scripts/diagnose-prod-db.ts",
     "verify:prod-db": "tsx scripts/verify-production-db.ts",

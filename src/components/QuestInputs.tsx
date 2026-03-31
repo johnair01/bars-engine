@@ -1,11 +1,12 @@
 'use client'
 
 import React from 'react'
+import { SignalQuestImageField } from '@/components/SignalQuestImageField'
 
 export interface BarInput {
     key: string
     label: string
-    type: 'text' | 'textarea' | 'select' | 'trigger'
+    type: 'text' | 'textarea' | 'select' | 'trigger' | 'image'
     required?: boolean
     options?: string[]
     placeholder?: string
@@ -77,6 +78,16 @@ export function QuestInputs({ inputs, values, onChange }: QuestInputsProps) {
                                 onChange={(e) => onChange(input.key, e.target.value)}
                                 placeholder={input.placeholder || `Enter ${input.label.toLowerCase()}...`}
                                 className="w-full bg-black border border-zinc-800 rounded-lg p-3 text-white placeholder:text-zinc-700 focus:border-purple-500/50 outline-none transition-all text-sm"
+                            />
+                        )}
+
+                        {input.type === 'image' && (
+                            <SignalQuestImageField
+                                inputKey={input.key}
+                                label={input.label}
+                                value={typeof value === 'string' ? value : ''}
+                                onChange={onChange}
+                                required={input.required}
                             />
                         )}
                     </div>

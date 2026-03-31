@@ -1,6 +1,6 @@
 # Spec: Cert feedback durable persistence (Vercel Blob) — CFB
 
-**Status:** Spec kit — not implemented.  
+**Status:** Phase 1 (FR1–FR2, FR5 script) **implemented** — [`mirrorCertFeedbackLine`](../../../src/lib/feedback/mirror-cert-feedback-line.ts), [`npm run feedback:export-blob`](../../../scripts/export-cert-feedback-blob.ts). FR3 (ENV doc) below.  
 **Backlog:** [BACKLOG.md § 1.60 CFB](../../backlog/BACKLOG.md).  
 **Relates to:** [site-signal-nav-report](../site-signal-nav-report/spec.md), [docs/CERTIFICATION_FEEDBACK.md](../../../docs/CERTIFICATION_FEEDBACK.md), [.agents/skills/cert-feedback-triage/SKILL.md](../../../.agents/skills/cert-feedback-triage/SKILL.md), [book-upload-vercel-client-exception](../book-upload-vercel-client-exception/plan.md) (Blob env patterns).
 
@@ -78,14 +78,14 @@ All use **`fs.appendFile`** → works on **local dev**; on **Vercel**, writes ar
 
 ### Phase 1 — Core persistence
 
-- **FR1:** Implement `persistCertFeedbackLine` (or equivalent) in `src/lib/feedback/` using `@vercel/blob` `put`, `access: 'private'`, unique pathname per event.
-- **FR2:** Wire **cert** route, **site-signal** route, **quest-engine** Share Your Signal block, and **logCertificationFeedback** to use the helper (single code path).
-- **FR3:** Document env **`BLOB_READ_WRITE_TOKEN`** for production in [docs/ENV_AND_VERCEL.md](../../../docs/ENV_AND_VERCEL.md) (CFB subsection).
-- **FR4:** Add `@vercel/blob` to `serverExternalPackages` in `next.config` if required (mirror book-upload spec).
+- **FR1:** ~~Implement `persistCertFeedbackLine` (or equivalent)~~ **Done:** [`mirrorCertFeedbackLine`](../../../src/lib/feedback/mirror-cert-feedback-line.ts) (`put`, `access: 'private'`, `cert-feedback/events/{date}/{uuid}.json`).
+- **FR2:** ~~Wire routes~~ **Done:** single path via [`persistPlayerFeedbackToBacklog`](../../../src/lib/feedback/persist-player-feedback-to-backlog.ts) (cert API, site-signal API, `logCertificationFeedback`, Share Your Signal in quest-engine).
+- **FR3:** **Done:** [docs/ENV_AND_VERCEL.md](../../../docs/ENV_AND_VERCEL.md) CFB subsection.
+- **FR4:** Add `@vercel/blob` to `serverExternalPackages` in `next.config` **if** build fails (not required for current build).
 
 ### Phase 1b — Triage ergonomics
 
-- **FR5:** Script or documented one-liner to materialize recent blob objects into a local JSONL file for [cert-feedback-triage](../../../.agents/skills/cert-feedback-triage/SKILL.md).
+- **FR5:** **Done:** `npm run feedback:export-blob` → [scripts/export-cert-feedback-blob.ts](../../../scripts/export-cert-feedback-blob.ts) for [cert-feedback-triage](../../../.agents/skills/cert-feedback-triage/SKILL.md).
 
 ### Non-goals (v1)
 
@@ -130,3 +130,4 @@ All use **`fs.appendFile`** → works on **local dev**; on **Vercel**, writes ar
 | Date | |
 |------|--|
 | 2026-03-27 | Initial spec kit (CFB backlog 1.60). |
+| 2026-03-30 | Phase 1: `mirrorCertFeedbackLine`, export script, ENV doc, site-signal modal UX (SNP slice). |

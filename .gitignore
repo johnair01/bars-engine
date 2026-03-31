@@ -80,3 +80,19 @@ scripts/bootstrap-creation-quests-output.json
 /public/uploads/
 .prisma_hash
 .env*.local
+
+# Local-only Prisma migrate resolve / restore scratch (do not commit)
+.prisma-migrate-local-notes
+.prisma-migrate-local-notes.*
+
+# Drift — local analysis cache (callgraph DB, pattern backups, graphs); not team source of truth
+.drift/
+
+# One-off ChatGPT / export snapshots (not the canonical repo)
+chatgpt_repo_snapshot_*/
+
+# Root scratch dumps (regenerate or delete locally)
+/tree.txt
+/specify_specs_tree.txt
+/possible_backlog_files.txt
+/schema.prisma.copy.txt

@@ -152,10 +152,17 @@ If the chain is already broken on empty DB, Path C still needs **incremental fix
 
 ---
 
+## Do not commit local migrate-resolve artifacts
+
+`prisma migrate resolve` updates **`_prisma_migrations` in the database only** — it does not create migration files in git. After a restore or drift fix, **do not commit** ad-hoc logs, one-off SQL, or “what we ran” notes as if they were part of the repo’s migration history.
+
+For personal scratch (commands, timestamps, which `resolve --applied` names you used), use **`.prisma-migrate-local-notes`** (gitignored) or another private store — not tracked files.
+
 ## Changelog
 
 | Date | Change |
 |------|--------|
+| 2026-03-30 | Do not commit local migrate-resolve artifacts; `.prisma-migrate-local-notes` gitignored. |
 | 2026-03-30 | Document added; removed duplicate wrong-order `20250306000000_playbook_to_archetype_rename` migration. |
 | 2026-03-30 | Architect playbook: P3009 / restore / `resolve --applied`, recurrence prevention, CI gate. |
 | 2026-03-30 | Policy: **`prisma db push` forbidden**; `db-sync` no longer pushes; `db:push` script errors; `db:reset` uses `migrate reset`. |

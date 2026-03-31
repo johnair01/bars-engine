@@ -437,9 +437,13 @@ export async function completeQuestForPlayer(
             const sentiment = (inputs as Record<string, unknown>)?.sentiment ?? 'N/A'
             const clarity = (inputs as Record<string, unknown>)?.clarity ?? 'N/A'
             const transmission = (inputs as Record<string, unknown>)?.feedback ?? ''
+            const rawImage = (inputs as Record<string, unknown>)?.signalImageUrl
+            const signalImageUrl =
+                typeof rawImage === 'string' && rawImage.trim().length > 0 ? rawImage.trim() : ''
             const feedbackText = [
                 `Resonance: ${sentiment} | Clarity: ${clarity}`,
                 transmission ? `\n\nTransmission: ${transmission}` : '',
+                signalImageUrl ? `\n\nScreenshot: ${signalImageUrl}` : '',
             ]
                 .join('')
                 .trim() || 'No text provided'
@@ -454,6 +458,7 @@ export async function completeQuestForPlayer(
                     sentiment,
                     clarity,
                     transmission: typeof transmission === 'string' ? transmission : JSON.stringify(transmission),
+                    ...(signalImageUrl ? { signalImageUrl } : {}),
                 },
             })
             if ('error' in persist) {

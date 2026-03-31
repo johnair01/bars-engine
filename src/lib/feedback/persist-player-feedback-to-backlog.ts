@@ -1,10 +1,9 @@
 /**
  * Durable player feedback: `BacklogItem` in Postgres (works on Vercel).
- * Best-effort mirror to `.feedback/cert_feedback.jsonl` when the filesystem is writable (local dev / triage skill).
+ * Best-effort mirror: Vercel Blob (when `BLOB_READ_WRITE_TOKEN`) or `.feedback/cert_feedback.jsonl`.
  */
-import { promises as fs } from 'fs'
-import path from 'path'
 import { db } from '@/lib/db'
+import { mirrorCertFeedbackLine } from '@/lib/feedback/mirror-cert-feedback-line'
 
 export type PlayerFeedbackSource =
   | 'share_your_signal'
@@ -56,27 +55,6 @@ function descriptionBlock(
   return lines.filter(Boolean).join('\n')
 }
 
-type JsonlEntry = {
-  timestamp: string
-  playerId: string
-  playerName: string
-  questId: string
-  passageName: string
-  feedback: string
-  backlogItemId?: string
-}
-
-async function appendCertFeedbackJsonlBestEffort(entry: JsonlEntry): Promise<void> {
-  try {
-    const feedbackDir = path.join(process.cwd(), '.feedback')
-    await fs.mkdir(feedbackDir, { recursive: true })
-    const feedbackFile = path.join(feedbackDir, 'cert_feedback.jsonl')
-    await fs.appendFile(feedbackFile, `${JSON.stringify(entry)}\n`)
-  } catch {
-    // Expected on serverless (no writable disk); DB row is canonical.
-  }
-}
-
 /**
  * Creates a `BacklogItem` and mirrors to JSONL when possible.
  * Returns `{ backlogItemId }` on success.
@@ -104,7 +82,7 @@ export async function persistPlayerFeedbackToBacklog(
       },
     })
 
-    await appendCertFeedbackJsonlBestEffort({
+    await mirrorCertFeedbackLine({
       timestamp: new Date().toISOString(),
       playerId: input.playerId,
       playerName: input.playerName ?? 'Unknown',

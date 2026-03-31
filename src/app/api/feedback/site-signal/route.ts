@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       search: data.search,
       documentTitle: data.documentTitle,
       isAdmin,
+      ...(data.imageUrl ? { imageUrl: data.imageUrl } : {}),
     },
   })
 
