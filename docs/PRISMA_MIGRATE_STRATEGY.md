@@ -150,6 +150,10 @@ If the chain is already broken on empty DB, Path C still needs **incremental fix
 - [Prisma: Baselining a database](https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate/baselining)
 - Project env: [ENV_AND_VERCEL.md](./ENV_AND_VERCEL.md)
 
+### Room presence (`RoomPresence`)
+
+The `room_presences` table has **no** `@@unique([playerId, roomId])`, so Prisma does not expose `playerId_roomId` for `upsert`. `src/actions/room-presence.ts` uses **`findFirst` + `update` / `create`** instead. To use **`upsert`** and tighten concurrency semantics, add a composite unique **via a migration** (then regenerate the client per project workflow).
+
 ---
 
 ## Do not commit local migrate-resolve artifacts
@@ -162,6 +166,7 @@ For personal scratch (commands, timestamps, which `resolve --applied` names you 
 
 | Date | Change |
 |------|--------|
+| 2026-03-31 | Note: `RoomPresence` has no composite unique; `room-presence.ts` uses findFirst + update/create (see References § Room presence). |
 | 2026-03-30 | Do not commit local migrate-resolve artifacts; `.prisma-migrate-local-notes` gitignored. |
 | 2026-03-30 | Document added; removed duplicate wrong-order `20250306000000_playbook_to_archetype_rename` migration. |
 | 2026-03-30 | Architect playbook: P3009 / restore / `resolve --applied`, recurrence prevention, CI gate. |

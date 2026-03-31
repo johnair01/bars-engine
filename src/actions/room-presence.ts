@@ -2,13 +2,25 @@
 import { dbBase } from '@/lib/db'
 import { requirePlayer } from '@/lib/auth'
 
+/** No @@unique([playerId, roomId]) on RoomPresence — cannot use upsert where playerId_roomId. */
 export async function enterRoom(roomId: string, instanceSlug: string) {
   const playerId = await requirePlayer()
-  await dbBase.roomPresence.upsert({
-    where: { playerId_roomId: { playerId, roomId } },
-    update: { lastSeenAt: new Date(), instanceSlug },
-    create: { playerId, roomId, instanceSlug, enteredAt: new Date(), lastSeenAt: new Date() },
+  const now = new Date()
+  const existing = await dbBase.roomPresence.findFirst({
+    where: { playerId, roomId },
+    orderBy: { lastSeenAt: 'desc' },
+    select: { id: true },
   })
+  if (existing) {
+    await dbBase.roomPresence.update({
+      where: { id: existing.id },
+      data: { lastSeenAt: now, instanceSlug },
+    })
+  } else {
+    await dbBase.roomPresence.create({
+      data: { playerId, roomId, instanceSlug, enteredAt: now, lastSeenAt: now },
+    })
+  }
 }
 
 export async function heartbeat(roomId: string) {
