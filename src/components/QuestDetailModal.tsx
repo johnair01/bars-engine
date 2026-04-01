@@ -3,7 +3,6 @@
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { completeQuest, getArchetypeHandbookData } from '@/actions/quest-engine'
 import { CastingRitual } from './CastingRitual'
-import { generateQuestFromReading } from '@/actions/generate-quest'
 import { useRouter, usePathname } from 'next/navigation'
 import { pickupMarketQuest } from '@/actions/market'
 import { ArchetypeHandbookContent } from './conclave/ArchetypeHandbookContent'
@@ -1059,22 +1058,6 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                         castingContext={
                                             context?.threadId ? { threadId: context.threadId } : null
                                         }
-                                        onComplete={async (hexagramId, ctx) => {
-                                            const result = await generateQuestFromReading(hexagramId, ctx ?? undefined)
-                                            if ('adventureId' in result && result.adventureId && result.questId && result.threadId) {
-                                                onClose()
-                                                router.refresh()
-                                                router.push(`/adventure/${result.adventureId}/play?questId=${result.questId}&threadId=${result.threadId}`)
-                                            } else {
-                                                setFeedback('error' in result
-                                                    ? result.error
-                                                    : '✨ Wisdom Received & Quest Generated!')
-                                                setTimeout(() => {
-                                                    onClose()
-                                                    router.refresh()
-                                                }, 2000)
-                                            }
-                                        }}
                                     />
                                 </div>
                             ) : (

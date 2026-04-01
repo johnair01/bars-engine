@@ -286,8 +286,11 @@ export async function persistIChingReadingForPlayer(
 
         return { success: true, hexagramName: hexagram.name }
     } catch (e: unknown) {
-        console.error('[persistIChingReadingForPlayer]', e instanceof Error ? e.message : String(e))
-        return { error: e instanceof Error ? e.message : 'Failed to persist reading' }
+        const msg = e instanceof Error ? e.message : String(e)
+        console.error('[persistIChingReadingForPlayer]', msg)
+        // Mask internal errors (API keys, quotas) from the user
+        const isApiError = msg.includes('quota') || msg.includes('API') || msg.includes('OPENAI')
+        return { error: isApiError ? 'Reading accepted, but some enrichment was skipped.' : 'Failed to persist reading' }
     }
 }
 

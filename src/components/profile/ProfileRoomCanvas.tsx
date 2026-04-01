@@ -42,9 +42,6 @@ export function ProfileRoomCanvas({
   const [proximateAnchor, setProximateAnchor] = useState<AnchorData | null>(null)
   const spriteReady = !!player.avatarConfig
 
-  const posRef = useRef(playerPos)
-  posRef.current = playerPos
-
   const { rendererRef } = useSpatialRoomSession({
     spatialBindKey,
     containerRef,
@@ -64,12 +61,15 @@ export function ProfileRoomCanvas({
 
   const handleDPadMove = useCallback((dx: number, dy: number, dir: 'north' | 'south' | 'east' | 'west') => {
     if (isEditing) return
-    const next = { x: posRef.current.x + dx, y: posRef.current.y + dy }
-    if (rendererRef.current?.isWalkable(next.x, next.y)) {
-      setLastMoveDirection(dir)
-      setPlayerPos(next)
-    }
-  }, [isEditing])
+    setPlayerPos((prev) => {
+      const next = { x: prev.x + dx, y: prev.y + dy }
+      if (rendererRef.current?.isWalkable(next.x, next.y)) {
+        setLastMoveDirection(dir)
+        return next
+      }
+      return prev
+    })
+  }, [isEditing, rendererRef])
 
   // Simple "Click to Toggle Impassable" editor for now
   const handleCanvasClick = useCallback(async (e: MouseEvent) => {
@@ -91,7 +91,7 @@ export function ProfileRoomCanvas({
         await curateToTrophy(selectedArtifact.id, selectedArtifact.type, x, y, selectedArtifact.name)
         onPlaced?.()
     }
-  }, [isEditing, selectedArtifact, room.id, room.tilemap, onPlaced])
+  }, [isEditing, selectedArtifact, room.id, room.tilemap, onPlaced, rendererRef, containerRef])
 
   useEffect(() => {
     const el = containerRef.current
