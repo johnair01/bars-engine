@@ -51,7 +51,7 @@ import { EventAdminToolbar } from './EventAdminToolbar'
  */
 export const metadata: Metadata = {
   title: 'The Bruised Banana — Birthday Quest Weekend',
-  description: 'April 4–5, 2026 · Portland. Enter curious. Follow signals. Play the game.',
+  description: 'April 3–5, 2026 · Portland. Enter curious. Follow signals. Play the game.',
 }
 
 function formatUsdCents(cents: number) {
@@ -126,18 +126,38 @@ export default async function EventPage() {
       <section id="weekend" className="event-section" style={{ background: 'var(--ep-base)' }}>
         <div className="event-section-inner">
           <h2 className="event-section-title">The Weekend</h2>
+
+          {/* Friday + Saturday side by side */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 
-            {/* Friday */}
-            <div className="space-y-4" id="apr-4">
+            {/* Friday — Signal Drop (in-app) */}
+            <div className="space-y-4" id="apr-3">
               <NightCard
                 variant="friday"
                 label="Friday · Signal Drop"
+                title="Check the App"
+                description="The signal drops Friday evening. Open the app, go through the experience, and unlock Saturday's address and details."
+                when="Friday, April 3 · Evening"
+                where="In-app — no physical gathering"
+                status="Interact Friday to unlock Saturday"
+                ctaLabel="Start the invite story"
+                ctaHref="/invite/event/bb-event-invite-apr4-dance"
+                secondaryLinks={[
+                  { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
+                ]}
+              />
+            </div>
+
+            {/* Saturday — The Party */}
+            <div className="space-y-4" id="apr-4">
+              <NightCard
+                variant="saturday"
+                label="Saturday · The Party"
                 title="Dance Night"
                 description="A public dance party — DJs, movement, strangers welcome. Low pressure, high vibe. No agenda; presence is enough."
-                when="Friday, April 4 · Evening"
-                where="Kai's Place — address after RSVP"
-                status="Location revealed after RSVP"
+                when="Saturday, April 4 · 8 PM"
+                where="Address unlocked Friday night"
+                status="Address drops after Friday's signal"
                 ctaLabel="Pre-experience (invite story)"
                 ctaHref="/invite/event/bb-event-invite-apr4-dance"
                 secondaryLinks={[
@@ -158,41 +178,41 @@ export default async function EventPage() {
                 </div>
               )}
             </div>
-
-            {/* Saturday */}
-            <div className="space-y-4" id="apr-5">
-              <NightCard
-                variant="saturday"
-                label="Saturday · The Game"
-                title="Collaborators & Donors"
-                description="Quests, roles, BARs, and the engine in the room. For people who want to build with us — curiosity beats expertise."
-                when="Saturday, April 5 · Daytime"
-                where="Shared after RSVP"
-                status="Details unlock Friday night"
-                ctaLabel="Pre-experience (invite story)"
-                ctaHref="/invite/event/bb-event-invite-apr26"
-                secondaryLinks={[
-                  { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
-                  { label: 'Donate', href: `/event/donate/wizard?ref=${refForDonate}` },
-                ]}
-              />
-              {isBB && (
-                <div className="space-y-2" id="bb-invite-bingo-apr5">
-                  <PartyMiniGameInModal
-                    game={BB_APR5_SCHEMING_BINGO}
-                    eventKey={BB_APR2026_EVENT_STORE_KEY}
-                    sectionId="apr-5-bingo"
-                    playerId={partyMiniGamePlayerId}
-                    buttonLabel="Open scheming day bingo"
-                    anchorId="apr-5-bingo-anchor"
-                    buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"
-                  />
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Invite bingo — full width below the two cards */}
+          {/* Sunday — full width below */}
+          <div className="mt-4 sm:mt-6" id="apr-5">
+            <NightCard
+              variant="sunday"
+              label="Sunday · The Game"
+              title="Collaborators & Role-Playing"
+              description="Quests, roles, BARs, and the engine in the room. For people who want to build with us — curiosity beats expertise. Invite only."
+              when="Sunday, April 5 · Daytime"
+              where="The Bruised Banana — separate location"
+              status="Invite only — details shared separately"
+              ctaLabel="Pre-experience (invite story)"
+              ctaHref="/invite/event/bb-event-invite-apr26"
+              secondaryLinks={[
+                { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
+                { label: 'Donate', href: `/event/donate/wizard?ref=${refForDonate}` },
+              ]}
+            />
+            {isBB && (
+              <div className="mt-4 space-y-2" id="bb-invite-bingo-apr5">
+                <PartyMiniGameInModal
+                  game={BB_APR5_SCHEMING_BINGO}
+                  eventKey={BB_APR2026_EVENT_STORE_KEY}
+                  sectionId="apr-5-bingo"
+                  playerId={partyMiniGamePlayerId}
+                  buttonLabel="Open scheming day bingo"
+                  anchorId="apr-5-bingo-anchor"
+                  buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Invite bingo — full width below */}
           {isBB && (
             <div className="mt-6" id="bb-invite-bingo">
               <PartyMiniGameInModal
@@ -244,35 +264,42 @@ export default async function EventPage() {
         </section>
       )}
 
-      {/* ─── 6. THE STORY (collapsed — for those who want depth) ───────── */}
+      {/* ─── 6. THE STORY (collapsible, starts collapsed) ─────────────── */}
       {wakeUpContent && (
         <section className="event-section" style={{ background: 'var(--ep-surface)' }}>
           <div className="event-section-inner">
-            <h2 className="event-section-title">The Story</h2>
-            <p
-              className="text-sm leading-relaxed whitespace-pre-wrap"
-              style={{ color: 'var(--ep-text-secondary)', maxWidth: '65ch' }}
-            >
-              {wakeUpContent}
-            </p>
-            <div className="flex flex-wrap items-center gap-4 mt-4">
-              <Link
-                href="/wiki"
-                className="text-sm font-medium hover:underline underline-offset-2"
-                style={{ color: 'var(--ep-cyan)' }}
-              >
-                Learn more
-              </Link>
-              {isBB && (
-                <Link
-                  href="/campaign/twine"
-                  className="text-sm font-medium hover:underline underline-offset-2"
-                  style={{ color: 'var(--ep-cyan)' }}
+            <details>
+              <summary className="event-story-toggle list-none cursor-pointer">
+                <h2 className="event-section-title" style={{ marginBottom: 0 }}>The Story</h2>
+                <span className="event-story-toggle-hint">Tap to read</span>
+              </summary>
+              <div className="mt-4">
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{ color: 'var(--ep-text-secondary)', maxWidth: '65ch' }}
                 >
-                  Browse initiation story
-                </Link>
-              )}
-            </div>
+                  {wakeUpContent}
+                </p>
+                <div className="flex flex-wrap items-center gap-4 mt-4">
+                  <Link
+                    href="/wiki"
+                    className="text-sm font-medium hover:underline underline-offset-2"
+                    style={{ color: 'var(--ep-cyan)' }}
+                  >
+                    Learn more
+                  </Link>
+                  {isBB && (
+                    <Link
+                      href="/campaign/twine"
+                      className="text-sm font-medium hover:underline underline-offset-2"
+                      style={{ color: 'var(--ep-cyan)' }}
+                    >
+                      Browse initiation story
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </details>
           </div>
         </section>
       )}
@@ -311,8 +338,9 @@ export default async function EventPage() {
 
           {/* Deep links for existing anchors */}
           <div className="text-xs space-x-4" style={{ color: 'var(--ep-text-muted)' }}>
-            <a href="#apr-4" className="hover:underline underline-offset-2">Friday</a>
-            <a href="#apr-5" className="hover:underline underline-offset-2">Saturday</a>
+            <a href="#apr-3" className="hover:underline underline-offset-2">Friday</a>
+            <a href="#apr-4" className="hover:underline underline-offset-2">Saturday</a>
+            <a href="#apr-5" className="hover:underline underline-offset-2">Sunday</a>
             {isBB && <a href="#bb-invite-bingo" className="hover:underline underline-offset-2">Invite bingo</a>}
           </div>
 

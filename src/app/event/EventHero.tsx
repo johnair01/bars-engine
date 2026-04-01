@@ -9,13 +9,17 @@ interface EventHeroProps {
 export function EventHero({ title, isLoggedIn, campaignRef }: EventHeroProps) {
   return (
     <section className="event-hero">
+      {/* Tactile texture layers */}
+      <div className="event-hero-grain" aria-hidden="true" />
+      <div className="event-hero-grid" aria-hidden="true" />
+
       <div className="event-hero-content">
         <h1 className="event-hero-title">{title}</h1>
         <p className="event-hero-subtitle">Birthday Quest Weekend</p>
         <p className="event-hero-tagline">
           Enter curious. Follow signals. Play the game.
         </p>
-        <p className="event-hero-meta">April 4 – 5, 2026 · Portland</p>
+        <p className="event-hero-meta">April 3 – 5, 2026 · Portland</p>
 
         {isLoggedIn ? (
           <Link
@@ -26,7 +30,7 @@ export function EventHero({ title, isLoggedIn, campaignRef }: EventHeroProps) {
           </Link>
         ) : (
           <Link
-            href={`/campaign?ref=${campaignRef ?? 'bruised-banana'}`}
+            href={`/login?next=/event`}
             className="event-hero-cta"
           >
             Enter

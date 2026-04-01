@@ -1,19 +1,23 @@
 const STEPS = [
   {
     title: 'Get your invite',
-    desc: 'You received the link — you\'re in. Log in or sign up to track your status.',
+    desc: 'You received the link — you\'re in. Sign up or log in to get started.',
   },
   {
-    title: 'RSVP on Partiful',
-    desc: 'Confirm your attendance for Friday, Saturday, or both.',
+    title: 'Go through the experience',
+    desc: 'Explore the invite story, choose your path, and engage with the app before the weekend.',
   },
   {
-    title: 'Friday night unlocks Saturday',
-    desc: 'Show up Friday and the full Saturday details — location, schedule, roles — are revealed.',
+    title: 'Friday drops the signal',
+    desc: 'Check the app Friday evening. Your activity unlocks Saturday\'s address and details.',
   },
   {
-    title: 'Show up and play',
-    desc: 'Arrive curious. Follow the signals. The game will find you.',
+    title: 'Saturday night — show up',
+    desc: 'The party starts at 8 PM. Arrive curious. Follow the signals.',
+  },
+  {
+    title: 'Sunday — play the game',
+    desc: 'Collaborators gather at The Bruised Banana for the role-playing game. Invite only.',
   },
 ]
 

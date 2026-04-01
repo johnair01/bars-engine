@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 interface NightCardProps {
-  variant: 'friday' | 'saturday'
+  variant: 'friday' | 'saturday' | 'sunday'
   label: string
   title: string
   description: string
