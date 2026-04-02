@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/cultivation-cards.css";
+@import "../styles/event-page.css";
 
 :root {
   --background: #ffffff;
