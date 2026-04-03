@@ -73,10 +73,10 @@ export default async function IChingWikiPage() {
                 <header className="space-y-2">
                     <h1 className="text-3xl sm:text-4xl font-bold text-white">I Ching Guidebook</h1>
                     <p className="text-sm text-zinc-400">
-                        Public canonical reference: hexagram → upper/lower trigram → trigram archetypes.
+                        Public canonical reference: hexagram → upper/lower trigram → trigram <Link href="/wiki/archetypes" className="text-amber-400 hover:text-amber-300">archetypes</Link>.
                     </p>
                     <div className="text-xs text-zinc-500">
-                        Data source: canonical hexagram structure + handbook-backed archetypes.
+                        Data source: canonical hexagram structure + <Link href="/wiki/handbook" className="text-amber-400 hover:text-amber-300">handbook</Link>-backed archetypes.
                     </div>
                 </header>
 
@@ -121,6 +121,18 @@ export default async function IChingWikiPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </section>
+
+                <section className="mt-12 pt-8 border-t border-zinc-800">
+                    <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+                    <div className="flex flex-wrap gap-3">
+                        <Link href="/wiki/archetypes" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Archetypes →</Link>
+                        <Link href="/wiki/nations" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Nations →</Link>
+                        <Link href="/wiki/emotional-alchemy" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Emotional Alchemy →</Link>
+                        <Link href="/wiki/moves" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">The Four Moves →</Link>
+                        <Link href="/wiki/quests-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Quests Guide →</Link>
+                        <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
                     </div>
                 </section>
 

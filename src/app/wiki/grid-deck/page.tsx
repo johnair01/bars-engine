@@ -33,8 +33,8 @@ export default function WikiGridDeckPage() {
         <ul className="list-disc list-inside text-sm space-y-1 text-zinc-400">
           <li>
             <strong className="text-zinc-300">Account</strong> — Sign in. Finish onboarding so you have a{' '}
-            <strong className="text-zinc-300">Nation</strong> and <strong className="text-zinc-300">Archetype</strong>{' '}
-            (same rule as creating any BAR in the app).
+            <Link href="/wiki/nations" className="text-amber-400 hover:text-amber-300">Nation</Link> and <Link href="/wiki/archetypes" className="text-amber-400 hover:text-amber-300">Archetype</Link>{' '}
+            (same rule as creating any <Link href="/wiki/bars-guide" className="text-amber-400 hover:text-amber-300">BAR</Link> in the app).
           </li>
           <li>
             <strong className="text-zinc-300">Data exists</strong> — The grid is seeded on the server (
@@ -123,9 +123,9 @@ export default function WikiGridDeckPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-white">How this fits the rest of BARs</h2>
         <p className="text-sm text-zinc-400">
-          The game often uses the pattern <strong className="text-zinc-200">something happens → you capture it as a BAR</strong>.
+          The game often uses the pattern <strong className="text-zinc-200">something happens → you capture it as a <Link href="/wiki/bars-guide" className="text-amber-400 hover:text-amber-300">BAR</Link></strong>.
           Scene Atlas adds: <strong className="text-zinc-200">that BAR also sits on a card</strong>, so you can see
-          coverage and gaps at a glance. The same skill (writing a clear BAR) powers quests, campaigns, and your hand.
+          coverage and gaps at a glance. The same skill (writing a clear BAR) powers <Link href="/wiki/quests-guide" className="text-amber-400 hover:text-amber-300">quests</Link>, campaigns, and your hand.
         </p>
         <p className="text-sm">
           <Link href="/wiki/glossary" className="text-amber-400 hover:text-amber-300">
@@ -148,6 +148,17 @@ export default function WikiGridDeckPage() {
           Spec and implementation:{' '}
           <code className="bg-zinc-800 px-1 rounded">.specify/specs/creator-scene-grid-deck/</code>
         </p>
+      </section>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/bars-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">BARs Guide →</Link>
+          <Link href="/wiki/emotional-alchemy" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Emotional Alchemy →</Link>
+          <Link href="/wiki/moves" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">The Four Moves →</Link>
+          <Link href="/wiki/values-and-polarities" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Values & Polarities →</Link>
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+        </div>
       </section>
 
       <p>

@@ -30,8 +30,8 @@ export default function PrivacyWikiPage() {
         <h2 className="text-sm font-bold text-teal-400 uppercase tracking-wider">The Structural Extraction Model</h2>
         <div className="text-sm text-zinc-300 space-y-3 leading-relaxed">
           <p>
-            Traditional systems capture your **stories**—the specific details of your life. 
-            The BARS Engine captures only the **tension vectors**.
+            Traditional systems capture your **stories**---the specific details of your life.
+            The <Link href="/wiki/handbook" className="text-teal-400 hover:text-teal-300">BARS Engine</Link> captures only the **tension vectors**.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <div className="space-y-1 p-3 bg-zinc-900/40 rounded-lg border border-zinc-800">
@@ -72,7 +72,7 @@ export default function PrivacyWikiPage() {
             into the light without fear of surveillance.
           </p>
           <p>
-            If you choose to publish a story (via the CYOA Generator), you are consciously turning your 
+            If you choose to publish a story (via the <Link href="/wiki/cyoa-adventure" className="text-teal-400 hover:text-teal-300">CYOA Generator</Link>), you are consciously turning your
             private metal into a collective artifact. Until that moment, your work is a closed circuit 
             between you and the witness you choose.
           </p>
@@ -83,26 +83,36 @@ export default function PrivacyWikiPage() {
       <section className="space-y-4">
         <h2 className="text-sm uppercase tracking-widest text-zinc-500">The Role of the Agent</h2>
         <p className="text-sm text-zinc-400 leading-relaxed">
-          The Agents you interact with are witnesses. They help you "Unpack" and "Clean Up" your charge. 
-          They are programmed to support your evolutionary purpose—not to harvest your vulnerabilities. 
+          The Agents you interact with are witnesses. They help you &quot;Unpack&quot; and &quot;Clean Up&quot; your charge.
+          They are programmed to support your evolutionary purpose --- not to harvest your vulnerabilities.
           The data they see is treated as ephemeral fuel for the ritual, never as a persistent profile.
+          See the <Link href="/wiki/rules" className="text-teal-400 hover:text-teal-300">game rules</Link> for how these boundaries are enforced in play.
         </p>
       </section>
 
       {/* Action Links */}
       <section className="border-t border-zinc-800 pt-8 flex flex-wrap gap-4">
-        <Link 
+        <Link
           href="/wiki/handbook"
           className="text-xs px-4 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors"
         >
           ← Back to Handbook
         </Link>
-        <Link 
+        <Link
           href="/shadow/321"
           className="text-xs px-4 py-2 rounded-lg border border-teal-800/50 text-teal-400 hover:bg-teal-950/20 transition-colors"
         >
           Start a 321 Session
         </Link>
+      </section>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+          <Link href="/wiki/rules" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Rules →</Link>
+          <Link href="/wiki/glossary" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Glossary →</Link>
+        </div>
       </section>
     </div>
   )

@@ -109,7 +109,7 @@ export default function CyoaAdventureGuidePage() {
         <h2 className="text-lg font-bold text-white">What is this?</h2>
         <p className="text-sm text-zinc-400 leading-relaxed">
           When you enter a campaign&apos;s adventure path, you go through a short intake — a combination
-          of emotional calibration and a choose-your-own-adventure story. The intake is not a
+          of <Link href="/wiki/emotional-alchemy" className="text-amber-400 hover:text-amber-300">emotional</Link> calibration and a choose-your-own-adventure story. The intake is not a
           quiz. It reads your current state and your choices, then routes you into a personalized
           spoke adventure: a second, deeper story built for where you are right now.
         </p>
@@ -210,6 +210,18 @@ export default function CyoaAdventureGuidePage() {
           new players will trigger fresh generation. The admin interface for this is under{' '}
           <code className="text-xs bg-zinc-800 px-1 rounded text-zinc-400">/admin/adventures</code>.
         </p>
+      </section>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/quests-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Quests Guide →</Link>
+          <Link href="/wiki/bars-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">BARs Guide →</Link>
+          <Link href="/wiki/moves" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">The Four Moves →</Link>
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+          <Link href="/wiki/archetypes" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Archetypes →</Link>
+          <Link href="/wiki/nations" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Nations →</Link>
+        </div>
       </section>
 
       <p className="text-sm">
