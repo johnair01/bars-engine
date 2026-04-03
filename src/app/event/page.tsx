@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { CampaignDonateButton } from '@/components/campaign/CampaignDonateButton'
 import { getActiveInstance } from '@/actions/instance'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
@@ -8,62 +9,85 @@ import {
   listEventArtifactsForInstance,
 } from '@/actions/campaign-invitation'
 import { getEventCampaignsForInstance } from '@/actions/event-campaign-engine'
-import { isCalendarEventCampaignType } from '@/lib/event-campaign-types'
+import {
+  EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN,
+  isCalendarEventCampaignType,
+} from '@/lib/event-campaign-types'
 import { getWorldVenueEntryForInstance } from '@/actions/spatial-maps'
-import { getCampaignSkin } from '@/lib/ui/campaign-skin'
-import { EventHero } from '@/components/event/EventHero'
-import { EventScheduleCard } from '@/components/event/EventScheduleCard'
-import { EventAdminToolbar } from '@/components/event/EventAdminToolbar'
-import { StickyRsvpBar } from '@/components/event/StickyRsvpBar'
-import { BruisedBananaApr2026EventBlocks } from './BruisedBananaApr2026EventBlocks'
-import { formatEventScheduleRange } from './EditEventScheduleButton'
-import { EditEventScheduleButton } from './EditEventScheduleButton'
+import { InviteButton } from './InviteButton'
+import { InviteToEventButton } from './InviteToEventButton'
+import {
+  EditEventScheduleButton,
+  formatEventCapacityLine,
+  formatEventScheduleRange,
+} from './EditEventScheduleButton'
 import { EditEventDetailsButton } from './EditEventDetailsButton'
+import { EventGuestsPanel } from './EventGuestsPanel'
 import { EventCampaignEditor } from './EventCampaignEditor'
 import { EventProgressUpdater } from './EventProgressUpdater'
+import { EventCrewSurface } from '@/components/event/EventCrewSurface'
 import { CreateEventButton } from './CreateEventButton'
-import { InviteToEventButton } from './InviteToEventButton'
-import { LibraryRequestButton } from '@/components/LibraryRequestButton'
-
-export const metadata: Metadata = {
-  title: 'Campaign',
-  description: 'Campaign hub — story, events, and ways to contribute.',
-}
-
-function formatUsdCents(cents: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
-}
+import { CreateAwarenessRunButton } from './CreateAwarenessRunButton'
+import { PartyMiniGameInModal } from '@/components/party-mini-game/PartyMiniGameInModal'
+import {
+  BB_APR2026_EVENT_STORE_KEY,
+  BB_APR4_DANCE_BINGO,
+  BB_APR5_SCHEMING_BINGO,
+  BB_INVITE_PRIMING,
+} from '@/lib/party-mini-game/definitions'
+import { EventHero } from './EventHero'
+import { NightCard } from './NightCard'
+import { WhatToExpect } from './WhatToExpect'
+import { HowItWorks } from './HowItWorks'
+import { EventAdminToolbar } from './EventAdminToolbar'
 
 /**
  * @page /event
  * @entity EVENT
- * @description Campaign hub — hero, schedule, story, and contribute
- * @permissions public (view), authenticated (RSVP/donate), admin (edit toolbar)
+ * @description Campaign hub — redesigned as Midnight Playbill.
+ *   Hero → Weekend split → What to expect → How it works → Support → Footer
+ * @permissions public (guest view), authenticated (actions), admin (floating toolbar)
  * @agentDiscoverable true
  */
+export const metadata: Metadata = {
+  title: 'The Bruised Banana — Birthday Quest Weekend',
+  description: 'April 3–5, 2026 · Portland. Enter curious. Follow signals. Play the game.',
+}
+
+function formatUsdCents(cents: number) {
+  const dollars = cents / 100
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(dollars)
+}
+
 export default async function EventPage() {
   const instance = await getActiveInstance()
   const player = await getCurrentPlayer()
 
   if (!instance) {
     return (
-      <div className="cs-wrapper flex items-center justify-center p-6">
-        <div className="max-w-md text-center space-y-4">
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--cs-title, white)' }}>No active campaign</h1>
-          <p className="cs-text-secondary text-sm">No instance is active. Admins can set one under Admin → Instances.</p>
-          <Link href="/" className="cs-cta-secondary inline-block text-sm">Back to app</Link>
+      <div className="event-page min-h-screen flex items-center justify-center" style={{ background: 'var(--ep-base)' }}>
+        <div className="max-w-xl w-full space-y-6 text-center p-6">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--ep-text)' }}>No active campaign</h1>
+          <p style={{ color: 'var(--ep-text-muted)' }}>
+            No instance is set as active. Admins can set one under Admin.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Link href="/" className="px-4 py-2 rounded-lg border" style={{ background: 'var(--ep-surface)', borderColor: 'var(--ep-border)', color: 'var(--ep-text)' }}>
+              Back
+            </Link>
+            <Link href="/conclave" className="event-hero-cta px-4 py-2 text-sm">
+              Join
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
-  // ── Data fetching ──────────────────────────────────────────
-  const skin = getCampaignSkin(instance.campaignRef)
-  const cssVars = skin?.cssVars ?? {}
   const goal = instance.goalAmountCents ?? 0
   const current = instance.currentAmountCents ?? 0
   const pct = goal > 0 ? Math.max(0, Math.min(1, current / goal)) : 0
@@ -71,127 +95,265 @@ export default async function EventPage() {
   const eventArtifacts = await listEventArtifactsForInstance(instance.id)
   const eventCampaigns = await getEventCampaignsForInstance(instance.id)
   const calendarEventCampaigns = eventCampaigns.filter((c) => isCalendarEventCampaignType(c.campaignType))
-  const canSendEventInvites = !!player && (await canInviteToAnyEventOnInstance(player.id, instance.id))
-  const canCreateCampaign = !!player && (await canCreateCampaignOnInstance(player.id, instance.id))
+  const awarenessContentRuns = eventCampaigns.filter(
+    (c) => c.campaignType === EVENT_CAMPAIGN_TYPE_AWARENESS_CONTENT_RUN
+  )
+  const canSendEventInvites =
+    !!player && (await canInviteToAnyEventOnInstance(player.id, instance.id))
+  const canCreateCampaign =
+    !!player && (await canCreateCampaignOnInstance(player.id, instance.id))
   const rootEvents = eventArtifacts.filter((e) => !e.parentEventArtifactId)
-  const childrenOf = (parentId: string) => eventArtifacts.filter((e) => e.parentEventArtifactId === parentId)
+  const childrenOf = (parentId: string) =>
+    eventArtifacts.filter((e) => e.parentEventArtifactId === parentId)
   const worldVenue = await getWorldVenueEntryForInstance(instance.id)
+  const wakeUpContent = instance.wakeUpContent ?? ''
+  const showUpContent = instance.showUpContent ?? ''
   const refForDonate = instance.campaignRef?.trim() || instance.slug?.trim() || 'bruised-banana'
-  const donatePath = `/event/donate/wizard?ref=${encodeURIComponent(refForDonate)}&source=event`
-
-  // ── Derived display values ─────────────────────────────────
-  const wakeUpContent = instance.wakeUpContent ?? 'The Bruised Banana Residency is a creative space and community supporting artists, healers, and changemakers.'
-  const showUpContent = instance.showUpContent ?? 'Contribute money (Donate) or play the game by signing up and choosing your domains.'
-  const hasFundraiser = goal > 0 && instance.isEventMode
-  const totalRsvps = eventArtifacts.reduce((sum, e) => sum + (e.rsvpCount ?? 0), 0)
-
-  // Date summary from root events
-  const dateSummary = rootEvents.length > 0
-    ? rootEvents.map((e) => formatEventScheduleRange(e)).filter(Boolean).join(' + ')
-    : null
-
-  // Find next upcoming event
-  const now = new Date()
-  const nextEventIdx = rootEvents.findIndex((e) => e.startTime && new Date(e.startTime) >= now)
+  const isBB = instance.campaignRef === 'bruised-banana'
+  const partyMiniGamePlayerId = player?.id ?? null
 
   return (
-    <div className="cs-wrapper" style={cssVars}>
-      <div className="max-w-lg mx-auto px-4 pb-28 space-y-6">
+    <div className="event-page" style={{ background: 'var(--ep-base)', color: 'var(--ep-text)' }}>
 
-        {/* ── HERO ─────────────────────────────────────── */}
-        <EventHero
-          campaignName={skin?.displayName ?? instance.name}
-          theme={instance.theme ?? null}
-          targetDescription={instance.targetDescription ?? null}
-          dateSummary={dateSummary}
-          progressPct={hasFundraiser ? pct : null}
-          currentFormatted={hasFundraiser ? formatUsdCents(current) : null}
-          goalFormatted={hasFundraiser ? formatUsdCents(goal) : null}
-          donatePath={donatePath}
-          rsvpUrl={skin?.rsvpUrl ?? null}
-          partifulUrl={(instance as { partifulInviteToken?: string }).partifulInviteToken
-            ? `https://partiful.com/e/${(instance as { partifulInviteToken?: string }).partifulInviteToken}`
-            : null}
-          rsvpCount={totalRsvps}
-        />
+      {/* ─── 1. HERO ──────────────────────────────────────────────────────── */}
+      <EventHero
+        title={instance.name}
+        isLoggedIn={!!player}
+        campaignRef={instance.campaignRef}
+      />
 
-        {/* ── SCHEDULE ─────────────────────────────────── */}
-        <hr className="cs-rule-accent-3" />
+      {/* ─── 2. THE WEEKEND ───────────────────────────────────────────────── */}
+      <section id="weekend" className="event-section" style={{ background: 'var(--ep-base)' }}>
+        <div className="event-section-inner">
+          <h2 className="event-section-title">The Weekend</h2>
 
-        {rootEvents.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="font-pixel cs-title text-xs tracking-[0.2em]">Schedule</h2>
-            {rootEvents.map((ev, i) => (
-              <EventScheduleCard
-                key={ev.id}
-                event={ev}
-                children={childrenOf(ev.id)}
-                isNext={i === (nextEventIdx >= 0 ? nextEventIdx : 0)}
-                anchorId={ev.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
-                isAuthenticated={!!player}
+          {/* Friday + Saturday side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+
+            {/* Friday — Signal Drop (in-app) */}
+            <div className="space-y-4" id="apr-3">
+              <NightCard
+                variant="friday"
+                label="Friday · Signal Drop"
+                title="Check the App"
+                description="The signal drops Friday evening. Open the app, go through the experience, and unlock Saturday's address and details."
+                when="Friday, April 3 · Evening"
+                where="In-app — no physical gathering"
+                status="Interact Friday to unlock Saturday"
+                ctaLabel="Start the invite story"
+                ctaHref="/invite/event/bb-event-invite-apr4-dance"
+                secondaryLinks={[
+                  { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
+                ]}
               />
-            ))}
-          </section>
-        ) : (
-          <p className="cs-text-muted text-sm text-center py-4">No events scheduled yet.</p>
-        )}
+            </div>
 
-        {/* ── BB CAMPAIGN BLOCKS (bingo, etc) ──────────── */}
-        {instance.campaignRef === 'bruised-banana' && <BruisedBananaApr2026EventBlocks />}
-
-        {/* ── STORY & CONTRIBUTE (progressive disclosure) ─ */}
-        <hr className="cs-rule-accent-2" />
-
-        <details className="cs-details">
-          <summary>The story (Wake Up)</summary>
-          <div className="py-3 space-y-3">
-            <p className="cs-text-secondary text-sm leading-relaxed whitespace-pre-wrap">{wakeUpContent}</p>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <Link href="/wiki" className="cs-text-accent-2 hover:underline">Learn more →</Link>
-              {instance.campaignRef === 'bruised-banana' && (
-                <Link href="/campaign/twine" className="cs-text-accent-2 hover:underline">Browse initiation story →</Link>
-              )}
-              {player && instance.campaignRef && (
-                <LibraryRequestButton context={{ campaignRef: instance.campaignRef }} />
+            {/* Saturday — The Party */}
+            <div className="space-y-4" id="apr-4">
+              <NightCard
+                variant="saturday"
+                label="Saturday · The Party"
+                title="Dance Night"
+                description="A public dance party — DJs, movement, strangers welcome. Low pressure, high vibe. No agenda; presence is enough."
+                when="Saturday, April 4 · 8 PM"
+                where="Address unlocked Friday night"
+                status="Address drops after Friday's signal"
+                ctaLabel="Pre-experience (invite story)"
+                ctaHref="/invite/event/bb-event-invite-apr4-dance"
+                secondaryLinks={[
+                  { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
+                ]}
+              />
+              {isBB && (
+                <div className="space-y-2" id="bb-invite-bingo-apr4">
+                  <PartyMiniGameInModal
+                    game={BB_APR4_DANCE_BINGO}
+                    eventKey={BB_APR2026_EVENT_STORE_KEY}
+                    sectionId="apr-4-bingo"
+                    playerId={partyMiniGamePlayerId}
+                    buttonLabel="Open dance night bingo"
+                    anchorId="apr-4-bingo-anchor"
+                    buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"
+                  />
+                </div>
               )}
             </div>
           </div>
-        </details>
 
-        <details className="cs-details">
-          <summary>Ways to contribute (Show Up)</summary>
-          <div className="py-3 space-y-3">
-            <p className="cs-text-secondary text-sm leading-relaxed whitespace-pre-wrap">{showUpContent}</p>
-            <div className="flex flex-wrap gap-3">
-              <Link href={donatePath} className="cs-cta-secondary text-sm">Donate</Link>
-              {player ? (
-                <Link href="/" className="cs-cta-secondary text-sm">Dashboard</Link>
-              ) : (
-                <Link href="/conclave/guided" className="cs-cta-secondary text-sm">Play the game</Link>
-              )}
-            </div>
+          {/* Sunday — full width below */}
+          <div className="mt-4 sm:mt-6" id="apr-5">
+            <NightCard
+              variant="sunday"
+              label="Sunday · The Game"
+              title="Collaborators & Role-Playing"
+              description="Quests, roles, BARs, and the engine in the room. For people who want to build with us — curiosity beats expertise. Invite only."
+              when="Sunday, April 5 · Daytime"
+              where="The Bruised Banana — separate location"
+              status="Invite only — details shared separately"
+              ctaLabel="Pre-experience (invite story)"
+              ctaHref="/invite/event/bb-event-invite-apr26"
+              secondaryLinks={[
+                { label: 'Enter the 8 paths', href: '/campaign/hub?ref=bruised-banana' },
+                { label: 'Donate', href: `/event/donate/wizard?ref=${refForDonate}` },
+              ]}
+            />
+            {isBB && (
+              <div className="mt-4 space-y-2" id="bb-invite-bingo-apr5">
+                <PartyMiniGameInModal
+                  game={BB_APR5_SCHEMING_BINGO}
+                  eventKey={BB_APR2026_EVENT_STORE_KEY}
+                  sectionId="apr-5-bingo"
+                  playerId={partyMiniGamePlayerId}
+                  buttonLabel="Open scheming day bingo"
+                  anchorId="apr-5-bingo-anchor"
+                  buttonClassName="inline-flex min-h-11 w-full sm:w-auto items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors"
+                />
+              </div>
+            )}
           </div>
-        </details>
 
-        {/* ── FOOTER LINKS ─────────────────────────────── */}
-        <hr className="cs-rule-accent-1" />
-
-        <footer className="flex flex-wrap gap-4 text-xs cs-text-muted py-2 justify-center">
-          {worldVenue && (
-            <Link href={worldVenue.href} className="hover:cs-text-secondary transition">Pixel venue →</Link>
+          {/* Invite bingo — full width below */}
+          {isBB && (
+            <div className="mt-6" id="bb-invite-bingo">
+              <PartyMiniGameInModal
+                game={BB_INVITE_PRIMING}
+                eventKey={BB_APR2026_EVENT_STORE_KEY}
+                sectionId="bb-invite-bingo-grid"
+                playerId={partyMiniGamePlayerId}
+                buttonLabel="Open invite bingo card"
+                anchorId="bb-invite-bingo"
+              />
+            </div>
           )}
-          <Link href="/wiki" className="hover:cs-text-secondary transition">Wiki</Link>
-          <Link href="/" className="hover:cs-text-secondary transition">Dashboard</Link>
-          {player && <Link href="/hand" className="hover:cs-text-secondary transition">Vault</Link>}
-        </footer>
+        </div>
+      </section>
 
-        {/* ── ADMIN TOOLBAR (floating) ─────────────────── */}
-        {isAdmin && (
-          <EventAdminToolbar
-            instanceId={instance.id}
-            instanceName={instance.name}
-            events={eventArtifacts}
-          >
+      {/* ─── 3. WHAT TO EXPECT ────────────────────────────────────────────── */}
+      <WhatToExpect />
+
+      {/* ─── 4. HOW IT WORKS ──────────────────────────────────────────────── */}
+      <HowItWorks />
+
+      {/* ─── 5. SUPPORT THE QUEST (fundraiser) ────────────────────────────── */}
+      {goal > 0 && instance.isEventMode && (
+        <section className="event-section" style={{ background: 'var(--ep-base)' }}>
+          <div className="event-section-inner space-y-5">
+            <h2 className="event-section-title">Support the Quest</h2>
+            <div className="flex items-end justify-between gap-4 flex-wrap">
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--ep-text)' }}>
+                  {formatUsdCents(current)}{' '}
+                  <span style={{ color: 'var(--ep-text-muted)' }}>/</span>{' '}
+                  <span style={{ color: 'var(--ep-text-secondary)' }}>{formatUsdCents(goal)}</span>
+                </div>
+              </div>
+              <div className="text-sm font-mono" style={{ color: 'var(--ep-text-muted)' }}>
+                {Math.round(pct * 100)}%
+              </div>
+            </div>
+            <div className="fundraiser-bar-track">
+              <div className="fundraiser-bar-fill" style={{ width: `${Math.round(pct * 100)}%` }} />
+            </div>
+            <CampaignDonateButton
+              campaignRef={refForDonate}
+              className="event-hero-cta text-sm px-6 py-3"
+            >
+              {instance.donationButtonLabel?.trim() || 'Donate'}
+            </CampaignDonateButton>
+          </div>
+        </section>
+      )}
+
+      {/* ─── 6. THE STORY (collapsible, starts collapsed) ─────────────── */}
+      {wakeUpContent && (
+        <section className="event-section" style={{ background: 'var(--ep-surface)' }}>
+          <div className="event-section-inner">
+            <details>
+              <summary className="event-story-toggle list-none cursor-pointer">
+                <h2 className="event-section-title" style={{ marginBottom: 0 }}>The Story</h2>
+                <span className="event-story-toggle-hint">Tap to read</span>
+              </summary>
+              <div className="mt-4">
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{ color: 'var(--ep-text-secondary)', maxWidth: '65ch' }}
+                >
+                  {wakeUpContent}
+                </p>
+                <div className="flex flex-wrap items-center gap-4 mt-4">
+                  <Link
+                    href="/wiki"
+                    className="text-sm font-medium hover:underline underline-offset-2"
+                    style={{ color: 'var(--ep-cyan)' }}
+                  >
+                    Learn more
+                  </Link>
+                  {isBB && (
+                    <Link
+                      href="/campaign/twine"
+                      className="text-sm font-medium hover:underline underline-offset-2"
+                      style={{ color: 'var(--ep-cyan)' }}
+                    >
+                      Browse initiation story
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </details>
+          </div>
+        </section>
+      )}
+
+      {/* ─── 7. FOOTER ────────────────────────────────────────────────────── */}
+      <footer className="event-section" style={{ background: 'var(--ep-base)', borderTop: '1px solid var(--ep-border)' }}>
+        <div className="event-section-inner space-y-6">
+          <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+            {player ? (
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-bold"
+                style={{ background: 'var(--ep-surface)', color: 'var(--ep-text)', border: '1px solid var(--ep-border)' }}
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href={`/campaign?ref=${refForDonate}`}
+                  className="event-hero-cta text-sm px-5 py-3"
+                >
+                  Play the Game
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-bold"
+                  style={{ background: 'var(--ep-surface)', color: 'var(--ep-text)', border: '1px solid var(--ep-border)' }}
+                >
+                  Log In
+                </Link>
+              </>
+            )}
+            <InviteButton />
+          </div>
+
+          {/* Deep links for existing anchors */}
+          <div className="text-xs space-x-4" style={{ color: 'var(--ep-text-muted)' }}>
+            <a href="#apr-3" className="hover:underline underline-offset-2">Friday</a>
+            <a href="#apr-4" className="hover:underline underline-offset-2">Saturday</a>
+            <a href="#apr-5" className="hover:underline underline-offset-2">Sunday</a>
+            {isBB && <a href="#bb-invite-bingo" className="hover:underline underline-offset-2">Invite bingo</a>}
+          </div>
+
+          <p className="text-xs" style={{ color: 'var(--ep-text-muted)' }}>
+            Portland 2026 · One Weekend · Level Up or Lose
+          </p>
+        </div>
+      </footer>
+
+      {/* ─── ADMIN TOOLBAR (floating, separated from guest UX) ────────── */}
+      {isAdmin && (
+        <EventAdminToolbar>
+          <div className="space-y-2">
             <EventCampaignEditor
               instanceId={instance.id}
               initialWakeUp={wakeUpContent}
@@ -200,40 +362,109 @@ export default async function EventPage() {
               initialTheme={instance.theme ?? ''}
               initialTargetDescription={instance.targetDescription ?? ''}
             />
-            {hasFundraiser && (
-              <EventProgressUpdater
-                instanceId={instance.id}
-                initialCurrentCents={current}
-                initialGoalCents={goal}
-              />
-            )}
-            <CreateEventButton
+            <EventProgressUpdater
               instanceId={instance.id}
-              instanceName={instance.name}
-              campaigns={calendarEventCampaigns}
-              canCreateCampaign={canCreateCampaign}
+              initialCurrentCents={current}
+              initialGoalCents={goal}
             />
+            {canCreateCampaign && (
+              <CreateAwarenessRunButton instanceId={instance.id} instanceName={instance.name} />
+            )}
             {canSendEventInvites && (
-              <InviteToEventButton
+              <CreateEventButton
                 instanceId={instance.id}
                 instanceName={instance.name}
-                events={eventArtifacts}
+                campaigns={calendarEventCampaigns}
+                canCreateCampaign={canCreateCampaign}
               />
             )}
-          </EventAdminToolbar>
-        )}
+          </div>
 
-        {/* ── STICKY RSVP BAR (non-admin, mobile) ──────── */}
-        {!isAdmin && (
-          <StickyRsvpBar
-            donatePath={donatePath}
-            rsvpUrl={(instance as { partifulInviteToken?: string }).partifulInviteToken
-              ? `https://partiful.com/e/${(instance as { partifulInviteToken?: string }).partifulInviteToken}`
-              : null}
+          {/* Event artifacts list — admin view */}
+          {eventArtifacts.length > 0 && (
+            <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--ep-border)' }}>
+              <span className="text-xs font-medium" style={{ color: 'var(--ep-text-muted)' }}>Events</span>
+              {(rootEvents.length > 0 ? rootEvents : eventArtifacts).map((ev) => (
+                <div key={ev.id} className="text-sm space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate" style={{ color: 'var(--ep-text-secondary)' }}>{ev.title}</span>
+                    <div className="flex gap-1 shrink-0">
+                      <EditEventDetailsButton instanceId={instance.id} event={ev} />
+                      <EditEventScheduleButton instanceId={instance.id} event={ev} />
+                    </div>
+                  </div>
+                  <span className="text-xs block" style={{ color: 'var(--ep-text-muted)' }}>
+                    {formatEventScheduleRange(ev)}
+                    {formatEventCapacityLine(ev) ? ` · ${formatEventCapacityLine(ev)}` : ''}
+                  </span>
+                  <EventGuestsPanel instanceId={instance.id} eventId={ev.id} />
+                  {childrenOf(ev.id).map((sub) => (
+                    <div key={sub.id} className="pl-3 text-xs space-y-1" style={{ borderLeft: '1px solid var(--ep-border)' }}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate" style={{ color: 'var(--ep-text-muted)' }}>{sub.title}</span>
+                        <div className="flex gap-1 shrink-0">
+                          <EditEventDetailsButton instanceId={instance.id} event={sub} />
+                          <EditEventScheduleButton instanceId={instance.id} event={sub} />
+                        </div>
+                      </div>
+                      <EventGuestsPanel instanceId={instance.id} eventId={sub.id} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+              {canSendEventInvites && (
+                <InviteToEventButton
+                  instanceId={instance.id}
+                  instanceName={instance.name}
+                  events={eventArtifacts}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Awareness runs — admin view */}
+          {awarenessContentRuns.length > 0 && (
+            <div className="space-y-1 pt-2" style={{ borderTop: '1px solid var(--ep-border)' }}>
+              <span className="text-xs font-medium" style={{ color: 'var(--ep-text-muted)' }}>Awareness runs</span>
+              {awarenessContentRuns.map((run) => (
+                <div key={run.id} className="text-xs" style={{ color: 'var(--ep-text-secondary)' }}>
+                  {run.campaignContext}
+                  {run.productionThreadId && (
+                    <Link
+                      href={`/admin/journeys/thread/${encodeURIComponent(run.productionThreadId)}`}
+                      className="ml-2 hover:underline"
+                      style={{ color: 'var(--ep-cyan)' }}
+                    >
+                      Thread
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Crew surface — admin view */}
+          <EventCrewSurface
+            eventArtifacts={eventArtifacts}
+            instanceId={instance.id}
+            player={player}
+            canSendEventInvites={canSendEventInvites}
           />
-        )}
 
-      </div>
+          {/* World venue — admin view */}
+          {worldVenue && (
+            <div className="pt-2" style={{ borderTop: '1px solid var(--ep-border)' }}>
+              <Link
+                href={worldVenue.href}
+                className="text-xs hover:underline"
+                style={{ color: 'var(--ep-cyan)' }}
+              >
+                Pixel venue: {worldVenue.mapName}
+              </Link>
+            </div>
+          )}
+        </EventAdminToolbar>
+      )}
     </div>
   )
 }
