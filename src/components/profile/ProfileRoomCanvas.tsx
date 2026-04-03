@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState, useCallback, startTransition } from 'react'
 import type { AnchorData } from '@/lib/spatial-world/pixi-room'
 import { useSpatialRoomSession } from '@/lib/spatial-world/useSpatialRoomSession'
 import { DPadOverlay } from '@/components/world/DPadOverlay'
 import { curateToTrophy, updateProfileRoom } from '@/actions/profile-spatial'
-import { Package, Edit2, Map as MapIcon, Save, X } from 'lucide-react'
+import { Edit2, Map as MapIcon, Save } from 'lucide-react'
 
 type ProfileRoomCanvasProps = {
   spatialBindKey: string
@@ -56,8 +55,11 @@ export function ProfileRoomCanvas({
   useEffect(() => {
     rendererRef.current?.setPlayerPosition(playerPos.x, playerPos.y)
     rendererRef.current?.setPlayerDirection(lastMoveDirection)
-    setProximateAnchor(rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null)
-  }, [playerPos, lastMoveDirection])
+    const anchor = rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null
+    startTransition(() => {
+      setProximateAnchor(anchor)
+    })
+  }, [playerPos, lastMoveDirection, rendererRef])
 
   const handleDPadMove = useCallback((dx: number, dy: number, dir: 'north' | 'south' | 'east' | 'west') => {
     if (isEditing) return

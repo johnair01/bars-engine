@@ -1,9 +1,9 @@
 /**
- * @route GET /api/events/:eventId/ics
+ * @route GET /api/events/:id/ics
  * @entity EVENT
  * @description Download single-event iCalendar (.ics) file for calendar integration
  * @permissions authenticated
- * @params eventId:string (path, required) - Event artifact identifier
+ * @params id:string (path, required) - Event artifact identifier
  * @relationships EVENT (EventArtifact), PLAYER (host/participant access)
  * @dimensions WHO:player access, WHAT:calendar data, WHERE:event context, ENERGY:participation
  * @example /api/events/abc123/ics
@@ -21,9 +21,9 @@ function safeFilename(title: string): string {
 }
 export async function GET(
   _req: Request,
-  ctx: { params: Promise<{ eventId: string }> }
+  ctx: { params: Promise<{ id: string }> }
 ) {
-  const { eventId } = await ctx.params
+  const { id: eventId } = await ctx.params
   const player = await getCurrentPlayer()
   if (!player) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

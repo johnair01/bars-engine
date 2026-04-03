@@ -136,6 +136,7 @@
     "seed:schools-adventure": "tsx scripts/seed-schools-adventure.ts",
     "seed:chained-initiation": "tsx scripts/seed-chained-initiation.ts",
     "seed:bruised-banana-docs": "tsx scripts/seed-bruised-banana-docs.ts",
+    "seed:bb-donation-demo-bar": "tsx scripts/seed-bb-donation-demo-bar.ts",
     "bootstrap:creation-quests": "tsx scripts/bootstrap-creation-quests.ts",
     "backlog:seed": "tsx scripts/seed-spec-kit-backlog.ts",
     "seed:alchemy-scenes": "tsx scripts/seed-alchemy-scenes.ts",

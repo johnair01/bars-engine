@@ -21,6 +21,8 @@ Turns player-reported issues from certification quests into actionable Spec Kits
 tail -n 50 .feedback/cert_feedback.jsonl
 ```
 
+Production feedback may exist only in **Vercel Blob** (private `cert-feedback/events/…`). With `BLOB_READ_WRITE_TOKEN` in env: `npm run feedback:export-blob` → `.feedback/cert_feedback.imported.jsonl`, then triage that file (or merge with local JSONL).
+
 Parse entries: `questId`, `passageName`, `feedback`, `timestamp`, `playerName`.
 
 ### 2. Filter Unresolved

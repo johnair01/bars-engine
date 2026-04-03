@@ -24,7 +24,7 @@ You can donate to the Bruised Banana Residency (or any active fundraiser) in two
 
 **Payment methods**: Venmo, Cash App, PayPal, or Stripe (card) — whichever the instance has configured.
 
-**After donating**: Self-report your donation on the donate page. You receive BARs (redemption packs) that you can redeem for vibeulons in your wallet.
+**After donating**: Self-report your donation on the donate page (signed in). Vibeulons are minted to your wallet based on the amount.
 
 **Links**: Event page → Donate → Choose payment method → Self-report.
 `,
@@ -41,7 +41,7 @@ Vibeulons are the currency/token of the game. They represent emotional energy an
 **How to earn vibeulons:**
 - Complete quests
 - Emotional First Aid (Clean Up move)
-- Donate to the fundraiser (receive packs, redeem for vibeulons)
+- Donate to the fundraiser (self-report mints vibeulons to your wallet)
 - Other contribution actions
 
 Vibeulons flow when you Show Up — complete quests, contribute resources, take direct action.

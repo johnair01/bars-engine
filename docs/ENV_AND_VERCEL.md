@@ -56,7 +56,10 @@ Before merging schema changes or deploying to production:
 | **Migrate deploy** | Test locally: `DATABASE_URL="<prod-url>" npx prisma migrate deploy` must succeed. If it fails, fix before merging. |
 | **Diagnose first** | If prod login fails, run `DATABASE_URL="<prod>" npm run diagnose:prod-db` before applying fixes. |
 
-**Build behavior**: When `DATABASE_URL` is set, the build runs `prisma migrate deploy` first. If it fails, the build fails — no silent fallback. This prevents deploying an app with schema mismatch (500 errors, login failures).
+**Build behavior**:
+
+- **Production** (`VERCEL_ENV=production`): When `DATABASE_URL` (or `POSTGRES_PRISMA_URL`) is set, the build runs `prisma migrate deploy` first, then `next build`. If migrate fails, the build fails — no silent fallback. This prevents deploying an app with schema mismatch (500 errors, login failures).
+- **Preview / PR** (`VERCEL_ENV=preview`): By default the build **skips** `prisma migrate deploy` and runs `prisma generate` then `next build`, so PR builds do not require a reachable database during the build step (avoids **P1001** when Preview cannot reach `db.prisma.io` or your DB). Migrations still apply when you merge and **Production** deploys. To run migrate on Preview (e.g. dedicated staging DB that is reachable from Vercel’s build network), set **`VERCEL_RUN_MIGRATE_ON_PREVIEW=1`** for Preview. To force-skip migrate on any environment (e.g. debugging), set **`SKIP_PRISMA_MIGRATE_DEPLOY=1`**.
 
 ---
 
@@ -71,6 +74,12 @@ If production cannot log in or sign up while local dev has data, production and 
 ---
 
 ## Troubleshooting
+
+### P1001: Can't reach database (Vercel Preview build)
+
+If the build log shows `Can't reach database server at ...` and **`prisma migrate deploy failed`** during a **Preview** deployment, the build was likely trying to connect before this repo’s default (Preview skips migrate). After pulling the latest `main`, Preview should skip migrate and compile without needing DB access at build time.
+
+If you still see migrate running on Preview, confirm **`VERCEL_ENV`** is `preview` in that deployment, or set **`SKIP_PRISMA_MIGRATE_DEPLOY=1`** for Preview. If you intentionally need migrate on Preview, fix **`DATABASE_URL`** / network (firewall, Prisma Postgres allowlist) so the build can reach the server, and set **`VERCEL_RUN_MIGRATE_ON_PREVIEW=1`**.
 
 ### DB connection diagnostic (observe before act)
 
@@ -91,6 +100,8 @@ No speculation. Facts only. Compare the output to what you expect, then decide w
 If `DATABASE_URL` errors appear in build or Prisma commands (e.g. `npm run build`), ensure you've run `npm run env:pull` (or have `.env` with `DATABASE_URL`). The app loads `.env.local` first; all scripts now do the same.
 
 **Build without DATABASE_URL**: `npm run build` works even when `DATABASE_URL` is not set. In that case, it skips `prisma migrate deploy` and runs `prisma generate && next build`, so you can verify the app compiles and type-checks without a database. For a full build (including migrations), set `DATABASE_URL` via `npm run env:pull` or add it to `.env.local`.
+
+**Vercel Preview with DATABASE_URL**: Even when Preview has `DATABASE_URL` set, the build script skips `prisma migrate deploy` by default (see **Build behavior** above). Production deploys still run migrate.
 
 ### OPENAI_API_KEY / "Incorrect API key provided"
 

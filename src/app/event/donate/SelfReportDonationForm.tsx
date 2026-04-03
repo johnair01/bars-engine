@@ -15,6 +15,11 @@ type Props = {
   dswNarrative?: string
   dswMilestoneId?: string
   dswEchoQuestId?: string
+  /**
+   * Where to return after login when pending donation cookie is set (allowlisted server-side).
+   * @default '/event/donate'
+   */
+  donateReturnPath?: string
 }
 
 export function SelfReportDonationForm({
@@ -27,6 +32,7 @@ export function SelfReportDonationForm({
   dswNarrative,
   dswMilestoneId,
   dswEchoQuestId,
+  donateReturnPath = '/event/donate',
 }: Props) {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(reportDonationWithState, null)
@@ -43,6 +49,7 @@ export function SelfReportDonationForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      <input type="hidden" name="donateReturnPath" value={donateReturnPath} />
       <input type="hidden" name="instanceId" value={instanceId} />
       {dswPath ? <input type="hidden" name="dswPath" value={dswPath} /> : null}
       {dswTier ? <input type="hidden" name="dswTier" value={dswTier} /> : null}

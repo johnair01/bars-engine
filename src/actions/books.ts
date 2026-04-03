@@ -277,3 +277,18 @@ export async function listBooks() {
     orderBy: { createdAt: 'desc' },
   })
 }
+
+/**
+ * Permanently delete a book (admin). Fails if FK constraints block delete.
+ */
+export async function deleteBook(bookId: string): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    await db.book.delete({ where: { id: bookId } })
+    revalidatePath('/admin/books')
+    return {}
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Delete failed'
+    return { error: msg }
+  }
+}

@@ -10,6 +10,7 @@ import { emitBarFromPassage } from '@/actions/emit-bar-from-passage'
 import { createBarFromMoveChoice } from '@/actions/create-bar-from-move-choice'
 import { generateQuestFromReading } from '@/actions/generate-quest'
 import { plantSeedFromSpoke } from '@/actions/plant-seed-from-spoke'
+import { completeGscpAdventureTerminal } from '@/actions/generated-spoke-cyoa'
 import { saveCyoaHexagramSnapshot } from '@/actions/cyoa-artifact-ledger'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
@@ -98,6 +99,12 @@ export function AdventurePlayer({
   const [generatingPortalQuest, setGeneratingPortalQuest] = useState(false)
   const [portalQuestGenerated, setPortalQuestGenerated] = useState<{ title: string; questId?: string } | null>(null)
   const [spokeSeedBarId, setSpokeSeedBarId] = useState<string | null>(null)
+  /** Generated spoke CYOA terminal — server records BAR + nursery kernel */
+  const [gscpTerminal, setGscpTerminal] = useState<{
+    status: 'idle' | 'running' | 'done' | 'error'
+    error: string | null
+    barId: string | null
+  }>({ status: 'idle', error: null, barId: null })
   const [ledger, setLedger] = useState<CyoaArtifactLedgerEntry[]>([])
   const [hexLine, setHexLine] = useState<string | null>(null)
   /** In-flow GM face from portal passages (overrides URL `face` after picker) */
@@ -128,6 +135,29 @@ export function AdventurePlayer({
     pickedFaceRef.current = null
     setPickedFace(null)
   }, [adventureId, startNodeId])
+
+  useEffect(() => {
+    if (!currentNode || isPreview) return
+    if (currentNode.metadata?.actionType !== 'gscp_terminal') {
+      setGscpTerminal({ status: 'idle', error: null, barId: null })
+      return
+    }
+    let cancelled = false
+    setGscpTerminal({ status: 'running', error: null, barId: null })
+    void completeGscpAdventureTerminal(adventureId).then((r) => {
+      if (cancelled) return
+      if ('error' in r) {
+        setGscpTerminal({ status: 'error', error: r.error, barId: null })
+      } else {
+        setGscpTerminal({ status: 'done', error: null, barId: r.barId })
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+    // Intentionally depend on id + actionType only (not full node) to avoid re-running on unrelated node updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- gscp_terminal completion is keyed by node id
+  }, [currentNode?.id, currentNode?.metadata?.actionType, adventureId, isPreview])
 
   const isBarEmitNode = currentNode?.metadata?.actionType === 'bar_emit'
   const isCastIChingNode =
@@ -175,8 +205,15 @@ export function AdventurePlayer({
         await saveAdventureProgress(adventureId, nodeId, {})
       }
 
-      // Auto-plant seed BAR when a spoke terminal node is reached
-      if (node.choices.length === 0 && portalSpokeIndex != null && campaignRef && !isPreview) {
+      // Auto-plant seed BAR when a spoke terminal node is reached (not GSCP — that uses completeGscpAdventureTerminal)
+      const isGscpTerminal = node.metadata?.actionType === 'gscp_terminal'
+      if (
+        node.choices.length === 0 &&
+        portalSpokeIndex != null &&
+        campaignRef &&
+        !isPreview &&
+        !isGscpTerminal
+      ) {
         void plantSeedFromSpoke({
           campaignRef,
           spokeIndex: portalSpokeIndex,
@@ -383,6 +420,14 @@ export function AdventurePlayer({
     [currentNode]
   )
 
+  /** Must run before any conditional return — same hook order on loading vs loaded (portal CYOA). */
+  const portalFaceLabel = useMemo(() => {
+    const raw = pickedFace?.trim() || portalFace?.trim()
+    if (!raw) return null
+    const key = raw as GameMasterFace
+    return FACE_META[key]?.label ?? raw
+  }, [pickedFace, portalFace])
+
   if (loading && !currentNode) {
     return (
       <div className="text-zinc-500 animate-pulse text-center p-8">
@@ -411,12 +456,6 @@ export function AdventurePlayer({
   if (!currentNode) return null
 
   const showHubContextStrip = Boolean(campaignRef?.trim())
-  const portalFaceLabel = useMemo(() => {
-    const raw = pickedFace?.trim() || portalFace?.trim()
-    if (!raw) return null
-    const key = raw as GameMasterFace
-    return FACE_META[key]?.label ?? raw
-  }, [pickedFace, portalFace])
 
   const slides = chunkIntoSlides(currentNode.text)
   const useSlideMode = slides.length > 1
@@ -596,6 +635,69 @@ export function AdventurePlayer({
                 <p className="text-green-400 font-bold">Quest completed!</p>
                 <p className="text-zinc-400 text-sm mt-1">Redirecting...</p>
               </div>
+            ) : currentNode.metadata?.actionType === 'gscp_terminal' ? (
+              gscpTerminal.status === 'running' || gscpTerminal.status === 'idle' ? (
+                <div className="p-4 bg-zinc-900/40 border border-zinc-700/50 rounded-xl text-center space-y-2">
+                  <p className="text-zinc-300 font-medium">Recording your achievement…</p>
+                  <p className="text-zinc-500 text-xs">BAR + spoke nursery</p>
+                </div>
+              ) : gscpTerminal.status === 'error' ? (
+                <div className="p-4 bg-red-900/20 border border-red-800/50 rounded-xl text-center space-y-2">
+                  <p className="text-red-300 text-sm">{gscpTerminal.error ?? 'Could not complete this step.'}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGscpTerminal({ status: 'running', error: null, barId: null })
+                      void completeGscpAdventureTerminal(adventureId).then((r) => {
+                        if ('error' in r) {
+                          setGscpTerminal({ status: 'error', error: r.error, barId: null })
+                        } else {
+                          setGscpTerminal({ status: 'done', error: null, barId: r.barId })
+                        }
+                      })
+                    }}
+                    className="text-sm text-purple-400 hover:text-purple-300"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
+                    <p className="text-green-400 font-bold">Spoke journey complete</p>
+                    <p className="text-zinc-400 text-sm mt-1">
+                      Achievement saved — your BAR appears on{' '}
+                      <Link href="/hand" className="text-purple-400 hover:text-purple-300">
+                        Hand
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                  {campaignRef ? (
+                    <>
+                      <Link
+                        href={`/campaign/landing?ref=${encodeURIComponent(campaignRef)}${portalSpokeIndex != null ? `&spoke=${portalSpokeIndex}` : ''}`}
+                        className="block w-full text-center py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
+                      >
+                        Continue to landing card →
+                      </Link>
+                      <Link
+                        href={`/campaign/hub?ref=${encodeURIComponent(campaignRef)}`}
+                        className="block w-full text-center py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+                      >
+                        Return to hub
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href="/hand"
+                      className="block w-full text-center py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
+                    >
+                      Open hand →
+                    </Link>
+                  )}
+                </div>
+              )
             ) : portalSpokeIndex != null && campaignRef ? (
               <div className="space-y-3">
                 {spokeSeedBarId && (
