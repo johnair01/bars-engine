@@ -9,7 +9,7 @@
  * @example /api/events/abc123/ics
  * @agentDiscoverable true
  */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { playerCanAccessEventCalendar } from '@/actions/campaign-invitation'
@@ -20,7 +20,7 @@ function safeFilename(title: string): string {
   return `${t}.ics`
 }
 export async function GET(
-  _req: Request,
+  _request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id: eventId } = await ctx.params
