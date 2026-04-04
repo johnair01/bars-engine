@@ -64,9 +64,18 @@ type CapturedCharge = { id: string; title: string; personalMove?: PersonalMove }
 type ChargeCaptureFormProps = {
   hasChargedToday?: boolean
   todayCharge?: { id: string; title: string; description: string; createdAt: string } | null
+  /** Primary submit button (default: Capture) */
+  submitLabel?: string
+  /** Shown while submitting (default: Capturing…) */
+  loadingLabel?: string
 }
 
-export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: ChargeCaptureFormProps = {}) {
+export function ChargeCaptureForm({
+  hasChargedToday = false,
+  todayCharge,
+  submitLabel = 'Capture',
+  loadingLabel = 'Capturing…',
+}: ChargeCaptureFormProps = {}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const textRef = useRef<HTMLInputElement>(null)
@@ -309,7 +318,7 @@ export function ChargeCaptureForm({ hasChargedToday = false, todayCharge }: Char
           disabled={isPending}
           className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded-xl transition"
         >
-          {isPending ? 'Capturing…' : 'Capture'}
+          {isPending ? loadingLabel : submitLabel}
         </button>
 
         {/* 5. More detail — collapsible */}

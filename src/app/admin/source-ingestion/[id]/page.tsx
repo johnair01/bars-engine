@@ -31,23 +31,23 @@ export default async function SourceDocumentDetailPage({ params }: { params: Pro
     )
   }
 
-  const { document, candidateCount, promptCount, seedCount } = result
+  const { document: sourceDoc, candidateCount, promptCount, seedCount } = result
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white">{document.title}</h1>
-        {document.author && <p className="text-zinc-500">{document.author}</p>}
+        <h1 className="text-2xl font-bold text-white">{sourceDoc.title}</h1>
+        {sourceDoc.author && <p className="text-zinc-500">{sourceDoc.author}</p>}
         <div className="flex gap-2 mt-2">
           <span
             className={`text-xs px-2 py-1 rounded ${
-              document.status === 'ANALYZED' ? 'bg-green-900/50 text-green-300' : document.status === 'PARSED' ? 'bg-blue-900/50 text-blue-300' : document.status === 'FAILED' ? 'bg-red-900/50 text-red-300' : 'bg-zinc-800 text-zinc-400'
+              sourceDoc.status === 'ANALYZED' ? 'bg-green-900/50 text-green-300' : sourceDoc.status === 'PARSED' ? 'bg-blue-900/50 text-blue-300' : sourceDoc.status === 'FAILED' ? 'bg-red-900/50 text-red-300' : 'bg-zinc-800 text-zinc-400'
             }`}
           >
-            {document.status}
+            {sourceDoc.status}
           </span>
           <span className="text-xs text-zinc-600">
-            {document.pageCount ? `${document.pageCount} pages` : ''} · {document.documentKind}
+            {sourceDoc.pageCount ? `${sourceDoc.pageCount} pages` : ''} · {sourceDoc.documentKind}
           </span>
         </div>
         <p className="text-sm text-zinc-600 mt-2">
@@ -55,7 +55,7 @@ export default async function SourceDocumentDetailPage({ params }: { params: Pro
         </p>
       </div>
 
-      <SourceDocumentActions documentId={id} status={document.status} hasFile={!!document.fileUrl} />
+      <SourceDocumentActions documentId={id} status={sourceDoc.status} hasFile={!!sourceDoc.fileUrl} />
 
       <section>
         <h2 className="text-lg font-semibold text-white mb-4">Candidates</h2>

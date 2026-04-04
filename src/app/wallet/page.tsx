@@ -5,7 +5,6 @@ import { getWallet, getMovementFeed } from '@/actions/economy'
 import { Avatar } from '@/components/Avatar'
 import { redirect } from 'next/navigation'
 import { VibulonTransfer } from '@/components/VibulonTransfer'
-import { RedemptionPacksSection } from '@/components/RedemptionPacksSection'
 import { MovementFeed } from '@/components/MovementFeed'
 import { AppreciationsReceived } from '@/components/AppreciationsReceived'
 import { getAppreciationFeed } from '@/actions/appreciation'
@@ -16,9 +15,9 @@ import { WidgetErrorBoundary } from '@/components/WidgetErrorBoundary'
 /**
  * @page /wallet
  * @entity PLAYER
- * @description Player wallet - vibulon balance, token inventory, P2P transfer, redemption packs, emotional alchemy state, appreciations, local liquidity
+ * @description Player wallet - vibulon balance, token inventory, P2P transfer, emotional alchemy state, appreciations, local liquidity
  * @permissions authenticated
- * @relationships displays player's vibulon tokens, instance participations, redemption packs, alchemy state, transfer history, appreciations
+ * @relationships displays player's vibulon tokens, instance participations, alchemy state, transfer history, appreciations
  * @energyCost 0 (wallet viewing)
  * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:wallet, ENERGY:vibulon+alchemy_state, PERSONAL_THROUGHPUT:reflect
  * @example /wallet
@@ -77,13 +76,6 @@ export default async function WalletPage() {
         orderBy: { updatedAt: 'desc' }
     })
 
-    // Fetch unredeemed redemption packs (BARs from donations)
-    const redemptionPacks = await db.redemptionPack.findMany({
-        where: { playerId, status: 'unredeemed' },
-        include: { instance: true },
-        orderBy: { createdAt: 'desc' }
-    })
-
     return (
         <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             {/* Header */}
@@ -109,11 +101,6 @@ export default async function WalletPage() {
                     playerId={playerId}
                 />
             </WidgetErrorBoundary>
-
-            {/* Redemption Packs (BARs from donations) */}
-            {redemptionPacks.length > 0 && (
-                <RedemptionPacksSection packs={redemptionPacks} />
-            )}
 
             {/* Appreciations received */}
             {appreciations.length > 0 && (

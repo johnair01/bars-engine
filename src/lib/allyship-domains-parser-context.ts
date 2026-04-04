@@ -61,3 +61,11 @@ Assign ONE essential domain per quest when possible. Multiple domains often appl
 export const ALLYSHIP_DOMAINS_PARSER_CONTEXT_SHORT = `
 Domains (assign one when clear): GATHERING_RESOURCES=additive, resources; DIRECT_ACTION=obstacles, steps; RAISE_AWARENESS=helping others see; SKILLFUL_ORGANIZING=coordinating, delegating. Moves: wakeUp=see, cleanUp=unblock, growUp=skill, showUp=do. Prefer domain when clear; null if purely individual.
 `
+
+/**
+ * Instructions for the domain-fit paragraph in book summary / leverage prompts.
+ */
+export const DOMAIN_FIT_ANALYSIS_CONTEXT = `
+## Domain fit analysis
+Compare the book's themes and examples to the four allyship domains (Skillful Organizing, Gathering Resources, Direct Action, Raising Awareness). State which domain(s) it fits best, whether it supports the campaign's primary domain when one is given, and which domains are a weaker fit.
+`.trim()

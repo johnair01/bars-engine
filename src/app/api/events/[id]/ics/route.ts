@@ -1,15 +1,15 @@
 /**
- * @route GET /api/events/:eventId/ics
+ * @route GET /api/events/:id/ics
  * @entity EVENT
  * @description Download single-event iCalendar (.ics) file for calendar integration
  * @permissions authenticated
- * @params eventId:string (path, required) - Event artifact identifier
+ * @params id:string (path, required) - Event artifact identifier
  * @relationships EVENT (EventArtifact), PLAYER (host/participant access)
  * @dimensions WHO:player access, WHAT:calendar data, WHERE:event context, ENERGY:participation
  * @example /api/events/abc123/ics
  * @agentDiscoverable true
  */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentPlayer } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { playerCanAccessEventCalendar } from '@/actions/campaign-invitation'
@@ -20,10 +20,10 @@ function safeFilename(title: string): string {
   return `${t}.ics`
 }
 export async function GET(
-  _req: Request,
-  ctx: { params: Promise<{ eventId: string }> }
+  _request: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
 ) {
-  const { eventId } = await ctx.params
+  const { id: eventId } = await ctx.params
   const player = await getCurrentPlayer()
   if (!player) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
