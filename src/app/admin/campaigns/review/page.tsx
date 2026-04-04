@@ -4,6 +4,7 @@ import {
   listCampaignsForReview,
   approveCampaign,
   rejectCampaign,
+  submitForReview,
   type ReviewQueueCampaign,
 } from '@/actions/campaign-approval'
 import Link from 'next/link'
@@ -123,14 +124,17 @@ function CampaignReviewCard({
   campaign,
   onApprove,
   onReject,
+  onSubmit,
   isPending,
 }: {
   campaign: ReviewQueueCampaign
   onApprove: (id: string) => void
   onReject: (campaign: ReviewQueueCampaign) => void
+  onSubmit: (id: string) => void
   isPending: boolean
 }) {
   const isPendingReview = campaign.status === 'PENDING_REVIEW'
+  const isDraft = campaign.status === 'DRAFT' || campaign.status === 'REJECTED'
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700 transition-all">
@@ -216,7 +220,7 @@ function CampaignReviewCard({
         </div>
       )}
 
-      {/* Actions */}
+      {/* Actions — Pending Review (admin can approve/reject) */}
       {isPendingReview && (
         <div className="flex gap-3 pt-3 border-t border-zinc-800">
           <button
@@ -233,6 +237,37 @@ function CampaignReviewCard({
           >
             Reject
           </button>
+          <Link
+            href={`/campaign/${campaign.slug}`}
+            className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors"
+          >
+            Preview →
+          </Link>
+        </div>
+      )}
+
+      {/* Actions — Draft (steward can submit for review) */}
+      {isDraft && (
+        <div className="flex gap-3 pt-3 border-t border-zinc-800">
+          <button
+            onClick={() => onSubmit(campaign.id)}
+            disabled={isPending}
+            className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+          >
+            Submit for Review
+          </button>
+          <Link
+            href={`/admin/campaigns/create?edit=${campaign.id}`}
+            className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors"
+          >
+            Edit
+          </Link>
+          <Link
+            href={`/campaign/${campaign.slug}`}
+            className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors"
+          >
+            Preview →
+          </Link>
         </div>
       )}
 
@@ -259,7 +294,7 @@ function CampaignReviewCard({
  */
 export default function CampaignReviewPage() {
   const [campaigns, setCampaigns] = useState<ReviewQueueCampaign[]>([])
-  const [statusFilter, setStatusFilter] = useState<string>('PENDING_REVIEW')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [isPending, startTransition] = useTransition()
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [rejectingCampaign, setRejectingCampaign] = useState<ReviewQueueCampaign | null>(null)
@@ -298,6 +333,16 @@ export default function CampaignReviewPage() {
     if ('success' in result) {
       setFeedback({ type: 'success', message: result.message })
       setRejectingCampaign(null)
+      loadCampaigns()
+    } else {
+      setFeedback({ type: 'error', message: result.error })
+    }
+  }
+
+  const handleSubmit = async (campaignId: string) => {
+    const result = await submitForReview(campaignId)
+    if ('success' in result) {
+      setFeedback({ type: 'success', message: result.message ?? 'Submitted for review' })
       loadCampaigns()
     } else {
       setFeedback({ type: 'error', message: result.error })
@@ -379,6 +424,7 @@ export default function CampaignReviewPage() {
             campaign={campaign}
             onApprove={handleApprove}
             onReject={setRejectingCampaign}
+            onSubmit={handleSubmit}
             isPending={isPending}
           />
         ))}
