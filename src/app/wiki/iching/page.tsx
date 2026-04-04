@@ -126,8 +126,9 @@ export default async function IChingWikiPage() {
 
                 <div className="text-xs text-zinc-500">
                     <Link href="/story-clock" className="hover:text-zinc-300 transition">Story Clock</Link>
-                    {' '}•{' '}
+                    {' '}&bull;{' '}
                     <Link href="/" className="hover:text-zinc-300 transition">Dashboard</Link>
+                    {' '}<span className="text-zinc-900/30 hover:text-zinc-500 transition-colors duration-1000"><Link href="/wiki/hidden" title="Hexagram 0 - The Undrawn">&#x2637;</Link></span>
                 </div>
             </div>
         </div>

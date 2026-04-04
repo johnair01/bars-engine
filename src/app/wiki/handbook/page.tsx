@@ -87,6 +87,14 @@ export default function HandbookPage() {
           stands for Brave Act of Resistance — the unit of creative and developmental energy in the game.
           Every charge you capture is a BAR. Every quest you complete is a BAR metabolized.
         </p>
+        <div className="pt-2">
+          <Link
+            href="/wiki/handbook/play"
+            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+          >
+            Want to learn by doing? Play the orientation &rarr;
+          </Link>
+        </div>
       </header>
 
       {/* What success looks like — brief inline version */}
@@ -188,6 +196,10 @@ export default function HandbookPage() {
           <Link href="/wiki/player-guides" className="text-zinc-400 hover:text-white transition">All guides</Link>
         </div>
       </section>
+
+      <div className="pt-12 text-center">
+        <Link href="/wiki/hidden" className="text-zinc-900/30 hover:text-zinc-600 transition-colors duration-1000 text-xs tracking-[0.5em]">...</Link>
+      </div>
     </div>
   )
 }

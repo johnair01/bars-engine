@@ -154,6 +154,7 @@ export default function EmotionalAlchemyPage() {
                 <span className="capitalize text-red-300/70">{to}</span>
               </div>
             ))}
+            <Link href="/wiki/hidden/signal" className="text-zinc-900/60 hover:text-emerald-800 transition-colors duration-1000 text-[10px] font-mono tracking-widest">&#x2237; signal &#x2237;</Link>
           </div>
         </div>
       </section>

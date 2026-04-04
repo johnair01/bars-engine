@@ -96,7 +96,8 @@ export default function GlossaryPage() {
       <section id="compost" className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-2">
         <h2 className="text-lg font-bold text-white">Compost</h2>
         <p className="text-zinc-300 text-sm">
-          A zone for BARs removed from active play. Temporary; untransformed composted BARs are destroyed after a time window (with any attached vibeulons). Ecological tone—&quot;returned to the fire.&quot;
+          A zone for BARs removed from active play. Temporary; untransformed composted BARs are destroyed after a time window (with any attached vibeulons). Ecological tone—&quot;returned to the fire.&quot;{' '}
+          <Link href="/wiki/hidden" className="text-zinc-900 hover:text-zinc-500 transition-colors duration-700">Some say there is a deeper heap.</Link>
         </p>
         <Link href="/wiki/rules/compost" className="text-xs text-amber-400 hover:text-amber-300">→ Compost Heap</Link>
       </section>
