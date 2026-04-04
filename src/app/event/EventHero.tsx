@@ -8,7 +8,7 @@ interface EventHeroProps {
 
 export function EventHero({ title, isLoggedIn, campaignRef }: EventHeroProps) {
   return (
-    <section className="event-hero">
+    <section id="hero" className="event-hero">
       {/* Tactile texture layers */}
       <div className="event-hero-grain" aria-hidden="true" />
       <div className="event-hero-grid" aria-hidden="true" />

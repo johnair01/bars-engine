@@ -23,7 +23,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="event-section" style={{ background: 'var(--ep-surface)' }}>
+    <section id="how" className="event-section" style={{ background: 'var(--ep-surface)' }}>
       <div className="event-section-inner">
         <h2 className="event-section-title">How It Works</h2>
         <div className="steps-list">
