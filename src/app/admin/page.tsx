@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getGlobalState } from '@/actions/world'
 import { AdminTiltControl } from '@/components/admin/AdminTiltControl'
 import { AdminResetZone } from '@/components/admin/AdminResetZone'
@@ -6,7 +7,7 @@ import { AdminPlayerSpawner } from '@/components/admin/AdminPlayerSpawner'
 /**
  * @page /admin
  * @entity SYSTEM
- * @description Game Master control center with stewardship moves (Wake Up/Clean Up/Grow Up/Show Up) and quick access dashboard
+ * @description Game Master control center — campaigns, content, players, system
  * @permissions admin
  * @dimensions WHO:admin, WHAT:SYSTEM, PERSONAL_THROUGHPUT:all-stages
  * @example /admin
@@ -16,185 +17,139 @@ export default async function AdminDashboard() {
     const globalState = await getGlobalState()
 
     return (
-        <div className="space-y-8 sm:space-y-12 ml-0 sm:ml-64 transition-all duration-300">
-            <header className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Control Center</h1>
-                        <p className="text-zinc-400 text-sm sm:text-base">Game Master suite for the Conclave.</p>
-                    </div>
-                    {/* TILT CONTROL */}
-                    <div className="w-full sm:max-w-sm">
-                        <AdminTiltControl
-                            currentAct={globalState.currentAct}
-                            currentPeriod={globalState.currentPeriod}
-                            hexagramSequence={globalState.hexagramSequence}
-                        />
-                    </div>
+        <div className="space-y-8 ml-0 sm:ml-64 transition-all duration-300">
+
+            {/* ── HEADER ──────────────────────────────────── */}
+            <header className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">Control Center</h1>
+                    <p className="text-zinc-500 text-sm mt-1">Game Master suite</p>
+                </div>
+                <div className="w-full sm:max-w-xs">
+                    <AdminTiltControl
+                        currentAct={globalState.currentAct}
+                        currentPeriod={globalState.currentPeriod}
+                        hexagramSequence={globalState.hexagramSequence}
+                    />
                 </div>
             </header>
 
-            <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 space-y-4">
-                <h2 className="text-lg font-bold text-white">Stewardship (four moves)</h2>
-                <p className="text-sm text-zinc-500 max-w-3xl">
-                    Wayfinding aligned with player moves — see{' '}
-                    <code className="text-zinc-400 text-xs">docs/runbooks/ADMIN_STEWARDSHIP.md</code>.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <MoveBlock
-                        title="Wake up — orient"
-                        links={[
-                            { label: 'Instances', href: '/admin/instances' },
-                            { label: 'Docs', href: '/admin/docs' },
-                        ]}
-                    />
-                    <MoveBlock
-                        title="Clean up — repair"
-                        links={[
-                            { label: 'Campaign events', href: '/admin/campaign-events' },
-                            { label: 'Config', href: '/admin/config' },
-                        ]}
-                    />
-                    <MoveBlock
-                        title="Grow up — author"
-                        links={[
-                            { label: 'Adventures', href: '/admin/adventures' },
-                            { label: 'Twine', href: '/admin/twine' },
-                            { label: 'Quest proposals', href: '/admin/quest-proposals' },
-                            { label: 'CYOA proposals', href: '/admin/cyoa-proposals' },
-                        ]}
-                    />
-                    <MoveBlock
-                        title="Show up — ship"
-                        links={[
-                            { label: 'Campaigns', href: '/admin/campaigns/review' },
-                            { label: 'Create campaign', href: '/admin/campaigns/create' },
-                            { label: 'Campaign page (/event)', href: '/event' },
-                            { label: 'Lobby', href: '/lobby' },
-                        ]}
-                    />
+            {/* ── PRIMARY ACTIONS (what you do most) ──────── */}
+            <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <ActionCard
+                    href="/admin/campaigns/create"
+                    title="Create Campaign"
+                    description="Launch a new campaign with wizard"
+                    accent="amber"
+                />
+                <ActionCard
+                    href="/admin/campaigns/review"
+                    title="Review Campaigns"
+                    description="Approve or reject draft campaigns"
+                    accent="emerald"
+                />
+                <ActionCard
+                    href="/event"
+                    title="Live Event Page"
+                    description="View the public campaign page"
+                    accent="sky"
+                />
+            </section>
+
+            {/* ── MANAGE (organized by what you're managing) ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {/* Campaigns & Events */}
+                <Section title="Campaigns & Events">
+                    <NavLink href="/admin/campaigns/create" label="Create campaign" />
+                    <NavLink href="/admin/campaigns/review" label="Campaign queue" />
+                    <NavLink href="/admin/campaign-events" label="Event management" />
+                    <NavLink href="/admin/instances" label="Instances" />
+                    <NavLink href="/event" label="Public event page" external />
+                </Section>
+
+                {/* Content & Stories */}
+                <Section title="Content & Stories">
+                    <NavLink href="/admin/adventures" label="Adventures (CYOA)" />
+                    <NavLink href="/admin/twine" label="Twine stories" />
+                    <NavLink href="/admin/quest-proposals" label="Quest proposals" />
+                    <NavLink href="/admin/cyoa-proposals" label="CYOA proposals" />
+                    <NavLink href="/admin/agent-proposals" label="Agent / NPC proposals" />
+                </Section>
+
+                {/* Players & Economy */}
+                <Section title="Players & Economy">
+                    <NavLink href="/admin/players" label="Players" />
+                    <NavLink href="/admin/journeys" label="Quest threads" />
+                    <NavLink href="/admin/quests" label="Available quests" />
+                    <NavLink href="/admin/first-aid" label="First aid tools" />
+                </Section>
+
+                {/* System */}
+                <Section title="System & Config">
+                    <NavLink href="/admin/config" label="App config" />
+                    <NavLink href="/admin/docs" label="Documentation" />
+                    <NavLink href="/admin/backlog" label="Spec backlog" />
+                    <NavLink href="/lobby" label="Lobby" external />
+                </Section>
+            </div>
+
+            {/* ── QUICK ACTIONS ───────────────────────────── */}
+            <section className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 p-4">
+                <div className="flex flex-wrap items-center gap-4">
+                    <span className="text-xs uppercase tracking-widest text-zinc-600 font-bold">Quick</span>
+                    <AdminPlayerSpawner />
                 </div>
             </section>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <DashboardCard
-                    title="Active Players"
-                    value="--"
-                    href="/admin/players"
-                    icon="👥"
-                />
-                <DashboardCard
-                    title="Quest Threads"
-                    value="--"
-                    href="/admin/journeys"
-                    icon="📜"
-                />
-                <DashboardCard
-                    title="Available Quests"
-                    value="--"
-                    href="/admin/quests"
-                    icon="⚔️"
-                />
-                <DashboardCard
-                    title="Adventures"
-                    value="CYOA"
-                    href="/admin/adventures"
-                    icon="🗺️"
-                />
-                <DashboardCard
-                    title="Campaigns"
-                    value="New"
-                    href="/admin/campaigns/review"
-                    icon="🏕️"
-                />
-                <DashboardCard
-                    title="System Status"
-                    value="Online"
-                    color="text-green-400"
-                    icon="🟢"
-                />
-                <DashboardCard
-                    title="First Aid Tools"
-                    value="Edit"
-                    href="/admin/first-aid"
-                    color="text-cyan-400"
-                    icon="🩺"
-                />
-                <DashboardCard
-                    title="Quest Proposals"
-                    value="BAR→Quest"
-                    href="/admin/quest-proposals"
-                    icon="📋"
-                />
-                <DashboardCard
-                    title="CYOA Proposals"
-                    value="Story"
-                    href="/admin/cyoa-proposals"
-                    icon="✨"
-                    color="text-purple-400"
-                />
-                <DashboardCard
-                    title="Agent Proposals"
-                    value="NPC"
-                    href="/admin/agent-proposals"
-                    icon="🤖"
-                />
-                <DashboardCard
-                    title="Backlog"
-                    value="Spec Kit"
-                    href="/admin/backlog"
-                    icon="📌"
-                />
-            </div>
-
-            <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Quick Actions</h2>
-                <div className="flex flex-wrap gap-4">
-                    <AdminPlayerSpawner />
-                    {/* Placeholder for quick actions like "Create Announcement" or "Mint Vibeulons" */}
-                </div>
-            </div>
-
-            {/* DANGER ZONE */}
+            {/* ── DANGER ZONE ─────────────────────────────── */}
             <AdminResetZone />
         </div>
     )
 }
 
-function MoveBlock({
-    title,
-    links,
-}: {
+function ActionCard({ href, title, description, accent }: {
+    href: string
     title: string
-    links: { label: string; href: string }[]
+    description: string
+    accent: 'amber' | 'emerald' | 'sky' | 'violet'
 }) {
+    const colors = {
+        amber: 'border-amber-800/40 hover:border-amber-600/60 text-amber-400',
+        emerald: 'border-emerald-800/40 hover:border-emerald-600/60 text-emerald-400',
+        sky: 'border-sky-800/40 hover:border-sky-600/60 text-sky-400',
+        violet: 'border-violet-800/40 hover:border-violet-600/60 text-violet-400',
+    }
     return (
-        <div className="rounded-lg border border-zinc-800/80 bg-black/20 p-4 space-y-2">
-            <div className="text-xs font-bold text-purple-300 uppercase tracking-wide">{title}</div>
-            <ul className="space-y-1">
-                {links.map((l) => (
-                    <li key={l.href}>
-                        <a href={l.href} className="text-zinc-300 hover:text-white underline-offset-2 hover:underline">
-                            {l.label}
-                        </a>
-                    </li>
-                ))}
-            </ul>
+        <Link
+            href={href}
+            className={`block rounded-xl border bg-zinc-900/40 p-5 transition-all hover:-translate-y-0.5 ${colors[accent]}`}
+        >
+            <div className="text-sm font-bold text-white">{title}</div>
+            <div className="text-xs text-zinc-500 mt-1">{description}</div>
+        </Link>
+    )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 p-4 space-y-1">
+            <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold mb-2">{title}</div>
+            {children}
         </div>
     )
 }
 
-function DashboardCard({ title, value, href, icon, color = 'text-white' }: any) {
+function NavLink({ href, label, external }: { href: string; label: string; external?: boolean }) {
     return (
-        <a href={href} className="block group">
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-all group-hover:-translate-y-1">
-                <div className="flex justify-between items-start mb-4">
-                    <span className="text-2xl">{icon}</span>
-                    <span className="text-zinc-600 group-hover:text-purple-400 transition-colors">→</span>
-                </div>
-                <div className="text-xs sm:text-sm text-zinc-500 uppercase tracking-wider font-medium mb-1">{title}</div>
-                <div className={`text-2xl sm:text-3xl font-mono font-bold ${color}`}>{value}</div>
-            </div>
-        </a>
+        <Link
+            href={href}
+            className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/40 transition-colors group"
+        >
+            <span>{label}</span>
+            <span className="text-zinc-700 group-hover:text-zinc-400 text-xs">
+                {external ? '↗' : '→'}
+            </span>
+        </Link>
     )
 }
