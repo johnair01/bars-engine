@@ -125,7 +125,7 @@ export default function EmotionalAlchemyPage() {
           <div className="border border-yellow-800/40 bg-yellow-900/10 rounded-lg p-3 space-y-1">
             <div className="font-semibold text-yellow-300">Generate →↑ <span className="text-xs font-normal text-zinc-500">生 shēng</span></div>
             <div className="text-zinc-400 text-xs leading-relaxed">Flow to nourished channel · altitude rises · energy +1</div>
-            <div className="font-mono text-[10px] text-zinc-500">fear:dissatisfied → anger:neutral</div>
+            <div className="font-mono text-[10px] text-zinc-500">fear:dissatisfied → sadness:neutral</div>
           </div>
           <div className="border border-red-800/40 bg-red-900/10 rounded-lg p-3 space-y-1">
             <div className="font-semibold text-red-300">Control →↓ <span className="text-xs font-normal text-zinc-500">克 kè</span></div>
