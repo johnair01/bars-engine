@@ -13,14 +13,14 @@ import Link from 'next/link'
  */
 
 const KOTTER_PROGRESSION = [
-  { stage: 1, name: 'Create Urgency', move: 'Wake Up', description: 'See the need. Name it. Make it real for yourself and others.' },
-  { stage: 2, name: 'Form Coalition', move: 'Wake Up', description: 'Find allies. Who else feels this? Build the guiding team.' },
-  { stage: 3, name: 'Create Vision', move: 'Grow Up', description: 'Articulate the destination. What does the changed world look like?' },
-  { stage: 4, name: 'Communicate Vision', move: 'Show Up', description: 'Spread the word. Make the vision legible to those who need it.' },
-  { stage: 5, name: 'Remove Obstacles', move: 'Clean Up', description: 'Clear the path. Metabolize blockers — internal and external.' },
-  { stage: 6, name: 'Create Short-Term Wins', move: 'Show Up', description: 'Build momentum. Small completions that prove the vision is real.' },
-  { stage: 7, name: 'Build on Change', move: 'Grow Up', description: 'Consolidate gains. Use wins to fuel the next wave.' },
-  { stage: 8, name: 'Anchor in Culture', move: 'Show Up', description: 'Make it permanent. The new way becomes the way.' },
+  { stage: 1, name: 'Urgency — THUNDERCLAP', move: 'Wake Up', description: 'See the need. Name it. Make it real for yourself and others.' },
+  { stage: 2, name: 'Coalition — NURTURE', move: 'Wake Up', description: 'Find allies. Who else feels this? Build the guiding team.' },
+  { stage: 3, name: 'Vision — COMMAND', move: 'Grow Up', description: 'Articulate the destination. What does the changed world look like?' },
+  { stage: 4, name: 'Communicate — EXPRESS', move: 'Show Up', description: 'Spread the word. Make the vision legible to those who need it.' },
+  { stage: 5, name: 'Obstacles — INFILTRATE', move: 'Clean Up', description: 'Clear the path. Metabolize blockers — internal and external.' },
+  { stage: 6, name: 'Wins — IGNITE', move: 'Show Up', description: 'Build momentum. Small completions that prove the vision is real.' },
+  { stage: 7, name: 'Build On — PERMEATE', move: 'Grow Up', description: 'Consolidate gains. Use wins to fuel the next wave.' },
+  { stage: 8, name: 'Anchor — IMMOVABLE', move: 'Show Up', description: 'Make it permanent. The new way becomes the way.' },
 ] as const
 
 export default function RulesPage() {

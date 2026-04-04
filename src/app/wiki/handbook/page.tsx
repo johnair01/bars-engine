@@ -84,7 +84,7 @@ export default function HandbookPage() {
           <Link href="/wiki/glossary#bar" className="text-zinc-400 hover:text-white underline underline-offset-2">
             BAR
           </Link>{' '}
-          stands for Brave Act of Resistance — the unit of creative and developmental energy in the game.
+          stands for Basic Artifact Resource — the unit of creative and developmental energy in the game.
           Every charge you capture is a BAR. Every quest you complete is a BAR metabolized.
         </p>
       </header>

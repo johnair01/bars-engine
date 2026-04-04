@@ -87,7 +87,7 @@ export default function BarsGuidePage() {
         <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono">Getting Started</p>
         <h1 className="text-3xl font-bold text-white">What Are BARs</h1>
         <p className="text-zinc-400 text-sm leading-relaxed">
-          BAR stands for <strong className="text-zinc-200">Biographic Artifact Record</strong> — the basic unit of signal in the game.
+          BAR stands for <strong className="text-zinc-200">Basic Artifact Resource</strong> — the basic unit of signal in the game.
           A BAR is a seed packet: compact, portable, and carrying the potential for action. Every charge you capture,
           every story you record, every invitation you extend — these are BARs.
         </p>
@@ -108,7 +108,11 @@ export default function BarsGuidePage() {
         {LIFECYCLE.map((l) => (
           <div key={l.stage} className={`rounded-xl border ${l.borderClass} ${l.bgClass} p-5 space-y-2`}>
             <h3 className={`text-lg font-bold ${l.accentClass}`}>{l.stage}</h3>
-            <p className="text-sm text-zinc-300 leading-relaxed">{l.description}</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              {l.stage === 'Compost'
+                ? <>When a BAR has given what it has to give, you return it to the fire. Composting is not deletion — it is completion. Untransformed composted BARs expire after a grace window, releasing any attached <Link href="/wiki/glossary#vibeulon" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">vibeulons</Link>.</>
+                : l.description}
+            </p>
           </div>
         ))}
       </section>
