@@ -67,6 +67,8 @@ export default async function AdminDashboard() {
                     <MoveBlock
                         title="Show up — ship"
                         links={[
+                            { label: 'Campaigns', href: '/admin/campaigns/review' },
+                            { label: 'Create campaign', href: '/admin/campaigns/create' },
                             { label: 'Campaign page (/event)', href: '/event' },
                             { label: 'Lobby', href: '/lobby' },
                         ]}
@@ -98,6 +100,12 @@ export default async function AdminDashboard() {
                     value="CYOA"
                     href="/admin/adventures"
                     icon="🗺️"
+                />
+                <DashboardCard
+                    title="Campaigns"
+                    value="New"
+                    href="/admin/campaigns/review"
+                    icon="🏕️"
                 />
                 <DashboardCard
                     title="System Status"
