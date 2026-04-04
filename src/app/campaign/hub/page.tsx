@@ -31,10 +31,11 @@ export const metadata: Metadata = {
 }
 
 export default async function CampaignHubPage(props: {
-  searchParams: Promise<{ ref?: string }>
+  searchParams: Promise<{ ref?: string; joined?: string }>
 }) {
-  const { ref: urlRef } = await props.searchParams
+  const { ref: urlRef, joined } = await props.searchParams
   const campaignRef = urlRef ?? DEFAULT_CAMPAIGN_REF
+  const isNewlyJoined = joined === 'true'
 
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
@@ -124,6 +125,7 @@ export default async function CampaignHubPage(props: {
       recentCapture={recentCapture ?? undefined}
       intakeAdventureId={intakeAdventure?.id ?? null}
       showFundraisingSettings={showFundraisingSettings}
+      isNewlyJoined={isNewlyJoined}
     />
   )
 }

@@ -20,6 +20,10 @@ export function isPublicCampaignEntryReturnTo(returnTo: string | undefined): boo
   if (returnTo === '/campaign/initiation' || returnTo.startsWith('/campaign/initiation?')) {
     return true
   }
+  // Campaign join pages — allow redirect back after login to complete membership
+  if (/^\/campaign\/[^/]+\/join(\?.*)?$/.test(returnTo)) {
+    return true
+  }
   return false
 }
 

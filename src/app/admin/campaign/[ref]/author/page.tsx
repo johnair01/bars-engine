@@ -59,6 +59,12 @@ export default async function CampaignAuthorPage({
         action={
           <div className="flex flex-wrap items-center gap-4">
             <Link
+              href={`/admin/campaign/${encodeURIComponent(campaignRef)}/theme`}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+            >
+              Theme editor →
+            </Link>
+            <Link
               href={`/admin/campaign/${encodeURIComponent(campaignRef)}/deck`}
               className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
             >

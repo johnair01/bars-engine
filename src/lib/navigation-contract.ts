@@ -17,6 +17,7 @@ export type ActionResult = {
   barId?: string
   daemonId?: string
   sceneId?: string
+  campaignSlug?: string
 }
 
 export type NavigationContract = {
@@ -102,5 +103,33 @@ export const NAV: Record<string, NavigationContract> = {
     onSuccess: (r) => `/hand?quest=${r.questId}`,
     onCancel: null,
     onError: 'stay',
+  },
+
+  // ── Campaign join (visitor → member) ──────────────────────────────────────
+  'campaign_join': {
+    onSuccess: (r) => {
+      const slug = r.campaignSlug ? encodeURIComponent(r.campaignSlug) : ''
+      return slug ? `/campaign/${slug}/home?joined=true` : '/campaign/hub?joined=true'
+    },
+    onCancel: null,             // return to campaign landing (contextual)
+    onError: 'stay',
+  },
+  'campaign_visit': {
+    onSuccess: (r) => {
+      const slug = r.campaignSlug ? `?ref=${encodeURIComponent(r.campaignSlug)}` : ''
+      return `/campaign/hub${slug}`
+    },
+    onCancel: '/',
+    onError: 'cancel',
+  },
+
+  // ── Campaign home (member → activity hub) ─────────────────────────────────
+  'campaign_home': {
+    onSuccess: (r) => {
+      const slug = r.campaignSlug ? encodeURIComponent(r.campaignSlug) : ''
+      return slug ? `/campaign/${slug}/home` : '/'
+    },
+    onCancel: null,             // contextual return to campaign landing
+    onError: 'cancel',
   },
 }

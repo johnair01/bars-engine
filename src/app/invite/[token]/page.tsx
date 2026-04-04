@@ -1,12 +1,17 @@
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 import Link from 'next/link'
 import { InviteSignupForm } from './InviteSignupForm'
+import { CampaignInviteLanding } from './CampaignInviteLanding'
+import { getCampaignInviteData } from '@/actions/campaign-invite'
+import { getCampaignSkin } from '@/lib/ui/campaign-skin'
 
 /**
  * @page /invite/:token
  * @entity PLAYER
- * @description Invitation signup page - accepts invite token, creates player account with prefilled profile
+ * @description Invitation signup page - accepts invite token, creates player account with prefilled profile.
+ *   When invite is linked to a campaign, displays campaign branding, info, and themed join CTA.
  * @permissions public (invite token required)
  * @params token:string (path, required) - Invite token
  * @relationships validates Invite (status=active), creates PLAYER account, optionally prefills nation/archetype from forger or invitation target
@@ -15,6 +20,24 @@ import { InviteSignupForm } from './InviteSignupForm'
  * @example /invite/abc123xyz
  * @agentDiscoverable false
  */
+
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+    const { token } = await params
+
+    const campaignData = await getCampaignInviteData(token)
+    if (campaignData) {
+        return {
+            title: `Join ${campaignData.campaign.name} | BARs`,
+            description: campaignData.campaign.description ?? `You're invited to join the ${campaignData.campaign.name} campaign`,
+        }
+    }
+
+    return {
+        title: 'Accept Your Invitation | BARs',
+        description: 'Create your character and join the game.',
+    }
+}
+
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = await params
 
@@ -74,6 +97,26 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         prefillArchetypeId = invite.forger.archetypeId || ''
     }
 
+    // Campaign-branded landing: when invite is linked to an approved/live campaign
+    if (invite.campaignId) {
+        const campaignData = await getCampaignInviteData(token)
+        if (campaignData) {
+            const staticSkin = getCampaignSkin(campaignData.campaign.slug)
+            return (
+                <CampaignInviteLanding
+                    data={campaignData}
+                    staticSkin={staticSkin}
+                    token={token}
+                    nations={nations}
+                    archetypes={archetypes}
+                    prefillNationId={prefillNationId}
+                    prefillArchetypeId={prefillArchetypeId}
+                />
+            )
+        }
+    }
+
+    // Default: non-campaign invite signup form
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 sm:p-8">
             <InviteSignupForm
