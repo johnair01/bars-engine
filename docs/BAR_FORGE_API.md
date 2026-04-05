@@ -92,6 +92,21 @@ Query:
 Response: `{ "records": [...], "count": number, "totalCount"?: number }`  
 `count` is always the length of `records` in this response; `totalCount` is the full table size when requested.
 
+### GET `/api/quests`
+
+Lists **matchable** `CustomBar` quests (`active` | `draft`). Query: `limit`, `campaignRef`, `questSource`. Same Bearer/session auth as other BAR Forge routes.
+
+### POST `/api/quests`
+
+Creates a **generated quest registry** row (BAR Forge / GPT pipeline): validated JSON persisted in `generated_quest_registry` with a stable id. **Book linkage is optional** (`bookId` nullable or omitted; when set, must reference an existing `books.id`).
+
+- **Validation:** Zod `CreateQuestSchema` in [`src/lib/generated-quest-registry/schema.ts`](../src/lib/generated-quest-registry/schema.ts) — required fields include `title`, `status`, `chapter`, `moveType`, `source.kind`, `bar.*`, `transformation`, `steps`.
+- **Success:** **201** with the full quest object plus `id`, `createdAt`, `updatedAt`.
+
+### GET `/api/quests/registry/[id]`
+
+Returns one persisted generated quest by **registry** id (from POST), or **404**.
+
 ### Custom GPT: registry + books + quests
 
 Use **two** Action schemas (or one merged OpenAPI): **`BARS_API_KEY`** (BAR Forge) and **`BOOKS_CONTEXT_API_KEY`** (books).

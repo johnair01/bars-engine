@@ -1045,9 +1045,28 @@ model Book {
   updatedAt              DateTime                @updatedAt
   thread                 QuestThread?
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
-  bookChunkTags        BookChunkTag[]
+  bookChunkTags            BookChunkTag[]
+  generatedQuestRegistries GeneratedQuestRegistry[]
 
   @@map("books")
+}
+
+/// BAR Forge / GPT: persisted generated quest payloads (global registry; optional book link).
+model GeneratedQuestRegistry {
+  id        String   @id @default(cuid())
+  title     String
+  status    String
+  chapter   Int
+  moveType  String
+  bookId    String?
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  book      Book?    @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  @@index([bookId])
+  @@index([status])
+  @@map("generated_quest_registry")
 }
 
 /// Sage-slice: deterministic text ranges tagged with Game Master face (+ optional I Ching hexagram) for GPT/admin pipelines.

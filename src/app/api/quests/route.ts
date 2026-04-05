@@ -3,9 +3,16 @@ import type { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { toQuestDto } from '@/lib/bar-forge/match-bar-to-quests'
 import { requireForgeBearerOrSession } from '@/lib/bar-forge/forge-or-session'
+import { CreateQuestSchema } from '@/lib/generated-quest-registry/schema'
+import {
+  createGeneratedQuestRecord,
+  UnknownBookError,
+} from '@/lib/generated-quest-registry/create-generated-quest'
+import { registryRowToResponse } from '@/lib/generated-quest-registry/to-response'
 
 /**
  * GET /api/quests — canonical quest catalog slice (matchable CustomBar rows).
+ * POST /api/quests — persist a BAR-forge / GPT generated quest registry entry (global; optional bookId).
  * Auth: Bearer (BARS_API_KEY) or logged-in session.
  */
 export async function GET(request: NextRequest) {
@@ -52,4 +59,38 @@ export async function GET(request: NextRequest) {
     quests: rows.map(toQuestDto),
     count: rows.length,
   })
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await requireForgeBearerOrSession(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
+  let json: unknown
+  try {
+    json = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const parsed = CreateQuestSchema.safeParse(json)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const row = await createGeneratedQuestRecord(parsed.data)
+    return NextResponse.json(registryRowToResponse(row), { status: 201 })
+  } catch (e) {
+    if (e instanceof UnknownBookError) {
+      return NextResponse.json({ error: e.message }, { status: 400 })
+    }
+    const message = e instanceof Error ? e.message : 'Failed to create quest'
+    console.error('[POST /api/quests]', message)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
