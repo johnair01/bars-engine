@@ -57,6 +57,44 @@ Duplicate the GPT or duplicate the Action, set **`servers[0].url`** to **product
 
 ---
 
+## Parallel: verify the API without ChatGPT
+
+Use this while you fix Actions URL or auth—you isolate **server + key** from **GPT quirks**.
+
+1. Set **`BOOKS_CONTEXT_API_KEY`** in `.env.local` (same idea as Vercel: long random secret).
+2. Terminal A: `npm run dev`
+3. Terminal B: `npm run smoke:books-api:local` — hits `listBooks`, optional `getBook` / quests / chunk-tags (same Bearer auth as the GPT).
+
+Against a **preview** host instead of localhost:
+
+```bash
+BASE=https://your-preview.vercel.app npm run smoke:books-api:local
+```
+
+Put the **preview** key in `.env.local` for that run, or export `BOOKS_CONTEXT_API_KEY` in the shell so it matches **Preview** in Vercel for that URL.
+
+Remote smoke (bash, explicit `BASE` + key): see `npm run smoke:books-api` and [BOOKS_CONTEXT_API.md](./BOOKS_CONTEXT_API.md).
+
+---
+
+## Troubleshooting (HTTP codes)
+
+| Code | Typical cause | What to do |
+|------|----------------|------------|
+| **401** `Unauthorized` | Bearer token wrong or ChatGPT not sending it | Match **Actions** token to **`BOOKS_CONTEXT_API_KEY`** on the **same** deployment as `servers[0].url`. |
+| **503** + message about key not set | Env missing on that deployment | Vercel → **Preview** (or relevant env) → add **`BOOKS_CONTEXT_API_KEY`** → **redeploy**. |
+| **404** / HTML | Wrong base URL | No trailing slash; must be the deployment root (`https://….vercel.app`), not a path. |
+| Request fails / connection | Dev server down or bad `BASE` | For local: `npm run dev`. For preview: confirm URL from Vercel **Deployments**. |
+
+Quick manual check:
+
+```bash
+curl -sS -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $BOOKS_CONTEXT_API_KEY" \
+  "$BASE/api/admin/books?compact=1"
+```
+
+---
+
 ## Related docs
 
 - [BOOKS_CONTEXT_API.md](./BOOKS_CONTEXT_API.md)

@@ -96,7 +96,7 @@ What you need on your side:
 | Step | Done when |
 |------|-----------|
 | 1. Env on server | `BOOKS_CONTEXT_API_KEY` is set in Vercel for the environment that serves your public URL. |
-| 2. Deploy | Latest code with these routes is deployed; smoke-test with `curl` + Bearer key. |
+| 2. Deploy | Latest code with these routes is deployed; smoke-test with `curl` + Bearer key, or `npm run smoke:books-api:local` (against `npm run dev`) / `npm run smoke:books-api` (set `BASE` + key). See [CUSTOM_GPT_STAGING_ACTIONS.md](./CUSTOM_GPT_STAGING_ACTIONS.md). |
 | 3. OpenAPI file | Copy [openapi/books-context-api.yaml](../openapi/books-context-api.yaml), set `servers[0].url` to your real `https://….vercel.app`. |
 | 4. Create / edit Custom GPT | Configure **Actions** → **Import from URL** or paste schema; or upload the YAML. |
 | 5. Authentication | In Actions, set **Authentication** to **API Key** or **Bearer** and map it to the same value as `BOOKS_CONTEXT_API_KEY` (ChatGPT stores it as a secret—do not put the key in Instructions). |
