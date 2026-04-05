@@ -192,6 +192,36 @@ export function PartyMiniGameGridInteractive({ game, eventKey, sectionId, player
             ) : null}
           </div>
 
+          {/* Completion celebration */}
+          {hydrated && count === total && (
+            <div className="rounded-xl border-2 p-4 text-center space-y-2 animate-in zoom-in-95 duration-500 mb-3"
+              style={{
+                borderColor: 'var(--element-glow)',
+                background: 'color-mix(in srgb, var(--element-frame) 15%, transparent)',
+              }}
+            >
+              <div className="text-2xl">✦</div>
+              <p className="text-sm font-bold text-white">Bingo complete!</p>
+              <p className="text-xs text-zinc-400">
+                {loggedIn
+                  ? 'Every square captured. Check your vault for the moments you saved.'
+                  : 'Every square marked. Log in to save these as BARs in your vault.'}
+              </p>
+              {loggedIn && (
+                <Link
+                  href="/hand"
+                  className="inline-block mt-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors"
+                  style={{
+                    borderColor: 'var(--element-frame)',
+                    color: 'var(--element-glow)',
+                  }}
+                >
+                  View vault →
+                </Link>
+              )}
+            </div>
+          )}
+
           <ul
             className="grid grid-cols-3 gap-2 list-none m-0 p-0"
             role="list"

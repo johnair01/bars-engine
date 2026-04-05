@@ -40,6 +40,7 @@ import { NightCard } from './NightCard'
 import { WhatToExpect } from './WhatToExpect'
 import { HowItWorks } from './HowItWorks'
 import { EventAdminToolbar } from './EventAdminToolbar'
+import { EventDotNav } from './EventDotNav'
 
 /**
  * @page /event
@@ -236,7 +237,7 @@ export default async function EventPage() {
 
       {/* ─── 5. SUPPORT THE QUEST (fundraiser) ────────────────────────────── */}
       {goal > 0 && instance.isEventMode && (
-        <section className="event-section" style={{ background: 'var(--ep-base)' }}>
+        <section id="support" className="event-section" style={{ background: 'var(--ep-base)' }}>
           <div className="event-section-inner space-y-5">
             <h2 className="event-section-title">Support the Quest</h2>
             <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -266,7 +267,7 @@ export default async function EventPage() {
 
       {/* ─── 6. THE STORY (collapsible, starts collapsed) ─────────────── */}
       {wakeUpContent && (
-        <section className="event-section" style={{ background: 'var(--ep-surface)' }}>
+        <section id="story" className="event-section" style={{ background: 'var(--ep-surface)' }}>
           <div className="event-section-inner">
             <details>
               <summary className="event-story-toggle list-none cursor-pointer">
@@ -305,7 +306,7 @@ export default async function EventPage() {
       )}
 
       {/* ─── 7. FOOTER ────────────────────────────────────────────────────── */}
-      <footer className="event-section" style={{ background: 'var(--ep-base)', borderTop: '1px solid var(--ep-border)' }}>
+      <footer id="footer" className="event-section" style={{ background: 'var(--ep-base)', borderTop: '1px solid var(--ep-border)' }}>
         <div className="event-section-inner space-y-6">
           <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
             {player ? (
@@ -465,6 +466,9 @@ export default async function EventPage() {
           )}
         </EventAdminToolbar>
       )}
+
+      {/* ─── DOT NAV (floating right edge) ───────────────────────────────── */}
+      <EventDotNav />
     </div>
   )
 }

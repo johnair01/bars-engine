@@ -61,7 +61,7 @@ export default function BruisedBananaCampaignPage() {
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-400">The Fundraiser</h2>
         <p className="text-zinc-300 text-sm leading-relaxed">
-          The Bruised Banana Fundraiser supports the house through donations. The campaign runs on quests, BARs,
+          The Bruised Banana Fundraiser supports the house through <Link href="/wiki/donation-guide" className="text-emerald-400 hover:text-emerald-300">donations</Link>. The campaign runs on <Link href="/wiki/quests-guide" className="text-emerald-400 hover:text-emerald-300">quests</Link>, <Link href="/wiki/bars-guide" className="text-emerald-400 hover:text-emerald-300">BARs</Link>,
           vibeulons, and story clock. Contributing money or playing the game helps the collective thrive.
         </p>
       </section>
@@ -138,6 +138,17 @@ export default function BruisedBananaCampaignPage() {
           Play the game
         </Link>
       </div>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/donation-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Donation Guide →</Link>
+          <Link href="/wiki/domains" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Domains →</Link>
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+          <Link href="/wiki/rules" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Rules →</Link>
+          <Link href="/event" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Event Page →</Link>
+        </div>
+      </section>
     </div>
   )
 }

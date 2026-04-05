@@ -125,7 +125,7 @@ export default function EmotionalAlchemyPage() {
           <div className="border border-yellow-800/40 bg-yellow-900/10 rounded-lg p-3 space-y-1">
             <div className="font-semibold text-yellow-300">Generate →↑ <span className="text-xs font-normal text-zinc-500">生 shēng</span></div>
             <div className="text-zinc-400 text-xs leading-relaxed">Flow to nourished channel · altitude rises · energy +1</div>
-            <div className="font-mono text-[10px] text-zinc-500">fear:dissatisfied → anger:neutral</div>
+            <div className="font-mono text-[10px] text-zinc-500">fear:dissatisfied → sadness:neutral</div>
           </div>
           <div className="border border-red-800/40 bg-red-900/10 rounded-lg p-3 space-y-1">
             <div className="font-semibold text-red-300">Control →↓ <span className="text-xs font-normal text-zinc-500">克 kè</span></div>
@@ -154,6 +154,7 @@ export default function EmotionalAlchemyPage() {
                 <span className="capitalize text-red-300/70">{to}</span>
               </div>
             ))}
+            <Link href="/wiki/hidden/signal" className="text-zinc-900/60 hover:text-emerald-800 transition-colors duration-1000 text-[10px] font-mono tracking-widest">&#x2237; signal &#x2237;</Link>
           </div>
         </div>
       </section>

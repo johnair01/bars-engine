@@ -9,7 +9,7 @@ const EXPECT_ITEMS = [
 
 export function WhatToExpect() {
   return (
-    <section className="event-section" style={{ background: 'var(--ep-base)' }}>
+    <section id="expect" className="event-section" style={{ background: 'var(--ep-base)' }}>
       <div className="event-section-inner">
         <h2 className="event-section-title">What to Expect</h2>
         <div className="expect-grid">
