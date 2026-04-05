@@ -9,7 +9,9 @@ info:
     Pass optional `gameMasterFace` on match/registry so the GPT keeps sect influence; registry stores it under `metadataJson.gameMasterFace`.
 
     **Custom GPT:** Route each user turn through a face lens when helpful—Sage may delegate. Use `tags` and `x-gm-faces` below as behavioral hints, not separate HTTP APIs.
-  version: 1.1.0
+
+    **Quest catalog & clustering (v1.2):** `GET /api/quests` and `POST /api/bar-registry/cluster` accept **Bearer (BARS_API_KEY)** or, when the key is unset, a **logged-in session cookie** (same-origin). **BAR→quest links** and **campaign drafts** are **browser-session** routes (`bars_player_id` cookie), not Bearer — see tags `BarQuestLink` and `CampaignDraft`.
+  version: 1.2.1
   x-gm-faces:
     shaman:
       mission: Mythic threshold — belonging, ritual space, bridge between worlds.
@@ -47,6 +49,12 @@ tags:
     description: Relational field — polarity tags; care in copy before save
   - name: GM_Sage
     description: Routing & synthesis — default router; combine other tags in instructions
+  - name: QuestCatalog
+    description: Matchable quest rows (CustomBar) for matcher and GPT
+  - name: BarQuestLink
+    description: BAR→quest link persistence — session cookie auth (not Bearer)
+  - name: CampaignDraft
+    description: Braided playerArc + campaignContext drafts — session cookie auth (not Bearer)
 
 security:
   - bearerAuth: []
@@ -212,6 +220,319 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/quests:
+    get:
+      operationId: listQuestCatalog
+      summary: List matchable quests (canonical CustomBar catalog slice)
+      description: |
+        Filterable catalog for matcher and tools. Auth: Bearer (BARS_API_KEY), or session cookie when key unset (local dev).
+      tags:
+        - QuestCatalog
+        - GM_Architect
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: campaignRef
+          in: query
+          description: Filter by CustomBar.campaignRef (e.g. bruised-banana)
+          schema:
+            type: string
+        - name: questSource
+          in: query
+          description: Filter by CustomBar.questSource (e.g. system, bounty)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quest rows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quests:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QuestDto"
+                  count:
+                    type: integer
+                required:
+                  - quests
+                  - count
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/bar-registry/cluster:
+    post:
+      operationId: clusterBarsForArcs
+      summary: Group BAR ids into arcs (manual or heuristic v1)
+      description: |
+        Deterministic clustering contract (spec D8). Auth: Bearer or session cookie when key unset.
+      tags:
+        - GM_Architect
+        - GM_Sage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClusterRequest"
+      responses:
+        "200":
+          description: Arc buckets + revision audit stub
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClusterResponse"
+        "400":
+          description: Validation error or unknown bar id
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/bar-quest-links:
+    get:
+      operationId: listBarQuestLinks
+      summary: List links for a source BAR (session cookie)
+      tags:
+        - BarQuestLink
+      parameters:
+        - name: sourceBarId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Links for source BAR
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BarQuestLink"
+                required:
+                  - links
+        "400":
+          description: Missing sourceBarId
+        "401":
+          description: Not logged in
+        "403":
+          description: Not owner of source BAR
+    post:
+      operationId: createBarQuestLink
+      summary: Create a proposed BAR→quest link (session cookie)
+      tags:
+        - BarQuestLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BarQuestLinkCreate"
+      responses:
+        "200":
+          description: Created link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  link:
+                    $ref: "#/components/schemas/BarQuestLink"
+                required:
+                  - link
+        "400":
+          description: Validation error
+        "401":
+          description: Not logged in
+        "403":
+          description: Not owner of source BAR
+
+  /api/bar-quest-links/{id}:
+    get:
+      operationId: getBarQuestLink
+      summary: Get one link (session cookie)
+      tags:
+        - BarQuestLink
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  link:
+                    $ref: "#/components/schemas/BarQuestLink"
+                required:
+                  - link
+        "404":
+          description: Not found
+        "401":
+          description: Not logged in
+        "403":
+          description: Forbidden
+    patch:
+      operationId: patchBarQuestLink
+      summary: Accept, reject, or withdraw a link (steward/admin rules in description)
+      description: |
+        `accepted`/`rejected` require admin or instance owner/steward (InstanceMembership.roleKey owner|steward) when `instanceId` or `campaignRef` is set. `withdrawn` allowed for link author or source BAR owner.
+      tags:
+        - BarQuestLink
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BarQuestLinkPatch"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  link:
+                    $ref: "#/components/schemas/BarQuestLink"
+                required:
+                  - link
+        "401":
+          description: Not logged in
+        "403":
+          description: Forbidden
+        "409":
+          description: Invalid state transition
+
+  /api/campaign-drafts:
+    get:
+      operationId: listCampaignDrafts
+      summary: List current player campaign drafts (session cookie)
+      tags:
+        - CampaignDraft
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drafts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CampaignDraft"
+                required:
+                  - drafts
+        "401":
+          description: Not logged in
+    post:
+      operationId: createCampaignDraft
+      summary: Create a campaign draft (session cookie)
+      tags:
+        - CampaignDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignDraftCreate"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft:
+                    $ref: "#/components/schemas/CampaignDraft"
+                required:
+                  - draft
+        "400":
+          description: Validation error
+        "401":
+          description: Not logged in
+
+  /api/campaign-drafts/{id}:
+    get:
+      operationId: getCampaignDraft
+      summary: Get one campaign draft (session cookie)
+      tags:
+        - CampaignDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft:
+                    $ref: "#/components/schemas/CampaignDraft"
+                required:
+                  - draft
+        "404":
+          description: Not found
+        "401":
+          description: Not logged in
+        "403":
+          description: Forbidden
+    patch:
+      operationId: patchCampaignDraft
+      summary: Update a campaign draft (session cookie)
+      tags:
+        - CampaignDraft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignDraftPatch"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft:
+                    $ref: "#/components/schemas/CampaignDraft"
+                required:
+                  - draft
+        "404":
+          description: Not found
+        "401":
+          description: Not logged in
+        "403":
+          description: Forbidden
 
 components:
   securitySchemes:
@@ -435,3 +756,224 @@ components:
         - polarity
         - secondaryQuestIds
         - createdAt
+
+    ClusterRequest:
+      type: object
+      properties:
+        barIds:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        strategy:
+          type: string
+          enum:
+            - manual
+            - heuristic_v1
+      required:
+        - barIds
+        - strategy
+
+    ClusterResponse:
+      type: object
+      properties:
+        strategy:
+          type: string
+        arcs:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              barIds:
+                type: array
+                items:
+                  type: string
+              reason:
+                type: string
+        revision:
+          type: object
+          properties:
+            actor:
+              type: string
+            at:
+              type: string
+      required:
+        - strategy
+        - arcs
+
+    BarQuestLinkCreate:
+      type: object
+      properties:
+        sourceBarId:
+          type: string
+        targetQuestId:
+          type: string
+        matchType:
+          type: string
+          enum:
+            - primary
+            - secondary
+            - manual
+        confidence:
+          type: number
+          nullable: true
+        reason:
+          type: string
+        supportedBy:
+          type: object
+          additionalProperties: true
+          nullable: true
+        campaignRef:
+          type: string
+          nullable: true
+        instanceId:
+          type: string
+          nullable: true
+      required:
+        - sourceBarId
+        - targetQuestId
+        - reason
+
+    BarQuestLinkPatch:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - accepted
+            - rejected
+            - withdrawn
+      required:
+        - status
+
+    BarQuestLink:
+      type: object
+      properties:
+        id:
+          type: string
+        sourceBarId:
+          type: string
+        targetQuestId:
+          type: string
+        matchType:
+          type: string
+        confidence:
+          type: number
+          nullable: true
+        reason:
+          type: string
+        supportedBy:
+          nullable: true
+        status:
+          type: string
+        createdByPlayerId:
+          type: string
+        reviewedByPlayerId:
+          type: string
+          nullable: true
+        reviewedAt:
+          type: string
+          nullable: true
+        campaignRef:
+          type: string
+          nullable: true
+        instanceId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        targetQuest:
+          type: object
+          additionalProperties: true
+
+    CampaignDraftCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        playerArc:
+          type: object
+          additionalProperties: true
+        campaignContext:
+          type: object
+          additionalProperties: true
+        structure:
+          type: object
+          additionalProperties: true
+      required:
+        - playerArc
+        - campaignContext
+
+    CampaignDraftPatch:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        contentLayer:
+          type: string
+          enum:
+            - ops
+            - story
+        status:
+          type: string
+          enum:
+            - draft
+            - review
+            - approved
+            - archived
+        playerArc:
+          type: object
+          additionalProperties: true
+        campaignContext:
+          type: object
+          additionalProperties: true
+        structure:
+          type: object
+          additionalProperties: true
+
+    CampaignDraft:
+      type: object
+      properties:
+        id:
+          type: string
+        playerId:
+          type: string
+        title:
+          type: string
+          nullable: true
+        contentLayer:
+          type: string
+          enum:
+            - ops
+            - story
+        status:
+          type: string
+        playerArc:
+          type: object
+          additionalProperties: true
+        campaignContext:
+          type: object
+          additionalProperties: true
+        structure:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - playerId
+        - contentLayer
+        - status
+        - playerArc
+        - campaignContext
+        - structure
+        - createdAt
+        - updatedAt

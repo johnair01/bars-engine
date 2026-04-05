@@ -174,6 +174,57 @@ export default function HandbookPage() {
           is your agency pattern — how you move through the world. Neither is a fixed identity; both are
           frames that make the game's moves more specific to you.
         </p>
+        <p className="text-sm text-zinc-400 leading-relaxed pt-2">
+          In the 321 process you also pick a{' '}
+          <Link
+            href="/wiki/cultivation-sifu"
+            className="text-zinc-300 hover:text-white underline underline-offset-2"
+          >
+            Cultivation Sifu
+          </Link>
+          — a guide aligned to one of the six Game Master faces (same list as in-app).
+        </p>
+      </section>
+
+      {/* Deep handbook (RPG sourcebook track) */}
+      <section className="space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-500">Deep handbook</h2>
+        <p className="text-sm text-zinc-500 leading-relaxed">
+          Analog play, session zero, safety, and tokens — the same moves as the app, written for tables
+          using cards, dice, and vibeulon counters.
+        </p>
+        <ul className="text-sm text-zinc-400 space-y-2 list-none">
+          <li>
+            <Link href="/wiki/handbook/session-zero" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+              Session zero
+            </Link>
+            {' — '}table contract, calibration, pause/stop.
+          </li>
+          <li>
+            <Link href="/wiki/handbook/analog-bars" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+              Analog BARs
+            </Link>
+            {' — '}capture and track BARs offline.
+          </li>
+          <li>
+            <Link href="/wiki/handbook/analog-play" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+              Analog play
+            </Link>
+            {' — '}setup, prompts, example opening.
+          </li>
+          <li>
+            <Link href="/wiki/handbook/vibeulons-and-tokens" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+              Vibeulons and tokens
+            </Link>
+            {' — '}physical economy at the table.
+          </li>
+          <li>
+            <Link href="/wiki/handbook/safety" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">
+              Safety and facilitation
+            </Link>
+            {' — '}tools and escalation.
+          </li>
+        </ul>
       </section>
 
       {/* Reference */}
@@ -186,6 +237,7 @@ export default function HandbookPage() {
           <Link href="/wiki/archetypes" className="text-zinc-400 hover:text-white transition">Archetypes</Link>
           <Link href="/wiki/glossary" className="text-zinc-400 hover:text-white transition">Glossary</Link>
           <Link href="/wiki/player-guides" className="text-zinc-400 hover:text-white transition">All guides</Link>
+          <Link href="/wiki/cultivation-sifu" className="text-zinc-400 hover:text-white transition">Cultivation Sifu</Link>
         </div>
       </section>
     </div>

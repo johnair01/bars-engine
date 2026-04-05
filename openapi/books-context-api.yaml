@@ -4,8 +4,8 @@ info:
   description: |
     Admin books catalog and generated library quests for ChatGPT Actions / external tools.
     Set `BOOKS_CONTEXT_API_KEY` on the server; use Bearer token in requests.
-    See docs/BOOKS_CONTEXT_API.md.
-  version: 1.2.0
+    See docs/BOOKS_CONTEXT_API.md and docs/BOOKS_CHUNK_TAGS_API.md (Sage slice: GM face + optional hexagram per text range).
+  version: 1.3.0
 
 servers:
   - url: https://bars-engine.vercel.app
@@ -74,6 +74,16 @@ paths:
           schema:
             type: integer
             default: 80000
+        - name: startChar
+          in: query
+          description: When extractedText=1, slice from this character offset (0-based, inclusive)
+          schema:
+            type: integer
+        - name: endChar
+          in: query
+          description: When extractedText=1, slice up to this character offset (exclusive); omit for EOF after startChar
+          schema:
+            type: integer
       responses:
         "200":
           description: Single book
@@ -84,6 +94,104 @@ paths:
                 properties:
                   book:
                     $ref: "#/components/schemas/BookDetail"
+        "404":
+          description: Book not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/admin/books/{id}/chunk-tags:
+    get:
+      operationId: listBookChunkTags
+      summary: List chunk tags (Game Master face + optional hexagram per char range)
+      description: |
+        Sage-slice: deterministic `charStart`/`charEnd` relative to `Book.extractedText`.
+        Optional `face` query filters by one of the six GM faces.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: face
+          in: query
+          required: false
+          description: Filter by gameMasterFace
+          schema:
+            type: string
+            enum:
+              - shaman
+              - challenger
+              - regent
+              - architect
+              - diplomat
+              - sage
+      responses:
+        "200":
+          description: Tags for this book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookId:
+                    type: string
+                  count:
+                    type: integer
+                  tags:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BookChunkTag"
+        "404":
+          description: Book not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    put:
+      operationId: putBookChunkTags
+      summary: Replace all chunk tags for this book
+      description: |
+        Full replace: deletes existing tags for the book, then inserts the provided array (max 2000).
+        Same auth as GET (BOOKS_CONTEXT_API_KEY).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tags
+              properties:
+                tags:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/BookChunkTagInput"
+      responses:
+        "200":
+          description: Replaced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  bookId:
+                    type: string
+                  count:
+                    type: integer
+                  message:
+                    type: string
+        "400":
+          description: Validation error
         "404":
           description: Book not found
         "401":
@@ -296,3 +404,55 @@ components:
         - id
         - title
         - status
+
+    BookChunkTag:
+      type: object
+      properties:
+        id:
+          type: string
+        charStart:
+          type: integer
+        charEnd:
+          type: integer
+        gameMasterFace:
+          type: string
+        hexagramId:
+          type: integer
+          nullable: true
+        metadata:
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    BookChunkTagInput:
+      type: object
+      required:
+        - charStart
+        - charEnd
+        - gameMasterFace
+      properties:
+        charStart:
+          type: integer
+          minimum: 0
+        charEnd:
+          type: integer
+          minimum: 0
+        gameMasterFace:
+          type: string
+          enum:
+            - shaman
+            - challenger
+            - regent
+            - architect
+            - diplomat
+            - sage
+        hexagramId:
+          type: integer
+          minimum: 1
+          maximum: 64
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true

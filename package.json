@@ -43,6 +43,8 @@
     "test:twine": "tsx scripts/smoke-test-twine.ts",
     "test:twine-quest": "tsx scripts/smoke-test-twine-quest.ts",
     "test:admin-validation": "tsx scripts/smoke-test-admin-validation.ts",
+    "test:book-toc-slices": "tsx src/lib/__tests__/book-toc-slices.test.ts",
+    "test:book-chunk-tags-validation": "tsx src/lib/__tests__/book-chunk-tags-validation.test.ts",
     "test:quest-grammar": "tsx src/lib/quest-grammar/__tests__/compileQuest.test.ts && tsx src/lib/quest-grammar/__tests__/branchedPath.test.ts && tsx src/lib/quest-grammar/__tests__/resolveMoveForContext.test.ts",
     "test:simulation": "tsx src/lib/simulation/__tests__/simulateFlow.test.ts",
     "test:transformation-sim": "tsx src/lib/transformation-simulation/__tests__/simulateQuest.test.ts",

@@ -1,0 +1,29 @@
+# bars-engine Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-04-01
+
+## Active Technologies
+
+- TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK (main)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+TypeScript, Next.js 14+: Follow standard conventions
+
+## Recent Changes
+
+- main: Added TypeScript, Next.js 14+ + Prisma, Tailwind CSS, AI SDK
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

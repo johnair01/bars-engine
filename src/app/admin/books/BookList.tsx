@@ -185,6 +185,9 @@ export function BookList({ books }: { books: AdminBookRow[] }) {
                 {meta?.toc?.entries != null && meta.toc.entries.length > 0 && (
                   <span className="text-xs text-zinc-500">· {meta.toc.entries.length} TOC entries</span>
                 )}
+                <span className="text-xs text-zinc-500" title="Sage slice: chunk tags (face + optional hexagram)">
+                  · {book._count.bookChunkTags} chunk tags
+                </span>
                 {meta?.analysis?.chunksAnalyzed != null &&
                   meta?.analysis?.chunksTotal != null &&
                   meta.analysis.chunksAnalyzed < meta.analysis.chunksTotal && (

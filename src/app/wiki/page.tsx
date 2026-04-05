@@ -42,6 +42,7 @@ const SECTIONS = [
   {
     title: 'Game Concepts',
     links: [
+      { href: '/wiki/handbook/analog-play', label: 'Player Handbook — analog play' },
       { href: '/wiki/moves', label: 'The 4 Moves (Personal Throughput)' },
       { href: '/wiki/nations', label: 'Nations (4 moves per nation)' },
       { href: '/wiki/archetypes', label: 'Archetypes (Playbooks)' },

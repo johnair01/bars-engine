@@ -27,6 +27,12 @@ export async function GET(
     500_000,
     Math.max(1, parseInt(request.nextUrl.searchParams.get('maxChars') || '80000', 10) || 80000)
   )
+  const startCharRaw = request.nextUrl.searchParams.get('startChar')
+  const endCharRaw = request.nextUrl.searchParams.get('endChar')
+  const startChar =
+    startCharRaw !== null && startCharRaw !== '' ? Math.max(0, parseInt(startCharRaw, 10) || 0) : null
+  const endChar =
+    endCharRaw !== null && endCharRaw !== '' ? Math.max(0, parseInt(endCharRaw, 10) || 0) : null
 
   try {
     const book = await db.book.findUnique({
@@ -53,7 +59,12 @@ export async function GET(
     let extractedText: string | null = null
     let extractedTextTruncated = false
     if (wantText && 'extractedText' in book && book.extractedText) {
-      const raw = book.extractedText
+      let raw = book.extractedText
+      if (startChar !== null || endChar !== null) {
+        const s = startChar ?? 0
+        const e = endChar !== null ? endChar : raw.length
+        raw = raw.slice(s, Math.min(e, raw.length))
+      }
       if (raw.length > maxChars) {
         extractedText = raw.slice(0, maxChars)
         extractedTextTruncated = true

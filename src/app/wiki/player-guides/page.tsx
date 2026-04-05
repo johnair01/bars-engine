@@ -20,6 +20,13 @@ const GUIDES = {
         'The four-move compass: Wake Up, Clean Up, Grow Up, Show Up. What success looks like. Where to start.',
       status: 'live' as const,
     },
+    {
+      href: '/wiki/handbook/session-zero',
+      title: 'Deep handbook (offline play)',
+      blurb:
+        'Session zero, analog BARs, analog play, vibeulons at the table, safety — RPG-style depth; link hub from the handbook page.',
+      status: 'live' as const,
+    },
   ],
   'Hands-on features': [
     {
@@ -54,6 +61,12 @@ const GUIDES = {
     { href: '/wiki/domains', title: 'Allyship domains (WHERE)', blurb: 'Gathering Resources, Direct Action, etc.', status: 'live' as const },
     { href: '/wiki/nations', title: 'Nations', blurb: 'Cultural frame and move sets.', status: 'live' as const },
     { href: '/wiki/archetypes', title: 'Archetypes (playbooks)', blurb: 'Character grammar for your player.', status: 'live' as const },
+    {
+      href: '/wiki/cultivation-sifu',
+      title: 'Cultivation Sifu',
+      blurb: 'Six guides for the 321 descent — one per Game Master face (same list as in-app).',
+      status: 'live' as const,
+    },
     { href: '/wiki/emotional-alchemy', title: 'Emotional alchemy', blurb: 'Quest energy and node design.', status: 'live' as const },
     { href: '/wiki/iching', title: 'I Ching guidebook', blurb: 'Hexagram / reflective play in lore.', status: 'live' as const },
     {

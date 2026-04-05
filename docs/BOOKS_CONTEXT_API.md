@@ -23,6 +23,12 @@ If the env var is missing on the server, the API returns **503** with a clear me
 - File: [openapi/books-context-api.yaml](../openapi/books-context-api.yaml)
 - Replace `https://YOUR_DEPLOYMENT.vercel.app` in `servers[0].url` with your real deployment base URL (no trailing slash).
 
+## Book chunk tags (Sage slice)
+
+Tag deterministic slices of `extractedText` with **Game Master face** + optional **hexagram (1–64)** for GPT pipelines. Same auth key.
+
+See **[BOOKS_CHUNK_TAGS_API.md](./BOOKS_CHUNK_TAGS_API.md)**.
+
 ## Endpoints
 
 ### List books (no full PDF text — token-efficient)
@@ -48,6 +54,7 @@ GET /api/admin/books/<bookId>?extractedText=1&maxChars=80000
 ```
 
 - **`extractedText=1`**: includes extracted PDF text, truncated to **`maxChars`** (default `80000`, max `500000`).
+- **`startChar`** / **`endChar`** (optional): slice the extracted text to that character range **before** applying `maxChars` (deterministic TOC chunks; see `src/lib/book-toc-slices.ts`).
 - Response includes `extractedTextTruncated` when truncation applied.
 
 ### Generated quests (book analysis → CustomBars)

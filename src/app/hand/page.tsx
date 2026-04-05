@@ -9,6 +9,7 @@ import { loadEventInviteBarsForStewards } from '@/lib/vault-event-invite-bars'
 import { VaultCampaignInviteBars } from '@/components/hand/VaultCampaignInviteBars'
 import { VaultSummaryStrip } from '@/components/hand/VaultSummaryStrip'
 import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
+import { SuggestedQuestsPanel } from '@/components/hand/SuggestedQuestsPanel'
 
 /**
  * @page /hand
@@ -183,6 +184,8 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
             />
 
             <VaultCampaignInviteBars bars={eventInviteBars} />
+
+            {process.env.NEXT_PUBLIC_SHOW_SUGGESTED_QUESTS_ON_HAND === '1' ? <SuggestedQuestsPanel /> : null}
 
             {/* Accepted invitations — relational signal at lobby level (G20) */}
             {acceptedInvites.length > 0 && (

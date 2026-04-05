@@ -8,6 +8,8 @@ export type AdminBookRow = {
   metadataJson: string | null
   createdAt: Date
   thread?: { id: string } | null
+  /** Sage slice: GM face + optional hexagram tags per text range */
+  _count: { bookChunkTags: number }
 }
 
 export type ParsedBookMeta = {

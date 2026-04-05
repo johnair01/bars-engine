@@ -198,6 +198,10 @@ model Player {
   /// CCV: Player's contribution records across campaigns
   contributionRecords          ContributionRecord[]    @relation("PlayerContributions")
   cmaGeneratorDrafts           CmaGeneratorDraft[]
+  /// BAR ↔ quest link rows created by this player
+  createdBarQuestLinks         BarQuestLink[]          @relation("BarQuestLinkCreatedBy")
+  reviewedBarQuestLinks        BarQuestLink[]          @relation("BarQuestLinkReviewedBy")
+  campaignDrafts               CampaignDraft[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -419,6 +423,8 @@ model CustomBar {
   barForgeRecordsAsPrimary             BarForgeRecord[]          @relation("BarForgePrimaryQuest")
   barMedia                             BarMedia[]
   daemonsGrownFromBar                  Daemon[]                  @relation("DaemonSourceBar")
+  barQuestLinksAsSource                BarQuestLink[]            @relation("BarQuestLinkSource")
+  barQuestLinksAsTargetQuest           BarQuestLink[]            @relation("BarQuestLinkTargetQuest")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
@@ -438,6 +444,60 @@ model BarMedia {
 
   @@index([barId])
   @@map("bar_media")
+}
+
+/// First-class BAR → quest (CustomBar) suggestion with lifecycle — not only embedded on BAR/registry.
+model BarQuestLink {
+  id                 String    @id @default(cuid())
+  sourceBarId        String
+  targetQuestId      String
+  matchType          String    @default("primary") // primary | secondary | manual
+  confidence         Float?
+  reason             String    @db.Text
+  supportedBy        Json?
+  status             String    @default("proposed") // proposed | accepted | rejected | withdrawn
+  createdByPlayerId  String
+  reviewedByPlayerId String?
+  reviewedAt         DateTime?
+  /// Matches `Instance.campaignRef` when resolving stewardship without a concrete instance row.
+  campaignRef        String?
+  instanceId         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sourceBar    CustomBar @relation("BarQuestLinkSource", fields: [sourceBarId], references: [id], onDelete: Cascade)
+  targetQuest  CustomBar @relation("BarQuestLinkTargetQuest", fields: [targetQuestId], references: [id], onDelete: Cascade)
+  createdBy    Player    @relation("BarQuestLinkCreatedBy", fields: [createdByPlayerId], references: [id], onDelete: Cascade)
+  reviewedBy   Player?   @relation("BarQuestLinkReviewedBy", fields: [reviewedByPlayerId], references: [id], onDelete: SetNull)
+  instance     Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+
+  @@index([sourceBarId])
+  @@index([targetQuestId])
+  @@index([createdByPlayerId])
+  @@index([instanceId])
+  @@index([campaignRef])
+  @@map("bar_quest_links")
+}
+
+/// Braided campaign composition: inner player arc ∧ outer campaign context (Conclave construct).
+model CampaignDraft {
+  id              String   @id @default(cuid())
+  playerId        String
+  title           String?
+  status          String   @default("draft") // draft | review | approved | archived
+  /// ops = logistical / real-world framing; story = narrative / immersion (see src/lib/ontology/content-layer.ts)
+  contentLayer    String   @default("story")
+  playerArc       Json
+  campaignContext Json
+  structure       Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@map("campaign_drafts")
 }
 
 /// BAR Forge / Custom GPT: persisted BAR analyses + quest links (no Player ownership required).
@@ -985,8 +1045,30 @@ model Book {
   updatedAt              DateTime                @updatedAt
   thread                 QuestThread?
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
+  bookChunkTags        BookChunkTag[]
 
   @@map("books")
+}
+
+/// Sage-slice: deterministic text ranges tagged with Game Master face (+ optional I Ching hexagram) for GPT/admin pipelines.
+model BookChunkTag {
+  id             String   @id @default(cuid())
+  bookId         String
+  charStart      Int
+  charEnd        Int
+  /// shaman | challenger | regent | architect | diplomat | sage
+  gameMasterFace String
+  /// 1–64 when set; optional until classification is trusted
+  hexagramId     Int?
+  metadataJson   String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, charStart, charEnd])
+  @@index([bookId])
+  @@index([bookId, gameMasterFace])
+  @@map("book_chunk_tags")
 }
 
 model BookAnalysisResumeLog {
@@ -1575,6 +1657,8 @@ model Instance {
   communityCharacterCorpus   Json?                   @map("community_character_corpus")
   /// ECI-B: child campaigns spawned from watered allyship intakes
   latentAllyshipIntakesSpawned LatentAllyshipIntake[] @relation("AllyshipIntakeSpawnedInstance")
+  /// Optional scope for BAR→quest link confirmation (owner/steward on membership)
+  barQuestLinks                BarQuestLink[]
 
   @@map("instances")
 }
@@ -3316,6 +3400,21 @@ model NpcEncounter {
   @@index([spokeSessionId])
   @@index([npcId])
   @@map("npc_encounters")
+}
+
+/// DB-backed wiki pages (e.g. Player’s Handbook deep chapters). GPT/API writes; static TSX falls back when no published row.
+model WikiPageContent {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  bodyMarkdown String   @db.Text
+  /// draft | pending_review | published
+  status       String   @default("draft")
+  metadataJson String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@map("wiki_page_contents")
 }
 
 // Wiki Draft for agent-generated documentation

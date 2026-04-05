@@ -40,6 +40,7 @@ docs/handbook/
 - Reference these files when writing quests, dialogue, or UI text
 - Keep story consistency by checking nation/playbook descriptions
 - Update when new canonical information is established
+- RPG-depth handbook pipeline: `HANDBOOK_TOC.md`, `HANDBOOK_SOURCEBOOK_RUBRIC.md`, `CULTIVATION_SIFU_HANDBOOK_VOICE.md`, `GPT_PLAYERS_HANDBOOK_INSTRUCTIONS.md`, and [WIKI_WRITE_API.md](../WIKI_WRITE_API.md)
 
 ### For Player Handbook PDF
 - All content in this directory will be compiled into the final handbook

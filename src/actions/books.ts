@@ -253,6 +253,7 @@ const adminBookHubSelect = {
   metadataJson: true,
   createdAt: true,
   thread: { select: { id: true } },
+  _count: { select: { bookChunkTags: true } },
 } as const
 
 /**

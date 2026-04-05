@@ -116,6 +116,8 @@ Requests may include `gameMasterFace`: `shaman` | `challenger` | `regent` | `arc
 - **POST match** — echoed in `debug.matchedOn` as `gm_face:<name>` when set.
 - **POST registry** — merged into `metadataJson.gameMasterFace` (with any client `metadataJson`).
 
+**Staging vs production:** See [CUSTOM_GPT_STAGING_ACTIONS.md](./CUSTOM_GPT_STAGING_ACTIONS.md) — set `servers[0].url` to your preview/staging host and put secrets in **Authentication**, not in Instructions.
+
 ## Custom GPT settings checklist
 
 Do this in **ChatGPT → My GPTs → [BAR Forge] → Edit**:
@@ -124,8 +126,9 @@ Do this in **ChatGPT → My GPTs → [BAR Forge] → Edit**:
 2. **Actions → Schema** — Import **`openapi/bar-forge-custom-gpt.yaml`** (recommended: includes Game Master quest routes; or `bar-forge-api.yaml` for BAR Forge only). Set **`servers[0].url`** to `https://bars-engine.vercel.app` (no trailing slash), or your deployment URL.
 3. **Actions → Authentication** — **Bearer**; token = same value as `BARS_API_KEY` in Vercel. **Do not** put the key in **Instructions**.
 4. **Books API in the same GPT (optional)** — Import [openapi/books-context-api.yaml](../openapi/books-context-api.yaml) as a second Action, or merge OpenAPI files and use one secret if you unify keys.
-5. **Instructions** — Describe when to call: match → optional POST registry → GET list to reconcile. Use paths exactly as in the schema (`/api/match-bar-to-quests`, `/api/bar-registry`, …).
-6. **Preview** — Test POST match, POST registry, GET list, GET by id.
+5. **Wiki write API (Player’s Handbook drafts)** — Import [openapi/wiki-write-api.yaml](../openapi/wiki-write-api.yaml); set **`WIKI_WRITE_API_KEY`** on the server and in Actions (separate from books read key). See [docs/WIKI_WRITE_API.md](../WIKI_WRITE_API.md) and [docs/handbook/GPT_PLAYERS_HANDBOOK_INSTRUCTIONS.md](../handbook/GPT_PLAYERS_HANDBOOK_INSTRUCTIONS.md).
+6. **Instructions** — Describe when to call: match → optional POST registry → GET list to reconcile. Use paths exactly as in the schema (`/api/match-bar-to-quests`, `/api/bar-registry`, …).
+7. **Preview** — Test POST match, POST registry, GET list, GET by id.
 
 ## curl examples
 
