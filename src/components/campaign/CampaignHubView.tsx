@@ -1,4 +1,6 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
+import { PostJoinWelcomeBanner } from '@/components/campaign/PostJoinWelcomeBanner'
 import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 import { CampaignOutlineNavButton } from '@/components/campaign/CampaignOutlineNavButton'
 import { KOTTER_STAGES } from '@/lib/kotter'
@@ -47,6 +49,8 @@ type Props = {
   recentCapture?: RecentCapture
   intakeAdventureId?: string | null
   showFundraisingSettings?: boolean
+  /** True when player just joined via the campaign_join NavigationContract. */
+  isNewlyJoined?: boolean
 }
 
 const MOVE_LABEL: Record<string, string> = {
@@ -76,6 +80,7 @@ export function CampaignHubView({
   recentCapture,
   intakeAdventureId,
   showFundraisingSettings,
+  isNewlyJoined,
 }: Props) {
   const { portals, campaignName, kotterStage, faceMoves, donateButtonLabel } = data
   const stageInfo = KOTTER_STAGES[kotterStage as keyof typeof KOTTER_STAGES]
@@ -83,6 +88,13 @@ export function CampaignHubView({
   return (
     <div className="min-h-screen text-zinc-200 font-sans" style={zoneBackgroundStyle('lobby')}>
       <div className="max-w-6xl mx-auto px-4 sm:px-5 py-8 sm:py-10 space-y-8">
+        {/* Post-join welcome banner (transient, auto-dismissing) */}
+        {isNewlyJoined && (
+          <Suspense>
+            <PostJoinWelcomeBanner campaignName={campaignName} />
+          </Suspense>
+        )}
+
         <header className="space-y-3">
           <div className="flex flex-wrap justify-between items-start gap-3">
             <CampaignOutlineNavButton href="/game-map" className="text-xs">

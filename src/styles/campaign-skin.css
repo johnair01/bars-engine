@@ -160,3 +160,51 @@
   background: rgba(200, 160, 255, 0.1);
   color: var(--cs-text-primary);
 }
+
+/* ── Density-aware spacing (L2 three-channel encoding) ── */
+.cs-section {
+  padding: var(--cs-card-padding, 1.5rem);
+}
+.cs-section + .cs-section {
+  margin-top: var(--cs-section-spacing, 1.5rem);
+}
+
+/* ── Border token integration (altitude channel) ──────── */
+.cs-card {
+  background: var(--cs-surface);
+  border: var(--cs-border-width, 1px) solid var(--cs-border);
+  border-radius: var(--cs-border-radius, 0.75rem);
+  padding: var(--cs-card-padding, 1.5rem);
+  box-shadow: 0 0 var(--cs-glow-radius, 0px) var(--cs-glow-color, transparent);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.cs-card:hover {
+  background: var(--cs-surface-hover);
+  border-color: var(--cs-border-hover);
+}
+
+/* ── Campaign poster container ──────────────────────────── */
+.cs-poster {
+  border-radius: var(--cs-border-radius, 0.75rem);
+  overflow: hidden;
+  border: var(--cs-border-width, 1px) solid var(--cs-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.cs-poster img {
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ── Content density variants ───────────────────────────── */
+.cs-wrapper[data-density="compact"] .cs-card {
+  padding: 1rem;
+}
+.cs-wrapper[data-density="compact"] .cs-section + .cs-section {
+  margin-top: 1rem;
+}
+.cs-wrapper[data-density="spacious"] .cs-card {
+  padding: 2rem;
+}
+.cs-wrapper[data-density="spacious"] .cs-section + .cs-section {
+  margin-top: 2rem;
+}
