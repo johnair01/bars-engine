@@ -329,19 +329,10 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     })
   }
 
-  /* 
-  if (hasActiveOrientationThread) {
-    // ENFORCE STICKY FLOW: If there's an orientation quest active, go back to onboarding controller
-    // This now covers ALL orientation quests, including the final signal.
-    redirect('/conclave/onboarding')
-  } else {
-  */
-  if (!player.nationId && !hasActiveOrientationThread) {
-    redirect('/conclave/guided?step=nation_select')
-  }
   if (!player.archetypeId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=playbook_select')
   }
+  */
 
   const ritualComplete = searchParams.ritualComplete === 'true'
   const focusQuest = searchParams.focusQuest
@@ -688,7 +679,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                 Quick Setup →
               </Link>
               <Link
-                href="/conclave/onboarding?reset=true"
+                href="/conclave/guided?reset=true"
                 className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
               >
                 Guided Story

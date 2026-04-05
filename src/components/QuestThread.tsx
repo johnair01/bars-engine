@@ -175,7 +175,7 @@ export function QuestThread({ thread, completedMoveTypes, isSetupIncomplete, foc
                         )}
                         {isSetupIncomplete && thread.threadType === 'orientation' && (
                             <Link
-                                href="/conclave/onboarding?ritual=true"
+                                href="/"
                                 className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-500 hover:text-yellow-400 transition-colors bg-yellow-900/40 px-3 py-1.5 rounded border border-yellow-500/30"
                             >
                                 ⚡ Enter Ritual to Unlock →

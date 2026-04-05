@@ -168,7 +168,7 @@ export function TwineQuestModal({ isOpen, onClose, questId, questTitle, twineSto
                         if (result.redirect) {
                             router.push(result.redirect)
                         } else if (isRitual) {
-                            router.push('/conclave/onboarding?ritual=true')
+                            router.push('/')
                         } else {
                             router.refresh()
                         }

@@ -273,7 +273,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
     const handleCompletionContinue = () => {
         setCompletionResult(null)
         if (completionResult?.threadType === 'orientation') {
-            router.push('/conclave/onboarding?ritual=true')
+            router.push('/')
         } else {
             onClose()
         }

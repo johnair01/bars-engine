@@ -16,10 +16,11 @@ function isDonateFlowReturnTo(returnTo: string | undefined): boolean {
 /**
  * @page /login
  * @entity PLAYER
- * @description Login page - email-based authentication with optional returnTo redirect
+ * @description Login page - email-based authentication with * 2. If already logged in, redirect home. We no longer use a standalone onboarding controller
+ * behind the scenes; the dashboard handles orientation states.
  * @permissions public
  * @searchParams returnTo:string (optional) - Post-login redirect URL
- * @relationships authenticates PLAYER; incomplete profile → /conclave/onboarding unless returnTo is a public donate path
+ * @relationships authenticates PLAYER; incomplete profile → / unless returnTo is a public donate path
  * @energyCost 0 (authentication)
  * @dimensions WHO:playerId, WHAT:PLAYER, WHERE:auth, ENERGY:N/A, PERSONAL_THROUGHPUT:wake_up
  * @example /login?returnTo=/create-bar

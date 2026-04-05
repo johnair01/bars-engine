@@ -23,6 +23,12 @@ import { GuidedAuthForm } from './components/GuidedAuthForm'
 
 export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string, returnTo?: string }> }) {
     const { step, reset, ref: campaignRef, returnTo } = await searchParams
+    const player = await getCurrentPlayer()
+
+    // If already logged in, this page is deprecated. Go to dashboard.
+    if (player) {
+        redirect('/')
+    }
 
     if (reset === 'true') {
         const cookieStore = await cookies()
@@ -71,7 +77,7 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
     try {
         const raw = player.storyProgress ? JSON.parse(player.storyProgress as string) : null
         if (raw && typeof raw === 'object' && raw.campaignBypass === true) {
-            redirect('/conclave/onboarding')
+            redirect('/')
         }
     } catch {
         // ignore parse errors
