@@ -13,6 +13,7 @@
 
 - `CyoaBuild` fields, narrative template registry (`§3.3`), face ownership table, Kotter maturity (`§3.6`), `parseGameMasterFace` (`§3.4`), Sage/NPC (`§3.7`). Exit: `§3.8`.
 
-## Show Up — ship *(after §3.8)*
+## Show Up — ship *(first slice done)*
 
-- Implement DTO, registry module, boundary parse, hub merge, Option B if scoped; `tasks.md` checklist; fail-fix workflow.
+- Core: `CyoaBuild` Zod, narrative registry, `parseGameMasterFace`, adventure API/UI, iching, GSCP mapper, tests — see `spec.md` §4.  
+- Next: persist build, hub merge, Option B, optional public API.
