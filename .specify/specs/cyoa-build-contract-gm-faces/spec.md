@@ -1,0 +1,140 @@
+# Spec: CYOA build contract, GM faces, Sifu alignment, hub/spoke
+
+**Status:** Wake Up — research **audits complete** (§1.6–1.9); Clean Up next.  
+**GitHub:** [Issue #36](https://github.com/johnair01/bars-engine/issues/36)  
+**Relates to:** [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md), [game-master-face-moves](../game-master-face-moves/spec.md), `.agent/context/game-master-sects.md`, `.agent/context/emotional-alchemy-interfaces.md`
+
+## Purpose
+
+Unify **player-composed CYOA intent** (emotional vector, four-move spine, GM face, narrative template, campaign/Kotter context) behind **one contract** and **one ontology** (`GameMasterFace`, template registry, Sifu → `portraysFace`), with **Option B** mid-spoke persistence (checkpoint + revalidate on resume).
+
+Delivery uses **WAVE** internally (see issue #36): Wake Up → research; Clean Up → throughput; Grow Up → faces + Kotter; Show Up → implementation.
+
+---
+
+## 1. Wake Up — research (current repository state)
+
+*Goal: what we know today; what knowledge must remain in-repo for implementers; gaps before Clean Up.*
+
+### 1.1 CYOA / campaign entry surfaces (inventory)
+
+| Surface | Role | GM face / template / vector |
+|--------|------|------------------------------|
+| `/campaign/hub` | Portal selection, milestone CTAs; BB may redirect to spatial octagon | Hub passages reference emit roots (`passage_*_Emit`); not a unified build DTO |
+| `/campaign/spoke/[index]` | Spoke entry; default redirects to **`/campaign/spoke/:index/generated`** (GSCP) | Legacy `?portal=1` uses `Instance.portalAdventureId` + Twine; passes `hexagram`, `face` query params when `campaignHubState` matches Kotter |
+| **GSCP generated spoke** | `generated-spoke-cyoa` + `generateAndPersistGscpAdventure` | **`GeneratedSpokeInputs`** already includes `gmFace`, `moveFocus`, `chargeText`, `kotterStage`, hub hexagram — **strong partial contract** for this pipeline only |
+| `/campaign` (legacy) | Twine / grammatical initiation for BB | `CampaignReader` local state includes `active_face`, per-face completion flags — **stringly** vs enum at edges |
+| `/adventure/[id]/play` | Twine passage player | Query params can carry `face`, `kotterStage`, `spoke` — **ad-hoc** |
+| `/shadow/321` | **321 emotional process**; Cultivation Sifu choice | **`NPC_GUIDES`** in `src/lib/cultivation-sifu-guides.ts` — **explicit `face: GameMasterFace`** (good pattern); emotional current/desired in `Shadow321Runner` phases `alchemy` / `alchemy_feeling` |
+| Dashboard / capture | Check-in, charges | `getTodayCharge`, alchemy actions — **vector** sources not yet merged into a single **CyoaBuild** |
+| `POST /api/quests` | Generated quest registry (BAR-forge) | **`CreateQuestSchema`** — quest catalog, **not** the same as CYOA session build |
+| `quest-grammar` / `compileQuest` | Grammar compilation | `questModel` `personal` → `epiphany_bridge`, `communal` → `kotter`; **`EVENT_PRODUCTION_GRAMMARS`** = `kotter` \| `epiphany_bridge` only |
+| **Modular CYOA / CMA** (`clb-coaster-v0`) | Story generator template + graph validation | **Roller-coaster arc** lives here (`coasterTag`, `validateQuestGraph` “grammatical coaster”), **not** in `questGrammar` string — see §1.9 |
+
+### 1.2 Persistence & hub state (inventory)
+
+| Mechanism | Location | Notes |
+|-----------|----------|--------|
+| **Campaign hub draw** | `Instance.campaignHubState` JSON | **`CampaignHubStateV1`** in `src/lib/campaign-hub/types.ts`: 8 spokes, each `hexagramId`, `changingLines`, **`primaryFace: GameMasterFace`**; invalidated when `kotterStage` ≠ state |
+| **GSCP run bundle** | `GscpProgressBundle` + adventure/passage persistence | Tracks `gmFace`, `moveType`, `chargeText`, `kotterStage`, spoke — **does not** unify with 321 session id |
+| **321 session** | `persist321Session`, charge metabolism | Emotional narrative captured; **not** the same persistence shape as spoke CYOA |
+| **Option B** | Spec intent | **Not** centrally implemented as “resume passage + revalidate branches from current alchemy” in one module — **gap** |
+
+### 1.3 Sifu ↔ face (inventory)
+
+- **`NPC_GUIDES`** — single source for **321** guide names; each row has **`face: GameMasterFace`** — **reference pattern** for “named NPC → canonical face.”
+- **Future:** nations / schools / multiple NPCs per face — **not** in schema as first-class; issue #36 tracks spec only.
+
+### 1.4 Gaps (Wake Up conclusion)
+
+1. **No single `CyoaBuild` (or equivalent) type** consumed by hub, 321, GSCP, and Twine — **three parallel partial contracts** (`GeneratedSpokeInputs`, 321 answers, Twine query params).
+2. **Narrative templates** are **split**: quest compile uses **epiphany_bridge** / **kotter**; **roller coaster** exists as **`clb-coaster-v0`** modular graph (§1.9). **No single registry** ties event grammar + quest grammar + coaster template ids.
+3. **Check-in / vector → CYOA** policy is **fragmented** (threshold encounter, wiki copy, dashboard) — no one **gate** API.
+4. **Option B** persistence is **specified** at product level but **not** one implementation path across spoke stores.
+5. **`AdventurePlayer` URL `face=`** — **not** validated against `GAME_MASTER_FACES`; unknown values still display (see §1.6). Twine depth / `gm_set_` paths **are** constrained by node id regex.
+
+### 1.5 Knowledge that must live in-repo (for Clean Up onward)
+
+- [x] This **spec** (Wake Up inventory + deltas as we go).
+- [x] **Bridge table** — §1.7 (321 → quest/CYOA); refine into ADR in Grow Up if needed.
+- [ ] **Template registry** decision location (enum + map file vs DB) — **TBD in Grow Up** (must span quest grammar + modular coaster + events).
+- [ ] **OpenAPI / Zod** for any new public API — **Show Up**.
+
+### 1.6 Audit — `active_face` / `face` validation (Twine vs adventure player)
+
+| Path | Validation | Risk |
+|------|------------|------|
+| **`/api/adventures/.../depth_*_{face}`** | Face **must** be one of `shaman\|challenger\|regent\|architect\|diplomat\|sage` (regex on `nodeId`). Writes `storyProgress.state.active_face`. | **Low** — typos impossible from URL. |
+| **`gm_set_{face}`** nodes | Same six faces via regex on `nodeId`. | **Low**. |
+| **`getAlignmentContext`** (`iching-alignment.ts`) | Reads `active_face` from `storyProgress` as **string**, lowercases; **`FACE_TRIGRAM_PREFERENCE[activeFace]`** — unknown key → **no sect score** (silent). | **Medium** — corrupt state yields weaker alignment, not errors. |
+| **`AdventurePlayer`** (`portalFace` / `pickedFace`) | Casts to `GameMasterFace` for **`FACE_META` label** only; **`FACE_META[key]?.label ?? raw`** shows **raw** string if not a canonical key. | **Medium** — bad query params still propagate to API. |
+| **`CampaignReader`** (legacy `/campaign`) | Local `campaignState.active_face` string; `<<complete_active_face>>` macro uses whatever is set in Twine state. | **Medium** — depends on authored passages. |
+
+**Recommendation (Grow Up):** single `parseGameMasterFace(input: string): GameMasterFace | null` used at API boundary for `face` search param and optional normalization when persisting `storyProgress`.
+
+### 1.7 Trace — 321 → quest wizard / CYOA draft
+
+| Step | What happens |
+|------|----------------|
+| **`stashQuestWizardPrefillFrom321`** | Writes **`QuestWizardPrefill321V1`** to **sessionStorage** (`QUEST_WIZARD_PREFILL_321_KEY`): `metadata` (`Metadata321`), `phase2` (`UnpackingAnswers` + `alignedAction`), `phase3` (`Phase3Taxonomic`), optional `shadow321Name`, `displayHints`. Consumed when player opens quest flow — **client-only bridge**. |
+| **`createCyoaDraftFrom321`** | Server action: creates **`CustomBar`**, **`persist321Session`** with phase2/phase3 snapshots, then **`createCyoaDraft`** with **`templateId: 'clb-coaster-v0'`** (mandatory M1 **coaster** template per `seed-m1-template.ts`), `mission` from `phase2.alignedAction` or `'Direct Action'`. |
+
+**Implication:** 321 already fans out to (a) **quest wizard prefill** and (b) **modular coaster CYOA draft** — **not** to `GeneratedSpokeInputs` or `questGrammar` compile in one step. Unified **`CyoaBuild`** should **reference** these outputs (ids + template kind), not duplicate them.
+
+### 1.8 Index — `questModel` / `questGrammar` / `EVENT_PRODUCTION_GRAMMARS`
+
+**`EVENT_PRODUCTION_GRAMMARS`** (`src/lib/event-campaign/domains.ts`): `kotter` \| `epiphany_bridge` — validation for event/campaign domain authoring.
+
+**`questModel` → `questGrammar`** (`src/actions/quest-grammar.ts`): `communal` → `kotter`, else `epiphany_bridge`.
+
+**Compile / generation:**
+
+- `src/lib/quest-grammar/compileQuestCore.ts` — `questModel` selects Kotter vs Epiphany beat sets.
+- `src/app/admin/quest-grammar/GenerationFlow.tsx`, `UnpackingForm.tsx`, `useGenerationFlowState.ts` — admin UI.
+- `src/lib/creation-quest/*`, `src/lib/onboarding-cyoa-generator/*` — creation intent, onboarding CYOA.
+- `packages/bars-core/src/quest-grammar/*` — parallel package copies.
+- `src/lib/agent-client.ts` — `quest_grammar` payload.
+- `scripts/seed-cyoa-certification-quests.ts` — seed content (naming collision with “quest grammar” as product).
+
+**Not in this list:** modular **coaster** graph (`src/lib/modular-cyoa-graph/*`) — separate template family.
+
+### 1.9 Roller coaster — where it lives today
+
+- **Quest grammar / BAR compile:** only **epiphany_bridge** and **kotter** (plus `questModel` personal/communal).
+- **321 → CYOA:** **`clb-coaster-v0`** template (`scripts/seed-m1-template.ts`, `createCyoaDraftFrom321`) — **coaster** as **modular graph** with `coasterTag` / LIFT ↔ STATION validation.
+- **Grow Up decision:** whether “narrative template = roller coaster” **unifies** under one registry that points to **either** modular CYOA keys **or** a future third `questGrammar` branch — **not** blocked on absence of a string in `compileQuest`; the work is **cross-subsystem naming + registry**.
+
+---
+
+---
+
+## 2. Clean Up — (next) emotional throughput
+
+*Deferred until Wake Up sign-off. Will name current → desired player emotional move for this feature and tie to alchemy.*
+
+## 3. Grow Up — (next) six faces + Kotter maturity
+
+*Deferred. Will map design choices to faces and Kotter stage advancement.*
+
+## 4. Show Up — (next) implementation checklist
+
+*Deferred. Links to `tasks.md` and PRs.*
+
+---
+
+## References (file-level)
+
+- `src/lib/campaign-hub/types.ts` — `CampaignHubStateV1`, `CampaignHubSpokeDrawV1`
+- `src/lib/generated-spoke-cyoa/types.ts` — `GeneratedSpokeInputs`, `GscpProgressBundle`
+- `src/actions/generated-spoke-cyoa.ts` — GSCP wizard + persist
+- `src/app/campaign/spoke/[index]/page.tsx` — spoke routing, legacy portal
+- `src/lib/cultivation-sifu-guides.ts` — `NPC_GUIDES` ↔ `GameMasterFace`
+- `src/app/shadow/321/Shadow321Runner.tsx` — 321 phases, alchemy / desired feeling
+- `src/lib/quest-wizard-prefill.ts` — `QuestWizardPrefill321V1`, sessionStorage bridge
+- `src/actions/cyoa-generator.ts` — `createCyoaDraftFrom321`, `clb-coaster-v0`
+- `src/app/adventure/[id]/play/AdventurePlayer.tsx` — portal face URL / display
+- `src/app/api/adventures/[slug]/[nodeId]/route.ts` — `depth_*`, `gm_set_*`, portal face
+- `src/lib/iching-alignment.ts` — `activeFace` from `storyProgress`
+- `src/actions/quest-grammar.ts` — `questGrammar` epiphany vs kotter
+- `src/lib/event-campaign/domains.ts` — `EVENT_PRODUCTION_GRAMMARS`
+- `src/lib/modular-cyoa-graph/*`, `scripts/seed-m1-template.ts` — coaster template
