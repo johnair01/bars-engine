@@ -121,7 +121,7 @@ Response: `{ "record": { ... } }` or **404**
 
 ## OpenAPI
 
-- Machine-readable: [openapi/bar-forge-api.yaml](../openapi/bar-forge-api.yaml)
+- Machine-readable: [openapi/bar-forge-api.yaml](../openapi/bar-forge-api.yaml) (v1.3.0+ includes **`POST /api/quests`** and **`GET /api/quests/registry/{id}`** for generated quest registry)
 - **Custom GPT (recommended import):** [openapi/bar-forge-custom-gpt.yaml](../openapi/bar-forge-custom-gpt.yaml) — BAR Forge routes **plus** `/api/game-master/collective-context`, `/api/game-master/move`, `/api/game-master/resolve-quest` (same `BARS_API_KEY`). Also includes **`info.x-gm-faces`**, **`tags`** per sect, and optional **`gameMasterFace`** on match/registry bodies (stored in registry `metadataJson`).
 
 ### Optional `gameMasterFace`
