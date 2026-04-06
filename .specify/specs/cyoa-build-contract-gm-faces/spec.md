@@ -1,6 +1,6 @@
 # Spec: CYOA build contract, GM faces, Sifu alignment, hub/spoke
 
-**Status:** Wake Up ✓ · Clean Up ✓ · **Grow Up** (§3) drafted — team review → **Show Up**. Branch: `feature/rpg-handbook-gpt-pipeline`.  
+**Status:** Wake Up ✓ · Clean Up ✓ · Grow Up ✓ · **Show Up** — core types + registry + `parseGameMasterFace` wired (see §4). Branch: `feature/rpg-handbook-gpt-pipeline`.  
 **GitHub:** [Issue #36](https://github.com/johnair01/bars-engine/issues/36)  
 **Relates to:** [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md), [game-master-face-moves](../game-master-face-moves/spec.md), `.agent/context/game-master-sects.md`, `.agent/context/emotional-alchemy-interfaces.md`
 
@@ -57,7 +57,7 @@ Delivery uses **WAVE** internally (see issue #36): Wake Up → research; Clean U
 
 - [x] This **spec** (Wake Up inventory + deltas as we go).
 - [x] **Bridge table** — §1.7 (321 → quest/CYOA); refine into ADR in Grow Up if needed.
-- [ ] **Template registry** decision location (enum + map file vs DB) — **TBD in Grow Up** (must span quest grammar + modular coaster + events).
+- [x] **Template registry** — `src/lib/narrative-templates/registry.ts` (Show Up).
 - [ ] **OpenAPI / Zod** for any new public API — **Show Up**.
 
 ### 1.6 Audit — `active_face` / `face` validation (Twine vs adventure player)
@@ -285,3 +285,6 @@ Single DTO name **TBD** (`CyoaBuild`, `CyoaSessionIntent`, etc.); fields **conce
 - `src/actions/quest-grammar.ts` — `questGrammar` epiphany vs kotter
 - `src/lib/event-campaign/domains.ts` — `EVENT_PRODUCTION_GRAMMARS`
 - `src/lib/modular-cyoa-graph/*`, `scripts/seed-m1-template.ts` — coaster template
+- `src/lib/quest-grammar/parseGameMasterFace.ts` — boundary parse
+- `src/lib/narrative-templates/registry.ts` — template ids → subsystem
+- `src/lib/cyoa-build/*` — `CyoaBuild` Zod + GSCP mapper

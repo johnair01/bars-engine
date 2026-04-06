@@ -9,6 +9,7 @@
 import { db } from '@/lib/db'
 import { getActiveInstance } from '@/actions/instance'
 import { getHexagramStructure } from '@/lib/iching-struct'
+import { parseGameMasterFace } from '@/lib/quest-grammar/parseGameMasterFace'
 import { KOTTER_STAGES } from '@/lib/kotter'
 import { NATION_AFFINITIES } from '@/lib/elemental-moves'
 import type { KotterStage } from '@/lib/kotter'
@@ -84,7 +85,7 @@ export async function getAlignmentContext(playerId: string): Promise<IChingAlign
       const parsed = JSON.parse(player.storyProgress) as { state?: Record<string, unknown> }
       const state = parsed?.state
       if (state && typeof state.active_face === 'string') {
-        activeFace = state.active_face.toLowerCase().trim() || null
+        activeFace = parseGameMasterFace(state.active_face) ?? null
       }
     } catch {
       // Ignore parse errors

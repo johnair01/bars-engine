@@ -15,7 +15,8 @@ import { saveCyoaHexagramSnapshot } from '@/actions/cyoa-artifact-ledger'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
 import { buildOnboardingUrl } from '@/lib/safe-return-to'
-import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
+import { FACE_META } from '@/lib/quest-grammar/types'
+import { parseGameMasterFace } from '@/lib/quest-grammar/parseGameMasterFace'
 import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
 import { CastIChingModal } from '@/components/CastIChingModal'
 import { CyoaBarLedgerSheet } from '@/components/cyoa/CyoaBarLedgerSheet'
@@ -424,8 +425,8 @@ export function AdventurePlayer({
   const portalFaceLabel = useMemo(() => {
     const raw = pickedFace?.trim() || portalFace?.trim()
     if (!raw) return null
-    const key = raw as GameMasterFace
-    return FACE_META[key]?.label ?? raw
+    const parsed = parseGameMasterFace(raw)
+    return parsed ? FACE_META[parsed].label : null
   }, [pickedFace, portalFace])
 
   if (loading && !currentNode) {

@@ -4,17 +4,17 @@
 
 ## Clean Up — ✓
 
-## Grow Up — §3 drafted *(review)*
+## Grow Up — ✓
 
-- [ ] Confirm §3.2 `CyoaBuild` field names + optional renames.
-- [ ] Confirm §3.3 registry path (`src/lib/narrative-templates/registry.ts` or adjust).
-- [ ] §3.8 exit criteria → tick when agreed.
+## Show Up — first slice ✓
 
-## Show Up — next
+- [x] `parseGameMasterFace` + API/UI + iching alignment
+- [x] Narrative template registry + `CyoaBuild` Zod + GSCP mapper + 321 template constant
+- [x] Tests: `npm run test:cyoa-contract`, `test:quest-grammar` includes parse test
 
-- [ ] `CyoaBuild` Zod + persistence slice.
-- [ ] Narrative template registry module + first consumer.
-- [ ] `parseGameMasterFace` + AdventurePlayer / API wiring.
-- [ ] Hub/spoke merge of build + `campaignHubState`.
-- [ ] Option B revalidate spike (if scoped).
-- [ ] OpenAPI for new routes if any.
+## Follow-up
+
+- [ ] Persist `CyoaBuild` (Instance JSON or session) + hub/spoke consumer
+- [ ] Option B revalidate (checkpoint + alchemy branches)
+- [ ] `POST /api/cyoa/build` or similar + OpenAPI if public
+- [ ] Additional consumers: quest compile, event UI import `resolveNarrativeTemplate`

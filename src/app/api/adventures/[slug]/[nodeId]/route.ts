@@ -27,6 +27,7 @@ import {
     revalidateCampaignPortalRoomChoices,
 } from '@/lib/cyoa/filter-choices'
 import { getFaceMoveContent, moveFromEmitNodeId, EMIT_NODE_IDS } from '@/lib/cyoa/face-move-passages'
+import { parseGameMasterFace } from '@/lib/quest-grammar/parseGameMasterFace'
 import {
     hubJourneyPatchToStateFields,
     parseHubJourneyFromSearchParams,
@@ -510,7 +511,8 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const ref = searchParams.get('ref')
     const preview = searchParams.get('preview')
-    const portalFace = searchParams.get('face') ?? undefined
+    const portalFaceRaw = searchParams.get('face')
+    const portalFace = parseGameMasterFace(portalFaceRaw ?? undefined) ?? undefined
     let allowDraft = false
     if (preview === '1') {
       const player = await getCurrentPlayer()

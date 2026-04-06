@@ -10,6 +10,7 @@ import { persist321Session } from './charge-metabolism'
 import { Metadata321 } from '@/lib/quest-grammar'
 import { CmaStory } from '@/lib/modular-cyoa-graph/types'
 import { generateDeterministicNodeText } from '@/lib/modular-cyoa-graph/deterministic-filler'
+import { DEFAULT_MODULAR_COASTER_TEMPLATE_ID } from '@/lib/narrative-templates/registry'
 
 /**
  * Initializes a new CYOA draft from a source BAR and an Adventure Template.
@@ -316,10 +317,10 @@ export async function createCyoaDraftFrom321(data: {
         shadow321Name: data.shadow321Name
     })
 
-    // 3. Create the draft (clb-coaster-v0 is the mandatory M1 template)
+    // 3. Create the draft (modular coaster — `resolveNarrativeTemplate('modular_coaster')`)
     return createCyoaDraft({
         barId: bar.id,
-        templateId: 'clb-coaster-v0',
+        templateId: DEFAULT_MODULAR_COASTER_TEMPLATE_ID,
         mission: data.phase2?.alignedAction || 'Direct Action'
     })
 }

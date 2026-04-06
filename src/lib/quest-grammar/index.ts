@@ -114,3 +114,4 @@ export type {
   IChingContext,
   NodeChoiceOverride,
 } from './types'
+export { parseGameMasterFace } from './parseGameMasterFace'
