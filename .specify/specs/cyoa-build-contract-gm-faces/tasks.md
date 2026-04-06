@@ -1,23 +1,19 @@
 # Tasks: CYOA build contract — WAVE
 
-## Wake Up (research) — current sprint
+## Wake Up — signed off ✓
 
-- [x] Create spec kit `cyoa-build-contract-gm-faces` with **Wake Up** inventory (`spec.md` §1).
-- [x] **Audit** `CampaignReader` / Twine / `AdventurePlayer` / API — `active_face` + `face` validation vs `GameMasterFace` (`spec.md` §1.6).
-- [x] **Trace** `createCyoaDraftFrom321` + `stashQuestWizardPrefillFrom321` (`spec.md` §1.7).
-- [x] **List** `questGrammar` / `questModel` / `EVENT_PRODUCTION_GRAMMARS` call sites (`spec.md` §1.8).
-- [x] **Roller coaster** — located `clb-coaster-v0` + modular graph; distinguished from quest grammar (`spec.md` §1.9).
-- [ ] Team **sign-off** on Wake Up (issue #36): proceed to **Clean Up**.
+- [x] Spec kit, audits, push to `feature/rpg-handbook-gpt-pipeline` (`4db62e2`+).
 
-## Clean Up — (next)
+## Clean Up — in progress
 
-- [ ] Emotional throughput paragraph + player-facing “move” this unlocks.
-- [ ] Check-in gate policy stated as single rule.
+- [ ] Complete **§2.2 capture table** in `spec.md` (emotional vector + check-in rule + optional 15-move hooks).
+- [ ] Write **§2.3** player-facing throughput paragraph.
+- [ ] Mark **§2.4** exit criteria when ready for Grow Up.
 
 ## Grow Up — (not started)
 
 - [ ] Template registry design (quest + event + coaster ids).
-- [ ] `parseGameMasterFace` (or equivalent) at API boundary — issue from §1.6 recommendation.
+- [ ] `parseGameMasterFace` (or equivalent) — from Wake Up §1.6.
 
 ## Show Up — (not started)
 

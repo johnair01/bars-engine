@@ -5,10 +5,10 @@
 - Inventory CYOA surfaces, persistence, face/template binding, audits §1.6–1.9 (**complete** — see `spec.md`).
 - Exit: team sign-off → **Clean Up** (emotional throughput narrative).
 
-## Clean Up — emotional throughput
+## Clean Up — emotional throughput *(active)*
 
-- Name the emotional current → desired framing for the unified contract.
-- Tie gates (check-in, revalidate) to throughput, not only mechanics.
+- Fill `spec.md` §2.2–2.4: current/desired, alchemy/WAVE, optional 15-move labels, one check-in gate sentence.
+- Tie Option B and vector to **resolution**, not only data flow.
 
 ## Grow Up — faces + Kotter
 
