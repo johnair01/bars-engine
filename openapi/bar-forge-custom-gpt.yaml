@@ -4,7 +4,7 @@ info:
   description: |
     **Import this file into Custom GPT Actions** — single schema for BAR Forge **and** Game Master quest routes.
 
-    **BAR Forge:** match BAR → quests, list/save BAR registry (`BARS_API_KEY`, Bearer). See docs/BAR_FORGE_API.md.
+    **BAR Forge:** match BAR → quests, list/save BAR registry (`BARS_API_KEY`, Bearer). **`GET /api/quests`** lists matchable quests; **`POST /api/quests`** persists generated quest registry rows (BAR Forge output); **`GET /api/quests/registry/{id}`** fetches by id. See docs/BAR_FORGE_API.md.
 
     **Game Master (new):** collective campaign snapshot, wave moves (`/api/game-master/move`), savvy quest resolution with **artifact prizes** (`/api/game-master/resolve-quest`). Same Bearer key as BAR Forge.
 
@@ -12,7 +12,7 @@ info:
     Pass optional `gameMasterFace` on match/registry; registry stores under `metadataJson.gameMasterFace`.
 
     **Custom GPT:** Route user turns through a face lens when helpful—Sage may delegate. Use `tags` and `x-gm-faces` as behavioral hints.
-  version: 1.2.0
+  version: 1.3.0
   x-gm-faces:
     shaman:
       mission: Mythic threshold — belonging, ritual space, bridge between worlds.
@@ -50,6 +50,8 @@ tags:
     description: Relational field — polarity tags; care in copy before save
   - name: GM_Sage
     description: Routing & synthesis — default router; combine other tags in instructions
+  - name: QuestCatalog
+    description: Matchable quest rows + generated quest registry (CustomBar catalog and BAR Forge persistence)
 
 security:
   - bearerAuth: []
@@ -215,6 +217,120 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+
+  /api/quests:
+    get:
+      operationId: listQuestCatalog
+      summary: List matchable quests (canonical CustomBar catalog slice)
+      description: |
+        Filterable catalog for matcher and tools. Auth: Bearer (BARS_API_KEY), or session cookie when key unset (local dev).
+      tags:
+        - QuestCatalog
+        - GM_Architect
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: campaignRef
+          in: query
+          description: Filter by CustomBar.campaignRef (e.g. bruised-banana)
+          schema:
+            type: string
+        - name: questSource
+          in: query
+          description: Filter by CustomBar.questSource (e.g. system, bounty)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quest rows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quests:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QuestDto"
+                  count:
+                    type: integer
+                required:
+                  - quests
+                  - count
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createGeneratedQuestRegistry
+      summary: Create generated quest registry entry (BAR Forge output)
+      description: |
+        Validates body with `CreateQuestSchema` (see `src/lib/generated-quest-registry/schema.ts`).
+        Persists to `generated_quest_registry` with a stable id. `bookId` is optional; when set, must reference an existing book.
+        Auth: Bearer (BARS_API_KEY) or logged-in session (same as GET catalog).
+      tags:
+        - QuestCatalog
+        - GM_Architect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneratedQuestRegistryCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedQuestRegistryResponse"
+        "400":
+          description: Validation failed or unknown bookId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          description: Persistence error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+
+  /api/quests/registry/{id}:
+    get:
+      operationId: getGeneratedQuestRegistryById
+      summary: Get one generated quest registry row by id
+      description: |
+        Returns the same shape as `POST /api/quests` response. Auth: Bearer or session (same as catalog).
+      tags:
+        - QuestCatalog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Registry id returned from POST /api/quests
+      responses:
+        "200":
+          description: Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedQuestRegistryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
 
   /api/game-master/collective-context:
     get:
@@ -826,3 +942,187 @@ components:
         narrativeKernel:
           type: string
           nullable: true
+
+    GeneratedQuestTransformationMove:
+      type: object
+      description: Stabilization or expression leg (from / to / move)
+      required:
+        - from
+        - to
+        - move
+      properties:
+        from:
+          type: string
+          minLength: 1
+        to:
+          type: string
+          minLength: 1
+        move:
+          type: string
+          minLength: 1
+
+    GeneratedQuestTranslationTransformation:
+      type: object
+      description: Translation leg (includes path)
+      required:
+        - path
+        - from
+        - to
+        - move
+      properties:
+        path:
+          type: string
+          minLength: 1
+        from:
+          type: string
+          minLength: 1
+        to:
+          type: string
+          minLength: 1
+        move:
+          type: string
+          minLength: 1
+
+    GeneratedQuestRegistryStep:
+      type: object
+      required:
+        - phase
+        - instruction
+      properties:
+        phase:
+          type: string
+          enum:
+            - stabilization
+            - translation
+            - expression
+        instruction:
+          type: string
+          minLength: 1
+
+    GeneratedQuestRegistryCreate:
+      type: object
+      description: |
+        Request body for POST /api/quests. Mirrors Zod CreateQuestSchema in src/lib/generated-quest-registry/schema.ts
+      required:
+        - title
+        - status
+        - chapter
+        - moveType
+        - source
+        - bar
+        - transformation
+        - steps
+      properties:
+        title:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - archived
+        chapter:
+          type: integer
+          minimum: 1
+        moveType:
+          type: string
+          enum:
+            - generated
+            - library
+            - manual
+        source:
+          type: object
+          required:
+            - kind
+          properties:
+            kind:
+              type: string
+              minLength: 1
+            label:
+              type: string
+              minLength: 1
+        bar:
+          type: object
+          required:
+            - label
+            - type
+            - emotionalChannel
+            - emotionalState
+          properties:
+            label:
+              type: string
+              minLength: 1
+            type:
+              type: string
+              enum:
+                - perception
+                - identity
+                - relational
+                - systemic
+            polarity:
+              type: string
+              minLength: 1
+            emotionalChannel:
+              type: string
+              enum:
+                - anger
+                - fear
+                - sadness
+                - joy
+                - neutral
+            emotionalState:
+              type: string
+              minLength: 1
+            wavePhases:
+              type: array
+              items:
+                type: string
+        transformation:
+          type: object
+          required:
+            - stabilization
+            - translation
+            - expression
+          properties:
+            stabilization:
+              $ref: "#/components/schemas/GeneratedQuestTransformationMove"
+            translation:
+              $ref: "#/components/schemas/GeneratedQuestTranslationTransformation"
+            expression:
+              $ref: "#/components/schemas/GeneratedQuestTransformationMove"
+        steps:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/GeneratedQuestRegistryStep"
+        tags:
+          type: array
+          items:
+            type: string
+        bookId:
+          type: string
+          nullable: true
+
+    GeneratedQuestRegistryResponse:
+      description: Created or fetched registry row (includes id and timestamps)
+      allOf:
+        - $ref: "#/components/schemas/GeneratedQuestRegistryCreate"
+        - type: object
+          required:
+            - id
+            - bookId
+            - createdAt
+            - updatedAt
+          properties:
+            id:
+              type: string
+            bookId:
+              type: string
+              nullable: true
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
