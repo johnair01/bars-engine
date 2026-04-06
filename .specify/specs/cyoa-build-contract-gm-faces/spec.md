@@ -1,6 +1,6 @@
 # Spec: CYOA build contract, GM faces, Sifu alignment, hub/spoke
 
-**Status:** Wake Up **signed off**; **Clean Up** capture complete (§2.2–2.6). Next: **Grow Up**. Branch: `feature/rpg-handbook-gpt-pipeline`.  
+**Status:** Wake Up ✓ · Clean Up ✓ · **Grow Up** (§3) drafted — team review → **Show Up**. Branch: `feature/rpg-handbook-gpt-pipeline`.  
 **GitHub:** [Issue #36](https://github.com/johnair01/bars-engine/issues/36)  
 **Relates to:** [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md), [game-master-face-moves](../game-master-face-moves/spec.md), `.agent/context/game-master-sects.md`, `.agent/context/emotional-alchemy-interfaces.md`
 
@@ -183,15 +183,89 @@ Heuristic: pair **Clean-leaning** moves to **integration** work; **Wake** to **n
 - [x] §2.3–2.4 player throughput + gate rule.  
 - [x] §2.5 Wake-within-Clean + campaign maturity.  
 - [x] §2.6 pairings advised.  
-- [ ] Team review → proceed to **Grow Up** (§3).
+- [x] Team review → **Grow Up** (§3) drafted.
 
-## 3. Grow Up — (next) six faces + Kotter maturity
+---
 
-*After Clean Up. Map design choices to faces and Kotter stage advancement.*
+## 3. Grow Up — six faces, Kotter maturity, contracts
 
-## 4. Show Up — (next) implementation checklist
+*Grow Up expands **capacity**: one ontology across subsystems, explicit **face ownership** of deliverables, and **campaign change** (Kotter) that stays legible when personal CYOA composes. Spiral / Integral mapping: see `.agent/context/game-master-sects.md` (faces ↔ developmental levels); design must not **dissociate** a level or conflict surfaces there.*
 
-*After Grow Up. Links to `tasks.md` and PRs.*
+### 3.1 Principle — all levels honored
+
+- **Six faces** = six **sect lenses**; **Sage** integrates and may **mask** as another face per [game-master-face-moves](../game-master-face-moves/spec.md).  
+- **CyoaBuild** and related APIs should make **face** and **template** **explicit** so no pipeline silently pretends to be “neutral.”  
+- **Kotter** = **collective change maturity** (`Instance.kotterStage`, hub draw invalidation). Personal CYOA must **read** the same stage and **resource** context so **Regent** / **Diplomat** beats (rules + weave) are not orphaned.
+
+### 3.2 `CyoaBuild` — conceptual fields *(Zod/OpenAPI in Show Up)*
+
+Single DTO name **TBD** (`CyoaBuild`, `CyoaSessionIntent`, etc.); fields **conceptually**:
+
+| Field | Purpose |
+|-------|---------|
+| `emotionalVector` | Ref or embedded snapshot: current → desired (from allowed sources per §2.4). |
+| `waveMove` | Four-move spine: Wake Up / Clean Up / Grow Up / Show Up (aligned with `GscpMoveFocus` / product wording). |
+| `gameMasterFace` | `GameMasterFace` — canonical; Sifu/NPC via `portraysFace` or `sifuId` + lookup. |
+| `gmFaceMoveId` | Optional; ties to face-moves spec when applicable. |
+| `narrativeTemplate` | **Registry key** — see §3.3 (not raw duplicate strings). |
+| `campaignContext` | At minimum: `campaignRef`, `kotterStage`, hub spoke index if relevant, `gatherResources` / domain flags as product requires. |
+| `provenance` | Which source satisfied the vector gate (`check_in`, `shadow_321`, `persisted_alchemy`, …). |
+
+**Merge rule:** **`GeneratedSpokeInputs`**, 321 exports, and Twine query bundles **map into** this shape at boundaries; **do not** fork the enum set.
+
+### 3.3 Narrative template registry *(decision)*
+
+**Decision:** introduce a **single module** (e.g. `src/lib/narrative-templates/registry.ts`) exporting:
+
+- **`NarrativeTemplateId`** — `enum` or union: at minimum `epiphany_bridge`, `kotter`, `modular_coaster` (maps to `clb-coaster-v0` and future coaster ids).  
+- **`resolveNarrativeTemplate(id)`** → `{ kind: 'quest_grammar' \| 'event_grammar' \| 'modular_cyoa'; questGrammar?: …; eventGrammar?: …; modularTemplateId?: string }`.  
+- **Consumers:** quest compile, event campaign domains, 321 → `createCyoaDraft`, GSCP (if it needs a template label).  
+
+**Rationale:** Wake Up §1.9 split is **real**; registry **names** the third path without forcing `questGrammar` to add `roller_coaster` until compile path needs it.
+
+### 3.4 `parseGameMasterFace` *(boundary)*
+
+- **Signature:** `parseGameMasterFace(input: string | null | undefined): GameMasterFace | null` (normalize: trim, lowercase).  
+- **Call sites (first slice):** `AdventurePlayer` / server handler for `face` query param; optional normalization when writing `storyProgress.state.active_face`.  
+- **Invalid:** return `null`; caller **must not** persist garbage — **Challenger** move: block or re-prompt (“Not yet” to invalid face).
+
+### 3.5 Face ownership of Grow Up deliverables
+
+| Face | Primary ownership in this initiative |
+|------|----------------------------------------|
+| **Shaman** | Ritual **gate** UX copy and flow: vector before threshold; 321 as threshold experience. |
+| **Challenger** | **Hard gate** enforcement — reject builds without vector; **flag blocked** pipelines. |
+| **Regent** | **`campaignContext.kotterStage`**, hub **`campaignHubState`** merge rules; **invalidation** when stage changes. |
+| **Architect** | **`CyoaBuild` DTO**, **template registry**, compile hooks from grammar + modular CYOA. |
+| **Diplomat** | **Weave** between hub, spoke, 321, dashboard — same contract fields across surfaces. |
+| **Sage** | **Masking** semantics (`portraysFace` vs runtime `effectiveFace`); **synthesis** when a feature must touch multiple faces. |
+
+### 3.6 Kotter — how unified contract **matures** the campaign
+
+| Stage (abbrev.) | What the contract unlocks |
+|-----------------|---------------------------|
+| **1–2 Urgency / Coalition** | Named **vector** + **face** make “why now” and “who with” **legible**; hub draw **aligns** with stage. |
+| **3–4 Vision / Communicate** | **Template** + narrative spine **match** epiphany vs Kotter vs coaster **explicitly** — no silent mismatch. |
+| **5–8 Obstacles → Anchor** | **Option B** + **revalidate** support honest **progress** when emotions shift; **BARs/quests** emitted from **same** build record. |
+
+*Not every stage needs a new ticket* — **Grow Up** ensures **one** `kotterStage` + **one** build snapshot drive **spoke** and **downstream** together.
+
+### 3.7 Sage / NPC
+
+- **`portraysFace: GameMasterFace`** on Sifu/NPC rows; **display name** is not authoritative.  
+- **Sage mask:** runtime `effectiveFace` when Sage “runs as” another face — document in ADR if prompts diverge from `portraysFace`.
+
+### 3.8 Exit criteria for Grow Up
+
+- [ ] §3.3 registry **location + file name** agreed (or PR stub).  
+- [ ] §3.2 field list **frozen** for first Show Up slice.  
+- [ ] §3.4 **parse** implemented or ticketed with file list.  
+- [ ] §1.5 **template registry** checkbox satisfied (move to Show Up for code).  
+- [ ] Team ready for **Show Up** (implementation checklist §4).
+
+## 4. Show Up — implementation checklist
+
+*Execute after §3.8. Track PRs in `tasks.md`; **OpenAPI / Zod** for any new public route per §1.5.*
 
 ---
 

@@ -1,18 +1,20 @@
 # Tasks: CYOA build contract — WAVE
 
-## Wake Up — signed off ✓
+## Wake Up — ✓
 
-## Clean Up — capture complete ✓
+## Clean Up — ✓
 
-- [x] §2 emotional vector, gate rule, §2.1b three layers, §2.5–2.6, exit criteria (pending team review).
+## Grow Up — §3 drafted *(review)*
 
-## Grow Up — next
+- [ ] Confirm §3.2 `CyoaBuild` field names + optional renames.
+- [ ] Confirm §3.3 registry path (`src/lib/narrative-templates/registry.ts` or adjust).
+- [ ] §3.8 exit criteria → tick when agreed.
 
-- [ ] Team review Clean Up → tick §2.7 last checkbox.
-- [ ] Template registry design (quest + event + coaster ids).
-- [ ] Map design choices to six faces + Kotter maturity (`spec.md` §3).
-- [ ] `parseGameMasterFace` — from Wake Up §1.6.
+## Show Up — next
 
-## Show Up — (not started)
-
-- [ ] Implementation PRs linked here.
+- [ ] `CyoaBuild` Zod + persistence slice.
+- [ ] Narrative template registry module + first consumer.
+- [ ] `parseGameMasterFace` + AdventurePlayer / API wiring.
+- [ ] Hub/spoke merge of build + `campaignHubState`.
+- [ ] Option B revalidate spike (if scoped).
+- [ ] OpenAPI for new routes if any.
