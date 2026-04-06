@@ -6,6 +6,14 @@ Players should assemble a **CYOA** from typed inputs: **emotional vector** (idea
 
 **Mid-spoke CYOA persistence (product decision):** **Option B — Checkpoint + revalidate.** Persist passage/progress, but on resume **re-run branch eligibility** from the **current** emotional-alchemy snapshot so visible choices stay honest when the player’s state changed.
 
+### Composer CYOA → `CyoaBuild` (how players fill the container)
+
+Players **do not** complete a detached form. The **composer path is itself a CYOA**: **chosen branches** accumulate **`CyoaBuild`** fields (narrative template, `gameMasterFace`, WAVE move, emotional vector / provenance, campaign context). A **terminal passage** validates (Zod), **persists** the build, and **hands off** to hub/spoke/GSCP. Hard-gate branches redirect to check-in / 321 with **return** into the composer when needed.
+
+**Six faces on the composer:** **Shaman** — ritual threshold (naming state); **Challenger** — “not yet” / hard gate; **Regent** — Kotter + campaign rules in context; **Architect** — branches as blueprint into the DTO; **Diplomat** — weave personal ↔ collective copy; **Sage** — commit / witness / optional mask.
+
+**Spec:** `.specify/specs/cyoa-composer-build-cyoa/spec.md` (in repo; on GitHub: `blob/<branch>/.specify/specs/cyoa-composer-build-cyoa/spec.md`).
+
 ---
 
 ## How we execute this issue: WAVE (delivery framework)
@@ -94,11 +102,13 @@ The only Game Master **face** identifiers are: **Shaman, Challenger, Regent, Arc
 
 ## Acceptance criteria
 
-- [ ] Spec under `.specify/specs/` covering: `CyoaBuild` (or agreed name), template registry, `portraysFace`, Sifu/nation model, and **Option B** persistence behavior for spokes.
-- [ ] **WAVE sections** reflected in spec: Wake (research/repo knowledge), Clean (throughput / alchemy move), Grow (faces + Kotter maturity), Show (implementation checklist).
+- [x] Core types + registry + `parseGameMasterFace` (Show Up slice — see parent spec §4).
+- [ ] **Composer CYOA** spec + implementation: persisted `CyoaBuild` from **branch accumulation**, hub/spoke **read** path — [cyoa-composer-build-cyoa](.specify/specs/cyoa-composer-build-cyoa/spec.md).
+- [ ] Spec under `.specify/specs/` covering: `CyoaBuild` persistence in gameplay, template registry consumers, `portraysFace`, Sifu/nation model, and **Option B** persistence behavior for **spoke** CYOAs.
+- [ ] **WAVE sections** reflected in specs (parent + composer).
 - [ ] APIs / DB use `GameMasterFace` (or documented migration from legacy strings).
 - [ ] 321 /shadow documented as resolving to face (+ optional Sifu id).
-- [ ] Child tasks or linked issues for: API routes, Prisma if needed, hub spoke consumer, roller coaster resolution.
+- [ ] Child tasks: persistence store, composer adventure graph, hub CTA → composer → spoke, roller coaster resolution in registry consumers.
 
 ---
 

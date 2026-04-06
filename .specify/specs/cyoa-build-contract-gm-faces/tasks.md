@@ -14,6 +14,7 @@
 
 ## Follow-up
 
+- [ ] **Composer CYOA** — [cyoa-composer-build-cyoa](../cyoa-composer-build-cyoa/spec.md) (branch → `CyoaBuild` persist → handoff)
 - [ ] Persist `CyoaBuild` (Instance JSON or session) + hub/spoke consumer
 - [ ] Option B revalidate (checkpoint + alchemy branches)
 - [ ] `POST /api/cyoa/build` or similar + OpenAPI if public

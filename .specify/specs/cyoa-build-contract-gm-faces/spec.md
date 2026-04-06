@@ -267,6 +267,8 @@ Single DTO name **TBD** (`CyoaBuild`, `CyoaSessionIntent`, etc.); fields **conce
 
 *Execute after §3.8. Track PRs in `tasks.md`; **OpenAPI / Zod** for any new public route per §1.5.*
 
+**Composer CYOA → persistence (how players “fill” the container):** Not a separate form — a **composer CYOA** whose **chosen branches** accumulate **`CyoaBuild`** fields and **commit** at a terminal passage. Spec: **[cyoa-composer-build-cyoa](../cyoa-composer-build-cyoa/spec.md)** (six faces lens §1, branch→field §2, persistence §3).
+
 ---
 
 ## References (file-level)
@@ -288,3 +290,4 @@ Single DTO name **TBD** (`CyoaBuild`, `CyoaSessionIntent`, etc.); fields **conce
 - `src/lib/quest-grammar/parseGameMasterFace.ts` — boundary parse
 - `src/lib/narrative-templates/registry.ts` — template ids → subsystem
 - `src/lib/cyoa-build/*` — `CyoaBuild` Zod + GSCP mapper
+- `.specify/specs/cyoa-composer-build-cyoa/spec.md` — composer CYOA → persist `CyoaBuild`
