@@ -1,6 +1,6 @@
 # Spec: CYOA build contract, GM faces, Sifu alignment, hub/spoke
 
-**Status:** Wake Up **signed off** (2026-04-06); **Clean Up** in progress (§2). Branch: `feature/rpg-handbook-gpt-pipeline`.  
+**Status:** Wake Up **signed off**; **Clean Up** capture complete (§2.2–2.6). Next: **Grow Up**. Branch: `feature/rpg-handbook-gpt-pipeline`.  
 **GitHub:** [Issue #36](https://github.com/johnair01/bars-engine/issues/36)  
 **Relates to:** [campaign-hub-spoke-landing-architecture](../campaign-hub-spoke-landing-architecture/spec.md), [game-master-face-moves](../game-master-face-moves/spec.md), `.agent/context/game-master-sects.md`, `.agent/context/emotional-alchemy-interfaces.md`
 
@@ -127,27 +127,63 @@ Delivery uses **WAVE** internally (see issue #36): Wake Up → research; Clean U
 - **15 moves** have **primary WAVE** leanings; any move can appear in multiple stages with different emphasis.  
 - This spec’s **Clean Up** phase (delivery process) should **mirror** player **Clean Up** where relevant: metabolize confusion, **stabilize coherence** between pipelines, **reopen** honest choice after fragmentation.
 
-### 2.2 Capture — product emotional vector *(fill with team; drives §2.3–2.4)*
+### 2.1b Three layers of “moves” (do not conflate)
 
-| Prompt | Answer *(TBD — interview below)* |
-|--------|-------------------------------------|
-| **Current state** (what does the *system* feel like today for players/GMs?) | |
-| **Desired state** (what should it feel like when `CyoaBuild` + registry land?) | |
-| **Shadow / belief row** that best fits (see alchemy doc §1 table, e.g. “I’m not ready,” “I don’t belong,” fragmentation) | |
-| **This initiative’s primary WAVE beat** for the *team* doing the work *(which of Wake/Clean/Grow/Show is the main thrust of Clean Up deliverables?)* | |
-| **15-move hooks** *(optional)* — which canonical moves label which deliverables? e.g. Stabilize Coherence → one registry; Reveal Stakes → Wake Up doc | |
-| **Check-in gate — one rule** *(one sentence: when must vector exist before CYOA?)* | |
+| Layer | Role | Tie to this initiative |
+|-------|------|-------------------------|
+| **Belief-relief moves** | Per shadow belief, per **WAVE column** in alchemy doc §1 (e.g. “I’m not good enough” → Clean up *unlivable standards*). They **relieve or challenge** the belief at that stage. | Our shadow row: **“I’m not good enough”** + **“the app isn’t capable”** — Clean Up work **dissolves incoherent standards** (many pipelines, no contract) and **grounds** capability in one honest integration path. |
+| **WAVE spine** (Wake / Clean / Grow / Show) | **Player journey** through a CYOA: which beat of the story we’re in. | **Ordered beats** through a CYOA (plus emitted BARs/quests) are the **adventure**; WAVE labels **where** we are in that arc. |
+| **Game Master face moves** | Per-face tools / flavor ([game-master-face-moves](../game-master-face-moves/spec.md)). | **Which Sifu/face** is active — not the same enum as belief-relief or WAVE, but **must resolve** to `GameMasterFace`. |
 
-### 2.3 Player-facing throughput *(after §2.2)*
+**Emerging product insight:** belief-relief moves, WAVE progression, and GM face moves can be **composed in order**; that composition is the **CYOA adventure**, and **BARs/quests** are what **emerge** from nodes (emit, wizard, registry) — specs should keep the three layers **legible** in `CyoaBuild` and downstream generators.
 
-*Tie: daily check-in / alchemy snapshot → gate → CYOA build. Option B revalidation = honesty when state changes.*
+### 2.2 Capture — product emotional vector *(2026-04-06)*
 
-### 2.4 Exit criteria for Clean Up
+| Prompt | Answer |
+|--------|--------|
+| **Current state** | **Frustrated, anxious** — *dissatisfied* **anger** and **fear** that this basic feature is not yet running. |
+| **Desired state** | **Triumph, excitement, bliss** — *satisfied* anger, fear, and **joy** when the unified path lands. |
+| **Shadow / belief row** | **“I’m not good enough”** paired with **“the app isn’t capable”** (alchemy doc §1: good enough + capability columns). Same table’s **moves** address the belief **per stage**; they are **not** the same as WAVE spine labels or GM face moves — see §2.1b. |
+| **Delivery WAVE for this section** | **Clean Up** stage only — we are **not** re-running a full WAVE for the team; we **reference** Wake / Grow / Show where they clarify **stakes** and **maturity** (§2.5). |
+| **Check-in gate** | **Hard gate.** The app’s main function is to **take in emotional data**; the CYOA generator may read it from **multiple sources** (check-in, 321, persisted alchemy), but **must not** run a build that **requires** a vector **without** resolving one through an allowed path. |
 
-- [ ] §2.2 table completed (or explicitly “N/A” with rationale).  
-- [ ] §2.3 short paragraph: player journey in emotional language.  
-- [ ] Check-in gate rule committed in spec.  
-- [ ] Team ready for **Grow Up** (faces + Kotter maturity on design choices).
+### 2.3 Player-facing throughput
+
+Players experience **fragmentation** as “the story doesn’t remember me” or “the teacher isn’t the same as the menu.” **Clean Up** in product terms: one **emotional vector** (current → desired) **feeds** the CYOA composer when a spoke or generator **requires** it — **hard gate**: no anonymous myth-making when the ritual demands truth. **Option B** (checkpoint + revalidate) keeps **honesty** when feelings shift mid-path: the engine **re-checks** branches against **current** alchemy instead of trapping the player in a lie. Triumph/bliss show up when **face**, **template**, and **campaign phase** **cohere** with what they already named in check-in or 321.
+
+### 2.4 Check-in gate — normative rule *(single sentence)*
+
+**If a CYOA build or spoke entry requires an emotional vector, the player must complete an allowed capture path (e.g. daily check-in or full 321 alchemy phases that yield vector fields) before the build proceeds; multiple sources may satisfy the gate if they produce the same contract fields.**
+
+### 2.5 What’s still left to **Wake Up** inside this Clean Up — and campaign maturity
+
+- **Wake** (insight not yet owned): fragmentation **is** the tax — not laziness. The Wake Up doc already **named** the pipes; Clean Up **chooses** integration despite discomfort.  
+- **How this Clean Up matures the campaign:** metabolizing duplicate template strings and orphan `face` params lets **Kotter stage**, **hub draw** (`campaignHubState`), and **321/Sifu** speak **one language** — **Regent** gets legible rules, **Architect** gets one blueprint registry, **Diplomat** gets a weave that doesn’t drop players between surfaces. That is **campaign maturity**: change stage and collective field stay **legible** to personal CYOA.
+
+### 2.6 Advised 15-move pairings *(from alchemy primary WAVE + Wake Up audit logic)*
+
+Heuristic: pair **Clean-leaning** moves to **integration** work; **Wake** to **naming**; **Grow** to **capacity** of the contract; **Show** to **shipping** PRs.
+
+| Canonical move (alchemy doc §2) | Primary WAVE | Pair to deliverable / risk |
+|---------------------------------|--------------|----------------------------|
+| **Stabilize Coherence** | Control / Clean | **Single template registry** (quest + event + coaster ids) — ground enthusiasm into one structure. |
+| **Consolidate Energy** | Control / Clean | **`CyoaBuild` DTO** + merge rules for hub + 321 + GSCP — gather scattered energy. |
+| **Reopen Sensitivity** | Control / Clean | **`parseGameMasterFace` at API boundary** — soften rigid/wrong `face` strings without shaming the player. |
+| **Temper Action** | Control / Clean | **Option B** persistence — reassess risk when alchemy changes on resume. |
+| **Reclaim Meaning** | Transcend / Clean | **Sifu `portraysFace`** — correct distortion between NPC name and canonical face. |
+| **Reveal Stakes** | Generative / Wake | **Wake Up §1** inventory — already done; keep as reference when scope creeps. |
+| **Integrate Gains** | Generative / Grow | **Grow Up** slice: after registry exists, **fold** BAR/quest emission into one pipeline story. |
+| **Declare Intention** | Generative / Show | **Show Up**: PRs that trace to spec tasks — momentum into visible action. |
+
+*Not every move needs a ticket* — use this table in **Grow Up** when assigning face + Kotter links to design choices.
+
+### 2.7 Exit criteria for Clean Up
+
+- [x] §2.2 table completed.  
+- [x] §2.3–2.4 player throughput + gate rule.  
+- [x] §2.5 Wake-within-Clean + campaign maturity.  
+- [x] §2.6 pairings advised.  
+- [ ] Team review → proceed to **Grow Up** (§3).
 
 ## 3. Grow Up — (next) six faces + Kotter maturity
 

@@ -2,18 +2,16 @@
 
 ## Wake Up — signed off ✓
 
-- [x] Spec kit, audits, push to `feature/rpg-handbook-gpt-pipeline` (`4db62e2`+).
+## Clean Up — capture complete ✓
 
-## Clean Up — in progress
+- [x] §2 emotional vector, gate rule, §2.1b three layers, §2.5–2.6, exit criteria (pending team review).
 
-- [ ] Complete **§2.2 capture table** in `spec.md` (emotional vector + check-in rule + optional 15-move hooks).
-- [ ] Write **§2.3** player-facing throughput paragraph.
-- [ ] Mark **§2.4** exit criteria when ready for Grow Up.
+## Grow Up — next
 
-## Grow Up — (not started)
-
+- [ ] Team review Clean Up → tick §2.7 last checkbox.
 - [ ] Template registry design (quest + event + coaster ids).
-- [ ] `parseGameMasterFace` (or equivalent) — from Wake Up §1.6.
+- [ ] Map design choices to six faces + Kotter maturity (`spec.md` §3).
+- [ ] `parseGameMasterFace` — from Wake Up §1.6.
 
 ## Show Up — (not started)
 
