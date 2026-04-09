@@ -3,10 +3,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AnchorData, AgentData } from '@/lib/spatial-world/pixi-room'
+import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import type { NurseryType } from '@/lib/spatial-world/nursery-rooms'
+import { getNpcByFace } from '@/lib/npc/named-guides'
 import { useSpatialRoomSession } from '@/lib/spatial-world/useSpatialRoomSession'
 import { enterRoom, heartbeat } from '@/actions/room-presence'
 import { getIntentAgentsForRoom } from '@/actions/intent-agents'
+import { launchNurseryRitual, completeNurseryRitual, type NurseryRitualContext } from '@/actions/nursery-ritual'
 import { AnchorModal } from '@/components/world/AnchorModal'
+import { NurseryRitualFlow } from '@/components/nursery/NurseryRitualFlow'
 import type { SpokeState } from '@/actions/campaign-spoke-states'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
 import { MapAvatarGate } from '@/components/world/MapAvatarGate'
@@ -68,6 +73,24 @@ export function RoomCanvas({
   const [agents, setAgents] = useState<AgentData[]>([])
   const [selectedAgent, setSelectedAgent] = useState<AgentData | null>(null)
   const [nationGateBlock, setNationGateBlock] = useState<{ nationDisplayName: string } | null>(null)
+  const [selectedFace, setSelectedFace] = useState<GameMasterFace | null>(() => {
+    // Persist face selection via URL search params
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const f = params.get('face')
+      if (f) return f as GameMasterFace
+    }
+    return null
+  })
+  const [ritualContext, setRitualContext] = useState<NurseryRitualContext | null>(null)
+  const [ritualNurseryType, setRitualNurseryType] = useState<NurseryType | null>(null)
+  const [ritualResult, setRitualResult] = useState<{ barTitle: string; vibeulonsAwarded: number; planted: boolean } | null>(null)
+  const [carryingBarId, setCarryingBarId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('carrying')
+    }
+    return null
+  })
   const spriteReady = !!player.avatarConfig
 
   const posRef = useRef(playerPos)
@@ -83,9 +106,11 @@ export function RoomCanvas({
         }
       }
       setNationGateBlock(null)
-      router.push(`/world/${instanceSlug}/${targetSlug}`)
+      // Carry face selection across room navigation
+      const faceParam = selectedFace ? `?face=${selectedFace}` : ''
+      router.push(`/world/${instanceSlug}/${targetSlug}${faceParam}`)
     },
-    [allRooms, playerNationKey, bypassNationGate, instanceSlug, router]
+    [allRooms, playerNationKey, bypassNationGate, instanceSlug, router, selectedFace]
   )
 
   // Stable ref so the playerPos effect never needs to expand its deps
@@ -155,6 +180,58 @@ export function RoomCanvas({
       if (target) navigateToWorldRoom(target.slug)
     }
   }
+
+  const handleSelectFace = useCallback((face: GameMasterFace) => {
+    setSelectedFace(face)
+    // Persist to URL so it survives room navigation
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('face', face)
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [])
+
+  const handleLaunchRitual = useCallback(async (nurseryType: NurseryType) => {
+    const face = selectedFace ?? 'sage'
+    const result = await launchNurseryRitual(nurseryType, face)
+    if (result.success) {
+      setRitualContext(result.context)
+      setRitualNurseryType(nurseryType)
+      setRitualResult(null)
+    } else {
+      console.error('[nursery] Launch failed:', result.error)
+    }
+  }, [selectedFace])
+
+  const handleRitualComplete = useCallback(async (result: {
+    barText: string
+    reflectionFields: Record<string, string>
+    coreResponse: unknown
+    moveId: string
+  }) => {
+    if (!ritualContext || !ritualNurseryType) return
+    const spokeMatch = room.name.match(/Spoke (\d+)/)
+    const spokeIndex = spokeMatch ? parseInt(spokeMatch[1], 10) : 0
+
+    const res = await completeNurseryRitual({
+      moveId: result.moveId,
+      barText: result.barText,
+      reflectionFields: result.reflectionFields,
+      coreResponse: result.coreResponse,
+      face: ritualContext.face,
+      spokeIndex,
+      instanceId: instanceSlug,
+      nurseryType: ritualNurseryType,
+    })
+
+    if (res.success) {
+      setRitualResult({
+        barTitle: res.barTitle,
+        vibeulonsAwarded: res.vibeulonsAwarded,
+        planted: res.planted,
+      })
+    }
+  }, [ritualContext, ritualNurseryType, room.name, instanceSlug])
 
   const navigateToEncounter = useCallback(() => {
     // For now, redirect to a mock combat run
@@ -386,6 +463,10 @@ export function RoomCanvas({
             playerNationKey,
             bypassNationGate,
           }}
+          onSelectFace={handleSelectFace}
+          onLaunchRitual={handleLaunchRitual}
+          carryingBarId={carryingBarId}
+          onBarPlanted={() => setCarryingBarId(null)}
         />
       )}
 
@@ -404,11 +485,53 @@ export function RoomCanvas({
         />
       )}
 
+      {ritualContext && (
+        <NurseryRitualFlow
+          nationMove={ritualContext.nationMove}
+          archetypeMove={ritualContext.archetypeMove}
+          face={ritualContext.face}
+          domain={ritualContext.domain}
+          onComplete={handleRitualComplete}
+          onClose={() => { setRitualContext(null); setRitualResult(null) }}
+          completionResult={ritualResult}
+        />
+      )}
+
       <DPadOverlay onMove={handleDPadMove} />
 
-      <div className="absolute top-4 left-4 z-10 text-xs text-zinc-500">
-        {room.name} · {instanceSlug}
-      </div>
+      {/* Carrying BAR indicator */}
+      {carryingBarId && (
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 bg-emerald-900/80 border border-emerald-700 rounded-lg px-4 py-2 pointer-events-none">
+          <p className="text-emerald-400 text-xs font-medium">Carrying a BAR — plant it in a nursery</p>
+        </div>
+      )}
+
+      {/* Campaign welcome overlay for intro rooms */}
+      {room.anchors.some(a => a.anchorType === 'welcome_text') && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 border border-zinc-700 rounded-xl px-5 py-3 max-w-sm text-center pointer-events-none">
+          <p className="text-amber-400/80 text-xs uppercase tracking-widest mb-1">Spoke Clearing</p>
+          <p className="text-zinc-300 text-sm">
+            Choose a guide, then enter a nursery to begin your ritual.
+          </p>
+          {selectedFace && (
+            <p className="text-zinc-400 text-xs mt-2">
+              Walking with <span className="text-zinc-200">{getNpcByFace(selectedFace)?.name.split(' ')[0] ?? selectedFace}</span>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Room label (non-intro rooms) */}
+      {!room.anchors.some(a => a.anchorType === 'welcome_text') && (
+        <div className="absolute top-4 left-4 z-10 text-xs text-zinc-500">
+          {room.name} · {instanceSlug}
+          {selectedFace && (
+            <span className="ml-2 px-2 py-0.5 bg-zinc-800 rounded text-zinc-300">
+              Walking with {getNpcByFace(selectedFace)?.name.split(' ')[0] ?? selectedFace}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }

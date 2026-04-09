@@ -1,0 +1,178 @@
+:: Start
+You stand at the edge of a charcoal plain. In your chest smoulders a ember of anger, a dissatisfaction that refuses to be ignored. A thick, red sky hangs low over the lands of **Pyrakanth**, where flames purify and forge.
+
+What emotion rises most strongly for you now? Think of the root of your anger — its taste, its origin. Describe it in a word or phrase. The **Challenger** gazes at you, eyes aflame, waiting for your honesty.
+
+[[Name your anger|ChooseMove]]
+
+:: ChooseMove
+You whisper the name of your anger, feeling its heat on your tongue. The **Challenger** nods. "You carry anger from the land of fire," they say. "What work do you want to do with it?"
+
+The four moves are laid before you like blazing paths:
+
+* **Wake Up** — notice your anger's origin and the patterns that hold it.
+* **Clean Up** — transform the stuck energy through a **Burn Offering**, purifying what no longer serves.
+* **Grow Up** — cultivate discipline to channel the flames into purpose.
+* **Show Up** — act boldly, turning your fire into forward motion.
+
+To walk with the **Challenger**, choose **Clean Up** — to burn what binds you.
+
+[[Clean Up|ChooseGM]]
+[[Wake Up (not implemented)|EndNonPath]]
+[[Grow Up (not implemented)|EndNonPath]]
+[[Show Up (not implemented)|EndNonPath]]
+
+:: ChooseGM
+"Which guide will you travel with?" asks a voice. Six figures appear, each a different face. You have already chosen to travel with the **Challenger** — a warrior of red, whose power can be frightening when uncontrolled and liberating when embraced.
+
+[[Walk with the Challenger|IntroMove]]
+[[Choose another (not implemented)|EndNonPath]]
+
+:: EndNonPath
+You take a step toward a path that has not yet been woven. The ground under your feet dissolves. A voice whispers, "This branch isn't ready." You find yourself back at the crossroads.
+
+[[Return|Start]]
+
+:: IntroMove
+The **Challenger** places their hand on your heart. "We will perform a **Burn Offering**," they say. "Your anger is fuel. We will tame your fire, and together we will see the truth. As the **Truth Seer**, you must purify by flame, cutting through lies until only essence remains."
+
+"Our ritual has three phases: First, reveal the shape of your anger. Second, offer it to the fire. Third, witness what remains."
+
+Are you ready?
+
+[[Yes, I am ready|RevealRoot]]
+[[No, I hesitate|Hesitation]]
+
+:: Hesitation
+Fear flickers like cold wind. The **Challenger**'s gaze softens. "Even hesitation is information," they say. "If you are not ready, rest and return when you are."
+
+[[Return when ready|IntroMove]]
+
+:: RevealRoot
+You close your eyes. Images surface: a person who wronged you, a promise broken, a situation that chafes. The **Challenger** asks three questions:
+
+1. **Where in your body do you feel this anger most strongly?**
+2. **What story do you tell yourself about this anger?**
+3. **What would your anger do if given free rein?**
+
+Consider these quietly. To move forward, choose the statement that best describes how your anger behaves.
+
+[[It erupts and harms others|PathErupt]]
+[[It implodes and harms myself|PathImplode]]
+[[It simmers and keeps me stuck|PathSimmer]]
+
+:: PathErupt
+Your anger leaps outward like sparks, scalding others with words and actions. The **Challenger** nods. "To clean up, you must call back your fire," they say. "Hold it close until you can see its core."
+
+They lead you to a pit lined with blackened stones. "Place an object that represents your anger in the pit."
+
+[[Offer a symbol|Offering]]
+
+:: PathImplode
+Your anger turns inward, gnawing at your own heart. The **Challenger** cups your face. "To clean up, you must honour yourself," they say. "Your fire has purpose beyond self-destruction."
+
+They lead you to a pit lined with blackened stones. "Place an object that represents your anger in the pit."
+
+[[Offer a symbol|Offering]]
+
+:: PathSimmer
+Your anger simmers quietly, paralysing you with indecision. The **Challenger** crouches beside you. "To clean up, you must stir the embers," they say. "We will give this fire air and watch it transform."
+
+They lead you to a pit lined with blackened stones. "Place an object that represents your anger in the pit."
+
+[[Offer a symbol|Offering]]
+
+:: Offering
+You search your pockets, your memory, your imagined landscape. You find something — a note, a stone, a piece of fabric, a memory — that carries your anger. You set it on the coals.
+
+The **Challenger** looks to you. "Three ways remain to release it," they say.
+
+* **Confront** — speak the truth of your anger aloud.
+* **Transform** — move the energy through your body with sound and motion.
+* **Sacrifice** — surrender control and let the fire consume it completely.
+
+[[Confront|ConfrontChoice]]
+[[Transform|TransformChoice]]
+[[Sacrifice|SacrificeChoice]]
+
+:: ConfrontChoice
+You stand tall. The **Truth Seer** within you calls you to name what has been hidden. You speak your anger's story — to a person, to the sky, to the imaginary mirror. You say what you have avoided saying. Your voice echoes.
+
+The flames in the pit rise as if listening. How does your body feel after speaking your truth?
+
+[[Lighter and clearer|AfterReleaseGood]]
+[[Still tense|AfterReleaseHeavy]]
+
+:: TransformChoice
+You begin to move. You stomp, dance, scream, or sing. You allow the anger to surge through your limbs. You do not hurt anyone; you simply let the energy find expression. Sweat and tears mix. You feel alive.
+
+As the fire reflects your movement, how does your body feel after moving the anger?
+
+[[Energized and calm|AfterReleaseGood]]
+[[Overwhelmed|AfterReleaseHeavy]]
+
+:: SacrificeChoice
+You kneel. You breathe into the object. You imagine your anger flowing into it. You whisper, "I let this go." Then you place it fully into the flames. The object blackens, curls, and crumbles. Smoke carries its form away.
+
+As you watch it burn, how does your body feel?
+
+[[Relieved and open|AfterReleaseGood]]
+[[Empty and uncertain|AfterReleaseHeavy]]
+
+:: AfterReleaseGood
+Warmth spreads through you. You notice space where the anger once sat. The **Challenger** smiles. "This is the purification," they say. "Now we must witness what remains."
+
+[[WitnessWhatRemains|Witness]]
+
+:: AfterReleaseHeavy
+A heaviness remains. The fire has taken something, but not all. The **Challenger** nods. "Sometimes the first burning only softens the shell," they say. "We will witness what remains anyway."
+
+[[WitnessWhatRemains|Witness]]
+
+:: Witness
+The flames die down. In the ashes lies something unexpected — a small glowing ember that pulses gently.
+
+"This is your essence," whispers the **Truth Seer** part of you. "Anger protected it. Now anger has revealed it."
+
+The **Challenger** asks you: "What truth has the fire revealed?"
+
+Choose the one that rings true.
+
+[[A change I must make|EpiphanyChange]]
+[[A boundary I must set|EpiphanyBoundary]]
+[[A passion I had forgotten|EpiphanyPassion]]
+[[A lie I was believing|EpiphanyLie]]
+
+:: EpiphanyChange [seam:321_reflection npc:ignis next:ignis-trial-harvest]
+The ember speaks: *"Something in your world must be transformed."* You realise there is a situation, relationship or habit that no longer aligns.
+
+The **Challenger** kneels beside you. "Before you act, you must speak to what you found. Let the fire hear your voice."
+
+:: EpiphanyBoundary [seam:321_reflection npc:ignis next:ignis-trial-harvest]
+The ember speaks: *"You must protect your energy."* You realise where you have allowed your fire to be misused.
+
+The **Challenger** kneels beside you. "Before you act, you must speak to what you found. Let the fire hear your voice."
+
+:: EpiphanyPassion [seam:321_reflection npc:ignis next:ignis-trial-harvest]
+The ember speaks: *"There is joy beneath anger."* You recall an old dream or passion your anger shielded.
+
+The **Challenger** kneels beside you. "Before you act, you must speak to what you found. Let the fire hear your voice."
+
+:: EpiphanyLie [seam:321_reflection npc:ignis next:ignis-trial-harvest]
+The ember speaks: *"You have been believing an untruth."* You see a story you held that fueled your anger.
+
+The **Challenger** kneels beside you. "Before you act, you must speak to what you found. Let the fire hear your voice."
+
+:: GenerateBAR [seam:bar_create npc:ignis move:fire_clean-up]
+The **Challenger** places a hand on your shoulder. "Take this insight and craft an action," they say. "Your BAR must be specific, tangible, and aligned with the change you've seen."
+
+Once you have written your BAR, close your eyes and imagine the fire wrapping around your commitment, sealing it.
+
+[[Complete Reflection|CompleteReflection]]
+
+:: CompleteReflection [seam:carry_and_return]
+You take a breath. The fire in the pit has become a bed of coals, radiating steady heat. The **Challenger** bows.
+
+"You have performed the **Burn Offering**," they say. "You have cleaned up your anger and turned it into purpose. Return here whenever anger arises. Each time the flames will reveal new truth."
+
+Your **epiphany BAR** reminds you that anger is a messenger, not a master. It shows you what must change.

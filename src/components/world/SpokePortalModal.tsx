@@ -32,6 +32,15 @@ export function SpokePortalModal({ anchor, spokeState, onClose }: Props) {
   const cyoaHref = `/campaign/spoke/${spokeIndex}?ref=${encodeURIComponent(campaignRef)}`
   const landingHref = `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${spokeIndex}`
 
+  // Nursery intro room: requires instanceSlug from the world context
+  // We derive it from the current URL since the modal renders inside /world/[instanceSlug]/...
+  const instanceSlug = typeof window !== 'undefined'
+    ? window.location.pathname.split('/')[2] ?? ''
+    : ''
+  const nurseryIntroHref = instanceSlug
+    ? `/world/${instanceSlug}/spoke-${spokeIndex}-intro`
+    : ''
+
   const isLocked = spokeState?.isLocked ?? spokeIndex > 1
   const hexagramId = spokeState?.hexagramId
   const primaryFace = spokeState?.primaryFace
@@ -82,19 +91,21 @@ export function SpokePortalModal({ anchor, spokeState, onClose }: Props) {
           </div>
         ) : (
           <>
+            {nurseryIntroHref && (
+              <Link
+                href={nurseryIntroHref}
+                onClick={handleNavigateAway}
+                className="block w-full py-3 text-center bg-purple-600/90 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors text-sm"
+              >
+                Enter Spoke Clearing →
+              </Link>
+            )}
             <Link
               href={landingHref}
               onClick={handleNavigateAway}
-              className="block w-full py-3 text-center bg-amber-700/90 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors text-sm"
+              className="block w-full py-2.5 text-center bg-zinc-700/90 hover:bg-zinc-600 text-zinc-300 font-medium rounded-xl transition-colors text-xs"
             >
-              Landing card first →
-            </Link>
-            <Link
-              href={cyoaHref}
-              onClick={handleNavigateAway}
-              className="block w-full py-2.5 text-center bg-purple-600/90 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors text-sm"
-            >
-              Enter CYOA directly →
+              Landing card →
             </Link>
           </>
         )}

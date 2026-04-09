@@ -24,7 +24,12 @@ export async function enterRoom(roomId: string, instanceSlug: string) {
 }
 
 export async function heartbeat(roomId: string) {
-  const playerId = await requirePlayer()
+  let playerId: string
+  try {
+    playerId = await requirePlayer()
+  } catch {
+    return // Session expired — heartbeat is non-critical, fail silently
+  }
   await dbBase.roomPresence.updateMany({
     where: { playerId, roomId },
     data: { lastSeenAt: new Date() },
