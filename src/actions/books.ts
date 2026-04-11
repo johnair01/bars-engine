@@ -252,7 +252,11 @@ const adminBookHubSelect = {
   status: true,
   metadataJson: true,
   createdAt: true,
+  bookOrigin: true,
+  parentBookId: true,
+  forkedAt: true,
   thread: { select: { id: true } },
+  parentBook: { select: { id: true, title: true } },
 } as const
 
 /**

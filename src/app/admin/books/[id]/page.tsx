@@ -21,6 +21,20 @@ function statusBadge(status: string) {
   )
 }
 
+function originBadge(origin: string) {
+  const label =
+    origin === 'forked_derivative'
+      ? 'fork'
+      : origin === 'manuscript_composed'
+        ? 'manuscript'
+        : 'library'
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-800 text-slate-300" title={origin}>
+      {label}
+    </span>
+  )
+}
+
 /**
  * @page /admin/books/:bookId
  * @entity WIKI
@@ -52,6 +66,7 @@ export default async function AdminBookHubPage(props: { params: Promise<{ id: st
         {book.author && <p className="text-sm text-zinc-500 mt-1">{book.author}</p>}
         <div className="flex flex-wrap items-center gap-2 mt-3">
           {statusBadge(book.status)}
+          {originBadge(book.bookOrigin)}
           <BookPraxisBadge metadataJson={book.metadataJson} />
           {meta?.pageCount != null && (
             <span className="text-xs text-zinc-500">

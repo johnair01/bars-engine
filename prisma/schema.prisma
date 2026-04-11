@@ -130,6 +130,7 @@ model Player {
   redemptionPacks                RedemptionPack[]
   libraryRequests                LibraryRequest[]
   bookAnalysisResumeLogs         BookAnalysisResumeLog[]
+  bookSectionApprovals           ApprovalEvent[]
   verificationCompletionLogs     VerificationCompletionLog[]
   stewardedSlots                 GameboardSlot[]             @relation("GameboardSteward")
   gameboardBids                  GameboardBid[]
@@ -428,6 +429,8 @@ model CustomBar {
   barForgeRecordsAsPrimary             BarForgeRecord[]       @relation("BarForgePrimaryQuest")
   barMedia                             BarMedia[]
   daemonsGrownFromBar                  Daemon[]               @relation("DaemonSourceBar")
+  sectionBarLinks                      SectionBARLink[]
+  sectionSourcesLinked               SectionSource[]        @relation("SectionSourceBar")
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
@@ -990,11 +993,23 @@ model Book {
   extractedText          String?                 @db.Text
   status                 String                  @default("draft") // draft | extracted | analyzed | published
   metadataJson           String?
+  /// library_ingested | manuscript_composed | forked_derivative (see .specify/specs/book-origin-fork-port/spec.md)
+  bookOrigin             String                  @default("library_ingested")
+  parentBookId           String?
+  forkedAt               DateTime?
+  forkMetadataJson       String?                 @db.Text
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   thread                 QuestThread?
   bookAnalysisResumeLogs BookAnalysisResumeLog[]
+  sections               BookSection[]
+  styleRules             StyleRule[]
+  canonRules             CanonRule[]
+  sectionSourcesAsBook   SectionSource[]         @relation("SectionSourceBook")
+  parentBook             Book?                   @relation("BookForkLineage", fields: [parentBookId], references: [id], onDelete: SetNull)
+  forkChildren           Book[]                  @relation("BookForkLineage")
 
+  @@index([parentBookId])
   @@map("books")
 }
 
@@ -1008,6 +1023,167 @@ model BookAnalysisResumeLog {
 
   @@index([adminId, createdAt])
   @@map("book_analysis_resume_logs")
+}
+
+/// Book OS v1 — governed manuscript spine (see .specify/specs/book-os-v1-authoring/spec.md)
+model BookSection {
+  id                   String    @id @default(cuid())
+  bookId               String
+  parentSectionId      String?
+  title                String
+  slug                 String
+  orderIndex           Int
+  sectionType          String    @default("standard") // intro | conceptual | instructional | story | bridge | exercise | closing | standard
+  goal                 String?   @db.Text
+  teachingIntent       String?   @db.Text
+  emotionalTarget      String?   @db.Text
+  targetReaderState    String?   @db.Text
+  exitReaderState      String?   @db.Text
+  mustDefine           String?   @db.Text
+  mustNotRepeat        String?   @db.Text
+  dependencySectionIds String?   @db.Text
+  avoidanceSectionIds  String?   @db.Text
+  draftText            String?   @db.Text
+  approvedText         String?   @db.Text
+  status               String    @default("draft") // draft | in_review | approved | canonical | archived
+  metadataJson         String?   @db.Text
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  book                 Book              @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  parentSection        BookSection?      @relation("BookSectionTree", fields: [parentSectionId], references: [id], onDelete: SetNull)
+  childSections        BookSection[]     @relation("BookSectionTree")
+  sources              SectionSource[]
+  sourcesOriginating   SectionSource[]   @relation("SectionSourceOrigin")
+  styleRules           StyleRule[]
+  canonRules           CanonRule[]
+  runs                 SectionRun[]
+  approvalEvents       ApprovalEvent[]
+  barLinks             SectionBARLink[]
+
+  @@unique([bookId, slug])
+  @@unique([bookId, orderIndex])
+  @@index([bookId, status])
+  @@map("book_sections")
+}
+
+model SectionSource {
+  id              String       @id @default(cuid())
+  sectionId       String
+  sourceType      String // pdf_excerpt | pasted_text | url_snapshot | external_doc | bar_link | approved_section_excerpt
+  title           String?
+  uri             String?
+  extractedText   String?      @db.Text
+  sourceBookId    String?
+  sourceSectionId String?
+  linkedBarId     String?
+  snapshotHash    String?
+  tagsJson        String?      @db.Text
+  trustLevel      String       @default("working") // authoritative | approved | working | reference
+  metadataJson    String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  section         BookSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  linkedBar       CustomBar?   @relation("SectionSourceBar", fields: [linkedBarId], references: [id], onDelete: SetNull)
+  sourceBook      Book?        @relation("SectionSourceBook", fields: [sourceBookId], references: [id], onDelete: SetNull)
+  sourceSection   BookSection? @relation("SectionSourceOrigin", fields: [sourceSectionId], references: [id], onDelete: SetNull)
+
+  @@index([sectionId])
+  @@index([linkedBarId])
+  @@index([sourceBookId])
+  @@map("section_sources")
+}
+
+model StyleRule {
+  id           String       @id @default(cuid())
+  bookId       String
+  sectionId    String?
+  title        String
+  ruleType     String // tone | cadence | teaching | anti_pattern | rhetorical_constraint | structure
+  severity     String       @default("hard") // hard | firm | soft
+  ruleText     String       @db.Text
+  exampleText  String?      @db.Text
+  metadataJson String?      @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  book         Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  section      BookSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([sectionId])
+  @@map("style_rules")
+}
+
+model CanonRule {
+  id             String       @id @default(cuid())
+  bookId         String
+  sectionId      String?
+  title          String
+  ruleType       String // definition | distinction | terminology | dependency | prohibition
+  ruleText       String       @db.Text
+  sourceExcerpt  String?      @db.Text
+  metadataJson   String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  book           Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  section        BookSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([sectionId])
+  @@map("canon_rules")
+}
+
+model SectionRun {
+  id           String      @id @default(cuid())
+  sectionId    String
+  runType      String // intake | retrieval | import_draft | critique | approval | derive_bars
+  actorType    String      @default("human") // human | agent | api
+  actorId      String?
+  inputJson    String?     @db.Text
+  outputText   String?     @db.Text
+  metadataJson String?     @db.Text
+  createdAt    DateTime    @default(now())
+
+  section      BookSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, runType])
+  @@map("section_runs")
+}
+
+model ApprovalEvent {
+  id              String      @id @default(cuid())
+  sectionId       String
+  approvedById    String?
+  approvedText    String      @db.Text
+  notes           String?     @db.Text
+  promotedToCanon Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+
+  section         BookSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  approvedBy      Player?     @relation(fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([sectionId, createdAt])
+  @@map("approval_events")
+}
+
+model SectionBARLink {
+  id           String      @id @default(cuid())
+  sectionId    String
+  barId        String
+  role         String // source | output | critique | refinement | note
+  metadataJson String?     @db.Text
+  createdAt    DateTime    @default(now())
+
+  section      BookSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  bar          CustomBar   @relation(fields: [barId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, barId, role])
+  @@index([sectionId])
+  @@index([barId])
+  @@map("section_bar_links")
 }
 
 model VerificationCompletionLog {
@@ -3546,6 +3722,11 @@ model Campaign {
   /// --- Relations ---
   instanceId      String
   instance        Instance  @relation("InstanceCampaigns", fields: [instanceId], references: [id], onDelete: Cascade)
+  /// Optional parent initiative (subcampaign). Must stay in the same `instanceId`; cycles forbidden (enforced in app).
+  /// On parent delete, children become root-level campaigns (`parentCampaignId` set null).
+  parentCampaignId String?
+  parentCampaign   Campaign?  @relation("CampaignHierarchy", fields: [parentCampaignId], references: [id], onDelete: SetNull)
+  childCampaigns   Campaign[] @relation("CampaignHierarchy")
   /// Steward+ who created the campaign
   createdById     String
   createdBy       Player    @relation("CampaignsCreated", fields: [createdById], references: [id], onDelete: Cascade)
@@ -3582,6 +3763,7 @@ model Campaign {
 
   @@index([instanceId, status])
   @@index([status])
+  @@index([parentCampaignId])
   @@map("campaigns")
 }
 

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { AnalysisFilters } from '@/actions/book-analyze'
+import { BookOriginForkPanel } from './BookOriginForkPanel'
 import { BookPraxisPanel } from './BookPraxisPanel'
 import { BookPipelineActions } from './BookPipelineActions'
 import { useBookPipelineActions } from './useBookPipelineActions'
@@ -159,6 +161,18 @@ export function BookHubClient({ book }: { book: AdminBookRow }) {
       )}
 
       <BookPraxisPanel bookId={book.id} metadataJson={book.metadataJson} />
+
+      <BookOriginForkPanel book={book} />
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 px-3 py-2">
+        <Link
+          href={`/admin/books/${book.id}/sections`}
+          className="text-sm text-violet-400 hover:text-violet-300"
+        >
+          Book OS — Sections →
+        </Link>
+        <p className="text-xs text-zinc-600 mt-1">Governed draft / approved prose and context pack (v1).</p>
+      </div>
 
       <div>
         <h2 className="text-sm font-medium text-zinc-400 mb-2">Actions</h2>
