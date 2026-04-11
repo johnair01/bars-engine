@@ -3577,11 +3577,19 @@ model Campaign {
   /// Future: drives narrative pacing, beat sheets, and branching paths; governed by narrativeSovereignty.
   storyArcTemplates StoryArcTemplate[]
 
+  /// Subcampaign / initiative tree — optional parent campaign.
+  /// Self-referential FK; SET NULL on delete so deleting parent does not cascade.
+  /// Migration: prisma/migrations/20260510120000_campaign_parent_hierarchy/migration.sql
+  parentCampaignId String?
+  parentCampaign   Campaign?  @relation("CampaignHierarchy", fields: [parentCampaignId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  childCampaigns   Campaign[] @relation("CampaignHierarchy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([instanceId, status])
   @@index([status])
+  @@index([parentCampaignId])
   @@map("campaigns")
 }
 

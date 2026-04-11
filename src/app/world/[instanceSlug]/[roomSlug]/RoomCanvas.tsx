@@ -16,6 +16,7 @@ import type { SpokeState } from '@/actions/campaign-spoke-states'
 import { IntentAgentPanel } from '@/components/world/IntentAgentPanel'
 import { MapAvatarGate } from '@/components/world/MapAvatarGate'
 import { DPadOverlay } from '@/components/world/DPadOverlay'
+import { PlayerHud } from '@/components/world/PlayerHud'
 import { NationRoomGateOverlay } from '@/components/world/NationRoomGateOverlay'
 import type { WorldRoomNavMeta } from '@/lib/world/nation-room-gate'
 import {
@@ -26,6 +27,8 @@ import {
 type RoomCanvasProps = {
   /** Canonical spatial bind from computeSpatialBindKey (server or client). */
   spatialBindKey: string
+  /** When true (server: `NEXT_PUBLIC_WALKABLE_SPRITE_DEMO`), allow map without stored avatarConfig — uses demo walkable sheet. */
+  walkableSpriteDemo?: boolean
   player: {
     id: string
     name: string
@@ -51,6 +54,7 @@ type RoomCanvasProps = {
 
 export function RoomCanvas({
   spatialBindKey,
+  walkableSpriteDemo = false,
   player,
   room,
   allRooms,
@@ -73,28 +77,55 @@ export function RoomCanvas({
   const [agents, setAgents] = useState<AgentData[]>([])
   const [selectedAgent, setSelectedAgent] = useState<AgentData | null>(null)
   const [nationGateBlock, setNationGateBlock] = useState<{ nationDisplayName: string } | null>(null)
-  const [selectedFace, setSelectedFace] = useState<GameMasterFace | null>(() => {
-    // Persist face selection via URL search params
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const f = params.get('face')
-      if (f) return f as GameMasterFace
-    }
-    return null
-  })
+  // Selected face is restored from `?face=...` URL param. Read in an effect to
+  // avoid SSR/CSR hydration mismatch (window is undefined during SSR).
+  const [selectedFace, setSelectedFace] = useState<GameMasterFace | null>(null)
   const [ritualContext, setRitualContext] = useState<NurseryRitualContext | null>(null)
   const [ritualNurseryType, setRitualNurseryType] = useState<NurseryType | null>(null)
   const [ritualResult, setRitualResult] = useState<{ barTitle: string; vibeulonsAwarded: number; planted: boolean } | null>(null)
-  const [carryingBarId, setCarryingBarId] = useState<string | null>(() => {
+  // Same SSR-safety pattern as selectedFace — restored from URL after mount.
+  const [carryingBarId, setCarryingBarId] = useState<string | null>(null)
+
+  // Update both React state AND URL when carrying state changes. The URL param
+  // is the source of truth across room navigations — without it, picking up a
+  // BAR with Sola in the spoke clearing and walking to a nursery would lose
+  // the carrying state because each room is a separate route mount.
+  const updateCarryingBarId = useCallback((barId: string | null) => {
+    setCarryingBarId(barId)
     if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search).get('carrying')
+      const url = new URL(window.location.href)
+      if (barId) {
+        url.searchParams.set('carrying', barId)
+      } else {
+        url.searchParams.delete('carrying')
+      }
+      window.history.replaceState({}, '', url.toString())
     }
-    return null
-  })
-  const spriteReady = !!player.avatarConfig
+  }, [])
+
+  // Restore selectedFace + carryingBarId from URL params *after* mount.
+  // Doing this in useEffect (not in useState initializer) prevents SSR/CSR
+  // hydration mismatches — the first render is identical on both sides.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const f = params.get('face')
+    if (f) setSelectedFace(f as GameMasterFace)
+    const c = params.get('carrying')
+    if (c) setCarryingBarId(c)
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const spriteReady = !!player.avatarConfig || walkableSpriteDemo
 
   const posRef = useRef(playerPos)
   posRef.current = playerPos
+
+  // Track whether the player has actually moved in this room session.
+  // Portal auto-fire (step-on-tile teleport) is suppressed until the player
+  // takes their first move. Prevents the "kicked back to Card Club on first
+  // entry" bug where the spawn position happens to coincide with a portal tile.
+  const hasMovedRef = useRef(false)
 
   const navigateToWorldRoom = useCallback(
     (targetSlug: string) => {
@@ -106,11 +137,15 @@ export function RoomCanvas({
         }
       }
       setNationGateBlock(null)
-      // Carry face selection across room navigation
-      const faceParam = selectedFace ? `?face=${selectedFace}` : ''
-      router.push(`/world/${instanceSlug}/${targetSlug}${faceParam}`)
+      // Carry face selection AND any in-hand BAR across room navigation.
+      // Both must survive route changes (each room is a separate mount).
+      const params = new URLSearchParams()
+      if (selectedFace) params.set('face', selectedFace)
+      if (carryingBarId) params.set('carrying', carryingBarId)
+      const qs = params.toString()
+      router.push(`/world/${instanceSlug}/${targetSlug}${qs ? `?${qs}` : ''}`)
     },
-    [allRooms, playerNationKey, bypassNationGate, instanceSlug, router, selectedFace]
+    [allRooms, playerNationKey, bypassNationGate, instanceSlug, router, selectedFace, carryingBarId]
   )
 
   // Stable ref so the playerPos effect never needs to expand its deps
@@ -254,6 +289,9 @@ export function RoomCanvas({
 
   useEffect(() => {
     setPlayerPos({ x: spawnX, y: spawnY })
+    // Reset the "has moved" flag whenever we enter a new room or respawn.
+    // Portal auto-fire is gated on this — see step-on-portal effect below.
+    hasMovedRef.current = false
   }, [spatialBindKey, spawnX, spawnY])
 
   const cancelWalk = useCallback(() => {
@@ -277,6 +315,7 @@ export function RoomCanvas({
         else if (step.y < prev.y) dir = 'north'
         else dir = 'south'
       }
+      hasMovedRef.current = true
       setLastMoveDirection(dir)
       setPlayerPos(step)
       i++
@@ -300,6 +339,7 @@ export function RoomCanvas({
     cancelWalk()
     const next = { x: posRef.current.x + dx, y: posRef.current.y + dy }
     if (rendererRef.current?.isWalkable(next.x, next.y)) {
+      hasMovedRef.current = true
       setLastMoveDirection(dir)
       setPlayerPos(next)
     }
@@ -312,8 +352,11 @@ export function RoomCanvas({
     const anchor = rendererRef.current?.getProximateAnchor(playerPos.x, playerPos.y) ?? null
     setProximateAnchor(anchor)
 
-    // Step onto a portal tile → navigate immediately (spoke_portal shows modal instead)
+    // Step onto a portal tile → navigate immediately (spoke_portal shows modal instead).
+    // Gated on hasMovedRef so first-render spawns that happen to coincide with a portal
+    // tile don't auto-bounce the player (the "kicked back to Card Club" bug).
     if (
+      hasMovedRef.current &&
       anchor &&
       (anchor.anchorType === 'portal' ||
         anchor.anchorType === 'campaign_portal') &&
@@ -374,20 +417,38 @@ export function RoomCanvas({
     }
   }, [spriteReady, handleCanvasTap])
 
-  // Arrow key movement
+  // Arrow + WASD movement (updates facing for walkable sprite frames)
   useEffect(() => {
     const DELTAS: Record<string, { dx: number; dy: number; dir: 'north' | 'south' | 'east' | 'west' }> = {
-      ArrowUp: { dx: 0, dy: -1, dir: 'north' },
-      ArrowDown: { dx: 0, dy: 1, dir: 'south' },
-      ArrowLeft: { dx: -1, dy: 0, dir: 'west' },
-      ArrowRight: { dx: 1, dy: 0, dir: 'east' },
+      arrowup: { dx: 0, dy: -1, dir: 'north' },
+      arrowdown: { dx: 0, dy: 1, dir: 'south' },
+      arrowleft: { dx: -1, dy: 0, dir: 'west' },
+      arrowright: { dx: 1, dy: 0, dir: 'east' },
+      w: { dx: 0, dy: -1, dir: 'north' },
+      s: { dx: 0, dy: 1, dir: 'south' },
+      a: { dx: -1, dy: 0, dir: 'west' },
+      d: { dx: 1, dy: 0, dir: 'east' },
     }
     const handler = (e: KeyboardEvent) => {
-      const delta = DELTAS[e.key]
+      if (e.repeat) return
+      // Don't intercept WASD when the player is typing into an input/textarea/contenteditable
+      // (e.g. "Share the signal" modal, BAR title fields). Arrow keys are also blocked
+      // because they navigate text cursors.
+      const target = e.target as HTMLElement | null
+      if (target) {
+        const tag = target.tagName?.toLowerCase()
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable) {
+          return
+        }
+      }
+      const raw = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase()
+      const delta = DELTAS[raw]
       if (!delta || !rendererRef.current) return
+      e.preventDefault()
       cancelWalk()
       const next = { x: posRef.current.x + delta.dx, y: posRef.current.y + delta.dy }
       if (rendererRef.current.isWalkable(next.x, next.y)) {
+        hasMovedRef.current = true
         setLastMoveDirection(delta.dir)
         setPlayerPos(next)
       }
@@ -466,7 +527,8 @@ export function RoomCanvas({
           onSelectFace={handleSelectFace}
           onLaunchRitual={handleLaunchRitual}
           carryingBarId={carryingBarId}
-          onBarPlanted={() => setCarryingBarId(null)}
+          onBarPlanted={() => updateCarryingBarId(null)}
+          onBarCarried={(barId) => updateCarryingBarId(barId)}
         />
       )}
 
@@ -498,6 +560,12 @@ export function RoomCanvas({
       )}
 
       <DPadOverlay onMove={handleDPadMove} />
+
+      {/* Persistent player HUD — bottom-right corner, Harvest Moon style */}
+      <PlayerHud
+        refreshToken={`${ritualResult?.barTitle ?? ''}|${carryingBarId ?? ''}`}
+        carryingBarId={carryingBarId}
+      />
 
       {/* Carrying BAR indicator */}
       {carryingBarId && (

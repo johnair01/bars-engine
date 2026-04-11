@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { AnchorData } from '@/lib/spatial-world/pixi-room'
 import type { NurseryType } from '@/lib/spatial-world/nursery-rooms'
 import { NURSERY_LABELS } from '@/lib/spatial-world/nursery-rooms'
@@ -51,7 +51,10 @@ export function NurseryActivityModal({ anchor, onClose, onLaunchRitual, instance
       .finally(() => setLoading(false))
   }, [instanceSlug, spokeIndex, nurseryType])
 
-  const handlePlant = useCallback(async () => {
+  // Plain async function (no useCallback) — React Compiler auto-memoizes
+  // function components, and the manual useCallback was tripping
+  // react-hooks/preserve-manual-memoization (pre-existing on this branch).
+  async function handlePlant() {
     if (!carryingBarId) return
     setPlanting(true)
     const result = await plantBarOnSpoke({
@@ -71,7 +74,7 @@ export function NurseryActivityModal({ anchor, onClose, onLaunchRitual, instance
         window.history.replaceState({}, '', url.toString())
       }
     }
-  }, [carryingBarId, instanceSlug, spokeIndex, nurseryType])
+  }
 
   const label = NURSERY_LABELS[nurseryType]
   const description = NURSERY_DESCRIPTIONS[nurseryType]

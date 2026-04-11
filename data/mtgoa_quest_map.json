@@ -1,0 +1,169 @@
+{
+  "instance": {
+    "id": "MTGOA-BG-001",
+    "slug": "mastering-allyship",
+    "name": "Mastering the Game of Allyship — Book/Game",
+    "targetDescription": "An 8-spoke curriculum that teaches players the practice of allyship through emotional alchemy, role mastery, and quest design. The Book/Game spoke of the MTGOA Organization campaign.",
+    "domainType": "RAISE_AWARENESS",
+    "isEventMode": false,
+    "clockType": "completion-bounded",
+    "parentCampaignRef": "bruised-banana",
+    "parentSpokeIndex": 7,
+    "bigVision": "Players practice allyship as a sustainable, joyful, skill-based practice specific to their gifts.",
+    "desiredFeeling": "Curious, courageous, playful, alive"
+  },
+  "quests": [
+    {
+      "id": "MTGOA-BG-1",
+      "kotterStage": 1,
+      "title": "Answer the Call",
+      "emoji": "📞",
+      "archetype": "Thunder",
+      "description": "**You've already heard it.** That faint signal — the ache that says \"this could be better.\" That's your first quest card. Answer the call by naming what brought you here.\n\n**By move:** Wake Up — notice the call inside you. Clean Up — clear the resistance to admitting it. Grow Up — develop the courage to claim a player identity. Show Up — say yes to the game out loud.",
+      "moveApplications": {
+        "wakeUp": "Notice the signal that brought you to allyship work.",
+        "cleanUp": "Clear the resistance, doubt, or fear that says you're not ready.",
+        "growUp": "Develop the courage to claim 'I am a player in this game.'",
+        "showUp": "Say yes out loud — to yourself, a witness, or the system."
+      },
+      "allyshipDomain": "RAISE_AWARENESS",
+      "predictedFeelings": ["Poignance", "Excitement"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-2",
+      "kotterStage": 2,
+      "title": "Know Your Charge",
+      "emoji": "⚡",
+      "archetype": "Earth",
+      "description": "**Charge begins with contact.** Learn to notice the emotional charge moving through you — the twinge, the tightening, the zing. This is the fuel of all allyship moves.\n\n**By move:** Wake Up — notice when charge arises. Clean Up — name the discomfort without bypassing. Grow Up — develop your charge vocabulary. Show Up — generate charge with a 'Notice the Glitch' move.",
+      "moveApplications": {
+        "wakeUp": "Notice when emotional charge arises in your body.",
+        "cleanUp": "Name a discomfort without fleeing or fixing.",
+        "growUp": "Develop the vocabulary to describe your inner weather.",
+        "showUp": "Generate charge with a Notice the Glitch move."
+      },
+      "allyshipDomain": "RAISE_AWARENESS",
+      "predictedFeelings": ["Poignance", "Bliss"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-3",
+      "kotterStage": 3,
+      "title": "Compost the Shadow",
+      "emoji": "🌑",
+      "archetype": "Heaven",
+      "description": "**Shadow work is the engine.** Every moment you bypass grief, suppress anger, or tighten against fear, you leak energy. Composting the shadow returns presence that evasion cost — and converts it into fuel.\n\n**By move:** Wake Up — see the part of you you've exiled. Clean Up — process a charged emotion through the 3-2-1 method. Grow Up — develop comfort with what you don't want to feel. Show Up — turn one shadow encounter into a quest seed.",
+      "moveApplications": {
+        "wakeUp": "See a part of yourself you've been avoiding.",
+        "cleanUp": "Process a charged emotion via 3-2-1 or similar shadow practice.",
+        "growUp": "Develop comfort with sitting in what you don't want to feel.",
+        "showUp": "Turn one shadow encounter into a quest seed."
+      },
+      "allyshipDomain": "RAISE_AWARENESS",
+      "predictedFeelings": ["Poignance", "Peace"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-4",
+      "kotterStage": 4,
+      "title": "Make Your Move",
+      "emoji": "🎯",
+      "archetype": "Lake",
+      "description": "**Mastery begins with motion, not permission.** Your first move doesn't need to be brilliant — it just needs to be yours. A text. A question. A pause. A yes. The world changes a little when you make it.\n\n**By move:** Wake Up — see what move is available right now. Clean Up — clear the perfectionism that demands the right move. Grow Up — develop willingness to be clumsy in public. Show Up — make a real move in your real life.",
+      "moveApplications": {
+        "wakeUp": "See what small move is available to you right now.",
+        "cleanUp": "Clear the perfectionism that demands the perfect move.",
+        "growUp": "Develop willingness to be clumsy in public.",
+        "showUp": "Make a real move in your real life and report back."
+      },
+      "allyshipDomain": "DIRECT_ACTION",
+      "predictedFeelings": ["Excitement", "Triumph"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-5",
+      "kotterStage": 5,
+      "title": "Choose Your Role",
+      "emoji": "🎭",
+      "archetype": "Water",
+      "description": "**Rookie, Ace, Veteran, Engineer, Leader.** These aren't levels — they're costumes. Pick one that fits where you are right now. The role focuses your energy and tells the story of how you'll show up.\n\n**By move:** Wake Up — see which role you've been unconsciously playing. Clean Up — clear the role you've outgrown. Grow Up — try on a role that stretches you. Show Up — play a move from your chosen role's deck.",
+      "moveApplications": {
+        "wakeUp": "See which role you've been unconsciously playing.",
+        "cleanUp": "Release the role that no longer serves.",
+        "growUp": "Try on a role that stretches your current capacity.",
+        "showUp": "Play a move from your chosen role's deck in real life."
+      },
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "predictedFeelings": ["Excitement", "Bliss"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-6",
+      "kotterStage": 6,
+      "title": "Find Your Superpower",
+      "emoji": "✨",
+      "archetype": "Fire",
+      "description": "**Without your superpower, you're Superman under a red sun — present but powerless.** Discover the unique form of ally magic only you can wield. This is your leverage point.\n\n**By move:** Wake Up — see what gift others rely on you for. Clean Up — clear the false modesty hiding it. Grow Up — develop fluency in naming and offering your superpower. Show Up — wield your superpower in a real moment.",
+      "moveApplications": {
+        "wakeUp": "See the gift others already rely on you for.",
+        "cleanUp": "Clear the false modesty hiding your gift.",
+        "growUp": "Develop fluency in naming and offering your superpower.",
+        "showUp": "Wield your superpower in a real moment of need."
+      },
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "predictedFeelings": ["Triumph", "Bliss"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-7",
+      "kotterStage": 7,
+      "title": "Complete a Quest",
+      "emoji": "🏆",
+      "archetype": "Wind",
+      "description": "**Quests are the soul currency of this game.** Choose one quest, run the full arc — intake, action, reflection — and complete it. The completion is what builds you into someone who finishes.\n\n**By move:** Wake Up — see which quest is calling you. Clean Up — clear what tries to abandon it midway. Grow Up — develop the muscle of finishing. Show Up — complete a quest from start to end.",
+      "moveApplications": {
+        "wakeUp": "See which quest is most alive for you right now.",
+        "cleanUp": "Clear what tries to abandon the quest midway.",
+        "growUp": "Develop the muscle of finishing what you start.",
+        "showUp": "Complete a full quest arc — intake, action, reflection."
+      },
+      "allyshipDomain": "DIRECT_ACTION",
+      "predictedFeelings": ["Triumph", "Excitement"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    },
+    {
+      "id": "MTGOA-BG-8",
+      "kotterStage": 8,
+      "title": "Design the Game",
+      "emoji": "🎲",
+      "archetype": "Mountain",
+      "description": "**You are the Game Designer.** You've played enough to start creating. Design a quest, a ritual, or a mechanic for someone else. This is the move that turns players into co-creators of the world.\n\n**By move:** Wake Up — see what others need that doesn't yet exist. Clean Up — clear the imposter syndrome about being a designer. Grow Up — develop game design instincts. Show Up — create one quest or ritual for another player.",
+      "moveApplications": {
+        "wakeUp": "See what others need that doesn't yet exist.",
+        "cleanUp": "Clear the imposter syndrome about being a designer.",
+        "growUp": "Develop game design instincts through small experiments.",
+        "showUp": "Create one quest or ritual for another player to use."
+      },
+      "allyshipDomain": "SKILLFUL_ORGANIZING",
+      "predictedFeelings": ["Triumph", "Bliss", "Peace"],
+      "reward": 1,
+      "visibility": "public",
+      "isSystem": true
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import {
   isCampaignHubStateV1,
   hubStateMatchesKotter,
 } from '@/lib/campaign-hub/types'
+import { getSpokeBinding } from '@/lib/campaign-hub/spoke-bindings'
 import Link from 'next/link'
 
 /**
@@ -68,6 +69,13 @@ export default async function SpokeCyoaEntryPage(props: {
         body="Spoke index must be 0–7."
       />
     )
+  }
+
+  // Sub-hub binding check: if this spoke is bound to a child campaign, redirect to its hub.
+  // This must run before the locked-state check so bound spokes always route to their child.
+  const binding = getSpokeBinding(campaignRef, spokeIndex)
+  if (binding) {
+    redirect(binding.childHubPath)
   }
 
   // Locked state: spokes 2–7 are not yet authored

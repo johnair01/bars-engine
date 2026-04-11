@@ -36,9 +36,11 @@ type Props = {
   carryingBarId?: string | null
   /** Called when BAR is planted — clears carrying state */
   onBarPlanted?: () => void
+  /** Called when player picks up a new BAR (e.g. selects a face move) — sets carrying state */
+  onBarCarried?: (barId: string) => void
 }
 
-export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldContext, onSelectFace, onLaunchRitual, carryingBarId, onBarPlanted }: Props) {
+export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldContext, onSelectFace, onLaunchRitual, carryingBarId, onBarPlanted, onBarCarried }: Props) {
   function handleOverlay(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose()
   }
@@ -98,6 +100,9 @@ export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldC
             onClose={onClose}
             onSelectFace={(face) => {
               onSelectFace?.(face)
+            }}
+            onBarCarried={(barId) => {
+              onBarCarried?.(barId)
             }}
             instanceSlug={worldContext?.instanceSlug}
             roomSlug={typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : undefined}
