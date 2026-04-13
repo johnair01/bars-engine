@@ -20,13 +20,14 @@ import { StoryReader } from './components/StoryReader'
 import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
 import { StoryProgress } from './types'
 import { GuidedAuthForm } from './components/GuidedAuthForm'
+import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
 export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string, returnTo?: string }> }) {
     const { step, reset, ref: campaignRef, returnTo } = await searchParams
-    const player = await getCurrentPlayer()
 
+    const { player, dbError } = await getCurrentPlayerSafe()
     // If already logged in, this page is deprecated. Go to dashboard.
-    if (player) {
+    if (!dbError && player) {
         redirect('/')
     }
 
@@ -45,8 +46,6 @@ export default async function GuidedModePage({ searchParams }: { searchParams: P
         </div>
     )
 }
-
-import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
 async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { requestedStep?: string, campaignRef?: string, returnTo?: string }) {
     const { playerId, player, dbError, errorMessage } = await getCurrentPlayerSafe()
