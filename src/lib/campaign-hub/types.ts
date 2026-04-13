@@ -1,13 +1,106 @@
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
-import {
-    parseCompletedBuildReceipts,
-    type CompletedBuildReceiptParsed,
-    type CompletedBuildBarSummaryParsed,
-} from '@/lib/cyoa-build/schemas'
+import { GAME_MASTER_FACES, type GameMasterFace } from '@/lib/quest-grammar/types'
 
-/** Hub ledger receipt — canonical runtime validation in cyoa-build Zod schemas. */
-export type CompletedBuildReceipt = CompletedBuildReceiptParsed
-export type CompletedBuildBarSummary = CompletedBuildBarSummaryParsed
+/** Inline BAR summary stored in a completed build receipt (hub ledger). */
+export type CompletedBuildBarSummary = {
+    barId: string
+    title: string
+    type: 'vibe' | 'story' | 'insight'
+    vibeulons: number
+}
+
+/** Emotional vector on a receipt — matches cyoa-build emotionalVectorSchema when that module ships. */
+export type CompletedBuildEmotionalVector = {
+    channelFrom: 'Fear' | 'Anger' | 'Sadness' | 'Joy' | 'Neutrality'
+    altitudeFrom: 'dissatisfied' | 'neutral' | 'satisfied'
+    channelTo: 'Fear' | 'Anger' | 'Sadness' | 'Joy' | 'Neutrality'
+    altitudeTo: 'dissatisfied' | 'neutral' | 'satisfied'
+}
+
+/**
+ * Immutable receipt stored in CampaignHubStateV1.completedBuilds.
+ * Kept here (not imported from cyoa-build) so campaign hub compiles before that package is merged.
+ */
+export type CompletedBuildReceipt = {
+    buildId: string
+    spokeIndex: number
+    face: GameMasterFace
+    templateKind: string
+    templateKey: string
+    emotionalVector: CompletedBuildEmotionalVector
+    chargeText: string
+    terminalNodeId: string
+    blueprintKey: string
+    barSummaries: CompletedBuildBarSummary[]
+    totalVibeulons: number
+    completedAt: string
+}
+
+const EMOTIONAL_CHANNELS = [
+    'Fear',
+    'Anger',
+    'Sadness',
+    'Joy',
+    'Neutrality',
+] as const satisfies readonly CompletedBuildEmotionalVector['channelFrom'][]
+
+const ALCHEMY_ALTITUDES = [
+    'dissatisfied',
+    'neutral',
+    'satisfied',
+] as const satisfies readonly CompletedBuildEmotionalVector['altitudeFrom'][]
+
+function isNonEmptyString(x: unknown): x is string {
+    return typeof x === 'string' && x.length > 0
+}
+
+function isGameMasterFace(x: unknown): x is GameMasterFace {
+    return typeof x === 'string' && (GAME_MASTER_FACES as readonly string[]).includes(x)
+}
+
+function isEmotionalVector(x: unknown): x is CompletedBuildEmotionalVector {
+    if (!x || typeof x !== 'object') return false
+    const o = x as Record<string, unknown>
+    const cf = o.channelFrom
+    const af = o.altitudeFrom
+    const ct = o.channelTo
+    const at = o.altitudeTo
+    return (
+        (EMOTIONAL_CHANNELS as readonly string[]).includes(cf as string) &&
+        (ALCHEMY_ALTITUDES as readonly string[]).includes(af as string) &&
+        (EMOTIONAL_CHANNELS as readonly string[]).includes(ct as string) &&
+        (ALCHEMY_ALTITUDES as readonly string[]).includes(at as string)
+    )
+}
+
+function isCompletedBuildBarSummary(x: unknown): x is CompletedBuildBarSummary {
+    if (!x || typeof x !== 'object') return false
+    const o = x as Record<string, unknown>
+    if (!isNonEmptyString(o.barId) || !isNonEmptyString(o.title)) return false
+    if (o.type !== 'vibe' && o.type !== 'story' && o.type !== 'insight') return false
+    return typeof o.vibeulons === 'number' && Number.isInteger(o.vibeulons) && o.vibeulons >= 0
+}
+
+function isCompletedBuildReceipt(x: unknown): x is CompletedBuildReceipt {
+    if (!x || typeof x !== 'object') return false
+    const o = x as Record<string, unknown>
+    if (!isNonEmptyString(o.buildId)) return false
+    if (typeof o.spokeIndex !== 'number' || !Number.isInteger(o.spokeIndex) || o.spokeIndex < 0) {
+        return false
+    }
+    if (!isGameMasterFace(o.face)) return false
+    if (!isNonEmptyString(o.templateKind) || !isNonEmptyString(o.templateKey)) return false
+    if (!isEmotionalVector(o.emotionalVector)) return false
+    if (typeof o.chargeText !== 'string') return false
+    if (!isNonEmptyString(o.terminalNodeId) || !isNonEmptyString(o.blueprintKey)) return false
+    if (!Array.isArray(o.barSummaries) || !o.barSummaries.every(isCompletedBuildBarSummary)) {
+        return false
+    }
+    if (typeof o.totalVibeulons !== 'number' || !Number.isInteger(o.totalVibeulons) || o.totalVibeulons < 0) {
+        return false
+    }
+    if (typeof o.completedAt !== 'string' || o.completedAt.length === 0) return false
+    return true
+}
 
 /** Persisted hub draw — invalidated when instance `kotterStage` changes. */
 export type CampaignHubSpokeDrawV1 = {
@@ -41,8 +134,7 @@ export function isCampaignHubStateV1(x: unknown): x is CampaignHubStateV1 {
     }
     if (o.completedBuilds !== undefined) {
         if (!Array.isArray(o.completedBuilds)) return false
-        const parsed = parseCompletedBuildReceipts(o.completedBuilds)
-        if (!parsed.success) return false
+        if (!o.completedBuilds.every(isCompletedBuildReceipt)) return false
     }
     return true
 }
