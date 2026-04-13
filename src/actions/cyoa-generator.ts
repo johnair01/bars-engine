@@ -168,9 +168,16 @@ export async function finalizeCyoaDraft(draftId: string, options?: { adminBypass
             startNodeId: story.startId,
             adventureType: 'CYOA_INTAKE',
             campaignRef: draft.campaignId || undefined,
-            instanceId: draft.instanceId || undefined,
         }
     })
+
+    // Instance ↔ Adventure is modeled on Instance (portalAdventureId), not on Adventure.
+    if (draft.instanceId) {
+        await db.instance.update({
+            where: { id: draft.instanceId },
+            data: { portalAdventureId: adventure.id },
+        })
+    }
 
     // 2. Create Passages for all nodes
     const passageCreates = story.nodes.map((node: any) => {
