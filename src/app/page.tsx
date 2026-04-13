@@ -315,13 +315,8 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     // Continue with hasActiveOrientationThread = null — dashboard will still render
   }
 
-  /* 
-  if (hasActiveOrientationThread) {
-    // ENFORCE STICKY FLOW: If there's an orientation quest active, go back to onboarding controller
-    // This now covers ALL orientation quests, including the final signal.
-    redirect('/conclave/onboarding')
-  } else {
-  */
+  // Sticky /conclave/onboarding redirect when an orientation thread is active is deprecated;
+  // nation/playbook gates still skip while orientation is in progress.
   if (!player.nationId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=nation_select')
   }
