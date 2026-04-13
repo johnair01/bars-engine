@@ -329,10 +329,14 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
     })
   }
 
+  // Sticky /conclave/onboarding redirect when an orientation thread is active is deprecated;
+  // nation/playbook gates still skip while orientation is in progress.
+  if (!player.nationId && !hasActiveOrientationThread) {
+    redirect('/conclave/guided?step=nation_select')
+  }
   if (!player.archetypeId && !hasActiveOrientationThread) {
     redirect('/conclave/guided?step=playbook_select')
   }
-  */
 
   const ritualComplete = searchParams.ritualComplete === 'true'
   const focusQuest = searchParams.focusQuest
