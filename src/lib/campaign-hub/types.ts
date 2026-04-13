@@ -1,4 +1,13 @@
 import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import {
+    parseCompletedBuildReceipts,
+    type CompletedBuildReceiptParsed,
+    type CompletedBuildBarSummaryParsed,
+} from '@/lib/cyoa-build/schemas'
+
+/** Hub ledger receipt — canonical runtime validation in cyoa-build Zod schemas. */
+export type CompletedBuildReceipt = CompletedBuildReceiptParsed
+export type CompletedBuildBarSummary = CompletedBuildBarSummaryParsed
 
 /** Persisted hub draw — invalidated when instance `kotterStage` changes. */
 export type CampaignHubSpokeDrawV1 = {
@@ -11,6 +20,8 @@ export type CampaignHubStateV1 = {
     v: 1
     kotterStage: number
     spokes: CampaignHubSpokeDrawV1[]
+    /** Optional CYOA build receipts appended on ceremony completion (hub ledger). */
+    completedBuilds?: CompletedBuildReceipt[]
     updatedAt: string
 }
 
@@ -28,7 +39,17 @@ export function isCampaignHubStateV1(x: unknown): x is CampaignHubStateV1 {
         if (!Array.isArray(sp.changingLines)) return false
         if (typeof sp.primaryFace !== 'string') return false
     }
+    if (o.completedBuilds !== undefined) {
+        if (!Array.isArray(o.completedBuilds)) return false
+        const parsed = parseCompletedBuildReceipts(o.completedBuilds)
+        if (!parsed.success) return false
+    }
     return true
+}
+
+/** Ledger receipts stored on hub state (empty when field absent or legacy JSON). */
+export function getCompletedBuilds(state: CampaignHubStateV1): CompletedBuildReceipt[] {
+    return state.completedBuilds ?? []
 }
 
 export function hubStateMatchesKotter(state: CampaignHubStateV1, kotterStage: number): boolean {
