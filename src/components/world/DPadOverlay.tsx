@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 type Direction = 'north' | 'south' | 'east' | 'west'
 
@@ -15,12 +15,13 @@ const BUTTONS: { dir: Direction; dx: number; dy: number; label: string; classNam
   { dir: 'south', dx: 0,  dy: 1,  label: '▼', className: 'col-start-2 row-start-3' },
 ]
 
-export function DPadOverlay({ onMove }: Props) {
-  const [isTouch, setIsTouch] = useState(false)
+function readTouchDevice(): boolean {
+  if (typeof window === 'undefined') return false
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0
+}
 
-  useEffect(() => {
-    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
-  }, [])
+export function DPadOverlay({ onMove }: Props) {
+  const [isTouch] = useState(readTouchDevice)
 
   if (!isTouch) return null
 

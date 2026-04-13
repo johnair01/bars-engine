@@ -30,7 +30,6 @@ export function SpokePortalModal({ anchor, spokeState, onClose }: Props) {
     } catch { /* ignore */ }
   }
 
-  const cyoaHref = `/campaign/spoke/${spokeIndex}?ref=${encodeURIComponent(campaignRef)}`
   const landingHref = `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${spokeIndex}`
 
   // Nursery intro room: requires instanceSlug from the world context

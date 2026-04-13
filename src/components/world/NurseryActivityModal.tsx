@@ -29,7 +29,14 @@ type Props = {
   onBarPlanted?: () => void
 }
 
-export function NurseryActivityModal({ anchor, onClose, onLaunchRitual, instanceSlug, carryingBarId, onBarPlanted }: Props) {
+export function NurseryActivityModal({
+  anchor,
+  onClose,
+  onLaunchRitual,
+  instanceSlug,
+  carryingBarId,
+  onBarPlanted,
+}: Props) {
   const [completionState, setCompletionState] = useState<NurseryCompletionState | null>(null)
   const [loading, setLoading] = useState(true)
   const [planting, setPlanting] = useState(false)
@@ -171,9 +178,18 @@ export function NurseryActivityModal({ anchor, onClose, onLaunchRitual, instance
         <p className="text-zinc-600 text-xs mt-1">Complete their trial to receive a BAR, then return here to plant it.</p>
       </div>
 
-      <button type="button" onClick={onClose} className="w-full px-4 py-2 text-zinc-500 hover:text-zinc-300 text-sm">
-        Back
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => onLaunchRitual(nurseryType)}
+          className="w-full px-4 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm font-medium transition-colors"
+        >
+          Begin ritual (CYOA)
+        </button>
+        <button type="button" onClick={onClose} className="w-full px-4 py-2 text-zinc-500 hover:text-zinc-300 text-sm">
+          Back
+        </button>
+      </div>
     </div>
   )
 }
