@@ -3,6 +3,8 @@
  * Used by tests and server actions when that slice is present.
  */
 
+import type { EmotionalChannel, GameMasterFace, PersonalMoveType } from '@/lib/quest-grammar/types'
+
 export type ChallengerMoveId = 'issue_challenge' | 'propose_move'
 
 export const CHALLENGER_MOVE_IDS: ChallengerMoveId[] = ['issue_challenge', 'propose_move']
@@ -39,6 +41,68 @@ export const CHALLENGER_MOVE_META: Record<
 
 export type ArcPhase = 'intake' | 'action' | 'reflection'
 export type RegulationState = 'dissatisfied' | 'neutral' | 'satisfied'
+
+export const ARC_PHASES: ArcPhase[] = ['intake', 'action', 'reflection']
+
+export const PHASE_INDEX: Record<ArcPhase, number> = {
+  intake: 0,
+  action: 1,
+  reflection: 2,
+}
+
+export function isArcPhase(x: unknown): x is ArcPhase {
+  return x === 'intake' || x === 'action' || x === 'reflection'
+}
+
+export function isRegulationState(x: unknown): x is RegulationState {
+  return x === 'dissatisfied' || x === 'neutral' || x === 'satisfied'
+}
+
+/** BAR `type` field for each arc phase (identity for channel-typed BARs). */
+export type PhaseBarType = ArcPhase
+
+export const PHASE_BAR_CHANNEL_TYPE: Record<ArcPhase, PhaseBarType> = {
+  intake: 'intake',
+  action: 'action',
+  reflection: 'reflection',
+}
+
+/** Default arc slice: Challenger face + Wake Up WAVE, starting dissatisfied. */
+export const VERTICAL_SLICE = {
+  face: 'challenger',
+  waveMove: 'wakeUp',
+  initialRegulation: 'dissatisfied',
+} as const satisfies {
+  face: GameMasterFace
+  waveMove: PersonalMoveType
+  initialRegulation: RegulationState
+}
+
+export type AlchemyEngineState = {
+  playerId: string
+  channel: EmotionalChannel
+  regulation: RegulationState
+  arcPhase: ArcPhase | null
+  waveMove: PersonalMoveType | null
+  face: GameMasterFace | null
+  arcStartedAt: Date | null
+  arcCompletedAt: Date | null
+}
+
+export type PhaseAdvanceResult =
+  | {
+      success: true
+      newPhase: ArcPhase | null
+      newRegulation: RegulationState
+      arcComplete: boolean
+    }
+  | {
+      success: false
+      newPhase: ArcPhase | null
+      newRegulation: RegulationState
+      arcComplete: boolean
+      error: string
+    }
 
 export const PHASE_REGULATION_MAP: Record<
   ArcPhase,

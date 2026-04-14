@@ -93,6 +93,7 @@
     "test:vault-compost": "tsx src/lib/__tests__/vault-compost.test.ts",
     "test:shadow321-name-resolution": "npx tsx src/lib/__tests__/shadow321-name-resolution.test.ts",
     "test:npc321-merge-excerpt": "npx tsx src/lib/__tests__/npc321-merge-excerpt.test.ts",
+    "test:vitest": "vitest run",
     "test:onboarding-tokens": "npx tsx src/lib/__tests__/onboarding-tokens.parse.test.ts",
     "test:avatar-parts": "npx tsx src/lib/__tests__/avatar-parts.test.ts",
     "verify:avatar-lockstep": "tsx scripts/verify-avatar-lockstep.ts",
@@ -250,6 +251,7 @@
     "tailwindcss": "^4",
     "ts-morph": "^27.0.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.4"
   }
 }
