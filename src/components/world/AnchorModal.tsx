@@ -11,6 +11,8 @@ import { SpokePortalModal } from './SpokePortalModal'
 import { LibrarianNpcModal } from './LibrarianNpcModal'
 import { GiacomoNpcModal } from './GiacomoNpcModal'
 import { NationEmbassyModal } from './NationEmbassyModal'
+import { FaceNpcModal } from './FaceNpcModal'
+import { NurseryActivityModal } from './NurseryActivityModal'
 
 export type WorldAnchorModalContext = {
   instanceSlug: string
@@ -26,9 +28,19 @@ type Props = {
   spokeSeedStates?: SpokeState[]
   /** Card Club / lobby: librarian + embassy + nation gate targets */
   worldContext?: WorldAnchorModalContext | null
+  /** Nursery: face selection callback */
+  onSelectFace?: (face: import('@/lib/quest-grammar/types').GameMasterFace) => void
+  /** Nursery: ritual launch callback */
+  onLaunchRitual?: (nurseryType: import('@/lib/spatial-world/nursery-rooms').NurseryType) => void
+  /** BAR id the player is carrying */
+  carryingBarId?: string | null
+  /** Called when BAR is planted — clears carrying state */
+  onBarPlanted?: () => void
+  /** Called when player picks up a new BAR (e.g. selects a face move) — sets carrying state */
+  onBarCarried?: (barId: string) => void
 }
 
-export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldContext }: Props) {
+export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldContext, onSelectFace, onLaunchRitual, carryingBarId, onBarPlanted, onBarCarried }: Props) {
   function handleOverlay(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose()
   }
@@ -81,6 +93,33 @@ export function AnchorModal({ anchor, playerId, onClose, spokeSeedStates, worldC
               Close
             </button>
           </div>
+        )}
+        {anchor.anchorType === 'face_npc' && (
+          <FaceNpcModal
+            anchor={anchor}
+            onClose={onClose}
+            onSelectFace={(face) => {
+              onSelectFace?.(face)
+            }}
+            onBarCarried={(barId) => {
+              onBarCarried?.(barId)
+            }}
+            instanceSlug={worldContext?.instanceSlug}
+            roomSlug={typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : undefined}
+          />
+        )}
+        {anchor.anchorType === 'nursery_activity' && (
+          <NurseryActivityModal
+            anchor={anchor}
+            onClose={onClose}
+            onLaunchRitual={(nurseryType) => {
+              onLaunchRitual?.(nurseryType)
+              onClose()
+            }}
+            instanceSlug={worldContext?.instanceSlug ?? ''}
+            carryingBarId={carryingBarId}
+            onBarPlanted={onBarPlanted}
+          />
         )}
         {anchor.anchorType === 'npc_slot' && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-sm w-full">

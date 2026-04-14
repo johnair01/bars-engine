@@ -16,6 +16,7 @@ import { zoneBackgroundStyle } from '@/lib/ui/zone-surfaces'
 import { elementCssVars, altitudeCssVars } from '@/lib/ui/card-tokens'
 import { gmFaceToElement } from '@/lib/campaign-hub/gm-face-element'
 import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
+import type { BookMilestoneRollup } from '@/actions/chapter-spoke'
 
 export type CampaignHubPayload = {
   portals: PortalData[]
@@ -51,6 +52,11 @@ type Props = {
   showFundraisingSettings?: boolean
   /** True when player just joined via the campaign_join NavigationContract. */
   isNewlyJoined?: boolean
+  /**
+   * Book/chapter milestone rollup — shown when the hub is a book hub
+   * (e.g. mastering-allyship). Null/undefined → section hidden.
+   */
+  bookMilestoneRollup?: BookMilestoneRollup | null
 }
 
 const MOVE_LABEL: Record<string, string> = {
@@ -81,6 +87,7 @@ export function CampaignHubView({
   intakeAdventureId,
   showFundraisingSettings,
   isNewlyJoined,
+  bookMilestoneRollup,
 }: Props) {
   const { portals, campaignName, kotterStage, faceMoves, donateButtonLabel } = data
   const stageInfo = KOTTER_STAGES[kotterStage as keyof typeof KOTTER_STAGES]
@@ -161,6 +168,35 @@ export function CampaignHubView({
               progress={contributionProgress}
               campaignRef={campaignRef}
             />
+          )}
+
+          {bookMilestoneRollup && bookMilestoneRollup.chapters.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-[10px] uppercase tracking-widest text-purple-400">Chapter progress</p>
+                <p className="text-[10px] text-zinc-500">
+                  {Math.round(bookMilestoneRollup.overallProgress * 100)}% overall
+                </p>
+              </div>
+              <ul className="space-y-2">
+                {bookMilestoneRollup.chapters.map((ch) => (
+                  <li key={ch.chapterRef}>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <span className="text-xs text-zinc-300">{ch.title}</span>
+                      <span className="text-[10px] text-zinc-500">
+                        {ch.totalBarCount} BAR{ch.totalBarCount !== 1 ? 's' : ''} · {ch.totalPlayerCount} player{ch.totalPlayerCount !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 rounded-full transition-all"
+                        style={{ width: `${Math.round(ch.progressFraction * 100)}%` }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {milestoneGuidance ? <CampaignMilestoneStrip data={milestoneGuidance} variant="hub" /> : null}

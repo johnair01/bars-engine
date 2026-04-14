@@ -46,6 +46,9 @@ const ANCHOR_COLORS: Record<string, number> = {
   bar_deck:         0xf59e0b,  // amber — curated deck
   librarian_v2_npc: 0x06b6d4,  // cyan — the new Game Master face
   encounter_spawn:  0xef4444,  // red — wild grass / combat trigger
+  face_npc:         0xe879f9,  // orchid — GM face NPC in nursery intro room
+  nursery_activity: 0x38bdf8,  // sky blue — ritual launch point in nursery
+  welcome_text:     0xfbbf24,  // warm gold — campaign welcome text
 }
 
 /**
@@ -63,6 +66,8 @@ const PROXIMITY_PRIORITY: Record<string, number> = {
   cyoa_quest: 90,
   spoke_portal: 88,
   npc_slot: 85,
+  face_npc: 100,
+  nursery_activity: 95,
   encounter_spawn: 84,
   crafting_forge: 82,
   bar: 80,
@@ -348,6 +353,12 @@ export class RoomRenderer {
     this._onCanvasTap?.(tileX, tileY)
   }
 
+  /** Anchor types that block movement — player interacts from adjacent tile. */
+  private static NPC_ANCHOR_TYPES = new Set([
+    'face_npc', 'nursery_activity', 'npc_slot', 'librarian_npc',
+    'giacomo_npc', 'librarian_v2_npc', 'welcome_text',
+  ])
+
   isWalkable(x: number, y: number): boolean {
     // Portal anchors are always passable — stepping on them triggers room transition
     if (
@@ -361,6 +372,16 @@ export class RoomRenderer {
       )
     ) {
       return true
+    }
+    // NPC anchors are impassable — player interacts from adjacent tile
+    if (
+      this.anchors.some(
+        a => RoomRenderer.NPC_ANCHOR_TYPES.has(a.anchorType) &&
+          a.tileX === x &&
+          a.tileY === y
+      )
+    ) {
+      return false
     }
     // Keys are seeded as `${x},${y}` (no space after comma)
     const tile = this.tilemap[`${x},${y}`] ?? this.tilemap[`${x}, ${y}`]

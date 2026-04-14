@@ -14,6 +14,9 @@ import { completeGscpAdventureTerminal } from '@/actions/generated-spoke-cyoa'
 import { saveCyoaHexagramSnapshot } from '@/actions/cyoa-artifact-ledger'
 import { chunkIntoSlides } from '@/lib/slide-chunker'
 import { applyAuthenticatedChoicePolicy } from '@/lib/cyoa/filter-choices'
+import { SeamReflection321 } from '@/components/adventure/seams/SeamReflection321'
+import { SeamBarCreate } from '@/components/adventure/seams/SeamBarCreate'
+import { SeamCarryReturn } from '@/components/adventure/seams/SeamCarryReturn'
 import { buildOnboardingUrl } from '@/lib/safe-return-to'
 import { FACE_META, type GameMasterFace } from '@/lib/quest-grammar/types'
 import type { CyoaArtifactLedgerEntry } from '@/lib/cyoa/types'
@@ -96,6 +99,7 @@ export function AdventurePlayer({
   const [moveChoiceProcessing, setMoveChoiceProcessing] = useState(false)
   const [barTitle, setBarTitle] = useState('')
   const [barDescription, setBarDescription] = useState('')
+  const [seamBarCreated, setSeamBarCreated] = useState<string | null>(null)
   const [generatingPortalQuest, setGeneratingPortalQuest] = useState(false)
   const [portalQuestGenerated, setPortalQuestGenerated] = useState<{ title: string; questId?: string } | null>(null)
   const [spokeSeedBarId, setSpokeSeedBarId] = useState<string | null>(null)
@@ -160,6 +164,11 @@ export function AdventurePlayer({
   }, [currentNode?.id, currentNode?.metadata?.actionType, adventureId, isPreview])
 
   const isBarEmitNode = currentNode?.metadata?.actionType === 'bar_emit'
+  const isAdventureSeam = currentNode?.metadata?.actionType === 'adventure_seam'
+  const seamType = isAdventureSeam ? (currentNode?.metadata as Record<string, unknown>)?.seamType as string : null
+  const seamNpcId = (currentNode?.metadata as Record<string, unknown>)?.npcId as string | undefined
+  const seamNextSlug = (currentNode?.metadata as Record<string, unknown>)?.nextAdventureSlug as string | undefined
+  const seamMoveKey = (currentNode?.metadata as Record<string, unknown>)?.moveKey as string | undefined
   const isCastIChingNode =
     currentNode?.metadata?.actionType === 'cast_iching' &&
     currentNode?.metadata?.castIChingTargetId
@@ -560,6 +569,45 @@ export function AdventurePlayer({
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Adventure Seam — game action between narrative segments */}
+          {isAdventureSeam && seamType === '321_reflection' && seamNpcId && seamNextSlug && (
+            <div className="p-4 bg-zinc-900/80 border border-purple-800/40 rounded-xl">
+              <SeamReflection321
+                passageText={currentNode.text}
+                npcId={seamNpcId}
+                nextAdventureSlug={seamNextSlug}
+                returnTo={returnTo ?? undefined}
+              />
+            </div>
+          )}
+          {isAdventureSeam && seamType === 'bar_create' && (
+            <div className="p-4 bg-zinc-900/80 border border-zinc-700 rounded-xl">
+              <SeamBarCreate
+                passageText={currentNode.text}
+                npcId={seamNpcId ?? 'witness'}
+                moveKey={seamMoveKey}
+                adventureId={adventureId}
+                passageNodeId={currentNode.id}
+                campaignRef={campaignRef ?? undefined}
+                onBarCreated={(barId) => {
+                  setSeamBarCreated(barId)
+                  // Advance to next passage — use metadata.nextTargetId or first choice
+                  const nextId = (currentNode.metadata as Record<string, unknown>)?.nextTargetId as string
+                    ?? currentNode.choices[0]?.targetId
+                  if (nextId) void fetchNode(nextId)
+                }}
+              />
+            </div>
+          )}
+          {isAdventureSeam && seamType === 'carry_and_return' && (
+            <div className="p-4">
+              <SeamCarryReturn
+                passageText={currentNode.text}
+                returnTo={returnTo ?? undefined}
+              />
+            </div>
+          )}
+
           {isBarEmitNode && (
             <div className="space-y-4 p-4 bg-zinc-900/80 border border-zinc-700 rounded-xl">
               <h3 className="text-lg font-medium text-zinc-200">Create a BAR</h3>
@@ -614,7 +662,7 @@ export function AdventurePlayer({
               />
             </>
           )}
-          {!isBarEmitNode &&
+          {!isBarEmitNode && !isAdventureSeam &&
           (currentNode.choices.length === 0 && !isCastIChingNode ? (
             completing ? (
               <div className="p-4 bg-green-900/20 border border-green-800/50 rounded-xl text-center">
