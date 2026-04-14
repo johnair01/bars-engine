@@ -1,0 +1,48 @@
+goal: "Build a campaign self-serve system enabling Steward+ users to create, skin, and run campaigns via an L1 form wizard and L2 visual theming, with a data model designed to accommodate future L3 narrative sovereignty, within the existing bars-engine Next.js/Prisma/PostgreSQL stack"
+task_type: code
+constraints:
+  - "Next.js 16 / React 19 / TypeScript / Prisma / PostgreSQL stack"
+  - "Steward+ roles (owner/steward/admin) only for campaign creation"
+  - "Campaigns require admin approval before going live (draft state)"
+  - "Instance:Campaign is 1:many — wizard creates Campaign under existing Instance"
+  - "L1+L2 ship together, L3 deferred but schema accommodates all three levels"
+  - "Bruised Banana backfilled as reference implementation — single source of truth"
+  - "First quest uses template+customize pattern (configuration tool, not authoring tool)"
+  - "Must follow existing patterns: getCampaignSkin, NavigationContract, UI_COVENANT.md three-channel encoding"
+  - "No direct DB manipulation by end users"
+  - "Coherence and usability are top priorities"
+acceptance_criteria:
+  - "Steward+ can complete L1 wizard to create a campaign in draft state under an existing Instance"
+  - "Draft campaigns go through admin approval flow before going live"
+  - "Approved campaign produces a shareable /campaign/[ref] page"
+  - "Invite flow allows players to join the campaign"
+  - "First quest is selectable from pre-built templates with copy/settings customization"
+  - "Full loop works: visit page, get invited, have something to do"
+  - "Bruised Banana is backfilled and represented through the wizard system"
+  - "L2 visual theming/skinning is configurable per campaign without code changes"
+  - "Data model supports future L3 narrative sovereignty"
+  - "Existing campaign skin system (getCampaignSkin) is integrated/extended"
+ontology_schema:
+  name: CampaignSelfServe
+  description: "Domain model for self-serve campaign creation, theming, and quest template assignment"
+  fields:
+    - name: campaignRef
+      type: string
+      description: "URL-friendly slug for the shareable /campaign/[ref] page"
+    - name: status
+      type: string
+      description: "Campaign lifecycle state: draft, pending_approval, active, archived"
+    - name: skinConfig
+      type: object
+      description: "L2 visual theming configuration (colors, typography, poster image)"
+    - name: questTemplateConfig
+      type: array
+      description: "Quest template selections with customized copy and settings"
+    - name: narrativeConfig
+      type: object
+      description: "Reserved L3 field for CYOA, bingo, NPC authoring configuration"
+metadata:
+  seed_id: seed_86e9dac694a2
+  ambiguity_score: 0.17
+  interview_id: interview_20260404_043415
+  created_at: "2026-04-04T04:49:49Z"

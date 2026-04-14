@@ -95,12 +95,16 @@ async function verifyCoreQuestConfig() {
     const feedbackInputs = parseJsonArray(feedbackQuest.inputs)
     const sentimentInput = feedbackInputs.find((input) => input?.key === 'sentiment')
     const clarityInput = feedbackInputs.find((input) => input?.key === 'clarity')
+    const signalImageInput = feedbackInputs.find((input) => input?.key === 'signalImageUrl')
 
     if (!sentimentInput?.label || !clarityInput?.label) {
         throw new Error('Feedback quest select labels are missing.')
     }
     if (sentimentInput.type !== 'select' || clarityInput.type !== 'select') {
         throw new Error('Feedback quest sentiment/clarity inputs are not select fields.')
+    }
+    if (signalImageInput && signalImageInput.type !== 'image') {
+        throw new Error('Feedback quest signalImageUrl input must be type image.')
     }
 
     const intentionInputs = parseJsonArray(intentionQuest.inputs)

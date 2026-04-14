@@ -5,6 +5,7 @@ import { verifyPassword } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
 import { isAuthBypassEmailVerificationEnabled } from '@/lib/mvp-flags'
 import { createRequestId, logActionError } from '@/lib/mvp-observability'
+import { isPublicCampaignEntryReturnTo } from '@/lib/safe-return-to'
 
 export type LoginState = {
     error?: string
@@ -78,11 +79,13 @@ export async function login(formData: FormData) {
         cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
 
         // If the player hasn't selected Nation / Archetype yet, drive them into the guided narrative
-        // node where those choices are made.
+        // node where those choices are made — unless returnTo is a public entry (donate, initiation, etc.).
         let redirectToPath = !player.nationId
             ? '/conclave/guided?step=nation_select'
             : (!player.archetypeId ? '/conclave/guided?step=archetype_select' : '/')
-        if (redirectToPath === '/' && returnTo && returnTo.startsWith('/')) {
+        if (returnTo && isPublicCampaignEntryReturnTo(returnTo)) {
+            redirectToPath = returnTo
+        } else if (redirectToPath === '/' && returnTo && returnTo.startsWith('/')) {
             redirectToPath = returnTo
         }
 

@@ -500,7 +500,13 @@ export async function runSeed(prisma: PrismaClient) {
                         'Blind (The system feels like a black box)'
                     ]
                 },
-                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' }
+                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' },
+                {
+                    key: 'signalImageUrl',
+                    label: 'Screenshot',
+                    type: 'image',
+                    required: false,
+                },
             ]),
             isSystem: true,
             reward: 1
@@ -538,7 +544,13 @@ export async function runSeed(prisma: PrismaClient) {
                         'Blind (The system feels like a black box)'
                     ]
                 },
-                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' }
+                { key: 'feedback', label: 'Transmission', type: 'textarea', required: false, placeholder: 'What specific friction or magic did you encounter?' },
+                {
+                    key: 'signalImageUrl',
+                    label: 'Screenshot',
+                    type: 'image',
+                    required: false,
+                },
             ])
         }
     })

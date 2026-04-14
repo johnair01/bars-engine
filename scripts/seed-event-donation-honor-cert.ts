@@ -42,8 +42,8 @@ async function seed() {
     {
       name: 'START',
       pid: '1',
-      text: 'This certification quest verifies the event donation honor system: public event page, donation page with provider links, self-report flow, and redemption packs (BARs) for donors.',
-      cleanText: 'This certification quest verifies the event donation honor system: public event page, donation page with provider links, self-report flow, and redemption packs (BARs) for donors.',
+      text: 'This certification quest verifies the event donation honor system: public event page, donation page with provider links, self-report flow, and vibeulons minted to the wallet after self-report.',
+      cleanText: 'This certification quest verifies the event donation honor system: public event page, donation page with provider links, self-report flow, and vibeulons minted to the wallet after self-report.',
       links: [{ label: 'Begin', target: 'STEP_1' }],
     },
     {
@@ -63,15 +63,15 @@ async function seed() {
     {
       name: 'STEP_3',
       pid: '4',
-      text: '### Step 3: Self-report (logged in)\n\nLog in, then enter an amount (e.g. $5) in the self-report form and submit. Confirm you receive a success message and packs are created.',
-      cleanText: '### Step 3: Self-report (logged in)\n\nLog in, then enter an amount (e.g. $5) in the self-report form and submit. Confirm you receive a success message and packs are created.',
+      text: '### Step 3: Self-report (logged in)\n\nLog in, then enter an amount (e.g. $5) in the self-report form and submit. Confirm you receive a success message and vibeulons are minted (see wallet balance).',
+      cleanText: '### Step 3: Self-report (logged in)\n\nLog in, then enter an amount (e.g. $5) in the self-report form and submit. Confirm you receive a success message and vibeulons are minted (see wallet balance).',
       links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }],
     },
     {
       name: 'STEP_4',
       pid: '5',
-      text: '### Step 4: Redeem packs\n\n[Open your Wallet](/wallet). Confirm you see Redemption Packs (BARs) from your donation. Click **Redeem** on a pack and confirm vibeulons are added to your balance.',
-      cleanText: '### Step 4: Redeem packs\n\n[Open your Wallet](/wallet). Confirm you see Redemption Packs (BARs) from your donation. Click **Redeem** on a pack and confirm vibeulons are added to your balance.',
+      text: '### Step 4: Wallet balance\n\n[Open your Wallet](/wallet). Confirm your ♦ total reflects the donation (vibeulons mint when self-report succeeds — no separate redeem step).',
+      cleanText: '### Step 4: Wallet balance\n\n[Open your Wallet](/wallet). Confirm your ♦ total reflects the donation (vibeulons mint when self-report succeeds — no separate redeem step).',
       links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }],
     },
     {
@@ -85,8 +85,8 @@ async function seed() {
     {
       name: 'END_SUCCESS',
       pid: '6',
-      text: 'Verification complete. You have confirmed the event donation honor system: public event page, donation links, self-report flow, and BAR redemption. Complete this quest to receive your vibeulon reward.',
-      cleanText: 'Verification complete. You have confirmed the event donation honor system: public event page, donation links, self-report flow, and BAR redemption. Complete this quest to receive your vibeulon reward.',
+      text: 'Verification complete. You have confirmed the event donation honor system: public event page, donation links, self-report flow, and vibeulons minted after self-report. Complete this quest to receive your vibeulon reward.',
+      cleanText: 'Verification complete. You have confirmed the event donation honor system: public event page, donation links, self-report flow, and vibeulons minted after self-report. Complete this quest to receive your vibeulon reward.',
       links: [],
     },
   ]
@@ -119,7 +119,7 @@ async function seed() {
     where: { id: slug },
     update: {
       title,
-      description: 'Step-by-step verification of the event donation honor system: public event page, donation page, self-report flow, and redemption packs (BARs).',
+      description: 'Step-by-step verification of the event donation honor system: public event page, donation page, self-report flow, and vibeulons minted to wallet.',
       reward: 1,
       twineStoryId: story.id,
       status: 'active',
@@ -129,7 +129,7 @@ async function seed() {
     create: {
       id: slug,
       title,
-      description: 'Step-by-step verification of the event donation honor system: public event page, donation page, self-report flow, and redemption packs (BARs).',
+      description: 'Step-by-step verification of the event donation honor system: public event page, donation page, self-report flow, and vibeulons minted to wallet.',
       creatorId: createdById,
       reward: 1,
       twineStoryId: story.id,

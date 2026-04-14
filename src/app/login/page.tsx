@@ -2,16 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { LoginForm } from './LoginForm'
-import { buildOnboardingUrl, isSafeAppPath } from '@/lib/safe-return-to'
-
-/**
- * Donate wizard + self-report are usable without nation/playbook; do not trap those URLs
- * behind /conclave/onboarding or players loop: login → onboarding → … → login?returnTo=donate.
- */
-function isDonateFlowReturnTo(returnTo: string | undefined): boolean {
-  if (!returnTo || !isSafeAppPath(returnTo)) return false
-  return returnTo === '/event/donate' || returnTo.startsWith('/event/donate?') || returnTo.startsWith('/event/donate/')
-}
+import { buildOnboardingUrl, isPublicCampaignEntryReturnTo, isSafeAppPath } from '@/lib/safe-return-to'
 
 /**
  * @page /login
@@ -44,7 +35,7 @@ export default async function LoginPage({
         })
         if (player) {
             const profileIncomplete = !player.nationId || !player.archetypeId
-            if (profileIncomplete && !isDonateFlowReturnTo(returnTo)) {
+            if (profileIncomplete && !isPublicCampaignEntryReturnTo(returnTo)) {
                 redirect(buildOnboardingUrl({ returnTo: returnTo && isSafeAppPath(returnTo) ? returnTo : undefined }))
             }
             redirect(returnTo && isSafeAppPath(returnTo) ? returnTo : '/')

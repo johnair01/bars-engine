@@ -50,6 +50,28 @@ function run() {
     )
   }
 
+  const badImage = siteSignalInputSchema.safeParse({
+    pageUrl: 'http://localhost:3000/foo',
+    pathname: '/foo',
+    message: 'ok',
+    imageUrl: 'https://evil.example.com/phish.png',
+  })
+  assert(!badImage.success, 'reject non-blob imageUrl')
+
+  const blobUrl = 'https://abc.public.blob.vercel-storage.com/signal-feedback/p/1.png'
+  const withImg = siteSignalInputSchema.safeParse({
+    pageUrl: 'http://localhost:3000/foo',
+    pathname: '/foo',
+    message: 'screen',
+    imageUrl: blobUrl,
+  })
+  assert(withImg.success, 'accept Vercel Blob imageUrl')
+  if (withImg.success) {
+    const block = formatSiteSignalFeedbackBlock(withImg.data)
+    assert(block.includes('--- Screenshot ---'), 'screenshot section')
+    assert(block.includes(blobUrl), 'image url in block')
+  }
+
   // eslint-disable-next-line no-console -- test runner
   console.log('site-signal-schema tests passed')
 }

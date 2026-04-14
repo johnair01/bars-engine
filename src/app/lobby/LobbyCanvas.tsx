@@ -84,6 +84,14 @@ export function LobbyCanvas({ spatialBindKey, player, room, allRooms, spawnX, sp
       d: { dx: 1, dy: 0, dir: 'east' }, ArrowRight: { dx: 1, dy: 0, dir: 'east' },
     }
     const handler = (e: KeyboardEvent) => {
+      // Don't intercept WASD/arrows when player is typing in an input field.
+      const target = e.target as HTMLElement | null
+      if (target) {
+        const tag = target.tagName?.toLowerCase()
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable) {
+          return
+        }
+      }
       const delta = DELTAS[e.key]
       if (!delta || !rendererRef.current) return
       const next = { x: posRef.current.x + delta.dx, y: posRef.current.y + delta.dy }

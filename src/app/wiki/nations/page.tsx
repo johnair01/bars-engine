@@ -68,6 +68,11 @@ export default async function NationsPage() {
         <Link href="/wiki/moves" className="hover:text-zinc-300">The 4 Moves</Link>
         <Link href="/wiki/archetypes" className="hover:text-zinc-300">Archetypes</Link>
       </div>
+
+      {/* Every nation has one. You just have to find yours. */}
+      <p className="text-[9px] text-zinc-900/40 hover:text-zinc-500 transition-colors duration-1000 mt-6 text-center">
+        <Link href="/wiki/hidden/grill-master">There was someone at the grill who knew.</Link>
+      </p>
     </div>
   )
 }

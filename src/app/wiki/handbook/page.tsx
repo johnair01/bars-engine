@@ -17,7 +17,7 @@ const MOVES = [
     color: 'emerald',
     tagline: 'Notice what is alive in you right now.',
     detail:
-      'Raise awareness. See who is here, what resources exist, what feels charged. You cannot act well from numbness — waking up is the first move.',
+      'Raise awareness. See who is here, what resources exist, what feels charged. You cannot act well from numbness — waking up is the first move. Your Nation shapes how charge feels to you.',
     action: 'Capture a charge',
     actionHref: '/capture',
     whenYoureDoingThis: 'Something feels charged and you stop to name it rather than let it pass.',
@@ -30,7 +30,7 @@ const MOVES = [
     color: 'sky',
     tagline: 'Move emotional energy through you.',
     detail:
-      'Unblock what is stuck so you can act from clarity. When charge accumulates without processing, it drives behavior unconsciously. The 321 process metabolizes it.',
+      'Unblock what is stuck so you can act from clarity. When charge accumulates without processing, it drives behavior unconsciously. The 321 process metabolizes it. If the charge is heavy, the Emotional First Aid Kit is designed for that.',
     action: 'Run the 321 process',
     actionHref: '/shadow/321',
     whenYoureDoingThis:
@@ -58,7 +58,7 @@ const MOVES = [
     color: 'amber',
     tagline: 'Do the work. Complete quests. Take action.',
     detail:
-      'A quest is not finished when it is captured or planned — it is finished when you move it. Show Up is the move that makes everything else count in the world.',
+      'A quest is not finished when it is captured or planned — it is finished when you move it. Show Up is the move that makes everything else count in the world. Every completed quest earns vibeulons.',
     action: 'View your active quests',
     actionHref: '/',
     whenYoureDoingThis:
@@ -84,9 +84,17 @@ export default function HandbookPage() {
           <Link href="/wiki/glossary#bar" className="text-zinc-400 hover:text-white underline underline-offset-2">
             BAR
           </Link>{' '}
-          stands for Brave Act of Resistance — the unit of creative and developmental energy in the game.
+          stands for Basic Artifact Resource — the unit of creative and developmental energy in the game.
           Every charge you capture is a BAR. Every quest you complete is a BAR metabolized.
         </p>
+        <div className="pt-2">
+          <Link
+            href="/wiki/handbook/play"
+            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+          >
+            Want to learn by doing? Play the orientation &rarr;
+          </Link>
+        </div>
       </header>
 
       {/* What success looks like — brief inline version */}
@@ -176,18 +184,67 @@ export default function HandbookPage() {
         </p>
       </section>
 
-      {/* Reference */}
-      <section className="border-t border-zinc-800 pt-6 space-y-2">
-        <h2 className="text-sm uppercase tracking-widest text-zinc-500">Reference</h2>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <Link href="/wiki/moves" className="text-zinc-400 hover:text-white transition">The four moves (deeper)</Link>
-          <Link href="/wiki/emotional-alchemy" className="text-zinc-400 hover:text-white transition">Emotional alchemy</Link>
-          <Link href="/wiki/nations" className="text-zinc-400 hover:text-white transition">Nations</Link>
-          <Link href="/wiki/archetypes" className="text-zinc-400 hover:text-white transition">Archetypes</Link>
-          <Link href="/wiki/glossary" className="text-zinc-400 hover:text-white transition">Glossary</Link>
-          <Link href="/wiki/player-guides" className="text-zinc-400 hover:text-white transition">All guides</Link>
+      {/* Go deeper */}
+      <section className="space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-500">Go deeper</h2>
+        <p className="text-sm text-zinc-500 leading-relaxed">
+          Every concept in this game connects to every other. Pick a thread and follow it.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <Link href="/wiki/bars-guide" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-amber-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-amber-400 text-xs block mb-0.5">Artifact</span>
+            What are BARs? <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/quests-guide" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-violet-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-violet-400 text-xs block mb-0.5">Action</span>
+            Quests &amp; how to play <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/nations" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-emerald-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-emerald-400 text-xs block mb-0.5">Identity</span>
+            The five nations <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/archetypes" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-sky-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-sky-400 text-xs block mb-0.5">Agency</span>
+            The eight archetypes <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/emotional-alchemy" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-orange-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-orange-400 text-xs block mb-0.5">System</span>
+            Emotional alchemy <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/iching" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-yellow-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-yellow-400 text-xs block mb-0.5">Oracle</span>
+            I Ching guidebook <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/moves" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition group">
+            <span className="text-zinc-400 text-xs block mb-0.5">Compass</span>
+            The four moves (deep) <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/domains" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-teal-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-teal-400 text-xs block mb-0.5">Where</span>
+            Allyship domains <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/rules" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition group">
+            <span className="text-zinc-400 text-xs block mb-0.5">Rules</span>
+            Full game rules <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/emotional-first-aid-guide" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-sky-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-sky-400 text-xs block mb-0.5">Safety</span>
+            Emotional first aid <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/grid-deck" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-purple-700/50 text-zinc-300 text-sm transition group">
+            <span className="text-purple-400 text-xs block mb-0.5">Divination</span>
+            Scene Atlas <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
+          <Link href="/wiki/glossary" className="px-3 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition group">
+            <span className="text-zinc-400 text-xs block mb-0.5">Reference</span>
+            Glossary <span className="text-zinc-600 group-hover:text-zinc-400">→</span>
+          </Link>
         </div>
       </section>
+
+      <div className="pt-12 text-center">
+        <Link href="/wiki/hidden" className="text-zinc-900/30 hover:text-zinc-600 transition-colors duration-1000 text-xs tracking-[0.5em]">...</Link>
+      </div>
     </div>
   )
 }

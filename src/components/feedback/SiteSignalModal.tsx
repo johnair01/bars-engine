@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { elementCssVars, altitudeCssVars, SURFACE_TOKENS } from '@/lib/ui/card-tokens'
+import { SignalQuestImageField } from '@/components/SignalQuestImageField'
 
 type Snapshot = {
   pageUrl: string
@@ -37,6 +38,7 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
   const [mounted, setMounted] = useState(false)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [message, setMessage] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -96,6 +98,7 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
           hash: snapshot.hash || undefined,
           documentTitle: snapshot.documentTitle.trim() || undefined,
           message: trimmed,
+          imageUrl: imageUrl.trim() || undefined,
         }),
       })
       const data = (await res.json()) as { success?: boolean; error?: string }
@@ -122,23 +125,23 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
   // so the overlay was a thin strip at the top — unusable on mobile.
   const modal = (
     <div
-      className="fixed inset-0 z-[200] flex flex-col bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
       <button
         type="button"
-        className="absolute inset-0 z-0 cursor-default"
+        className="absolute inset-0 z-0 cursor-default bg-black/50 backdrop-blur-[2px]"
         aria-label="Dismiss overlay"
         onClick={onClose}
       />
       <div
-        className="relative z-10 flex min-h-0 flex-1 flex-col p-3 sm:p-6"
+        className="relative z-10 flex w-full min-h-0 max-h-[92dvh] flex-col sm:max-h-[90dvh] sm:max-w-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="cultivation-card flex max-h-[100dvh] min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl sm:max-w-2xl sm:mx-auto"
+          className="cultivation-card flex max-h-[92dvh] min-h-0 w-full flex-col overflow-hidden rounded-t-2xl border border-zinc-800/90 sm:rounded-xl sm:border-zinc-800/80"
           style={{
             ...elementCssVars('metal'),
             ...altitudeCssVars('dissatisfied'),
@@ -175,6 +178,14 @@ export function SiteSignalModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 <pre className="text-xs text-zinc-400 font-mono whitespace-pre-wrap break-all bg-zinc-950/80 border border-zinc-800 rounded-lg p-3 max-h-32 overflow-y-auto">
                   {snapshot ? displayUrl : '…'}
                 </pre>
+              </div>
+              <div>
+                <SignalQuestImageField
+                  inputKey="imageUrl"
+                  label="Screenshot"
+                  value={imageUrl}
+                  onChange={(_, val) => setImageUrl(val)}
+                />
               </div>
               <div>
                 <label htmlFor="site-signal-message" className="block text-sm text-zinc-400 mb-2">

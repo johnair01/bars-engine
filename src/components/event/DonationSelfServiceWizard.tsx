@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { OfferBarModal } from '@/components/event/OfferBarModal'
 import type { DonationWizardMilestoneOption } from '@/lib/donation-wizard'
 import type { OfferBarDswPath } from '@/lib/offer-bar'
+import { isSafeAppPath } from '@/lib/safe-return-to'
 
 function mergeDonateHandoffQuery(
   searchParams: URLSearchParams,
@@ -87,7 +88,13 @@ export function DonationSelfServiceWizard({
     ? `/bars/create?ref=${encodeURIComponent(refParam)}`
     : '/bars/create'
 
-  const loginReturnHref = wizardHrefWithRef
+  /** BB campaign: sign-in from wizard lands on grammatical initiation (demo’s sibling path). Optional `afterAuth` overrides. */
+  const loginReturnHref = useMemo(() => {
+    const afterAuth = searchParams.get('afterAuth')?.trim() ?? ''
+    if (afterAuth && isSafeAppPath(afterAuth)) return afterAuth
+    if (refParam === 'bruised-banana') return '/campaign/initiation?segment=player'
+    return wizardHrefWithRef
+  }, [searchParams, refParam, wizardHrefWithRef])
   const loginHref = `/login?returnTo=${encodeURIComponent(loginReturnHref)}`
 
   const [offerModalPath, setOfferModalPath] = useState<OfferBarDswPath | null>(null)
@@ -137,7 +144,7 @@ export function DonationSelfServiceWizard({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(
               [
-                { id: 'money' as const, title: 'Money', emoji: '💵', blurb: 'Donate and self-report for redemption packs (vibeulons).' },
+                { id: 'money' as const, title: 'Money', emoji: '💵', blurb: 'Donate and self-report — vibeulons mint to your wallet.' },
                 { id: 'time' as const, title: 'Time', emoji: '⏱️', blurb: 'Show up — skills, facilitation, or campaign labor.' },
                 { id: 'space' as const, title: 'Space', emoji: '🏠', blurb: 'Venue, housing, storage, or in-kind space.' },
                 { id: 'host' as const, title: 'Host / organize', emoji: '🎤', blurb: 'Benefit night, drive, or fundraiser — align with stewards first.' },

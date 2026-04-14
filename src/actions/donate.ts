@@ -17,6 +17,24 @@ const DSW_ALLOWED_TIER = new Set(['small', 'medium', 'large', 'custom'])
 
 const cuidSchema = z.string().cuid()
 
+/** Post-login return for pending donation — allowlist only (blocks open redirects). */
+function normalizeDonateReturnPath(raw: string | null | undefined): string {
+  const v = raw?.trim() || '/event/donate'
+  if (v === '/demo/bruised-banana/donate' || v.startsWith('/demo/bruised-banana/donate?')) {
+    return v
+  }
+  if (v === '/campaign/initiation' || v.startsWith('/campaign/initiation?')) {
+    return v
+  }
+  if (v === '/event/donate/wizard' || v.startsWith('/event/donate/wizard?')) {
+    return v
+  }
+  if (v === '/event/donate' || v.startsWith('/event/donate?')) {
+    return v
+  }
+  return '/event/donate'
+}
+
 export type DonationWizardMeta = {
   path?: string
   tier?: string
@@ -84,7 +102,8 @@ export type ReportDonationState = {
   requiresAuth?: boolean
   redirectTo?: string
   amountCents?: number
-  packsCreated?: number
+  /** Vibeulons minted to the player when self-report succeeds (no intermediate “pack” step). */
+  vibeulonsMinted?: number
 }
 
 function parseAmountCents(raw: FormDataEntryValue | null): number | null {
@@ -143,7 +162,7 @@ function dswFromPendingCookie(data: Record<string, unknown>): DonationWizardMeta
 
 /**
  * Report a donation (honor system). If not logged in, stores pending donation in cookie
- * and returns requiresAuth + redirectTo. If logged in, creates Donation + RedemptionPacks.
+ * and returns requiresAuth + redirectTo. If logged in, creates Donation + mints vibeulons.
  */
 export async function reportDonation(formData: FormData): Promise<ReportDonationState> {
   const instanceId = (formData.get('instanceId') as string | null)?.trim()
@@ -179,7 +198,8 @@ export async function reportDonation(formData: FormData): Promise<ReportDonation
       path: '/',
       maxAge: 60 * 60 * 24, // 24h
     })
-    const returnTo = encodeURIComponent('/event/donate')
+    const returnPath = normalizeDonateReturnPath(formData.get('donateReturnPath') as string | null)
+    const returnTo = encodeURIComponent(returnPath)
     return {
       requiresAuth: true,
       redirectTo: `/login?returnTo=${returnTo}`,
@@ -205,7 +225,7 @@ async function createDonationAndPacks(
 ): Promise<ReportDonationState> {
   const inst = await db.instance.findUnique({
     where: { id: instanceId },
-    select: { donationPackRateCents: true, campaignRef: true, slug: true },
+    select: { name: true, donationPackRateCents: true, campaignRef: true, slug: true },
   })
   if (!inst) return { error: 'Instance not found' }
 
@@ -239,7 +259,7 @@ async function createDonationAndPacks(
   const rate = inst.donationPackRateCents ?? DEFAULT_PACK_RATE_CENTS
   const packsCount = Math.floor(amountCents / rate)
   if (packsCount < 1) {
-    return { error: `Minimum donation for a pack is $${(rate / 100).toFixed(2)}` }
+    return { error: `Minimum self-reported donation to mint vibeulons is $${(rate / 100).toFixed(2)}` }
   }
 
   let linkedMilestoneId: string | null = null
@@ -283,22 +303,6 @@ async function createDonationAndPacks(
         linkedMilestoneId = msRow.id
       }
 
-      const packs = []
-      for (let i = 0; i < packsCount; i++) {
-        packs.push(
-          tx.redemptionPack.create({
-            data: {
-              instanceId,
-              playerId,
-              donationId: donation.id,
-              packType: 'donation',
-              status: 'unredeemed',
-              vibeulonAmount: VIBEULONS_PER_PACK,
-            },
-          })
-        )
-      }
-
       await tx.instance.update({
         where: { id: instanceId },
         data: {
@@ -323,7 +327,7 @@ async function createDonationAndPacks(
         })
       }
 
-      return { donation, packs }
+      return { donation }
     })
 
     if (linkedMilestoneId) {
@@ -334,16 +338,30 @@ async function createDonationAndPacks(
       }
     }
 
+    const vibeulonsMinted = packsCount * VIBEULONS_PER_PACK
+    const { mintVibulon } = await import('@/actions/economy')
+    await mintVibulon(
+      playerId,
+      vibeulonsMinted,
+      {
+        source: 'donation',
+        id: result.donation.id,
+        title: `Donation: ${inst.name?.trim() || 'Campaign'}`,
+      },
+      { skipRevalidate: true }
+    )
+
     revalidatePath('/event')
     revalidatePath('/event/donate')
     revalidatePath('/event/donate/wizard')
+    revalidatePath('/demo/bruised-banana/donate')
     revalidatePath('/')
     revalidatePath('/wallet')
 
     return {
       success: true,
       amountCents,
-      packsCreated: result.packs.length,
+      vibeulonsMinted,
     }
   } catch (e) {
     console.error('[donate] createDonationAndPacks failed:', e)
@@ -353,12 +371,12 @@ async function createDonationAndPacks(
 
 /**
  * Process pending donation from cookie (post-auth). Called when user lands on donate page
- * after logging in. Creates Donation + RedemptionPacks and clears cookie.
+ * after logging in. Creates Donation + mints vibeulons and clears cookie.
  */
 export async function processPendingDonation(playerId: string): Promise<{
   success?: boolean
   amountCents?: number
-  packsCreated?: number
+  vibeulonsMinted?: number
 } | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get(PENDING_DONATION_COOKIE)?.value
@@ -391,38 +409,7 @@ export async function processPendingDonation(playerId: string): Promise<{
   cookieStore.delete(PENDING_DONATION_COOKIE)
 
   if (result.success) {
-    return { success: true, amountCents: result.amountCents, packsCreated: result.packsCreated }
+    return { success: true, amountCents: result.amountCents, vibeulonsMinted: result.vibeulonsMinted }
   }
   return null
-}
-
-/**
- * Redeem a RedemptionPack for vibeulons. Mints vibeulons and marks pack as redeemed.
- */
-export async function redeemPack(packId: string): Promise<{ error?: string }> {
-  const player = await getCurrentPlayer()
-  if (!player) return { error: 'Sign in to redeem' }
-
-  const pack = await db.redemptionPack.findFirst({
-    where: { id: packId, playerId: player.id, status: 'unredeemed' },
-    include: { instance: true },
-  })
-  if (!pack) return { error: 'Pack not found or already redeemed' }
-
-  const { mintVibulon } = await import('@/actions/economy')
-  await mintVibulon(player.id, pack.vibeulonAmount, {
-    source: 'redemption_pack',
-    id: pack.id,
-    title: `Donation pack: ${pack.instance.name}`,
-  })
-
-  await db.redemptionPack.update({
-    where: { id: packId },
-    data: { status: 'redeemed', redeemedAt: new Date() },
-  })
-
-  revalidatePath('/wallet')
-  revalidatePath('/event/donate')
-  revalidatePath('/')
-  return {}
 }

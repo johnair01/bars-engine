@@ -18,6 +18,13 @@ export type AvatarConfig = {
     genderKey?: 'male' | 'female' | 'neutral' | 'default'
 }
 
+/** Demo walkable sheet under `public/sprites/walkable/argyra-bold-heart.png`. */
+export const WALKABLE_SPRITE_DEMO_AVATAR: AvatarConfig = {
+    nationKey: 'argyra',
+    archetypeKey: 'bold-heart',
+    variant: 'default',
+}
+
 export type DeriveAvatarConfigOptions = {
     nationName?: string | null
     archetypeName?: string | null

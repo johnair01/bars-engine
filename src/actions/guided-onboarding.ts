@@ -187,9 +187,9 @@ export async function recordStoryChoice(
         const updatedProgress: StoryProgress = {
             ...currentProgress,
             currentNodeId: nextNodeId,
-            completedNodes: [...currentProgress.completedNodes, nodeId],
+            completedNodes: [...(Array.isArray(currentProgress.completedNodes) ? currentProgress.completedNodes : []), nodeId],
             decisions: [
-                ...currentProgress.decisions,
+                ...(Array.isArray(currentProgress.decisions) ? currentProgress.decisions : []),
                 {
                     nodeId,
                     choiceId,

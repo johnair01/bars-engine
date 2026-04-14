@@ -6,6 +6,7 @@ import { get8PortalsForCampaign } from '@/actions/campaign-portals'
 import { CampaignHubView } from '@/components/campaign/CampaignHubView'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 import { getCampaignContributionProgress } from '@/actions/campaign-contributions'
+import { getBookMilestoneRollup } from '@/actions/chapter-spoke'
 
 /**
  * @page /campaign/hub
@@ -25,16 +26,22 @@ const BB_SPATIAL_HUB_SLUG = 'bb-campaign-clearing'
 
 const PASSAGE_EMIT_ROOT_IDS = ['passage_WakeUp_Emit', 'passage_CleanUp_Emit', 'passage_ShowUp_Emit']
 
+/** Campaigns that are book hubs — maps campaignRef to its bookRef for chapter rollup display. */
+const BOOK_HUB_MAP: Record<string, string> = {
+  'mastering-allyship': 'mtgoa-book',
+}
+
 /** HSM: tab title should reflect this surface, not the root layout default “Conclave”. */
 export const metadata: Metadata = {
   title: 'Campaign hub',
 }
 
 export default async function CampaignHubPage(props: {
-  searchParams: Promise<{ ref?: string }>
+  searchParams: Promise<{ ref?: string; joined?: string }>
 }) {
-  const { ref: urlRef } = await props.searchParams
+  const { ref: urlRef, joined } = await props.searchParams
   const campaignRef = urlRef ?? DEFAULT_CAMPAIGN_REF
+  const isNewlyJoined = joined === 'true'
 
   const player = await getCurrentPlayer()
   if (!player) redirect('/login')
@@ -77,27 +84,33 @@ export default async function CampaignHubPage(props: {
     : null
   const showFundraisingSettings = isAdmin || !!stewardship
 
-  const [result, milestoneGuidance, contributionProgress, recentCapture, intakeAdventure] = await Promise.all([
-    get8PortalsForCampaign(campaignRef),
-    getCampaignMilestoneGuidance(player.id, { campaignRef }),
-    // Sub-AC 3c: fetch player's contribution completion count for progress bar
-    // Fails-soft (returns null) on any DB/auth error — hub renders without it
-    getCampaignContributionProgress(campaignRef, player.id),
-    db.customBar.findFirst({
-      where: {
-        creatorId: player.id,
-        campaignRef,
-        rootId: { in: PASSAGE_EMIT_ROOT_IDS },
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, title: true, description: true, rootId: true, createdAt: true },
-    }),
-    db.adventure.findFirst({
-      where: { adventureType: 'CYOA_INTAKE', campaignRef, status: 'ACTIVE' },
-      select: { id: true },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ])
+  const bookRef = BOOK_HUB_MAP[campaignRef]
+
+  const [result, milestoneGuidance, contributionProgress, recentCapture, intakeAdventure, bookRollupRaw] =
+    await Promise.all([
+      get8PortalsForCampaign(campaignRef),
+      getCampaignMilestoneGuidance(player.id, { campaignRef }),
+      // Sub-AC 3c: fetch player's contribution completion count for progress bar
+      // Fails-soft (returns null) on any DB/auth error — hub renders without it
+      getCampaignContributionProgress(campaignRef, player.id),
+      db.customBar.findFirst({
+        where: {
+          creatorId: player.id,
+          campaignRef,
+          rootId: { in: PASSAGE_EMIT_ROOT_IDS },
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, title: true, description: true, rootId: true, createdAt: true },
+      }),
+      db.adventure.findFirst({
+        where: { adventureType: 'CYOA_INTAKE', campaignRef, status: 'ACTIVE' },
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      bookRef ? getBookMilestoneRollup(bookRef) : Promise.resolve(null),
+    ])
+
+  const bookMilestoneRollup = bookRollupRaw && !('error' in bookRollupRaw) ? bookRollupRaw : null
 
   if ('error' in result) {
     return (
@@ -124,6 +137,8 @@ export default async function CampaignHubPage(props: {
       recentCapture={recentCapture ?? undefined}
       intakeAdventureId={intakeAdventure?.id ?? null}
       showFundraisingSettings={showFundraisingSettings}
+      isNewlyJoined={isNewlyJoined}
+      bookMilestoneRollup={bookMilestoneRollup}
     />
   )
 }

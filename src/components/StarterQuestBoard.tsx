@@ -10,6 +10,7 @@ import { releaseBarToSaladBowl } from '@/actions/release-bar'
 import { deleteBar } from '@/actions/quest-engine'
 import Link from 'next/link'
 import { CultivationCard } from '@/components/ui/CultivationCard'
+import { SignalQuestImageField } from '@/components/SignalQuestImageField'
 
 type CompletedBar = { id: string; inputs: Record<string, any> }
 
@@ -117,6 +118,19 @@ function VibeBarCard({
                 </div>
             )
         }
+        if (input.type === 'image') {
+            return (
+                <div key={input.key}>
+                    <SignalQuestImageField
+                        inputKey={input.key}
+                        label={input.label}
+                        value={typeof inputs[input.key] === 'string' ? inputs[input.key] : ''}
+                        onChange={(key, val) => setInputs({ ...inputs, [key]: val })}
+                        required={input.required}
+                    />
+                </div>
+            )
+        }
         return null
     }
 
@@ -127,6 +141,9 @@ function VibeBarCard({
             return Array.isArray(inputs[inp.key]) && inputs[inp.key].length > 0
         }
         const value = inputs[inp.key]
+        if (inp.type === 'image') {
+            return typeof value === 'string' && value.trim().length > 0
+        }
         return typeof value === 'string' ? value.trim().length > 0 : !!value
     })
 

@@ -16,8 +16,12 @@ export type QuestThreadSummary = {
   description: string | null
   questCount: number
   bookTitle?: string | null
+  bookAuthor?: string | null
   moveTypes?: string[]
   hasProgress: boolean
+  currentPosition?: number | null
+  completedAt?: Date | null
+  quests: Array<{ id: string; title: string; moveType?: string | null }>
 }
 
 /**
@@ -57,14 +61,23 @@ export async function getQuestLibraryContent(): Promise<QuestThreadSummary[]> {
 
   return filtered.map((t) => {
     const moveTypes = [...new Set(t.quests.map((q) => q.quest.moveType).filter(Boolean))] as string[]
+    const progress = t.progress[0]
     return {
       id: t.id,
       title: t.title,
       description: t.description,
       questCount: t.quests.length,
       bookTitle: t.book?.title ?? null,
+      bookAuthor: t.book?.author ?? null,
       moveTypes: moveTypes.length > 0 ? moveTypes : undefined,
       hasProgress: t.progress.length > 0,
+      currentPosition: progress?.currentPosition ?? null,
+      completedAt: progress?.completedAt ?? null,
+      quests: t.quests.map((q) => ({
+        id: q.quest.id,
+        title: q.quest.title,
+        moveType: q.quest.moveType,
+      })),
     }
   })
 }

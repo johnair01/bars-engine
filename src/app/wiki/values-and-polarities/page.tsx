@@ -82,7 +82,8 @@ export default function WikiValuesAndPolaritiesPage() {
               <tr className="border-b border-zinc-800/80">
                 <td className="p-3 align-top font-medium text-zinc-200">Move polarity</td>
                 <td className="p-3">
-                  Tags on <strong className="text-zinc-200">nation moves</strong> for game data — separate from grid rows
+                  Tags on <Link href="/wiki/nations" className="text-amber-400 hover:text-amber-300">nation</Link>{' '}
+                  <Link href="/wiki/moves" className="text-amber-400 hover:text-amber-300">moves</Link> for game data — separate from grid rows
                   and from vMemes.
                 </td>
               </tr>
@@ -156,6 +157,17 @@ export default function WikiValuesAndPolaritiesPage() {
           <code className="bg-zinc-800 px-1 rounded text-zinc-300">.specify/specs/creator-scene-grid-deck/POLARITY_DERIVATION.md</code>
           .
         </p>
+      </section>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/emotional-alchemy" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Emotional Alchemy →</Link>
+          <Link href="/wiki/moves" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">The Four Moves →</Link>
+          <Link href="/wiki/grid-deck" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Scene Atlas →</Link>
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+          <Link href="/wiki/glossary" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Glossary →</Link>
+        </div>
       </section>
 
       <p>

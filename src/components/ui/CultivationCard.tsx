@@ -139,6 +139,9 @@ export interface CultivationCardProps {
   /** Ritual: alchemical moment — expanded glow 24px, scale 1.05. */
   ritual?: boolean
 
+  /** Sealed: completed/immutable card — subtle lock overlay, reduced glow. */
+  sealed?: boolean
+
   // ─── Animation flags ──────────────────────────────────────────────────────
 
   /** Apply entry animation (opacity 0→1, translateY 8px→0, 300ms). */

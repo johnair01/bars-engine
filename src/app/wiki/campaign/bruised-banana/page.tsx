@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CampaignDonateCta } from '@/components/campaign/CampaignDonateCta'
 
 /**
  * @page /wiki/campaign/bruised-banana
@@ -11,6 +12,18 @@ import Link from 'next/link'
  * @example /wiki/campaign/bruised-banana
  * @agentDiscoverable true
  */
+function LensLink({ href, face, blurb }: { href: string; face: string; blurb: string }) {
+  return (
+    <li>
+      <Link href={href} className="block rounded-lg border border-zinc-800 bg-black/20 px-3 py-2 hover:border-zinc-600 transition">
+        <span className="text-emerald-400/90 font-medium">{face}</span>
+        <span className="text-zinc-500"> — </span>
+        <span className="text-zinc-400">{blurb}</span>
+      </Link>
+    </li>
+  )
+}
+
 export default function BruisedBananaCampaignPage() {
   return (
     <div className="space-y-6">
@@ -48,7 +61,7 @@ export default function BruisedBananaCampaignPage() {
       <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-400">The Fundraiser</h2>
         <p className="text-zinc-300 text-sm leading-relaxed">
-          The Bruised Banana Fundraiser supports the house through donations. The campaign runs on quests, BARs,
+          The Bruised Banana Fundraiser supports the house through <Link href="/wiki/donation-guide" className="text-emerald-400 hover:text-emerald-300">donations</Link>. The campaign runs on <Link href="/wiki/quests-guide" className="text-emerald-400 hover:text-emerald-300">quests</Link>, <Link href="/wiki/bars-guide" className="text-emerald-400 hover:text-emerald-300">BARs</Link>,
           vibeulons, and story clock. Contributing money or playing the game helps the collective thrive.
         </p>
       </section>
@@ -79,6 +92,38 @@ export default function BruisedBananaCampaignPage() {
         </p>
       </section>
 
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-4">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Support &amp; demo</h2>
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Try the short public ritual (charge + 3→2→1, nothing saved until you sign in elsewhere), or go straight to
+          donate when you&apos;re ready.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/demo/bruised-banana"
+            className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-lg text-sm font-semibold bg-purple-700/80 hover:bg-purple-600 text-white border border-purple-500/40 transition-colors"
+          >
+            Donation demo ritual
+          </Link>
+          <CampaignDonateCta campaignRef="bruised-banana" showGivingGuide />
+        </div>
+      </section>
+
+      <section className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400">Explore by Game Master lens</h2>
+        <p className="text-zinc-500 text-xs leading-relaxed">
+          Six grammatical perspectives the app uses — same story, different entry points.
+        </p>
+        <ul className="grid sm:grid-cols-2 gap-2 text-sm">
+          <LensLink href="/wiki/emotional-alchemy" face="Shaman" blurb="Meaning, ritual, energy" />
+          <LensLink href="/wiki/emotional-first-aid-guide" face="Challenger" blurb="Friction, truth, edge" />
+          <LensLink href="/wiki/privacy" face="Regent" blurb="Care, boundaries, safety" />
+          <LensLink href="/wiki/cyoa-adventure" face="Architect" blurb="Structure, how play works" />
+          <LensLink href="/wiki/voice-style-guide" face="Diplomat" blurb="Translation, voice, trust" />
+          <LensLink href="/wiki/moves" face="Sage" blurb="Pattern, moves, pedagogy" />
+        </ul>
+      </section>
+
       <div className="flex flex-wrap gap-3 pt-4">
         <Link
           href="/event"
@@ -93,6 +138,17 @@ export default function BruisedBananaCampaignPage() {
           Play the game
         </Link>
       </div>
+
+      <section className="mt-12 pt-8 border-t border-zinc-800">
+        <h2 className="text-lg font-bold text-white mb-4">Keep exploring</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/wiki/donation-guide" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Donation Guide →</Link>
+          <Link href="/wiki/domains" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Domains →</Link>
+          <Link href="/wiki/handbook" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Handbook →</Link>
+          <Link href="/wiki/rules" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Rules →</Link>
+          <Link href="/event" className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm transition">Event Page →</Link>
+        </div>
+      </section>
     </div>
   )
 }

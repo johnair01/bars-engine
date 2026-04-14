@@ -5,17 +5,18 @@ import {
   isCampaignHubStateV1,
   hubStateMatchesKotter,
 } from '@/lib/campaign-hub/types'
+import { getSpokeBinding } from '@/lib/campaign-hub/spoke-bindings'
 import Link from 'next/link'
 
 /**
  * @page /campaign/spoke/:index
  * @entity CAMPAIGN
- * @description Spoke CYOA entry point — validates spoke availability and routes
- *   the player into the correct CYOA adventure for that spoke. Spokes 0+1 are
- *   fully authored (available); spokes 2–7 are locked placeholder cards.
+ * @description Spoke CYOA entry — validates spoke; **spokes 0–1** route to **GSCP** generated
+ *   pipeline (`/campaign/spoke/:index/generated`). Append `?portal=1` for legacy portal adventure.
  * @permissions authenticated
  * @params index:number (spoke index 0–7)
  * @searchParams ref:string (campaign reference, optional, defaults to 'bruised-banana')
+ * @searchParams portal:string (optional `1` = legacy Instance.portalAdventure)
  * @relationships CAMPAIGN (instance), ADVENTURE (portalAdventure)
  * @dimensions WHO:player, WHAT:spoke entry, WHERE:campaign, ENERGY:spoke_selection
  * @example /campaign/spoke/0?ref=bruised-banana
@@ -41,10 +42,10 @@ const PORTAL_START_NODE_IDS = [
 
 export default async function SpokeCyoaEntryPage(props: {
   params: Promise<{ index: string }>
-  searchParams: Promise<{ ref?: string }>
+  searchParams: Promise<{ ref?: string; portal?: string }>
 }) {
   const { index: indexParam } = await props.params
-  const { ref: urlRef } = await props.searchParams
+  const { ref: urlRef, portal: portalLegacy } = await props.searchParams
   const campaignRef = urlRef ?? DEFAULT_CAMPAIGN_REF
 
   const spokeIndexEarly = parseInt(indexParam, 10)
@@ -70,6 +71,13 @@ export default async function SpokeCyoaEntryPage(props: {
     )
   }
 
+  // Sub-hub binding check: if this spoke is bound to a child campaign, redirect to its hub.
+  // This must run before the locked-state check so bound spokes always route to their child.
+  const binding = getSpokeBinding(campaignRef, spokeIndex)
+  if (binding) {
+    redirect(binding.childHubPath)
+  }
+
   // Locked state: spokes 2–7 are not yet authored
   if (!AVAILABLE_SPOKE_INDICES.includes(spokeIndex)) {
     return (
@@ -82,7 +90,12 @@ export default async function SpokeCyoaEntryPage(props: {
     )
   }
 
-  // Load campaign instance and hub state
+  /** Default: GSCP generated spoke pipeline (v1). Legacy portal: `?portal=1`. */
+  if (portalLegacy !== '1') {
+    redirect(`/campaign/spoke/${spokeIndex}/generated?ref=${encodeURIComponent(campaignRef)}`)
+  }
+
+  // ── Legacy portal adventure (Instance.portalAdventureId) ─────────────────
   const inst = await db.instance.findFirst({
     where: { OR: [{ campaignRef }, { slug: campaignRef }] },
     select: {
@@ -119,7 +132,6 @@ export default async function SpokeCyoaEntryPage(props: {
     )
   }
 
-  // Extract spoke metadata from persisted hub state (hexagram + face for context)
   const ks = kotterStage ?? 1
   let hexagramId: number | undefined
   let primaryFace: string | undefined
@@ -133,7 +145,6 @@ export default async function SpokeCyoaEntryPage(props: {
   const startNodeId = PORTAL_START_NODE_IDS[spokeIndex] ?? `Portal_${spokeIndex + 1}`
   const refResolved = inst.campaignRef ?? inst.slug ?? campaignRef
 
-  // Build the adventure player URL with full spoke context
   const params = new URLSearchParams({
     start: startNodeId,
     ref: refResolved,

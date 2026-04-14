@@ -76,6 +76,7 @@ export default async function CampaignInitiationPage(props: {
       <div className="w-full max-w-2xl flex flex-wrap justify-end gap-2 mb-4">
         <CampaignOutlineNavButton href="/campaign/hub?ref=bruised-banana">Portals</CampaignOutlineNavButton>
         <CampaignOutlineNavButton href="/campaign/board?ref=bruised-banana">Featured field</CampaignOutlineNavButton>
+        <CampaignOutlineNavButton href="/demo/bruised-banana">Donation demo</CampaignOutlineNavButton>
         <CampaignDonateCta campaignRef="bruised-banana" />
         <CampaignOutlineNavButton href="/event">Event page</CampaignOutlineNavButton>
       </div>

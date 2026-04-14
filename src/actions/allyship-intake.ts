@@ -279,7 +279,7 @@ export async function waterAllyshipIntake(
             allyshipDomain: parentInstance.allyshipDomain,
             narrativeKernel: kernelLines,
             kotterStage: 1,
-            campaignHubState: hubState as Prisma.InputJsonValue,
+            campaignHubState: hubState as unknown as Prisma.InputJsonValue,
             moveIds: parentInstance.moveIds,
             domainDeckCycles: parentInstance.domainDeckCycles as Prisma.InputJsonValue,
             timezone: parentInstance.timezone,

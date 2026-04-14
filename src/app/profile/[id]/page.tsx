@@ -46,7 +46,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         .filter(pq => pq.status === 'completed')
         .map(pq => ({
             questId: pq.questId,
-            quest: { name: pq.quest.name },
+            quest: { name: pq.quest.title },
             completedAt: pq.completedAt?.toISOString() || null
         }))
 
