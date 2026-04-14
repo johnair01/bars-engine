@@ -42,7 +42,9 @@ const CERT_QUEST_IDS = [
     'cert-now-event-vault-qol-v1',
     'cert-campaign-marketplace-slots-v1',
     'cert-donation-self-service-wizard-v1',
-    'cert-spoke-move-seed-beds-v1'
+    'cert-spoke-move-seed-beds-v1',
+    'cert-book-os-v1-authoring-v1',
+    'cert-book-origin-fork-port-v1'
 ]
 
 async function seed() {
@@ -3565,6 +3567,185 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${abclSlug}`)
+
+    // --- Certification: Book OS v1 authoring (BOK) ---
+    const bokTitle = 'Certification: Book OS v1 Authoring V1'
+    const bokSlug = 'cert-book-os-v1-authoring-v1'
+    const bokPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify governed Book OS sections: draft → approve, SectionRun audit, SectionBARLink to a real CustomBar id.',
+            cleanText: 'Book OS certification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Open a book hub\n\nAs **admin**, open [/admin/books](/admin/books) and pick any book. Open **Book OS — Sections**.',
+            cleanText: 'Step 1: Sections list.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Draft and approve\n\nCreate or open a section. Enter **draft** text, save, then **Approve draft → canonical**. Confirm **approved text** appears and a recent **approval** run is listed.',
+            cleanText: 'Step 2: Approve draft.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: BAR link\n\nPaste a valid **CustomBar id** (from quests/BAR admin) under **Linked BARs**, choose role **source**, click **Attach link**. Confirm it appears in the list; remove if this was a throwaway test.',
+            cleanText: 'Step 3: SectionBARLink.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '6',
+            text: '### Report an Issue\n\nDescribe what failed in Book OS.',
+            cleanText: 'Report.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '5',
+            text: 'Book OS v1 slice verified. Complete this quest for your vibeulon reward.',
+            cleanText: 'Done.',
+            links: []
+        }
+    ]
+    const bokParsedJson = JSON.stringify({
+        title: bokTitle,
+        startPassage: 'START',
+        passages: bokPassages
+    })
+    const bokStory = await db.twineStory.upsert({
+        where: { slug: bokSlug },
+        update: { title: bokTitle, parsedJson: bokParsedJson, isPublished: true },
+        create: {
+            title: bokTitle,
+            slug: bokSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Book OS v1 (seed-cyoa-certification-quests.ts)',
+            parsedJson: bokParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+    await db.customBar.upsert({
+        where: { id: bokSlug },
+        update: {
+            title: bokTitle,
+            description: 'Verify Book OS sections + BAR links.',
+            reward: 1,
+            twineStoryId: bokStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-os-v1-authoring/spec.md'
+        },
+        create: {
+            id: bokSlug,
+            title: bokTitle,
+            description: 'Verify Book OS sections + BAR links.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: bokStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-os-v1-authoring/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${bokSlug}`)
+
+    // --- Certification: Book origin / fork / import (BFP) ---
+    const bfpTitle = 'Certification: Book Origin Fork Port V1'
+    const bfpSlug = 'cert-book-origin-fork-port-v1'
+    const bfpPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'Verify book **origin** badge, **fork** with TOC → sections, and optional **import gameplay** from parent.',
+            cleanText: 'BFP certification.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: TOC + fork\n\nPick a book with **TOC** (Extract TOC done). On the book hub, confirm **Origin: library** (or fork). Use **Fork book** — confirm a **child** book opens with **Origin: fork** and scaffolded sections.',
+            cleanText: 'Step 1: Fork.',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Import (optional)\n\nOn the fork, open **Import gameplay from parent** if the parent had quests in a thread. Preview and **commit** at least one **quest** link, or skip if no data.',
+            cleanText: 'Step 2: Import.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '5',
+            text: '### Report an Issue\n\nDescribe fork/import problems.',
+            cleanText: 'Report.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '4',
+            text: 'Book origin / fork flow verified. Complete this quest for your vibeulon reward.',
+            cleanText: 'Done.',
+            links: []
+        }
+    ]
+    const bfpParsedJson = JSON.stringify({
+        title: bfpTitle,
+        startPassage: 'START',
+        passages: bfpPassages
+    })
+    const bfpStory = await db.twineStory.upsert({
+        where: { slug: bfpSlug },
+        update: { title: bfpTitle, parsedJson: bfpParsedJson, isPublished: true },
+        create: {
+            title: bfpTitle,
+            slug: bfpSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Book origin fork port (seed-cyoa-certification-quests.ts)',
+            parsedJson: bfpParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+    await db.customBar.upsert({
+        where: { id: bfpSlug },
+        update: {
+            title: bfpTitle,
+            description: 'Verify fork + import gameplay.',
+            reward: 1,
+            twineStoryId: bfpStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-origin-fork-port/spec.md'
+        },
+        create: {
+            id: bfpSlug,
+            title: bfpTitle,
+            description: 'Verify fork + import gameplay.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: bfpStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/book-origin-fork-port/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${bfpSlug}`)
 
     // --- Certification: NOW / Event / Vault throughput QOL (NEV) ---
     const nevTitle = 'Certification: NOW Event Vault Throughput QOL V1'

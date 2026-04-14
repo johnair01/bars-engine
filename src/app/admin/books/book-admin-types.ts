@@ -7,7 +7,11 @@ export type AdminBookRow = {
   status: string
   metadataJson: string | null
   createdAt: Date
+  bookOrigin: string
+  parentBookId: string | null
+  forkedAt: Date | null
   thread?: { id: string } | null
+  parentBook?: { id: string; title: string } | null
 }
 
 export type ParsedBookMeta = {
