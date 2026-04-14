@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getPlayerHudData, type PlayerHudData } from '@/actions/player-hud'
-import { parseAvatarConfig } from '@/lib/avatar-utils'
-import { resolveWalkableSpriteUrl, characterIdentityFromAvatarConfig } from '@/lib/pixel-identity'
+import { getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
 import { HandModal } from './HandModal'
 
 /**
@@ -55,9 +54,7 @@ export function PlayerHud({ refreshToken, carryingBarId }: Props) {
     }
 
     const parsedConfig = parseAvatarConfig(data.avatarConfig)
-    const spriteUrl = parsedConfig
-        ? resolveWalkableSpriteUrl(characterIdentityFromAvatarConfig(parsedConfig))
-        : null
+    const spriteUrl = parsedConfig ? getWalkableSpriteUrl(parsedConfig) : null
 
     return (
         <>
