@@ -1,5 +1,63 @@
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
-import type { EmotionalVector } from '@/lib/quest-grammar/types'
+import type { AlchemyAltitude } from '@/lib/alchemy/types'
+import {
+    GAME_MASTER_FACES,
+    type EmotionalChannel,
+    type EmotionalVector,
+    type GameMasterFace,
+} from '@/lib/quest-grammar/types'
+
+const EMOTIONAL_CHANNELS: readonly EmotionalChannel[] = [
+    'Fear',
+    'Anger',
+    'Sadness',
+    'Joy',
+    'Neutrality',
+]
+
+const ALCHEMY_ALTITUDES: readonly AlchemyAltitude[] = ['dissatisfied', 'neutral', 'satisfied']
+
+function isEmotionalChannel(x: unknown): x is EmotionalChannel {
+    return typeof x === 'string' && (EMOTIONAL_CHANNELS as readonly string[]).includes(x)
+}
+
+function isAlchemyAltitude(x: unknown): x is AlchemyAltitude {
+    return typeof x === 'string' && (ALCHEMY_ALTITUDES as readonly string[]).includes(x)
+}
+
+function isEmotionalVector(v: unknown): v is EmotionalVector {
+    if (!v || typeof v !== 'object') return false
+    const o = v as Record<string, unknown>
+    return (
+        isEmotionalChannel(o.channelFrom) &&
+        isAlchemyAltitude(o.altitudeFrom) &&
+        isEmotionalChannel(o.channelTo) &&
+        isAlchemyAltitude(o.altitudeTo)
+    )
+}
+
+function isCompletedBuildBarSummary(u: unknown): u is CompletedBuildBarSummary {
+    if (!u || typeof u !== 'object') return false
+    const b = u as Record<string, unknown>
+    if (typeof b.barId !== 'string' || typeof b.title !== 'string') return false
+    if (b.type !== 'vibe' && b.type !== 'story' && b.type !== 'insight') return false
+    if (typeof b.vibeulons !== 'number') return false
+    return true
+}
+
+function isCompletedBuildReceipt(u: unknown): u is CompletedBuildReceipt {
+    if (!u || typeof u !== 'object') return false
+    const r = u as Record<string, unknown>
+    if (typeof r.buildId !== 'string') return false
+    if (typeof r.spokeIndex !== 'number') return false
+    if (typeof r.face !== 'string' || !GAME_MASTER_FACES.includes(r.face as GameMasterFace)) return false
+    if (typeof r.templateKind !== 'string' || typeof r.templateKey !== 'string') return false
+    if (!isEmotionalVector(r.emotionalVector)) return false
+    if (typeof r.chargeText !== 'string') return false
+    if (typeof r.terminalNodeId !== 'string' || typeof r.blueprintKey !== 'string') return false
+    if (!Array.isArray(r.barSummaries) || !r.barSummaries.every(isCompletedBuildBarSummary)) return false
+    if (typeof r.totalVibeulons !== 'number' || typeof r.completedAt !== 'string') return false
+    return true
+}
 
 /** Persisted hub draw — invalidated when instance `kotterStage` changes. */
 export type CampaignHubSpokeDrawV1 = {
