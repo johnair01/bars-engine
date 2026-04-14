@@ -27,7 +27,7 @@ export async function previewPortBookCampaign(_input: { targetBookId: string; so
         'Campaign port wizard is not implemented yet. Use quest thread import (book-gameplay-import) and align instances manually per campaign ontology spec.',
     }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Preview failed') as const }
+    return { error: e instanceof Error ? e.message : 'Preview failed' }
   }
 }
 
@@ -36,6 +36,6 @@ export async function commitPortBookCampaign(_input: { targetBookId: string; sou
     await requireAdminPlayerId()
     return { error: 'Campaign port commit is not implemented in this slice.' as const }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Commit failed') as const }
+    return { error: e instanceof Error ? e.message : 'Commit failed' }
   }
 }

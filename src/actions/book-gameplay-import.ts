@@ -101,7 +101,7 @@ export async function previewImportBookGameplay(input: {
 
     return { success: true as const, items }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Preview failed') as const }
+    return { error: e instanceof Error ? e.message : 'Preview failed' }
   }
 }
 
@@ -246,6 +246,6 @@ export async function commitImportBookGameplay(input: {
     if (threadForHub) revalidatePath(`/admin/journeys/thread/${threadForHub.id}`)
     return { success: true as const, imported }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Import failed') as const }
+    return { error: e instanceof Error ? e.message : 'Import failed' }
   }
 }

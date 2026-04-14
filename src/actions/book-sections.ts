@@ -63,7 +63,7 @@ export async function listBookSectionsForAdmin(bookId: string) {
     return { success: true as const, sections }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to list sections'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -114,7 +114,7 @@ export async function createBookSection(bookId: string, input: CreateBookSection
     return { success: true as const, sectionId: section.id }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to create section'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -156,7 +156,7 @@ export async function updateBookSection(sectionId: string, input: UpdateBookSect
     return { success: true as const }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to update section'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -217,7 +217,7 @@ export async function approveBookSection(
     return { success: true as const }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to approve section'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -298,7 +298,7 @@ export async function getBookSectionForAdmin(sectionId: string) {
     return { success: true as const, section }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to load section'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -331,7 +331,7 @@ export async function attachSectionBarLink(sectionId: string, barId: string, rol
     if (/Unique constraint/i.test(msg)) {
       return { error: 'This section already has that bar in this role' as const }
     }
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -350,6 +350,6 @@ export async function detachSectionBarLink(linkId: string) {
     return { success: true as const }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to remove BAR link'
-    return { error: msg as const }
+    return { error: msg }
   }
 }

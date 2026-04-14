@@ -134,7 +134,7 @@ export async function forkBookFromLibrary(input: ForkBookFromLibraryInput) {
     return { success: true as const, bookId: child.id }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Fork failed'
-    return { error: msg as const }
+    return { error: msg }
   }
 }
 
@@ -163,7 +163,7 @@ export async function getBookForkPreviewForAdmin(parentBookId: string) {
       hasThread: Boolean(book.thread),
     }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Preview failed') as const }
+    return { error: e instanceof Error ? e.message : 'Preview failed' }
   }
 }
 
@@ -221,6 +221,6 @@ export async function applyBookSectionJourneyScaffold(sectionId: string) {
     revalidatePath(`/admin/books/${section.bookId}/sections/${sectionId}`)
     return { success: true as const, updated: true as const }
   } catch (e) {
-    return { error: (e instanceof Error ? e.message : 'Scaffold failed') as const }
+    return { error: e instanceof Error ? e.message : 'Scaffold failed' }
   }
 }
