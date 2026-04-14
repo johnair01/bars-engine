@@ -621,7 +621,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
                 Quick Setup →
               </Link>
               <Link
-                href="/conclave/onboarding?reset=true"
+                href="/conclave/guided?reset=true"
                 className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-lg transition-colors whitespace-nowrap text-sm"
               >
                 Guided Story

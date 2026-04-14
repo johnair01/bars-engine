@@ -265,9 +265,7 @@ export async function createCampaignPlayer(prevState: any, formData: FormData) {
         const shareToken = typeof state?.shareToken === 'string' && state.shareToken.trim() ? state.shareToken.trim() : null
         const redirectTo = shareToken
             ? `/bar/share/${encodeURIComponent(shareToken)}`
-            : postSignupRedirect === 'dashboard'
-                ? await getDashboardRedirectForPlayer(player.id)
-                : '/conclave/onboarding'
+            : await getDashboardRedirectForPlayer(player.id)
 
         return { success: true, redirectTo }
     } catch (e: any) {
@@ -318,12 +316,10 @@ export async function loginWithCampaignState(
     let redirectTo: string
     if (shareToken) {
         redirectTo = `/bar/share/${encodeURIComponent(shareToken)}`
-    } else if (postSignupRedirect === 'dashboard') {
+    } else {
         const cookieStore = await cookies()
         const playerId = cookieStore.get('bars_player_id')?.value
         redirectTo = playerId ? await getDashboardRedirectForPlayer(playerId) : '/'
-    } else {
-        redirectTo = '/conclave/onboarding'
     }
     return { success: true, redirectTo }
 }
@@ -352,15 +348,10 @@ async function applyCampaignStateAction(formData: FormData) {
     const result = await applyCampaignStateToExistingPlayer(campaignState)
     if (result.error) return { error: result.error }
 
-    const postSignupRedirect = await getPostSignupRedirect()
-    if (postSignupRedirect === 'dashboard') {
-        const cookieStore = await cookies()
-        const playerId = cookieStore.get('bars_player_id')?.value
-        const target = playerId ? await getDashboardRedirectForPlayer(playerId) : '/'
-        redirect(target)
-    } else {
-        redirect('/conclave/onboarding')
-    }
+    const cookieStore = await cookies()
+    const playerId = cookieStore.get('bars_player_id')?.value
+    const target = playerId ? await getDashboardRedirectForPlayer(playerId) : '/'
+    redirect(target)
 }
 
 /**

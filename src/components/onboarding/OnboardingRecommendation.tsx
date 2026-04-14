@@ -52,7 +52,7 @@ export function OnboardingRecommendation({ type, recommendedId, options, onCompl
 
                     // RITUAL MODE: If in ritual, push to onboarding controller to maintain flow
                     if (isRitual) {
-                        router.push('/conclave/onboarding?ritual=true')
+                        router.push('/')
                     } else {
                         // Redirect to dashboard to see results
                         router.push('/')

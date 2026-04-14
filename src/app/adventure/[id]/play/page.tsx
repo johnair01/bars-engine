@@ -111,8 +111,8 @@ export default async function AdventurePlayPage({
       <div className="min-h-screen bg-black text-zinc-200 p-8 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-red-400">Adventure not found or inactive.</p>
-          <Link href="/conclave/onboarding" className="text-zinc-500 hover:text-white text-sm">
-            ← Back to onboarding
+          <Link href="/" className="text-zinc-500 hover:text-white text-sm">
+            ← Back to dashboard
           </Link>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default async function AdventurePlayPage({
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <Link
-            href={returnTo ?? (campaignRef ? `/campaign/hub?ref=${encodeURIComponent(campaignRef)}` : '/conclave/onboarding')}
+            href={returnTo ?? (campaignRef ? `/campaign/hub?ref=${encodeURIComponent(campaignRef)}` : '/')}
             className="text-sm text-zinc-500 hover:text-white transition"
           >
             ← {returnTo ? 'Back' : campaignRef ? 'Lobby' : 'Back'}
