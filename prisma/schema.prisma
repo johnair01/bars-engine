@@ -2582,6 +2582,14 @@ model AlchemyPlayerState {
   playerId  String   @unique
   channel   String // fear | anger | sadness | joy | neutrality
   altitude  String // dissatisfied | neutral | satisfied
+  /// intake | action | reflection — null when no arc in progress
+  arcPhase         String?
+  /// WAVE move for the arc (e.g. wakeUp)
+  waveMove         String?
+  /// GM face locked for the arc (e.g. challenger)
+  face             String?
+  arcStartedAt     DateTime?
+  arcCompletedAt   DateTime?
   updatedAt DateTime @updatedAt
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
