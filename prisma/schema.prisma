@@ -207,6 +207,7 @@ model Player {
   /// L3: Lore entries authored by this player (empty until L3 ships).
   /// Tracks authorship for narrative sovereignty audit trail — see CampaignLoreEntry model.
   loreEntriesCreated             CampaignLoreEntry[]         @relation("LoreEntriesCreated")
+  chapterProgress                PlayerChapterProgress[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -3914,4 +3915,57 @@ model School {
   @@index([nationId])
   @@index([instanceId])
   @@map("schools")
+}
+
+// ─── Chapter-Spoke Template (spec 1.41) ──────────────────────────────────────
+
+model ChapterRegistration {
+  id           String   @id @default(cuid())
+  chapterRef   String   @unique
+  bookRef      String
+  orgRef       String
+  version      String   @default("v1")
+  definition   Json
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([bookRef])
+  @@index([orgRef])
+  @@map("chapter_registrations")
+}
+
+model PlayerChapterProgress {
+  id            String   @id @default(cuid())
+  playerId      String
+  chapterRef    String
+  firstEnteredAt DateTime @default(now())
+  lastEnteredAt  DateTime @default(now())
+  enterCount    Int      @default(1)
+  barCount      Int      @default(0)
+  completed     Boolean  @default(false)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, chapterRef])
+  @@index([playerId])
+  @@index([chapterRef])
+  @@map("player_chapter_progress")
+}
+
+model ChapterMilestone {
+  id                 String   @id @default(cuid())
+  chapterRef         String   @unique
+  bookRef            String
+  title              String
+  description        String
+  parentMilestoneRef String?
+  rollupWeight       Float    @default(1.0)
+  minBarsRequired    Int      @default(1)
+  totalBarCount      Int      @default(0)
+  totalPlayerCount   Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([bookRef])
+  @@map("chapter_milestones")
 }
