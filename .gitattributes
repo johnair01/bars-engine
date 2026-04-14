@@ -1,0 +1,5 @@
+# public/registry.json is generated (npm run build:registry). Timestamps and route
+# IDs change every run; line-level merges are meaningless. Use merge=ours so Git
+# keeps the checked-out branch's version without conflict markers, then run:
+#   npm run registry:regenerate
+public/registry.json merge=ours
