@@ -210,7 +210,7 @@ export async function recordStoryChoice(
 
         // NEW: If we just selected Guided mode, signal a redirect to the new onboarding controller
         if (nodeId === 'mode_select' && choiceId === 'mode_guided') {
-            return { success: true, redirectTo: '/conclave/onboarding' }
+            return { success: true, redirectTo: '/' }
         }
 
         return { success: true }

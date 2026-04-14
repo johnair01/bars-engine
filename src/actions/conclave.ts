@@ -411,7 +411,7 @@ export async function createGuidedPlayer(prevState: any, formData: FormData) {
             if (postSignupRedirect === 'dashboard') {
                 redirectTo = await getDashboardRedirectForPlayer(player.id)
             } else {
-                redirectTo = campaignRef === 'bruised-banana' ? '/event' : '/conclave/onboarding'
+                redirectTo = campaignRef === 'bruised-banana' ? '/event' : '/'
             }
         }
         return { success: true, redirectTo }

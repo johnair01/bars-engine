@@ -65,7 +65,7 @@ export async function emitBarFromPassage(input: {
         reward: 1,
         visibility: 'private',
         status: 'active',
-        claimedById: player.id,
+        claimedById: null, // Unclaimed draft — appears in vault; claimed on plant/accept
         inputs: JSON.stringify([]),
         rootId: `passage_${input.passageNodeId}`,
         campaignRef,

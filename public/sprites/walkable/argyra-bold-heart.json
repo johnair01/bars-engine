@@ -1,0 +1,19 @@
+{
+  "model": "humanoid_v1",
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "anchor": { "x": 32, "y": 56 },
+  "layout": [
+    "north_idle",
+    "north_walk",
+    "south_idle",
+    "south_walk",
+    "east_idle",
+    "east_walk",
+    "west_idle",
+    "west_walk"
+  ],
+  "identity": { "nation": "argyra", "archetype": "bold-heart" },
+  "palette": "argyra_core_v1",
+  "provenance": "steward_approved"
+}

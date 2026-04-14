@@ -86,7 +86,7 @@ async function ensurePersistedHubDraw(inst: {
   }
   await db.instance.update({
     where: { id: inst.id },
-    data: { campaignHubState: newState as Prisma.InputJsonValue },
+    data: { campaignHubState: newState as unknown as Prisma.InputJsonValue },
   })
   return newState
 }

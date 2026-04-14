@@ -1,5 +1,4 @@
 'use client'
-
 /**
  * useCampaignSkin — client-side hook for consuming resolved campaign skins.
  *

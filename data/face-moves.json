@@ -1,0 +1,499 @@
+{
+  "_README": {
+    "purpose": "The 24 face moves — 6 NPCs × 4 WAVE stages. Each move is a PROMPT the NPC offers the player. The player's response becomes a player_response BAR. This is the prototype implementation of the prompt deck pattern.",
+    "convergence": "When backlog item 1.34 PDH (Prompt deck draw + shared hand) ships, each entry in this file becomes a BarDeckCard row. The fields here (prompt, prompt_templates, response_bar_type) are deliberately aligned with that future schema. Issue #47 (I Ching → Prompt Deck Engine) is the first concrete instance of this pattern.",
+    "naming_lineage": "Each face has its own naming pattern, locked by 6-face council session (2026-04-10). Ignis: imperative verb-noun. Kaelen: noun-of-noun ritual. Vorm: forge-protocol technical. Aurelius: definite-article clauses. Sola: soft attendance phrases. Witness: integration moves sampling 4 different elements.",
+    "see_also": [
+      "memory: project_face_moves_prompt_deck_convergence.md",
+      "spec: .specify/specs/prompt-deck-draw-hand/spec.md",
+      "GitHub: issue #47 — Upgrade I Ching from Oracle → Prompt Deck Engine"
+    ]
+  },
+  "moves": [
+    {
+      "canonical_id": "ignis_wake_smell_smoke",
+      "short_name": "Smell the Smoke",
+      "ritual_name": "Smelling the Smoke Before the Flame",
+      "face": "challenger",
+      "npc_id": "ignis",
+      "nation_key": "pyrakanth",
+      "element": "fire",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, you will know what's burning before it consumes you.",
+      "description": "Notice the heat that's been building in a corner of your life — the slow burn you've been pretending isn't happening. Don't act yet. Just locate it. Name what's smoldering. The fire is already lit; your only job is to admit you can smell it.",
+      "prompt": "What in your life is starting to smolder that you've been pretending not to notice?",
+      "prompt_templates": [
+        "What in your life is starting to smolder that you've been pretending not to notice?",
+        "Where is the heat building that you keep ignoring?",
+        "What signal is your body giving you that something is about to catch?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "ignis_clean_cross_forge",
+      "short_name": "Cross the Forge",
+      "ritual_name": "Crossing the Forge Without Looking Away",
+      "face": "challenger",
+      "npc_id": "ignis",
+      "nation_key": "pyrakanth",
+      "element": "fire",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, you will come out tempered.",
+      "description": "Walk into the heat of what you've been avoiding. Not to fix it. Not to escape it. To stand in it long enough that the parts of you that can't survive the temperature burn off. What remains is harder, simpler, and yours.",
+      "prompt": "What heat are you ready to cross instead of route around?",
+      "prompt_templates": [
+        "What heat are you ready to cross instead of route around?",
+        "What in you needs to burn off so you can move freely again?",
+        "If you stopped avoiding the hot thing, what would happen?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": "ignis-trial-descent"
+    },
+    {
+      "canonical_id": "ignis_grow_shape_edge",
+      "short_name": "Shape the Edge",
+      "ritual_name": "Shaping the Edge Against the Stone",
+      "face": "challenger",
+      "npc_id": "ignis",
+      "nation_key": "pyrakanth",
+      "element": "fire",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, you will become sharp enough to cut what needs cutting.",
+      "description": "Find the resistance — the person, the situation, the inner voice — that has been grinding against you. Stop trying to escape it. Use it. Sharpen yourself against what is hard. Capability is forged at the friction point, not in safety.",
+      "prompt": "What friction in your life could you use to sharpen yourself instead of escape?",
+      "prompt_templates": [
+        "What friction in your life could you use to sharpen yourself instead of escape?",
+        "What resistance keeps shaping you whether you let it or not?",
+        "Where is the stone you've been avoiding that could give you an edge?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "ignis_show_stand_fire",
+      "short_name": "Stand in the Fire",
+      "ritual_name": "Standing in the Fire While Others Watch",
+      "face": "challenger",
+      "npc_id": "ignis",
+      "nation_key": "pyrakanth",
+      "element": "fire",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, others will see you burning — and stay.",
+      "description": "The work is done in private. The move is done in public. Step into a moment where you are visible, vulnerable, and committed. Let people see you under heat. Don't perform composure. Stand in what you actually feel and let the room hold it with you.",
+      "prompt": "Where do you need to be visibly on fire in front of someone who matters?",
+      "prompt_templates": [
+        "Where do you need to be visibly on fire in front of someone who matters?",
+        "What truth would you speak if you stopped managing your composure?",
+        "Whose witness would change everything if you let them see you burning?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+
+    {
+      "canonical_id": "kaelen_wake_listen_sapling",
+      "short_name": "The Listening of the Sapling",
+      "ritual_name": "The Listening of the Sapling for the Word It Carries",
+      "face": "shaman",
+      "npc_id": "kaelen",
+      "nation_key": "virelune",
+      "element": "wood",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, you will hear the new growth before it speaks aloud.",
+      "description": "Something young is rising in you. A new direction. A new desire. A new becoming. Most people miss it because it speaks in a whisper. Sit with the part of you that is just beginning. Listen to what it's trying to tell you about who you are next.",
+      "prompt": "What new growth in you is trying to speak that you keep talking over?",
+      "prompt_templates": [
+        "What new growth in you is trying to speak that you keep talking over?",
+        "What young part of yourself is asking for attention right now?",
+        "If you got quiet, what would the new shoot in you say?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "kaelen_clean_burial_branch",
+      "short_name": "The Burial of the Branch",
+      "ritual_name": "The Burial of the Branch That Will Not Bear Again",
+      "face": "shaman",
+      "npc_id": "kaelen",
+      "nation_key": "virelune",
+      "element": "wood",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, what is rotting will become soil for what is becoming.",
+      "description": "A part of your life has stopped bearing fruit. You know which one. You've been tending it because you remember when it lived. Honor it. Bury it. Let it become compost for the part of you that is still growing. The burial is not the end — it's the soil.",
+      "prompt": "What in your life has stopped bearing fruit that you keep tending anyway?",
+      "prompt_templates": [
+        "What in your life has stopped bearing fruit that you keep tending anyway?",
+        "What dead branch needs to be honored and buried so something new can grow?",
+        "What are you holding onto out of memory that has become weight?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "kaelen_grow_climb_trellis",
+      "short_name": "The Climbing of the Trellis",
+      "ritual_name": "The Climbing of the Living Trellis Toward Open Sky",
+      "face": "shaman",
+      "npc_id": "kaelen",
+      "nation_key": "virelune",
+      "element": "wood",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, you will discover the structure that wants to hold your weight.",
+      "description": "You cannot grow upward without something to climb. Find the structure — a practice, a relationship, a teacher, a discipline — that is willing to hold you while you stretch. Stop trying to grow alone in midair. The trellis is not weakness; it is partnership with what wants you to thrive.",
+      "prompt": "What structure could hold you while you grow into something you can't yet do alone?",
+      "prompt_templates": [
+        "What structure could hold you while you grow into something you can't yet do alone?",
+        "Whose support are you refusing because you think you should grow unaided?",
+        "What practice would let your weight stretch upward without breaking you?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "kaelen_show_bloom_open",
+      "short_name": "The Bloom in Open Air",
+      "ritual_name": "The Bloom in Open Air Where the Wind Can See",
+      "face": "shaman",
+      "npc_id": "kaelen",
+      "nation_key": "virelune",
+      "element": "wood",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, what has been growing privately will become a gift to the world.",
+      "description": "There is something in you that has been ripening in shadow. It is ready to be seen. Move it into the open air. Let the wind touch it. Let strangers see what you have been becoming. The bloom is for the world; the growth was for you.",
+      "prompt": "What has been growing in you privately that is ready to be seen?",
+      "prompt_templates": [
+        "What has been growing in you privately that is ready to be seen?",
+        "What gift have you been ripening that the world is waiting for?",
+        "Where have you been blooming in shadow that the wind needs to find?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+
+    {
+      "canonical_id": "vorm_wake_read_blueprint",
+      "short_name": "Read the Blueprint",
+      "ritual_name": "Reading the Blueprint Beneath the Ruin",
+      "face": "architect",
+      "npc_id": "vorm",
+      "nation_key": "argyra",
+      "element": "metal",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, you will see the system you've been living inside without knowing it.",
+      "description": "Stop reacting to the symptoms. Step back and look at the architecture. What is the system that keeps producing this same outcome? What was its original design? What rules were never spoken but always enforced? Reading the blueprint is the first move of any engineer who will eventually rebuild.",
+      "prompt": "What system in your life keeps producing the same outcome — and what is its actual blueprint?",
+      "prompt_templates": [
+        "What system in your life keeps producing the same outcome — and what is its actual blueprint?",
+        "If you mapped the rules nobody told you about, what would the diagram look like?",
+        "What pattern in your life has architecture you've never bothered to read?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "vorm_clean_shear_joint",
+      "short_name": "Shear the Joint",
+      "ritual_name": "Shearing the Joint That No Longer Holds",
+      "face": "architect",
+      "npc_id": "vorm",
+      "nation_key": "argyra",
+      "element": "metal",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, the structure will stop pretending the broken part is still working.",
+      "description": "There is a connection in your life — a habit, an agreement, a piece of infrastructure — that has failed but is still bearing weight. Cut it cleanly. Don't try to repair what was never going to hold. The structure is stronger when you remove what is fooling everyone into thinking it's still doing its job.",
+      "prompt": "What broken connection in your life are you still pretending is holding weight?",
+      "prompt_templates": [
+        "What broken connection in your life are you still pretending is holding weight?",
+        "What joint needs to be cut cleanly because repair is no longer the right move?",
+        "Where is the failure point you keep patching instead of removing?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "vorm_grow_refine_lattice",
+      "short_name": "Refine the Lattice",
+      "ritual_name": "Refining the Lattice Until It Sings",
+      "face": "architect",
+      "npc_id": "vorm",
+      "nation_key": "argyra",
+      "element": "metal",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, your structure will become precise enough to bear what's coming.",
+      "description": "Take a system in your life that already works and make it more honest. Tighten the tolerances. Remove the unused parts. Replace the rough joints with precise ones. Refinement is not perfectionism — it is the work of making something strong enough that it can be trusted with weight you cannot yet imagine.",
+      "prompt": "What working system in your life is ready to be tightened, refined, made precise?",
+      "prompt_templates": [
+        "What working system in your life is ready to be tightened, refined, made precise?",
+        "Where could you remove the rough edges so the structure can carry more?",
+        "What practice could you sharpen until it sings instead of merely functions?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "vorm_show_anchor_spire",
+      "short_name": "Anchor the Spire",
+      "ritual_name": "Anchoring the Spire That Others Will Climb",
+      "face": "architect",
+      "npc_id": "vorm",
+      "nation_key": "argyra",
+      "element": "metal",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, you will build something others can stand on after you are gone.",
+      "description": "Take what you have built and make it permanent enough to outlast you. Document it. Anchor it in the world. Hand it to someone else and let them climb it. The architect's deepest move is not to build for themselves but to build a structure that holds weight they will never carry.",
+      "prompt": "What have you built that needs to be anchored permanently for others to climb?",
+      "prompt_templates": [
+        "What have you built that needs to be anchored permanently for others to climb?",
+        "What knowledge or system in you should outlast your own attention?",
+        "Whose future weight could rest on what you anchor today?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+
+    {
+      "canonical_id": "aurelius_wake_first_bell",
+      "short_name": "The First Bell",
+      "ritual_name": "The First Bell That Calls the Court to Order",
+      "face": "regent",
+      "npc_id": "aurelius",
+      "nation_key": "meridia",
+      "element": "earth",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, you will hear the call that has been ringing without your acknowledgment.",
+      "description": "There is a matter waiting to be addressed in your life — an obligation, a responsibility, a quiet request from someone who depends on you. The bell has been rung. You have been pretending you didn't hear it. Open the court. Acknowledge that you have been called. The first move is not action; it is presence to the call.",
+      "prompt": "What call to responsibility in your life have you been pretending not to hear?",
+      "prompt_templates": [
+        "What call to responsibility in your life have you been pretending not to hear?",
+        "What bell has been ringing for you that you keep walking past?",
+        "Whose request for your attention have you been deferring without good reason?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "aurelius_clean_setting_boundary",
+      "short_name": "The Setting of the Boundary",
+      "ritual_name": "The Setting of the Boundary That Was Always Yours",
+      "face": "regent",
+      "npc_id": "aurelius",
+      "nation_key": "meridia",
+      "element": "earth",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, you will reclaim the territory that was always yours to defend.",
+      "description": "There is a line in your life that needs to be drawn — a 'no' that has been waiting to be spoken, a limit that has been violated for too long. Setting a boundary is not aggression. It is the lawful act of declaring what belongs to you and what does not. The boundary was always yours; you are just finally placing the stones.",
+      "prompt": "What boundary in your life has needed to be set for too long?",
+      "prompt_templates": [
+        "What boundary in your life has needed to be set for too long?",
+        "What 'no' have you been swallowing that needs to be spoken cleanly?",
+        "Where is the line that was always yours that you have not yet drawn?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "aurelius_grow_holding_line",
+      "short_name": "The Holding of the Line",
+      "ritual_name": "The Holding of the Line Until the Hour Turns",
+      "face": "regent",
+      "npc_id": "aurelius",
+      "nation_key": "meridia",
+      "element": "earth",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, you will discover what you are made of when no one is coming to relieve you.",
+      "description": "You have taken a position. The pressure is mounting. People are asking you to move. The work now is not action; it is endurance. Hold the line. Be the person who is still standing when the hour turns. Capability is not what you can do once — it is what you can sustain when sustaining costs you.",
+      "prompt": "What position in your life are you being asked to abandon that you must instead hold?",
+      "prompt_templates": [
+        "What position in your life are you being asked to abandon that you must instead hold?",
+        "Where is the pressure mounting on you to move when the right move is to stay?",
+        "What stand of yours requires endurance, not strategy, right now?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "aurelius_show_decree_noon",
+      "short_name": "The Decree at Noon",
+      "ritual_name": "The Decree Spoken at Noon for All to Hear",
+      "face": "regent",
+      "npc_id": "aurelius",
+      "nation_key": "meridia",
+      "element": "earth",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, your private intention will become a public commitment that cannot be retracted.",
+      "description": "There is a truth you have been holding privately that needs to be declared in the open. Not whispered. Not hedged. Spoken at noon, where no shadow can hide it, where everyone present becomes a witness. The decree is the moment your inner conviction becomes an external structure that holds you to your word.",
+      "prompt": "What private commitment of yours needs to be declared publicly to become real?",
+      "prompt_templates": [
+        "What private commitment of yours needs to be declared publicly to become real?",
+        "What truth are you ready to speak at noon where no shadow can hide it?",
+        "Whose witness would lock in what you have been privately deciding?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+
+    {
+      "canonical_id": "sola_wake_sit_with_tide",
+      "short_name": "Sit With the Tide",
+      "ritual_name": "Sitting With the Tide That Brought You Here",
+      "face": "diplomat",
+      "npc_id": "sola",
+      "nation_key": "lamenth",
+      "element": "water",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, the feeling that has been carrying you will finally tell you its name.",
+      "description": "There is an emotion moving through you that you have been managing instead of meeting. Stop managing it. Sit down beside it. Don't try to make it leave or make it useful. Just be with it the way you would sit beside someone in grief — present, undefended, willing to hear what it has to say.",
+      "prompt": "What feeling have you been managing that needs you to simply sit with it?",
+      "prompt_templates": [
+        "What feeling have you been managing that needs you to simply sit with it?",
+        "What emotion in you is asking for company instead of correction?",
+        "If you stopped trying to fix what you feel, what would the feeling tell you?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "sola_clean_wash_unspoken",
+      "short_name": "Wash What Is Unspoken",
+      "ritual_name": "Washing What Cannot Yet Be Spoken",
+      "face": "diplomat",
+      "npc_id": "sola",
+      "nation_key": "lamenth",
+      "element": "water",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, what has been heavy and wordless will become lighter without needing to be explained.",
+      "description": "Some grief does not yet have language. Some hurt cannot be named because the words have not arrived. The work is not to find the words. The work is to let water move through the unspoken thing — through tears, through breath, through the body — until it becomes lighter without becoming legible. Some things are processed by being felt, not understood.",
+      "prompt": "What in you is heavy and wordless that needs to be felt instead of explained?",
+      "prompt_templates": [
+        "What in you is heavy and wordless that needs to be felt instead of explained?",
+        "What grief in you has been waiting for water instead of language?",
+        "Where could you let yourself feel something fully without needing to articulate it?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "sola_grow_hold_in_salt",
+      "short_name": "Hold the Other in Salt",
+      "ritual_name": "Holding the Other in Salt Without Fixing",
+      "face": "diplomat",
+      "npc_id": "sola",
+      "nation_key": "lamenth",
+      "element": "water",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, you will become someone who can be present to another's pain without trying to make it stop.",
+      "description": "There is a person in your life who is hurting. You have been trying to fix it because their pain is unbearable to you. The capability to grow into is not fixing — it is holding. Sit beside them in their salt. Don't reassure. Don't redirect. Don't make it about your discomfort. Be the kind of person whose presence is sufficient even when nothing improves.",
+      "prompt": "Who in your life needs you to hold their pain without trying to fix it?",
+      "prompt_templates": [
+        "Who in your life needs you to hold their pain without trying to fix it?",
+        "Where could your presence be sufficient if you stopped reaching for solutions?",
+        "Whose grief have you been managing because their pain is unbearable to you?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "sola_show_pour_outward",
+      "short_name": "Pour the Self Outward",
+      "ritual_name": "Pouring the Self Outward Without Drowning",
+      "face": "diplomat",
+      "npc_id": "sola",
+      "nation_key": "lamenth",
+      "element": "water",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, your care will reach where it is needed without emptying you.",
+      "description": "You have something to give — care, attention, presence, time. The old way was to give it until you were dry. The new way is to pour outward in a shape that does not collapse you. Give visibly. Give in public. Give in the way that water gives to a river — by joining, not by emptying. Show up in a way that the giving is sustainable.",
+      "prompt": "Where could you give yourself outward in a way that doesn't drain you?",
+      "prompt_templates": [
+        "Where could you give yourself outward in a way that doesn't drain you?",
+        "What care in you wants to flow toward someone in a sustainable shape?",
+        "How could your generosity move in public without emptying you?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+
+    {
+      "canonical_id": "witness_wake_pattern_in_pattern",
+      "short_name": "See the Pattern Within the Pattern",
+      "ritual_name": "Seeing the Pattern Within the Pattern That Holds Them All",
+      "face": "sage",
+      "npc_id": "witness",
+      "nation_key": "all",
+      "element": "wood",
+      "wcgs_stage": "wake_up",
+      "tagline": "If you do this, you will notice the pattern that has been organizing all your other patterns.",
+      "description": "You have been working on a problem at the level it presents itself. Step back further. There is a pattern beneath the pattern — a deeper rhythm that organizes the surface ones. The Wake Up is not seeing the immediate issue more clearly; it is seeing the structure that keeps producing the issue. Recursive noticing. The roots beneath the roots.",
+      "prompt": "What pattern is organizing all the patterns you've been trying to fix one at a time?",
+      "prompt_templates": [
+        "What pattern is organizing all the patterns you've been trying to fix one at a time?",
+        "If you stepped back twice, what would you see beneath the surface problem?",
+        "What deeper rhythm in your life keeps producing the situations you keep solving?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "witness_clean_release_mask",
+      "short_name": "Release the Mask",
+      "ritual_name": "Releasing the Mask That Was Once a Refuge",
+      "face": "sage",
+      "npc_id": "witness",
+      "nation_key": "all",
+      "element": "metal",
+      "wcgs_stage": "clean_up",
+      "tagline": "If you do this, the false self that once kept you safe will finally be allowed to retire.",
+      "description": "There is a version of you that you have been performing — competent, composed, uncomplicated. It served you once. It got you through a hard place. It is no longer the truest move, but you have worn it so long it feels like skin. Release it. Let the mask be set down with gratitude. What is underneath has been waiting.",
+      "prompt": "What version of yourself have you been performing that is ready to be set down?",
+      "prompt_templates": [
+        "What version of yourself have you been performing that is ready to be set down?",
+        "What mask served you once that you no longer need to wear?",
+        "What false self in you is asking to be retired with thanks?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "witness_grow_hold_all_faces",
+      "short_name": "Hold All the Faces",
+      "ritual_name": "Holding All the Faces at Once Without Choosing",
+      "face": "sage",
+      "npc_id": "witness",
+      "nation_key": "all",
+      "element": "earth",
+      "wcgs_stage": "grow_up",
+      "tagline": "If you do this, you will gain the capacity to navigate between developmental levels without collapsing into one.",
+      "description": "Each developmental face is real — Shaman, Challenger, Regent, Architect, Diplomat. Most people get stuck in one and call it the truth. The capability to grow into is the ability to hold all of them at once, to draw on the right one in the right moment, to refuse the false comfort of having a single answer. Hold all the faces. Become someone who can be each of them when each is needed.",
+      "prompt": "Which developmental face have you been clinging to as 'the truth' that needs to make room for the others?",
+      "prompt_templates": [
+        "Which developmental face have you been clinging to as 'the truth' that needs to make room for the others?",
+        "What situation in your life requires a face you don't usually wear?",
+        "Where could you hold contradiction instead of resolving it prematurely?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    },
+    {
+      "canonical_id": "witness_show_speak_from_whole",
+      "short_name": "Speak from the Whole",
+      "ritual_name": "Speaking from the Whole Even When It Costs You",
+      "face": "sage",
+      "npc_id": "witness",
+      "nation_key": "all",
+      "element": "fire",
+      "wcgs_stage": "show_up",
+      "tagline": "If you do this, your words will land with the weight of integration instead of the noise of partiality.",
+      "description": "You have been speaking from a part of yourself — the part that is angry, or the part that is hopeful, or the part that wants to be liked. The committed move is to speak from the whole. From all the faces at once. From the integrated place that has held the contradictions and not run from them. It will cost you. Partial speech is easier. But the room can feel the difference, and so can you.",
+      "prompt": "What needs to be said from the whole of you instead of the loudest part?",
+      "prompt_templates": [
+        "What needs to be said from the whole of you instead of the loudest part?",
+        "What partial truth have you been speaking when the integrated truth is harder?",
+        "Where could you let the integrated voice come through, even though it costs you?"
+      ],
+      "response_bar_type": "player_response",
+      "trial_slug": null
+    }
+  ]
+}

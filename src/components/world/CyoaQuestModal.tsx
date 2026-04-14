@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation'
 import type { AnchorData } from '@/lib/spatial-world/pixi-room'
 import { getQuestCyoaMeta } from '@/actions/quest-cyoa'
 
+type QuestMeta = {
+  questId: string
+  storyId: string
+  title: string
+  description: string | null
+}
+
+type FetchState =
+  | { kind: 'ok'; questId: string; meta: QuestMeta }
+  | { kind: 'err'; questId: string; message: string }
+
 type Props = {
   anchor: AnchorData
   onClose: () => void
@@ -12,28 +23,42 @@ type Props = {
 
 export function CyoaQuestModal({ anchor, onClose }: Props) {
   const router = useRouter()
-  const [meta, setMeta] = useState<{ questId: string; storyId: string; title: string; description: string | null } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const questId = anchor.linkedId ?? null
+  const [state, setState] = useState<FetchState | null>(null)
 
   useEffect(() => {
-    const questId = anchor.linkedId
-    if (!questId) {
-      setError('No quest linked')
-      setLoading(false)
-      return
-    }
+    if (!questId) return
+    let cancelled = false
     getQuestCyoaMeta(questId).then((result) => {
-      setLoading(false)
-      if (result) setMeta(result)
-      else setError('Quest has no adventure')
+      if (cancelled) return
+      if (result) setState({ kind: 'ok', questId, meta: result })
+      else setState({ kind: 'err', questId, message: 'Quest has no adventure' })
     })
-  }, [anchor.linkedId])
+    return () => {
+      cancelled = true
+    }
+  }, [questId])
+
+  const loading = Boolean(questId) && (!state || state.questId !== questId)
+  const error =
+    state && state.questId === questId && state.kind === 'err' ? state.message : null
+  const meta =
+    state && state.questId === questId && state.kind === 'ok' ? state.meta : null
 
   const handlePlay = () => {
     if (!meta) return
     router.push(`/adventures/${meta.storyId}/play?questId=${meta.questId}`)
     onClose()
+  }
+
+  if (!questId) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full space-y-4">
+        <h2 className="text-white font-bold">{anchor.label ?? 'Adventure'}</h2>
+        <p className="text-zinc-400 text-sm">No quest linked</p>
+        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-sm">Close</button>
+      </div>
+    )
   }
 
   if (loading) {

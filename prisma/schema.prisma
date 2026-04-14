@@ -207,6 +207,7 @@ model Player {
   /// L3: Lore entries authored by this player (empty until L3 ships).
   /// Tracks authorship for narrative sovereignty audit trail — see CampaignLoreEntry model.
   loreEntriesCreated             CampaignLoreEntry[]         @relation("LoreEntriesCreated")
+  chapterProgress                PlayerChapterProgress[]
 
   @@unique([contactType, contactValue])
   @@map("players")
@@ -1167,6 +1168,7 @@ model Nation {
   createdAt   DateTime     @default(now())
   moves       NationMove[]
   players     Player[]
+  schools     School[]
   instance    Instance?    @relation("NationInstance", fields: [instanceId], references: [id], onDelete: Cascade)
 
   @@index([instanceId])
@@ -1586,6 +1588,10 @@ model Instance {
   latentAllyshipIntakesSpawned LatentAllyshipIntake[]  @relation("AllyshipIntakeSpawnedInstance")
   /// CSS: Self-serve campaigns living inside this Instance
   campaigns                    Campaign[]              @relation("InstanceCampaigns")
+  /// GM-overridable CYOA Composer step ordering per campaign (JSON)
+  composerStepOverrides        Json?
+  /// Schools scoped to this instance
+  schools                      School[]                @relation("SchoolInstance")
 
   @@map("instances")
 }
@@ -2251,16 +2257,18 @@ model QuestAdventureLink {
 }
 
 model AdventureTemplate {
-  id                 String              @id @default(cuid())
-  key                String              @unique
-  name               String
-  description        String?
-  passageSlots       String // JSON: [{ nodeId, label?, order }]
-  startNodeId        String
-  ownership          String              @default("system") // system | player
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  cmaGeneratorDrafts CmaGeneratorDraft[]
+  id                    String              @id @default(cuid())
+  key                   String              @unique
+  name                  String
+  description           String?
+  passageSlots          String // JSON: [{ nodeId, label?, order }]
+  startNodeId           String
+  ownership             String              @default("system") // system | player
+  /// Default CYOA Composer step ordering for adventures using this template (JSON)
+  composerStepOverrides Json?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  cmaGeneratorDrafts    CmaGeneratorDraft[]
 
   @@map("adventure_templates")
 }
@@ -2592,6 +2600,13 @@ model AlchemyPlayerState {
   arcCompletedAt   DateTime?
   updatedAt DateTime @updatedAt
 
+  // --- Alchemy Engine arc tracking (phase-locked advancement) ---
+  arcPhase  String?  // null | intake | action | reflection
+  waveMove  String?  // null | wakeUp | cleanUp | growUp | showUp
+  face      String?  // null | challenger | shaman | regent | architect | diplomat | sage
+  arcStartedAt  DateTime?
+  arcCompletedAt DateTime?
+
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@map("alchemy_player_states")
@@ -2751,6 +2766,7 @@ model NpcConstitution {
   limits              String // JSON: can_initiate[], cannot_do[], requires_regent_approval_for[]
   memoryPolicy        String // JSON: scope, retention_rules[]
   reflectionPolicy    String // JSON: allowed, frequency, max_outputs
+  portraysFace        String? // shaman|challenger|regent|architect|diplomat|sage
   governedBy          String   @default("regent_game_master")
   status              String   @default("draft") // draft|active|suspended|archived
   currentLocation     String   @default("none") // library|efa|dojos|gameboard|none
@@ -3570,11 +3586,19 @@ model Campaign {
   /// Future: drives narrative pacing, beat sheets, and branching paths; governed by narrativeSovereignty.
   storyArcTemplates StoryArcTemplate[]
 
+  /// Subcampaign / initiative tree — optional parent campaign.
+  /// Self-referential FK; SET NULL on delete so deleting parent does not cascade.
+  /// Migration: prisma/migrations/20260510120000_campaign_parent_hierarchy/migration.sql
+  parentCampaignId String?
+  parentCampaign   Campaign?  @relation("CampaignHierarchy", fields: [parentCampaignId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  childCampaigns   Campaign[] @relation("CampaignHierarchy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([instanceId, status])
   @@index([status])
+  @@index([parentCampaignId])
   @@map("campaigns")
 }
 
@@ -3843,4 +3867,113 @@ model StoryArcTemplate {
 
   @@index([campaignId, status])
   @@map("story_arc_templates")
+}
+
+// ---------------------------------------------------------------------------
+// NarrativeTemplate — unified narrative template registry
+// ---------------------------------------------------------------------------
+
+enum NarrativeTemplateKind {
+  EPIPHANY
+  KOTTER
+  ORIENTATION
+  CUSTOM
+}
+
+model NarrativeTemplate {
+  id             String                @id @default(cuid())
+  key            String                @unique
+  name           String
+  description    String?
+  kind           NarrativeTemplateKind
+  stepCount      Int
+  faceAffinities Json                  @default("[]")
+  questModel     String                @default("personal")
+  configBlob     Json                  @default("{}")
+  status         String                @default("active")
+  sortOrder      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([kind, status])
+  @@map("narrative_templates")
+}
+
+// ---------------------------------------------------------------------------
+// School — 6 Big Schools + 30 nation gyms
+// ---------------------------------------------------------------------------
+
+model School {
+  id           String   @id @default(cuid())
+  name         String
+  description  String   @default("")
+  portraysFace String
+  nationId     String?
+  instanceId   String?
+  imgUrl       String?
+  archived     Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  nation   Nation?   @relation(fields: [nationId], references: [id], onDelete: Cascade)
+  instance Instance? @relation("SchoolInstance", fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([portraysFace])
+  @@index([nationId])
+  @@index([instanceId])
+  @@map("schools")
+}
+
+// ─── Chapter-Spoke Template (spec 1.41) ──────────────────────────────────────
+
+model ChapterRegistration {
+  id           String   @id @default(cuid())
+  chapterRef   String   @unique
+  bookRef      String
+  orgRef       String
+  version      String   @default("v1")
+  definition   Json
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([bookRef])
+  @@index([orgRef])
+  @@map("chapter_registrations")
+}
+
+model PlayerChapterProgress {
+  id            String   @id @default(cuid())
+  playerId      String
+  chapterRef    String
+  firstEnteredAt DateTime @default(now())
+  lastEnteredAt  DateTime @default(now())
+  enterCount    Int      @default(1)
+  barCount      Int      @default(0)
+  completed     Boolean  @default(false)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, chapterRef])
+  @@index([playerId])
+  @@index([chapterRef])
+  @@map("player_chapter_progress")
+}
+
+model ChapterMilestone {
+  id                 String   @id @default(cuid())
+  chapterRef         String   @unique
+  bookRef            String
+  title              String
+  description        String
+  parentMilestoneRef String?
+  rollupWeight       Float    @default(1.0)
+  minBarsRequired    Int      @default(1)
+  totalBarCount      Int      @default(0)
+  totalPlayerCount   Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([bookRef])
+  @@map("chapter_milestones")
 }

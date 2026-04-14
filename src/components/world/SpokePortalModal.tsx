@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { AnchorData } from '@/lib/spatial-world/pixi-room'
 import type { SpokeState } from '@/actions/campaign-spoke-states'
+import { getSpokeBinding } from '@/lib/campaign-hub/spoke-bindings'
 
 type Props = {
   anchor: AnchorData
@@ -29,14 +30,25 @@ export function SpokePortalModal({ anchor, spokeState, onClose }: Props) {
     } catch { /* ignore */ }
   }
 
-  const cyoaHref = `/campaign/spoke/${spokeIndex}?ref=${encodeURIComponent(campaignRef)}`
   const landingHref = `/campaign/landing?ref=${encodeURIComponent(campaignRef)}&spoke=${spokeIndex}`
 
-  const isLocked = spokeState?.isLocked ?? spokeIndex > 1
+  // Nursery intro room: requires instanceSlug from the world context
+  // We derive it from the current URL since the modal renders inside /world/[instanceSlug]/...
+  const instanceSlug = typeof window !== 'undefined'
+    ? window.location.pathname.split('/')[2] ?? ''
+    : ''
+  const nurseryIntroHref = instanceSlug
+    ? `/world/${instanceSlug}/spoke-${spokeIndex}-intro`
+    : ''
+
+  // Check if this spoke is bound to a child campaign (sub-hub).
+  // Bound spokes always route to their child hub, even if they would otherwise be locked.
+  const subHubBinding = getSpokeBinding(campaignRef, spokeIndex)
+  const isLocked = !subHubBinding && (spokeState?.isLocked ?? spokeIndex > 1)
   const hexagramId = spokeState?.hexagramId
   const primaryFace = spokeState?.primaryFace
   const seedBarId = spokeState?.seedBarId
-  const label = anchor.label ?? `Portal ${spokeIndex + 1}`
+  const label = subHubBinding?.label ?? anchor.label ?? `Portal ${spokeIndex + 1}`
 
   function handleNavigateAway() {
     onClose()
@@ -76,25 +88,43 @@ export function SpokePortalModal({ anchor, spokeState, onClose }: Props) {
 
       {/* CTAs */}
       <div className="space-y-2 pt-1">
-        {isLocked ? (
+        {subHubBinding ? (
+          <>
+            <div className="rounded-xl bg-purple-950/40 border border-purple-800/40 px-4 py-2">
+              <p className="text-[10px] uppercase tracking-wide text-purple-400">Sub-hub campaign</p>
+              <p className="text-xs text-zinc-300 mt-0.5">
+                This spoke opens into its own campaign hub.
+              </p>
+            </div>
+            <Link
+              href={subHubBinding.childHubPath}
+              onClick={handleNavigateAway}
+              className="block w-full py-3 text-center bg-purple-600/90 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors text-sm"
+            >
+              Enter {subHubBinding.label} →
+            </Link>
+          </>
+        ) : isLocked ? (
           <div className="w-full py-3 rounded-xl bg-zinc-800 text-center text-zinc-500 text-sm">
             🔒 Locked — unlocks as the campaign advances
           </div>
         ) : (
           <>
+            {nurseryIntroHref && (
+              <Link
+                href={nurseryIntroHref}
+                onClick={handleNavigateAway}
+                className="block w-full py-3 text-center bg-purple-600/90 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors text-sm"
+              >
+                Enter Spoke Clearing →
+              </Link>
+            )}
             <Link
               href={landingHref}
               onClick={handleNavigateAway}
-              className="block w-full py-3 text-center bg-amber-700/90 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors text-sm"
+              className="block w-full py-2.5 text-center bg-zinc-700/90 hover:bg-zinc-600 text-zinc-300 font-medium rounded-xl transition-colors text-xs"
             >
-              Landing card first →
-            </Link>
-            <Link
-              href={cyoaHref}
-              onClick={handleNavigateAway}
-              className="block w-full py-2.5 text-center bg-purple-600/90 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors text-sm"
-            >
-              Enter CYOA directly →
+              Landing card →
             </Link>
           </>
         )}

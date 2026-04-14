@@ -20,9 +20,16 @@ import { StoryReader } from './components/StoryReader'
 import { getStoryNode, resetOnboarding } from '@/actions/guided-onboarding'
 import { StoryProgress } from './types'
 import { GuidedAuthForm } from './components/GuidedAuthForm'
+import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
 export default async function GuidedModePage({ searchParams }: { searchParams: Promise<{ step?: string, reset?: string, ref?: string, returnTo?: string }> }) {
     const { step, reset, ref: campaignRef, returnTo } = await searchParams
+
+    const { player, dbError } = await getCurrentPlayerSafe()
+    // If already logged in, this page is deprecated. Go to dashboard.
+    if (!dbError && player) {
+        redirect('/')
+    }
 
     if (reset === 'true') {
         const cookieStore = await cookies()
@@ -39,8 +46,6 @@ export default async function GuidedModePage({ searchParams }: { searchParams: P
         </div>
     )
 }
-
-import { getCurrentPlayerSafe } from '@/lib/auth-safe'
 
 async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { requestedStep?: string, campaignRef?: string, returnTo?: string }) {
     const { playerId, player, dbError, errorMessage } = await getCurrentPlayerSafe()
@@ -71,7 +76,7 @@ async function GuidedStoryLoader({ requestedStep, campaignRef, returnTo }: { req
     try {
         const raw = player.storyProgress ? JSON.parse(player.storyProgress as string) : null
         if (raw && typeof raw === 'object' && raw.campaignBypass === true) {
-            redirect('/conclave/onboarding')
+            redirect('/')
         }
     } catch {
         // ignore parse errors

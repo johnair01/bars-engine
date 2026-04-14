@@ -12,6 +12,7 @@
     "validate:routes": "tsx scripts/validate-routes.ts",
     "validate:routes:strict": "tsx scripts/validate-routes.ts --strict",
     "build:registry": "tsx scripts/build-registry.ts",
+    "registry:regenerate": "npm run build:registry",
     "analyze:routes": "tsx scripts/analyze-annotations.ts",
     "coverage:dashboard": "tsx scripts/generate-coverage-dashboard.ts && open public/coverage-dashboard.html",
     "routes:report": "npm run validate:routes && npm run analyze:routes",
