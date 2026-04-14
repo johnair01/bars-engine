@@ -26,7 +26,7 @@ export function BookGameplayImportClient({
     setMsg(null)
     startTransition(async () => {
       const r = await previewImportBookGameplay({ targetBookId, sourceBookId, kinds })
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Preview failed')
       else {
         setItems(r.items)
         setSelected(new Set())
@@ -38,7 +38,7 @@ export function BookGameplayImportClient({
     let cancelled = false
     void previewImportBookGameplay({ targetBookId, sourceBookId, kinds }).then((r) => {
       if (cancelled) return
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Preview failed')
       else {
         setItems(r.items)
         setSelected(new Set())
@@ -86,7 +86,7 @@ export function BookGameplayImportClient({
         mode: 'link',
         targetSectionId: anyBar ? targetSectionId : undefined,
       })
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Import failed')
       else {
         setMsg(`Imported ${r.imported} row(s).`)
         load()

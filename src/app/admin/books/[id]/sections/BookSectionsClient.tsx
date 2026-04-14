@@ -38,7 +38,7 @@ export function BookSectionsClient({
     setMsg(null)
     startTransition(async () => {
       const r = await createBookSection(bookId, { title, goal: goal || null })
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Could not create section')
       else {
         setTitle('')
         setGoal('')

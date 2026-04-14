@@ -44,7 +44,7 @@ export function SectionEditorClient({ section }: { section: BookSectionEditorPay
     setMsg(null)
     startTransition(async () => {
       const r = await updateBookSection(section.id, { draftText })
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Request failed')
       else {
         setMsg('Draft saved.')
         router.refresh()
@@ -56,7 +56,7 @@ export function SectionEditorClient({ section }: { section: BookSectionEditorPay
     setMsg(null)
     startTransition(async () => {
       const r = await approveBookSection(section.id, { useDraft: true, notes: notes || null })
-      if ('error' in r) setMsg(r.error)
+      if ('error' in r) setMsg(r.error ?? 'Request failed')
       else {
         setMsg('Approved — approvedText updated from draft.')
         setNotes('')
@@ -94,7 +94,7 @@ export function SectionEditorClient({ section }: { section: BookSectionEditorPay
               setMsg(null)
               startTransition(async () => {
                 const r = await applyBookSectionJourneyScaffold(section.id)
-                if ('error' in r) setMsg(r.error)
+                if ('error' in r) setMsg(r.error ?? 'Request failed')
                 else {
                   setMsg(r.updated ? 'Journey scaffold applied (goal / teaching / emotional).' : 'Fields already set — nothing to scaffold.')
                   router.refresh()
@@ -136,7 +136,7 @@ export function SectionEditorClient({ section }: { section: BookSectionEditorPay
                     setMsg(null)
                     startTransition(async () => {
                       const r = await detachSectionBarLink(l.id)
-                      if ('error' in r) setMsg(r.error)
+                      if ('error' in r) setMsg(r.error ?? 'Request failed')
                       else router.refresh()
                     })
                   }}
@@ -183,7 +183,7 @@ export function SectionEditorClient({ section }: { section: BookSectionEditorPay
               setMsg(null)
               startTransition(async () => {
                 const r = await attachSectionBarLink(section.id, barIdInput.trim(), barRole)
-                if ('error' in r) setMsg(r.error)
+                if ('error' in r) setMsg(r.error ?? 'Request failed')
                 else {
                   setBarIdInput('')
                   router.refresh()

@@ -89,7 +89,7 @@ export function BookOriginForkPanel({ book }: { book: AdminBookRow }) {
                   newTitle: title.trim(),
                   options: { includeTocSections: true, stewardNote: note.trim() || undefined },
                 })
-                if ('error' in r) setMsg(r.error)
+                if ('error' in r) setMsg(r.error ?? 'Fork failed')
                 else {
                   router.push(`/admin/books/${r.bookId}`)
                   router.refresh()
