@@ -1,0 +1,558 @@
+# Spec Kit: Campaign-Aware BAR Generation + Amplification Engine v0
+
+## Title
+Campaign-Aware BAR Generation + Amplification Engine v0
+
+## Status
+Draft
+
+## Owner
+Wendell / BARs-engine
+
+## Summary
+Introduce campaign-aware BAR typing, output requirements, Scene Atlas integration, and a minimal artifact generation flow so users can contribute to a campaign without needing to understand internal ontology, JSON structures, or Twine-like admin complexity.
+
+This feature aims to preserve momentum between:
+- entering a campaign
+- completing a quest
+- generating a BAR
+- transforming that BAR into a useful artifact
+- amplifying campaign value through copy-ready outputs
+
+The immediate target is a working end-to-end flow for fundraising and awareness campaigns such as Bruised Banana Residency.
+
+---
+
+## Problem
+
+The current system can already do meaningful things:
+- BAR creation is implemented well enough to be usable
+- 3-2-1 / cleanup flows are relatively mature
+- campaigns and quests exist in usable form
+- users can move through the loop in a coarse way
+
+But the experience still becomes fuzzy in several places:
+
+1. **BARs are too generic**
+   - The system does not reliably know what kind of BAR should be generated from a given context.
+   - Users carry more ontological burden than they should.
+
+2. **Campaign context is underused**
+   - BAR generation is not strongly shaped by campaign type, quest type, or preceding action.
+   - The system is not yet smart enough to ask the right targeted questions at the right moment.
+
+3. **Contribution does not visibly transform**
+   - A user may complete a useful flow, but the system does not reliably turn that contribution into campaign-ready outputs like posts, invitations, or synthesis.
+
+4. **Story construction is too admin-heavy**
+   - Choose-your-own-adventure construction currently requires too much Twine literacy and too much comfort with JSON.
+   - The system needs higher-level building blocks.
+
+5. **The first high-value flow is not yet sharp enough**
+   - The app can do many things in principle, but the clearest end-to-end proof of value still needs to be made undeniable.
+
+---
+
+## Product Intent
+
+A user should be able to:
+
+1. enter a campaign
+2. choose a meaningful mode of contribution
+3. complete a guided action
+4. generate a context-aware BAR
+5. have that BAR become usable campaign fuel
+6. optionally generate a campaign artifact such as a social post or outreach prompt
+
+All of this should happen without requiring the user to understand:
+- the full BAR ontology
+- underlying JSON structures
+- admin authoring complexity
+- internal orchestration tools such as Strand
+
+---
+
+## Design Principles
+
+### 1. Preserve momentum
+The system should capture energy while it is live. If someone finishes useful work, the app should already know enough context to narrow what comes next.
+
+### 2. Hide internal machinery
+Strand, typing logic, transformation pipelines, and other infrastructure should remain mostly invisible to normal users.
+
+### 3. Make campaign type first-class
+Campaign type should shape:
+- the kinds of BARs that are expected
+- the kinds of artifacts that can be generated
+- the kinds of next moves the system recommends
+
+### 4. Convert contribution into visible value
+Users should be able to see how their action changed campaign state.
+
+### 5. Favor ergonomic authoring over raw flexibility
+Admin tooling should evolve toward simple building blocks and guided composition rather than raw JSON editing.
+
+---
+
+## Six Game Master Face Framing
+
+### Shaman / Magenta
+The ritual layer is weak. Users are being asked to do symbolic work before the system has properly initiated them into meaning. This feature should turn BAR creation, contribution, and Scene Atlas draws into felt threshold moments rather than abstract data entry.
+
+### Challenger / Red
+Energy is being split between shipping the basic thing and building the great cathedral. This spec should focus on a decisive end-to-end move: a single campaign flow that proves value through action, not theory.
+
+### Regent / Amber
+The ontology exists but is not enforced strongly enough. Campaign types, BAR types, and required outputs need obligation pathways rather than loose suggestions.
+
+### Architect / Orange
+The infrastructure is powerful, but the first value loop is still blurrier than it should be. Internal orchestration should remain hidden behind simple actions like “Generate Post” or “Synthesize Contributions.”
+
+### Diplomat / Green
+The system needs a more empathic gradient of participation. Users should be able to help through money, time, or curiosity without immediately hitting cognitive overhead.
+
+### Sage / Teal
+The larger vision is coherent: emotional charge becomes structured action, meaning is preserved through provenance, and backlog becomes metabolizable game fuel. This feature should create one lived proof of that vision.
+
+---
+
+## Scope
+
+### In Scope
+- campaign-aware BAR context
+- campaign-type-based BAR requirements
+- artifact generation from BARs
+- minimal Scene Atlas integration for stuckness / next move prompting
+- a minimal UI for generating copy-ready artifacts
+- support for fundraising and awareness flows
+
+### Out of Scope
+- full social network API posting
+- complete authoring overhaul for micro-twine / CYOA admin tools
+- full human design integration
+- full campaign narrative synthesis dashboard
+- deep automation across all campaign types
+- complete BAR scarcity / composting redesign
+
+---
+
+## Primary Use Cases
+
+### Use Case 1: Fundraising Supporter
+A user lands on the Bruised Banana Residency campaign and wants to support it financially. They should be able to donate immediately without needing to understand the deeper system.
+
+### Use Case 2: Time Contributor
+A user cannot donate money but is willing to help. They should be able to select a mode of contribution, complete a quest, generate a useful BAR, and feed the campaign.
+
+### Use Case 3: Raise Awareness Contributor
+A user completes a contribution flow and the system can turn their contribution, or campaign context plus existing BARs, into a shareable social artifact.
+
+### Use Case 4: Stuck Campaign Owner
+An admin or campaign steward is unsure what to do next. Scene Atlas should either point toward an existing bound BAR or prompt creation of a needed BAR type.
+
+---
+
+## Functional Requirements
+
+### FR1. BARs must carry campaign context
+Every BAR created through a campaign or quest flow must support contextual metadata including campaign type and source action.
+
+```ts
+type BarContext = {
+  campaignId?: string
+  campaignType?: "gather_resources" | "raise_awareness" | "skillful_organizing" | "direct_action"
+  questType?: string
+  sourceAction?: "321_process" | "wake_up" | "clean_up" | "grow_up" | "show_up" | "scene_atlas" | "manual"
+}
+```
+
+### FR2. Campaign types must define expected BAR and artifact outputs
+The system must maintain output requirement definitions by campaign type.
+
+```ts
+type CampaignOutputRequirements = {
+  requiredBarTypes: string[]
+  requiredArtifacts: string[]
+}
+```
+
+Example starter map:
+
+```ts
+const CAMPAIGN_REQUIREMENTS = {
+  raise_awareness: {
+    requiredBarTypes: ["insight", "message", "audience_target"],
+    requiredArtifacts: ["social_post"]
+  },
+  gather_resources: {
+    requiredBarTypes: ["need", "offer", "resource"],
+    requiredArtifacts: ["donation_prompt"]
+  },
+  skillful_organizing: {
+    requiredBarTypes: ["role", "coordination_need", "next_step"],
+    requiredArtifacts: ["volunteer_invite"]
+  },
+  direct_action: {
+    requiredBarTypes: ["objective", "constraint", "action_path"],
+    requiredArtifacts: ["mobilization_prompt"]
+  }
+}
+```
+
+### FR3. The system must detect missing outputs for a campaign
+Given an existing campaign state, the system must be able to compute:
+- which required BAR types are present
+- which required BAR types are missing
+- which artifacts are currently generatable
+- which artifacts are blocked and why
+
+### FR4. Artifact generation must be supported as a first-class action
+Users or admins must be able to trigger artifact generation from campaign context and BAR inputs.
+
+```ts
+type BarToArtifactTransformation = {
+  inputBarTypes: string[]
+  outputArtifactType: string
+  transformer: "strand" | "template" | "manual"
+}
+```
+
+Example:
+
+```ts
+{
+  inputBarTypes: ["insight", "story", "call_to_action"],
+  outputArtifactType: "social_post",
+  transformer: "strand"
+}
+```
+
+### FR5. Strand must remain infrastructure, not user-facing ontology
+The UI should expose actions such as:
+- Generate Post
+- Synthesize Campaign Story
+- Draft Invitation
+- Create Outreach Prompt
+
+It should not require users to know what Strand is.
+
+### FR6. Scene Atlas must be able to return a next move
+A Scene Atlas draw should return either:
+1. an existing bound BAR that is relevant to current campaign needs
+2. a prompt to generate a missing BAR type
+3. a recommended next move tied to wake up / clean up / grow up / show up
+
+### FR7. Minimal artifact generation UI must exist
+For v0, at least one campaign page must include:
+- a clear call to generate an artifact
+- a preview or text output
+- a copy action
+
+### FR8. The contribution gradient must be legible
+Campaign entry should clearly support at least three pathways:
+- donate money
+- contribute time / effort
+- explore / learn first
+
+---
+
+## Non-Functional Requirements
+
+### NFR1. Low cognitive overhead
+A normal contributor should be able to use the flow without understanding internal data types.
+
+### NFR2. Fast enough for momentum retention
+Artifact generation should feel responsive enough to preserve the sense of continuity after contribution.
+
+### NFR3. Auditable provenance
+Generated artifacts should retain traceability to source campaign context and source BARs.
+
+### NFR4. Backward-compatible enough for current BAR flows
+Existing generic BAR creation should continue to work while contextual typing is introduced incrementally.
+
+---
+
+## Proposed Data Model
+
+### BAR Context Extension
+
+```ts
+type Bar = {
+  id: string
+  title: string
+  body: string
+  tags: string[]
+  context?: BarContext
+  barType?: string
+}
+```
+
+### Campaign Requirement Snapshot
+
+```ts
+type CampaignRequirementSnapshot = {
+  campaignId: string
+  campaignType: string
+  presentBarTypes: string[]
+  missingBarTypes: string[]
+  generatableArtifacts: string[]
+  blockedArtifacts: {
+    artifactType: string
+    missingInputs: string[]
+  }[]
+}
+```
+
+### Generated Artifact Record
+
+```ts
+type GeneratedArtifact = {
+  id: string
+  campaignId: string
+  artifactType: string
+  sourceBarIds: string[]
+  generator: "strand" | "template" | "manual"
+  content: string
+  createdAt: string
+}
+```
+
+---
+
+## API Surface
+
+### Create BAR
+```http
+POST /api/bars/create
+```
+
+Expected behavior:
+- accepts BAR content and optional context
+- persists barType and context
+- returns created BAR
+
+### Get Campaign Output Requirements
+```http
+GET /api/campaigns/:id/required-outputs
+```
+
+Returns:
+- campaign type
+- present BAR types
+- missing BAR types
+- generatable artifacts
+- blocked artifacts
+
+### Generate Artifact
+```http
+POST /api/campaigns/:id/generate-artifact
+```
+
+Example request body:
+```json
+{
+  "artifactType": "social_post"
+}
+```
+
+Expected behavior:
+- gathers eligible BARs
+- determines whether requirements are met
+- invokes transformer
+- returns generated content and source provenance
+
+### Scene Atlas Draw
+```http
+POST /api/scene-atlas/draw
+```
+
+Example request body:
+```json
+{
+  "campaignId": "abc123",
+  "userId": "user_1"
+}
+```
+
+Expected behavior:
+- checks campaign needs
+- prefers returning useful next-step guidance
+- returns one of:
+  - bound BAR
+  - BAR creation prompt
+  - move recommendation
+
+---
+
+## UI / UX Notes
+
+### Campaign Landing View
+Must support three obvious pathways:
+1. Support financially
+2. Help with the work
+3. Explore what this is
+
+### Contribution Completion
+After a quest or cleanup flow, the system should:
+- acknowledge contribution
+- infer likely BAR type if possible
+- ask fewer, sharper questions
+
+### Artifact Generation
+A campaign steward or contributor with permission should be able to click:
+- Generate Post
+- Generate Invite
+- Generate Prompt
+
+V0 can simply output text inside a panel with:
+- copy button
+- provenance preview
+- regenerate button if available
+
+### Ontological Load Reduction
+Users should not need to think:
+- “What kind of BAR is this?”
+- “What JSON shape do I need?”
+- “Which system abstraction am I inside?”
+
+The app should infer as much as possible from context.
+
+---
+
+## Example Flow: Bruised Banana Raise Awareness
+
+1. User enters Bruised Banana Residency campaign
+2. User chooses “Help spread the word”
+3. User completes a short guided flow
+4. System generates BARs such as:
+   - insight
+   - message
+   - audience_target
+5. Campaign requirement endpoint now shows social post is generatable
+6. User clicks “Generate Post”
+7. System uses campaign context plus BAR inputs to produce copy
+8. User copies and posts it externally
+
+---
+
+## Example Flow: Scene Atlas for Stuck Steward
+
+1. Steward opens campaign and does not know next move
+2. Steward triggers Scene Atlas draw
+3. System checks campaign requirement gaps
+4. If missing `audience_target`, it prompts BAR creation for that type
+5. If enough context exists, it returns a bound BAR relevant to the campaign
+6. Steward follows the prompt and continues
+
+---
+
+## Implementation Phases
+
+### Phase 1: Contextual BAR Foundations
+- extend BAR model with context metadata
+- define starter barType taxonomy for campaign outputs
+- support campaign-aware BAR creation
+
+### Phase 2: Campaign Requirement Engine
+- implement requirement map by campaign type
+- compute requirement snapshot for campaign state
+- expose `GET /required-outputs`
+
+### Phase 3: Artifact Generation v0
+- implement one artifact type for one campaign type
+- support `Generate Post`
+- return copy-ready text
+
+### Phase 4: Scene Atlas Alignment
+- make Scene Atlas aware of campaign gaps
+- return bound BAR or prompted BAR creation
+
+### Phase 5: UX Polish
+- improve contribution gradient
+- tighten question prompts after quest completion
+- reduce typing and admin overhead
+
+---
+
+## Success Metrics
+
+### Product Success
+- a user can contribute to a campaign and generate a useful artifact in one session
+- a campaign steward can see what kinds of inputs are still missing
+- the Bruised Banana flow becomes legible enough to use in real outreach
+
+### Behavioral Success
+- reduced drop-off after quest completion
+- increased conversion from contribution to generated campaign output
+- increased reuse of generated outputs in actual campaign activity
+
+### Philosophical Success
+- the system preserves energetic continuity
+- contribution becomes visibly metabolized
+- campaign state feels alive rather than inert
+
+---
+
+## Risks
+
+### Risk 1: Overfitting ontology too early
+Mitigation:
+- start with a coarse barType taxonomy
+- preserve fallback generic BAR behavior
+
+### Risk 2: Artifact generation quality may be mediocre at first
+Mitigation:
+- start with one campaign type and one artifact type
+- allow template fallback if Strand output is weak
+
+### Risk 3: Too much invisible inference may confuse admins
+Mitigation:
+- provide light provenance and “why this was generated” views
+
+### Risk 4: Scope creep into full authoring overhaul
+Mitigation:
+- explicitly keep CYOA editor simplification out of v0 except where context capture is necessary
+
+---
+
+## Open Questions
+
+1. What is the minimum viable BAR type taxonomy for v0?
+2. Which artifact type should be implemented first:
+   - social_post
+   - donation_prompt
+   - volunteer_invite
+3. Should artifact generation be user-available, admin-only, or permissioned by role?
+4. How much campaign synthesis should happen automatically versus on button press?
+5. How should generated artifacts be stored, versioned, and optionally edited?
+6. What exact Scene Atlas trigger moments should be supported first?
+
+---
+
+## Recommended First Cut
+
+Build the smallest sharp version:
+- Bruised Banana Residency
+- Raise Awareness campaign subtype
+- Context-aware BAR generation
+- `GET /required-outputs`
+- `POST /generate-artifact`
+- one `social_post` generator
+- copy-ready UI
+
+That is enough to create one clean proof that:
+- contribution becomes BAR
+- BAR becomes artifact
+- artifact amplifies campaign
+- the system is doing more than a physical notecard ever could
+
+---
+
+## Appendix: Positioning Note
+
+This feature is not the full vision of campaign intelligence, story synthesis, or ergonomic CYOA authoring.
+
+It is the first sharp telescope image.
+
+The aim is not to solve the whole cosmos.
+The aim is to let one patch of sky come into focus.
