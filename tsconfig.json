@@ -37,6 +37,7 @@
     "**/*.mts"
   ],
   "exclude": [
+    "_deferred",
     "node_modules",
     "scripts",
     "src/scripts",
