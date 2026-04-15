@@ -42,7 +42,7 @@ export default async function AdminBookSectionsPage(props: { params: Promise<{ i
         </p>
       </div>
 
-      <BookSectionsClient bookId={id} bookTitle={book.title} initialSections={sections} loadError={'error' in res ? res.error : null} />
+      <BookSectionsClient bookId={id} bookTitle={book.title} initialSections={sections} loadError={'error' in res ? (res.error ?? null) : null} />
     </div>
   )
 }
