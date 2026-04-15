@@ -113,6 +113,28 @@ See [docs/DB_STRATEGY.md](DB_STRATEGY.md) for migrate vs push.
 
 ---
 
+## Schema Merge Protocol
+
+**Schema PRs go first. Code PRs go second. Never mix them.**
+
+When a branch introduces new Prisma models OR modifies relations between existing models:
+
+1. **Open a schema-only PR first.** Isolate only `prisma/schema.prisma` + any new migration files. No API routes, no UI, no lib code that depends on the new types.
+
+2. **Verify independently.** On a clean main checkout: `git checkout main && npx prisma validate && npm run db:generate && npm run check`. All must pass with zero errors.
+
+3. **Land the schema PR.** Merge before any code that depends on the new types.
+
+4. **Then open code PRs.** Code PRs that use new types rebase onto the updated main and compile cleanly.
+
+**Why this matters:** A branch that adds 5 new models and 20 files of code that uses those models will fail to build on main — because the models don't exist yet. If that PR is "almost ready" and sits open for weeks, it accrues merge conflicts against a moving main. This is what happened to `feature/rpg-handbook-gpt-pipeline` (PR #34): 32,808 additions, schema deleted 10 existing models, 5 months of conflicts. The fix was a full re-architecture.
+
+**The rule:** If `git diff main..yourbranch -- prisma/schema.prisma | grep -E "^+model|^-model"` shows any output — you have a schema PR.
+
+**Deferred files pattern:** When porting code that depends on un-landed schema, put it in `_deferred/`. Add `_deferred` to `tsconfig.json exclude`. Move files back one at a time, each verified clean. Track deferred items in the backlog.
+
+---
+
 ## 5. Verification — run these before you start coding
 
 Run each command and fix any failure before proceeding.
