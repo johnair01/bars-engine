@@ -1,75 +1,71 @@
 import Link from 'next/link'
-import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
+import { getCurrentPlayer } from '@/lib/auth'
+import { db } from '@/lib/db'
+import { Experiment5PlayShell } from '@/components/play/Experiment5PlayShell'
 
-/**
- * @page /play
- * @entity SYSTEM
- * @description Short guided creative loop - Charge → Scene Atlas → I Ching (three-step creative practice)
- * @permissions authenticated
- * @relationships links to /capture, /creator-scene-deck, /iching
- * @energyCost 0 (creative practice hub)
- * @dimensions WHO:playerId, WHAT:SYSTEM, WHERE:creative_loop, ENERGY:creative, PERSONAL_THROUGHPUT:create+wake_up
- * @example /play
- * @agentDiscoverable false
- */
+const NATIONS = ['argyra', 'lamenth', 'meridia', 'pyrakanth', 'virelune'] as const
+const SAMPLE_ASSETS = [
+  'exp3_farm_carrot.png',
+  'exp3_farm_watering_can.png',
+  'exp3_farm_wooden_crate.png',
+  'exp3_forest_red_mushroom.png',
+  'exp3_forest_sapling.png',
+  'exp3_forest_stone_ore.png',
+] as const
+
+type RecentBar = {
+  id: string
+  title: string
+  description: string
+  type: string
+  createdAt: string
+}
+
 export default async function PlayPage() {
   const player = await getCurrentPlayer()
-  if (!player) {
-    redirect('/conclave/guided')
-  }
+  if (!player) redirect('/conclave/guided')
+
+  const recentBarsRaw = await db.customBar.findMany({
+    where: { creatorId: player.id },
+    orderBy: { createdAt: 'desc' },
+    take: 6,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      type: true,
+      createdAt: true,
+    },
+  })
+
+  const recentBars: RecentBar[] = recentBarsRaw.map((row) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    createdAt: row.createdAt.toISOString(),
+  }))
 
   return (
-    <div className="min-h-screen bg-black text-zinc-200 font-sans p-6 sm:p-10 max-w-lg mx-auto space-y-8">
-      <header className="space-y-2">
-        <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300">
-          ← Dashboard
-        </Link>
-        <h1 className="text-2xl font-bold text-white">Try the loop</h1>
-        <p className="text-sm text-zinc-400">
-          Three stops: name a charge, answer one Scene Atlas cell, cast for the collective field.
-        </p>
-        <p className="text-xs text-zinc-600 pt-1">
-          Already living in the play hub?{' '}
-          <Link href="/adventures" className="text-amber-400/90 hover:text-amber-300 font-medium">
-            Open Play (journeys &amp; adventures) →
+    <div className="min-h-screen bg-black text-zinc-100 p-6 sm:p-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <header className="space-y-3">
+          <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300">
+            ← Dashboard
           </Link>
-        </p>
-      </header>
-
-      <ol className="space-y-4 list-decimal list-inside text-sm">
-        <li className="marker:text-rose-400">
-          <span className="font-medium text-zinc-200">Charge</span>
-          <p className="text-zinc-500 mt-1 ml-6 text-[13px]">Capture what&apos;s live — the same voltage you&apos;ll metabolize elsewhere.</p>
-          <Link
-            href="/capture"
-            className="inline-block mt-2 ml-6 text-rose-400 hover:text-rose-300 text-sm font-medium"
-          >
-            Open Capture →
-          </Link>
-        </li>
-        <li className="marker:text-emerald-400">
-          <span className="font-medium text-zinc-200">{SCENE_ATLAS_DISPLAY_NAME}</span>
-          <p className="text-zinc-500 mt-1 ml-6 text-[13px]">{SCENE_ATLAS_TAGLINE}</p>
-          <Link
-            href="/creator-scene-deck"
-            className="inline-block mt-2 ml-6 text-emerald-400 hover:text-emerald-300 text-sm font-medium"
-          >
-            Open deck →
-          </Link>
-        </li>
-        <li className="marker:text-amber-400">
-          <span className="font-medium text-zinc-200">I Ching</span>
-          <p className="text-zinc-500 mt-1 ml-6 text-[13px]">Collective reading — different container, shared pattern.</p>
-          <Link
-            href="/iching"
-            className="inline-block mt-2 ml-6 text-amber-400 hover:text-amber-300 text-sm font-medium"
-          >
-            Cast →
-          </Link>
-        </li>
-      </ol>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Experiment 5: Play Shell</h1>
+          <p className="text-sm text-zinc-400 max-w-3xl">
+            Vertical slice: nation-skinned assets (Experiment 4), farm/forest scene shell, and BAR hub adapter calls for quest proposals.
+          </p>
+        </header>
+        <Experiment5PlayShell
+          playerId={player.id}
+          nations={[...NATIONS]}
+          sampleAssets={[...SAMPLE_ASSETS]}
+          recentBars={recentBars}
+        />
+      </div>
     </div>
   )
 }

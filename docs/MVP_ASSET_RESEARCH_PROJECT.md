@@ -166,6 +166,13 @@ Interpretation:
   - export cleanliness
   - ability to connect to BARs adapter APIs
   - refactor effort to repo standards
+ - Status: In progress (vertical slice implemented)
+ - Output:
+   - `src/app/play/page.tsx`
+   - `src/components/play/Experiment5PlayShell.tsx`
+   - `src/app/api/play/resolve/route.ts`
+   - `src/app/api/play/sprites/[nation]/[asset]/route.ts`
+   - `docs/EXPERIMENT5_PLAY_SHELL.md`
 
 ## Decision Gate
 Proceed with full MVP production only if:
