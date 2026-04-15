@@ -1,0 +1,373 @@
+{
+  "timestamp_utc": "2026-04-15T18:29:45Z",
+  "input_dir": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized",
+  "assets_scanned": 20,
+  "thresholds": {
+    "alpha_max": 220,
+    "distance_threshold": 42.0,
+    "ratio_threshold": 0.15,
+    "bg_distance_threshold": 60.0,
+    "bg_ratio_threshold": 0.08
+  },
+  "flagged_count": 12,
+  "flagged_assets": [
+    "exp3_farm_carrot.png",
+    "exp3_farm_corn.png",
+    "exp3_farm_hay_bale.png",
+    "exp3_farm_hoe.png",
+    "exp3_farm_milk_bottle.png",
+    "exp3_farm_seed_bag.png",
+    "exp3_farm_tomato.png",
+    "exp3_farm_watering_can.png",
+    "exp3_farm_wheat_sheaf.png",
+    "exp3_farm_wooden_crate.png",
+    "exp3_forest_lantern.png",
+    "exp3_forest_sapling.png"
+  ],
+  "fix_mode": true,
+  "fix_dir": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized_dehalo_v3",
+  "fix_changes": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "changed_pixels": 175
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "changed_pixels": 173
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "changed_pixels": 183
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "changed_pixels": 195
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "changed_pixels": 100
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "changed_pixels": 181
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "changed_pixels": 230
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "changed_pixels": 167
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "changed_pixels": 224
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "changed_pixels": 4
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "changed_pixels": 0
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "changed_pixels": 49
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "changed_pixels": 64
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "changed_pixels": 16
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "changed_pixels": 76
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "changed_pixels": 73
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "changed_pixels": 0
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "changed_pixels": 46
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "changed_pixels": 150
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "changed_pixels": 29
+    }
+  ],
+  "results": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 236,
+      "suspicious_pixels": 147,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.6229,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.718,
+      "bg_distance_p05": 123.863,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 244,
+      "suspicious_pixels": 96,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.3934,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.448,
+      "bg_distance_p05": 166.367,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 206,
+      "suspicious_pixels": 152,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.7379,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 58.499,
+      "bg_distance_p05": 153.379,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 238,
+      "suspicious_pixels": 162,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.6807,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.702,
+      "bg_distance_p05": 164.618,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 114,
+      "suspicious_pixels": 86,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.7544,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.923,
+      "bg_distance_p05": 155.467,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 246,
+      "suspicious_pixels": 149,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.6057,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.845,
+      "bg_distance_p05": 167.911,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 316,
+      "suspicious_pixels": 142,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.4494,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.721,
+      "bg_distance_p05": 133.735,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 210,
+      "suspicious_pixels": 156,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.7429,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.795,
+      "bg_distance_p05": 155.119,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 282,
+      "suspicious_pixels": 176,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.6241,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.698,
+      "bg_distance_p05": 225.009,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 4,
+      "suspicious_pixels": 4,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 1.0,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 45.205,
+      "bg_distance_p05": 177.217,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 172,
+      "suspicious_pixels": 0,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 0.0,
+      "bg_distance_p05": 0.0,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 206,
+      "suspicious_pixels": 15,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0728,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 53.131,
+      "bg_distance_p05": 207.935,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 1221,
+      "suspicious_pixels": 44,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.036,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 37.422,
+      "bg_distance_p05": 233.48,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 20,
+      "suspicious_pixels": 12,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.6,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 59.038,
+      "bg_distance_p05": 208.713,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 1005,
+      "suspicious_pixels": 53,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0527,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 42.356,
+      "bg_distance_p05": 231.73,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 769,
+      "suspicious_pixels": 27,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0351,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 58.202,
+      "bg_distance_p05": 212.812,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 156,
+      "suspicious_pixels": 0,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 0.0,
+      "bg_distance_p05": 0.0,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 613,
+      "suspicious_pixels": 6,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0098,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 52.938,
+      "bg_distance_p05": 213.544,
+      "flag_halo": false
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 378,
+      "suspicious_pixels": 60,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.1587,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 53.694,
+      "bg_distance_p05": 208.235,
+      "flag_halo": true
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "mode": "RGBA",
+      "size": "64x64",
+      "edge_semialpha_pixels": 229,
+      "suspicious_pixels": 8,
+      "bg_suspicious_pixels": 0,
+      "halo_ratio": 0.0349,
+      "bg_halo_ratio": 0.0,
+      "distance_p95": 54.856,
+      "bg_distance_p05": 208.569,
+      "flag_halo": false
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "experiment": "Experiment 3 - AI Delta Test",
+  "timestamp_utc": "2026-04-15T18:15:13Z",
+  "total_assets": 20,
+  "accepted_assets": 20,
+  "accept_rate_percent": 100.0,
+  "generation_minutes_window": 9.26,
+  "cleanup_minutes": 0.56,
+  "cleanup_minutes_per_accepted": 0.028,
+  "gate": {
+    "accept_rate_target_percent": 60,
+    "cleanup_per_accepted_target_minutes": 10,
+    "accept_rate_pass": true,
+    "cleanup_pass": true,
+    "overall_pass": true
+  },
+  "raw_generation_issues": {
+    "jpeg_bitstream_in_png_extension_count": 20,
+    "note": "All raw outputs arrived as JPEG bitstreams despite .png extension; normalized outputs fix this."
+  },
+  "per_asset": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 1478,
+      "transparent_pixels": 2618
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 1413,
+      "transparent_pixels": 2683
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 2515,
+      "transparent_pixels": 1581
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 1092,
+      "transparent_pixels": 3004
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 1496,
+      "transparent_pixels": 2600
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 2501,
+      "transparent_pixels": 1595
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 2649,
+      "transparent_pixels": 1447
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 1790,
+      "transparent_pixels": 2306
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 2110,
+      "transparent_pixels": 1986
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3600,
+      "transparent_pixels": 496
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3562,
+      "transparent_pixels": 534
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3525,
+      "transparent_pixels": 571
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 2988,
+      "transparent_pixels": 1108
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3596,
+      "transparent_pixels": 500
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3098,
+      "transparent_pixels": 998
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3252,
+      "transparent_pixels": 844
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3600,
+      "transparent_pixels": 496
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3387,
+      "transparent_pixels": 709
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3490,
+      "transparent_pixels": 606
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "accepted": true,
+      "checks": {
+        "filename_prefix_ok": true,
+        "format_png": true,
+        "mode_rgba": true,
+        "size_64": true,
+        "has_opaque_pixels": true,
+        "has_transparent_pixels": true
+      },
+      "opaque_pixels": 3522,
+      "transparent_pixels": 574
+    }
+  ],
+  "raw_format_inspection": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_carrot.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_corn.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_hay_bale.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_hoe.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_milk_bottle.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_seed_bag.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_tomato.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_watering_can.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_wheat_sheaf.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_farm_wooden_crate.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_berry_branch.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_hand_axe.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_herb_bundle.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_lantern.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_log_bundle.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_pine_cone.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_red_mushroom.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_rope_coil.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_sapling.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "file_output": "/home/workspace/bars-engine/content/assets/experiments/exp3/raw/exp3_forest_stone_ore.png: JPEG image data, JFIF standard 1.01, resolution (DPI), density 300x300, segment length 16, baseline, precision 8, 1024x1024, components 3"
+    }
+  ]
+}

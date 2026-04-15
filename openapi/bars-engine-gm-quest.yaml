@@ -1,0 +1,435 @@
+openapi: 3.1.1
+info:
+  title: BARS Engine — GM Quest & Collective Context
+  description: |
+    Draft contract for savvy quest resolution, wave moves with player context, and collective campaign snapshot.
+    Implemented routes: `/api/game-master/move`, `/api/game-master/resolve-quest`, `/api/game-master/collective-context` (Bearer `BARS_API_KEY`). See `.specify/specs/bars-engine-game-master-move/spec.md`.
+
+    **World model:** Game Master *characters* (NPCs) issue quests; **artifacts** are the **completion prize** for those quests.
+    GM *agents* implement these APIs and system-level artifacts.
+
+    Auth: typically `Authorization: Bearer <BARS_API_KEY>` (align with BAR Forge); in-app routes may use session instead.
+  version: 0.2.0
+
+servers:
+  - url: https://bars-engine.vercel.app
+    description: Production (replace if needed)
+
+tags:
+  - name: GM_Move
+    description: Wave moves — per-face artifact-shaped outputs
+  - name: GM_Resolve
+    description: Which quest + which face presents + artifact prize
+  - name: GM_Collective
+    description: Campaign / instance collective state
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/game-master/move:
+    post:
+      operationId: gameMasterMove
+      summary: Apply wave move; optional player/collective context
+      tags:
+        - GM_Move
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameMasterMoveRequest"
+      responses:
+        "200":
+          description: Per-face artifacts and meta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameMasterMoveResponse"
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/game-master/resolve-quest:
+    post:
+      operationId: gameMasterResolveQuest
+      summary: Rank quest proposals with presenting NPC face and artifact completion prize
+      tags:
+        - GM_Resolve
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveQuestRequest"
+      responses:
+        "200":
+          description: Collective snapshot + ranked proposals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveQuestResponse"
+        "400":
+          description: Validation error
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Instance or player not found
+
+  /api/game-master/collective-context:
+    get:
+      operationId: gameMasterCollectiveContext
+      summary: Read-only collective campaign snapshot (Kotter, domains, hub state subset)
+      tags:
+        - GM_Collective
+      parameters:
+        - name: instanceId
+          in: query
+          schema:
+            type: string
+          description: Instance CUID (one of instanceId or campaignRef required)
+        - name: campaignRef
+          in: query
+          schema:
+            type: string
+          description: Campaign ref slug (resolves to instance when unique)
+      responses:
+        "200":
+          description: Collective context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectiveContext"
+        "400":
+          description: Missing query or ambiguous campaignRef
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Instance not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+  schemas:
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: string
+
+    GameMasterFace:
+      type: string
+      enum:
+        - shaman
+        - challenger
+        - regent
+        - architect
+        - diplomat
+        - sage
+
+    GmWaveMove:
+      type: string
+      enum:
+        - wake_up
+        - clean_up
+        - grow_up
+        - show_up
+
+    BarAnalysisInput:
+      type: object
+      properties:
+        type:
+          type: string
+        wavePhase:
+          type: string
+        polarity:
+          type: array
+          items:
+            type: string
+
+    PlayerQuestContext:
+      type: object
+      description: Grounds moves in player + campaign reality
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+        playerId:
+          type: string
+        nationKey:
+          type: string
+        archetypeKey:
+          type: string
+        charge:
+          type: object
+          properties:
+            text:
+              type: string
+            sourceBarId:
+              type: string
+        barRegistryIds:
+          type: array
+          items:
+            type: string
+        bars:
+          type: array
+          items:
+            type: object
+            properties:
+              bar:
+                type: string
+              analysis:
+                $ref: "#/components/schemas/BarAnalysisInput"
+
+    GameMasterMoveRequest:
+      type: object
+      required:
+        - bar
+        - analysis
+        - move
+        - gameMasters
+      properties:
+        bar:
+          type: string
+        analysis:
+          $ref: "#/components/schemas/BarAnalysisInput"
+        move:
+          $ref: "#/components/schemas/GmWaveMove"
+        gameMasters:
+          type: array
+          items:
+            $ref: "#/components/schemas/GameMasterFace"
+        options:
+          type: object
+          properties:
+            maxArtifacts:
+              type: integer
+              minimum: 0
+        context:
+          $ref: "#/components/schemas/PlayerQuestContext"
+
+    Artifact:
+      type: object
+      required:
+        - type
+        - title
+        - description
+        - instructions
+        - charge
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        charge:
+          type: string
+        riskLevel:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        domain:
+          type: string
+          enum:
+            - internal
+            - relational
+            - systemic
+        questId:
+          type: string
+          description: When this artifact is the prize for completing this quest
+        sourceFace:
+          $ref: "#/components/schemas/GameMasterFace"
+
+    GameMasterMoveResponse:
+      type: object
+      required:
+        - bar
+        - move
+        - artifacts
+        - meta
+      properties:
+        bar:
+          type: string
+        move:
+          type: string
+        artifacts:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Artifact"
+        meta:
+          type: object
+          properties:
+            axis:
+              type: object
+              properties:
+                communion:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+                agency:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+            patterns:
+              description: Optional wake-up pattern summary
+              type: object
+              additionalProperties: true
+
+    QuestProposal:
+      type: object
+      required:
+        - questId
+        - presentingFace
+        - artifactPrize
+      properties:
+        questId:
+          type: string
+        presentingFace:
+          $ref: "#/components/schemas/GameMasterFace"
+        artifactPrize:
+          $ref: "#/components/schemas/Artifact"
+        rationale:
+          type: array
+          items:
+            type: string
+        sceneHint:
+          type: string
+
+    ResolveQuestRequest:
+      type: object
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+        playerId:
+          type: string
+        charge:
+          type: object
+          properties:
+            text:
+              type: string
+            sourceBarId:
+              type: string
+        barRegistryIds:
+          type: array
+          items:
+            type: string
+        bars:
+          type: array
+          items:
+            type: object
+            properties:
+              bar:
+                type: string
+              analysis:
+                $ref: "#/components/schemas/BarAnalysisInput"
+        nationKey:
+          type: string
+        archetypeKey:
+          type: string
+        options:
+          type: object
+          properties:
+            maxProposals:
+              type: integer
+              minimum: 1
+              default: 3
+            preferFaces:
+              type: array
+              items:
+                $ref: "#/components/schemas/GameMasterFace"
+
+    ResolveQuestResponse:
+      type: object
+      required:
+        - collective
+        - player
+        - proposals
+        - meta
+      properties:
+        collective:
+          type: object
+          properties:
+            kotterStage:
+              type: integer
+            allyshipDomain:
+              type: string
+              nullable: true
+            campaignRef:
+              type: string
+              nullable: true
+        player:
+          type: object
+          properties:
+            nationKey:
+              type: string
+              nullable: true
+            archetypeKey:
+              type: string
+              nullable: true
+        proposals:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestProposal"
+        meta:
+          type: object
+          properties:
+            axis:
+              type: object
+              properties:
+                communion:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+                agency:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/GameMasterFace"
+
+    CollectiveContext:
+      type: object
+      properties:
+        instanceId:
+          type: string
+        campaignRef:
+          type: string
+          nullable: true
+        kotterStage:
+          type: integer
+        allyshipDomain:
+          type: string
+          nullable: true
+        primaryCampaignDomain:
+          type: string
+          nullable: true
+        campaignHubState:
+          description: JSON — hub / spoke state when exposed for caller
+          type: object
+          additionalProperties: true
+        narrativeKernel:
+          type: string
+          nullable: true

@@ -1,0 +1,110 @@
+{
+  "experiment": "experiment-2-asset-stack-candidates",
+  "version": "v0",
+  "constraints": {
+    "budget_cap_usd": 1000,
+    "mvp": {
+      "nations": 5,
+      "classes": 8,
+      "zones": ["farm", "forest"],
+      "focus": "CYOA-first with modular 16-bit style assets"
+    }
+  },
+  "stacks": [
+    {
+      "id": "stack-open-cc0-kenney",
+      "name": "Open Stack A (CC0/Kenney)",
+      "cost_usd_min": 0,
+      "sources": [
+        "https://kenney.nl/assets/roguelike-rpg-pack",
+        "https://kenney.nl/assets/monochrome-rpg",
+        "https://kenney.nl/support"
+      ],
+      "license_model": "CC0",
+      "attribution_required": false,
+      "coverage_score_1_to_5": {
+        "farm_forest": 3,
+        "character_classes": 3,
+        "customization": 3,
+        "ui": 5,
+        "style_consistency": 4,
+        "integration_speed": 4,
+        "legal_simplicity": 5
+      },
+      "notes": [
+        "Best legal simplicity and budget safety.",
+        "Farm-specific flavor may require AI or manual deltas."
+      ]
+    },
+    {
+      "id": "stack-open-lpc-copyleft",
+      "name": "Open Stack B (LPC Farming + Base)",
+      "cost_usd_min": 0,
+      "sources": [
+        "https://opengameart.org/content/lpc-farming-tilesets-magic-animations-and-ui-elements",
+        "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles"
+      ],
+      "license_model": "CC-BY-SA-3.0 or GPL-3.0",
+      "attribution_required": true,
+      "coverage_score_1_to_5": {
+        "farm_forest": 5,
+        "character_classes": 4,
+        "customization": 4,
+        "ui": 4,
+        "style_consistency": 4,
+        "integration_speed": 3,
+        "legal_simplicity": 2
+      },
+      "notes": [
+        "Excellent farm/forest relevance for zero dollars.",
+        "Copyleft and attribution compliance needs strict process."
+      ]
+    },
+    {
+      "id": "stack-paid-micro-minifantasy",
+      "name": "Paid Fallback C (Minifantasy + Kenney UI)",
+      "cost_usd_min": 13.97,
+      "sources": [
+        "https://krishna-palacio.itch.io/minifantasy-farm",
+        "https://krishna-palacio.itch.io/minifantasy-silent-swamp",
+        "https://cupnooble.itch.io/sprout-lands-asset-pack",
+        "https://kenney.nl/assets/roguelike-rpg-pack"
+      ],
+      "license_model": "Commercial use allowed by pack terms + CC0 for Kenney UI fillers",
+      "attribution_required": true,
+      "coverage_score_1_to_5": {
+        "farm_forest": 5,
+        "character_classes": 3,
+        "customization": 3,
+        "ui": 4,
+        "style_consistency": 5,
+        "integration_speed": 5,
+        "legal_simplicity": 4
+      },
+      "notes": [
+        "Fastest route to coherent farm/forest MVP.",
+        "Minimal cash spend while preserving commercial path."
+      ]
+    }
+  ],
+  "recommendation": {
+    "primary": "stack-paid-micro-minifantasy",
+    "secondary": "stack-open-cc0-kenney",
+    "avoid_for_mvp_unless_oss_copyleft_is_intentional": "stack-open-lpc-copyleft",
+    "rationale": [
+      "Meets farm+forest needs with the least integration effort.",
+      "Keeps spend far below $1000 and still allows commercial release flow.",
+      "Use Kenney CC0 as filler for UI/icons and missing utility props."
+    ]
+  },
+  "self_reported_ai_observations": [
+    {
+      "claim": "Teams report AI can accelerate ideation but still requires cleanup to become game-ready.",
+      "confidence": "medium",
+      "sources": [
+        "https://www.reddit.com/r/aigamedev/comments/1qxt37v/how_are_you_making_art_assets/",
+        "https://www.reddit.com/r/GameDevelopment/comments/1lb4tqt/thoughts_on_using_ai_for_generating_sprites_sheets/"
+      ]
+    }
+  ]
+}

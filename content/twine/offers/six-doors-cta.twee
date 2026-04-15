@@ -1,0 +1,153 @@
+:: StoryTitle
+Six Doors CTA
+
+:: StoryData
+{
+  "ifid": "C8CF714C-E965-4A3D-B9CF-EC6F757B7F20",
+  "format": "SugarCube",
+  "format-version": "2.36.1",
+  "start": "Threshold"
+}
+
+:: Threshold [cluster1 passage]
+Choose the kind of change you are ready for.
+
+Your next move runs the core loop: Wake Up -> Clean Up -> Grow Up -> Show Up.
+
+[[Shaman — The Door of Attunement|Face_Shaman]]
+[[Challenger — The Door of Fire|Face_Challenger]]
+[[Regent — The Door of Stewardship|Face_Regent]]
+[[Architect — The Door of Design|Face_Architect]]
+[[Diplomat — The Door of Accord|Face_Diplomat]]
+[[Sage — The Door of Integration|Face_Sage]]
+
+:: Face_Shaman [cluster2 choice emits:face_selected]
+[TOKEN] SET face=shaman
+When the room is noise, this door sharpens your ability to sense the currents and respond in rhythm.
+
+- Wake Up (Signal): Notice the current in the room and in your body before the story forms.
+- Clean Up (Meaning): Separate real signal from projection, panic, and old pattern.
+- Grow Up (Action): Practice attunement under pressure so sensing becomes reliable, not lucky.
+- Show Up (Consequence): Respond in rhythm and shift the field without forcing it.
+
+[[Enter Shaman|CTA_Shaman]]
+[[Choose another door|Threshold]]
+
+:: Face_Challenger [cluster2 choice emits:face_selected]
+[TOKEN] SET face=challenger
+When truth is trapped behind politeness, this door cuts a path.
+
+- Wake Up (Signal): Name the truth everyone is stepping around.
+- Clean Up (Meaning): Burn off politeness theater and false consensus.
+- Grow Up (Action): Make the hard call with precision, not reactivity.
+- Show Up (Consequence): Create movement where the system was stalled.
+
+[[Enter Challenger|CTA_Challenger]]
+[[Choose another door|Threshold]]
+
+:: Face_Regent [cluster2 choice emits:face_selected]
+[TOKEN] SET face=regent
+When everything depends on heroes, this door builds legacy that holds.
+
+- Wake Up (Signal): See where heroics are masking structural fragility.
+- Clean Up (Meaning): Clarify roles, boundaries, and responsibility lines.
+- Grow Up (Action): Build cadence, governance, and continuity practices.
+- Show Up (Consequence): Trust holds even when pressure spikes.
+
+[[Enter Regent|CTA_Regent]]
+[[Choose another door|Threshold]]
+
+:: Face_Architect [cluster2 choice emits:face_selected]
+[TOKEN] SET face=architect
+When good intentions keep dying in execution, this door builds the engine.
+
+- Wake Up (Signal): Identify where intention breaks down in execution.
+- Clean Up (Meaning): Remove ambiguity from flows, decisions, and ownership.
+- Grow Up (Action): Install a repeatable engine: signal to action to feedback.
+- Show Up (Consequence): Better outcomes happen by design, not hero effort.
+
+[[Enter Architect|CTA_Architect]]
+[[Choose another door|Threshold]]
+
+:: Face_Diplomat [cluster2 choice emits:face_selected]
+[TOKEN] SET face=diplomat
+When conflict is real and retreat is tempting, this door turns fracture into workable relationship.
+
+- Wake Up (Signal): Surface the unmet needs under the conflict.
+- Clean Up (Meaning): Untangle accusation from impact, story from stake.
+- Grow Up (Action): Build terms for contact, repair, and coordinated next moves.
+- Show Up (Consequence): Fracture becomes workable relationship and forward motion.
+
+[[Enter Diplomat|CTA_Diplomat]]
+[[Choose another door|Threshold]]
+
+:: Face_Sage [cluster2 choice emits:face_selected]
+[TOKEN] SET face=sage
+When you've outgrown your old maps, this door reveals the level you skipped.
+
+- Wake Up (Signal): See the repeating ceiling across your work and leadership.
+- Clean Up (Meaning): Locate the skipped developmental level driving the pattern.
+- Grow Up (Action): Integrate the missing capacity into your operating practice.
+- Show Up (Consequence): You lead with range, coherence, and less shadow drag.
+
+[[Enter Sage|CTA_Sage]]
+[[Choose another door|Threshold]]
+
+:: CTA_Shaman [cluster3 cta]
+You chose Shaman.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: CTA_Challenger [cluster3 cta]
+You chose Challenger.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: CTA_Regent [cluster3 cta]
+You chose Regent.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: CTA_Architect [cluster3 cta]
+You chose Architect.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: CTA_Diplomat [cluster3 cta]
+You chose Diplomat.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: CTA_Sage [cluster3 cta]
+You chose Sage.
+
+If this is your door, book a 20-minute fit call and tell me why this path resonated.
+
+[[Book your fit call|Book_Call]]
+[[Choose another door|Threshold]]
+
+:: Book_Call [cluster4 action]
+You're at the threshold.
+
+For now, replace this passage with your actual booking link handoff.
+
+Suggested next step:
+- route to your calendar URL with face prefilled as a query param
+- example: /book?face=$face
+
+[[Start over|Threshold]]

@@ -1,0 +1,3 @@
+# Backlog Prompt: Navbar Consolidation
+
+> Implement the Navbar Consolidation spec per [.specify/specs/navbar-consolidation/spec.md](../specs/navbar-consolidation/spec.md). Essential nav items (non-negotiable): HOME, BARS, MAP or EXPLORE. Design constraint: **What is the least amount that keeps essential game functions <6 clicks away from any screen a player is on?** Option A (recommended): 5 items — HOME, BARS, MAP, WALLET, Disconnect. Remove MARKET, MOVES, PLAY from nav; BARS provides path to Market and Create BAR; MAP provides path to four lobbies. Update `src/components/NavBar.tsx`. Run `npm run build` and `npm run check`.

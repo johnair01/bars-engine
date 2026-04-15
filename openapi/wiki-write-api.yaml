@@ -1,0 +1,117 @@
+openapi: 3.1.1
+info:
+  title: BARS Engine — Wiki content write API
+  description: |
+    Authenticated read/write for DB-backed wiki pages (Player’s Handbook deep chapters).
+    Set `WIKI_WRITE_API_KEY` on the server; use Bearer token or `X-Wiki-Write-Key`.
+    See docs/WIKI_WRITE_API.md.
+
+    Paths: use `/api/wiki/content?slug=handbook/analog-play` (slug must start with `handbook/`).
+  version: 1.0.0
+
+servers:
+  - url: https://bars-engine.vercel.app
+    description: Production (no trailing slash)
+
+security:
+  - wikiWriteAuth: []
+
+paths:
+  /api/wiki/content:
+    get:
+      operationId: getWikiContent
+      summary: Get wiki page Markdown
+      parameters:
+        - name: slug
+          in: query
+          required: true
+          description: e.g. handbook/analog-play
+          schema:
+            type: string
+        - name: draft
+          in: query
+          description: If 1, return draft/pending_review; default published only
+          schema:
+            type: string
+            enum:
+              - "0"
+              - "1"
+            default: "0"
+      responses:
+        "200":
+          description: Wiki page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wikiPage:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      slug:
+                        type: string
+                      bodyMarkdown:
+                        type: string
+                      status:
+                        type: string
+                      metadataJson:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found or slug not allowed
+        "503":
+          description: WIKI_WRITE_API_KEY not configured
+    put:
+      operationId: putWikiContent
+      summary: Upsert wiki page Markdown
+      parameters:
+        - name: slug
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - markdown
+              properties:
+                markdown:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - pending_review
+                    - published
+                  default: pending_review
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Saved
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+        "503":
+          description: WIKI_WRITE_API_KEY not configured
+
+components:
+  securitySchemes:
+    wikiWriteAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key

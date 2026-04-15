@@ -1,0 +1,429 @@
+{
+  "experiment": "exp3_ai_delta_test",
+  "generated_assets": 20,
+  "background_threshold": 46,
+  "normalization_seconds": 33.467,
+  "normalized_dir": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized",
+  "assets": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        265,
+        173,
+        790,
+        862
+      ],
+      "raw_opaque_px_estimate": 165769,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 1478,
+      "normalized_transparent_px": 2618,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_carrot.png"
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        305,
+        127,
+        718,
+        897
+      ],
+      "raw_opaque_px_estimate": 190575,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 1413,
+      "normalized_transparent_px": 2683,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_corn.png"
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        173,
+        152,
+        851,
+        872
+      ],
+      "raw_opaque_px_estimate": 338225,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 2515,
+      "normalized_transparent_px": 1581,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_hay_bale.png"
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        183,
+        162,
+        841,
+        882
+      ],
+      "raw_opaque_px_estimate": 125306,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 1092,
+      "normalized_transparent_px": 3004,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_hoe.png"
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        357,
+        162,
+        667,
+        862
+      ],
+      "raw_opaque_px_estimate": 185862,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 1496,
+      "normalized_transparent_px": 2600,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_milk_bottle.png"
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        234,
+        193,
+        790,
+        821
+      ],
+      "raw_opaque_px_estimate": 247863,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 2501,
+      "normalized_transparent_px": 1595,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_seed_bag.png"
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        193,
+        173,
+        841,
+        862
+      ],
+      "raw_opaque_px_estimate": 315129,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 2649,
+      "normalized_transparent_px": 1447,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_tomato.png"
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        142,
+        244,
+        944,
+        831
+      ],
+      "raw_opaque_px_estimate": 286865,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 1790,
+      "normalized_transparent_px": 2306,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_watering_can.png"
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        224,
+        173,
+        800,
+        851
+      ],
+      "raw_opaque_px_estimate": 237007,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 2110,
+      "normalized_transparent_px": 1986,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_wheat_sheaf.png"
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        101,
+        101,
+        923,
+        923
+      ],
+      "raw_opaque_px_estimate": 675260,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3600,
+      "normalized_transparent_px": 496,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_farm_wooden_crate.png"
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 620191,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3562,
+      "normalized_transparent_px": 534,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_berry_branch.png"
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 755537,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3525,
+      "normalized_transparent_px": 571,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_hand_axe.png"
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 610205,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 2988,
+      "normalized_transparent_px": 1108,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_herb_bundle.png"
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 1040408,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3596,
+      "normalized_transparent_px": 500,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_lantern.png"
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 696031,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3098,
+      "normalized_transparent_px": 998,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_log_bundle.png"
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 595569,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3252,
+      "normalized_transparent_px": 844,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_pine_cone.png"
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 629392,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3600,
+      "normalized_transparent_px": 496,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_red_mushroom.png"
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 731072,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3387,
+      "normalized_transparent_px": 709,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_rope_coil.png"
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 903195,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3490,
+      "normalized_transparent_px": 606,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_sapling.png"
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "raw_size": [
+        1024,
+        1024
+      ],
+      "raw_bbox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "raw_opaque_px_estimate": 737685,
+      "normalized_size": [
+        64,
+        64
+      ],
+      "normalized_opaque_px": 3522,
+      "normalized_transparent_px": 574,
+      "normalized_path": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized/exp3_forest_stone_ore.png"
+    }
+  ]
+}

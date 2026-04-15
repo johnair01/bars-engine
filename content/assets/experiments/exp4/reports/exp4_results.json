@@ -1,0 +1,1140 @@
+{
+  "experiment": "Experiment 4 - Nation Skinning Test",
+  "timestamp_utc": "2026-04-15T18:55:14Z",
+  "input_dir": "/home/workspace/bars-engine/content/assets/experiments/exp3/normalized",
+  "output_variants_dir": "/home/workspace/bars-engine/content/assets/experiments/exp4/variants",
+  "assets_base_count": 20,
+  "nations_count": 5,
+  "nations": [
+    "argyra",
+    "lamenth",
+    "meridia",
+    "pyrakanth",
+    "virelune"
+  ],
+  "timing": {
+    "total_seconds": 1.877,
+    "seconds_per_variant": 0.0188
+  },
+  "gate": {
+    "min_pairwise_delta_threshold": 18.0,
+    "target_differentiation_pass_rate": 0.9,
+    "max_seconds_per_variant": 2.0,
+    "coverage_pass": true,
+    "alpha_lockstep_pass": true,
+    "differentiation_pass_rate": 1.0,
+    "differentiation_pass": true,
+    "speed_pass": true,
+    "overall_pass": true
+  },
+  "counts": {
+    "expected_variants": 100,
+    "written_variants": 100,
+    "differentiation_pass_assets": 20,
+    "differentiation_fail_assets": 0,
+    "alpha_mismatches": 0
+  },
+  "alpha_mismatch_assets": [],
+  "per_asset": [
+    {
+      "asset": "exp3_farm_carrot.png",
+      "delta_from_base": {
+        "argyra": 72.08,
+        "lamenth": 88.601,
+        "meridia": 15.364,
+        "pyrakanth": 63.602,
+        "virelune": 152.614
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 53.634
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 63.948
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 89.069
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 128.512
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 80.021
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 124.739
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 91.05
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 66.276
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 144.274
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 182.966
+        }
+      ],
+      "min_pairwise_delta": 53.634,
+      "avg_pairwise_delta": 102.449,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_corn.png",
+      "delta_from_base": {
+        "argyra": 66.495,
+        "lamenth": 73.806,
+        "meridia": 14.249,
+        "pyrakanth": 61.994,
+        "virelune": 135.538
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 52.767
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 58.711
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 78.661
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 112.134
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 64.398
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 96.994
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 78.281
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 61.59
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 127.556
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 159.027
+        }
+      ],
+      "min_pairwise_delta": 52.767,
+      "avg_pairwise_delta": 89.012,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_hay_bale.png",
+      "delta_from_base": {
+        "argyra": 54.871,
+        "lamenth": 51.839,
+        "meridia": 12.896,
+        "pyrakanth": 61.279,
+        "virelune": 115.097
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 40.863
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 52.581
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 90.25
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 96.172
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 43.29
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 94.709
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 69.887
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 64.367
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 108.123
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 156.874
+        }
+      ],
+      "min_pairwise_delta": 40.863,
+      "avg_pairwise_delta": 81.712,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_hoe.png",
+      "delta_from_base": {
+        "argyra": 51.485,
+        "lamenth": 46.846,
+        "meridia": 12.98,
+        "pyrakanth": 38.344,
+        "virelune": 61.955
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 28.158
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 42.824
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 48.082
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 52.944
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 40.403
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 55.616
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 35.317
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 38.102
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 56.761
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 72.932
+        }
+      ],
+      "min_pairwise_delta": 28.158,
+      "avg_pairwise_delta": 47.114,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_milk_bottle.png",
+      "delta_from_base": {
+        "argyra": 32.224,
+        "lamenth": 42.88,
+        "meridia": 14.472,
+        "pyrakanth": 33.359,
+        "virelune": 50.515
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 43.79
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 38.839
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 40.556
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 47.208
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 36.516
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 47.489
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 37.342
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 33.048
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 48.807
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 64.254
+        }
+      ],
+      "min_pairwise_delta": 33.048,
+      "avg_pairwise_delta": 43.785,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_seed_bag.png",
+      "delta_from_base": {
+        "argyra": 54.782,
+        "lamenth": 50.407,
+        "meridia": 12.284,
+        "pyrakanth": 48.215,
+        "virelune": 89.958
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 26.535
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 48.313
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 71.049
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 75.473
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 41.577
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 77.094
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 56.767
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 50.807
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 81.768
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 121.635
+        }
+      ],
+      "min_pairwise_delta": 26.535,
+      "avg_pairwise_delta": 65.102,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_tomato.png",
+      "delta_from_base": {
+        "argyra": 73.449,
+        "lamenth": 84.397,
+        "meridia": 16.191,
+        "pyrakanth": 56.687,
+        "virelune": 127.776
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 44.005
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 61.889
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 57.679
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 107.139
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 73.709
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 89.723
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 75.071
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 54.679
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 119.125
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 142.595
+        }
+      ],
+      "min_pairwise_delta": 44.005,
+      "avg_pairwise_delta": 82.561,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_watering_can.png",
+      "delta_from_base": {
+        "argyra": 48.012,
+        "lamenth": 41.547,
+        "meridia": 11.459,
+        "pyrakanth": 35.278,
+        "virelune": 48.57
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 36.85
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 41.587
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 34.233
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 44.25
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 40.004
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 44.094
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 26.256
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 32.559
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 47.224
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 48.03
+        }
+      ],
+      "min_pairwise_delta": 26.256,
+      "avg_pairwise_delta": 39.509,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_wheat_sheaf.png",
+      "delta_from_base": {
+        "argyra": 63.231,
+        "lamenth": 62.434,
+        "meridia": 12.5,
+        "pyrakanth": 61.923,
+        "virelune": 132.364
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 41.246
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 58.272
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 96.476
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 110.496
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 52.522
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 106.138
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 84.769
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 65.549
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 123.401
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 174.478
+        }
+      ],
+      "min_pairwise_delta": 41.246,
+      "avg_pairwise_delta": 91.335,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_farm_wooden_crate.png",
+      "delta_from_base": {
+        "argyra": 58.364,
+        "lamenth": 58.11,
+        "meridia": 11.239,
+        "pyrakanth": 50.686,
+        "virelune": 107.676
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 27.761
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 52.141
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 85.9
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 90.632
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 49.024
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 95.757
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 71.746
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 56.055
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 98.462
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 147.381
+        }
+      ],
+      "min_pairwise_delta": 27.761,
+      "avg_pairwise_delta": 77.486,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_berry_branch.png",
+      "delta_from_base": {
+        "argyra": 17.788,
+        "lamenth": 38.082,
+        "meridia": 17.543,
+        "pyrakanth": 22.798,
+        "virelune": 22.683
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 45.485
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 31.569
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 29.323
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 26.946
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 27.109
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 38.304
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 31.078
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 27.726
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 20.248
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 37.04
+        }
+      ],
+      "min_pairwise_delta": 20.248,
+      "avg_pairwise_delta": 31.483,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_hand_axe.png",
+      "delta_from_base": {
+        "argyra": 26.525,
+        "lamenth": 20.584,
+        "meridia": 9.964,
+        "pyrakanth": 22.128,
+        "virelune": 19.995
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 33.273
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 29.733
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 29.491
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 24.996
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 20.13
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 30.857
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 23.773
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 27.509
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 18.417
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 36.594
+        }
+      ],
+      "min_pairwise_delta": 18.417,
+      "avg_pairwise_delta": 27.477,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_herb_bundle.png",
+      "delta_from_base": {
+        "argyra": 17.694,
+        "lamenth": 36.115,
+        "meridia": 17.752,
+        "pyrakanth": 26.318,
+        "virelune": 25.8
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 41.271
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 29.205
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 33.785
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 26.898
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 24.515
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 34.787
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 30.391
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 27.717
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 21.302
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 42.1
+        }
+      ],
+      "min_pairwise_delta": 21.302,
+      "avg_pairwise_delta": 31.197,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_lantern.png",
+      "delta_from_base": {
+        "argyra": 30.295,
+        "lamenth": 18.826,
+        "meridia": 9.076,
+        "pyrakanth": 24.921,
+        "virelune": 27.677
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 30.29
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 30.602
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 33.625
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 29.485
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 19.417
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 32.457
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 25.392
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 29.479
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 24.328
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 45.832
+        }
+      ],
+      "min_pairwise_delta": 19.417,
+      "avg_pairwise_delta": 30.091,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_log_bundle.png",
+      "delta_from_base": {
+        "argyra": 25.484,
+        "lamenth": 43.574,
+        "meridia": 21.699,
+        "pyrakanth": 36.625,
+        "virelune": 42.089
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 28.002
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 27.156
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 40.262
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 32.722
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 27.099
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 35.301
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 31.538
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 29.439
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 28.164
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 52.874
+        }
+      ],
+      "min_pairwise_delta": 27.099,
+      "avg_pairwise_delta": 33.256,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_pine_cone.png",
+      "delta_from_base": {
+        "argyra": 20.385,
+        "lamenth": 41.261,
+        "meridia": 17.476,
+        "pyrakanth": 28.793,
+        "virelune": 35.164
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 37.137
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 30.668
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 40.154
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 33.786
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 28.62
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 41.723
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 36.815
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 30.456
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 29.132
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 54.025
+        }
+      ],
+      "min_pairwise_delta": 28.62,
+      "avg_pairwise_delta": 36.252,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_red_mushroom.png",
+      "delta_from_base": {
+        "argyra": 29.321,
+        "lamenth": 44.908,
+        "meridia": 16.073,
+        "pyrakanth": 28.027,
+        "virelune": 46.124
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 45.387
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 40.115
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 34.616
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 46.536
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 35.79
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 47.712
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 44.383
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 33.996
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 43.52
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 62.59
+        }
+      ],
+      "min_pairwise_delta": 33.996,
+      "avg_pairwise_delta": 43.465,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_rope_coil.png",
+      "delta_from_base": {
+        "argyra": 29.846,
+        "lamenth": 44.029,
+        "meridia": 19.381,
+        "pyrakanth": 42.172,
+        "virelune": 56.398
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 30.045
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 31.92
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 53.165
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 45.501
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 29.48
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 48.992
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 39.984
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 37.37
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 44.12
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 76.028
+        }
+      ],
+      "min_pairwise_delta": 29.48,
+      "avg_pairwise_delta": 43.66,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_sapling.png",
+      "delta_from_base": {
+        "argyra": 24.752,
+        "lamenth": 24.099,
+        "meridia": 11.872,
+        "pyrakanth": 22.138,
+        "virelune": 20.252
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 34.297
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 29.996
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 29.339
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 25.15
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 21.026
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 32.482
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 24.72
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 28.095
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 18.776
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 37.632
+        }
+      ],
+      "min_pairwise_delta": 18.776,
+      "avg_pairwise_delta": 28.151,
+      "differentiation_pass": true
+    },
+    {
+      "asset": "exp3_forest_stone_ore.png",
+      "delta_from_base": {
+        "argyra": 24.822,
+        "lamenth": 28.744,
+        "meridia": 23.078,
+        "pyrakanth": 22.958,
+        "virelune": 28.156
+      },
+      "pairwise": [
+        {
+          "pair": "argyra__lamenth",
+          "mean_delta": 32.85
+        },
+        {
+          "pair": "argyra__meridia",
+          "mean_delta": 34.299
+        },
+        {
+          "pair": "argyra__pyrakanth",
+          "mean_delta": 29.623
+        },
+        {
+          "pair": "argyra__virelune",
+          "mean_delta": 26.67
+        },
+        {
+          "pair": "lamenth__meridia",
+          "mean_delta": 19.23
+        },
+        {
+          "pair": "lamenth__pyrakanth",
+          "mean_delta": 31.447
+        },
+        {
+          "pair": "lamenth__virelune",
+          "mean_delta": 21.599
+        },
+        {
+          "pair": "meridia__pyrakanth",
+          "mean_delta": 32.614
+        },
+        {
+          "pair": "meridia__virelune",
+          "mean_delta": 19.002
+        },
+        {
+          "pair": "pyrakanth__virelune",
+          "mean_delta": 40.157
+        }
+      ],
+      "min_pairwise_delta": 19.002,
+      "avg_pairwise_delta": 28.749,
+      "differentiation_pass": true
+    }
+  ]
+}
