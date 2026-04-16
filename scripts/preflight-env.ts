@@ -10,31 +10,24 @@
 
 import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
+import { withAccelerate } from '@prisma/extension-accelerate'
 import process from 'process'
+import { resolveDatabaseUrl } from '../src/lib/db-resolve'
 
-// Load .env.local first, then .env (Next.js order)
-config({ path: '.env.local' })
+// Match runtime diagnostics/load order used elsewhere in the repo.
 config({ path: '.env' })
+config({ path: '.env.local', override: true })
 
 async function checkEnv() {
     console.log('🔍 Running Conclave Preflight Checks...')
 
-    const required = [
-        'DATABASE_URL',
-    ]
-
-    let missing = false
-    for (const v of required) {
-        if (!process.env[v]) {
-            console.warn(`  ⚠️  Missing environment variable: ${v}`)
-            missing = true
-        } else {
-            console.log(`  ✓ ${v} is present`)
-        }
-    }
-
-    if (missing) {
+    const dbConfig = resolveDatabaseUrl()
+    if (!dbConfig) {
+        console.warn('  ⚠️  Missing database URL env var.')
+        console.warn('     Set one of: DATABASE_URL, POSTGRES_URL, PRISMA_DATABASE_URL, POSTGRES_PRISMA_URL')
         console.warn('\n  ! Some critical config is missing. The app may run in Guest Mode.')
+    } else {
+        console.log(`  ✓ Database URL resolved from ${dbConfig.source}${dbConfig.accelerate ? ' (Accelerate)' : ''}`)
     }
 
     // Optional: OPENAI_API_KEY for AI features (Book analysis, I Ching quest gen)
@@ -49,7 +42,15 @@ async function checkEnv() {
 
     // Attempt DB connection
     console.log('\n📡 Checking DB Connectivity...')
-    const prisma = new PrismaClient()
+    const baseClient = dbConfig
+      ? new PrismaClient({
+          datasources: { db: { url: dbConfig.url } },
+          log: [],
+        })
+      : new PrismaClient()
+    const prisma = dbConfig?.accelerate
+      ? (baseClient.$extends(withAccelerate()) as unknown as PrismaClient)
+      : baseClient
     try {
         await prisma.$connect()
         await prisma.$queryRaw`SELECT 1`
