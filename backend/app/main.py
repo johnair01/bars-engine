@@ -33,6 +33,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "bars-engine-api"}
+
+
 _default_origins = ["http://localhost:3000", "http://localhost:3001"]
 _cors_origins = settings.cors_origins.split(",") if settings.cors_origins else _default_origins
 
