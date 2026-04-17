@@ -107,7 +107,7 @@
     "build:type-check": "tsc --noEmit",
     "validate-manifest": "tsx scripts/validate-manifest.ts",
     "smoke": "tsx scripts/preflight-env.ts",
-    "smoke:db": "bun run scripts/smoke-db.ts",
+    "smoke:local": "bun run scripts/smoke-db.ts",
     "smoke:books-api": "bash scripts/smoke-books-context-api.sh",
     "report:npc321-merges": "tsx scripts/report-npc321-merges.ts",
     "diagnose:db": "tsx scripts/diagnose-db-connection.ts",
