@@ -2,10 +2,14 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "dockerfilePath": "Dockerfile",
+    "watchPatterns": [
+      "/backend/**",
+      "/packages/bars-core/**"
+    ]
   },
   "deploy": {
-    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}",
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   },
