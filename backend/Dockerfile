@@ -1,9 +1,15 @@
-FROM python:3.12-slim
+FROM python:3.12
 
 WORKDIR /app
 
+# Install uv for fast package management
+RUN pip install uv
+
+# Copy source
 COPY . .
-RUN pip install --no-cache-dir -r requirements.txt .
+
+# Install dependencies from pyproject.toml
+RUN uv pip install --system .
 
 EXPOSE 8080
 
