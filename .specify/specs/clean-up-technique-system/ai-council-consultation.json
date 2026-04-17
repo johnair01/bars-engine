@@ -1,0 +1,117 @@
+{
+  "technique": {
+    "id": "ai-council-consultation",
+    "name": "AI Council Consultation",
+    "slug": "ai-council-consultation",
+    "moveType": "grow-up",
+    "face": "sage",
+    "description": "Tap the Council as a thinking partner. Surface what's unresolved by letting six faces weigh in.",
+    "steps": [
+      {
+        "id": "council-start",
+        "text": "You pause at the threshold of the Council Chamber. Six seats wait in a circle. One is empty — that one is yours.\n\nSomething is moving in you that you haven't named yet. You don't need to know what it is to start.",
+        "choices": [
+          {
+            "text": "Enter the chamber",
+            "nextId": "council-seat"
+          }
+        ]
+      },
+      {
+        "id": "council-seat",
+        "text": "You take your seat. The six faces are already present — Shaman, Challenger, Regent, Architect, Diplomat, Sage. They don't speak until you're ready.\n\nYou name the situation in one sentence. Just one. The vaguer the better at this stage.",
+        "choices": [
+          {
+            "text": "Name what you're facing",
+            "nextId": "council-first-voice"
+          }
+        ],
+        "state": {
+          "active": true,
+          "phase": "naming"
+        }
+      },
+      {
+        "id": "council-first-voice",
+        "text": "A voice rises from one of the faces. You don't choose who speaks — the situation chooses.\n\nThe first voice names what it sees in your situation. It might disagree with how you framed it. It might go deeper. It might ask a question you hadn't considered.\n\nListen. Don't argue. Let it land.",
+        "choices": [
+          {
+            "text": "Let the next voice speak",
+            "nextId": "council-second-voice"
+          }
+        ],
+        "state": {
+          "phase": "listening",
+          "voices_heard": 1
+        }
+      },
+      {
+        "id": "council-second-voice",
+        "text": "A second voice rises. This one may contradict the first, or add a layer the first didn't see. Sometimes they agree and the agreement itself is information.\n\nYou notice which voices feel comfortable and which feel uncomfortable. Neither reaction is the answer.",
+        "choices": [
+          {
+            "text": "Let the next voice speak",
+            "nextId": "council-third-voice"
+          }
+        ],
+        "state": {
+          "phase": "listening",
+          "voices_heard": 2
+        }
+      },
+      {
+        "id": "council-third-voice",
+        "text": "Three voices have now spoken. You have a pattern forming — some faces are pulling in one direction, some in another. The disagreement is not a problem. It is the map of where you are unresolved.\n\nA fourth voice rises.",
+        "choices": [
+          {
+            "text": "Continue to the synthesis",
+            "nextId": "council-synthesis"
+          }
+        ],
+        "state": {
+          "phase": "synthesis_ready",
+          "voices_heard": 3
+        }
+      },
+      {
+        "id": "council-synthesis",
+        "text": "The Sage face speaks last. Not to summarize — to name what wants to emerge. What the Council collectively sees that you couldn't see alone.\n\nThis is not advice. It is observation from a position that includes all six faces simultaneously.\n\nWhat do you do with this?",
+        "choices": [
+          {
+            "text": "Take it in. Let it settle.",
+            "nextId": "council-close",
+            "effects": [
+              {
+                "type": "vibeulon_gain",
+                "amount": 3
+              }
+            ]
+          }
+        ],
+        "state": {
+          "phase": "synthesis",
+          "voices_heard": 6
+        }
+      },
+      {
+        "id": "council-close",
+        "text": "The Council Chamber remains. You can return whenever something is unresolved that the faces can weigh in on.\n\nSome questions resolve here. Some don't. Both are information.\n\nYou've used the Council. It remembers what happened.",
+        "choices": [
+          {
+            "text": "Return to the world",
+            "nextId": "council-exit"
+          }
+        ],
+        "state": {
+          "phase": "closed",
+          "complete": true
+        }
+      },
+      {
+        "id": "council-exit",
+        "text": "You leave the chamber. The six seats are still. But something has shifted in how you're seeing the situation.\n\nYou don't have an answer. You have a more precise question. That's usually what the Council gives.",
+        "choices": []
+      }
+    ]
+  }
+}

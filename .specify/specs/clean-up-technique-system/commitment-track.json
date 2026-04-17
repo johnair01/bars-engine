@@ -1,0 +1,132 @@
+{
+  "technique": {
+    "id": "commitment-track",
+    "name": "Commitment Track",
+    "slug": "commitment-track",
+    "moveType": "show-up",
+    "face": "challenger",
+    "description": "What did I say I'd do? Did I do it? The gap between intention and action is where the work lives.",
+    "steps": [
+      {
+        "id": "ct-enter",
+        "text": "You stand at the Commitment Track. This is not a guilt ritual. This is a proof check.\n\nYou made a commitment. You know you did. Now you're checking whether it became real.",
+        "choices": [
+          {
+            "text": "Find the commitment",
+            "nextId": "ct-find"
+          }
+        ]
+      },
+      {
+        "id": "ct-find",
+        "text": "You locate the commitment. It was specific. It had a time. It had a form.\n\nYou said you'd do the thing. Not think about the thing — do the thing.\n\nThe track is right in front of you.",
+        "choices": [
+          {
+            "text": "Walk the track",
+            "nextId": "ct-walk"
+          }
+        ],
+        "state": {
+          "phase": "finding"
+        }
+      },
+      {
+        "id": "ct-walk",
+        "text": "You walk the track. Each step is a day since you made the commitment.\n\nDay one: did you do it?\nDay two: did you do it?\nDay three: did you do it?\n\nYou don't skip days. You don't explain. You check.",
+        "choices": [
+          {
+            "text": "See what the track shows",
+            "nextId": "ct-result"
+          }
+        ],
+        "state": {
+          "phase": "walking"
+        }
+      },
+      {
+        "id": "ct-result",
+        "text": "The track shows you what happened.\n\nThree outcomes are possible:\nYou did it. The commitment became real.\nYou partially did it. Something happened, but not all of it.\nYou didn't do it. The commitment stayed in the future.",
+        "choices": [
+          {
+            "text": "Did the commitment complete?",
+            "nextId": "ct-complete"
+          },
+          {
+            "text": "Did it partially complete?",
+            "nextId": "ct-partial"
+          },
+          {
+            "text": "Did it not complete?",
+            "nextId": "ct-miss"
+          }
+        ],
+        "state": {
+          "phase": "result"
+        }
+      },
+      {
+        "id": "ct-complete",
+        "text": "You did it.\n\nThis matters. Not as a trophy — as proof. Proof that you can make a commitment and keep it. Proof that the gap between intention and action can close.\n\nThe track logs this. You earned it.",
+        "choices": [
+          {
+            "text": "Log the proof and close",
+            "nextId": "ct-close",
+            "effects": [
+              {
+                "type": "vibeulon_gain",
+                "amount": 3
+              }
+            ]
+          }
+        ],
+        "state": {
+          "verdict": "complete"
+        }
+      },
+      {
+        "id": "ct-partial",
+        "text": "Something happened. Not all of it — but something.\n\nThe partial completion is not failure. It is data. The question is: what got in the way? Was it capacity, priority, or resistance?\n\nYou name which one before you close.",
+        "choices": [
+          {
+            "text": "Name what got in the way",
+            "nextId": "ct-close"
+          }
+        ],
+        "state": {
+          "verdict": "partial"
+        }
+      },
+      {
+        "id": "ct-miss",
+        "text": "The commitment didn't complete.\n\nThis is not a moral judgment. It's a data point. The question is: did you lie, or did something else happen?\n\nIf you knew you weren't going to do it when you made the commitment — that's a different problem than running into an obstacle.\n\nYou name what happened.",
+        "choices": [
+          {
+            "text": "Name what happened",
+            "nextId": "ct-close"
+          }
+        ],
+        "state": {
+          "verdict": "missed"
+        }
+      },
+      {
+        "id": "ct-close",
+        "text": "The Commitment Track closes. The record is in the system.\n\nThe next commitment you make will be shaped by what you learned here. That's the point — not punishment, not celebration. Learning.\n\nYou showed up. That's the minimum. You did the work. That's the standard.",
+        "choices": [
+          {
+            "text": "Return to the world",
+            "nextId": "ct-exit"
+          }
+        ],
+        "state": {
+          "complete": true
+        }
+      },
+      {
+        "id": "ct-exit",
+        "text": "You leave the Commitment Track. The next commitment is coming — it always is.\n\nThe track doesn't lie. It shows what you did and didn't do. That's exactly what you need.",
+        "choices": []
+      }
+    ]
+  }
+}

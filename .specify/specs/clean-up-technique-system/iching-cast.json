@@ -1,0 +1,125 @@
+{
+  "technique": {
+    "id": "iching-cast",
+    "name": "I Ching Cast",
+    "slug": "iching-cast",
+    "moveType": "grow-up",
+    "face": "sage",
+    "description": "Use hexagrams to surface what the pattern wants to become. Cast, read, integrate.",
+    "steps": [
+      {
+        "id": "iching-enter",
+        "text": "You stand at the I Ching altar. Three coins rest in your palm. You feel the question before you name it — but naming it is part of the process.\n\nThe coins are cool. You breathe.",
+        "choices": [
+          {
+            "text": "Hold the question",
+            "nextId": "iching-cast"
+          }
+        ]
+      },
+      {
+        "id": "iching-cast",
+        "text": "You drop the coins. They scatter across the altar cloth. You read the lines as they fall — not to predict, but to see what shape your question is taking in this moment.\n\nSix drops. Six lines. A hexagram forms.\n\nThe hexagram is not the answer. It is the mirror.",
+        "choices": [
+          {
+            "text": "Read the hexagram",
+            "nextId": "iching-read"
+          },
+          {
+            "text": "Check what face this hexagram is associated with",
+            "nextId": "iching-face-read"
+          }
+        ],
+        "effects": [
+          {
+            "type": "vibeulon_stake",
+            "amount": 1
+          }
+        ],
+        "state": {
+          "cast_complete": true
+        }
+      },
+      {
+        "id": "iching-face-read",
+        "text": "One of the six faces speaks to this hexagram. Which face is dominant tells you where the energy is — what Gate you're in, what kind of work the moment is asking for.\n\nThis face doesn't have to agree with your question. It will tell you what the situation actually wants.",
+        "choices": [
+          {
+            "text": "Read the full hexagram meaning",
+            "nextId": "iching-read"
+          }
+        ],
+        "state": {
+          "phase": "face_read"
+        }
+      },
+      {
+        "id": "iching-read",
+        "text": "The hexagram speaks:\n\nTrigrams above and below. The relationship between them is the situation. Moving lines or still lines — change or stability.\n\nYou read the upper trigram first (what's happening externally), then the lower (what's happening internally), then the whole.\n\nThen you ask: what is this hexagram trying to become?",
+        "choices": [
+          {
+            "text": "Read the changing lines",
+            "nextId": "iching-changing"
+          },
+          {
+            "text": "Name what the hexagram is telling you",
+            "nextId": "iching-naming"
+          }
+        ],
+        "state": {
+          "phase": "interpretation"
+        }
+      },
+      {
+        "id": "iching-changing",
+        "text": "The changing lines show where the hexagram is in motion. Where it is becoming something else. The moving line is not a problem to fix — it is the place where transformation is already happening.\n\nYou notice which line is moving. You notice what it is becoming.",
+        "choices": [
+          {
+            "text": "Name what the hexagram is telling you",
+            "nextId": "iching-naming"
+          }
+        ],
+        "state": {
+          "phase": "changing_lines"
+        }
+      },
+      {
+        "id": "iching-naming",
+        "text": "You speak the hexagram aloud. Or write it. Or hold it in silence — whatever form the moment needs.\n\nNaming is not explanation. Naming is giving shape to what was formless. The hexagram helps you find the shape faster than you would alone.",
+        "choices": [
+          {
+            "text": "Let the hexagram integrate",
+            "nextId": "iching-close",
+            "effects": [
+              {
+                "type": "vibeulon_gain",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "state": {
+          "phase": "naming"
+        }
+      },
+      {
+        "id": "iching-close",
+        "text": "The hexagram remains. It will keep speaking as you move through the day.\n\nYou cast the I Ching. It gave you a shape for what was moving. Now you carry that shape back into the world.\n\nThe altar is quiet. The coins are still.",
+        "choices": [
+          {
+            "text": "Return to the world",
+            "nextId": "iching-exit"
+          }
+        ],
+        "state": {
+          "complete": true
+        }
+      },
+      {
+        "id": "iching-exit",
+        "text": "You leave the altar. The hexagram stays with you as a question, not an answer.\n\nSometimes the next cast is the confirmation. Sometimes you don't need to cast again. Both are information.",
+        "choices": []
+      }
+    ]
+  }
+}

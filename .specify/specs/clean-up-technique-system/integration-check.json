@@ -1,0 +1,115 @@
+{
+  "technique": {
+    "id": "integration-check",
+    "name": "Integration Check",
+    "slug": "integration-check",
+    "moveType": "grow-up",
+    "face": "sage",
+    "description": "Did this actually metabolize? Check before and after. The only proof is changed behavior.",
+    "steps": [
+      {
+        "id": "check-enter",
+        "text": "You sit with the Integration Check. This is not a feelings check. This is a proof check.\n\nYou came to this session with something. A decision made, a charge released, an insight earned. Now you're checking whether it moved through you or just passed through.",
+        "choices": [
+          {
+            "text": "Check the before state",
+            "nextId": "check-before"
+          }
+        ]
+      },
+      {
+        "id": "check-before",
+        "text": "Before this work, what was the pattern?\n\nName it concretely. Not the feeling — the behavior. What did you do, say, or avoid? When did it show up? Who did it affect?\n\nThe body keeps the score. The behavior is the scoreboard.",
+        "choices": [
+          {
+            "text": "Name the before behavior",
+            "nextId": "check-current"
+          }
+        ],
+        "state": {
+          "phase": "before_state"
+        }
+      },
+      {
+        "id": "check-current",
+        "text": "Now. What is the current behavior?\n\nBe specific. Did you do the thing you said you'd do? Did you say the thing you were afraid to say? Did you notice the charge and stay with it instead of discharging it onto someone else?\n\nThis is the only measure that matters.",
+        "choices": [
+          {
+            "text": "Compare before and current",
+            "nextId": "check-verdict"
+          }
+        ],
+        "state": {
+          "phase": "current_state"
+        }
+      },
+      {
+        "id": "check-verdict",
+        "text": "The verdict is not good or bad. It is true or false.\n\nIf the behavior changed: the work metabolized. Something moved through. You earned it.\n\nIf the behavior didn't change: the work didn't complete. The insight stayed cognitive. The body held its pattern.\n\nBoth are information. Neither is a failure.",
+        "choices": [
+          {
+            "text": "If something changed — log it",
+            "nextId": "check-changed"
+          },
+          {
+            "text": "If nothing changed — this is data, not failure",
+            "nextId": "check-unchanged"
+          }
+        ],
+        "state": {
+          "phase": "verdict"
+        }
+      },
+      {
+        "id": "check-changed",
+        "text": "Something changed. The work metabolized.\n\nYou name what shifted: which behavior, how much, in what direction. You log it not as a trophy but as a record. The record is what lets you see the pattern over time.\n\nYou earned this. The changed behavior is the proof.",
+        "choices": [
+          {
+            "text": "Close the check",
+            "nextId": "check-close",
+            "effects": [
+              {
+                "type": "vibeulon_gain",
+                "amount": 3
+              }
+            ]
+          }
+        ],
+        "state": {
+          "verdict": "metabolized"
+        }
+      },
+      {
+        "id": "check-unchanged",
+        "text": "Nothing changed. The pattern held.\n\nThis is not a failure of the work — it is information about where the resistance is. The body chose its familiar pattern over the new learning. That choice is data.\n\nYou ask: where is the pattern still protective? What would happen if it let go?",
+        "choices": [
+          {
+            "text": "Name where the pattern is still protective",
+            "nextId": "check-close"
+          }
+        ],
+        "state": {
+          "verdict": "unchanged"
+        }
+      },
+      {
+        "id": "check-close",
+        "text": "The Integration Check closes. You know what the work did and didn't do.\n\nThis is the practice. Not the big transformation — the small, repeated proof that change is actually happening.\n\nThe record is in you. The system remembers too.",
+        "choices": [
+          {
+            "text": "Return to the world",
+            "nextId": "check-exit"
+          }
+        ],
+        "state": {
+          "complete": true
+        }
+      },
+      {
+        "id": "check-exit",
+        "text": "You leave the Integration Check. The next time you do this work, the before state will be more recent. The gap between sessions is where the integration happens — or doesn't.\n\nThe check doesn't lie. Neither do you, when you do it.",
+        "choices": []
+      }
+    ]
+  }
+}
