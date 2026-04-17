@@ -1,7 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/api/(?P<path>.*)", "destination": "/api/vercel_backend" }
-  ],
   "buildCommand": "cd backend && pip install -r requirements.txt .",
   "installCommand": "cd backend && pip install -r requirements.txt ."
 }

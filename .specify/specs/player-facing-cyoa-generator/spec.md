@@ -46,6 +46,99 @@ Let **players** (not only admins) generate **personal or campaign-shaped CYOA** 
 
 ---
 
+
+
+---
+
+## Coach Identity Anchor (ITD Q3/Q4)
+
+**Source:** Integral Teal Design Research — Rectification of Names + Three Hats at Levels
+**Hexagram:** 14 (Great Possession) — Architect + Challenger active
+
+### Why this section exists
+
+Before M1 ships, this spec must name who is building and who benefits. The "player-author" framing is correct but incomplete. The first meaningful player-author is the coach themselves — specifically Wendell — whose identity is shifting from service provider to game designer + business person + service provider.
+
+### The rectified names for this spec
+
+| Old name | Rectified | What it enables |
+|---------|-----------|----------------|
+| "Build a CYOA tool" | Coach builds their own practice as a CYOA | The tool is downstream of the coach's identity work |
+| "Players generate CYOAs" | Coaches generate CYOAs from their own BARs first | Revenue path for the coach, not just infrastructure |
+| "Quality bar" | Coach-quality bar first, player-quality bar second | The coach's standard is the standard |
+| "Sovereignty" | Sovereignty for the coach-as-designer, then for players | Two distinct sovereignty contracts |
+
+### The three hats in this spec
+
+| Hat | How it shows up in PFCG |
+|-----|------------------------|
+| **Service provider** | The coach's BAR is the source; their practice is the content |
+| **Business person** | Generating a CYOA from their practice is how the coach earns dominion toward payment |
+| **Game designer** | The coach designs the structure that players can then use |
+
+### Sequencing rule
+
+The coach must generate their own practice CYOA (using M1-M2) before the player-facing generator ships to general players. This is not a marketing step — it is a structural requirement. The coach's CYOA is the proof of quality.
+
+---
+
+## Revenue Path Phase 0 — Coach Dominion (not Phase 3)
+
+**Source:** Integral Teal Design Research — Shadow Prediction
+**Hexagram:** 14 (Great Possession) — Challenger + Regent active
+
+### The problem with Phase 3 monetization
+
+The current spec treats monetization as Phase 3+. This is correct for player-generated CYOAs in a shared campaign. It is wrong for the coach earning from their own practice.
+
+### FR0 Coach Dominion Matrix
+
+| Action | Who | Dominion required | Revenue connected |
+|--------|-----|-----------------|-----------------|
+| Coach generates their own CYOA from their BAR | Coach | None (self-source) | Yes — coach's own offer |
+| Coach offers CYOA as paid product | Coach | None (self-owned) | Yes — direct |
+| Player generates CYOA from own BAR | Player | None (self-source) | No — infrastructure only |
+| Player submits CYOA to shared campaign | Player | Dominion earned in campaign | Revenue share or gate |
+| Steward approves player CYOA to campaign | Steward | Instance owner/steward role | Governance only |
+
+### The coach revenue path is not the platform revenue path
+
+These must be tracked separately in the dominion matrix. The coach earning from coaching is not the same as the platform taking a cut of player-generated CYOAs.
+
+---
+
+## Designer Shadow Checkpoint (ITD Q6)
+
+**Source:** Integral Teal Design Research — Designer Shadow Management
+**Hexagram:** 14 (Great Possession) — Architect + Challenger active
+
+### The unique shadow burden
+
+The coach builds a system to help people manage shadow — while using that system themselves. When the generator works, what does the coach's shadow look like?
+
+### Predictable shadow from success
+
+| Solution that works | Shadow that emerges |
+|--------------------|--------------------|
+| Coach generates a CYOA that converts | "My system is the answer" — subtle condescension toward non-converters |
+| Quality bar catches bad player CYOAs | "Players can't be trusted to generate quality" — projection of quality doubt |
+| Dominion gates create earned access | "People who haven't earned dominion don't deserve this" — moral superiority |
+| Generator is faster than manual authoring | "Why are coaches still doing this manually?" — subtle contempt for existing practice |
+
+### Pre-build checkpoint
+
+Before M1 ships, the coach must answer:
+
+1. **Am I attached to this working?** If yes — that's the shadow. Proceed anyway, but know what you're carrying.
+2. **Who benefits first?** Coach before players = business tool. Players before coach = service tool. Both valid — name which.
+3. **Somatic checkpoint:** Does the generator's current state feel open or closed? If closed, investigate before proceeding.
+
+### Council requirement
+
+This spec requires at least 2 people who give direct feedback on the generator's design without being invested in the coach's approval. Their role: challenge when quality bars become exclusionary, flag when dominion gates become gatekeeping, name when the generator feels like replacement for relationship.
+
+---
+
 ## API contracts (v0 sketch — refine before build)
 
 ### `createCyoaGeneratorDraft`

@@ -11,7 +11,7 @@ backups
 
 # Large optional dirs
 LibreSprite
-# backend  # REMOVED — needed for Vercel Python serverless backend
+# backend  # Included now — Vercel Python runtime for serverless backend
 docs/_build
 docs/source
 
