@@ -1,0 +1,69 @@
+{
+  "technique": {
+    "id": "tech-321-shadow-process",
+    "name": "3-2-1 Shadow Process",
+    "moveType": "clean-up",
+    "category": "shadow",
+    "description": "A structured felt-sense discharge for working with stuck emotional material. You witness, you move through, you arrive.",
+    "gateIndex": 0,
+    "isStarter": true,
+    "teachingTriggers": ["stuck", "heavy", "cant-shake", "carrying"],
+    "vibeulonReward": 50
+  },
+  "passages": [
+    {
+      "pid": "321-start",
+      "title": "The Weight",
+      "text": "Something has landed in your body. You don't know what it is yet — only that it's heavy, or sharp, or too warm. It arrived without being invited. The first move is to stop trying to fix it. Just stand in front of it.",
+      "choices": [
+        {"text": "I can feel it. Something is here.", "goto": "321-witness", "state": {"shadowPresent": true}}
+      ]
+    },
+    {
+      "pid": "321-witness",
+      "title": "The Witness",
+      "text": "What is the shape of this feeling? Where in your body does it live? Is it dense or diffuse? Is it yours alone, or did it come from somewhere else?\n\nYou don't need to answer in words. Just let your body describe it.",
+      "choices": [
+        {"text": "It's in my chest. Tight. Like a stone wrapped in cloth.", "goto": "321-3count"},
+        {"text": "It's in my throat. Something I swallowed and never digested.", "goto": "321-3count"},
+        {"text": "It's everywhere. I can't find the edges.", "goto": "321-3count"}
+      ]
+    },
+    {
+      "pid": "321-3count",
+      "title": "Three",
+      "text": "Let yourself feel it fully for three breaths.\n\nDon't analyze. Don't move toward resolution. Just let it be there — held, witnessed, without demand.\n\nThe first breath: you feel the weight.\nThe second breath: you feel the weight as yours.\nThe third breath: you feel the weight as information.",
+      "choices": [
+        {"text": "I felt it. All three.", "goto": "321-2count"}
+      ],
+      "state": {"shadowWitnessed": true}
+    },
+    {
+      "pid": "321-2count",
+      "title": "Two",
+      "text": "Now let yourself imagine the weight leaving.\n\nNot gone — you're not pretending it's gone. Just... moving. Making room for what comes next.\n\nThe second breath is permission. The third breath is movement.",
+      "choices": [
+        {"text": "I can feel it shifting.", "goto": "321-1count"}
+      ],
+      "state": {"shadowMoving": true}
+    },
+    {
+      "pid": "321-1count",
+      "title": "One",
+      "text": "And now — what arrives in the space it leaves?\n\nThis is not a trick question. There is no right answer. The space after the weight is the territory of this practice. You stay here for one breath.",
+      "choices": [
+        {"text": "Something quieter. Not happiness. Just... air.", "goto": "321-close"},
+        {"text": "Tiredness. The weight was being held.", "goto": "321-close"},
+        {"text": "I don't know yet. That's okay.", "goto": "321-close"}
+      ],
+      "state": {"shadowArriving": true}
+    },
+    {
+      "pid": "321-close",
+      "title": "After",
+      "text": "The weight has moved — or you have moved around it. Either counts.\n\nWhat stays with you is the note: you can be with difficult material without needing it to resolve before you act. You can carry what needs to be carried, and let the carrying change over time.",
+      "choices": [],
+      "state": {"shadowComplete": true, "timesUsed_increment": 1}
+    }
+  ]
+}

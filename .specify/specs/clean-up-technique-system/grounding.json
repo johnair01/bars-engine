@@ -1,0 +1,58 @@
+{
+  "technique": {
+    "id": "tech-grounding",
+    "name": "Grounding",
+    "moveType": "wake-up",
+    "category": "orientation",
+    "description": "Return to body, name what's present, establish your location in the system. The first call when you're not sure you can feel your own edges.",
+    "gateIndex": 0,
+    "isStarter": true,
+    "teachingTriggers": ["scattered", "dissociated", "uncertain", "unraveling"],
+    "vibeulonReward": 25
+  },
+  "passages": [
+    {
+      "pid": "ground-start",
+      "title": "The Request",
+      "text": "Where are you?\n\nNot in the sense of GPS coordinates. In the sense of: what's the room you're in right now? What are you sitting on? What does the air smell like? What's the temperature on your skin?\n\nBefore you answer with your mind, let your body answer first.",
+      "choices": [
+        {"text": "I'm here. I can feel it.", "goto": "ground-feet"}
+      ]
+    },
+    {
+      "pid": "ground-feet",
+      "title": "The Perimeter",
+      "text": "Feel your feet on the floor. Or your weight against the chair. Feel the surface — the one that's holding you up.\n\nYou're not trying to relax. You're not trying to feel good. You're trying to be located. To have edges. To be inside something that's solid enough to stand on.",
+      "choices": [
+        {"text": "I can feel the floor.", "goto": "ground-points"},
+        {"text": "I can't feel much. I know the floor is there.", "goto": "ground-points"}
+      ]
+    },
+    {
+      "pid": "ground-points",
+      "title": "The Points",
+      "text": "Find three points in your body that you can feel right now. Not three thoughts about your body. Three actual physical sensations.\n\nIt might be your hands on the keyboard. The weight of your head. The breath moving through your throat. The place where your legs meet the chair.\n\nThree is enough. Name them.",
+      "choices": [
+        {"text": "My hands. My breath. The back of my neck.", "goto": "ground-name"},
+        {"text": "My weight in the chair. The air on my face. My jaw.", "goto": "ground-name"}
+      ],
+      "state": {"bodyLocated": true}
+    },
+    {
+      "pid": "ground-name",
+      "title": "The Naming",
+      "text": "Name what is present. Not what should be present. What's actually here.\n\nYou might feel: tired, wired, numb, heavy, diffuse, present, anxious, flat, contracted, open. The naming is not a judgment — it's a description. Like reading a weather report for your interior.\n\nWhat's actually here?",
+      "choices": [
+        {"text": "[Naming what's present]", "goto": "ground-arrive"}
+      ],
+      "state": {"stateNamed": true}
+    },
+    {
+      "pid": "ground-arrive",
+      "title": "The Arrival",
+      "text": "You are located.\n\nYou are not necessarily calm. You are not necessarily okay. But you have edges, and you know where you are, and the room has a floor and walls and you're in it.\n\nThat's the whole practice. Grounding is not a cure — it's a rest. You were somewhere else. Now you're here.",
+      "choices": [],
+      "state": {"grounded": true, "timesUsed_increment": 1}
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "technique": {
+    "id": "tech-burn-offering",
+    "name": "Burn Offering",
+    "moveType": "clean-up",
+    "category": "shadow",
+    "description": "Conscious release through ritual consumption. You name what you're letting go, and you burn it — not to destroy it, but to change its relationship to you.",
+    "gateIndex": 1,
+    "isStarter": false,
+    "teachingTriggers": ["grief", "letting-go", "finished", "ending"],
+    "vibeulonReward": 50,
+    "requiresWitness": true
+  },
+  "passages": [
+    {
+      "pid": "burn-start",
+      "title": "The Thing to Be Released",
+      "text": "There is something you are carrying that you are ready to set down.\n\nIt might be a regret. A version of yourself. A belief that stopped being true. A person you loved who is gone. A future that closed. It might be small. It might be very large.\n\nThe practice is the same regardless: you name it, you give it a form, and you let fire take it.",
+      "choices": [
+        {"text": "I'm ready to name it.", "goto": "burn-name"}
+      ]
+    },
+    {
+      "pid": "burn-name",
+      "title": "The Naming",
+      "text": "Speak the thing aloud. One sentence. Be specific.\n\nThe naming is the first burning. When you say it out loud — when you make it language — you start to separate yourself from it. Before the fire, the declaration.",
+      "choices": [
+        {"text": "[Speaking it aloud]", "goto": "burn-form"}
+      ],
+      "state": {"shadowNamed": true}
+    },
+    {
+      "pid": "burn-form",
+      "title": "The Form",
+      "text": "Give it a shape. It doesn't need to be literal — it can be an object, a color, a sound, a texture. Something the fire can actually reach.\n\nIf it's a person, you might give them back their own weight. If it's a belief, you might give it the texture of stone. If it's a closed future, you might give it the shape of a door.",
+      "choices": [
+        {"text": "[Giving it a form]", "goto": "burn-witness"}
+      ],
+      "state": {"shadowFormed": true}
+    },
+    {
+      "pid": "burn-witness",
+      "title": "The Witness",
+      "text": "You do not do this alone.\n\nThe Burn Offering requires a witness — someone who holds the space while you burn. They do not speak unless you ask them to. They simply watch, and remember that this happened.\n\nThe witness does not judge what's being burned. They witness that you're burning something. That's the whole role.",
+      "choices": [
+        {"text": "I have a witness.", "goto": "burn-ignite"},
+        {"text": "I don't have a witness right now. I'll come back when I do.", "goto": "burn-defer"}
+      ]
+    },
+    {
+      "pid": "burn-defer",
+      "title": "Deferred",
+      "text": "This practice requires a witness. That's not a weakness — it's a design feature. Some fires need someone else in the room to make the burning real.\n\nCome back when there's someone who can hold space. The thing you're carrying will wait.",
+      "choices": [],
+      "state": {"shadowDeferred": true}
+    },
+    {
+      "pid": "burn-ignite",
+      "title": "The Fire",
+      "text": "You burn the form. Not the thing itself — you've already named it, so the thing is already partly outside you. What burns is the container. The weight of it. The charge.\n\nLet the burning be enough. You are not trying to forget. You are changing the relationship.",
+      "choices": [
+        {"text": "[The burning finishes]", "goto": "burn-close"}
+      ],
+      "state": {"shadowBurned": true, "timesUsed_increment": 1}
+    },
+    {
+      "pid": "burn-close",
+      "title": "What Remains",
+      "text": "The thing is not gone. It happened. The burn offering is not about erasure — it's about changing the weight.\n\nWhat remains is what the burning made room for. That differs by practice and person. Sometimes it's grief. Sometimes it's relief. Sometimes it's a strange lightness. Sometimes it's nothing visible at all.",
+      "choices": [],
+      "state": {"shadowComplete": true}
+    }
+  ]
+}
