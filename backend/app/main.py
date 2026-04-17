@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+# Railway deploy trigger — env vars updated
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
