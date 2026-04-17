@@ -1,5 +1,4 @@
 from collections.abc import AsyncGenerator
-# Railway deploy trigger — env vars updated
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -33,6 +32,12 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+# Railway liveness probe — always 200, no deps, no FastAPI routing
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
 
 
 @app.get("/")
