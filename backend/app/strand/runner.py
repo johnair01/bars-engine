@@ -73,8 +73,13 @@ async def run_strand(
     audit_trail: list[dict] = []
 
     # Single shared AsyncSession: pydantic-ai defaults to parallel tool calls, which asyncpg rejects
-    # ("another operation is in progress"). Strand runs must serialize tool execution.
-    with ToolManager.parallel_execution_mode("sequential"):
+    # (another operation is in progress). Strand runs must serialize tool execution.
+    with ToolManager.parallel_execution_mode(
+        # Use sequential mode to prevent asyncpg conflict (Render deploy 2026-04-17)
+        # import path: pydantic_ai_slim.pydantic_ai._tool_manager (v0.1.x)
+        # fallback: pydantic_ai._tool_manager (v0.84.x)
+        "sequential"
+    ):
         for sect in sect_sequence:
             if sect == "shaman":
                 # --- before advocacy ---
