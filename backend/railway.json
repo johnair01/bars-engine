@@ -10,6 +10,6 @@
     "restartPolicyMaxRetries": 3
   },
   "healthcheck": {
-    "path": "/api/health"
+    "path": "/healthz"
   }
 }
