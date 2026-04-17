@@ -1,16 +1,12 @@
-FROM python:3.12
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install uv for fast package management
-RUN pip install uv
-
-# Copy source
 COPY . .
 
-# Install dependencies from pyproject.toml
-RUN uv pip install --system .
+RUN pip install uv && \
+    uv pip install --system -r requirements.txt .
 
 EXPOSE 8080
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
