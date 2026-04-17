@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from pydantic_ai._tool_manager import ToolManager
+try:
+    from pydantic_ai_slim.pydantic_ai._tool_manager import ToolManager
+except ImportError:
+    from pydantic_ai._tool_manager import ToolManager
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents._deps import AgentDeps
