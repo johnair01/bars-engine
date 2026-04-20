@@ -1,5 +1,11 @@
 # bars-engine Working Memory
 
+## Production Backend Policy (Canonical)
+- Production Python backend host is **Render**.
+- Treat Railway as **legacy/rollback** only unless explicitly reactivated.
+- For any backend runtime/deploy/env change, validate Render impact first.
+- If a change mentions Railway config, mirror the same intent for Render (or document why not).
+
 ## Environment Bring-up (Current Canonical Flow)
 - Use Vercel-backed env by default on this machine.
 - Steps:

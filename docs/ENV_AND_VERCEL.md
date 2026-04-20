@@ -307,7 +307,7 @@ When production cannot log in or sign up (or admin credentials fail), run these 
 
 ## Python Backend (Game Master Agents)
 
-The Python FastAPI backend (`backend/`) runs the Game Master agents (Architect, Sage, Shaman, etc.). Vercel does not support Python serverless, so the backend is deployed separately (Railway, Render, or Fly.io).
+The Python FastAPI backend (`backend/`) runs the Game Master agents (Architect, Sage, Shaman, etc.). Vercel does not support Python serverless, so the backend is deployed separately (Render canonical; Railway legacy/rollback; or Fly.io).
 
 ### Running the backend locally
 
@@ -325,9 +325,9 @@ This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_
 
 | Env | Purpose | When to set |
 |-----|---------|-------------|
-| `NEXT_PUBLIC_BACKEND_URL` | URL of the deployed Python backend (e.g. `https://bars-backend.railway.app`) | Set for Production and Preview when backend is deployed. Omit or leave empty to use fallback (direct OpenAI or deterministic logic). |
+| `NEXT_PUBLIC_BACKEND_URL` | URL of the deployed Python backend (e.g. `https://bars-backend-5fhb.onrender.com`) | Set for Production and Preview when backend is deployed. Omit or leave empty to use fallback (direct OpenAI or deterministic logic). |
 
-### Backend (Railway / Render / Fly.io)
+### Backend (Render canonical / Railway legacy / Fly.io)
 
 Set these in the backend service's environment:
 

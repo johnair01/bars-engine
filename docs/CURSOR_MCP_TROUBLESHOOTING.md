@@ -27,7 +27,7 @@ When an MCP server shows **Error** and **Show output**, use this to fix it or to
 
 **Day-to-day dev** should hit **local** API (`http://127.0.0.1:8000`). The wrapper already ensures that process is up before spawning Python.
 
-The MCP **health probe** inside `app.mcp_server` uses `NEXT_PUBLIC_BACKEND_URL` or `BARS_BACKEND_URL` if set (else `127.0.0.1:8000`). If `.env.local` sets a **deployed** Railway URL for the Next app, MCP will probe **that** host for `strand_run` / similar gates — which is fine only when you intend it. **When in doubt, prioritize local:** unset those vars for MCP purposes or set `NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8000` on your machine. Canonical narrative: [AGENT_WORKFLOWS.md § Day-to-day dev vs deployed backend](./AGENT_WORKFLOWS.md#day-to-day-dev-vs-deployed-backend-precedence).
+The MCP **health probe** inside `app.mcp_server` uses `NEXT_PUBLIC_BACKEND_URL` or `BARS_BACKEND_URL` if set (else `127.0.0.1:8000`). If `.env.local` sets a **deployed** Render URL for the Next app, MCP will probe **that** host for `strand_run` / similar gates — which is fine only when you intend it. **When in doubt, prioritize local:** unset those vars for MCP purposes or set `NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8000` on your machine. Canonical narrative: [AGENT_WORKFLOWS.md § Day-to-day dev vs deployed backend](./AGENT_WORKFLOWS.md#day-to-day-dev-vs-deployed-backend-precedence).
 
 ### Fix: `Unexpected token 'd', "[dotenv@17."... is not valid JSON`
 
@@ -76,17 +76,17 @@ Cursor is often started from the Dock (GUI), which has a **minimal PATH** (no Ho
 
 ### Fix: `unknown url type` / host without `https://` (strand_run, sage_consult)
 
-If `.env.local` sets **`NEXT_PUBLIC_BACKEND_URL`** or **`BARS_BACKEND_URL`** to a **bare hostname** (e.g. `bars-xxx.up.railway.app` with no `https://`), the MCP health probe used to build `host/api/health`, which Python rejects.
+If `.env.local` sets **`NEXT_PUBLIC_BACKEND_URL`** or **`BARS_BACKEND_URL`** to a **bare hostname** (e.g. `bars-backend-5fhb.onrender.com` with no `https://`), the MCP health probe used to build `host/api/health`, which Python rejects.
 
 **Preferred:** use a full origin in `.env.local`:
 
 ```bash
-NEXT_PUBLIC_BACKEND_URL=https://bars-enginecore-production.up.railway.app
+NEXT_PUBLIC_BACKEND_URL=https://bars-backend-5fhb.onrender.com
 ```
 
 **Also fixed in code:** `backend/app/mcp_health.py` now prepends `https://` for bare public hosts and `http://` for `localhost` / `127.0.0.1`. Pull latest, **Reload Window**, retry the tool.
 
-If the primary URL still fails (Railway down, VPN, etc.) but **local** API is up, the MCP probe **automatically retries** `http://127.0.0.1:8000/api/health` once. Ensure `npm run dev:backend` is running.
+If the primary URL still fails (Render down, VPN, etc.) but **local** API is up, the MCP probe **automatically retries** `http://127.0.0.1:8000/api/health` once. Ensure `npm run dev:backend` is running.
 
 To **always** probe local for MCP (independent of Next’s public URL):
 

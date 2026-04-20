@@ -11,7 +11,7 @@ The easiest way to deploy is via **Vercel**.
 1.  Push code to GitHub.
 2.  Import project in Vercel.
 3.  **Environment Variables**:
-    - `DATABASE_URL`: Your production connection string (e.g., Vercel Postgres, Neon, or Railway).
+    - `DATABASE_URL`: Your production connection string (e.g., Vercel Postgres, Neon, or Render Postgres).
     - `OPENAI_API_KEY`: For the Story Clock AI generation.
 4.  **Build Command**: `npx prisma generate && next build` (Standard Next.js).
 5.  **Output Directory**: `.next`.
