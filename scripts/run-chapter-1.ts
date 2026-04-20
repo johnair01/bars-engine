@@ -1,6 +1,7 @@
 /**
  * run-chapter-1.ts — Plug Chapter 1 prose into the BAR asset pipeline
- * 
+ * and persist to the game DB.
+ *
  * Usage: cd bars-engine && npx tsx scripts/run-chapter-1.ts
  * Requires: ZO_CLIENT_IDENTITY_TOKEN env var (or ANTHROPIC_API_KEY / OPENAI_API_KEY)
  */
@@ -38,7 +39,7 @@ The deeper truth: Allyship is about what you are capable of becoming before you 
     console.log(`[Step 1] Using fallback prose (${prose.length} chars)`)
   }
 
-  // Step 2: Build BarSeed-like object with maturity='shared_or_acted'
+  // Step 2: Build BarSeed with maturity='shared_or_acted'
   const seed: BarSeedLike = {
     id: buildStructuredBarId('blessed', 'mtgoa', 1),
     title: 'Chapter 1: The Forest — Why Allyship Keeps Failing',
@@ -77,8 +78,33 @@ The deeper truth: Allyship is about what you are capable of becoming before you 
   console.log(`reward:   ${result.barDef.reward}`)
   console.log(`inputs:   ${result.barDef.inputs.map(i => `${i.label}(${i.type})`).join(', ')}`)
   console.log(`storyPath: ${result.barDef.storyPath ?? 'none'}`)
-  console.log(`twinelogic: ${(result.metadata.content as any)?.twineLogic ? 'present' : 'none'}`)
-  console.log(`========================================\n`)
+  const twineLogic = (result.metadata.content as any)?.twineLogic
+  console.log(`twineLogic: ${twineLogic ? 'present (' + JSON.stringify(twineLogic).length + ' chars)' : 'none'}`)
+  console.log(`========================================`)
+
+  // Step 4: Persist to game DB via API
+  console.log(`\n[Step 4] Persisting to game DB...`)
+  const apiBase = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  try {
+    const persistRes = await fetch(`${apiBase}/api/bar-asset/persist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ asset: result }),
+    })
+    if (!persistRes.ok) {
+      const errText = await persistRes.text()
+      console.log(`[Step 4] Persist failed (${persistRes.status}): ${errText}`)
+    } else {
+      const persisted = await persistRes.json()
+      console.log(`[Step 4] Persisted: id=${persisted.id} status=${persisted.status} storyPath=${persisted.storyPath ?? 'none'}`)
+      if (persisted.storyPath) {
+        console.log(`[Step 4] → Play at: ${apiBase}/bar/${persisted.id}/story`)
+      }
+    }
+  } catch (err) {
+    console.log(`[Step 4] Could not reach game API at ${apiBase} (is the dev server running?)`)
+  }
+  console.log(`\nDone.`)
 }
 
 main()

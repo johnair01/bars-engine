@@ -165,6 +165,45 @@ export async function translateBarSeedToAsset(
   }
 
   // Promote to integrated BarAsset
+  // Wire content for Constructor C (game renderer) — storyPath + TwineLogic
+  const storyContent = [
+    parsed.mood ? `🜄 MOOD: ${String(parsed.mood)}` : '',
+    '',
+    `# ${parsed.name}`,
+    '',
+    String(parsed.description ?? seed.description),
+    '',
+    props.length ? '## Features\n' + props.map(p => `- **${(p as Record<string,unknown>).name}**: ${(p as Record<string,unknown>).description}`).join('\n') : '',
+    '',
+    exits.length ? '## Exits\n' + exits.map(e => `- ${(e as Record<string,unknown>).direction}${((e as Record<string,unknown>).barrier) ? ` [${(e as Record<string,unknown>).barrier}]` : ''} → ${(e as Record<string,unknown>).leadsTo}`).join('\n') : '',
+  ].filter(Boolean).join('\n')
+
+  // Build TwineLogic passages from NL output
+  // Start passage is the main room description
+  const startPassageText = [
+    `<<set $roomName to "${parsed.name}">>`,
+    `<<set $characterName to $\{${'{'}characterName{${'}'}}>>`,
+    '',
+    String(parsed.description ?? seed.description),
+    '',
+    props.length ? 'You notice: ' + props.map(p => `**${(p as Record<string,unknown>).name}** — ${(p as Record<string,unknown>).description}`).join(' | ') : '',
+    '',
+    'Where do you go?',
+    ...exits.map(e => `[[${(e as Record<string,unknown>).direction}->${(e as Record<string,unknown>).leadsTo}]]`),
+  ].filter(Boolean).join('\n')
+
+  const twineLogic = {
+    name: String(parsed.name ?? barId),
+    description: String(parsed.description ?? seed.description),
+    mood: parsed.mood ? String(parsed.mood) : undefined,
+    variables: [
+      { name: 'roomName', initial: String(parsed.name ?? barId) },
+    ],
+    passages: [
+      { id: 'start', name: parsed.name as string ?? barId, text: startPassageText, choices: exits.map(e => ({ text: String((e as Record<string,unknown>).direction), targetId: String((e as Record<string,unknown>).leadsTo) })) },
+    ],
+  }
+
   const asset: BarAsset = {
     barDef,
     maturity: 'integrated',
@@ -177,6 +216,10 @@ export async function translateBarSeedToAsset(
       emotionalVector: undefined,
       translationProvider: result.provider,
       translationTokens: result.tokensUsed ?? null,
+      content: {
+        storyContent,
+        twineLogic,
+      },
     },
   }
 
