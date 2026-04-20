@@ -55,22 +55,30 @@ The deeper truth: Allyship is about what you are capable of becoming before you 
 
   // Step 3: Translate prose → BarAsset via NL engine
   console.log(`[Step 3] Calling NL engine...`)
+  let result
   try {
-    const asset = await translateBarSeedToAsset(seed as Parameters<typeof translateBarSeedToAsset>[0], 'mtgoa')
-    console.log(`\n========== BAR ASSET OUTPUT ==========`)
-    console.log(`id:       ${asset.id}`)
-    console.log(`title:    ${asset.barDef.title}`)
-    console.log(`type:     ${asset.barDef.type}`)
-    console.log(`reward:   ${asset.barDef.reward}`)
-    console.log(`inputs:   ${asset.barDef.inputs.map(i => `${i.label}(${i.type})`).join(', ')}`)
-    console.log(`storyPath: ${asset.barDef.storyPath ?? 'none'}`)
-    console.log(`twinelogic: ${(asset.metadata.content as any)?.twineLogic ? 'present' : 'none'}`)
-    console.log(`========================================\n`)
+    result = await translateBarSeedToAsset(seed, 'mtgoa')
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.log(`[Step 3] Translation error: ${msg}`)
-    console.log(`  → Set ZO_CLIENT_IDENTITY_TOKEN, ANTHROPIC_API_KEY, or OPENAI_API_KEY to enable.`)
+    if (err && typeof err === 'object' && 'rawOutput' in err) {
+      const raw = String((err as any).rawOutput ?? '')
+      console.log(`[Step 3] Raw output (${raw.length} chars): ${raw.slice(0, 800)}`)
+    }
+    if (msg.includes('non-JSON')) {
+      console.log('  → Set ZO_CLIENT_IDENTITY_TOKEN, ANTHROPIC_API_KEY, or OPENAI_API_KEY to enable.')
+    }
+    return
   }
+  console.log(`\n========== BAR ASSET OUTPUT ==========`)
+  console.log(`id:       ${result.barDef.id}`)
+  console.log(`title:    ${result.barDef.title}`)
+  console.log(`type:     ${result.barDef.type}`)
+  console.log(`reward:   ${result.barDef.reward}`)
+  console.log(`inputs:   ${result.barDef.inputs.map(i => `${i.label}(${i.type})`).join(', ')}`)
+  console.log(`storyPath: ${result.barDef.storyPath ?? 'none'}`)
+  console.log(`twinelogic: ${(result.metadata.content as any)?.twineLogic ? 'present' : 'none'}`)
+  console.log(`========================================\n`)
 }
 
 main()

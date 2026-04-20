@@ -94,7 +94,12 @@ export async function translateBarSeedToAsset(
     temperature: 0.8,
   })
 
-  // Parse JSON from NL output
+  // Parse JSON from NL output — strip markdown code fences if present
+  let rawJson = result.output.trim()
+  if (rawJson.startsWith('```')) {
+    rawJson = rawJson.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?\s*```$/i, '')
+  }
+
   let parsed: {
     name?: unknown
     description?: unknown
@@ -103,7 +108,7 @@ export async function translateBarSeedToAsset(
     mood?: unknown
   }
   try {
-    parsed = JSON.parse(result.output)
+    parsed = JSON.parse(rawJson)
   } catch {
     throw new TranslationError('NL provider returned non-JSON output', result.provider, result.output)
   }
@@ -139,14 +144,11 @@ export async function translateBarSeedToAsset(
     }
   })
 
-  // Determine barType from seed.barType or default to 'blessed'
+  // Determine barType — default to 'blessed' if not on seed
   const barType = (seed.barType ?? 'blessed') as BarType
 
-  // Derive sequence from metadata or default to 1
-  const sequence = ((seed.metadata as Record<string, unknown>)?.sequence as number) ?? 1
-
   // Build the structured bar id
-  const barId = buildStructuredBarId(barType, creator, sequence)
+  const barId = buildStructuredBarId(barType, creator, 1)
 
   // Build BarDef — what Constructor C actually renders
   const barDef: BarDef = {
