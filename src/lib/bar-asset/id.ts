@@ -60,7 +60,7 @@ export function buildStructuredBarId(
  * @returns StructuredBarId if valid structured format, null otherwise
  */
 export function parseStructuredBarId(id: string): { barType: BarType; creator: string; sequence: number } | null {
-  const match = id.match(/^([a-z]+)_([a-z0-9_-]+)_([0-9]+)$/)
+  const match = id.match(/^([a-z]+)_([a-z0-9_-]+)_([0-9]{3,6})$/)
   if (!match) return null
   const [, barType, creator, seqStr] = match
   if (!(BAR_TYPE_PREFIXES as readonly string[]).includes(barType)) return null
@@ -77,12 +77,14 @@ export function parseStructuredBarId(id: string): { barType: BarType; creator: s
 
 /**
  * Normalize any BarId to structured format.
- * - Structured ids: returned as-is
- * - Legacy ids: returned as-is (to preserve DB references)
- * - Empty/whitespace: throws
+ * - Structured ids: returned as-is with isLegacy=false
+ * - Legacy/unstructured ids: returned as-is with isLegacy=true
+ * - Empty/whitespace: returns null
  */
-export function normalizeBarId(id: string): string {
+export function normalizeBarId(id: string): { normalized: string; isLegacy: boolean } | null {
   const trimmed = id.trim()
-  if (!trimmed) throw new Error('BarId cannot be empty')
-  return trimmed
+  if (!trimmed) return null
+  const parsed = parseStructuredBarId(trimmed)
+  if (parsed) return { normalized: trimmed, isLegacy: false }
+  return { normalized: trimmed, isLegacy: true }
 }
