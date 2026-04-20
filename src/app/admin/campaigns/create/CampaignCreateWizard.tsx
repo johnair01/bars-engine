@@ -18,14 +18,15 @@ import { QuestTemplateCustomizeForm } from '@/components/campaign/QuestTemplateC
 // Types
 // ---------------------------------------------------------------------------
 
-type WizardStep = 'name' | 'description' | 'instance' | 'quests' | 'customize' | 'review' | 'done'
+type WizardStep = 'name' | 'description' | 'instance' | 'parent' | 'quests' | 'customize' | 'review' | 'done'
 
-const STEP_ORDER: WizardStep[] = ['name', 'description', 'instance', 'quests', 'customize', 'review']
+const STEP_ORDER: WizardStep[] = ['name', 'description', 'instance', 'parent', 'quests', 'customize', 'review']
 
 const STEP_LABELS: Record<WizardStep, string> = {
   name: 'Name',
   description: 'Description',
   instance: 'Instance',
+  parent: 'Parent',
   quests: 'Quests',
   customize: 'Customize',
   review: 'Confirm',
@@ -190,6 +191,7 @@ export function CampaignCreateWizard({
   const [instanceId, setInstanceId] = useState(
     instances.length === 1 ? instances[0].id : '',
   )
+  const [parentCampaignId, setParentCampaignId] = useState('')
   const [questTemplates, setQuestTemplates] = useState<SelectedTemplate[]>([])
   const [error, setError] = useState<string | null>(null)
   const [createdSlug, setCreatedSlug] = useState<string | null>(null)
@@ -263,6 +265,7 @@ export function CampaignCreateWizard({
         slug: effectiveSlug,
         description: description.trim() || undefined,
         allyshipDomain: allyshipDomain || undefined,
+        parentCampaignId: parentCampaignId || undefined,
         questTemplateConfig: questTemplateConfig.length > 0 ? questTemplateConfig : undefined,
       }
       const result = await createCampaign(input)
@@ -326,6 +329,7 @@ export function CampaignCreateWizard({
               setDescription('')
               setAllyshipDomain('')
               setInstanceId(instances.length === 1 ? instances[0].id : '')
+              setParentCampaignId('')
               setQuestTemplates([])
               setError(null)
               setCreatedSlug(null)
@@ -508,6 +512,7 @@ export function CampaignCreateWizard({
                   type="button"
                   onClick={() => {
                     setInstanceId(inst.id)
+                    setParentCampaignId('')
                     setError(null)
                   }}
                   className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
@@ -536,6 +541,63 @@ export function CampaignCreateWizard({
             onBack={goBack}
             onNext={() => validateInstance() && goNext()}
             nextDisabled={!instanceId}
+            isPending={isPending}
+          />
+        </>
+      )}
+
+      {/* ----- Step: PARENT CAMPAIGN ----- */}
+      {step === 'parent' && (
+        <>
+          <StepTitle>Choose parent campaign</StepTitle>
+          <StepDescription>
+            Optional. Leave blank to create a root campaign, or attach this as a
+            child under an existing campaign in the same instance.
+          </StepDescription>
+
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setParentCampaignId('')}
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                parentCampaignId === ''
+                  ? 'border-purple-600/60 bg-purple-950/30 text-purple-100'
+                  : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600'
+              }`}
+            >
+              <div className="font-medium text-sm">No parent (root campaign)</div>
+              <div className="text-xs text-zinc-500 mt-0.5">
+                Top-level campaign in /{selectedInstance?.slug}
+              </div>
+            </button>
+            {(selectedInstance?.campaigns ?? []).map((campaign) => (
+              <button
+                key={campaign.id}
+                type="button"
+                onClick={() => setParentCampaignId(campaign.id)}
+                className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                  parentCampaignId === campaign.id
+                    ? 'border-purple-600/60 bg-purple-950/30 text-purple-100'
+                    : 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600'
+                }`}
+              >
+                <div className="font-medium text-sm">{campaign.name}</div>
+                <div className="text-xs text-zinc-500 mt-0.5">
+                  /{campaign.slug} · {campaign.status}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {(selectedInstance?.campaigns ?? []).length === 0 && (
+            <p className="text-xs text-zinc-500">
+              No campaigns yet in this instance. This will be created as a root campaign.
+            </p>
+          )}
+
+          <NavButtons
+            onBack={goBack}
+            onNext={goNext}
             isPending={isPending}
           />
         </>
@@ -679,6 +741,16 @@ export function CampaignCreateWizard({
                 </span>
               </p>
             </div>
+            {parentCampaignId && (
+              <div>
+                <span className="text-xs uppercase tracking-widest text-zinc-500">
+                  Parent Campaign
+                </span>
+                <p className="text-sm text-zinc-300">
+                  {selectedInstance?.campaigns.find((c) => c.id === parentCampaignId)?.name ?? 'Selected parent'}
+                </p>
+              </div>
+            )}
             <div>
               <span className="text-xs uppercase tracking-widest text-zinc-500">
                 Quests
