@@ -1,91 +1,88 @@
-// BarAsset ID — structured namespace convention
-// Sprint: sprint/bar-asset-pipeline-001 | Issue: #76
-
-import type { BarDef } from '../bars'
-import type { SeedMetabolizationState, MaturityPhase } from '../bar-seed-metabolization/types'
-
 /**
- * Valid BAR type prefixes for the structured namespace.
- * Convention: {barType}_{creator}_{sequence}
- */
-export const BAR_TYPES = [
-  'blessed',
-  'rune',
-  'quest',
-  'allyship',
-  'vibe',
-  'story',
-  'insight',
-] as const
-export type BarType = (typeof BAR_TYPES)[number]
-
-/**
- * Structured BAR ID following the namespace convention.
- * Format: {barType}_{creator}_{sequence}
+ * BarAsset ID — structured namespace for multi-creator multi-pipeline
+ * Sprint: sprint/bar-asset-pipeline-001 | Issue: #76
+ *
+ * All BarIds follow the structured namespace: {barType}_{creator}_{sequence}
  *
  * Examples:
- *   blessed_wendell_001
- *   rune_zoc_001
- *   quest_barsengine_001
- *   allyship_masteringallyship_001
+ *   blessed_wendell_001     — Wendell's first blessed object
+ *   rune_zoc_001           — Zo Computer's first rune
+ *   quest_barsengine_001   — bars-engine's first quest
+ *   allyship_masteringallyship_001 — MA.com allyship
+ *
+ * This convention makes ids self-describing and collision-free
+ * when multiple constructors generate BARs independently.
+ *
+ * References:
+ *   src/lib/bar-asset/types.ts — StructuredBarId type + BAR_TYPE_PREFIXES
  */
-export type StructuredBarId = string
 
-function isValidBarType(v: unknown): v is BarType {
-  return typeof v === 'string' && (BAR_TYPES as readonly string[]).includes(v)
-}
+import { BAR_TYPE_PREFIXES, type BarTypePrefix } from './types'
 
-function isValidCreator(v: unknown): v is string {
-  return typeof v === 'string' && /^[a-z0-9_-]{1,64}$/.test(v)
-}
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-function isValidSequence(v: unknown): v is string {
-  return typeof v === 'string' && /^\d{3,6}$/.test(v)
-}
+/** Valid bar types for structured id construction. */
+export type BarType = BarTypePrefix
 
-/**
- * Parse a structured BarId into its components.
- * Returns null if the id does not conform to the namespace convention.
- */
-export function parseStructuredBarId(
-  id: string,
-): { barType: BarType; creator: string; sequence: string } | null {
-  const parts = id.split('_')
-  if (parts.length !== 3) return null
-  const [barType, creator, sequence] = parts
-  if (!isValidBarType(barType)) return null
-  if (!isValidCreator(creator)) return null
-  if (!isValidSequence(sequence)) return null
-  return { barType, creator, sequence }
-}
+// ---------------------------------------------------------------------------
+// Construction
+// ---------------------------------------------------------------------------
 
 /**
  * Build a structured BarId from components.
+ * Ensures: creator is safe (lowercase, no special chars), sequence is zero-padded.
+ *
+ * @example
+ * buildStructuredBarId('blessed', 'wendell', 1) // → 'blessed_wendell_001'
  */
 export function buildStructuredBarId(
   barType: BarType,
   creator: string,
   sequence: number,
-): StructuredBarId {
+): string {
   const safeCreator = creator.toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 64)
   const safeSeq = String(sequence).padStart(3, '0').slice(0, 6)
   return `${barType}_${safeCreator}_${safeSeq}`
 }
 
+// ---------------------------------------------------------------------------
+// Parsing
+// ---------------------------------------------------------------------------
+
 /**
  * Validate a BarId against the structured namespace convention.
- * Returns null for valid structured ids; returns the raw id for legacy ids.
+ * Returns the parsed StructuredBarId for structured ids,
+ * returns null for legacy ids (e.g. 'bar_blessed_object', 'bar_01').
+ *
+ * @param id - The BarId to parse
+ * @returns StructuredBarId if valid structured format, null otherwise
  */
-export function normalizeBarId(
-  id: string,
-): { normalized: StructuredBarId; isLegacy: boolean } | null {
-  const parsed = parseStructuredBarId(id)
-  if (parsed) {
-    return { normalized: id, isLegacy: false }
+export function parseStructuredBarId(id: string): { barType: BarType; creator: string; sequence: number } | null {
+  const match = id.match(/^([a-z]+)_([a-z0-9_-]+)_([0-9]+)$/)
+  if (!match) return null
+  const [, barType, creator, seqStr] = match
+  if (!(BAR_TYPE_PREFIXES as readonly string[]).includes(barType)) return null
+  return {
+    barType: barType as BarType,
+    creator,
+    sequence: parseInt(seqStr, 10),
   }
-  // Legacy id — passthrough with flag
-  if (typeof id === 'string' && id.length > 0) {
-    return { normalized: id, isLegacy: true }
-  }
-  return null
+}
+
+// ---------------------------------------------------------------------------
+// Normalization
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize any BarId to structured format.
+ * - Structured ids: returned as-is
+ * - Legacy ids: returned as-is (to preserve DB references)
+ * - Empty/whitespace: throws
+ */
+export function normalizeBarId(id: string): string {
+  const trimmed = id.trim()
+  if (!trimmed) throw new Error('BarId cannot be empty')
+  return trimmed
 }
