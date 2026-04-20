@@ -59,7 +59,7 @@ export const EXTERNAL_DEFAULT_MODEL: Record<Exclude<AIProvider, 'zo'>, string> =
  * ZO_AI is primary (Wendell's own AI).
  */
 export function resolveProviderFromEnv(): AIProviderConfig {
-  if (process.env.ZO_AI_API_KEY) {
+  if (process.env.ZO_AI_API_KEY || process.env.ZO_CLIENT_IDENTITY_TOKEN) {
     return { provider: 'zo' }
   }
   if (process.env.ANTHROPIC_API_KEY) {
@@ -69,6 +69,6 @@ export function resolveProviderFromEnv(): AIProviderConfig {
     return { provider: 'openai', apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL ?? EXTERNAL_DEFAULT_MODEL.openai }
   }
   throw new Error(
-    'No AI provider configured. Set one of: ZO_AI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY'
+    'No AI provider configured. Set one of: ZO_AI_API_KEY, ZO_CLIENT_IDENTITY_TOKEN, ANTHROPIC_API_KEY, OPENAI_API_KEY'
   )
 }

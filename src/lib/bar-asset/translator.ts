@@ -225,3 +225,5 @@ export async function translateBarSeedToAsset(
 
   return asset
 }
+
+export { promoteToIntegrated }

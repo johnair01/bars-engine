@@ -8,7 +8,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { translateBarSeedToAsset } from '../src/lib/bar-asset/translator'
+import { translateBarSeedToAsset, promoteToIntegrated } from '../src/lib/bar-asset/translator'
 import { buildStructuredBarId } from '../src/lib/bar-asset/id'
 
 interface BarSeedLike {
@@ -71,6 +71,7 @@ The deeper truth: Allyship is about what you are capable of becoming before you 
     }
     return
   }
+  console.log(`\nDEBUG metadata: ${JSON.stringify((result.metadata as any)?.maturity ?? 'MISSING')}`)
   console.log(`\n========== BAR ASSET OUTPUT ==========`)
   console.log(`id:       ${result.barDef.id}`)
   console.log(`title:    ${result.barDef.title}`)
@@ -86,10 +87,12 @@ The deeper truth: Allyship is about what you are capable of becoming before you 
   console.log(`\n[Step 4] Persisting to game DB...`)
   const apiBase = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   try {
+    const asset = promoteToIntegrated(result, seed.id)
+    console.log(`DEBUG post-promote metadata: ${JSON.stringify(asset.metadata)}`)
     const persistRes = await fetch(`${apiBase}/api/bar-asset/persist`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ asset: result }),
+      body: JSON.stringify({ asset }),
     })
     if (!persistRes.ok) {
       const errText = await persistRes.text()

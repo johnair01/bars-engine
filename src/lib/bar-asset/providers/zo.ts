@@ -3,10 +3,13 @@
  * Sprint: sprint/bar-asset-pipeline-001 | Issue: #76
  *
  * Uses the /zo/ask internal API. This is the primary provider for
- * Wendell's instance. Requires ZO_AI_API_KEY to be set.
+ * Wendell's instance. Requires one of:
+ *   - ZO_CLIENT_IDENTITY_TOKEN (auto-set in Zo Computer environment — preferred)
+ *   - ZO_AI_API_KEY (explicit key from Settings > Advanced > Access Tokens)
  *
- * This provider calls the Zo Computer agent directly — no external API
- * calls, no cost per token, full control over model and persona.
+ * Model: vercel:minimax/minimax-m2.7
+ * Cost: free for Wendell, no per-token billing
+ * Persona: Council of Game Faces (d02a9e8c-ecf3-48bd-a4b6-a21f659b099c)
  */
 
 import type { AICompletionRequest, AICompletionResponse } from './providers'
@@ -27,9 +30,10 @@ import type { AICompletionRequest, AICompletionResponse } from './providers'
  * have the Zo dev server running.
  */
 export async function callZoAI(req: AICompletionRequest): Promise<AICompletionResponse> {
-  const apiKey = process.env.ZO_AI_API_KEY
+  // Prefer ZO_AI_API_KEY if set; fall back to ZO_CLIENT_IDENTITY_TOKEN (auto-set in Zo)
+  const apiKey = process.env.ZO_AI_API_KEY ?? process.env.ZO_CLIENT_IDENTITY_TOKEN
   if (!apiKey) {
-    throw new Error('ZO_AI_API_KEY is not set')
+    throw new Error('No Zo API key set. Set ZO_AI_API_KEY or ZO_CLIENT_IDENTITY_TOKEN.')
   }
 
   // Determine the endpoint: local dev vs deployed
