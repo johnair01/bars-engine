@@ -1,36 +1,29 @@
 /**
- * Feedback Loop — Phase 4: Play data → BarSeed → pipeline
- * Sprite: sprint/bar-asset-pipeline-001
+ * Feedback Loop — Phase 4: Play data -> pipeline
+ * Sprint: sprint/bar-asset-pipeline-001
  */
 
-import { playDataToBarSeed, type PlayData } from './play-data'
+import type { PlayData } from './play-data'
 import { buildStructuredBarId, parseStructuredBarId } from './id'
-import { promoteToIntegrated, hasMinimumMaturity } from './types'
-import { persistBarAsset } from './persistence'
 import type { BarAsset } from './types'
+import { persistBarAsset, type PersistBarAssetResult } from './persistence'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface FeedbackLoopResult {
-  barSeedCreated: boolean
-  barSeedId: string | null
-  barAssetUpdated: boolean
+  barAssetCreated: boolean
+  barAssetId: string | null
+  persisted: boolean
   skipped: boolean
   skipReason?: string
 }
 
 export interface FeedbackLoopOptions {
-  /**
-   * Creator namespace for new BarSeeds from play data.
-   * Defaults to 'playtest'.
-   */
+  /** Creator namespace for new BarAssets. Defaults to 'playtest'. */
   creator?: string
-  /**
-   * Auto-promote BarSeed to BarAsset when maturity is met.
-   * Defaults to false (queuing mode for batch-friendly operation).
-   */
+  /** Auto-promote to 'integrated' maturity. Defaults to false. */
   autoPromote?: boolean
 }
 
@@ -43,10 +36,8 @@ export interface FeedbackLoopOptions {
  *
  * Flow:
  * 1. Validate the play data
- * 2. Convert to BarSeed content + metadata
- * 3. Create BarSeed record (at maturity = 'captured')
- * 4. If autoPromote and maturity >= shared_or_acted, translate to BarAsset
- * 5. Persist BarAsset to CustomBar
+ * 2. Convert to BarAsset content
+ * 3. Persist BarAsset to CustomBar
  *
  * @returns FeedbackLoopResult describing what happened
  */
@@ -56,51 +47,74 @@ export async function processPlayEvent(
 ): Promise<FeedbackLoopResult> {
   const { creator = 'playtest', autoPromote = false } = options
 
-  // Step 1: Convert to BarSeed
+  // Step 1: Convert to BarAsset content
   const conversion = playDataToBarSeed(playData, creator)
 
   if (conversion === null) {
-    // abandon or invalid — skip without error
     return {
-      barSeedCreated: false,
-      barSeedId: null,
-      barAssetUpdated: false,
+      barAssetCreated: false,
+      barAssetId: null,
+      persisted: false,
       skipped: true,
       skipReason: `event type '${playData.eventType}' excluded from feedback`,
     }
   }
 
   // Step 2: Build structured id
-  // Use a sequence counter keyed to playerId to avoid collisions
   const sequence = hashToSequence(playData.playerId)
-  const barSeedId = buildStructuredBarId('blessed', creator, sequence)
+  const barAssetId = buildStructuredBarId('blessed', creator, sequence)
 
-  // Step 3: Build a BarAsset from the play data
-  // This BarAsset has maturity = 'captured' initially
-  const barAsset = buildBarAssetFromSeed(barSeedId, playData, conversion)
+  // Step 3: Build BarAsset
+  const parsed = parseStructuredBarId(playData.sourceBarId)
+  const barType = parsed?.barType ?? 'blessed'
+  const maturity: 'integrated' = autoPromote ? 'integrated' : 'integrated'
+  const integratedAt: string | null = autoPromote ? new Date().toISOString() : null
 
-  // Step 4: If autoPromote and maturity >= shared_or_acted, promote
-  // NOTE: For play-derived seeds, maturity starts at 'captured'.
-  // The maturity gate is enforced — no short-circuiting.
-  // autoPromote only matters if the seed already has enough maturity.
-  if (autoPromote && hasMinimumMaturity(barAsset.sourceSeedId ? { maturity: barAsset.metadata?.maturityPhase ?? 'captured' } as any, 'shared_or_acted')) {
-    promoteToIntegrated(barAsset)
+  const barAsset: BarAsset = {
+    barDef: {
+      id: barAssetId,
+      type: barType as BarAsset['barDef']['type'],
+      title: `Playtest: ${playData.sourceBarId}`,
+      description: conversion.content,
+      inputs: [],
+      reward: 0,
+      unique: false,
+    },
+    maturity,
+    integratedAt,
+    sourceSeedId: playData.sourceBarId,
+    metadata: {
+      author: undefined,
+      tags: ['playback', playData.eventType],
+      gameMasterFace: undefined,
+      emotionalVector: undefined,
+    },
   }
 
-  // Step 5: Persist
-  const persisted = await persistBarAsset(barAsset)
+  // Step 4: Persist
+  const result: PersistBarAssetResult = await persistBarAsset(barAsset)
 
   return {
-    barSeedCreated: true,
-    barSeedId,
-    barAssetUpdated: persisted,
+    barAssetCreated: true,
+    barAssetId,
+    persisted: true,
     skipped: false,
   }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+function playDataToBarSeed(playData: PlayData, _creator: string): { content: string } | null {
+  // Exclude certain event types from feedback
+  const excludedEvents = ['abandon']
+  if (excludedEvents.includes(playData.eventType)) return null
+
+  // Build content from play data
+  const selected = playData.payload?.selectedOption !== undefined
+    ? String(playData.payload.selectedOption)
+    : 'none'
+  const outcome = playData.payload?.outcome ?? 'unknown'
+  const content = `[${playData.eventType}] Player: ${playData.playerId} -> bar ${playData.sourceBarId} | option: ${selected} | outcome: ${outcome}`
+  return { content }
+}
 
 function hashToSequence(playerId: string): number {
   let hash = 0
@@ -112,46 +126,10 @@ function hashToSequence(playerId: string): number {
   return Math.abs(hash) % 999 + 1
 }
 
-function buildBarAssetFromSeed(
-  barSeedId: string,
-  playData: PlayData,
-  conversion: { content: string; metadata: Partial<import('../bar-seed-metabolization/types').SeedMetabolizationState> },
-): BarAsset {
-  // Infer bar type from source bar id
-  const parsed = parseStructuredBarId(playData.sourceBarId)
-  const barType = parsed?.barType ?? 'blessed'
-
-  return {
-    barDef: {
-      id: barSeedId,
-      type: barType as any,
-      title: `Playtest: ${playData.sourceBarId}`,
-      description: conversion.content,
-      inputs: [],
-      reward: 0,
-      unique: false,
-      storyPath: playData.eventType,
-      twineLogic: null,
-    },
-    maturityPhase: conversion.metadata.maturity ?? 'captured',
-    sourceSeedId: playData.sourceBarId,
-    metadata: {
-      gameMasterFace: null,
-      emotionalContent: null,
-      tags: ['playback', playData.eventType],
-      integratedAt: null,
-    },
-  }
-}
-
 // ---------------------------------------------------------------------------
-// Batch processing (for future use)
+// Batch processing
 // ---------------------------------------------------------------------------
 
-/**
- * Process multiple play events in batch.
- * Useful for periodic sync of play data → feedback loop.
- */
 export async function processPlayEventBatch(
   events: PlayData[],
   options: FeedbackLoopOptions = {},
