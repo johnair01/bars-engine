@@ -16,7 +16,7 @@ import { dbBase } from '@/lib/db'
 import { slugify } from '@/lib/spatial-world/utils'
 import { computeSpatialBindKey } from '@/lib/spatial-world/spatial-room-bind'
 import { resolveSpawnForRoom } from '@/lib/spatial-world/spawn-resolver'
-import { resolveAvatarConfigForPlayer, getWalkableSpriteUrl, parseAvatarConfig } from '@/lib/avatar-utils'
+import { resolveAvatarConfigForPlayer, resolveWorldWalkableSprite } from '@/lib/avatar-utils'
 import { getSpokeStatesForRoom } from '@/actions/campaign-spoke-states'
 import {
   canAccessNationRoom,
@@ -139,9 +139,10 @@ export default async function WorldRoomPage({
   }))
 
   const avatarConfig = resolveAvatarConfigForPlayer(player)
-  const walkableSpriteUrl = avatarConfig
-    ? getWalkableSpriteUrl(parseAvatarConfig(avatarConfig))
-    : null
+  const walkableSpriteDemoEnabled =
+    process.env.NEXT_PUBLIC_WALKABLE_SPRITE_DEMO === '1' ||
+    process.env.NEXT_PUBLIC_WALKABLE_SPRITE_DEMO === 'true'
+  const worldSprite = resolveWorldWalkableSprite(avatarConfig, walkableSpriteDemoEnabled)
 
   const spatialBindKey = computeSpatialBindKey(room.id, tilemap, anchors)
 
@@ -160,9 +161,10 @@ export default async function WorldRoomPage({
       player={{
         id: player.id,
         name: player.name,
-        avatarConfig: avatarConfig ?? null,
-        walkableSpriteUrl,
+        avatarConfig: worldSprite.avatarConfig,
+        walkableSpriteUrl: worldSprite.walkableSpriteUrl,
       }}
+      walkableSpriteDemo={worldSprite.walkableSpriteDemo}
       room={{ id: room.id, name: room.name, tilemap, anchors }}
       allRooms={allRooms}
       instanceSlug={instanceSlug}

@@ -160,6 +160,43 @@ export function getWalkableSpriteUrl(config: AvatarConfig | null): string {
     return `/sprites/walkable/${key}.png`
 }
 
+/**
+ * Resolve world-room sprite inputs, including demo-mode fallback for #45.
+ * When demo mode is on and a player has no avatar config, we force the demo
+ * walkable sheet and bypass MapAvatarGate.
+ */
+export function resolveWorldWalkableSprite(
+    avatarConfig: string | null,
+    demoEnabled: boolean
+): {
+    avatarConfig: string | null
+    walkableSpriteUrl: string | null
+    walkableSpriteDemo: boolean
+} {
+    const parsed = parseAvatarConfig(avatarConfig)
+    if (parsed) {
+        return {
+            avatarConfig,
+            walkableSpriteUrl: getWalkableSpriteUrl(parsed),
+            walkableSpriteDemo: false,
+        }
+    }
+
+    if (demoEnabled) {
+        return {
+            avatarConfig: JSON.stringify(WALKABLE_SPRITE_DEMO_AVATAR),
+            walkableSpriteUrl: getWalkableSpriteUrl(WALKABLE_SPRITE_DEMO_AVATAR),
+            walkableSpriteDemo: true,
+        }
+    }
+
+    return {
+        avatarConfig: null,
+        walkableSpriteUrl: null,
+        walkableSpriteDemo: false,
+    }
+}
+
 /** Player shape for resolving avatar config (nation/archetype included). */
 export type PlayerForAvatar = {
     avatarConfig?: string | null
