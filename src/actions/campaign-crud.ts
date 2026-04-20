@@ -7,6 +7,7 @@ import { randomBytes } from 'crypto'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { validateEdit, validateDelete } from '@/lib/campaign-lifecycle'
+import { validateCampaignParentAssignment } from '@/lib/campaign-hierarchy'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -99,6 +100,8 @@ export type CreateCampaignInput = {
   startDate?: string | null
   /** Scheduled end */
   endDate?: string | null
+  /** Optional parent campaign (same instance only) */
+  parentCampaignId?: string | null
 }
 
 export type CreateCampaignResult =
@@ -187,9 +190,14 @@ export async function createCampaign(
   })
   if (existing) return { error: `A campaign with slug "${slug}" already exists` }
 
+  const parentCheck = await validateCampaignParentAssignment(db, {
+    instanceId: input.instanceId,
+    parentCampaignId: input.parentCampaignId,
+  })
+  if ('error' in parentCheck) return { error: parentCheck.error }
+
   // --- Create the campaign in DRAFT status ---
-  const campaign = await db.campaign.create({
-    data: {
+  const createData: Prisma.CampaignUncheckedCreateInput = {
       slug,
       name: input.name.trim(),
       description: input.description?.trim() || null,
@@ -208,7 +216,11 @@ export async function createCampaign(
       endDate: input.endDate ? new Date(input.endDate) : null,
       instanceId: input.instanceId,
       createdById: playerId,
-    },
+      parentCampaignId: input.parentCampaignId?.trim() || null,
+  }
+
+  const campaign = await db.campaign.create({
+    data: createData,
   })
 
   revalidatePath('/campaigns')
@@ -297,7 +309,7 @@ export async function updateCampaign(
 
   const campaign = await db.campaign.findUnique({
     where: { id: campaignId },
-    select: { status: true, slug: true },
+    select: { status: true, slug: true, instanceId: true },
   })
   if (!campaign) return { error: 'Campaign not found' }
 
@@ -306,7 +318,7 @@ export async function updateCampaign(
   if (!editCheck.valid) return { error: editCheck.reason }
 
   // Build update data — only include fields that were explicitly passed
-  const data: Prisma.CampaignUpdateInput = {}
+  const data: Prisma.CampaignUncheckedUpdateInput = {}
   if (input.name !== undefined) data.name = input.name.trim()
   if (input.description !== undefined) data.description = input.description?.trim() || null
   if (input.allyshipDomain !== undefined) data.allyshipDomain = input.allyshipDomain || null
@@ -321,6 +333,15 @@ export async function updateCampaign(
   }
   if (input.startDate !== undefined) data.startDate = input.startDate ? new Date(input.startDate) : null
   if (input.endDate !== undefined) data.endDate = input.endDate ? new Date(input.endDate) : null
+  if (input.parentCampaignId !== undefined) {
+    const parentCheck = await validateCampaignParentAssignment(db, {
+      instanceId: campaign.instanceId,
+      parentCampaignId: input.parentCampaignId,
+      campaignId,
+    })
+    if ('error' in parentCheck) return { error: parentCheck.error }
+    data.parentCampaignId = input.parentCampaignId?.trim() || null
+  }
 
   // Check if any fields were set
   if (Object.keys(data).length === 0) {
@@ -424,6 +445,13 @@ export type StewardInstance = {
   slug: string
   name: string
   campaignCount: number
+  campaigns: {
+    id: string
+    slug: string
+    name: string
+    parentCampaignId: string | null
+    status: string
+  }[]
 }
 
 export async function listStewardInstances(): Promise<StewardInstance[]> {
@@ -441,6 +469,16 @@ export async function listStewardInstances(): Promise<StewardInstance[]> {
         slug: true,
         name: true,
         _count: { select: { campaigns: true } },
+        campaigns: {
+          orderBy: { name: 'asc' },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            parentCampaignId: true,
+            status: true,
+          },
+        },
       },
     })
     return instances.map((i) => ({
@@ -448,6 +486,7 @@ export async function listStewardInstances(): Promise<StewardInstance[]> {
       slug: i.slug,
       name: i.name,
       campaignCount: i._count.campaigns,
+      campaigns: i.campaigns,
     }))
   }
 
@@ -464,6 +503,16 @@ export async function listStewardInstances(): Promise<StewardInstance[]> {
           slug: true,
           name: true,
           _count: { select: { campaigns: true } },
+          campaigns: {
+            orderBy: { name: 'asc' },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              parentCampaignId: true,
+              status: true,
+            },
+          },
         },
       },
     },
@@ -476,6 +525,7 @@ export async function listStewardInstances(): Promise<StewardInstance[]> {
       slug: m.instance.slug,
       name: m.instance.name,
       campaignCount: m.instance._count.campaigns,
+      campaigns: m.instance.campaigns,
     }))
 }
 
