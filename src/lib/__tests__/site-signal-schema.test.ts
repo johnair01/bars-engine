@@ -72,7 +72,7 @@ function run() {
     assert(block.includes(blobUrl), 'image url in block')
   }
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('site-signal-schema tests passed')
 }
 

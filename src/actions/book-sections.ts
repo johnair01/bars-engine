@@ -28,7 +28,7 @@ function slugFromTitle(title: string): string {
 }
 
 async function allocateSectionSlug(bookId: string, title: string): Promise<string> {
-  let base = slugFromTitle(title.trim()) || 'section'
+  const base = slugFromTitle(title.trim()) || 'section'
   for (let n = 0; n < 200; n++) {
     const slug = n === 0 ? base : `${base}-${n}`
     const clash = await db.bookSection.findUnique({

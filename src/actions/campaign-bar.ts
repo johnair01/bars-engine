@@ -89,7 +89,7 @@ export async function advanceCampaignWatering(
   campaignBarId?: string,
   response?: string
 ) {
-  let bar = campaignBarId
+  const bar = campaignBarId
     ? await tx.customBar.findUnique({
         where: { id: campaignBarId, type: 'campaign_kernel' },
       })

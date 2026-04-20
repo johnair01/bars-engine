@@ -79,7 +79,7 @@ export async function plantSeedFromCyoa(
   }
 
   // ── 3. Resolve campaign context ───────────────────────────────────────────
-  let campaignRef: string | null =
+  const campaignRef: string | null =
     playbook.adventure?.campaignRef?.trim() || null
 
   let allyshipDomain: string | null = null

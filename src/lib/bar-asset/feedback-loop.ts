@@ -28,11 +28,11 @@ export interface FeedbackLoopOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Main orchestrator
+// Main entry point
 // ---------------------------------------------------------------------------
 
 /**
- * Process a single play event through the feedback loop.
+ * Process a single play event and route it through the feedback loop.
  *
  * Flow:
  * 1. Validate the play data
@@ -45,7 +45,7 @@ export async function processPlayEvent(
   playData: PlayData,
   options: FeedbackLoopOptions = {},
 ): Promise<FeedbackLoopResult> {
-  const { creator = 'playtest', autoPromote = false } = options
+  const { creator = 'playtest' } = options
 
   // Step 1: Convert to BarAsset content
   const conversion = playDataToBarSeed(playData, creator)
@@ -67,13 +67,13 @@ export async function processPlayEvent(
   // Step 3: Build BarAsset
   const parsed = parseStructuredBarId(playData.sourceBarId)
   const barType = parsed?.barType ?? 'blessed'
-  const maturity: 'integrated' = autoPromote ? 'integrated' : 'integrated'
-  const integratedAt: string | null = autoPromote ? new Date().toISOString() : null
+  const maturity = 'integrated' as const
+  const integratedAt: string | null = new Date().toISOString()
 
   const barAsset: BarAsset = {
     barDef: {
       id: barAssetId,
-      type: barType as BarAsset['barDef']['type'],
+      type: barType as any,
       title: `Playtest: ${playData.sourceBarId}`,
       description: conversion.content,
       inputs: [],
@@ -84,15 +84,12 @@ export async function processPlayEvent(
     integratedAt,
     sourceSeedId: playData.sourceBarId,
     metadata: {
-      author: undefined,
       tags: ['playback', playData.eventType],
-      gameMasterFace: undefined,
-      emotionalVector: undefined,
     },
   }
 
   // Step 4: Persist
-  const result: PersistBarAssetResult = await persistBarAsset(barAsset)
+  const result: PersistBarAssetResult = await persistBarAsset({ barAsset, createdBy: creator })
 
   return {
     barAssetCreated: true,
@@ -101,6 +98,10 @@ export async function processPlayEvent(
     skipped: false,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function playDataToBarSeed(playData: PlayData, _creator: string): { content: string } | null {
   // Exclude certain event types from feedback
@@ -120,7 +121,7 @@ function hashToSequence(playerId: string): number {
   let hash = 0
   for (let i = 0; i < playerId.length; i++) {
     const char = playerId.charCodeAt(i)
-    hash = (hash << 5) - hash + char
+    hash = ((hash << 5) - hash) + char
     hash = hash & hash
   }
   return Math.abs(hash) % 999 + 1
@@ -130,6 +131,10 @@ function hashToSequence(playerId: string): number {
 // Batch processing
 // ---------------------------------------------------------------------------
 
+/**
+ * Process multiple play events in batch.
+ * Useful for periodic sync of play data -> feedback loop.
+ */
 export async function processPlayEventBatch(
   events: PlayData[],
   options: FeedbackLoopOptions = {},

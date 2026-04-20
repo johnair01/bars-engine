@@ -1,0 +1,69 @@
+name: Render transition check
+
+on:
+  workflow_dispatch:
+    inputs:
+      render_url:
+        description: Render backend base URL (e.g. https://bars-backend-xxxx.onrender.com)
+        required: true
+        type: string
+      frontend_url:
+        description: Frontend URL to validate (default production)
+        required: false
+        default: https://bars-engine.vercel.app
+        type: string
+      skip_vercel_env_check:
+        description: Skip T8 Vercel env pointer check
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Link Vercel project (for T8)
+        if: ${{ inputs.skip_vercel_env_check == false }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
+        run: |
+          if [ -z "${VERCEL_TOKEN:-}" ] || [ -z "${VERCEL_SCOPE:-}" ]; then
+            echo "Missing VERCEL_TOKEN or VERCEL_SCOPE secret."
+            echo "Set skip_vercel_env_check=true if you want to run without T8."
+            exit 1
+          fi
+          npx vercel link --yes --project bars-engine --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+
+      - name: Verify render transition
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
+        run: |
+          EXTRA_FLAGS=""
+          if [ "${{ inputs.skip_vercel_env_check }}" = "true" ]; then
+            EXTRA_FLAGS="--skip-vercel-env-check"
+          fi
+          npm run verify:render-transition -- \
+            --render-url "${{ inputs.render_url }}" \
+            --frontend-url "${{ inputs.frontend_url }}" \
+            $EXTRA_FLAGS
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-transition-reports
+          path: reports/deploy/render-transition-evidence-*
+          if-no-files-found: warn

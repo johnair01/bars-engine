@@ -254,7 +254,7 @@ export async function completeForgeSession(
     }
 
     let agentSpecId: string | null = null
-    let agentPatchId: string | null = null
+    const agentPatchId: string | null = null
 
     if (session.outputType === 'NEW_AGENT') {
       const spec = await db.agentSpec.create({

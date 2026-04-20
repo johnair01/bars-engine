@@ -540,7 +540,7 @@ export async function getOrCreateRun(storyId: string, questId?: string | null, p
     })
 
     if (!run) {
-        let initialCyoaState: Record<string, any> = {}
+        const initialCyoaState: Record<string, any> = {}
         const p = await db.player.findUnique({ where: { id: playerId } })
         if (p?.storyProgress) {
             try {

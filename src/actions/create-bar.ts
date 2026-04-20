@@ -90,7 +90,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
     if (metadata321?.tags?.length) tags = [...new Set([...tags, ...metadata321.tags])].slice(0, 10)
     const allowedNations = formData.get('allowedNations') as string || null
     const allowedTrigrams = formData.get('allowedTrigrams') as string || null
-    let allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
+    const allyshipDomain = (formData.get('allyshipDomain') as string)?.trim() || null
     let campaignRef = (formData.get('campaignRef') as string)?.trim() || null
     const campaignGoal = (formData.get('campaignGoal') as string)?.trim() || null
     const sceneGridInstanceId = (formData.get('sceneGridInstanceId') as string)?.trim() || ''

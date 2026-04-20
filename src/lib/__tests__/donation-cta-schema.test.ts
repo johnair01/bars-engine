@@ -37,7 +37,7 @@ function run() {
   const ev = eventDonationCtaOverridesSchema.safeParse({ venmoUrl: 'https://venmo.com/u/test' })
   assert(ev.success, 'partial event overrides')
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('donation-cta-schema tests passed')
 }
 

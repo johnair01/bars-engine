@@ -6,8 +6,8 @@
  * Requires ZO_CLIENT_IDENTITY_TOKEN and ZO_AI_API_KEY env vars.
  */
 
-import type { AICompletionRequest, AICompletionResponse } from '../dispatcher'
-import { dispatchAI } from '../dispatcher'
+import type { AICompletionRequest, AICompletionResponse } from '../providers'
+import { dispatchAI } from './providers'
 
 const ZO_API_URL = 'https://api.zo.computer/zo/ask'
 
@@ -16,7 +16,7 @@ const ZO_API_URL = 'https://api.zo.computer/zo/ask'
  * Falls back to external AI if ZO_AI_API_KEY is not set.
  */
 export async function callZoAI(req: AICompletionRequest): Promise<AICompletionResponse> {
-  const apiKey = process.env.ZO_AI_API_KEY
+  const apiKey = process.env.ZO_AI_API_KEY ?? process.env.ZO_CLIENT_IDENTITY_TOKEN ?? process.env.ZO_CLIENT_IDENTITY_TOKEN
 
   if (!apiKey) {
     throw new Error(

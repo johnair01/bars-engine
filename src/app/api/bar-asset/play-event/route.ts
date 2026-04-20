@@ -1,54 +1,37 @@
-/**
- * POST /api/bar-asset/play-event — Phase 4 feedback loop ingestion
- * Accepts play events, runs them through the feedback loop.
- * Sprint: sprint/bar-asset-pipeline-001
- */
-
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentPlayer } from '@/lib/auth'
 import { processPlayEvent } from '@/lib/bar-asset/feedback-loop'
-import { validatePlayData, type PlayData } from '@/lib/bar-asset/play-data'
+import type { FeedbackLoopResult } from '@/lib/bar-asset/feedback-loop'
 
-export async function POST(request: Request) {
-  let body: unknown
+export async function POST(req: NextRequest) {
+  const player = await getCurrentPlayer()
+  if (!player) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  let body: { playData: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  if (!body.playData) {
+    return NextResponse.json({ error: 'Missing required field: playData' }, { status: 400 })
+  }
 
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    const result: FeedbackLoopResult = await processPlayEvent(body.playData as any)
+    return NextResponse.json({
+      accepted: true,
+      barAssetId: result.barAssetId,
+      persisted: result.persisted,
+      skipped: result.skipped,
+      skipReason: result.skipReason ?? null,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('[/api/bar-asset/play-event]', message)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  // Validate structure
-  const validation = validatePlayData(body)
-  if (!validation.valid) {
-    return NextResponse.json(
-      { error: 'Invalid play data', details: validation.errors },
-      { status: 400 },
-    )
-  }
-
-  const playData = body as PlayData
-
-  // Reject abandon events (no quality signal from abandoned runs)
-  if (playData.eventType === 'abandon') {
-    return NextResponse.json(
-      { error: 'abandon events are not accepted', code: 'ABANDON_REJECTED' },
-      { status: 400 },
-    )
-  }
-
-  // Process through feedback loop
-  const result = await processPlayEvent(playData)
-
-  if (result.skipped) {
-    return NextResponse.json(
-      { accepted: false, reason: result.skipReason },
-      { status: 200 },
-    )
-  }
-
-  return NextResponse.json({
-    accepted: true,
-    barSeedId: result.barSeedId,
-    barAssetUpdated: result.barAssetUpdated,
-  })
 }

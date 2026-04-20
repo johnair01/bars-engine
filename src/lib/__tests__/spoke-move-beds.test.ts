@@ -38,7 +38,7 @@ function run() {
   assert(passesSpokeKernelQualityGate('Yes', '12345678901'), 'quality ok')
   assert(!passesSpokeKernelQualityGate('Yo', 'short'), 'quality fail')
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('✓ spoke-move-beds OK')
 }
 

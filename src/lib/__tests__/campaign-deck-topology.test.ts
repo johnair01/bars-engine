@@ -22,7 +22,7 @@ function run() {
 
   assert(CAMPAIGN_DECK_TOPOLOGY_OPTIONS.length === 2, 'two options')
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('✓ campaign-deck-topology OK')
 }
 

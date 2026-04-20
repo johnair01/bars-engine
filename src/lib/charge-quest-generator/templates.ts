@@ -21,7 +21,7 @@ export function extractTopic(summary: string): string {
   const s = summary.trim()
   if (!s) return 'this'
   // Strip common prefixes (multiple passes for compound phrases)
-  let stripped = s
+  const stripped = s
     .replace(/^(i'm|i am|i feel|feeling|felt)\s+/i, '')
     .replace(/^(frustrated about|angry about|sad about|excited about|inspired to|worried about|anxious about)\s+/i, '')
     .trim()

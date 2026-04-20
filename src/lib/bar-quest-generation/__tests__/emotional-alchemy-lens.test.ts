@@ -25,7 +25,7 @@ function run() {
   )
   assert(pickGmLensFromStoryState({ hub_portal_face: 'bogus' }) === undefined, 'reject bogus')
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('✓ emotional-alchemy lens OK')
 }
 

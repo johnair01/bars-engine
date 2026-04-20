@@ -106,7 +106,7 @@ const MATURITY_RANK: Record<MaturityPhase, number> = {
  * Constructor B promotes 'shared_or_acted' → 'integrated' on success.
  */
 export function hasMinimumMaturityForConstructorB(state: SeedMetabolizationState): boolean {
-  return (MATURITY_RANK[state.maturity] ?? 0) >= (MATURITY_RANK['shared_or_acted'] ?? 0)
+  return (state.maturity ? (MATURITY_RANK[state.maturity] ?? 0) : 0) >= (MATURITY_RANK["shared_or_acted"] ?? 0)
 }
 
 /**

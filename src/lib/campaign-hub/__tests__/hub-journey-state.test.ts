@@ -58,7 +58,7 @@ function run() {
   const bad = parseHubJourneyFromSearchParams(new URLSearchParams('ref=x&face=nope&hexagram=1'), 'Portal_1')
   assert(bad == null, 'reject bad face')
 
-  // eslint-disable-next-line no-console -- test runner
+   
   console.log('✓ hub-journey-state OK')
 }
 

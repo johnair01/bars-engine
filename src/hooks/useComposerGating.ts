@@ -139,7 +139,7 @@ export function useComposerGating(input: UseComposerGatingInput): ComposerGating
 
   const filteredOptions = useMemo(
     () => computeFilteredOptions(dataBag, templateCatalog, campaignConfig),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- dataBag is the canonical source;
+     
     // lockedFace and emotionalVector are listed for granular reactivity
     [
       dataBag,

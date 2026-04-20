@@ -130,7 +130,7 @@ export async function drawFromDeck(
     select: { domainDeckCycles: true },
   })
   const cycles = parseDomainDeckCycles(instance?.domainDeckCycles ?? {})
-  let cycle = cycles[domain] ?? {
+  const cycle = cycles[domain] ?? {
     playedQuestIds: [] as string[],
     cycleId: `${instanceId}-${domain}-${Date.now()}`,
   }

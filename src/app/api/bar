@@ -1,0 +1,91 @@
+/**
+ * POST /api/bar-asset/persist — Persist a BarAsset to CustomBar
+ * Phase 4 wired: BarAsset → CustomBar → game renderer
+ *
+ * Request body: BarAsset (from translateBarSeedToAsset output)
+ * Response: { id, status }
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { getPlayerId } from '@/lib/session'
+import { hasMinMaturity } from '@/lib/bar-asset/types'
+import type { BarAsset } from '@/lib/bar-asset/types'
+
+export async function POST(req: NextRequest) {
+  try {
+    const playerId = await getPlayerId()
+    if (!playerId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json() as { asset: BarAsset }
+    const { asset } = body
+
+    if (!asset?.barDef?.id) {
+      return NextResponse.json({ error: 'asset.barDef.id is required' }, { status: 400 })
+    }
+
+    // Ensure minimum maturity
+    if (!hasMinMaturity(asset.metadata?.metabolization?.state, 'shared_or_acted')) {
+      return NextResponse.json({ error: 'maturity must be shared_or_acted or integrated' }, { status: 422 })
+    }
+
+    const barDef = asset.barDef
+    const content = asset.metadata?.content
+
+    // Map BarAsset → CustomBar fields
+    const twineLogic = content?.twineLogic
+      ? (typeof content.twineLogic === 'string' ? content.twineLogic : JSON.stringify(content.twineLogic))
+      : null
+
+    const inputs = barDef.inputs?.length
+      ? JSON.stringify(barDef.inputs)
+      : '[]'
+
+    // Determine status from maturity
+    const isIntegrated = asset.metadata?.metabolization?.state?.maturity === 'integrated'
+    const status = isIntegrated ? 'active' : 'draft'
+
+    // Upsert: update if exists (same id), create if new
+    const customBar = await db.customBar.upsert({
+      where: { id: barDef.id },
+      update: {
+        title: barDef.title ?? barDef.id,
+        description: barDef.description ?? '',
+        type: barDef.type ?? 'story',
+        reward: barDef.reward ?? 1,
+        storyPath: barDef.storyPath ?? null,
+        inputs,
+        status,
+        twineLogic,
+        storyContent: content?.storyContent ?? null,
+        updatedAt: new Date(),
+      },
+      create: {
+        id: barDef.id,
+        creatorId: playerId,
+        title: barDef.title ?? barDef.id,
+        description: barDef.description ?? '',
+        type: barDef.type ?? 'story',
+        reward: barDef.reward ?? 1,
+        storyPath: barDef.storyPath ?? null,
+        inputs,
+        status,
+        twineLogic,
+        storyContent: content?.storyContent ?? null,
+        sourceBarId: asset.metadata?.sourceSeedId ?? null,
+        gameMasterFace: content?.gameMasterFace ?? null,
+      },
+    })
+
+    return NextResponse.json({
+      id: customBar.id,
+      status: customBar.status,
+      storyPath: customBar.storyPath,
+    })
+  } catch (err) {
+    console.error('[bar-asset/persist]', err)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}

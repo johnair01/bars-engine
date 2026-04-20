@@ -113,7 +113,7 @@ export function RoomCanvas({
     const c = params.get('carrying')
     if (c) setCarryingBarId(c)
     // Run once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   const spriteReady = !!player.avatarConfig || walkableSpriteDemo

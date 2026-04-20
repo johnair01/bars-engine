@@ -23,7 +23,7 @@ export function generateDeterministicNodeText(
     
     // Architect: Placeholder Binding
     // Replace {object}, {state}, {actor}
-    let filledText = template
+    const filledText = template
         .replace(/\{object\}/g, `"${context.title}"`)
         .replace(/\{state\}/g, `a sense of ${context.charge}`)
         .replace(/\{actor\}/g, 'you')
