@@ -3716,6 +3716,18 @@ model Campaign {
   /// Constraints: validated at application layer; ownershipModel required when non-null;
   /// Role references must be valid BARS roles (owner/steward/admin/player).
   narrativeSovereignty Json?
+
+  /// Phase 2a: Inherited world properties (read-only snapshot)
+  /// Populated at campaign creation from Instance. Immutable once set.
+  /// Shape: { nations, emotionalAlchemy, moves, gates, ... } — frozen at creation time
+  inheritedWorld       Json?
+
+  /// Phase 2a: Campaign flavor layers (customizable by GM)
+  /// GM-editable contextualization on top of inherited world.
+  /// Shape: { scope, real_world_context, quest_generation, invite_config, ... }
+  /// See PHASE2A_BACKFILL_LOGIC_DESIGN.md for full schema.
+  campaignFlavorLayers Json?
+
   /// Scheduled start
   startDate            DateTime?
   /// Scheduled end

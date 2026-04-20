@@ -75,14 +75,14 @@ This starts the backend at `http://localhost:8000`. The backend reads `DATABASE_
 | Context | Intended backend | Notes |
 |--------|-------------------|--------|
 | **Daily dev** (Cursor, MCP, `strand_run`, `sage:brief`, strand consult scripts) | **Local** `127.0.0.1:8000` | Omit `NEXT_PUBLIC_BACKEND_URL` / `BARS_BACKEND_URL` for MCP health, or set explicitly to `http://127.0.0.1:8000`. |
-| **Next.js app** (browser → agents) | From `NEXT_PUBLIC_BACKEND_URL` or fallback in `agent-client` | Vercel Preview/Production often points at **deployed** Railway; that is separate from “is my laptop MCP talking to local Python?”. |
-| **Intentional remote agents** | Deployed URL (`https://…railway.app`) | Opt-in: you are testing production/staging agents or not running local API. Align `OPENAI_API_KEY` on **that** host. |
+| **Next.js app** (browser → agents) | From `NEXT_PUBLIC_BACKEND_URL` or fallback in `agent-client` | Vercel Preview/Production should point at **deployed Render** backend; that is separate from “is my laptop MCP talking to local Python?”. |
+| **Intentional remote agents** | Deployed URL (`https://…onrender.com`) | Opt-in: you are testing production/staging agents or not running local API. Align `OPENAI_API_KEY` on **that** host. |
 
-**Why this matters:** `NEXT_PUBLIC_BACKEND_URL` is loaded into the same `.env.local` that the **Python MCP process** reads. If it points at Railway while you expect **local** agents, MCP tools (`strand_run`, etc.) health-check the wrong origin — or you get `openai_configured: false` on the remote host. **When helping someone or writing runbooks, assume local-first**; mention deployed URLs only as an explicit alternate.
+**Why this matters:** `NEXT_PUBLIC_BACKEND_URL` is loaded into the same `.env.local` that the **Python MCP process** reads. If it points at Render (or any remote host) while you expect **local** agents, MCP tools (`strand_run`, etc.) health-check the wrong origin — or you get `openai_configured: false` on the remote host. **When helping someone or writing runbooks, assume local-first**; mention deployed URLs only as an explicit alternate.
 
-**MCP health probe fallback (strand_run gate):** `backend/app/mcp_health.py` probes `GET /api/health` on the URL derived from env (with bare-host normalization). If that probe **fails** and the primary origin was **not** already `http://127.0.0.1:8000` or `http://localhost:8000`, it **retries once** against **`http://127.0.0.1:8000/api/health`**. So with `npm run dev:backend` running locally, a bad or unreachable Railway URL in `.env.local` should not block `strand_run` by itself.
+**MCP health probe fallback (strand_run gate):** `backend/app/mcp_health.py` probes `GET /api/health` on the URL derived from env (with bare-host normalization). If that probe **fails** and the primary origin was **not** already `http://127.0.0.1:8000` or `http://localhost:8000`, it **retries once** against **`http://127.0.0.1:8000/api/health`**. So with `npm run dev:backend` running locally, a bad or unreachable remote URL in `.env.local` should not block `strand_run` by itself.
 
-**Pin MCP to local explicitly:** set **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** in `.env.local`. That variable **only** affects the MCP Python process health check (not the browser/Next agent client). Use it when you want Next to keep pointing at Vercel/Railway but Cursor **bars-agents** must talk to local FastAPI.
+**Pin MCP to local explicitly:** set **`BARS_MCP_HEALTH_ORIGIN=http://127.0.0.1:8000`** in `.env.local`. That variable **only** affects the MCP Python process health check (not the browser/Next agent client). Use it when you want Next to keep pointing at Vercel/Render but Cursor **bars-agents** must talk to local FastAPI.
 
 See [CURSOR_MCP_TROUBLESHOOTING.md](./CURSOR_MCP_TROUBLESHOOTING.md) (dev-first + bare-host URL fixes).
 
@@ -199,7 +199,7 @@ Expect `"openai_configured": true`. If `false`, the key is missing from those fi
 
 **Common pitfall**: Key only in Vercel or only in a shell export — fine for that session, but `uvicorn` started from another terminal/Cursor won’t see it unless it’s in one of the files above.
 
-**Wrong `NEXT_PUBLIC_BACKEND_URL`**: See [Day-to-day dev vs deployed backend (precedence)](#day-to-day-dev-vs-deployed-backend-precedence). If `.env.local` points MCP/scripts at Railway while you meant local, or the remote host has no key, you get `openai_configured: false` or consult failures. For local dev, prefer unset or `http://127.0.0.1:8000`; use `--backend http://localhost:8000` on assess/brief scripts when overriding.
+**Wrong `NEXT_PUBLIC_BACKEND_URL`**: See [Day-to-day dev vs deployed backend (precedence)](#day-to-day-dev-vs-deployed-backend-precedence). If `.env.local` points MCP/scripts at Render (or another remote host) while you meant local, or the remote host has no key, you get `openai_configured: false` or consult failures. For local dev, prefer unset or `http://127.0.0.1:8000`; use `--backend http://localhost:8000` on assess/brief scripts when overriding.
 
 ### Generic or deterministic agent output (Sage, strand, sage:brief)
 

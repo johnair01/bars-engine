@@ -68,7 +68,7 @@ async function seed() {
     console.log(`  ✓ Quest BAR exists: ${quest.id}`)
   }
 
-  let thread =
+  const thread =
     (await db.questThread.findUnique({ where: { bookId: book.id } })) ??
     (await db.questThread.create({
       data: {
