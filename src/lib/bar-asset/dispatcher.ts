@@ -6,8 +6,8 @@
  * Providers are resolved in priority order: zo → anthropic → openai.
  */
 
-import type { AICompletionRequest, AICompletionResponse } from './providers'
-import { resolveProviderFromEnv } from './providers'
+import type { AICompletionRequest, AICompletionResponse } from './providers/index'
+import { resolveProviderFromEnv } from './providers/index'
 import { callZoAI } from './providers/zo'
 import { callAnthropic, callOpenAI } from './providers/external'
 
@@ -25,5 +25,7 @@ export async function dispatchAI(req: AICompletionRequest): Promise<AICompletion
       return callAnthropic(req)
     case 'openai':
       return callOpenAI(req)
+    default:
+      throw new Error(`No AI provider configured`)
   }
 }

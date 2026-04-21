@@ -14,7 +14,7 @@
  *     → BarAsset.barDef (via translator.ts → promoteToIntegrated)
  */
 
-import type { BarSeed } from '../bar-seed-metabolization/types'
+
 
 /** System prompt — sets the NL engine role for dungeon room generation */
 const SYSTEM_PROMPT = `You are a retro RPG dungeon room designer. Your output is a JSON object representing a single dungeon room for a retro RPG game.
@@ -37,13 +37,13 @@ Rules:
  * The seed's title and description are the primary content.
  * Metadata fields (author, contextNote) provide additional authoring context.
  */
-function buildUserPrompt(seed: BarSeed): string {
+function buildUserPrompt(seed: { title: string; description: string; metadata?: { author?: string; contextNote?: string } }): string {
   return `Generate a dungeon room based on this blessed object:
 
 Title: ${seed.title}
 Description: ${seed.description}
 Author: ${seed.metadata?.author ?? 'unknown'}
-Context: ${seed.contextNote ?? 'The object exists in a sacred space, awaiting discovery.'}
+Context: ${seed.metadata?.contextNote ?? 'The object exists in a sacred space, awaiting discovery.'}
 
 Output a JSON object with this exact schema:
 {

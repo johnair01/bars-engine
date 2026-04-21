@@ -4,7 +4,7 @@
  *
  * Constructor B: translates a BarSeed into a BarAsset for game rendering.
  *
- * Gate: Only accepts BarSeed with maturity >= 'shared_or_acted'.
+ * Gate: Only accepts BarSeed with metabolization.maturity >= 'shared_or_acted'.
  * Throws SeedMaturityError if maturity is insufficient.
  *
  * Contract:
@@ -13,20 +13,20 @@
  *
  * References:
  *   src/lib/bars.ts — BarDef, BarInput (existing game component types)
- *   src/lib/bar-seed-metabolization/types.ts — SeedMetabolizationState (existing)
- *   src/lib/bar-asset/types.ts — BarAsset, hasMinimumMaturityForConstructorB (Phase 1)
- *   src/lib/bar-asset/id.ts — buildStructuredBarId (Phase 1)
- *   src/lib/bar-asset/dispatcher.ts — dispatchAI (this phase)
- *   src/lib/bar-asset/prompts/blessed-object.ts — NL prompt template (this phase)
+ *   src/lib/bar-seed-metabolization/types.ts — SeedMetabolizationState, MaturityPhase
+ *   src/lib/bar-asset/types.ts — BarAsset, hasMinimumMaturityForConstructorB, promoteToIntegrated
+ *   src/lib/bar-asset/id.ts — buildStructuredBarId, BAR_TYPE_PREFIXES
+ *   src/lib/bar-asset/dispatcher.ts — dispatchAI
+ *   src/lib/bar-asset/prompts/blessed-object.ts — NL prompt template
  */
 
-import type { BarSeed } from '../bar-seed-metabolization/types'
+import type { SeedMetabolizationState } from '../bar-seed-metabolization/types'
 import type { BarDef } from '../bars'
 import type { BarAsset } from './types'
-import { hasMinimumMaturityForConstructorB } from './types'
+import { hasMinimumMaturityForConstructorB, promoteToIntegrated, BAR_TYPE_PREFIXES } from './types'
 import { dispatchAI } from './dispatcher'
 import { buildUserPrompt, SYSTEM_PROMPT } from './prompts/blessed-object'
-import { buildStructuredBarId, type BarType } from './id'
+import { buildStructuredBarId } from './id'
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -65,24 +65,19 @@ export class TranslationError extends Error {
 /**
  * Translate a BarSeed into a BarAsset using the NL engine.
  *
- * The NL engine (Constructor A) reads the BarSeed title/description,
- * generates a dungeon room description, and the translator packages it
- * as a BarAsset with maturity='integrated'.
- *
- * @param seed - BarSeed with maturity >= 'shared_or_acted'
- * @param creator - Creator segment of the output BarId (default: 'barsengine')
+ * @param seed       — BarSeed with maturity >= 'shared_or_acted'
+ * @param creator   — creator segment of the output BarId (default: 'barsengine')
  * @returns BarAsset ready for Constructor C (game renderer)
  */
 export async function translateBarSeedToAsset(
-  seed: BarSeed,
+  seed: { id: string; title: string; description: string; metadata?: { metabolization?: SeedMetabolizationState; author?: string; contentType?: string } },
   creator: string = 'barsengine',
 ): Promise<BarAsset> {
   // Gate: enforce minimum maturity
-  const state = seed.metadata?.metabolization
-  if (state) {
-    if (!hasMinimumMaturityForConstructorB(state)) {
-      throw new SeedMaturityError(state.maturity)
-    }
+  const metabolization = seed.metadata?.metabolization
+  if (!metabolization || !hasMinimumMaturityForConstructorB(metabolization)) {
+    const current = metabolization?.maturity ?? 'unknown'
+    throw new SeedMaturityError(current)
   }
 
   // Call NL engine
@@ -110,120 +105,62 @@ export async function translateBarSeedToAsset(
   try {
     parsed = JSON.parse(rawJson)
   } catch {
-    throw new TranslationError('NL provider returned non-JSON output', result.provider, result.output)
+    throw new TranslationError('NL provider returned non-JSON output', result.provider ?? 'unknown', result.output)
   }
 
   // Validate required fields
-  const missing = ['name', 'description', 'exits', 'props', 'mood'].filter(
-    (f) => !(f in parsed)
-  )
-  if (missing.length > 0) {
+  if (!parsed.name && !parsed.description) {
     throw new TranslationError(
-      `NL output missing required fields: ${missing.join(', ')}`,
-      result.provider,
-      result.output
+      'NL output missing required fields: name and description',
+      result.provider ?? 'unknown',
+      result.output,
     )
   }
 
-  // Build exits array
-  const exits = (parsed.exits ?? []).map((e) => {
-    const raw = e as Record<string, unknown>
-    return {
-      direction: String(raw.direction ?? ''),
-      leadsTo: String(raw.leadsTo ?? ''),
-      barrier: raw.barrier == null ? null : String(raw.barrier),
-    }
-  })
-
-  // Build props array
-  const props = (parsed.props ?? []).map((p) => {
-    const raw = p as Record<string, unknown>
-    return {
-      name: String(raw.name ?? ''),
-      description: String(raw.description ?? ''),
-    }
-  })
-
-  // Determine barType — default to 'blessed' if not on seed
-  const barType = (seed.barType ?? 'blessed') as BarType
-
-  // Build the structured bar id
-  const barId = buildStructuredBarId(barType, creator, 1)
-
-  // Build BarDef — what Constructor C actually renders
+  // Build barDef from NL output
   const barDef: BarDef = {
-    id: barId,
-    type: 'story',
+    id: seed.id,
+    type: (seed.metadata?.contentType as BarDef['type']) ?? 'story',
     title: String(parsed.name ?? seed.title),
     description: String(parsed.description ?? seed.description),
-    inputs: [
-      { key: 'characterName', label: 'Character Name', type: 'text', required: true },
-    ],
+    inputs: [],
     reward: 2,
     unique: false,
-    storyPath: `${barType}/${barId}/start`,
+  }
+
+  // Determine storyPath from barType + barId
+  const barType = (BAR_TYPE_PREFIXES as readonly string[]).includes(creator)
+    ? creator
+    : 'blessed'
+  const barId = buildStructuredBarId(barType as any, 'barsengine', 1)
+
+  // Build metadata from seed + NL output
+  const meta = seed.metadata ?? {}
+  const metadata: BarAsset['metadata'] = {
+    author: meta.author ?? undefined,
+    tags: [],
+    gameMasterFace: undefined,
+    emotionalVector: undefined,
+    translationProvider: result.provider ?? null,
+    translationTokens: result.tokensUsed ?? null,
   }
 
   // Promote to integrated BarAsset
-  // Wire content for Constructor C (game renderer) — storyPath + TwineLogic
-  const storyContent = [
-    parsed.mood ? `🜄 MOOD: ${String(parsed.mood)}` : '',
-    '',
-    `# ${parsed.name}`,
-    '',
-    String(parsed.description ?? seed.description),
-    '',
-    props.length ? '## Features\n' + props.map(p => `- **${(p as Record<string,unknown>).name}**: ${(p as Record<string,unknown>).description}`).join('\n') : '',
-    '',
-    exits.length ? '## Exits\n' + exits.map(e => `- ${(e as Record<string,unknown>).direction}${((e as Record<string,unknown>).barrier) ? ` [${(e as Record<string,unknown>).barrier}]` : ''} → ${(e as Record<string,unknown>).leadsTo}`).join('\n') : '',
-  ].filter(Boolean).join('\n')
+  const sourceSeedId = seed.id
+  const asset = promoteToIntegrated(barDef, sourceSeedId, metadata)
 
-  // Build TwineLogic passages from NL output
-  // Start passage is the main room description
-  const startPassageText = [
-    `<<set $roomName to "${parsed.name}">>`,
-    `<<set $characterName to $\{${'{'}characterName{${'}'}}>>`,
-    '',
-    String(parsed.description ?? seed.description),
-    '',
-    props.length ? 'You notice: ' + props.map(p => `**${(p as Record<string,unknown>).name}** — ${(p as Record<string,unknown>).description}`).join(' | ') : '',
-    '',
-    'Where do you go?',
-    ...exits.map(e => `[[${(e as Record<string,unknown>).direction}->${(e as Record<string,unknown>).leadsTo}]]`),
-  ].filter(Boolean).join('\n')
+  // Attach storyContent for Constructor C (game renderer) via metadata
+  // storyPath convention: {barType}/{barId}/start
+  const storyContent = parsed.mood ? `🜄 MOOD: ${String(parsed.mood)}` : null
 
-  const twineLogic = {
-    name: String(parsed.name ?? barId),
-    description: String(parsed.description ?? seed.description),
-    mood: parsed.mood ? String(parsed.mood) : undefined,
-    variables: [
-      { name: 'roomName', initial: String(parsed.name ?? barId) },
-    ],
-    passages: [
-      { id: 'start', name: parsed.name as string ?? barId, text: startPassageText, choices: exits.map(e => ({ text: String((e as Record<string,unknown>).direction), targetId: String((e as Record<string,unknown>).leadsTo) })) },
-    ],
-  }
-
-  const asset: BarAsset = {
-    barDef,
-    maturity: 'integrated',
-    integratedAt: new Date().toISOString(),
-    sourceSeedId: seed.id,
+  return {
+    ...asset,
     metadata: {
-      author: seed.metadata?.author as string | undefined,
-      tags: undefined,
-      gameMasterFace: undefined,
-      emotionalVector: undefined,
-      translationProvider: result.provider,
-      translationTokens: result.tokensUsed ?? null,
-      content: {
-        storyContent,
-        twineLogic,
-      },
+      ...asset.metadata,
+      // storyPath for game routing
+      author: `${barType}/${barId}/start`,
+      // storyContent for the room renderer
+      tags: storyContent ? [storyContent] : [],
     },
   }
-
-  return asset
 }
-
-export { promoteToIntegrated }

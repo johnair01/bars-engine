@@ -14,7 +14,10 @@
  *   OPENAI_MODEL=gpt-4o
  */
 
-import type { AICompletionRequest, AICompletionResponse } from '../providers'
+
+
+
+import type { AICompletionRequest, AICompletionResponse } from './index'
 
 export async function callAnthropic(req: AICompletionRequest): Promise<AICompletionResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -23,7 +26,7 @@ export async function callAnthropic(req: AICompletionRequest): Promise<AIComplet
   const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514'
 
   const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
-    { role: 'assistant', content: req.system },
+    { role: 'assistant', content: req.system ?? '' },
     { role: 'user', content: req.input },
   ]
 
@@ -69,7 +72,7 @@ export async function callOpenAI(req: AICompletionRequest): Promise<AICompletion
   const model = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
 
   const messages: Array<{ role: 'system' | 'user'; content: string }> = [
-    { role: 'system', content: req.system },
+    { role: 'system', content: req.system ?? '' },
     { role: 'user', content: req.input },
   ]
 

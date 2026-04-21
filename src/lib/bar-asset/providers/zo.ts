@@ -12,7 +12,7 @@
  * Persona: Council of Game Faces (d02a9e8c-ecf3-48bd-a4b6-a21f659b099c)
  */
 
-import type { AICompletionRequest, AICompletionResponse } from './providers'
+import type { AICompletionRequest, AICompletionResponse } from './index'
 
 /**
  * Call the Zo AI agent via the /zo/ask internal API.
@@ -48,7 +48,7 @@ export async function callZoAI(req: AICompletionRequest): Promise<AICompletionRe
 
   // If structured output is requested, add output_format
   if (req.responseFormat?.type === 'json_schema') {
-    body.output_format = req.responseFormat.json_schema.schema
+    body.output_format = req.responseFormat.json_schema?.schema
   }
 
   const response = await fetch(url, {

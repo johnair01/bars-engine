@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     accepted: true,
-    barSeedId: result.barSeedId,
-    barAssetUpdated: result.barAssetUpdated,
+    id: result.id,
+    persisted: result.persisted,
   })
 }

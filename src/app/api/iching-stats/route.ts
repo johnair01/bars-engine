@@ -99,7 +99,7 @@ export async function GET() {
       hexagramId: r.barId,
       castCount: r._count.barId,
     })),
-    faces: playerFaceCounts.map((r: any) => ({
+    faces: faceCounts.map((r: any) => ({
       face: r.chosenFace,
       choiceCount: r.count,
     })),

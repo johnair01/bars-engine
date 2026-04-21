@@ -155,3 +155,4 @@ Use the local wrapper to run `specify` commands:
 - `./tools/venv/bin/specify init --here` - Re-initialize or update Spec Kit
 - `./tools/venv/bin/specify check` - Verify local tool integrity
 - `./tools/venv/bin/specify version` - Check version information
+# 
