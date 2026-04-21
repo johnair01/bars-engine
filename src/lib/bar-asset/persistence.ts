@@ -1,7 +1,7 @@
 /**
  * BarAsset Persistence — Phase 3
  * Connects BarAsset output to existing CustomBar rows via the status lifecycle.
- * Sprint: sprint/bar-asset-pipeline-001
+ * Sprint: sprint/bar-asset-pipeline-002 | Issue: #76
  *
  * Lifecycle: seed → draft → active → archived
  * - BarSeed from NL authoring  → status='seed'
@@ -10,8 +10,7 @@
  */
 
 import { z } from 'zod'
-import type { BarAsset, BarTypePrefix } from './types'
-import { parseStructuredBarId } from './types'
+import type { BarAsset } from './types'
 
 /** Minimum fields required to upsert a CustomBar from a BarAsset. */
 export const BarAssetPersistenceSchema = z.object({
@@ -32,6 +31,8 @@ export interface PersistBarAssetResult {
 
 /**
  * Persist a BarAsset to a CustomBar row.
+ *
+ * @requires barAsset.sourceSeedId is not null — a BarAsset must have a traceable seed id
  *
  * Upsert logic:
  * - If structured BarId exists → update existing CustomBar row
@@ -57,8 +58,12 @@ export async function persistBarAsset(
   const parsed = BarAssetPersistenceSchema.parse(input)
   const { barAsset, createdBy } = parsed
 
-  // Build bar id from the underlying BarDef.
-  const barId = barAsset.sourceSeedId
+  if (!barAsset.sourceSeedId) {
+    throw new Error('persistBarAsset requires barAsset.sourceSeedId to be set')
+  }
+
+  // Build bar id from the source seed.
+  const barId: string = barAsset.sourceSeedId
   const barDef = barAsset.barDef
   const barType = barDef.type
   const title = barDef.title
@@ -126,15 +131,6 @@ export async function persistBarAsset(
     barType: created.type,
     title: created.title,
   }
-}
-
-/**
- * Infer a BarTypePrefix from a bar id string.
- * Falls back to 'vibe' for legacy/unstructured ids.
- */
-export function inferBarTypeFromId(id: string): BarTypePrefix {
-  const parsed = parseStructuredBarId(id)
-  return parsed?.barType ?? 'vibe'
 }
 
 /** Prisma-like client interface for dependency injection in tests. */

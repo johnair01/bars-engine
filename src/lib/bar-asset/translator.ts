@@ -1,32 +1,35 @@
 /**
  * BarAsset Translator — BAR Asset Pipeline
- * Sprint: sprint/bar-asset-pipeline-001 | Issue: #76
+ * Sprint: sprint/bar-asset-pipeline-002 | Issue: #76
  *
- * Constructor B: translates a BarSeed into a BarAsset for game rendering.
+ * Phase 2 — Translation Layer
  *
- * Gate: Only accepts BarSeed with metabolization.maturity >= 'shared_or_acted'.
+ * Translates AuthoredContent (title + description + metadata) into a BarAsset
+ * using the NL engine. The output is game-ready (maturity='integrated').
+ *
+ * Gate: Only accepts content with metabolization state maturity >= 'shared_or_acted'.
  * Throws SeedMaturityError if maturity is insufficient.
  *
  * Contract:
- *   Input:  BarSeed with maturity >= 'shared_or_acted'
+ *   Input:  AuthoredContent with maturity >= 'shared_or_acted'
  *   Output: BarAsset (barDef + maturity='integrated')
  *
  * References:
  *   src/lib/bars.ts — BarDef, BarInput (existing game component types)
- *   src/lib/bar-seed-metabolization/types.ts — SeedMetabolizationState, MaturityPhase
+ *   src/lib/bar-seed-metabolization/types.ts — SeedMetabolizationState, MaturityPhase (existing)
  *   src/lib/bar-asset/types.ts — BarAsset, hasMinimumMaturityForConstructorB, promoteToIntegrated
  *   src/lib/bar-asset/id.ts — buildStructuredBarId, BAR_TYPE_PREFIXES
  *   src/lib/bar-asset/dispatcher.ts — dispatchAI
  *   src/lib/bar-asset/prompts/blessed-object.ts — NL prompt template
  */
 
-import type { SeedMetabolizationState } from '../bar-seed-metabolization/types'
 import type { BarDef } from '../bars'
+import type { SeedMetabolizationState } from '../bar-seed-metabolization/types'
 import type { BarAsset } from './types'
 import { hasMinimumMaturityForConstructorB, promoteToIntegrated, BAR_TYPE_PREFIXES } from './types'
 import { dispatchAI } from './dispatcher'
 import { buildUserPrompt, SYSTEM_PROMPT } from './prompts/blessed-object'
-import { buildStructuredBarId } from './id'
+import { buildStructuredBarId, type BarType } from './id'
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -38,8 +41,8 @@ export class SeedMaturityError extends Error {
 
   constructor(current: string) {
     super(
-      `BarSeed maturity '${current}' is below minimum required 'shared_or_acted'. ` +
-      `Translation layer does not accept BarSeed below 'shared_or_acted' maturity.`
+      `Content maturity '${current}' is below minimum required 'shared_or_acted'. ` +
+      `Translation layer does not accept content below 'shared_or_acted' maturity.`,
     )
     this.name = 'SeedMaturityError'
     this.currentMaturity = current
@@ -59,42 +62,59 @@ export class TranslationError extends Error {
 }
 
 // ---------------------------------------------------------------------------
+// Input type (what Constructor A produces)
+// ---------------------------------------------------------------------------
+
+/**
+ * The minimal input that Constructor A (NL authoring) produces.
+ * This is what the translator accepts — not a full BarSeed type,
+ * just title + description + metabolization state.
+ */
+export interface AuthoredContent {
+  id: string
+  title: string
+  description: string
+  barType?: string
+  metadata?: {
+    author?: string
+    metabolization?: SeedMetabolizationState
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Core translator
 // ---------------------------------------------------------------------------
 
 /**
- * Translate a BarSeed into a BarAsset using the NL engine.
+ * Translate authored content into a BarAsset using the NL engine.
  *
- * @param seed       — BarSeed with maturity >= 'shared_or_acted'
- * @param creator   — creator segment of the output BarId (default: 'barsengine')
+ * @param seed - AuthoredContent with maturity >= 'shared_or_acted'
+ * @param creator - Creator segment of the output BarId (default: 'barsengine')
  * @returns BarAsset ready for Constructor C (game renderer)
  */
 export async function translateBarSeedToAsset(
-  seed: { id: string; title: string; description: string; metadata?: { metabolization?: SeedMetabolizationState; author?: string; contentType?: string } },
+  seed: AuthoredContent,
   creator: string = 'barsengine',
 ): Promise<BarAsset> {
   // Gate: enforce minimum maturity
-  const metabolization = seed.metadata?.metabolization
-  if (!metabolization || !hasMinimumMaturityForConstructorB(metabolization)) {
-    const current = metabolization?.maturity ?? 'unknown'
+  const meta = seed.metadata
+  if (!hasMinimumMaturityForConstructorB(meta?.metabolization)) {
+    const current = meta?.metabolization?.maturity ?? 'undefined'
     throw new SeedMaturityError(current)
   }
 
+  // Build NL prompt
+  const prompt = buildUserPrompt(seed)
+
   // Call NL engine
-  const userPrompt = buildUserPrompt(seed)
   const result = await dispatchAI({
+    input: prompt,
     system: SYSTEM_PROMPT,
-    input: userPrompt,
     maxTokens: 1024,
     temperature: 0.8,
   })
 
-  // Parse JSON from NL output — strip markdown code fences if present
-  let rawJson = result.output.trim()
-  if (rawJson.startsWith('```')) {
-    rawJson = rawJson.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?\s*```$/i, '')
-  }
-
+  // Parse NL output — expect JSON with { name, description, exits?, props?, mood? }
   let parsed: {
     name?: unknown
     description?: unknown
@@ -102,17 +122,27 @@ export async function translateBarSeedToAsset(
     props?: unknown[]
     mood?: unknown
   }
+
   try {
+    // Strip markdown code fences if present
+    const rawJson = result.output
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
     parsed = JSON.parse(rawJson)
   } catch {
-    throw new TranslationError('NL provider returned non-JSON output', result.provider ?? 'unknown', result.output)
+    throw new TranslationError(
+      'NL provider returned non-JSON output',
+      result.provider,
+      result.output,
+    )
   }
 
   // Validate required fields
   if (!parsed.name && !parsed.description) {
     throw new TranslationError(
       'NL output missing required fields: name and description',
-      result.provider ?? 'unknown',
+      result.provider,
       result.output,
     )
   }
@@ -120,7 +150,7 @@ export async function translateBarSeedToAsset(
   // Build barDef from NL output
   const barDef: BarDef = {
     id: seed.id,
-    type: (seed.metadata?.contentType as BarDef['type']) ?? 'story',
+    type: (seed.barType as BarDef['type']) ?? 'story',
     title: String(parsed.name ?? seed.title),
     description: String(parsed.description ?? seed.description),
     inputs: [],
@@ -128,39 +158,25 @@ export async function translateBarSeedToAsset(
     unique: false,
   }
 
-  // Determine storyPath from barType + barId
-  const barType = (BAR_TYPE_PREFIXES as readonly string[]).includes(creator)
-    ? creator
-    : 'blessed'
-  const barId = buildStructuredBarId(barType as any, 'barsengine', 1)
+  // Determine barType + build structured barId
+  const barType: BarType = (BAR_TYPE_PREFIXES as readonly string[]).includes(seed.barType ?? '')
+    ? (seed.barType as BarType)
+    : 'story'
+  const barId = buildStructuredBarId(barType, creator, 1)
 
   // Build metadata from seed + NL output
-  const meta = seed.metadata ?? {}
+  const storyContent = parsed.mood ? `MOOD: ${String(parsed.mood)}` : null
+
   const metadata: BarAsset['metadata'] = {
-    author: meta.author ?? undefined,
-    tags: [],
-    gameMasterFace: undefined,
-    emotionalVector: undefined,
+    author: meta?.author ?? creator,
+    creator,
     translationProvider: result.provider ?? null,
     translationTokens: result.tokensUsed ?? null,
+    gameMasterFace: undefined,
+    emotionalVector: undefined,
+    tags: storyContent ? [storyContent] : [],
   }
 
   // Promote to integrated BarAsset
-  const sourceSeedId = seed.id
-  const asset = promoteToIntegrated(barDef, sourceSeedId, metadata)
-
-  // Attach storyContent for Constructor C (game renderer) via metadata
-  // storyPath convention: {barType}/{barId}/start
-  const storyContent = parsed.mood ? `🜄 MOOD: ${String(parsed.mood)}` : null
-
-  return {
-    ...asset,
-    metadata: {
-      ...asset.metadata,
-      // storyPath for game routing
-      author: `${barType}/${barId}/start`,
-      // storyContent for the room renderer
-      tags: storyContent ? [storyContent] : [],
-    },
-  }
+  return promoteToIntegrated(barDef, seed.id, metadata)
 }
