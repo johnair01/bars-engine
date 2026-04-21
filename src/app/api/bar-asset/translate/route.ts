@@ -1,1 +1,61 @@
-// POST /api/bar-asset/translate\n// Body: { seed: BarSeed }\n// Returns: BarAsset\n// Gate: seed maturity must be >= 'shared_or_acted'\n\nimport { NextRequest, NextResponse } from 'next/server'\nimport { getCurrentPlayer } from '@/lib/auth'\nimport { translateBarSeedToAsset, SeedMaturityError, TranslationError } from '@/lib/bar-asset/translator'\n\nexport async function POST(req: NextRequest) {\n  const player = await getCurrentPlayer()\n\n  if (!player) {\n    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })\n  }\n\n  let body: { seed: unknown }\n  try {\n    body = await req.json()\n  } catch {\n    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })\n  }\n\n  if (!body.seed || typeof body.seed !== 'object') {\n    return NextResponse.json({ error: 'Missing required field: seed' }, { status: 400 })\n  }\n\n  const seed = body.seed as Record<string, unknown>\n\n  if (!seed.id || typeof seed.id !== 'string') {\n    return NextResponse.json({ error: 'seed.id is required' }, { status: 400 })\n  }\n  if (!seed.title || typeof seed.title !== 'string') {\n    return NextResponse.json({ error: 'seed.title is required' }, { status: 400 })\n  }\n  if (!seed.description || typeof seed.description !== 'string') {\n    return NextResponse.json({ error: 'seed.description is required' }, { status: 400 })\n  }\n\n  try {\n    const creator = player.username ?? player.email ?? 'unknown'\n    const asset = await translateBarSeedToAsset(seed as Parameters<typeof translateBarSeedToAsset>[0], creator)\n    return NextResponse.json({ asset }, { status: 200 })\n  } catch (err) {\n    if (err instanceof SeedMaturityError) {\n      return NextResponse.json(\n        { error: err.message, code: 'SEED_MATURITY_INSUFFICIENT', currentMaturity: err.currentMaturity },\n        { status: 422 }\n      )\n    }\n    if (err instanceof TranslationError) {\n      return NextResponse.json(\n        { error: err.message, code: 'TRANSLATION_FAILED', provider: err.provider },\n        { status: 502 }\n      )\n    }\n    const message = err instanceof Error ? err.message : 'Unknown error'\n    console.error('[/api/bar-asset/translate]', message)\n    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })\n  }\n}\n
+// POST /api/bar-asset/translate
+// Body: { seed: BarSeed }
+// Returns: BarAsset
+// Gate: seed maturity must be >= 'shared_or_acted'
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentPlayer } from '@/lib/auth'
+import { translateBarSeedToAsset, SeedMaturityError, TranslationError } from '@/lib/bar-asset/translator'
+
+export async function POST(req: NextRequest) {
+  const player = await getCurrentPlayer()
+
+  if (!player) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  let body: { seed: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  if (!body.seed || typeof body.seed !== 'object') {
+    return NextResponse.json({ error: 'Missing required field: seed' }, { status: 400 })
+  }
+
+  const seed = body.seed as Record<string, unknown>
+
+  if (!seed.id || typeof seed.id !== 'string') {
+    return NextResponse.json({ error: 'seed.id is required' }, { status: 400 })
+  }
+  if (!seed.title || typeof seed.title !== 'string') {
+    return NextResponse.json({ error: 'seed.title is required' }, { status: 400 })
+  }
+  if (!seed.description || typeof seed.description !== 'string') {
+    return NextResponse.json({ error: 'seed.description is required' }, { status: 400 })
+  }
+
+  try {
+    const creator = player.name ?? 'anonymous'
+    const asset = await translateBarSeedToAsset(seed as Parameters<typeof translateBarSeedToAsset>[0], creator)
+    return NextResponse.json({ asset }, { status: 200 })
+  } catch (err) {
+    if (err instanceof SeedMaturityError) {
+      return NextResponse.json(
+        { error: err.message, code: 'SEED_MATURITY_INSUFFICIENT', currentMaturity: err.currentMaturity },
+        { status: 422 }
+      )
+    }
+    if (err instanceof TranslationError) {
+      return NextResponse.json(
+        { error: err.message, code: 'TRANSLATION_FAILED', provider: err.provider },
+        { status: 502 }
+      )
+    }
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('[/api/bar-asset/translate]', message)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

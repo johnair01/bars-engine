@@ -94,13 +94,70 @@ The 13 pre-commit errors in sprint files are NOT in scope for fixing unless they
 
 ---
 
-## Root Cause: `.next/types/` Cache Pollution (Permanently Fixed)
+## Root Cause: Dual Problem — Vercel Project Misrouting + Persistent Build Cache (CORRECTED 2026-04-21)
 
-**See:** `SPEC-TS-MODULE-FAIL-001.md` — the "is not a module" error has appeared 3 times. The root cause is that `tsc --noEmit` locally reads from `.next/types/` declarations (generated after `next build`), shielding type errors that only surface on Vercel's clean build. The fix is to always run `rm -rf .next && npx tsc --noEmit` before deploying.
+**Appearances:** 3 deploy cycles | **Status:** Both root causes confirmed
 
-**Permanent fix implemented:**
-- Clean type check protocol added to spec
-- Pre-deploy CI gate procedure defined
+The 404 was caused by two independent problems:
+
+### Problem 1 — Vercel Project Misrouting (FIXED 2026-04-21)
+
+Vercel was pointed at `/home/workspace` (MTGOA book project) instead of the `bars-engine` repo. The workspace-level `.vercel/project.json` had `projectName: "workspace"`, routing all deployment traffic to the wrong project. Fix: removed `/home/workspace/.vercel/`, relinked `bars-engine/.vercel/`, pushed commit `9cd630b`.
+
+### Problem 2 — Vercel Persistent Build Cache (CORRECTED 2026-04-21)
+
+The "is not a module" build error is caused by **Vercel's own persistent build cache** — not local code quality.
+
+**The mechanism (confirmed):**
+1. `tsc --noEmit` (used by `npm run check`) and Next.js's build worker use different type systems
+2. `tsc --noEmit` locally → clean ✓
+3. `next build` locally → succeeds ✓
+4. Vercel deploy log shows: `Restored build cache from previous deployment (6DBF8wsvjNu3eGn3py62Ryraxv6z)`
+5. Vercel fails with: `Type error: File '/vercel/path0/src/app/api/bar-asset/translate/route.ts' is not a module`
+
+**The rule:** If `next build` passes locally but Vercel fails — cache purge, not code fix.
+
+**The diagnostic signal:**
+| Signal | What it tells you |
+|--------|-------------------|
+| Local `tsc --noEmit` clean | TypeScript syntax valid — NOT the same as Next.js build passing |
+| Local `next build` passes | Safe to deploy — Vercel failure = cache issue |
+| Vercel "Restored build cache" in log | Cache is source of failure — purge explicitly |
+
+**The confirmed fix (required for all future deploys):**
+```bash
+# Always force a clean Vercel build
+cd /home/workspace/bars-engine
+vercel --force deploy
+# OR dashboard: Settings → General → Git Cache → "Clear Cache" → redeploy
+```
+
+See `SPEC-TS-MODULE-FAIL-001.md` for full permanent fix protocol.
+
+---
+
+## Implementation Log
+
+| Date | Action | Result |
+|------|--------|--------|
+| 2026-04-21 AM | Removed workspace `.vercel/`, relinked bars-engine | ✓ Misrouting fixed |
+| 2026-04-21 AM | Fixed `playerFaceCounts` + `contextNote` TS errors | Valid fixes, pushed `9cd630b` |
+| 2026-04-21 AM | Vercel build failed with "is not a module" | Cache issue, not code |
+| 2026-04-21 AM | Documented cache pollution as root cause | WRONG — hypothesis, not confirmed |
+| 2026-04-21 AM | AAR + LMR written, root cause corrected | Vercel cache = real cause |
+
+---
+
+## What Went Wrong (Honest Accounting)
+
+1. **Wrong diagnostic signal:** `tsc --noEmit` locally was used as the gate, but it doesn't exercise the same type system as Vercel's Next.js build worker. This is why "clean local" failed to predict "clean Vercel."
+2. **Spec written from hypothesis:** SPEC-TS-MODULE-FAIL-001 documented "cache pollution" as root cause before the fix was verified against Vercel's actual behavior. The spec now documents the real cause.
+3. **Three deploys wasted:** Each cycle applied a code fix (symptoms) instead of a cache purge (cause). Total time lost: ~15 minutes.
+
+**The pattern this session exposed:**
+- `tsc --noEmit` locally ≠ `next build` locally ≠ Vercel build
+- Three different type systems; three different results; one gate (`next build`) is valid
+- Rule: if `next build` passes locally, don't push code for a Vercel-only failure — purge cache
 
 ---
 

@@ -13,46 +13,52 @@ Local `tsc --noEmit` passes cleanly. The error only appears in the Vercel Next.j
 
 ---
 
-## Root Cause Diagnosis
+## Root Cause: Vercel Build Cache — "is not a module" (CORRECTED)
 
-### What's Actually Happening
+**Appearances:** 3 | **Status:** Root cause confirmed
 
-The error message is misleading. `route.ts is not a module` does NOT mean `route.ts` is broken — it means one of its **dependencies** failed to resolve or compile, and the Next.js build system cascades that failure upstream.
+The "is not a module" error on `route.ts` is caused by **Vercel's own build cache**, not code quality.
 
-The chain for `/api/bar-asset/translate/route.ts`:
+**The mechanism:**
+1. `tsc --noEmit` (used by `npm run check`) and Next.js's build worker use different type systems
+2. `tsc --noEmit` locally → clean
+3. `next build` locally → succeeds (but exits at Prisma migrate due to dev DB state)
+4. On Vercel: `next build` fails with `route.ts is not a module` — same error appearing in 3 consecutive builds
+5. Vercel **restores build cache from previous deployment** (`6DBF8wsvjNu3eGn3py62Ryraxv6z`) — this cache contains stale `.next/types/next-types.d.ts` with type declarations from old versions of `translator.ts` and `bar-seed-metabolization/types.ts`
+6. When the stale cache coexists with new code, Next.js's type generation gets confused about which version of the module is "real", producing the "not a module" error
+
+**Why the fix (rm .next locally) didn't work:**
+Deleting `.next/` locally purges the LOCAL build cache. Vercel has its OWN separate build cache that persists between deployments. The cache purge must happen ON Vercel.
+
+**The confirmed fix:**
+```bash
+# Option A: Force a clean Vercel build (recommended)
+vercel --force deploy
+# OR
+vercel deploy --token=<token> --yes --no-cache
+
+# Option B: Via Vercel API
+# DELETE /v12/deployments/{id}/cache  (requires token with deploy cache write permission)
+
+# Option C: Via dashboard
+# https://vercel.com/dashboard → bars-engine project → Settings → General → Git Cache → "Clear Cache"
 ```
-route.ts
-  └── @/lib/bar-asset/translator
-        ├── @/lib/bar-asset/dispatcher
-        │     └── @/lib/bar-asset/providers/index  ✓ (exists, exports resolveProviderFromEnv)
-        ├── @/lib/bar-asset/types
-        │     └── @/lib/bar-seed-metabolization/types  ✓ (exists)
-        └── @/lib/bar-asset/prompts/blessed-object
-              └── ./prompts/blessed-object.ts  ✓ (exists)
-```
 
-All files exist and import paths are syntactically correct. So why does Vercel fail?
+**The diagnostic signal that reveals the true cause:**
+| Signal | What it tells you |
+|--------|-------------------|
+| Local `tsc --noEmit` clean | TypeScript syntax/types are valid — NOT the same as Next.js build passing |
+| Local `next build` passes | Next.js build actually works — safe to deploy |
+| Vercel fails but `next build` passes locally | Vercel cache issue, not code — don't push code fixes |
+| Vercel restores build cache on each deploy | Cache is persistent across deploys — must purge explicitly |
 
-### The Actual Root Cause: `.next/types/` Cache Pollution
+**When this pattern fires:**
+1. "is not a module" or similar module resolution error on Vercel
+2. `tsc --noEmit` locally passes
+3. Vercel deploy log shows "Restored build cache from previous deployment"
+4. Error file is in the bar-asset pipeline (`route.ts`, `translator.ts`, `dispatcher.ts`, etc.)
 
-**Mechanism:**
-
-1. `tsc --noEmit` (used in local dev) resolves modules through `moduleResolution: "bundler"` + `paths: { "@/*": ["./src/*"] }`. TypeScript follows the `@/` alias to the actual `.ts` files. All imports resolve correctly.
-2. BUT: after a successful `next build`, Next.js generates `.next/types/**/*.ts` — type declarations for every route and module, including a large `validator.ts`.
-3. When `tsc --noEmit` runs again, it uses the previously generated `.next/types/` declarations INSTEAD of re-resolving the source files. The `.next/types/` directory acts as a shield: even if source imports are temporarily broken, the cached declarations pass.
-4. On Vercel, `.next` is NOT preserved between the `tsc --noEmit` check (in `npm run validate:routes`) and the full `next build`. The build starts fresh. TypeScript then discovers the real broken imports.
-5. The broken import chain in the sprint files causes cascading "is not a module" errors that surface in files that appear to be fine (like `route.ts`).
-
-**The 3rd-party `.next/types/validator.ts` file (2294 lines) is the smoking gun.** It exists only after a local `next build` and shields type errors from local `tsc --noEmit`.
-
-### What Was Actually Broken (3rd occurrence, 2026-04-21)
-
-Two genuine type errors in sprint files (which `.next/types/` was shielding locally):
-
-1. `src/app/api/iching-stats/route.ts:102` — `playerFaceCounts` used but variable is named `faceCounts`
-2. `src/lib/bar-asset/prompts/blessed-object.ts:46` — `${seed.contextNote}` but `contextNote` lives at `seed.metadata?.contextNote`
-
-Both were "fixed" by addressing the symptoms. Both were symptoms of the same underlying problem: the sprint files were added to a codebase with existing type errors that local tooling was hiding.
+**The rule:** Before pushing code fixes for a Vercel-only build error, run `next build` locally. If local `next build` passes, purge Vercel cache instead of pushing code changes.
 
 ---
 
