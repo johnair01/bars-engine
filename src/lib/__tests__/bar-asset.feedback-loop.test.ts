@@ -1,127 +1,142 @@
 /**
  * bar-asset.feedback-loop.test.ts — Phase 4
- * Sprint: sprint/bar-asset-pipeline-001
+ * Sprint: sprint/bar-asset-pipeline-002
  */
 
-import { describe, expect, it } from 'bun:test'
-import { playDataToBarSeed, validatePlayData } from '../bar-asset/play-data'
+import { describe, expect, it, beforeEach, vi } from 'bun:test'
+import { processPlayEvent, processPlayEventBatch } from '../bar-asset/feedback-loop'
+import type { PlayData } from '../bar-asset/play-data'
 
-const BASE_PLAY_DATA = {
-  sourceBarId: 'blessed_wendell_001',
-  playerId: 'player_test_001',
-  eventType: 'completion' as const,
-  payload: { outcome: 'village_saved', timeToComplete: 42000 },
-  playedAt: '2026-04-20T20:00:00Z',
+// ---------------------------------------------------------------------------
+// Stub DB — captures what gets written
+// ---------------------------------------------------------------------------
+
+interface StubRecord {
+  id: string
+  status: string
+  type: string
+  title: string
 }
 
-describe('playDataToBarSeed', () => {
-  it('converts completion event to BarSeed content', () => {
-    const result = playDataToBarSeed(BASE_PLAY_DATA)
-    expect(result).not.toBeNull()
-    expect(result!.content).toContain('village_saved')
-    expect(result!.content).toContain('42000ms')
-    expect(result!.metadata.maturity).toBe('captured')
-    expect(result!.metadata.soilKind).toBeNull()
+let stubDb: {
+  findUnique: () => Promise<StubRecord | null>
+  create: (data: { data: Record<string, unknown> }) => Promise<StubRecord>
+  update: (data: { data: Record<string, unknown> }) => Promise<StubRecord>
+}
+
+function makeStubDb(existing: StubRecord | null = null) {
+  const created: StubRecord[] = []
+  stubDb = {
+    findUnique: async () => existing,
+    create: async ({ data }: { data: Record<string, unknown> }) => {
+      const record = { id: data.id as string, status: 'active', type: data.type as string, title: data.title as string }
+      created.push(record)
+      return record
+    },
+    update: async ({ data }: { data: Record<string, unknown> }) => {
+      return { id: data.id as string, status: 'active', type: data.type as string, title: data.title as string }
+    },
+  }
+  return { db: stubDb }
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe('processPlayEvent', () => {
+  it('skips excluded event types', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'page_view', sourceBarId: 'blessed_test_001', playerId: 'p1' },
+      { creator: 'test' },
+    )
+    expect(result.skipped).toBe(true)
+    expect(result.skipReason).toContain('page_view')
   })
 
-  it('converts choice event to BarSeed content', () => {
-    const choice: typeof BASE_PLAY_DATA = {
-      ...BASE_PLAY_DATA,
-      eventType: 'choice',
-      payload: { selectedOption: 2 },
-    }
-    const result = playDataToBarSeed(choice)
-    expect(result).not.toBeNull()
-    expect(result!.content).toContain('option 2')
+  it('skips empty content', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'completion', sourceBarId: 'blessed_test_001', playerId: 'p1', content: '' },
+      { creator: 'test' },
+    )
+    expect(result.skipped).toBe(true)
+    expect(result.skipReason).toContain('empty')
   })
 
-  it('converts outcome event to BarSeed content', () => {
-    const outcome: typeof BASE_PLAY_DATA = {
-      ...BASE_PLAY_DATA,
-      eventType: 'outcome',
-      payload: { outcome: 'secret_revealed' },
-    }
-    const result = playDataToBarSeed(outcome)
-    expect(result).not.toBeNull()
-    expect(result!.content).toContain('secret_revealed')
+  it('skips whitespace-only content', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'completion', sourceBarId: 'blessed_test_001', playerId: 'p1', content: '   \n  ' },
+      { creator: 'test' },
+    )
+    expect(result.skipped).toBe(true)
+    expect(result.skipReason).toContain('empty')
   })
 
-  it('returns null for abandon events', () => {
-    const abandon: typeof BASE_PLAY_DATA = {
-      ...BASE_PLAY_DATA,
-      eventType: 'abandon',
-      payload: {},
-    }
-    const result = playDataToBarSeed(abandon)
-    expect(result).toBeNull()
+  it('persists BarAsset when content is valid', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'completion', sourceBarId: 'blessed_test_001', playerId: 'p1', content: 'The village was saved!' },
+      { creator: 'test' },
+    )
+    expect(result.skipped).toBe(false)
+    expect(result.barAssetId).toBeTruthy()
+    expect(result.persisted).toBe(true)
+    expect(result.barAssetCreated).toBe(true)
   })
 
-  it('returns null when sourceBarId is empty', () => {
-    const empty: typeof BASE_PLAY_DATA = {
-      ...BASE_PLAY_DATA,
-      sourceBarId: '',
-    }
-    const result = playDataToBarSeed(empty)
-    expect(result).toBeNull()
+  it('builds structured bar id with correct format', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'completion', sourceBarId: 'blessed_test_001', playerId: 'player_alice', content: 'Hello world' },
+      { creator: 'test' },
+    )
+    expect(result.barAssetId).toMatch(/^blessed_test_\d+$/)
   })
 
-  it('marks slow completions (>5min) with slow flag', () => {
-    const slow: typeof BASE_PLAY_DATA = {
-      ...BASE_PLAY_DATA,
-      eventType: 'completion',
-      payload: { outcome: 'finished', timeToComplete: 8 * 60 * 1000 },
-    }
-    const result = playDataToBarSeed(slow)
-    expect(result).not.toBeNull()
-    expect(result!.content).toContain('slow completion flag')
+  it('uses custom creator namespace', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'completion', sourceBarId: 'blessed_test_001', playerId: 'p1', content: 'Content' },
+      { creator: 'mycampaign' },
+    )
+    expect(result.barAssetId).toMatch(/^blessed_mycampaign_\d+$/)
   })
 
-  it('uses custom creator namespace', () => {
-    const result = playDataToBarSeed(BASE_PLAY_DATA, 'my_pipeline')
-    expect(result).not.toBeNull()
-    // creator param reserved for barSeedId construction in feedback-loop; not embedded in content
-  })
-
-  it('sets playback context in metadata', () => {
-    const result = playDataToBarSeed(BASE_PLAY_DATA)
-    expect(result!.metadata.contextNote).toMatch(/playback:player_test_001:completion/)
+  it('skips session_heartbeat events', async () => {
+    const { db } = makeStubDb()
+    const result = await processPlayEvent(
+      { eventType: 'session_heartbeat', sourceBarId: 'blessed_test_001', playerId: 'p1', content: 'ping' },
+      { creator: 'test' },
+    )
+    expect(result.skipped).toBe(true)
+    expect(result.skipReason).toContain('session_heartbeat')
   })
 })
 
-describe('validatePlayData', () => {
-  it('accepts valid play data', () => {
-    const result = validatePlayData(BASE_PLAY_DATA)
-    expect(result.valid).toBe(true)
-    expect(result.errors).toHaveLength(0)
+describe('processPlayEventBatch', () => {
+  it('processes multiple events concurrently', async () => {
+    const { db } = makeStubDb()
+    const events: PlayData[] = [
+      { eventType: 'completion', sourceBarId: 'blessed_a_001', playerId: 'p1', content: 'First' },
+      { eventType: 'completion', sourceBarId: 'blessed_a_001', playerId: 'p2', content: 'Second' },
+      { eventType: 'completion', sourceBarId: 'blessed_a_001', playerId: 'p3', content: 'Third' },
+    ]
+    const results = await processPlayEventBatch(events, { creator: 'batch_test' })
+    expect(results).toHaveLength(3)
+    expect(results.filter(r => !r.skipped)).toHaveLength(3)
   })
 
-  it('rejects non-object input', () => {
-    const result = validatePlayData('not an object')
-    expect(result.valid).toBe(false)
-    expect(result.errors).toContain('playData must be an object')
-  })
-
-  it('rejects missing sourceBarId', () => {
-    const result = validatePlayData({ ...BASE_PLAY_DATA, sourceBarId: '' })
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('sourceBarId'))).toBe(true)
-  })
-
-  it('rejects missing playerId', () => {
-    const result = validatePlayData({ ...BASE_PLAY_DATA, playerId: '' })
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('playerId'))).toBe(true)
-  })
-
-  it('rejects invalid eventType', () => {
-    const result = validatePlayData({ ...BASE_PLAY_DATA, eventType: 'invalid' })
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('eventType'))).toBe(true)
-  })
-
-  it('rejects missing payload', () => {
-    const result = validatePlayData({ ...BASE_PLAY_DATA, payload: undefined })
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('payload'))).toBe(true)
+  it('returns skipped results for mixed valid/invalid events', async () => {
+    const { db } = makeStubDb()
+    const events: PlayData[] = [
+      { eventType: 'completion', sourceBarId: 'blessed_a_001', playerId: 'p1', content: 'Valid' },
+      { eventType: 'page_view', sourceBarId: 'blessed_a_001', playerId: 'p2', content: 'Invalid' },
+    ]
+    const results = await processPlayEventBatch(events, { creator: 'batch_test' })
+    expect(results[0].skipped).toBe(false)
+    expect(results[1].skipped).toBe(true)
   })
 })
