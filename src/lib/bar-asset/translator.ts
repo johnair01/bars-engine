@@ -30,6 +30,7 @@ import { hasMinimumMaturityForConstructorB, promoteToIntegrated, BAR_TYPE_PREFIX
 import { dispatchAI } from './dispatcher'
 import { buildUserPrompt, SYSTEM_PROMPT } from './prompts/blessed-object'
 import { buildStructuredBarId, type BarType } from './id'
+import { resolveEmotionalVector } from '../quest-grammar/emotional-vector-resolver'
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -173,7 +174,12 @@ export async function translateBarSeedToAsset(
     translationProvider: result.provider ?? null,
     translationTokens: result.tokensUsed ?? null,
     gameMasterFace: undefined,
-    emotionalVector: undefined,
+    emotionalVector: resolveEmotionalVector({
+      title: String(parsed.name ?? seed.title),
+      description: String(parsed.description ?? seed.description),
+      barType: barType,
+      mood: parsed.mood as string | null | undefined,
+    }),
     tags: storyContent ? [storyContent] : [],
   }
 
