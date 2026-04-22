@@ -1,54 +1,47 @@
 /**
- * POST /api/bar-asset/play-event — Phase 4 feedback loop ingestion
- * Accepts play events, runs them through the feedback loop.
- * Sprint: sprint/bar-asset-pipeline-001
+ * POST /api/bar-asset/play-event
+ * Phase 4: Ingest play events from the game client
+ *
+ * Body: { playData: PlayData }
+ * Returns: FeedbackLoopResult
  */
 
-import { NextResponse } from 'next/server'
-import { processPlayEvent } from '@/lib/bar-asset/feedback-loop'
-import { validatePlayData, type PlayData } from '@/lib/bar-asset/play-data'
+import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentPlayer } from '@/lib/auth'
+import { processPlayEvent, type PlayData } from '@/lib/bar-asset/feedback-loop'
 
-export async function POST(request: Request) {
-  let body: unknown
+export async function POST(req: NextRequest) {
+  const player = await getCurrentPlayer()
+  if (!player) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
 
+  let body: { playData: unknown }
   try {
-    body = await request.json()
+    body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  // Validate structure
-  const validation = validatePlayData(body)
-  if (!validation.valid) {
-    return NextResponse.json(
-      { error: 'Invalid play data', details: validation.errors },
-      { status: 400 },
-    )
+  if (!body.playData || typeof body.playData !== 'object') {
+    return NextResponse.json({ error: 'Missing required field: playData' }, { status: 400 })
   }
 
-  const playData = body as PlayData
+  const playData = body.playData as Record<string, unknown>
 
-  // Reject abandon events (no quality signal from abandoned runs)
-  if (playData.eventType === 'abandon') {
-    return NextResponse.json(
-      { error: 'abandon events are not accepted', code: 'ABANDON_REJECTED' },
-      { status: 400 },
-    )
+  if (!playData.eventType || typeof playData.eventType !== 'string') {
+    return NextResponse.json({ error: 'playData.eventType is required' }, { status: 400 })
+  }
+  if (!playData.sourceBarId || typeof playData.sourceBarId !== 'string') {
+    return NextResponse.json({ error: 'playData.sourceBarId is required' }, { status: 400 })
+  }
+  if (!playData.playerId || typeof playData.playerId !== 'string') {
+    return NextResponse.json({ error: 'playData.playerId is required' }, { status: 400 })
   }
 
-  // Process through feedback loop
-  const result = await processPlayEvent(playData)
-
-  if (result.skipped) {
-    return NextResponse.json(
-      { accepted: false, reason: result.skipReason },
-      { status: 200 },
-    )
-  }
-
-  return NextResponse.json({
-    accepted: true,
-    id: result.id,
-    persisted: result.persisted,
+  const result = await processPlayEvent(playData as unknown as PlayData, {
+    creator: player.name ?? 'anonymous',
   })
+
+  return NextResponse.json({ result }, { status: 200 })
 }

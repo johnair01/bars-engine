@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentPlayer } from '@/lib/auth'
-import { translateBarSeedToAsset, SeedMaturityError, TranslationError } from '@/lib/bar-asset/translator'
+import { translateBarSeedToAsset, SeedMaturityError, TranslationError, type AuthoredContent } from '@/lib/bar-asset/translator'
 
 export async function POST(req: NextRequest) {
   const player = await getCurrentPlayer()
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const creator = player.name ?? 'anonymous'
-    const asset = await translateBarSeedToAsset(seed as Parameters<typeof translateBarSeedToAsset>[0], creator)
+    const asset = await translateBarSeedToAsset(seed as unknown as AuthoredContent, creator)
     return NextResponse.json({ asset }, { status: 200 })
   } catch (err) {
     if (err instanceof SeedMaturityError) {

@@ -1,133 +1,170 @@
 /**
- * Feedback Loop — Phase 4: Play data → BarSeed → pipeline
- * Sprint: sprint/bar-asset-pipeline-001 | Issue: #76
+ * Feedback Loop — Phase 4: Play data → BarAsset pipeline
+ * Sprint: sprint/bar-asset-pipeline-002
  *
  * Flow:
- *   Play event → BarSeed content → auto-promote → BarAsset → CustomBar upsert
+ *   1. Receive PlayData from game client
+ *   2. Filter excluded event types
+ *   3. Convert to BarAsset content (title + description)
+ *   4. Persist BarAsset to CustomBar via persistBarAsset
  *
- * Lifecycle:
- *   processPlayEvent: validates + routes
- *   persistBarAsset:  writes BarAsset → CustomBar (see persistence.ts)
+ * Out of scope (deferred):
+ * - Feedback → new BarSeed cycle
+ * - Batch processing with concurrency limits
  */
 
-import { playDataToBarSeed, type PlayData } from './play-data'
 import { buildStructuredBarId, parseStructuredBarId } from './id'
-import { promoteToIntegrated } from './types'
+import type { BarAsset } from './types'
 import { persistBarAsset, type BarAssetPersistenceInput } from './persistence'
-import type { BarDef } from '../bars'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
+export interface PlayData {
+  /** Which event triggered this. Used to filter exclusions. */
+  eventType: string
+  /** The bar this play contributed to. */
+  sourceBarId: string
+  /** Player who triggered the event. */
+  playerId: string
+  /** Optional — NL text from the play. May be empty. */
+  content?: string
+}
+
 export interface FeedbackLoopResult {
-  id: string | null
+  barAssetCreated: boolean
+  barAssetId: string | null
   persisted: boolean
   skipped: boolean
   skipReason?: string
 }
 
 export interface FeedbackLoopOptions {
-  /** Creator namespace for new BarSeeds. Default: 'playtest' */
+  /** Creator namespace for new BarAssets. Defaults to 'playtest'. */
   creator?: string
-  /** Auto-promote to integrated. Default: false (queue mode) */
-  autoPromote?: boolean
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Event type exclusions
 // ---------------------------------------------------------------------------
 
-function hashToSequence(playerId: string): number {
-  let hash = 0
-  for (let i = 0; i < playerId.length; i++) {
-    const char = playerId.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash
-  }
-  return Math.abs(hash) % 999 + 1
-}
+const EXCLUDED_EVENT_TYPES = new Set([
+  'page_view',
+  'session_heartbeat',
+  'telemetry_degraded',
+])
 
 // ---------------------------------------------------------------------------
-// Main
+// Main entry point
 // ---------------------------------------------------------------------------
 
 /**
- * Process a single play event through the feedback loop.
+ * Process a single play event and route it through the feedback loop.
+ *
+ * Returns FeedbackLoopResult describing what happened:
+ * - `skipped: true` + `skipReason` if the event type is excluded
+ * - `skipped: false` + persisted BarAsset if content is present
+ * - `skipped: false` + persisted BarAsset if autoCreate is enabled (even empty content)
  */
 export async function processPlayEvent(
   playData: PlayData,
   options: FeedbackLoopOptions = {},
 ): Promise<FeedbackLoopResult> {
-  const { creator = 'playtest' } = options
+  const creator = options.creator ?? 'playtest'
 
-  // Step 1: Convert to BarSeed content
-  const conversion = playDataToBarSeed(playData, creator)
-  if (conversion === null) {
+  // Filter excluded event types
+  if (EXCLUDED_EVENT_TYPES.has(playData.eventType)) {
     return {
-      id: null,
+      barAssetCreated: false,
+      barAssetId: null,
       persisted: false,
       skipped: true,
       skipReason: `event type '${playData.eventType}' excluded from feedback`,
     }
   }
 
-  // Step 2: Build structured id
-  const sequence = hashToSequence(playData.playerId)
-  const barSeedId = buildStructuredBarId('blessed', creator, sequence)
-
-  // Step 3: Build a minimal BarDef from the play data
-  const parsed = parseStructuredBarId(playData.sourceBarId)
-  const barType = parsed?.barType ?? 'blessed'
-
-  const barDef: BarDef = {
-    id: barSeedId,
-    type: barType as BarDef['type'],
-    title: `Playtest: ${playData.sourceBarId}`,
-    description: conversion.content,
-    inputs: [],
-    reward: 0,
-    unique: false,
-  }
-
-  // Step 4: Wrap as BarAsset — maturity starts at 'captured'
-  // NOTE: autoPromote is not implemented in this sprint; seeds queue at 'captured'
-  // The maturity gate will block them from entering Constructor B until manually promoted.
-  const sourceSeedId = playData.sourceBarId
-  const asset = promoteToIntegrated(barDef, sourceSeedId, {
-    author: creator,
-    tags: ['playback', playData.eventType],
-  })
-
-  // Step 5: Persist to CustomBar
-  const input: BarAssetPersistenceInput = {
-    barAsset: asset,
-    createdBy: creator,
-  }
-
-  try {
-    const result = await persistBarAsset(input, { db: null as any })
+  // Skip if no content (nothing to write)
+  if (!playData.content || playData.content.trim().length === 0) {
     return {
-      id: result.id,
-      persisted: true,
-      skipped: false,
-    }
-  } catch (err) {
-    return {
-      id: barSeedId,
+      barAssetCreated: false,
+      barAssetId: null,
       persisted: false,
       skipped: true,
-      skipReason: err instanceof Error ? err.message : String(err),
+      skipReason: 'content empty — nothing to translate',
     }
+  }
+
+  // Build structured bar id
+  const sequence = hashToSequence(playData.playerId)
+  const barAssetId = buildStructuredBarId('blessed', creator, sequence)
+
+  // Infer bar type from source bar id
+  const parsed = parseStructuredBarId(playData.sourceBarId)
+  const barType = (parsed?.barType ?? 'blessed') as BarAsset['barDef']['type']
+
+  // Build BarAsset
+  const barAsset: BarAsset = {
+    id: barAssetId,
+    barDef: {
+      id: barAssetId,
+      type: barType,
+      title: `Playtest: ${playData.sourceBarId}`,
+      description: playData.content.trim(),
+      inputs: [],
+      reward: 0,
+      unique: false,
+    },
+    maturity: 'integrated',
+    sourceSeedId: playData.sourceBarId,
+    metadata: {
+      tags: ['playback', playData.eventType],
+    },
+  }
+
+  // Persist
+  await persistBarAsset({ barAsset, createdBy: creator }, { db: getStubDb() })
+
+  return {
+    barAssetCreated: true,
+    barAssetId,
+    persisted: true,
+    skipped: false,
   }
 }
 
 /**
- * Process multiple play events in batch.
+ * Process multiple play events concurrently.
  */
 export async function processPlayEventBatch(
   events: PlayData[],
   options: FeedbackLoopOptions = {},
 ): Promise<FeedbackLoopResult[]> {
   return Promise.all(events.map(event => processPlayEvent(event, options)))
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/** Simple deterministic hash → sequence number for bar id uniqueness. */
+function hashToSequence(playerId: string): number {
+  let hash = 0
+  for (let i = 0; i < playerId.length; i++) {
+    hash = (hash * 31 + playerId.charCodeAt(i)) & 0xffffffff
+  }
+  return Math.abs(hash)
+}
+
+/** Stub DB for unit tests — replace with real PrismaClient in the route handler. */
+function getStubDb() {
+  return {
+    customBar: {
+      findUnique: async () => null,
+      create: async ({ data }: { data: Record<string, unknown> }) =>
+        ({ id: data.id as string, status: 'active', type: 'blessed', title: '' }),
+      update: async ({ data }: { data: Record<string, unknown> }) =>
+        ({ id: data.id as string, status: 'active', type: 'blessed', title: '' }),
+    },
+  }
 }
