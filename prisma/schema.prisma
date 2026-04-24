@@ -183,6 +183,8 @@ model Player {
   milestonesProposed             CampaignMilestone[]         @relation("MilestoneProposals")
   milestonesApproved             CampaignMilestone[]         @relation("MilestoneApprovals")
   milestoneContributions         MilestoneContribution[]     @relation("MilestoneContributions")
+  /// Phase 3: campaign memberships
+  campaignMemberships             CampaignMembership[]        @relation("PlayerMemberships")
   marketplaceProfiles            PlayerMarketplaceProfile[]
   friendshipInvitationsSent      FriendshipInvitation[]      @relation("FriendshipInvitationsSent")
   friendshipInvitationsCompleted FriendshipInvitation[]      @relation("FriendshipInvitationsCompleted")
@@ -3664,7 +3666,31 @@ enum CampaignStatus {
   APPROVED
   REJECTED
   LIVE
+  ABANDONED // Phase 3: last steward left; decomposition timer running
   ARCHIVED
+}
+
+/// Phase 3: Who can do what in a campaign
+/// See .specify/specs/phase-3-stewardship/SPEC.md
+enum MembershipRole {
+  MEMBER   /// Can view + participate in stewarded content
+  STEWARD  /// Can create/edit within own stewardship scope
+  OWNER    /// Campaign creator; can promote/demote, set discoverability
+}
+
+/// Phase 3: Granular stewardship scope per spoke
+/// Derived from campaign deck type at campaign initialization
+enum StewardScope {
+  FULL     /// General steward — can touch everything
+  DECK     /// Owns campaign deck structure
+  SPOKE_1  /// Owns spoke domain 1
+  SPOKE_2
+  SPOKE_3
+  SPOKE_4
+  SPOKE_5
+  SPOKE_6
+  SPOKE_7
+  SPOKE_8
 }
 
 model Campaign {
@@ -3677,6 +3703,9 @@ model Campaign {
   description          String?        @db.Text
   /// Lifecycle: draft → pending_review → approved/rejected → live → archived
   status               CampaignStatus @default(DRAFT)
+  /// Phase 3: stewardship abandonment
+  abandonmentFlagged Boolean        @default(false) @map("abandonment_flagged")
+  decompositionAt     DateTime?                     @map("decomposition_at")
   /// Allyship domain focus (mirrors Instance.allyshipDomain)
   allyshipDomain       String? // GATHERING_RESOURCES | DIRECT_ACTION | RAISE_AWARENESS | SKILLFUL_ORGANIZING
   /// Wake Up copy (campaign story / "Learn the story")
@@ -3762,6 +3791,8 @@ model Campaign {
 
   /// Invite links generated for this campaign (self-serve)
   invites Invite[] @relation("CampaignInvites")
+  /// Phase 3: membership
+  memberships CampaignMembership[] @relation("CampaignMemberships")
 
   /// L3: Lore entries authored for this campaign's narrative world.
   /// Empty until L3 — relation reserved so Campaign can own lore without schema migration.
@@ -3791,6 +3822,25 @@ model Campaign {
 ///
 /// Typed columns cover the L2 wizard surfaces; JSON fields cover
 /// three-channel encoding (element→color, altitude→border, stage→density).
+/// Phase 3: Campaign membership — who is a member/steward/owner
+/// See .specify/specs/phase-3-stewardship/SPEC.md
+model CampaignMembership {
+  id           String         @id @default(cuid())
+  campaignId   String
+  playerId     String
+  role         MembershipRole
+  stewardScope StewardScope?  /// null unless role = STEWARD; FULL = general steward
+  createdAt    DateTime       @default(now())
+
+  campaign     Campaign @relation("CampaignMemberships", fields: [campaignId], references: [id], onDelete: Cascade, map: "campaign_memberships_campaign_id_fkey")
+  player       Player   @relation("PlayerMemberships", fields: [playerId], references: [id], onDelete: Cascade, map: "campaign_memberships_player_id_fkey")
+
+  @@unique([campaignId, playerId])
+  @@index([campaignId])
+  @@index([playerId])
+  @@map("campaign_memberships")
+}
+
 model CampaignTheme {
   id         String   @id @default(cuid())
   campaignId String   @unique
