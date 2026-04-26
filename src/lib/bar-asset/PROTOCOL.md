@@ -55,6 +55,75 @@ Only `integrated` BARs are lego pieces ready for game assembly.
 
 ---
 
+## Resolution Registers
+
+*Introduced: 2026-04-25 — GAP A-1 correction (RPG Design Zine Octalysis audit)*
+
+The RPG Design Zine defines three **resolution registers** for determining fictional outcomes when the system needs a non-negotiated answer. bars-engine implements all three:
+
+| Register | Mechanism | bars-engine implementation | Octalysis drive |
+|---|---|---|---|
+| **Fortune** | Random real-world element shapes fiction | `cast-iching.ts` (I Ching hexagram); `prompt-deck-play.ts` (card draw) | D7 (Unpredictability) + D4 (Ownership) |
+| **Drama** | Fiction drives outcome, no real-world element | Narrative resolution without dice/cast | D3 (Empowerment) |
+| **Karma** | Past behavior tracked in real-world state shapes outcome | BSM maturity phases; altitude map tracking | D8 (Loss Avoidance) |
+
+A `BarAsset.metadata.resolutionRegister` field documents which register a BAR uses. When absent, default is `'karma'` for mechanical BARs and `'drama'` for narrative-only BARs.
+
+### The I Ching as Fortune Register
+
+The I Ching casting system (`cast-iching.ts`) is bars-engine's primary Fortune mechanism:
+
+1. Server-side `Math.random()` simulates 6 coin flips → generates 6-line hexagram
+2. Hexagram ID (1–64) is a **provably non-repeating random number** in the uncountable hexagram space
+3. The hexagram maps to a 6 GM face array (Shaman through Sage) for game routing
+4. Changing lines optionally invoke the transformation path (Fortune → Drama → Karma)
+
+This is the **Fortune register in its canonical form**: a random real-world element (hexagram ID) that shapes fictional outcomes (quest availability, face moves, narrative direction) without regard for fictional context.
+
+### Why Naming Matters (Octalysis D4 + D7)
+
+Previously the I Ching was documented as a "cast mechanic" — this framing missed two Octalysis drives:
+
+- **D4 (Ownership):** Players who receive an I Ching reading own a genuinely non-repeating, personally-meaningful outcome. Naming the Fortune register makes this possession visible.
+- **D7 (Unpredictability):** The uncountable hexagram space is a discovery engine. Without naming, players cannot ask "what hexagrams haven't I seen yet?"
+
+Naming the register converts the mechanic from an oracle into a **possession artifact** (D4) with **emergent discovery potential** (D7).
+
+### References
+
+- Resolution register types: `src/lib/bar-asset/types.ts` (`ResolutionRegister`)
+- I Ching casting: `src/actions/cast-iching.ts`
+- I Ching alignment scoring: `src/lib/iching-alignment.ts`
+- Prompt deck (secondary Fortune): `src/actions/prompt-deck-play.ts`
+- Gap analysis: `GM_GAP_ANALYSIS_RPG_ZINE_BAR_MATURITY.md`
+
+### Altitude Zone (DAOE FR1.2)
+
+*Introduced: 2026-04-25 — Altitude Mechanic spec, FR1.2*
+
+A BAR's `authoredAltitudeZone` documents which altitude zone it is calibrated for:
+
+```typescript
+interface DualAltitude {
+  emotional: 'dissatisfied' | 'neutral' | 'satisfied' | 'uncalibrated'
+  developmental: 'wake' | 'clean' | 'grow' | 'show' | 'uncalibrated'
+}
+```
+
+**Rules:**
+- `authoredAltitudeZone` absent → BAR is accessible at all altitudes (permissive default, Phase 1)
+- `altitudeGated = true` + `authoredAltitudeZone` set → Constructor C enforces altitude gates
+- `authoredAltitudeZone` is the **BAR's target altitude** — NOT the player's current altitude
+- Player altitude is tracked separately via Show Up action completion
+
+**Constructor B responsibility:** When translating a BarSeed to BarAsset, copy the altitude zone from the seed analysis (if present) into `metadata.authoredAltitudeZone`.
+
+**Constructor C responsibility:** When rendering a BarAsset, check `altitudeGated`. If true, compare player altitude against `authoredAltitudeZone` and hide or lock the BAR if the player is below the threshold.
+
+**See also:** `.specify/specs/altitude-mechanic/spec.md`
+
+---
+
 ## Structured ID Convention
 
 All BARs in the pipeline use structured IDs:

@@ -26,8 +26,15 @@ export type CastIChingTraditionalResult = {
 
 /**
  * Traditional I Ching casting: 6 lines (yin/yang), optionally changing.
- * When lines not provided, simulates 6 coin flips.
  * Line 1–6 map to Shaman, Challenger, Regent, Architect, Diplomat, Sage.
+ *
+ * DAOE Phase 1 / Shaman S-3: THE RANDOMNESS IS THE FEATURE.
+ * This function IS the Fortune register — it is the system's primary source of genuine
+ * unpredictability. When an engineer sees "performance optimization" here and is tempted to
+ * cache results, replace Math.random() with a seeded RNG, or pre-assign hexagramIds, that
+ * optimization DESTROYS the Fortune register. The randomness is not noise — it is the
+ * signal. Without genuine randomness, the I Ching is a lookup table, not an oracle.
+ * See: GM_GAP_ANALYSIS_RPG_ZINE_BAR_MATURITY.md §D7 + §Shaman felt-reality ground.
  */
 export async function castIChingTraditional(opts?: {
   adventureId?: string
