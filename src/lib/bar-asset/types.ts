@@ -19,6 +19,7 @@
 
 import type { BarDef, BarInput } from '../bars'
 import type { MaturityPhase, SeedMetabolizationState } from '../bar-seed-metabolization/types'
+import type { DualAltitude } from '../quest-grammar/types'
 
 // ---------------------------------------------------------------------------
 // Re-exports for consumers who only need the protocol
@@ -27,6 +28,44 @@ import type { MaturityPhase, SeedMetabolizationState } from '../bar-seed-metabol
 export { MATURITY_PHASES } from '../bar-seed-metabolization/types'
 export type { MaturityPhase }
 export type { SeedMetabolizationState } from '../bar-seed-metabolization/types'
+
+// ---------------------------------------------------------------------------
+// Resolution Register — Octalysis D7 + RPG Design Zine #A-1 correction
+// RPG Design Zine names three registers for resolving fictional outcomes:
+//   Fortune  — random real-world element (die roll, I Ching hexagram) shapes fiction
+//   Drama    — fiction drives outcome, no real-world element involved
+//   Karma   — past behavior/decisions tracked in real-world state (tokens, sheet)
+// bars-engine has all three:
+//   Fortune: I Ching casting (cast-iching.ts) + prompt deck (prompt-deck-play.ts)
+//   Drama:   narrative-only resolution without mechanical intervention
+//   Karma:   BSM maturity phases + altitude map tracking
+// See: GM_GAP_ANALYSIS_RPG_ZINE_BAR_MATURITY.md (bars-engine/)
+// ---------------------------------------------------------------------------
+
+/**
+ * The resolution register for a BAR — which real-world mechanism resolves
+ * contested fictional outcomes when the system needs an answer.
+ *
+ * - `fortune`: A random real-world element (I Ching hexagram, coin flip, die roll)
+ *              shapes the fictional outcome. The mechanism is agnostic to fictional context.
+ * - `drama`:   The ongoing fiction drives the outcome. No real-world element intervenes.
+ *              Resolution is negotiated through fiction-internal logic.
+ * - `karma`:   Past behavior or decisions (tracked in real-world state: tokens, sheet ratings,
+ *              altitude) shape the outcome. Real-world state contextualizes the fiction.
+ * - `none`:    No contested outcome anticipated; resolution is deferred to social negotiation.
+ */
+export type ResolutionRegister = 'fortune' | 'drama' | 'karma' | 'none'
+
+/**
+ * All resolution registers this system supports.
+ * Use to validate or iterate over register types.
+ */
+export const RESOLUTION_REGISTERS: ResolutionRegister[] = [
+  'fortune',
+  'drama',
+  'karma',
+  'none',
+]
 
 // ---------------------------------------------------------------------------
 // Bar Type Prefixes
@@ -65,6 +104,11 @@ export interface BarAsset {
   sourceSeedId: string | null
   /** Metadata produced by Constructor B */
   metadata: BarAssetMetadata
+  // DAOE Phase 1 FR1.3: Resolution Register on BarAsset
+  // The register is inherited from the BarDef that produced this asset.
+  // Constructor B (translation) copies it from BarDef at translation time.
+  // Naming the register on BarAsset enables game-routing by register type.
+  resolutionRegister?: ResolutionRegister
 }
 
 /** Metadata attached to a BarAsset during translation. */
@@ -83,6 +127,17 @@ export interface BarAssetMetadata {
   gameMasterFace?: string
   /** Optional tags (e.g., mood strings, story path hints) */
   tags?: string[]
+  // Altitude Mechanic FR1.2: Authored altitude zone
+  // The dual altitude (emotional + developmental) this BAR is calibrated for.
+  // When set, Constructor C (game renderer) uses it for altitude gating.
+  // When absent, BAR is accessible at all altitudes (permissive default).
+  // This is NOT the player's altitude — it is the BAR's target altitude.
+  // See: .specify/specs/altitude-mechanic/spec.md
+  authoredAltitudeZone?: import('../quest-grammar/types').DualAltitude | null
+  // FR1.2: Whether this BAR is altitude-gated (locked until player reaches altitude)
+  // When true and authoredAltitudeZone is set, Constructor C enforces altitude gates.
+  // When false or absent, BAR is accessible regardless of player altitude.
+  altitudeGated?: boolean
   /** Arbitrary extra metadata from the NL output */
   [key: string]: unknown
 }
