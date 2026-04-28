@@ -157,12 +157,11 @@ async function buildKarmaState(playerId: string): Promise<KarmaState> {
 // ---------------------------------------------------------------------------
 
 async function isSuspended(campaignId: string): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const campaign = await (db.campaign as any).findUnique({
+  const campaign = await db.campaign.findUnique({
     where: { id: campaignId },
     select: { suspendedAt: true },
   })
-  return !!(campaign as any)?.suspendedAt
+  return campaign?.suspendedAt != null
 }
 
 // ---------------------------------------------------------------------------
