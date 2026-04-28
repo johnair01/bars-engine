@@ -209,13 +209,16 @@ Re-subscription handler — clears suspension state.
 - **FR4.2**: Implement `POST /api/daoe/campaign-suspend` — sets suspension, drops invalid sessions
 - **FR4.3**: Implement `POST /api/daoe/campaign-restore` — clears suspension, full access restored
 - **FR4.4**: Suspended campaigns: read-only access to state, no new delta writes, player sees "paused" UI
-- **FR4.5**: Migration file committed for `suspendedAt` field addition
+- **FR4.5**: `DAOE_SERVICE_TOKEN` secret saved in Zo secrets — service auth uses this token
+- **FR4.6**: `campaign-suspend` + `campaign-restore` routes commit to `feat/daoe-integration`
 
 ### Phase 5: NPC Ecology Integration
 
-- **FR5.1**: NPC persona selection reads from `PlayerPersonalityProfile.npcToneWeights`
-- **FR5.2**: GM face sentence generation uses tone weights to flavor NPC voice (not brand CEO voice)
-- **FR5.3**: No RAG pipeline at game time — personality profile is pre-computed at intake
+- **FR5.1**: `GET /api/daoe/npc-tone-weights` — returns player's `NpcToneWeights` from `Campaign.personalityProfile` ✅ Done
+- **FR5.2**: `personality-weigher.ts` — `getNpcToneWeights(campaignId)` + `applyToneWeights(text, weights)` ✅ Done (2026-04-28)
+- **FR5.3**: NPC dialogue system reads tone weights and applies flavor — **DEFERRED** (novel work, requires NPC dialogue pipeline audit; out of scope for DAOE Phase 0)
+  - `applyToneWeights` is ready to wire when NPC dialogue system is ready
+  - Upgrade path to LLM preserved for DAOE-1
 
 ---
 

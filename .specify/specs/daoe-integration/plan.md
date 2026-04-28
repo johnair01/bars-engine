@@ -140,3 +140,65 @@ Phase 5 must follow Phase 3 — NPC tone weights are populated by Phase 3.
 - Real-time RAG pipeline at game time (pre-computed artifacts only)
 - White-label Brand Ego Sync for B2B deployments
 - Thin-client renderer (reuse existing PixiJS components)
+
+---
+
+## Phase 5: NPC Ecology Integration (Partial)
+
+### Task 5.1: GET /api/daoe/npc-tone-weights ✅
+
+**File:** `src/app/api/daoe/npc-tone-weights/route.ts`
+
+**Implement:**
+- `GET /api/daoe/npc-tone-weights?campaignId={id}`
+- Reads `Campaign.personalityProfile` → extracts `npcToneWeights`
+- Falls back to default weights if `personalityProfile` is null
+- Returns `{ npcToneWeights: NpcToneWeights, source: 'profile' | 'default' }`
+
+**Default fallback** (when no intake completed):
+```ts
+const defaultWeights: NpcToneWeights = {
+  shaman: 0.4, challenger: 0.4, regent: 0.4,
+  architect: 0.4, diplomat: 0.4, sage: 0.85, // sage boosted as default
+}
+```
+
+**Verification:** Known campaign with/without profile — both return valid `NpcToneWeights`
+
+---
+
+### Task 5.2: Integrate filterNpcsByEffectiveFace with campaign tone weights
+
+**File:** `src/lib/daoe/personality-weigher.ts` (create)
+
+**Implement:**
+- `getNpcToneWeights(campaignId): Promise<NpcToneWeights>` — reads from `Campaign.personalityProfile`
+- `applyToneWeights(baseText: string, weights: NpcToneWeights): string` — flavors base NPC text based on tone weights
+
+**Flavoring MVP (template-based, no LLM):**
+- Prepend face-specific adjective based on highest-weight face:
+  - shaman → "Through the mythic lens: "
+  - challenger → "From the edge: "
+  - regent → "In proper order: "
+  - architect → "Looking at the blueprint: "
+  - diplomat → "From the relational field: "
+  - sage → "Seen from the whole: "
+- Adjust intensity based on weight (1.0 = full adjective, 0.5 = half-weight)
+
+**Where it integrates:**
+- NPC dialogue generation calls `applyToneWeights(baseText, weights)` before rendering
+- `npc-face-resolver.ts` `filterNpcsByEffectiveFace` already exists — wire it to read tone weights
+
+**Verification:** With preferredGMFace=challenger, NPC dialogue should have challenger-flavored intro
+
+---
+
+### Task 5.3: Update NPC action routing to read campaign tone weights
+
+**Files:** `src/actions/npc-actions.ts`, `src/lib/npc-face-resolver.ts`
+
+**Changes:**
+- NPC action handlers read `campaignRef` → fetch tone weights from `Campaign.personalityProfile`
+- Pass weights into `applyToneWeights` for any NPC-generated text
+
+**Verification:** NPC responses for same scenario differ by player preferredGMFace
