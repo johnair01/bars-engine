@@ -1,0 +1,16 @@
+{
+  "body": "The person feels stuck in a loop\n\n[Dialogue] You: You said it again\nThem: Because it was not heard\nYou: But now it has been said three times\nThem: And still you do not feel it\n\n[Integration] One clear example is enough",
+  "systemTitle": "The chapter is too repetitive · 2026-05-06",
+  "moveType": null,
+  "allyshipDomain": null,
+  "allyshipDomainSuggested": null,
+  "tags": [
+    "chapter:ch1",
+    "321",
+    "shadow",
+    "ch1"
+  ],
+  "source321FullText": "BELIEF: The chapter is too repetitive\nTHIRD PERSON: The person feels stuck in a loop\nSECOND PERSON: You: You said it again\nThem: Because it was not heard\nYou: But now it has been said three times\nThem: And still you do not feel it\nFIRST PERSON: One clear example is enough",
+  "phase2Snapshot": "{\"q1\":\"The person feels stuck in a loop\",\"q2\":[],\"q3\":\"You: You said it again\\nThem: Because it was not heard\\nYou: But now it has been said three times\\nThem: And still you do not feel it\",\"q4\":[],\"q5\":\"One clear example is enough\",\"q6\":[]}",
+  "shadow321Name": "2026-05-06T19-57-52_ch1"
+}
