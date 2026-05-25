@@ -31,7 +31,8 @@ const ALLOWED_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
   APPROVED: ['PENDING_REVIEW'],
   REJECTED: ['PENDING_REVIEW'],
   LIVE: ['APPROVED'],
-  ARCHIVED: ['LIVE'],
+  ABANDONED: ['LIVE'],
+  ARCHIVED: ['LIVE', 'ABANDONED'],
 }
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,7 @@ const TRANSITION_ROLE: Record<CampaignStatus, RequiredRole> = {
   APPROVED: 'admin',           // admin approves
   REJECTED: 'admin',           // admin rejects
   LIVE: 'admin',               // admin launches
+  ABANDONED: 'steward+',       // stewardship abandonment (Phase 3)
   ARCHIVED: 'steward+',        // steward+ or admin archives
 }
 
@@ -247,6 +249,7 @@ export const STATUS_LABELS: Record<CampaignStatus, string> = {
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
   LIVE: 'Live',
+  ABANDONED: 'Abandoned',
   ARCHIVED: 'Archived',
 }
 

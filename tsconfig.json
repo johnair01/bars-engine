@@ -41,6 +41,7 @@
     "src/lib/__tests__",
     "scripts",
     "src/scripts",
-    "chatgpt_repo_snapshot_*"
+    "chatgpt_repo_snapshot_*",
+    "vitest.config.ts"
   ]
 }
