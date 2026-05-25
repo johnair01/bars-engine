@@ -7,6 +7,12 @@
 
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
 
+/** Emotional + developmental altitude pair (BAR authoring / altitude mechanic). */
+export type DualAltitude = {
+  emotional?: AlchemyAltitude
+  developmental?: AlchemyAltitude
+}
+
 export type EmotionalChannel = 'Fear' | 'Anger' | 'Sadness' | 'Joy' | 'Neutrality'
 
 /** Move family: Transcend = altitude within channel; Translate = channel-to-channel. */

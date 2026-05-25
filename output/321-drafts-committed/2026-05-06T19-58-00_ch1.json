@@ -1,0 +1,16 @@
+{
+  "body": "The person cannot find where the chapter shifts\n\n[Dialogue] You: Where is the moment it changes\nThem: It does not have one yet\nYou: Then the whole thing is description\nThem: Yes, description without commitment\n\n[Integration] I found the structural gap and I will fix it",
+  "systemTitle": "ch1 draft is missing the turning point · 2026-05-06",
+  "moveType": null,
+  "allyshipDomain": null,
+  "allyshipDomainSuggested": null,
+  "tags": [
+    "chapter:ch1",
+    "321",
+    "shadow",
+    "ch1"
+  ],
+  "source321FullText": "BELIEF: ch1 draft is missing the turning point\nTHIRD PERSON: The person cannot find where the chapter shifts\nSECOND PERSON: You: Where is the moment it changes\nThem: It does not have one yet\nYou: Then the whole thing is description\nThem: Yes, description without commitment\nFIRST PERSON: I found the structural gap and I will fix it",
+  "phase2Snapshot": "{\"q1\":\"The person cannot find where the chapter shifts\",\"q2\":[],\"q3\":\"You: Where is the moment it changes\\nThem: It does not have one yet\\nYou: Then the whole thing is description\\nThem: Yes, description without commitment\",\"q4\":[],\"q5\":\"I found the structural gap and I will fix it\",\"q6\":[]}",
+  "shadow321Name": "2026-05-06T19-58-00_ch1"
+}

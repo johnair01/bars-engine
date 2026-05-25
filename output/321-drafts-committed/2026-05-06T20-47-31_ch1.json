@@ -1,0 +1,16 @@
+{
+  "body": "third\n\n[Dialogue] You: test\nThem: responding\n\n[Integration] I am committing",
+  "systemTitle": "test editing 321 · 2026-05-06",
+  "moveType": null,
+  "allyshipDomain": null,
+  "allyshipDomainSuggested": null,
+  "tags": [
+    "chapter:ch1",
+    "321",
+    "shadow",
+    "ch1"
+  ],
+  "source321FullText": "BELIEF: test editing 321\nTHIRD PERSON: third\nSECOND PERSON: You: test\nThem: responding\nFIRST PERSON: I am committing",
+  "phase2Snapshot": "{\"q1\":\"third\",\"q2\":[],\"q3\":\"You: test\\nThem: responding\",\"q4\":[],\"q5\":\"I am committing\",\"q6\":[]}",
+  "shadow321Name": "2026-05-06T20-47-31_ch1"
+}
