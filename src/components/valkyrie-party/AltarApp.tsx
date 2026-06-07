@@ -225,6 +225,7 @@ export function AltarApp() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [exportBlob, setExportBlob] = useState('')
   const [composer, setComposer] = useState({ title: '', body: '', category: 'blessing', tags: '', anonymous: false })
+  const [composerFile, setComposerFile] = useState<File | null>(null)
   const [composerOpen, setComposerOpen] = useState(false)
   const [focusedEntry, setFocusedEntry] = useState<AltarBoardEntry | null>(null)
 
@@ -264,8 +265,8 @@ export function AltarApp() {
   const visiblePosts = board?.posts || []
   const emptySlots = Math.max(6, 12 - visiblePosts.length)
 
-  const submitPost = useCallback(async (file: File | null) => {
-    if (!composer.body.trim()) return
+  const submitPost = useCallback(async (file: File | null = composerFile) => {
+    if (!composer.body.trim() && !file) return
     setBusy(true)
     try {
       let assetUrl = ''
@@ -282,6 +283,7 @@ export function AltarApp() {
         asset_url: assetUrl,
       })
       setComposer({ title: '', body: '', category: composer.category, tags: '', anonymous: false })
+      setComposerFile(null)
       setComposerOpen(false)
       setNotice('Your offering is now on the altar.')
       await loadBoard()
@@ -291,7 +293,7 @@ export function AltarApp() {
     } finally {
       setBusy(false)
     }
-  }, [composer, loadBoard, loadPlayerContext])
+  }, [composer, composerFile, loadBoard, loadPlayerContext])
 
   const sendReply = useCallback(async (postId: string) => {
     const body = replyDrafts[postId]?.trim()
@@ -432,21 +434,25 @@ export function AltarApp() {
               </label>
               <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
                 <label style={buttonStyle(false, busy)}>
-                  Add photo
+                  {composerFile ? 'Change photo' : 'Choose photo'}
                   <input
                     type="file"
                     accept="image/*"
                     disabled={busy}
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const file = e.currentTarget.files?.[0] || null
-                      if (file) await submitPost(file)
+                      setComposerFile(file)
+                      if (file) {
+                        setComposer((draft) => ({ ...draft, category: draft.category === 'blessing' ? 'photo' : draft.category }))
+                      }
                       e.currentTarget.value = ''
                     }}
                     style={{ display: 'none' }}
                   />
                 </label>
-                <button type="button" disabled={busy || !composer.body.trim()} onClick={() => submitPost(null)} style={buttonStyle(true, busy || !composer.body.trim())}>
-                  Post to altar
+                {composerFile ? <span style={{ alignSelf: 'center', opacity: 0.78, fontSize: '0.84rem' }}>Attached: {composerFile.name}</span> : null}
+                <button type="button" disabled={busy || (!composer.body.trim() && !composerFile)} onClick={() => submitPost()} style={buttonStyle(true, busy || (!composer.body.trim() && !composerFile))}>
+                  {composerFile ? 'Post to altar' : 'Post note to altar'}
                 </button>
               </div>
             </div>
@@ -491,9 +497,32 @@ export function AltarApp() {
             <select value={composer.category} onChange={(e) => setComposer((draft) => ({ ...draft, category: e.target.value }))} style={fieldStyle()}>
               {CATEGORY_OPTIONS.filter(([value]) => value !== 'all').map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
+            <label style={{ display: 'grid', gap: '0.4rem' }}>
+              <span style={{ color: PARTY_CREAM, opacity: 0.9 }}>Photo</span>
+              <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <label style={buttonStyle(false, busy)}>
+                  {composerFile ? 'Change photo' : 'Choose photo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={busy}
+                    onChange={(e) => {
+                      const file = e.currentTarget.files?.[0] || null
+                      setComposerFile(file)
+                      if (file) {
+                        setComposer((draft) => ({ ...draft, category: draft.category === 'blessing' ? 'photo' : draft.category }))
+                      }
+                      e.currentTarget.value = ''
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+                {composerFile ? <span style={{ opacity: 0.78, fontSize: '0.84rem' }}>{composerFile.name}</span> : <span style={{ opacity: 0.62, fontSize: '0.84rem' }}>Optional, but fully supported.</span>}
+              </div>
+            </label>
             <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setComposerOpen(false)} style={buttonStyle()}>Cancel</button>
-              <button type="button" disabled={busy || !composer.body.trim()} onClick={() => submitPost(null)} style={buttonStyle(true, busy || !composer.body.trim())}>Pin note</button>
+              <button type="button" onClick={() => { setComposerOpen(false); setComposerFile(null) }} style={buttonStyle()}>Cancel</button>
+              <button type="button" disabled={busy || (!composer.body.trim() && !composerFile)} onClick={() => submitPost()} style={buttonStyle(true, busy || (!composer.body.trim() && !composerFile))}>{composerFile ? 'Pin to altar' : 'Pin note'}</button>
             </div>
           </div>
         </div>
