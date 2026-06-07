@@ -458,8 +458,8 @@ export function PartyApp() {
   const [cardRevealed, setCardRevealed] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
-  const [playerName, setPlayerName] = useState(localStorage.getItem("valkyrie_party_player") || "");
-  const [showJoinModal, setShowJoinModal] = useState(() => !localStorage.getItem("valkyrie_party_player"));
+  const [playerName, setPlayerName] = useState("");
+  const [showJoinModal, setShowJoinModal] = useState(true);
   const [signup, setSignup] = useState({ email: "", keep: true, full: false });
   const [mailDraft, setMailDraft] = useState({ recipient_name: "", sender_note: "" });
   const [oracleAnswerDraft, setOracleAnswerDraft] = useState("");
@@ -473,8 +473,8 @@ export function PartyApp() {
   const [answerText, setAnswerText] = useState("");
   const [answerPrivateNote, setAnswerPrivateNote] = useState("");
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(() => new URLSearchParams(window.location.search).get("admin") === "1");
-  const [adminToken, setAdminToken] = useState(localStorage.getItem("valkyrie_party_admin") || "");
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminToken, setAdminToken] = useState("");
   const [scheduleDraft, setScheduleDraft] = useState<PartyDeck["party"] | null>(null);
   const [selectedAdminCardId, setSelectedAdminCardId] = useState("");
   const [adminCopyDraft, setAdminCopyDraft] = useState<AdminCardCopyDraft>(emptyAdminDraft);
@@ -510,6 +510,17 @@ export function PartyApp() {
   useEffect(() => {
     loadParty().catch((err) => setNotice(err instanceof Error ? err.message : "Could not load party"));
   }, [loadParty]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedPlayer = window.localStorage.getItem("valkyrie_party_player") || "";
+    const savedAdmin = window.localStorage.getItem("valkyrie_party_admin") || "";
+    const adminQueryEnabled = new URLSearchParams(window.location.search).get("admin") === "1";
+    setPlayerName(savedPlayer);
+    setShowJoinModal(!savedPlayer);
+    setAdminToken(savedAdmin);
+    setShowAdmin(adminQueryEnabled);
+  }, []);
 
   useEffect(() => {
     if (!playerName.trim()) return;
