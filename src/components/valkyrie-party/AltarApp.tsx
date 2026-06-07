@@ -238,11 +238,11 @@ export function AltarApp() {
     const query = filter !== 'all' ? `?category=${encodeURIComponent(filter)}` : ''
     const json = await getJson<{ posts: AltarBoardEntry[]; categories: string[]; reaction_types: string[] }>(`/api/party/valkyrie/altar${query}`)
     setBoard(json)
-    if (focusedEntry) {
-      const refreshed = json.posts.find((entry) => entry.post.id === focusedEntry.post.id) || null
-      setFocusedEntry(refreshed)
-    }
-  }, [filter, focusedEntry])
+    setFocusedEntry((current) => {
+      if (!current) return null
+      return json.posts.find((entry) => entry.post.id === current.post.id) || null
+    })
+  }, [filter])
 
   const loadPlayerContext = useCallback(async () => {
     const [discoveryJson, savesJson] = await Promise.all([
