@@ -1,0 +1,38 @@
+[
+  {
+    "id": "altar-post-mq429iae-ynmsfq",
+    "author_name": "Anonymous",
+    "anonymous": true,
+    "category": "blessing",
+    "tags": [],
+    "title": "RELAX",
+    "body": "I send blessings of relaxation and positive vibes to this space and all who inhabit it",
+    "source": {
+      "kind": "freeform",
+      "base_card_id": null,
+      "thread_id": null,
+      "player_card_id": null
+    },
+    "media": [],
+    "created_at": "2026-06-07T17:33:38.390Z",
+    "deleted_at": null
+  },
+  {
+    "id": "altar-post-mq424f8x-lu7csm",
+    "author_name": "Wendell",
+    "anonymous": false,
+    "category": "other",
+    "tags": [],
+    "title": "Codex Smoke",
+    "body": "Temporary altar check.",
+    "source": {
+      "kind": "freeform",
+      "base_card_id": null,
+      "thread_id": null,
+      "player_card_id": null
+    },
+    "media": [],
+    "created_at": "2026-06-07T17:29:41.169Z",
+    "deleted_at": "2026-06-07T17:31:16.134Z"
+  }
+]

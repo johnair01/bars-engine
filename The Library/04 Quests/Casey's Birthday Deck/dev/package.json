@@ -1,0 +1,27 @@
+{
+  "name": "oracle-deck-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api": "node api.mjs",
+    "web": "vite",
+    "dev": "concurrently -k -n api,web -c blue,green \"npm run api\" \"npm run web\"",
+    "smoke": "node ../__tests__/oracle_deck_smoke.local.mjs",
+    "smoke:live": "python3 ../__tests__/oracle_deck_smoke.py",
+    "teardown": "rm -rf node_modules .npm-cache dist"
+  },
+  "dependencies": {
+    "gensync": "https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "vite": "^6.0.3"
+  }
+}

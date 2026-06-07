@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <title>Show Up</title>
+  <!-- Hourglass: two triangles meeting at center point -->
+  <path d="M4 4 L20 4 L12 12 Z" fill="none" stroke="#C9A84C" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M4 20 L20 20 L12 12 Z" fill="none" stroke="#C9A84C" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Cross bars on sides -->
+  <line x1="4" y1="4" x2="4" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="4" x2="20" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+</svg>

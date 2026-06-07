@@ -1,0 +1,73 @@
+{
+  "Wendell": {
+    "card_ids": [
+      "SU-8",
+      "WU-2",
+      "CU-5",
+      "CU-J",
+      "GU-A",
+      "GU-K",
+      "SU-7",
+      "GU-7"
+    ],
+    "events": [
+      {
+        "card_id": "SU-8",
+        "source": "draw",
+        "created_at": "2026-06-07T16:05:14.301Z"
+      },
+      {
+        "card_id": "WU-2",
+        "source": "draw",
+        "created_at": "2026-06-07T16:35:15.845Z"
+      },
+      {
+        "card_id": "CU-5",
+        "source": "draw",
+        "created_at": "2026-06-07T16:46:03.614Z"
+      },
+      {
+        "card_id": "CU-J",
+        "source": "draw",
+        "created_at": "2026-06-07T16:46:16.413Z"
+      },
+      {
+        "card_id": "GU-A",
+        "source": "draw",
+        "created_at": "2026-06-07T16:54:00.046Z"
+      },
+      {
+        "card_id": "GU-K",
+        "source": "draw",
+        "created_at": "2026-06-07T16:54:14.760Z"
+      },
+      {
+        "card_id": "SU-7",
+        "source": "draw",
+        "created_at": "2026-06-07T16:55:13.624Z"
+      },
+      {
+        "card_id": "GU-A",
+        "source": "draw",
+        "created_at": "2026-06-07T16:55:18.286Z"
+      },
+      {
+        "card_id": "GU-7",
+        "source": "draw",
+        "created_at": "2026-06-07T16:55:38.029Z"
+      }
+    ]
+  },
+  "Smoke Tester": {
+    "card_ids": [
+      "WU-A"
+    ],
+    "events": [
+      {
+        "card_id": "WU-A",
+        "source": "private_answer",
+        "created_at": "2026-06-07T16:45:21.904Z"
+      }
+    ]
+  }
+}

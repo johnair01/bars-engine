@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <title>Clean Up</title>
+  <!-- Outer circle -->
+  <circle cx="12" cy="12" r="9" fill="none" stroke="#C9A84C" stroke-width="2"/>
+  <!-- Inner triangle pointing up -->
+  <path d="M12 5 L18 17 L6 17 Z" fill="none" stroke="#C9A84C" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Center dot -->
+  <circle cx="12" cy="12" r="1.5" fill="#C9A84C"/>
+</svg>

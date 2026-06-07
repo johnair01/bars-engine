@@ -1,0 +1,2246 @@
+{
+  "deck_name": "Oracle at the Edge of the Known World",
+  "for": "Casey (He/They)",
+  "made_by": "Wendell",
+  "total_cards": 52,
+  "spec_version": "3.0",
+  "spec_ref": "docs/oracle-deck-spec-v3.md",
+  "cards": [
+    {
+      "id": "WU-A",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "Ace",
+      "title": "The First Noticing",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-a.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Attention is where devotion takes root.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        },
+        "medium": {
+          "line": "Where attention rests, devotion begins to grow",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "hard": {
+          "line": "Attention turns the ordinary into something held.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing you noticed about me this week.",
+        "medium": "Tell me one thing I do that you've never said out loud.",
+        "hard": "What have you been noticing about me that you've been afraid to name?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 55.0466796875,
+        "y": 18.15546875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-J",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "Jack",
+      "title": "The Sharpening",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-j.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "A single life burns with the question of its use.",
+          "npc": "Jarek Stone",
+          "title": "The Breaking Stillness of Meridia"
+        },
+        "medium": {
+          "line": "A wild and precious life demands a chosen direction.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "hard": {
+          "line": "Life eagerly waits for the shape it will be given.",
+          "npc": "Luma Vire",
+          "title": "The Rising Bloom of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      },
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one thing about me you see clearly that you haven't said directly?",
+        "medium": "Tell me one thing you've been seeing clearly about me that you've been softening when you say it out loud.",
+        "hard": "What's the sharpest true thing you could say about who I am right now — the version you'd only say if you knew I could take it?"
+      }
+    },
+    {
+      "id": "WU-Q",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "Queen",
+      "title": "The Long Pause",
+      "poet": "Lawrence Ferlinghetti",
+      "image_file": "/images/oracle/wu-q.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "The moment stands just beyond the call.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "medium": {
+          "line": "Waiting holds the breath before the name is spoken.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        },
+        "hard": {
+          "line": "A turn approaches through the stillness of waiting.",
+          "npc": "Lyra Venn",
+          "title": "The Revealing Vine of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.489843750000006,
+        "y": 56.008203125,
+        "zoom": 1.1
+      },
+      "prompts": {
+        "easy": "What's present between us right now that you haven't fully let yourself feel?",
+        "medium": "What are you rushing past in this friendship that deserves more of your attention?",
+        "hard": "What would change between us if you slowed down enough to actually feel what's here?"
+      }
+    },
+    {
+      "id": "WU-K",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "King",
+      "title": "The After",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-k.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "No great Mystery has a final answer.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "medium": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.089648437499996,
+        "y": 23.000585937499995,
+        "zoom": 1.1
+      },
+      "prompts": {
+        "easy": "Name one thing that's different between us now compared to when we first became friends.",
+        "medium": "Tell me what you understand about me now that you couldn't have known a year ago.",
+        "hard": "What has changed in how you see me — and have you ever said it out loud?"
+      }
+    },
+    {
+      "id": "WU-2",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "2",
+      "title": "The Temperature Check",
+      "poet": "Edna St. Vincent Millay",
+      "image_file": "/images/oracle/wu-2.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Resignation has not found a home here.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "medium": {
+          "line": "Something in this refuses to bow.",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What's your energy like right now, in one word?",
+        "medium": "Tell me what's running underneath your surface today.",
+        "hard": "What feeling about Casey are you carrying right now that you haven't named out loud yet?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 49.183203125,
+        "y": 62.132421875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-3",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "3",
+      "title": "The Texture Card",
+      "poet": "Leonard Cohen",
+      "image_file": "/images/oracle/wu-3.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Every form breaks somewhere; light enters there.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "medium": {
+          "line": "Light finds the fracture and makes it a doorway.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "hard": {
+          "line": "What breaks open becomes a passage for light.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What feels unresolved or unsettled between us right now — it doesn't have to be bad, just unfinished?",
+        "medium": "What's a moment between us you moved past too quickly?",
+        "hard": "Tell me what you were actually feeling the last time you told me you were fine."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-4",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "4",
+      "title": "The Unsaid Thing",
+      "poet": "Naomi Shihab Nye",
+      "image_file": "/images/oracle/wu-4.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Unspoken words settle into the body.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "Silence gathers what the voice refuses.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "hard": {
+          "line": "What goes unsaid takes shape within.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What's one thing you almost said to me but didn't?",
+        "medium": "Tell me something you've been holding back that has nothing to do with a problem.",
+        "hard": "What truth have you been protecting me from that I might actually need?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 38.8935546875,
+        "y": 5.5419921875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-5",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "5",
+      "title": "The Peripheral Vision",
+      "poet": "James Wright",
+      "image_file": "/images/oracle/wu-5.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Life withers while the heart stands elsewhere.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        },
+        "medium": {
+          "line": "Time can pass without ever touching what matters.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What do you sense Casey needs right now that they haven't asked for?",
+        "medium": "What have you been noticing about yourself lately that's been harder to look at?",
+        "hard": "What are you aware of — about yourself, about us — that you've been deliberately not looking at?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.844921875,
+        "y": 35.7552734375,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-6",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "6",
+      "title": "The Arrival",
+      "poet": "Rainer Maria Rilke",
+      "image_file": "/images/oracle/wu-6.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "The ordinary waits for the gaze that makes it sacred.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "medium": {
+          "line": "Everything leans toward holiness when seen clearly.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The sacred waits inside what is overlooked.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What does it feel like to be around me?",
+        "medium": "When did you last feel like you'd actually arrived — like you were fully present with me?",
+        "hard": "Tell me what it feels like when you stop performing."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.609375,
+        "y": 27.172460937500002,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-7",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "7",
+      "title": "The Witnessing",
+      "poet": "Lucille Clifton",
+      "image_file": "/images/oracle/wu-7.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "The watcher sits quietly inside every moment.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "medium": {
+          "line": "The self never stops bearing witness.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "hard": {
+          "line": "Every act unfolds under an inward gaze.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What are you watching in yourself right now?",
+        "medium": "What are you watching in yourself when you're with me — and do you like what you see?",
+        "hard": "What are you witnessing in yourself right now that you haven't been willing to say to me?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50.015234375,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-8",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "8",
+      "title": "The Quality of Attention",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-8.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Attention opens into astonishment and asks for a mouthpiece.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        },
+        "medium": {
+          "line": "What is seen deeply seeks to be spoken.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What's something small that astonished you recently?",
+        "medium": "Tell me one moment this week when you felt fully alive.",
+        "hard": "What are you not paying attention to that wants your attention?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 54.9072265625,
+        "y": 11.060937499999998,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-9",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "9",
+      "title": "The Echo",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-9.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Worth stands before goodness is measured.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "medium": {
+          "line": "Belonging does not wait for perfection.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "hard": {
+          "line": "Being arrives before any standard is met.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What does it take out of you to show up honestly with me?",
+        "medium": "What do you notice yourself holding back in order to keep things comfortable between us?",
+        "hard": "What's the price you're paying right now to stay in this friendship the way you've been showing up in it?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 49.989453125000004,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-10",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "♣️"
+      },
+      "rank": "10",
+      "title": "The Drift",
+      "poet": "Ram Dass",
+      "image_file": "/images/oracle/wu-10.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure seated and thinking, the other leaning in to listen.",
+      "flavor": {
+        "easy": {
+          "line": "Every path is shared",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        },
+        "medium": {
+          "line": "Each life moves in quiet company with another.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        },
+        "hard": {
+          "line": "The journey home is never solitary.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "How connected do you feel to me right now?",
+        "medium": "Tell me what shifts in you when you're around me versus other people.",
+        "hard": "What's the distance between us right now that neither of us has named?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 49.989453125000004,
+        "y": 10.132226562500001,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-A",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "Ace",
+      "title": "The Small Honesty",
+      "poet": "Joseph Heller",
+      "image_file": "/images/oracle/cu-a.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Cowardice lasts longer than fear.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        },
+        "medium": {
+          "line": "A coward lives with the cost; the brave meet it once.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        },
+        "hard": {
+          "line": "Fear flows. Cowardice pools.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing you've let slide in our friendship.",
+        "medium": "Tell me one way you've been showing up in this friendship that you're not proud of.",
+        "hard": "What's the pattern you keep bringing to close friendships that you wish you could stop?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 56.959765624999996,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-J",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "Jack",
+      "title": "The Confession Dial",
+      "poet": "Elizabeth Barrett Browning",
+      "image_file": "/images/oracle/cu-j.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Grief without passion has already gone silent.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        },
+        "medium": {
+          "line": "Grief must move to remain alive in the heart.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "Name one thing you've been less than fully honest with me about.",
+        "medium": "Tell me something you said to me that was true but not the whole truth.",
+        "hard": "What's the thing you've been most careful not to say directly — and what would happen if you just said it?"
+      },
+      "crop": {
+        "x": 49.920312499999994,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-Q",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "Queen",
+      "title": "The Tide",
+      "poet": "Louisa May Alcott",
+      "image_file": "/images/oracle/cu-q.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Storms teach the captain how to sail the ship.",
+          "npc": "Luma Vire",
+          "title": "The Rising Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Every storm answers to the hand that dares to steer.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "hard": {
+          "line": "The heart learns the sea by staying with the storm.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one thing between us that you let pass in the moment but it stayed with you?",
+        "medium": "Tell me about something you let build up that you wish you'd said earlier.",
+        "hard": "What's the version of an apology you owe me that you haven't fully given yet?"
+      },
+      "crop": {
+        "x": 50,
+        "y": 49.966015625,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-K",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "King",
+      "title": "The Reckoning",
+      "poet": "Ovid",
+      "image_file": "/images/oracle/cu-k.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Everything changes; nothing is lost to the whole.",
+          "npc": "Lyra Venn",
+          "title": "The Revealing Vine of Virelune"
+        },
+        "medium": {
+          "line": "Nothing ends; every form becomes another.",
+          "npc": "Neris Vale",
+          "title": "The Wild Current of Virelune"
+        },
+        "hard": {
+          "line": "All things shift",
+          "npc": "Iri Sol",
+          "title": "The Hidden Bloom of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one thing about how you show up in friendships that you've had to face honestly?",
+        "medium": "Tell me about a version of yourself in friendship that you've had to leave behind.",
+        "hard": "What's the most honest account you can give of who you've been in this friendship — and who you want to be going forward?"
+      },
+      "crop": {
+        "x": 46.784375,
+        "y": 17.795117187500004,
+        "zoom": 1.3000000000000003
+      }
+    },
+    {
+      "id": "CU-2",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "2",
+      "title": "The Projection",
+      "poet": "Ursula K. Le Guin",
+      "image_file": "/images/oracle/cu-2.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Every dragon answers to the same call as the hero.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "medium": {
+          "line": "The hero and the dragon share a single fire.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What's something in me that sometimes bothers you that you also see in yourself?",
+        "medium": "Tell me about a time you judged me for something you were also doing.",
+        "hard": "What do you resent in me that belongs to you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 34.544140625000004,
+        "y": 91.0181640625,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-3",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "3",
+      "title": "The Ask Card",
+      "poet": "Rumi",
+      "image_file": "/images/oracle/cu-3.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Speak the want without disguise.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        },
+        "medium": {
+          "line": "Name the want or lose the chance.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "hard": {
+          "line": "Let the want be heard before silence claims it.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's something small you've wanted from me that you talked yourself out of asking for?",
+        "medium": "What do you make yourself need less of because you're afraid to ask for it?",
+        "hard": "What's the thing you most want from this friendship that you've never let yourself ask for — and what does that cost you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 49.0765625,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-4",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "4",
+      "title": "The Withhold",
+      "poet": "Oscar Wilde",
+      "image_file": "/images/oracle/cu-4.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "The truth resists purity and refuses simplicity.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        },
+        "medium": {
+          "line": "The truth comes tangled and cuts anyway.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "hard": {
+          "line": "Truth is a Chimaera.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What's something true about our friendship you've been keeping to yourself?",
+        "medium": "Tell me a small resentment you've been sitting on.",
+        "hard": "What have you been pretending is fine that actually isn't?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 0.038671875,
+        "y": 0,
+        "zoom": 1.1
+      }
+    },
+    {
+      "id": "CU-5",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "5",
+      "title": "The Pattern",
+      "poet": "William Ernest Henley",
+      "image_file": "/images/oracle/cu-5.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "The master of fate answers to no one but the self.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "The soul follows the hand that dares to guide it.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What's a habit of yours that probably affects the people close to you?",
+        "medium": "Tell me about a pattern you've noticed yourself repeating in friendships.",
+        "hard": "What are you doing in this friendship that you've done before and it cost you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50.03515625,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-6",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "6",
+      "title": "The Repair",
+      "poet": "Emily Dickinson",
+      "image_file": "/images/oracle/cu-6.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Great pain settles into a formal stillness.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        },
+        "medium": {
+          "line": "After the wound, the body learns a colder shape.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "Is there something between us you walked past at the time that's stayed with you since?",
+        "medium": "Tell me about a moment in our friendship where you were more yourself than you let on.",
+        "hard": "Tell me about something you did — or didn't do — that you haven't fully made right."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-7",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "7",
+      "title": "The Gift Back",
+      "poet": "Derek Walcott",
+      "image_file": "/images/oracle/cu-7.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "Every gift returns to the giver in another form.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        },
+        "medium": {
+          "line": "Every offering circles back through the same fire.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "hard": {
+          "line": "What the heart gives, the heart must also receive.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing Casey does for you that you've never acknowledged.",
+        "medium": "Tell Casey about a way they show up for you that you've been taking for granted.",
+        "hard": "What has Casey given you that you haven't given back — and what would changing that look like?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 51.329492187499994,
+        "y": 12.082812500000003,
+        "zoom": 1.1
+      }
+    },
+    {
+      "id": "CU-8",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "8",
+      "title": "The Shadow",
+      "poet": "Carl Jung",
+      "image_file": "/images/oracle/cu-8.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "No light redeems a darkness left unseen.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        },
+        "medium": {
+          "line": "The heart softens when the darkness is allowed to be known.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "What's a version of yourself you don't show in friendships?",
+        "medium": "Tell me about the part of you that comes out when you're not trying to be likeable.",
+        "hard": "What's the most difficult version of yourself to be around — and when does it show up?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 64.55234374999999,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-9",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "9",
+      "title": "The Cost",
+      "poet": "Galway Kinnell",
+      "image_file": "/images/oracle/cu-9.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "True affection gathers its own tribe.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "medium": {
+          "line": "Love names the circle and calls it home.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "hard": {
+          "line": "The heart builds its people from what it cannot leave.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What does it cost you to stay close to people?",
+        "medium": "Tell me what you give in friendships that drains you.",
+        "hard": "What's the price you pay for being the person people can count on?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "CU-10",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "♦️"
+      },
+      "rank": "10",
+      "title": "The Receiving",
+      "poet": "Ada Limón",
+      "image_file": "/images/oracle/cu-10.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure speaks with an open palm, sharing something small. The other listens softly.",
+      "flavor": {
+        "easy": {
+          "line": "The burden weighs heavy; the soul remains beyond measure.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        },
+        "medium": {
+          "line": "Weight belongs to the load, not to the one who bears it.",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        },
+        "hard": {
+          "line": "The heart carries much and is never reduced by the carrying.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What has Casey been giving you that you haven't fully let in?",
+        "medium": "Name the last time Casey gave you something and you didn't fully receive it — then say what you'd receive now.",
+        "hard": "What do you need to let go of so you can actually show up for Casey without it being about you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 53.742382812500004,
+        "y": 0,
+        "zoom": 1.1
+      }
+    },
+    {
+      "id": "GU-A",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "Ace",
+      "title": "The Stage",
+      "poet": "Anaïs Nin",
+      "image_file": "/images/oracle/gu-a.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "Everything learned was taken from somewhere that mattered.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Inspiration burns where something already caught fire.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        },
+        "hard": {
+          "line": "What resonates becomes part of what grows.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's one thing you understand now that you couldn't have at 22?",
+        "medium": "Tell me about a belief you held about friendship that you've had to revise.",
+        "hard": "What capacity do you wish you had developed earlier — and what would it have cost you to have it sooner?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-J",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "Jack",
+      "title": "The Unguarded Moment",
+      "poet": "Maya Angelou",
+      "image_file": "/images/oracle/gu-j.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "Love removes the mask the self depends on for protection.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        },
+        "medium": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "Tell me something about yourself you don't usually lead with.",
+        "medium": "Share something you're in the middle of figuring out that you haven't packaged into a clean story yet.",
+        "hard": "What's the version of yourself you most protect me from seeing — and what would it mean to let me see it?"
+      },
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-Q",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "Queen",
+      "title": "The Longer Arc",
+      "poet": "Albert Einstein",
+      "image_file": "/images/oracle/gu-q.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "The self not lived still waits within reach.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "medium": {
+          "line": "The heart can still grow toward what it once imagined.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one way you've changed your mind about what good friendship looks like?",
+        "medium": "Tell me about a version of yourself you gave up on that you're starting to reconsider.",
+        "hard": "What do you want to grow into in the next few years that you haven't told anyone yet?"
+      },
+      "crop": {
+        "x": 100,
+        "y": 20.957421875,
+        "zoom": 1.1
+      }
+    },
+    {
+      "id": "GU-K",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "King",
+      "title": "The Integration",
+      "poet": "Confucius",
+      "image_file": "/images/oracle/gu-k.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "The end returns the beginning with deeper sight.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        },
+        "medium": {
+          "line": "The path brings the heart back to what it already knew.",
+          "npc": "Neris Vale",
+          "title": "The Wild Current of Virelune"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one thing you know now about yourself in friendships that you wish you'd known at the start of ours?",
+        "medium": "Tell me about a hard season you went through and what it made possible that wouldn't have been otherwise.",
+        "hard": "What's the through-line of who you've been across all your closest friendships — and what do you make of it?"
+      },
+      "crop": {
+        "x": 50.9744140625,
+        "y": 5.846093750000004,
+        "zoom": 1.1
+      }
+    },
+    {
+      "id": "GU-2",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "2",
+      "title": "The Reframe",
+      "poet": "Jim Jarmusch",
+      "image_file": "/images/oracle/gu-2.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "The mask shapes the one who wears it.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "medium": {
+          "line": "Every role becomes real with enough repetition.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "hard": {
+          "line": "The self forms around what the heart keeps performing.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's a story you've told about a friendship that might not be the whole story?",
+        "medium": "Tell me a version of a conflict where the other person wasn't wrong.",
+        "hard": "What's a narrative about yourself in relationships that you suspect is a protective story?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-3",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "3",
+      "title": "The Impact",
+      "poet": "Tim O'Brien",
+      "image_file": "/images/oracle/gu-3.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "A space stands between what happens and what follows.",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "medium": {
+          "line": "The moment before action decides the path.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        },
+        "hard": {
+          "line": "The heart lives in the space before answers.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Ask me one question you've been curious about but haven't felt ready to ask.",
+        "medium": "Ask me something about myself that you think would help you understand me better.",
+        "hard": "Ask me the question about our friendship that you most need the answer to but have been avoiding."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 56.4376953125,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-4",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "4",
+      "title": "The Capacity",
+      "poet": "Claudia Rankine",
+      "image_file": "/images/oracle/gu-4.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "Grief and fear share the same breath.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "medium": {
+          "line": "Fear wears grief when the loss has not settled.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        },
+        "hard": {
+          "line": "Grief borrows the shape of fear when it first arrives.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What emotional capacity are you still developing?",
+        "medium": "Tell me about something you couldn't tolerate two years ago that you can sit with now.",
+        "hard": "What are you being asked to grow into right now that scares you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.3744140625,
+        "y": 27.4419921875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-5",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "5",
+      "title": "The Other Side",
+      "poet": "Maya Angelou",
+      "image_file": "/images/oracle/gu-5.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "An untold story weighs heavier than any burden.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "medium": {
+          "line": "Silence traps the story and turns it inward.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        },
+        "hard": {
+          "line": "A story kept inside becomes its own kind of fire.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What might someone else's version of a hard moment between you look like?",
+        "medium": "Tell me what you think it's like to be on the receiving end of you when you're stressed.",
+        "hard": "What does the person who loves you most probably wish you understood about yourself?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 56.6357421875,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-6",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "6",
+      "title": "The Inherited Pattern",
+      "poet": "Maya Angelou",
+      "image_file": "/images/oracle/gu-6.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "The beginning holds; the ending bends to the hand.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "medium": {
+          "line": "No return to the start—only a different end earned forward.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        },
+        "hard": {
+          "line": "The path behind questions; the path ahead still answers.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Where do you see your upbringing showing up in how you do friendship?",
+        "medium": "Tell me about a relational pattern you inherited that you're actively trying to change.",
+        "hard": "What did the adults in your life model about receiving care that you're still unlearning?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 54.589648437499996,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-7",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "7",
+      "title": "The Permission",
+      "poet": "Sophia Bush",
+      "image_file": "/images/oracle/gu-7.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "A masterpiece carries the mark of what is unfinished.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "medium": {
+          "line": "Becoming burns inside what already stands complete.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        },
+        "hard": {
+          "line": "The heart holds the finished and the forming together.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What are you giving yourself permission to not be good at right now?",
+        "medium": "Tell me something you're in the middle of learning that you haven't announced yet.",
+        "hard": "What would change if you stopped waiting to have it figured out before you showed up?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 52.7509765625,
+        "y": 29.8044921875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-8",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "8",
+      "title": "The Blind Spot",
+      "poet": "Anaïs Nin",
+      "image_file": "/images/oracle/gu-8.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "The world reflects the one who looks.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "medium": {
+          "line": "Vision carries the shape of the seer.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        },
+        "hard": {
+          "line": "The world meets the heart as the heart arrives.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What kind of friend do you think you're capable of being that you haven't fully been yet?",
+        "medium": "What would it look like for you to be fully present in this friendship — not someday, but as a real possibility?",
+        "hard": "What's the deepest version of yourself in friendship that you can almost see but haven't stepped into?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 56.1095703125,
+        "y": 2.6773437499999986,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-9",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "9",
+      "title": "The Threshold",
+      "poet": "J.R.R. Tolkien",
+      "image_file": "/images/oracle/gu-9.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "Wandering follows a path not yet named.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "medium": {
+          "line": "A path exists even without a destination declared.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "hard": {
+          "line": "The heart can move without losing its ground.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What threshold are you standing at right now?",
+        "medium": "Tell me about something in your life that is ending, even if it hasn't officially ended.",
+        "hard": "What are you afraid of becoming — and what are you afraid you already are?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "GU-10",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "♥️"
+      },
+      "rank": "10",
+      "title": "The Long View",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/gu-10.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. One figure shares openly with both hands, the other leans forward in deep listening.",
+      "flavor": {
+        "easy": {
+          "line": "Exploration returns the beginning altered by knowing.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "medium": {
+          "line": "Every journey circles through fire and returns changed.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        },
+        "hard": {
+          "line": "The path returns the heart to what it could not first see.",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What do you want your close friendships to feel like in ten years?",
+        "medium": "Tell me what you're building in yourself that your future self will thank you for.",
+        "hard": "What would the person you're becoming need from this friendship that you haven't asked for yet?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 64.5283203125,
+        "y": 0,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-A",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "Ace",
+      "title": "The First Move",
+      "poet": "Llewelyn Vaughan-Lee",
+      "image_file": "/images/oracle/su-a.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Presence stand guard while Love struggles through the night.",
+          "npc": "Iri Sol",
+          "title": "The Hidden Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Staying becomes the act that defines love.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "hard": {
+          "line": "Love does not leave when the night stretches on.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        }
+      },
+      "prompts": {
+        "easy": "Text Casey something you've been meaning to say for a while.",
+        "medium": "Send Casey a voice note telling them one specific thing you appreciate about them.",
+        "hard": "Reach out to Casey before they reach out to you — and tell them exactly why you did it today."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.083203125,
+        "y": 29.611718750000005,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-J",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "Jack",
+      "title": "The Risk",
+      "poet": "Nelson Mandela",
+      "image_file": "/images/oracle/su-j.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "medium": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "Do one thing for Casey this week that's slightly outside your comfort zone.",
+        "medium": "Tell Casey something you've wanted to offer this friendship but have been talking yourself out of — and then offer it.",
+        "hard": "Do the thing for Casey that feels most exposing to offer — and do it this week."
+      },
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-Q",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "Queen",
+      "title": "The Open Door",
+      "poet": "Abraham Lincoln",
+      "image_file": "/images/oracle/su-q.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "The wound opens the way for light.",
+          "npc": "Jarek Stone",
+          "title": "The Breaking Stillness of Meridia"
+        },
+        "medium": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "Tell Casey one way they could make it easier for you to reach out when you need something — today.",
+        "medium": "Do one thing this week that makes it easier for Casey to reach you — not by asking them what they need, but by offering something before they have to.",
+        "hard": "Remove one barrier between you and Casey that's been making it harder to show up — and do it this week."
+      },
+      "crop": {
+        "x": 54.318359375,
+        "y": 11.134765625000002,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-K",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "King",
+      "title": "The Witness",
+      "poet": "Albert Einstein",
+      "image_file": "/images/oracle/su-k.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "The way forward remains inside what stands before it.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "medium": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "prompts": {
+        "easy": "Tell Casey one thing you've witnessed in them recently that you haven't named out loud — today.",
+        "medium": "Name something you've watched Casey carry without complaint — and do something about it this week.",
+        "hard": "Do something for Casey this week that shows you've been paying attention — something only possible because you actually see them."
+      },
+      "crop": {
+        "x": 53.30703125,
+        "y": 8.328125,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-2",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "2",
+      "title": "The Proactive",
+      "poet": "William James",
+      "image_file": "/images/oracle/su-2.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "The vow forms long before it is spoken.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "medium": {
+          "line": "The heart binds itself before witnesses arrive.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "Think of something Casey does for others that you've never done for them — and do it this week.",
+        "medium": "Do something for Casey this week that you'd want someone to do for you.",
+        "hard": "Do the thing for Casey that you've been waiting for them to ask for — without making them ask. Do it this week."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 49.1181640625,
+        "y": 22.713476562500002,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-3",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "3",
+      "title": "The Showing Up Card",
+      "poet": "Elizabeth Gilbert",
+      "image_file": "/images/oracle/su-3.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "The path forward passes through what stands in the way.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "medium": {
+          "line": "No unobserved fire yields",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "hard": {
+          "line": "The crossing happens inside what cannot be avoided.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing Casey needs from you that you haven't been giving — and do it this week.",
+        "medium": "Tell Casey specifically how their showing up has affected you — name the moment, the impact, and do it today.",
+        "hard": "Show up for Casey this week the way Casey shows up for everyone else — pick one specific thing and do it without being asked."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-4",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "4",
+      "title": "The Commitment",
+      "poet": "Will Durant",
+      "image_file": "/images/oracle/su-4.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Being seen and being loved rise together.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "medium": {
+          "line": "Love meets what stands without disguise.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "hard": {
+          "line": "The heart receives love when nothing remains hidden.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Name one small, repeatable thing you'll do to stay connected to Casey.",
+        "medium": "Make one specific commitment about how you'll show up in the next 30 days.",
+        "hard": "What's one habit you're willing to build because Casey matters to you?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-5",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "5",
+      "title": "The Seeing Card",
+      "poet": "Ralph Waldo Emerson",
+      "image_file": "/images/oracle/su-5.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Every reflection returns to the one who looks.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "The mirror answers with the same force brought to it.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "hard": {
+          "line": "The face encountered carries something of the self.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Tell Casey one thing you see in them that they might not see in themselves — today.",
+        "medium": "Name a strength Casey has been undervaluing and do something this week that reflects it back to them.",
+        "hard": "Do something for Casey this week that only makes sense if you've been paying close attention — something at the edge of what you'd normally offer."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-6",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "6",
+      "title": "The Schedule",
+      "poet": "Denise Brennan-Nelson",
+      "image_file": "/images/oracle/su-6.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "A day exists only when a hand claims it.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        },
+        "medium": {
+          "line": "Someday ends the moment a date is spoken.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "prompts": {
+        "easy": "Pick a date and propose something specific to do with Casey.",
+        "medium": "Plan something for Casey that requires you to know what they actually like.",
+        "hard": "Schedule something for Casey that requires you to initiate, plan, and follow through without them managing any of it."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-7",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "7",
+      "title": "The Check-In",
+      "poet": "Arthur Ashe",
+      "image_file": "/images/oracle/su-7.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Every place carries the same self within it.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "medium": {
+          "line": "No distance leaves the self behind.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The heart arrives wherever the body goes.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Send Casey a message that isn't a question and isn't about you.",
+        "medium": "Check in on Casey about something specific they mentioned last time you talked.",
+        "hard": "Reach out to Casey about something they're going through that they didn't bring up — because you noticed."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 53.240234375,
+        "y": 17.987890625000006,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-8",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "8",
+      "title": "The Repair Attempt",
+      "poet": "Coco Chanel",
+      "image_file": "/images/oracle/su-8.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Courage speaks the thought before approval can catch up",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "medium": {
+          "line": "A thought becomes real the moment a voice risks it.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "hard": {
+          "line": "The heart stands when the voice refuses to stay hidden.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this week that requires you to be present, not just helpful.",
+        "medium": "Show up for Casey in a way that asks something of you emotionally — not just practically — and do it before the week is out.",
+        "hard": "Do the thing for Casey that you've been avoiding because it would require you to be fully seen — and do it this week."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-9",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "9",
+      "title": "The Pour",
+      "poet": "Unknown",
+      "image_file": "/images/oracle/su-9.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "The step toward it is answered by a step back.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        },
+        "medium": {
+          "line": "The fire you follow warms you.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The heart reaches and finds something already reaching.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this month that costs you something — time, energy, or effort you don't easily have.",
+        "medium": "Show up for Casey in a way that requires you to give more than is comfortable — and do it before the week is out.",
+        "hard": "Do the most generous thing you can think of for Casey — the one that costs you something real — and do it this week."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 53.189843749999994,
+        "y": 9.9791015625,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "SU-10",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "♠️"
+      },
+      "rank": "10",
+      "title": "The Reciprocity Card",
+      "poet": "Mother Teresa",
+      "image_file": "/images/oracle/su-10.png",
+      "image_prompt": "Two figures on warm cream background. No faces, no text, no shading. Expressive body language. Portrait card art. Both figures engaged in a small shared activity, close together, moving in the same direction.",
+      "flavor": {
+        "easy": {
+          "line": "Beauty and terror arrive together; both must be received.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "medium": {
+          "line": "Nothing is refused; all is faced.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "hard": {
+          "line": "The self must hold what arrives without sorting.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this week that reflects who you've become in this friendship — not who you were when it started.",
+        "medium": "Name something Casey has given you repeatedly — then give it back before the week is out.",
+        "hard": "Do something for Casey this week that could only come from someone who has known them the way you have — the act that only you could give."
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      }
+    }
+  ]
+}

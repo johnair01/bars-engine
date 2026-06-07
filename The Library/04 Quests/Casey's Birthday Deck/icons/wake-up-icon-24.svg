@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <title>Wake Up</title>
+  <!-- Eye frame -->
+  <path d="M2 12 C2 12 L12 3 L22 12 C22 12 L12 21 Z" fill="none" stroke="#C9A84C" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Iris circle -->
+  <circle cx="12" cy="12" r="3" fill="none" stroke="#C9A84C" stroke-width="2"/>
+  <!-- Pupil -->
+  <circle cx="12" cy="12" r="1" fill="#C9A84C"/>
+  <!-- Upper rays -->
+  <line x1="12" y1="3" x2="12" y2="1" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="5" y1="5" x2="4" y2="3" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+  <line x1="19" y1="5" x2="20" y2="3" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+</svg>

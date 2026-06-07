@@ -1,0 +1,2061 @@
+{
+  "deck_name": "Oracle at the Edge of the Known World",
+  "for": "Casey (He/They)",
+  "made_by": "Wendell",
+  "total_cards": 52,
+  "cards": [
+    {
+      "id": "WU-A",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "Ace",
+      "title": "The First Noticing",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-a.png",
+      "image_prompt": "masculine young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, standing centered, one arm slightly extended forward, palm open, gaze direct, structured high-collar mid-thigh wuxia robe over black fitted trousers, asymmetric sleeves one wide one narrow, tight white cloth belt, single silver geometric clasp, pure white ivory fabric, silver-grey underlayers, structured tall polished leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions, faint lens-like clarity ripples in the air, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, stillness and precision, power held not shown, attention as devotion, seeing clearly, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Attention is where devotion takes root.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        },
+        "medium": {
+          "line": "Where attention rests, devotion begins to grow",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "hard": {
+          "line": "Attention turns the ordinary into something held.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing you noticed about me this week.",
+        "medium": "Tell me one thing I do that you've never said out loud.",
+        "hard": "What have you been noticing about me that you've been afraid to name?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 55.0466796875,
+        "y": 18.15546875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-J",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "Jack",
+      "title": "The Sharpening",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-j.png",
+      "image_prompt": "two figures from different nations, two figures facing each other, the younger leaning forward with intensity, disrupting the elder's stillness, both gazes locked on each other, first figure: masculine young adult in their early twenties, smooth unlined face, sharp alert expression, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist, stone stillness, grounded weight beneath the figure, second figure: feminine adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, vivid green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes and vivid saturated medium green robes meeting in the space between them, East Asian ink painting aesthetic, solidity and patience, balance, the center that holds, emergence and becoming, upward motion, something new arising, clarity without softening, the sharpest truth, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "A single life burns with the question of its use.",
+          "npc": "Jarek Stone",
+          "title": "The Breaking Stillness of Meridia"
+        },
+        "medium": {
+          "line": "A wild and precious life demands a chosen direction.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "hard": {
+          "line": "Life eagerly waits for the shape it will be given.",
+          "npc": "Luma Vire",
+          "title": "The Rising Bloom of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop": {
+        "x": 50,
+        "y": 50,
+        "zoom": 1
+      },
+      "crop_saved": true,
+      "prompts": {
+        "easy": "What's one thing about me you see clearly that you haven't said directly?",
+        "medium": "Tell me one thing you've been seeing clearly about me that you've been softening when you say it out loud.",
+        "hard": "What's the sharpest true thing you could say about who I am right now \u2014 the version you'd only say if you knew I could take it?"
+      }
+    },
+    {
+      "id": "WU-Q",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "Queen",
+      "title": "The Long Pause",
+      "poet": "Lawrence Ferlinghetti",
+      "image_file": "/images/oracle/wu-q.png",
+      "image_prompt": "two figures from the same nation, two figures facing each other, the elder seated with open hands and absolute stillness, the younger leaning slowly in, both gazes directed at each other, first figure: feminine adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, vivid green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, second figure: androgynous elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, the clean bright green of new leaves and living plants, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, unhurried presence, space held open, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The moment stands just beyond the call.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "medium": {
+          "line": "Waiting holds the breath before the name is spoken.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        },
+        "hard": {
+          "line": "A turn approaches through the stillness of waiting.",
+          "npc": "Lyra Venn",
+          "title": "The Revealing Vine of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.489843750000006,
+        "y": 56.008203125,
+        "zoom": 1.1
+      },
+      "prompts": {
+        "easy": "What's present between us right now that you haven't fully let yourself feel?",
+        "medium": "What are you rushing past in this friendship that deserves more of your attention?",
+        "hard": "What would change between us if you slowed down enough to actually feel what's here?"
+      }
+    },
+    {
+      "id": "WU-K",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "King",
+      "title": "The After",
+      "poet": "Mary Oliver",
+      "image_file": "/images/oracle/wu-k.png",
+      "image_prompt": "two figures from the same nation, two figures facing each other, both settled, the elder's hand resting on the younger's shoulder in quiet recognition, both gazes engaged with each other, first figure: androgynous adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, the clean bright green of new leaves and living plants, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, second figure: masculine elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, asymmetric vivid green wuxia outer robe longer on left over fitted earth-tone trousers, one wide sleeve one fitted, braided botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood clasps, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, what remains when the noticing settles, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "No great Mystery has a final answer.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "medium": {
+          "line": "The search for the soul deepens without end.",
+          "npc": "Iri Sol",
+          "title": "The Hidden Bloom of Virelune"
+        },
+        "hard": {
+          "line": "No great Mystery has a final answer.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        }
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 50.089648437499996,
+        "y": 23.000585937499995,
+        "zoom": 1.1
+      },
+      "prompts": {
+        "easy": "Name one thing that's different between us now compared to when we first became friends.",
+        "medium": "Tell me what you understand about me now that you couldn't have known a year ago.",
+        "hard": "What has changed in how you see me \u2014 and have you ever said it out loud?"
+      }
+    },
+    {
+      "id": "WU-2",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "2",
+      "title": "The Temperature Check",
+      "poet": "Edna St. Vincent Millay",
+      "image_file": "/images/oracle/wu-2.png",
+      "image_prompt": "feminine young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, seated, leaning forward over still water, studying their own reflection in the surface below, pale cream column dress floor length, asymmetric draped outer robe pinned at one shoulder, smooth silk inner with matte gauze outer, tight white cloth belt, single silver geometric pin, structured low-profile elegant leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions, faint lens-like clarity ripples in the air, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, stillness and precision, power held not shown, present awareness, what runs beneath, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Resignation has not found a home here.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "medium": {
+          "line": "Something in this refuses to bow.",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "hard": {
+          "line": "The will still stands",
+          "npc": "unbent.",
+          "title": "Varyn Doss, The Unyielding Vector of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's your energy like right now, in one word?",
+        "medium": "Tell me what's running underneath your surface today.",
+        "hard": "What feeling about Casey are you carrying right now that you haven't named out loud yet?"
+      },
+      "uploaded": true,
+      "crop_saved": true,
+      "crop": {
+        "x": 49.183203125,
+        "y": 62.132421875,
+        "zoom": 1
+      }
+    },
+    {
+      "id": "WU-3",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "3",
+      "title": "The Texture Card",
+      "poet": "Leonard Cohen",
+      "image_file": "images/wu-3.png",
+      "image_prompt": "two figures from different nations, two figures facing each other, the younger extending both hands forward in question, the elder standing attentive and still, first figure: masculine young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, structured high-collar mid-thigh wuxia robe over black fitted trousers, asymmetric sleeves one wide one narrow, tight white cloth belt, single silver geometric clasp, pure white ivory fabric, silver-grey underlayers, structured tall polished leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions, faint lens-like clarity ripples in the air, second figure: androgynous adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, structured dark crimson wuxia robes fitted at shoulder, V-neck lapels showing dark burgundy underlayers, rope sash, wide sleeves not flaring, deep burnt crimson red and dark burgundy tones, wrapped leather sandals, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes and deep burnt crimson red robes meeting in the space between them, East Asian ink painting aesthetic, stillness and precision, power held not shown, intensity and commitment, restrained volcanic power, friction as contact, what was glossed over, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every form breaks somewhere; light enters there.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "medium": {
+          "line": "Light finds the fracture and makes it a doorway.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "hard": {
+          "line": "What breaks open becomes a passage for light.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What feels unresolved or unsettled between us right now \u2014 it doesn't have to be bad, just unfinished?",
+        "medium": "What's a moment between us you moved past too quickly?",
+        "hard": "Tell me what you were actually feeling the last time you told me you were fine."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-4",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "4",
+      "title": "The Unsaid Thing",
+      "poet": "Naomi Shihab Nye",
+      "image_file": "images/wu-4.png",
+      "image_prompt": "androgynous adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing still, both arms folded close to chest, head slightly bowed, holding something inward, structured dark crimson wuxia robes fitted at shoulder, V-neck lapels showing dark burgundy underlayers, rope sash, wide sleeves not flaring, deep burnt crimson red and dark burgundy tones, wrapped leather sandals, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, held back, something waiting to be spoken, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Unspoken words settle into the body.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "Silence gathers what the voice refuses.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "hard": {
+          "line": "What goes unsaid takes shape within.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What's one thing you almost said to me but didn't?",
+        "medium": "Tell me something you've been holding back that has nothing to do with a problem.",
+        "hard": "What truth have you been protecting me from that I might actually need?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-5",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "5",
+      "title": "The Peripheral Vision",
+      "poet": "James Wright",
+      "image_file": "images/wu-5.png",
+      "image_prompt": "masculine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing at the edge of the frame, looking sideways into peripheral space, something unseen at the boundary, structured dark crimson wuxia outer robe, mid-thigh length over wide dark burgundy trousers, V-neck crossed lapels showing dark underlayer, wide sleeves not flaring, rope sash double-knotted, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, edge of awareness, what hovers at the margin, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Life withers while the heart stands elsewhere.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        },
+        "medium": {
+          "line": "Time can pass without ever touching what matters.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "A heart can slip through the hands without being held.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What do you sense Casey needs right now that they haven't asked for?",
+        "medium": "What have you been noticing about yourself lately that's been harder to look at?",
+        "hard": "What are you aware of \u2014 about yourself, about us \u2014 that you've been deliberately not looking at?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-6",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "6",
+      "title": "The Arrival",
+      "poet": "Rainer Maria Rilke",
+      "image_file": "images/wu-6.png",
+      "image_prompt": "two figures from different nations, two figures facing each other directly, both leaning slightly in, the space between them charged with recognition, first figure: feminine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, dark burgundy floor-length inner dress, structured crimson outer robe open at front, wide sleeves not flaring, wrapped crimson sash belt, dark metal shoulder clasps, wrapped leather sandals feet partially exposed, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, second figure: masculine adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes and dark midnight navy blue robes meeting in the space between them, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, depth and stillness, inward gravity, weight of feeling, arrival and recognition, two worlds meeting, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The ordinary waits for the gaze that makes it sacred.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "medium": {
+          "line": "Everything leans toward holiness when seen clearly.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The sacred waits inside what is overlooked.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What does it feel like to be around me?",
+        "medium": "When did you last feel like you'd actually arrived \u2014 like you were fully present with me?",
+        "hard": "Tell me what it feels like when you stop performing."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-7",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "7",
+      "title": "The Witnessing",
+      "poet": "Lucille Clifton",
+      "image_file": "images/wu-7.png",
+      "image_prompt": "two figures from the same nation, two figures facing each other, the elder seated completely still, the younger standing and being witnessed, gaze directed toward the elder not at the viewer, elder watching the standing figure with quiet attention not at the viewer, first figure: androgynous adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, dark midnight navy blue, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, second figure: feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool blue-white water energy, background muted, East Asian ink painting aesthetic, depth and stillness, inward gravity, weight of feeling, quiet observation, the self seen clearly by another, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The watcher sits quietly inside every moment.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "medium": {
+          "line": "The self never stops bearing witness.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "hard": {
+          "line": "Every act unfolds under an inward gaze.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What are you watching in yourself right now?",
+        "medium": "What are you watching in yourself when you're with me \u2014 and do you like what you see?",
+        "hard": "What are you witnessing in yourself right now that you haven't been willing to say to me?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-8",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "8",
+      "title": "The Quality of Attention",
+      "poet": "Mary Oliver",
+      "image_file": "images/wu-8.png",
+      "image_prompt": "feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, kneeling, both hands pressing into still water, gaze downward into the depth below, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool blue-white water energy, background muted, East Asian ink painting aesthetic, depth and stillness, inward gravity, weight of feeling, deep attention, astonishment seeking a voice, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Attention opens into astonishment and asks for a mouthpiece.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        },
+        "medium": {
+          "line": "What is seen deeply seeks to be spoken.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "hard": {
+          "line": "What is seen deeply seeks to be spoken.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What's something small that astonished you recently?",
+        "medium": "Tell me one moment this week when you felt fully alive.",
+        "hard": "What are you not paying attention to that wants your attention?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-9",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "9",
+      "title": "The Echo",
+      "poet": "Mary Oliver",
+      "image_file": "images/wu-9.png",
+      "image_prompt": "androgynous elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing upright but carrying invisible weight, one shoulder slightly dropped, having given much, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe, heavy leather hip belt, wide sleeves to wrist, heavy brocade, carved stone belt emblem, warm ochre brown the color of dried clay, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist, stone stillness, grounded weight beneath the figure, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey accents, background muted, East Asian ink painting aesthetic, solidity and patience, balance, the center that holds, the price of honesty, what holding back costs, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Worth stands before goodness is measured.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "medium": {
+          "line": "Belonging does not wait for perfection.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "hard": {
+          "line": "Being arrives before any standard is met.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What does it take out of you to show up honestly with me?",
+        "medium": "What do you notice yourself holding back in order to keep things comfortable between us?",
+        "hard": "What's the price you're paying right now to stay in this friendship the way you've been showing up in it?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "WU-10",
+      "suit": {
+        "code": "WU",
+        "name": "Wake Up",
+        "domain": "Notice What's Real Between You",
+        "icon": "\u2663\ufe0f"
+      },
+      "rank": "10",
+      "title": "The Drift",
+      "poet": "Ram Dass",
+      "image_file": "images/wu-10.png",
+      "image_prompt": "masculine elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing with both arms slightly open, face lifted, a sense of full arrival and completion, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist, stone stillness, grounded weight beneath the figure, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey accents, background muted, East Asian ink painting aesthetic, solidity and patience, balance, the center that holds, distance and connection, the space between, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every path is shared",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        },
+        "medium": {
+          "line": "Each life moves in quiet company with another.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        },
+        "hard": {
+          "line": "The journey home is never solitary.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "How connected do you feel to me right now?",
+        "medium": "Tell me what shifts in you when you're around me versus other people.",
+        "hard": "What's the distance between us right now that neither of us has named?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-A",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "Ace",
+      "title": "The Small Honesty",
+      "poet": "Joseph Heller",
+      "image_file": "images/cu-a.png",
+      "image_prompt": "feminine young adult in their early twenties, smooth unlined face, sharp alert expression, deep brown skin with African features, strong rooted build, full expressive features, standing centered, one arm slightly extended forward, palm open, gaze direct, vivid green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, the first small admission, courage beginning, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Cowardice lasts longer than fear.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        },
+        "medium": {
+          "line": "A coward lives with the cost; the brave meet it once.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        },
+        "hard": {
+          "line": "Fear flows. Cowardice pools.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing you've let slide in our friendship.",
+        "medium": "Tell me one way you've been showing up in this friendship that you're not proud of.",
+        "hard": "What's the pattern you keep bringing to close friendships that you wish you could stop?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-J",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "Jack",
+      "title": "The Confession Dial",
+      "poet": "Elizabeth Barrett Browning",
+      "image_file": "images/cu-j.png",
+      "image_prompt": "two figures from the same nation, two figures, the younger moving into the elder's space from the left, creating sudden energy and motion, engaged with each other, first figure: masculine young adult in their early twenties, smooth unlined face, sharp alert expression, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, second figure: feminine adult in their late thirties, strong lived-in features, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, softer embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist, stone stillness, grounded weight beneath the figure, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey accents, background muted, East Asian ink painting aesthetic, solidity and patience, balance, the center that holds, honesty turned up, the full truth spoken, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Grief without passion has already gone silent.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        },
+        "medium": {
+          "line": "Grief must move to remain alive in the heart.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "hard": {
+          "line": "Grief must move to remain alive in the heart.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "Name one thing you've been less than fully honest with me about.",
+        "medium": "Tell me something you said to me that was true but not the whole truth.",
+        "hard": "What's the thing you've been most careful not to say directly \u2014 and what would happen if you just said it?"
+      }
+    },
+    {
+      "id": "CU-Q",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "Queen",
+      "title": "The Tide",
+      "poet": "Louisa May Alcott",
+      "image_file": "images/cu-q.png",
+      "image_prompt": "two figures from the same nation, two figures, the elder standing behind and to the right, one hand extended gently toward the younger, both engaged with each other, first figure: feminine adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, vivid green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, second figure: androgynous elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, the clean bright green of new leaves and living plants, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, what returns slowly, the tide of accountability, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Storms teach the captain how to sail the ship.",
+          "npc": "Luma Vire",
+          "title": "The Rising Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Every storm answers to the hand that dares to steer.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "hard": {
+          "line": "The heart learns the sea by staying with the storm.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "What's one thing between us that you let pass in the moment but it stayed with you?",
+        "medium": "Tell me about something you let build up that you wish you'd said earlier.",
+        "hard": "What's the version of an apology you owe me that you haven't fully given yet?"
+      }
+    },
+    {
+      "id": "CU-K",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "King",
+      "title": "The Reckoning",
+      "poet": "Ovid",
+      "image_file": "images/cu-k.png",
+      "image_prompt": "two figures from the same nation, two figures at a slight angle, both turned toward each other, the elder gesturing to name what has changed, engaged, first figure: androgynous adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, the clean bright green of new leaves and living plants, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, second figure: masculine elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, asymmetric vivid green wuxia outer robe longer on left over fitted earth-tone trousers, one wide sleeve one fitted, braided botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood clasps, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, the honest accounting, what has been faced, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Everything changes; nothing is lost to the whole.",
+          "npc": "Lyra Venn",
+          "title": "The Revealing Vine of Virelune"
+        },
+        "medium": {
+          "line": "Nothing ends; every form becomes another.",
+          "npc": "Neris Vale",
+          "title": "The Wild Current of Virelune"
+        },
+        "hard": {
+          "line": "All things shift",
+          "npc": "Iri Sol",
+          "title": "The Hidden Bloom of Virelune"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "What's one thing about how you show up in friendships that you've had to face honestly?",
+        "medium": "Tell me about a version of yourself in friendship that you've had to leave behind.",
+        "hard": "What's the most honest account you can give of who you've been in this friendship \u2014 and who you want to be going forward?"
+      }
+    },
+    {
+      "id": "CU-2",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "2",
+      "title": "The Projection",
+      "poet": "Ursula K. Le Guin",
+      "image_file": "images/cu-2.png",
+      "image_prompt": "androgynous young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, seated, leaning forward over still water, studying their own reflection in the surface below, pale cream layered wuxia robes, structured collar, smooth matte linen fabric, tight white cloth belt, silver geometric clasp, pure white and ivory tones, structured leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions, faint lens-like clarity ripples in the air, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, stillness and precision, power held not shown, the self reflected in the other, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every dragon answers to the same call as the hero.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "medium": {
+          "line": "The hero and the dragon share a single fire.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "hard": {
+          "line": "The dragon and the hero grow from the same heart.",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's something in me that sometimes bothers you that you also see in yourself?",
+        "medium": "Tell me about a time you judged me for something you were also doing.",
+        "hard": "What do you resent in me that belongs to you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-3",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "3",
+      "title": "The Ask Card",
+      "poet": "Rumi",
+      "image_file": "images/cu-3.png",
+      "image_prompt": "two figures from the same nation, two figures at an angle, the younger reaching toward the elder from the left, the elder slightly turned but listening, first figure: masculine young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, structured high-collar mid-thigh wuxia robe over black fitted trousers, asymmetric sleeves one wide one narrow, tight white cloth belt, single silver geometric clasp, pure white ivory fabric, silver-grey underlayers, structured tall polished leather boots, loose black hair in a high bun with falling strands, second figure: androgynous adult in their late thirties, strong lived-in features, pale skin, androgynous lean build, sharp precise features, pale cream layered wuxia robes, structured collar, smooth matte linen fabric, tight white cloth belt, silver geometric clasp, pure white and ivory tones, structured leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions, faint lens-like clarity ripples in the air, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, stillness and precision, power held not shown, the withheld want, fear of asking, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Speak the want without disguise.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        },
+        "medium": {
+          "line": "Name the want or lose the chance.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "hard": {
+          "line": "Let the want be heard before silence claims it.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's something small you've wanted from me that you talked yourself out of asking for?",
+        "medium": "What do you make yourself need less of because you're afraid to ask for it?",
+        "hard": "What's the thing you most want from this friendship that you've never let yourself ask for \u2014 and what does that cost you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-4",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "4",
+      "title": "The Withhold",
+      "poet": "Oscar Wilde",
+      "image_file": "images/cu-4.png",
+      "image_prompt": "masculine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing still, both arms folded close to chest, head slightly bowed, holding something inward, structured dark crimson wuxia outer robe, mid-thigh length over wide dark burgundy trousers, V-neck crossed lapels showing dark underlayer, wide sleeves not flaring, rope sash double-knotted, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, what has been kept, resentment and truth, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The truth resists purity and refuses simplicity.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        },
+        "medium": {
+          "line": "The truth comes tangled and cuts anyway.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "hard": {
+          "line": "Truth is a Chimaera.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What's something true about our friendship you've been keeping to yourself?",
+        "medium": "Tell me a small resentment you've been sitting on.",
+        "hard": "What have you been pretending is fine that actually isn't?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-5",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "5",
+      "title": "The Pattern",
+      "poet": "William Ernest Henley",
+      "image_file": "images/cu-5.png",
+      "image_prompt": "feminine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing at the edge of the frame, looking sideways into peripheral space, something unseen at the boundary, dark burgundy floor-length inner dress, structured crimson outer robe open at front, wide sleeves not flaring, wrapped crimson sash belt, dark metal shoulder clasps, wrapped leather sandals feet partially exposed, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, the recurring shadow, the habit that costs, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The master of fate answers to no one but the self.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "The soul follows the hand that dares to guide it.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "The soul follows the hand that dares to guide it.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What's a habit of yours that probably affects the people close to you?",
+        "medium": "Tell me about a pattern you've noticed yourself repeating in friendships.",
+        "hard": "What are you doing in this friendship that you've done before and it cost you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-6",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "6",
+      "title": "The Repair",
+      "poet": "Emily Dickinson",
+      "image_file": "images/cu-6.png",
+      "image_prompt": "two figures from different nations, two figures, one arriving from the left with a lowered head, the other turning slowly to meet them, first figure: feminine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, dark burgundy floor-length inner dress, structured crimson outer robe open at front, wide sleeves not flaring, wrapped crimson sash belt, dark metal shoulder clasps, wrapped leather sandals feet partially exposed, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, second figure: masculine adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes and dark midnight navy blue robes meeting in the space between them, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, depth and stillness, inward gravity, weight of feeling, returning to what was left unfinished, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Great pain settles into a formal stillness.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        },
+        "medium": {
+          "line": "After the wound, the body learns a colder shape.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "hard": {
+          "line": "Great pain becomes a quiet order the heart keeps.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Is there something between us you walked past at the time that's stayed with you since?",
+        "medium": "Tell me about a moment in our friendship where you were more yourself than you let on.",
+        "hard": "Tell me about something you did \u2014 or didn't do \u2014 that you haven't fully made right."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-7",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "7",
+      "title": "The Gift Back",
+      "poet": "Derek Walcott",
+      "image_file": "images/cu-7.png",
+      "image_prompt": "two figures from the same nation, two figures, the elder standing slightly behind and to one side, watching the younger with absolute quiet attention, both gazes directed at each other not at the viewer, first figure: androgynous adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, dark midnight navy blue, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, second figure: feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool blue-white water energy, background muted, East Asian ink painting aesthetic, depth and stillness, inward gravity, weight of feeling, receiving what was given, the circle closing, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every gift returns to the giver in another form.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        },
+        "medium": {
+          "line": "Every offering circles back through the same fire.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "hard": {
+          "line": "What the heart gives, the heart must also receive.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing Casey does for you that you've never acknowledged.",
+        "medium": "Tell Casey about a way they show up for you that you've been taking for granted.",
+        "hard": "What has Casey given you that you haven't given back \u2014 and what would changing that look like?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-8",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "8",
+      "title": "The Shadow",
+      "poet": "Carl Jung",
+      "image_file": "images/cu-8.png",
+      "image_prompt": "androgynous elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, kneeling, both hands pressing into still water, gaze downward into the depth below, draped open collar, multiple overlapping translucent navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, dark midnight navy blue, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool blue-white water energy, background muted, East Asian ink painting aesthetic, depth and stillness, inward gravity, weight of feeling, hidden depth, the concealed self revealed, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "No light redeems a darkness left unseen.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        },
+        "medium": {
+          "line": "The heart softens when the darkness is allowed to be known.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The heart softens when the darkness is allowed to be known.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What's a version of yourself you don't show in friendships?",
+        "medium": "Tell me about the part of you that comes out when you're not trying to be likeable.",
+        "hard": "What's the most difficult version of yourself to be around \u2014 and when does it show up?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-9",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "9",
+      "title": "The Cost",
+      "poet": "Galway Kinnell",
+      "image_file": "images/cu-9.png",
+      "image_prompt": "masculine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, standing upright but carrying invisible weight, one shoulder slightly dropped, having given much, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples emanating from the figure, white lotus blooms, falling water droplets, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool blue-white water energy, background muted, East Asian ink painting aesthetic, depth and stillness, inward gravity, weight of feeling, the price of closeness, what intimacy requires, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "True affection gathers its own tribe.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "medium": {
+          "line": "Love names the circle and calls it home.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "hard": {
+          "line": "The heart builds its people from what it cannot leave.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What does it cost you to stay close to people?",
+        "medium": "Tell me what you give in friendships that drains you.",
+        "hard": "What's the price you pay for being the person people can count on?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "CU-10",
+      "suit": {
+        "code": "CU",
+        "name": "Clean Up",
+        "domain": "Own Your Part",
+        "icon": "\u2666\ufe0f"
+      },
+      "rank": "10",
+      "title": "The Receiving",
+      "poet": "Ada Lim\u00f3n",
+      "image_file": "images/cu-10.png",
+      "image_prompt": "feminine elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing with both arms slightly open, face lifted, a sense of full arrival and completion, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, softer embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist, stone stillness, grounded weight beneath the figure, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey accents, background muted, East Asian ink painting aesthetic, solidity and patience, balance, the center that holds, letting in what was given, the full receive, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The burden weighs heavy; the soul remains beyond measure.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        },
+        "medium": {
+          "line": "Weight belongs to the load, not to the one who bears it.",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        },
+        "hard": {
+          "line": "The heart carries much and is never reduced by the carrying.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What has Casey been giving you that you haven't fully let in?",
+        "medium": "Name the last time Casey gave you something and you didn't fully receive it \u2014 then say what you'd receive now.",
+        "hard": "What do you need to let go of so you can actually show up for Casey without it being about you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-A",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "Ace",
+      "title": "The Stage",
+      "poet": "Ana\u00efs Nin",
+      "image_file": "images/gu-a.png",
+      "image_prompt": "androgynous young adult in their early twenties, smooth unlined face, sharp alert expression, deep brown skin with African features, strong rooted build, full expressive features, standing centered, one arm slightly extended forward, palm open, gaze direct, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, the clean bright green of new leaves and living plants, bare feet visible against earth, long thick dreadlocks with gold beads, loose and flowing, spiraling leaf tendrils and small birds emerging from the figure, vine details in the fabric edges, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, emergence and becoming, upward motion, something new arising, development and becoming, what was learned, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Everything learned was taken from somewhere that mattered.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Inspiration burns where something already caught fire.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        },
+        "hard": {
+          "line": "What resonates becomes part of what grows.",
+          "npc": "Kael Virex",
+          "title": "The Cutting Lens of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's one thing you understand now that you couldn't have at 22?",
+        "medium": "Tell me about a belief you held about friendship that you've had to revise.",
+        "hard": "What capacity do you wish you had developed earlier \u2014 and what would it have cost you to have it sooner?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-J",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "Jack",
+      "title": "The Unguarded Moment",
+      "poet": "Maya Angelou",
+      "image_file": "images/gu-j.png",
+      "image_prompt": "two figures from different nations in a sparring scene, first figure: masculine elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing in a low rooted stance having just delivered a strike, expression calm and patient, watching without judgment, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded pressing into the earth, loose black hair in a high bun with falling strands, faint mountain mist rising around his feet, second figure: feminine young adult in their early twenties, smooth unlined face, warm bronze skin, broad-shouldered powerful build, strong jaw, knocked prone by the strike, in the process of pushing herself up from the ground, one hand pressed into the earth one knee rising, face lifted upward mid-recovery, in the split second between down and standing her face is completely unguarded, the trained intensity gone briefly replaced by something younger and more uncertain and more true, the real face visible before the mask comes back, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels, wide sleeves not flaring, rope sash, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, fire energy momentarily disrupted and scattered around her not contained, the two elemental energies visible \u2014 mountain mist steady, fire briefly scattered, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the elder, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown and deep crimson meeting in the space between them, muted not saturated, East Asian ink painting aesthetic, the mask gone for one unguarded second, the real face visible before the performance returns, love reveals the face beneath what shame hid, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Love removes the mask the self depends on for protection.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        },
+        "medium": {
+          "line": "Passion burns away the mask that fear protects.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        },
+        "hard": {
+          "line": "Love reveals the face beneath what shame hid.",
+          "npc": "Jarek Stone",
+          "title": "The Breaking Stillness of Meridia"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "Tell me something about yourself you don't usually lead with.",
+        "medium": "Share something you're in the middle of figuring out that you haven't packaged into a clean story yet.",
+        "hard": "What's the version of yourself you most protect me from seeing \u2014 and what would it mean to let me see it?"
+      }
+    },
+    {
+      "id": "GU-Q",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "Queen",
+      "title": "The Longer Arc",
+      "poet": "Albert Einstein",
+      "image_file": "images/gu-q.png",
+      "image_prompt": "two figures in an open dojo or training ground, first figure: feminine adult in their late thirties, strong lived-in features, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing at the center of the training space in a patient waiting stance, arms slightly open, weight settled, the posture of someone who has been keeping this space ready, expression calm and unhurried, she never left, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, softer embossed brocade, carved stone belt emblem, bare feet heavy and grounded, loose black hair in a high bun with falling strands, faint mountain mist low at the ground around her, stone stillness in her presence, second figure: androgynous elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, standing at the threshold of the training space, one foot inside one foot still outside, mid-arrival, the posture of someone returning after a long absence, expression hesitant but resolute, coming back to something given up, vivid medium green asymmetric wuxia outer robe, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, bare feet visible against earth, long thick dreadlocks with gold beads loose and flowing, new leaf tendrils beginning to grow from the threshold where they step, botanical energy returning with them as they cross back in, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the waiting figure at center, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown at the center vivid green arriving at the threshold, muted not saturated, East Asian ink painting aesthetic, the space kept ready for the one who would return, the self not lived still waits within reach, becoming waits for the moment it is claimed, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The self not lived still waits within reach.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "medium": {
+          "line": "The heart can still grow toward what it once imagined.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "hard": {
+          "line": "The heart can still grow toward what it once imagined.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "What's one way you've changed your mind about what good friendship looks like?",
+        "medium": "Tell me about a version of yourself you gave up on that you're starting to reconsider.",
+        "hard": "What do you want to grow into in the next few years that you haven't told anyone yet?"
+      }
+    },
+    {
+      "id": "GU-K",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "King",
+      "title": "The Integration",
+      "poet": "Confucius",
+      "image_file": "images/gu-k.png",
+      "image_prompt": "two figures from the same nation on opposite sides of a massive ancient tree, both with hands pressed against the bark, the tree is the central image, first figure: androgynous youth in their early twenties, smooth unlined face, deep brown skin with African features, strong rooted build, both palms on the bark, face tilted upward, just beginning to understand what this tree will mean, vivid medium green asymmetric wuxia outer robe, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, bare feet against earth, long thick dreadlocks with gold beads, young botanical energy rising around them new and reaching, second figure: masculine elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, one hand on the bark, eyes closed, the posture of recognition and return, they have been here before and are seeing it whole for the first time, asymmetric vivid green wuxia outer robe longer on left over fitted earth-tone trousers, braided botanical cord belt, rough linen over smooth silk, carved wood clasps, bare feet rooted into the earth, long thick dreadlocks with gold beads, mature botanical energy \u2014 vines completing full spirals, birds returning to the canopy, the tree ancient and vast, roots visible at the surface, canopy spreading wide above, botanical energy from both figures flowing into the tree and through it connecting them, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo around the tree trunk, vertical gold line with small dot accents, full scene visible with generous empty parchment space above into the canopy, soft diffused ambient light, no hard shadows, vivid medium green dominant, gold-green botanical accents, background muted, East Asian ink painting aesthetic, the end returns the beginning with deeper sight, the path brings the heart back to what it already knew, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The end returns the beginning with deeper sight.",
+          "npc": "Aeri Thal",
+          "title": "The Rooted Light of Virelune"
+        },
+        "medium": {
+          "line": "The path brings the heart back to what it already knew.",
+          "npc": "Neris Vale",
+          "title": "The Wild Current of Virelune"
+        },
+        "hard": {
+          "line": "The path brings the heart back to what it already knew.",
+          "npc": "Neris Vale",
+          "title": "The Wild Current of Virelune"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "What's one thing you know now about yourself in friendships that you wish you'd known at the start of ours?",
+        "medium": "Tell me about a hard season you went through and what it made possible that wouldn't have been otherwise.",
+        "hard": "What's the through-line of who you've been across all your closest friendships \u2014 and what do you make of it?"
+      }
+    },
+    {
+      "id": "GU-2",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "2",
+      "title": "The Reframe",
+      "poet": "Jim Jarmusch",
+      "image_file": "images/gu-2.png",
+      "image_prompt": "close-up portrait, face torso and hands only, no lower body, a figure in the act of removing a pale white geometric porcelain mask, one hand holding the mask pulled halfway from the face, the mask angular and precise with a single etched crosshair motif, cold and still, beautifully crafted, held with something between reverence and relief, the exposed half of the face: warm bronze skin, strong jaw, intense features, young adult in their early twenties, smooth unlined face, the exposed eye raw and open, the intensity of the real face visible for the first time, the hidden half of the face still behind the pale mask, the performance not fully released yet, the figure wearing a dark crimson wuxia outer robe with V-neck lapels, over a pale cream inner layer that is beginning to slip from one shoulder as the mask comes off, the pale cream falling away revealing the dark crimson beneath, dark leather bracer visible on the wrist holding the mask, loose black hair in a high bun with falling strands, fire energy beginning to rise from the figure's core as the mask loosens its hold, ember glow at the sternum brightest where the pale layer has slipped, the fire returning to what had been suppressed, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, generous empty parchment space above, soft diffused ambient light, no hard shadows, deep crimson robes emerging as the dominant color, pale white mask as contrast, ember orange at the sternum, background muted, East Asian ink painting aesthetic, the mask shapes the one who wears it, the self forming around what the heart has been performing, the real face visible before the story closes back over it, --ar 2:3 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The mask shapes the one who wears it.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "medium": {
+          "line": "Every role becomes real with enough repetition.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "hard": {
+          "line": "The self forms around what the heart keeps performing.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "What's a story you've told about a friendship that might not be the whole story?",
+        "medium": "Tell me a version of a conflict where the other person wasn't wrong.",
+        "hard": "What's a narrative about yourself in relationships that you suspect is a protective story?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-3",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "3",
+      "title": "The Impact",
+      "poet": "Tim O'Brien",
+      "image_file": "images/gu-3.png",
+      "image_prompt": "two figures from the same nation, the charged moment before a difficult question is spoken, first figure: masculine young adult in their early twenties, smooth unlined face, pale skin, androgynous lean build, sharp precise features, leaning slightly forward, mouth just open, breath caught, one hand raised mid-gesture that stopped \u2014 the body already moving toward the ask while the voice hasn't followed, eyes direct and measuring, the question formed but not yet released, structured high-collar mid-thigh wuxia robe over black fitted trousers, asymmetric sleeves one wide one narrow, tight white cloth belt, single silver geometric clasp, pure white ivory fabric, silver-grey underlayers, structured tall polished leather boots, loose black hair in a high bun with falling strands, second figure: androgynous adult in their late thirties, strong lived-in features, pale skin, androgynous lean build, sharp precise features, completely still, eyes on the asking figure, waiting with full attention, the posture of someone who has made themselves available for whatever is coming, pale cream layered wuxia robes, structured collar, smooth matte linen fabric, tight white cloth belt, silver geometric clasp, structured leather boots, loose black hair in a high bun with falling strands, in the space between the two figures the geometric clarity energy is most concentrated, faint geometric light lines forming in the air between them where the question already exists, lens-like clarity ripples focused in the gap, the question visible as geometry before it becomes sound, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the waiting figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, the space between what happens and what follows, the heart lives in the moment before the answer, the question almost spoken, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "A space stands between what happens and what follows.",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "medium": {
+          "line": "The moment before action decides the path.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        },
+        "hard": {
+          "line": "The heart lives in the space before answers.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Ask me one question you've been curious about but haven't felt ready to ask.",
+        "medium": "Ask me something about myself that you think would help you understand me better.",
+        "hard": "Ask me the question about our friendship that you most need the answer to but have been avoiding."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-4",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "4",
+      "title": "The Capacity",
+      "poet": "Claudia Rankine",
+      "image_file": "images/gu-4.png",
+      "image_prompt": "two figures from different nations standing side by side, both in the same mudra posture \u2014 right hand cupped over left, each holding their elemental energy in the cupped space of their hands, the same gesture, two expressions of the same capacity, left figure: masculine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, holding a small contained ember flame in cupped hands, fire held still not flaring, expression intense but controlled, the fear held without releasing it, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels, wide sleeves not flaring, rope sash, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, right figure: feminine adult in their late thirties, strong lived-in features, pale skin, androgynous lean build, sharp precise features, holding faint geometric light in cupped hands, lens-like clarity ripples contained within the palms, expression still and inward, the grief held with precision, pale cream column dress floor length, asymmetric draped outer robe pinned at one shoulder, smooth silk inner with matte gauze outer, tight white cloth belt, single silver geometric pin, structured low-profile elegant leather boots, loose black hair in a high bun with falling strands, the two elemental energies side by side \u2014 contained ember on the left, geometric light on the right \u2014 different expressions of the same thing being held, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind both figures, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep crimson on the left pure white ivory on the right, muted not saturated, background muted, East Asian ink painting aesthetic, grief and fear sharing the same breath, the capacity to hold what used to overwhelm, two faces of the same thing held without being consumed, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Grief and fear share the same breath.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "medium": {
+          "line": "Fear wears grief when the loss has not settled.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        },
+        "hard": {
+          "line": "Grief borrows the shape of fear when it first arrives.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What emotional capacity are you still developing?",
+        "medium": "Tell me about something you couldn't tolerate two years ago that you can sit with now.",
+        "hard": "What are you being asked to grow into right now that scares you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-5",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "5",
+      "title": "The Other Side",
+      "poet": "Maya Angelou",
+      "image_file": "images/gu-5.png",
+      "image_prompt": "androgynous adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing at the edge of the frame, looking sideways into peripheral space, something unseen at the boundary, structured dark crimson wuxia robes fitted at shoulder, V-neck lapels showing dark burgundy underlayers, rope sash, wide sleeves not flaring, deep burnt crimson red and dark burgundy tones, wrapped leather sandals, loose black hair in a high bun with falling strands, fire rising from the figure's core outward in a controlled vortex, ember glow at the torso fading upward, the figure is the source, flame controlled not consuming, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, intensity and commitment, restrained volcanic power, the view from the other side of the dynamic, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "An untold story weighs heavier than any burden.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "medium": {
+          "line": "Silence traps the story and turns it inward.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        },
+        "hard": {
+          "line": "A story kept inside becomes its own kind of fire.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "What might someone else's version of a hard moment between you look like?",
+        "medium": "Tell me what you think it's like to be on the receiving end of you when you're stressed.",
+        "hard": "What does the person who loves you most probably wish you understood about yourself?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-6",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "6",
+      "title": "The Inherited Pattern",
+      "poet": "Maya Angelou",
+      "image_file": "images/gu-6.png",
+      "image_prompt": "three figures from the same nation \u2014 two young parents and their small child, a family scene, the inherited pattern visible across all three, first figure: feminine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing in a natural protective stance, fire rising from her core in a controlled vortex, dark burgundy floor-length inner dress, structured crimson outer robe open at front, wide sleeves not flaring, wrapped crimson sash belt, dark metal shoulder clasps, wrapped leather sandals feet partially exposed, loose black hair in a high bun with falling strands, second figure: masculine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing close beside her, the same protective quality in his posture, fire rising from his core mirroring hers, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels, wide sleeves not flaring, rope sash double-knotted, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, third figure: a small child between and slightly in front of both parents, young child perhaps six or seven years old, warm bronze skin, small simplified version of the same crimson robes, standing in the exact same protective stance as the parents without knowing it, the pattern already in the body before it is understood, small hands at sides, the same fire beginning to glow faintly at the child's sternum, the inheritance already underway, the fire of all three figures connecting in the space between them, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind all three figures, vertical gold line with small dot accents, full figures visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, ember orange accents, background muted, East Asian ink painting aesthetic, the beginning holds, the ending bends to the hand, the pattern already in the body before it is chosen, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The beginning holds; the ending bends to the hand.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "medium": {
+          "line": "No return to the start\u2014only a different end earned forward.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        },
+        "hard": {
+          "line": "The path behind questions; the path ahead still answers.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Where do you see your upbringing showing up in how you do friendship?",
+        "medium": "Tell me about a relational pattern you inherited that you're actively trying to change.",
+        "hard": "What did the adults in your life model about receiving care that you're still unlearning?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-7",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "7",
+      "title": "The Permission",
+      "poet": "Sophia Bush",
+      "image_file": "images/gu-7.png",
+      "image_prompt": "two figures from the same nation, an intimate interior scene, first figure: androgynous adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, seated at a low writing desk, leaning over a scroll of calligraphy in progress, brush in hand mid-stroke, the calligraphy visible but imperfect, still being learned, expression concentrated and open, not frustrated \u2014 the permission to be mid-process, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, ink and water energy in the calligraphy strokes, the brushwork flowing with water ripple quality, second figure: feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, standing behind and slightly over the shoulder of the seated figure, looking down at the calligraphy with quiet presence, not correcting, simply witnessing, one hand loosely clasped behind their back, the posture of someone who has made peace with unfinished work, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, water ripples moving gently across the scroll surface, white lotus blooms near the ink stone, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the elder figure, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, cool water energy in the ink, background muted, East Asian ink painting aesthetic, becoming burns inside what already stands complete, the permission to be unfinished in front of someone who sees you clearly, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "A masterpiece carries the mark of what is unfinished.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "medium": {
+          "line": "Becoming burns inside what already stands complete.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        },
+        "hard": {
+          "line": "The heart holds the finished and the forming together.",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What are you giving yourself permission to not be good at right now?",
+        "medium": "Tell me something you're in the middle of learning that you haven't announced yet.",
+        "hard": "What would change if you stopped waiting to have it figured out before you showed up?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-8",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "8",
+      "title": "The Blind Spot",
+      "poet": "Ana\u00efs Nin",
+      "image_file": "images/gu-8.png",
+      "image_prompt": "a solitary figure standing at the edge of a waterfall curtain, one hand raised and almost touching the falling water but not quite, the posture of someone on the threshold of something they can almost see through, the step not yet taken, masculine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, face turned toward the waterfall, eyes open and searching, through the falling water a faint luminous shape is visible \u2014 a fuller version of the figure, more present, more open, almost but not quite resolved, the possibility self visible through the water but not yet reachable, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, the waterfall itself rendered in delicate ink-wash lines, water light catching the navy robes, white lotus blooms floating at the base of the falls, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, cool blue-white water light, background muted, East Asian ink painting aesthetic, vision carries the shape of the seer, the deepest version of the self almost visible through the water, the step not yet taken, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The world reflects the one who looks.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "medium": {
+          "line": "Vision carries the shape of the seer.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        },
+        "hard": {
+          "line": "The world meets the heart as the heart arrives.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "What kind of friend do you think you're capable of being that you haven't fully been yet?",
+        "medium": "What would it look like for you to be fully present in this friendship \u2014 not someday, but as a real possibility?",
+        "hard": "What's the deepest version of yourself in friendship that you can almost see but haven't stepped into?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-9",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "9",
+      "title": "The Threshold",
+      "poet": "J.R.R. Tolkien",
+      "image_file": "images/gu-9.png",
+      "image_prompt": "a solitary figure standing at a shoreline crossroads, where the water meets the land and two paths diverge along the shore, one foot in the shallow water one foot on the earth, standing exactly at the line where the elements meet, not looking back or forward but looking down at the threshold itself, the posture of someone who has arrived at the place before the decision, feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, expression still and unresolved, neither afraid nor certain, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash wrapped twice trailing at hip with small stone beads, the foot in water has dark fabric wrapping, the foot on earth is bare against the ground, loose black hair in a high bun with falling strands, water ripples moving away from where her foot meets the water, faint mountain mist rising from the earth path on one side, white lotus blooms floating on the water path on the other, the two paths diverging ahead of her into generous negative space, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with the two paths opening into generous empty parchment space ahead, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, warm earth tones on the ground path, cool water light on the water path, background muted, East Asian ink painting aesthetic, wandering follows a path not yet named, the heart can move without losing its ground, standing where water meets earth and the path has not yet been chosen, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Wandering follows a path not yet named.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "medium": {
+          "line": "A path exists even without a destination declared.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        },
+        "hard": {
+          "line": "The heart can move without losing its ground.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What threshold are you standing at right now?",
+        "medium": "Tell me about something in your life that is ending, even if it hasn't officially ended.",
+        "hard": "What are you afraid of becoming \u2014 and what are you afraid you already are?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "GU-10",
+      "suit": {
+        "code": "GU",
+        "name": "Grow Up",
+        "domain": "Expand the View",
+        "icon": "\u2665\ufe0f"
+      },
+      "rank": "10",
+      "title": "The Long View",
+      "poet": "Mary Oliver",
+      "image_file": "images/gu-10.png",
+      "image_prompt": "a solitary figure standing on a high mountain vantage point, looking out across a vast open landscape stretching into the distance, the journey visible in the depth of what can now be seen from here, androgynous elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing with weight fully settled, arms loosely at sides, face turned toward the far horizon, the posture of someone who has earned this view through the distance they have traveled, unhurried, patient, the long view held without grasping, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded on the mountain rock, loose black hair in a high bun with falling strands, faint mountain mist below the vantage point, the figure above the clouds, stone stillness in the rock beneath their feet, the landscape ahead vast and open with generous empty space stretching to the horizon, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with the vast landscape opening ahead into generous parchment space, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey mountain beneath, warm horizon ahead, background muted, East Asian ink painting aesthetic, the path returns the heart to what it could not first see, every journey circles through fire and returns changed, the long view earned by the full distance of the traveling, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Exploration returns the beginning altered by knowing.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "medium": {
+          "line": "Every journey circles through fire and returns changed.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        },
+        "hard": {
+          "line": "The path returns the heart to what it could not first see.",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "What do you want your close friendships to feel like in ten years?",
+        "medium": "Tell me what you're building in yourself that your future self will thank you for.",
+        "hard": "What would the person you're becoming need from this friendship that you haven't asked for yet?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-A",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "Ace",
+      "title": "The First Move",
+      "poet": "Llewelyn Vaughan-Lee",
+      "image_file": "images/su-a.png",
+      "image_prompt": "a young feminine figure mid-motion reaching forward toward someone at the edge of the frame, her arm extended, body leaning into the reach, the movement deliberate and chosen, at the very edge of the frame a partial glimpse of the recipient \u2014 a hand or shoulder just visible, turning toward her, beginning to receive, the connection happening at the boundary of the image, young adult in their early twenties, smooth unlined face, sharp alert expression, deep brown skin with African features, strong rooted build, full expressive features, expression open and direct, the first move made without waiting to be asked, vivid medium green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads loose and flowing, botanical energy \u2014 leaf tendrils and small birds \u2014 flowing forward in the direction of the reach, the energy moving toward the recipient not trailing behind, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents flowing toward the edge, background muted, East Asian ink painting aesthetic, presence offered before it is asked for, the first move made, love does not leave when the night stretches on, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Presence stand guard while Love struggles through the night.",
+          "npc": "Iri Sol",
+          "title": "The Hidden Bloom of Virelune"
+        },
+        "medium": {
+          "line": "Staying becomes the act that defines love.",
+          "npc": "Aelis Vire",
+          "title": "The Quiet Bloom of Virelune"
+        },
+        "hard": {
+          "line": "Love does not leave when the night stretches on.",
+          "npc": "Seren Thal",
+          "title": "The Soft Canopy of Virelune"
+        }
+      },
+      "prompts": {
+        "easy": "Text Casey something you've been meaning to say for a while.",
+        "medium": "Send Casey a voice note telling them one specific thing you appreciate about them.",
+        "hard": "Reach out to Casey before they reach out to you \u2014 and tell them exactly why you did it today."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-J",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "Jack",
+      "title": "The Risk",
+      "poet": "Nelson Mandela",
+      "image_file": "images/su-j.png",
+      "image_prompt": "a solitary figure balanced on one foot, the other foot lifted mid-step, caught in the moment of moving, the earth figure momentarily without their foundation, arms slightly out for balance, the whole body recalibrating around the risk of the step, expression focused and committed, not afraid but fully aware of the exposure, feminine adult in their late thirties, strong lived-in features, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, the heaviness of the body visible even in the precariousness of the one-footed stance, the weight still there but choosing to move, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, softer embossed brocade, carved stone belt emblem, the grounded foot bare and heavy pressing into earth, the lifted foot exposed mid-air, loose black hair in a high bun with falling strands, faint mountain mist swirling slightly disturbed around the lifted foot, the stone stillness broken by the choice to move, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, stone grey accents, background muted, East Asian ink painting aesthetic, the mind moves or it hardens, the heart grows only where it dares to become different, the earth choosing to step, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The mind moves or it hardens.",
+          "npc": "Bren Talos",
+          "title": "The Plain Speaker of Meridia"
+        },
+        "medium": {
+          "line": "A mind that will not change has already stopped.",
+          "npc": "Corin Dhal",
+          "title": "The Weight Bearer of Meridia"
+        },
+        "hard": {
+          "line": "The heart grows only where it dares to become different.",
+          "npc": "Elin Voss",
+          "title": "The Gentle Shift of Meridia"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "Do one thing for Casey this week that's slightly outside your comfort zone.",
+        "medium": "Tell Casey something you've wanted to offer this friendship but have been talking yourself out of \u2014 and then offer it.",
+        "hard": "Do the thing for Casey that feels most exposing to offer \u2014 and do it this week."
+      }
+    },
+    {
+      "id": "SU-Q",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "Queen",
+      "title": "The Open Door",
+      "poet": "Abraham Lincoln",
+      "image_file": "images/su-q.png",
+      "image_prompt": "two figures from different nations at a threshold scene, first figure: feminine adult in their late thirties, strong lived-in features, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, standing in an open doorway, arms open and weight settled, the door behind her ajar \u2014 old and worn, light coming through the cracks in the frame, the wound in the wood become a way for light to enter, expression open and unhurried, she has been standing here, the door has been open, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves to wrist, softer embossed brocade, carved stone belt emblem, bare feet heavy and grounded on the threshold stone, loose black hair in a high bun with falling strands, faint mountain mist low around her feet, stone stillness in the doorframe behind her, second figure: androgynous elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, approaching from outside, mid-step toward the open door, expression hesitant but moving, the approach already committed, vivid medium green wuxia robes, asymmetric cut, botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood details, bare feet visible against earth, long thick dreadlocks with gold beads loose and flowing, leaf tendrils beginning to grow from the path where they walk toward the door, botanical energy flowing forward toward the opening, warm light spilling through the cracked doorframe into the space between them, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the doorway figure, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown at the threshold vivid green approaching from outside, muted not saturated, East Asian ink painting aesthetic, the wound opens the way for light, the break becomes a door when you step through, the door has been open, the approach is already underway, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The wound opens the way for light.",
+          "npc": "Jarek Stone",
+          "title": "The Breaking Stillness of Meridia"
+        },
+        "medium": {
+          "line": "The break becomes a door when you step through.",
+          "npc": "Toren Field",
+          "title": "The Steady Hand of Meridia"
+        },
+        "hard": {
+          "line": "The break makes room for what could not enter before.",
+          "npc": "Luma Vire",
+          "title": "The Rising Bloom of Virelune"
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "Tell Casey one way they could make it easier for you to reach out when you need something \u2014 today.",
+        "medium": "Do one thing this week that makes it easier for Casey to reach you \u2014 not by asking them what they need, but by offering something before they have to.",
+        "hard": "Remove one barrier between you and Casey that's been making it harder to show up \u2014 and do it this week."
+      }
+    },
+    {
+      "id": "SU-K",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "King",
+      "title": "The Witness",
+      "poet": "Albert Einstein",
+      "image_file": "images/su-k.png",
+      "image_prompt": "two figures from the same nation in a quiet intimate moment, first figure: feminine adult in their late thirties, strong lived-in features, deep brown skin with African features, strong rooted build, full expressive features, standing still, being tended to, expression soft and receiving, slightly surprised by the specific attention, the care landing precisely, vivid medium green floor-length inner dress, asymmetric outer robe over left shoulder open on right, wide sleeve left fitted right, botanical cord belt with vine weaving, rough outer layer over smooth silk, carved wood pins, bare feet visible against earth, long thick dreadlocks with gold beads loose and flowing, second figure: masculine elder in their late fifties, age lines and weathered presence, deep brown skin with African features, strong rooted build, full expressive features, hands adjusting the first figure's outer robe \u2014 straightening a collar, pinning a drape, a small precise act of care that could only come from long attention, the adjustment exact, not fussing but knowing, expression focused and quiet, the action doing the speaking, asymmetric vivid green wuxia outer robe longer on left over fitted earth-tone trousers, one wide sleeve one fitted, braided botanical cord belt with leaves and vines, rough linen over smooth silk, carved wood clasps, bare feet visible against earth, long thick dreadlocks with gold beads loose and flowing, botanical energy \u2014 leaf tendrils and small birds \u2014 moving gently around both figures, vines completing their circuit in the space between the two sets of hands, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the elder figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, vivid saturated medium green robes as the dominant color, warm cream underlayers, gold-green botanical accents, background parchment muted, East Asian ink painting aesthetic, the way forward remains inside what stands before it, the care that is only possible because the attention was real, seeing someone and doing something about it, --ar 1:1 --sref https://cdn.midjourney.com/7aafa484-401a-48bb-b6bb-83e0e2079536/0_0.png --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The way forward remains inside what stands before it.",
+          "npc": "Selenya Grove",
+          "title": "The Tending Hand of Virelune"
+        },
+        "medium": {
+          "line": "Avoidance keeps the door closed; stepping opens it.",
+          "npc": "Lyra Venn",
+          "title": "The Revealing Vine of Virelune"
+        },
+        "hard": {
+          "line": "",
+          "npc": "",
+          "title": ""
+        }
+      },
+      "uploaded": false,
+      "crop_saved": false,
+      "prompts": {
+        "easy": "Tell Casey one thing you've witnessed in them recently that you haven't named out loud \u2014 today.",
+        "medium": "Name something you've watched Casey carry without complaint \u2014 and do something about it this week.",
+        "hard": "Do something for Casey this week that shows you've been paying attention \u2014 something only possible because you actually see them."
+      }
+    },
+    {
+      "id": "SU-2",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "2",
+      "title": "The Proactive",
+      "poet": "William James",
+      "image_file": "images/su-2.png",
+      "image_prompt": "a solitary figure walking away from a carefully placed lacquered box, the gift already set down with precision, the figure in mid-departure, back three-quarters turned, not looking back, the act already complete, the box sits alone in the foreground \u2014 deep red lacquer with gold geometric detailing, perfectly placed, the exactness of its positioning revealing the care that went into it, feminine young adult in their early twenties, smooth unlined face, sharp alert expression, pale skin, androgynous lean build, sharp precise features, expression settled and quiet, the satisfaction of something done before being asked, pale cream column dress floor length, asymmetric draped outer robe pinned at one shoulder, smooth silk inner with matte gauze outer, tight white cloth belt, single silver geometric pin, structured low-profile elegant leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions trailing behind the figure as they walk away, faint lens-like clarity ripples in the air around the placed box, the precision of the placement visible in the geometry of the space, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the walking figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, deep red lacquered box as the second visual anchor, gold geometric detailing connecting the box to the figure's aesthetic, background muted, East Asian ink painting aesthetic, the vow forms long before it is spoken, the heart binds itself before witnesses arrive, the gift placed and the figure already gone, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The vow forms long before it is spoken.",
+          "npc": "Veyra Null",
+          "title": "The Silent Measure of Argyra"
+        },
+        "medium": {
+          "line": "The heart binds itself before witnesses arrive.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        },
+        "hard": {
+          "line": "The heart binds itself before witnesses arrive.",
+          "npc": "Rax Corven",
+          "title": "The Final Edge of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Think of something Casey does for others that you've never done for them \u2014 and do it this week.",
+        "medium": "Do something for Casey this week that you'd want someone to do for you.",
+        "hard": "Do the thing for Casey that you've been waiting for them to ask for \u2014 without making them ask. Do it this week."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-3",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "3",
+      "title": "The Showing Up Card",
+      "poet": "Elizabeth Gilbert",
+      "image_file": "images/su-3.png",
+      "image_prompt": "two figures from the same nation in a quiet and intimate deathbed scene, first figure: androgynous elder in their late fifties, age lines and weathered presence, pale skin, androgynous lean build, sharp precise features, lying on a simple bed or mat, eyes closed or barely open, pale cream robes spread around them, the geometric precision of their usual bearing softened by rest, still and present, not struggling, second figure: masculine young adult in their early twenties, smooth unlined face, pale skin, androgynous lean build, sharp precise features, seated close beside the elder, leaning in with quiet focused attention, tending to the elder \u2014 adjusting a cover, holding a hand, offering water, the specific act of care chosen because they see exactly what is needed, expression open and steady, the discomfort of the moment crossed, the showing up already underway, structured high-collar mid-thigh wuxia robe over black fitted trousers, asymmetric sleeves one wide one narrow, tight white cloth belt, single silver geometric clasp, pure white ivory fabric, silver-grey underlayers, structured tall polished leather boots, loose black hair in a high bun with falling strands, subtle geometric light distortions soft and still in the space around both figures, faint lens-like clarity ripples settling like light on water, the clarity energy quieter here, present but not performing, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the tending figure, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, background muted, East Asian ink painting aesthetic, the crossing happens inside what cannot be avoided, showing up through what stands in the way, the path forward passes through what stands in the way, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The path forward passes through what stands in the way.",
+          "npc": "Oris Vale",
+          "title": "The Quiet Calibrator of Argyra"
+        },
+        "medium": {
+          "line": "No unobserved fire yields",
+          "npc": "Kelos Varn",
+          "title": "The Quiet Pressure of Argyra"
+        },
+        "hard": {
+          "line": "The crossing happens inside what cannot be avoided.",
+          "npc": "Varyn Doss",
+          "title": "The Unyielding Vector of Argyra"
+        }
+      },
+      "prompts": {
+        "easy": "Name one thing Casey needs from you that you haven't been giving \u2014 and do it this week.",
+        "medium": "Tell Casey specifically how their showing up has affected you \u2014 name the moment, the impact, and do it today.",
+        "hard": "Show up for Casey this week the way Casey shows up for everyone else \u2014 pick one specific thing and do it without being asked."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-4",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "4",
+      "title": "The Commitment",
+      "poet": "Will Durant",
+      "image_file": "images/su-4.png",
+      "image_prompt": "a solitary figure mid-kata, frozen in a precise martial arts form, one arm extended in a clean strike position, the other drawn back at the hip, weight distributed exactly, one knee slightly bent, the body a geometric argument for commitment, the form clearly practiced ten thousand times \u2014 the ease in the precision, not performing, not fighting, practicing, androgynous adult in their late thirties, strong lived-in features, pale skin, androgynous lean build, sharp precise features, expression empty and present, the mind in the body, nowhere else, pale cream layered wuxia robes moving with the form, structured collar, smooth matte linen fabric, tight white cloth belt, silver geometric clasp, pure white and ivory tones, silver-grey underlayers, structured leather boots planted precisely, loose black hair in a high bun with falling strands, geometric light distortions tracing the arc of the movement in the air, the clarity energy following the path of the form, faint geometric lines visible in the space where the strike passed \u2014 the movement leaving its exact shape in the air behind it, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, pure white and ivory robes as the dominant color, silver-grey underlayers, geometric light traces in the air, background muted, East Asian ink painting aesthetic, being seen and being loved rise together, the habit built because it matters, the form practiced until it becomes the self, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Being seen and being loved rise together.",
+          "npc": "Nexa Thorne",
+          "title": "The Iron Ward of Argyra"
+        },
+        "medium": {
+          "line": "Love meets what stands without disguise.",
+          "npc": "Valen Kryss",
+          "title": "The Unmoving Edge of Argyra"
+        },
+        "hard": {
+          "line": "The heart receives love when nothing remains hidden.",
+          "npc": "Serin Ashfall",
+          "title": "The Blazing Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Name one small, repeatable thing you'll do to stay connected to Casey.",
+        "medium": "Make one specific commitment about how you'll show up in the next 30 days.",
+        "hard": "What's one habit you're willing to build because Casey matters to you?"
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-5",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "5",
+      "title": "The Seeing Card",
+      "poet": "Ralph Waldo Emerson",
+      "image_file": "images/su-5.png",
+      "image_prompt": "two figures from the same nation, one practicing a martial arts form, one watching, first figure: feminine young adult in their early twenties, smooth unlined face, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, mid-kata, one arm extended in a strike position, the other drawn back, fully absorbed in the form, unaware of being watched, the fire energy rising from her core following the arc of the movement, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels, wide sleeves not flaring, rope sash, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, second figure: masculine elder in their late fifties, age lines and weathered presence, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, standing slightly apart and to the side, completely still, watching with absolute focused attention, expression intense and precise, seeing something in the form the practitioner cannot see themselves, the quality of his attention like fire concentrated to a single point, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels, wide sleeves not flaring, rope sash double-knotted, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, his fire energy still and contained, banked to fuel the watching not the moving, ember glow at his sternum brightest, the intensity directed outward in focused observation, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the watching figure, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange accents, background muted, East Asian ink painting aesthetic, every reflection returns to the one who looks, seeing what the other cannot see about themselves, the force of real attention, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every reflection returns to the one who looks.",
+          "npc": "Kaelis Drav",
+          "title": "The Breaking Flame of Pyrakanth"
+        },
+        "medium": {
+          "line": "The mirror answers with the same force brought to it.",
+          "npc": "Zarek Sol",
+          "title": "The Truth Seer of Pyrakanth"
+        },
+        "hard": {
+          "line": "The face encountered carries something of the self.",
+          "npc": "Rivena Korr",
+          "title": "The Held Flame of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Tell Casey one thing you see in them that they might not see in themselves \u2014 today.",
+        "medium": "Name a strength Casey has been undervaluing and do something this week that reflects it back to them.",
+        "hard": "Do something for Casey this week that only makes sense if you've been paying close attention \u2014 something at the edge of what you'd normally offer."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-6",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "6",
+      "title": "The Schedule",
+      "poet": "Denise Brennan-Nelson",
+      "image_file": "images/su-6.png",
+      "image_prompt": "a solitary figure mid-stroke with a calligraphy brush, writing a single bold character or date on a scroll, the act of naming made visible \u2014 the day claimed the moment the brush touches the paper, leaning forward with intent, weight behind the stroke, the brushwork decisive not tentative, the commitment in the pressure of the line, masculine adult in their late thirties, strong lived-in features, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, expression focused and certain, the plan already made, now being declared, structured dark crimson wuxia outer robe mid-thigh length over dark burgundy trousers, V-neck crossed lapels showing dark underlayer, wide sleeves pushed back from the writing hand, rope sash double-knotted, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, fire energy rising from the figure's core outward in a controlled vortex, ember glow brightest at the writing hand, the fire channeled into the stroke, the ink on the scroll catching the ember light, the written mark glowing faintly, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep burnt crimson red robes as the dominant color, dark burgundy underlayers, ember orange at the writing hand, background muted, East Asian ink painting aesthetic, someday ends the moment a date is spoken, the day begins when the voice names it aloud, the hand that claims the day, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "A day exists only when a hand claims it.",
+          "npc": "Draxen Vol",
+          "title": "The Ember Diver of Pyrakanth"
+        },
+        "medium": {
+          "line": "Someday ends the moment a date is spoken.",
+          "npc": "Talen Voss",
+          "title": "The Whispering Spark of Pyrakanth"
+        },
+        "hard": {
+          "line": "The day begins when the voice names it aloud.",
+          "npc": "Varn Keth",
+          "title": "The Burning Oath of Pyrakanth"
+        }
+      },
+      "prompts": {
+        "easy": "Pick a date and propose something specific to do with Casey.",
+        "medium": "Plan something for Casey that requires you to know what they actually like.",
+        "hard": "Schedule something for Casey that requires you to initiate, plan, and follow through without them managing any of it."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-7",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "7",
+      "title": "The Check-In",
+      "poet": "Arthur Ashe",
+      "image_file": "images/su-7.png",
+      "image_prompt": "two figures from different nations separated by space, shown side by side as if in different locations, the letter connecting them across the divide, left figure: androgynous adult in their late thirties, warm bronze skin, broad-shouldered powerful build, strong jaw and intense features, seated writing a letter with a brush, leaning forward with focused intensity, fire energy concentrated at the writing hand, ember glow in the ink strokes, structured dark crimson wuxia outer robe, wide sleeves pushed back from the writing hand, rope sash, dark leather bracers, heavy worn leather boots, loose black hair in a high bun with falling strands, right figure: feminine elder in their late fifties, age lines and weathered presence, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, seated reading a letter held gently in both hands, expression quietly moved, slightly surprised by being seen so precisely across the distance, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash with small stone beads, feet and ankles wrapped in dark fabric, loose black hair in a high bun with falling strands, water ripples moving quietly around her as she reads, white lotus blooms nearby, ember light from the left meeting water light from the right in the space between them, the letter the bridge between fire and water, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo spanning both figures, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, deep crimson on the left dark navy on the right, ember and water light meeting at center, background muted, East Asian ink painting aesthetic, no distance leaves the self behind, the heart arrives wherever the body goes, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Every place carries the same self within it.",
+          "npc": "Myra Kest",
+          "title": "The Ashen Voice of Pyrakanth"
+        },
+        "medium": {
+          "line": "No distance leaves the self behind.",
+          "npc": "Eira Lune",
+          "title": "The Open Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The heart arrives wherever the body goes.",
+          "npc": "Maelis Thren",
+          "title": "The Sorrow Mirror of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Send Casey a message that isn't a question and isn't about you.",
+        "medium": "Check in on Casey about something specific they mentioned last time you talked.",
+        "hard": "Reach out to Casey about something they're going through that they didn't bring up \u2014 because you noticed."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-8",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "8",
+      "title": "The Repair Attempt",
+      "poet": "Coco Chanel",
+      "image_file": "images/su-8.png",
+      "image_prompt": "two figures from the same nation in the moment of offering, first figure: androgynous adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, holding out a handmade folded fan, both hands extended, the offering carefully forward, expression raw and open, the vulnerability of the made thing visible in how they hold it, the object already in the air between them, no taking it back, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pooling at wrist, long sash with small stone beads, feet and ankles wrapped in dark fabric, loose black hair in a high bun with falling strands, water energy rising gently around the offered object, the depth of the making in the water light, second figure: feminine young adult in their early twenties, smooth unlined face, East Asian features, lean fluid build, hands cupped forward to receive, expression surprised and moved, the weight of being chosen as the recipient landing, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, wide sleeves pooling at wrist, long sash with small stone beads, feet and ankles wrapped in dark fabric, loose black hair in a high bun with falling strands, water ripples and white lotus blooms in the charged space between the two pairs of hands, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the offering figure, vertical gold line with small dot accents, full scene visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, cool water light on the offered object, background muted, East Asian ink painting aesthetic, courage speaks the thought before approval can catch up, the made thing offered, the self fully seen, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Courage speaks the thought before approval can catch up",
+          "npc": "Sira Lune",
+          "title": "The Lingering Echo of Lamenth"
+        },
+        "medium": {
+          "line": "A thought becomes real the moment a voice risks it.",
+          "npc": "Lethra Vane",
+          "title": "The Gentle Current of Lamenth"
+        },
+        "hard": {
+          "line": "The heart stands when the voice refuses to stay hidden.",
+          "npc": "Naelis Thorne",
+          "title": "The Quiet Basin of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this week that requires you to be present, not just helpful.",
+        "medium": "Show up for Casey in a way that asks something of you emotionally \u2014 not just practically \u2014 and do it before the week is out.",
+        "hard": "Do the thing for Casey that you've been avoiding because it would require you to be fully seen \u2014 and do it this week."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-9",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "9",
+      "title": "The Pour",
+      "poet": "Unknown",
+      "image_file": "images/su-9.png",
+      "image_prompt": "close-up portrait, face torso and hands only, no lower body, a figure pouring water from a large ceramic vessel directly toward the viewer, the pour aimed at the camera, the water flowing out of the frame toward the person holding the card, both hands tilting the vessel forward, water streaming out in a generous continuous flow, the pour deliberate and committed, not tentative, the figure slightly strained by the weight of the vessel but not stopping, the cost of the giving visible in the effort, the generosity in the not-stopping, feminine adult in their late thirties, strong lived-in features, East Asian features, lean fluid build, introspective expression and heavy-lidded eyes, expression focused and open, giving everything in the vessel, draped open collar, multiple overlapping translucent dark navy layers over heavy inner robe, extremely wide long sleeves pulled back from the pouring hands, long sash wrapped twice trailing at hip with small stone beads, feet and ankles wrapped in layered dark fabric bandage-like, loose black hair in a high bun with falling strands, the water pouring out carries luminous water energy \u2014 white lotus blooms appearing in the stream as it falls, water ripples expanding from where the pour lands, more water flowing than the vessel should logically contain, the generosity exceeding what was held, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, dark midnight navy blue robes as the dominant color, blue-grey underlayers, luminous cool water light in the falling stream, background muted, East Asian ink painting aesthetic, the heart reaches and finds something already reaching, the pour that costs something real and does not stop, --ar 2:3 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "The step toward it is answered by a step back.",
+          "npc": "Thera Sol",
+          "title": "The Deep Shelter of Lamenth"
+        },
+        "medium": {
+          "line": "The fire you follow warms you.",
+          "npc": "Saren Vale",
+          "title": "The Returning Tide of Lamenth"
+        },
+        "hard": {
+          "line": "The heart reaches and finds something already reaching.",
+          "npc": "Elen Thren",
+          "title": "The Drowned Path of Lamenth"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this month that costs you something \u2014 time, energy, or effort you don't easily have.",
+        "medium": "Show up for Casey in a way that requires you to give more than is comfortable \u2014 and do it before the week is out.",
+        "hard": "Do the most generous thing you can think of for Casey \u2014 the one that costs you something real \u2014 and do it this week."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    },
+    {
+      "id": "SU-10",
+      "suit": {
+        "code": "SU",
+        "name": "Show Up",
+        "domain": "Do It Together",
+        "icon": "\u2660\ufe0f"
+      },
+      "rank": "10",
+      "title": "The Reciprocity Card",
+      "poet": "Mother Teresa",
+      "image_file": "images/su-10.png",
+      "image_prompt": "a solitary figure at a potters wheel, hands shaping wet clay, the vessel on the wheel being formed for someone specific, the hands knowing what shape is needed without being told, the clay taking on a form that belongs to another person, only someone who has known this person for a long time could make this exact thing, masculine elder in their late fifties, age lines and weathered presence, warm tanned skin with broad Mongolian-influenced features, stocky heavy powerful build, weathered and grounded, leaning forward over the wheel with total focus, hands deep in the clay, the heaviness of the body fully committed to the making, expression absorbed and certain, no hesitation in the hands, wide square-shouldered wuxia robes, knee-length outer robe over long inner robe showing beneath, heavy leather hip belt, wide sleeves pushed back from working hands, heavy embossed brocade, carved stone belt emblem, bare feet heavy and grounded on the earth floor, loose black hair in a high bun with falling strands, faint mountain mist low around the wheel, stone stillness in the space around the figure, the earth energy in the clay itself, the vessel shaped by patient grounded knowing, ink-wash watercolor illustration, loose expressive brushwork, warm parchment paper background, thin gold geometric circle halo behind the figure, vertical gold line with small dot accents, full figure visible with generous empty parchment space above, soft diffused ambient light, no hard shadows, warm ochre brown robes as the dominant color, tan and earth-tone underlayers, wet clay as a second earthy presence, stone grey accents, background muted, East Asian ink painting aesthetic, nothing is refused, all is faced, the act that only you could give because you have known them this long, the shape of another person held in the hands and given form, --ar 1:1 --sref https://s.mj.run/hhQaGZCitbs --sw 400 --stylize 180 --v 8.1",
+      "is_operator": false,
+      "flavor": {
+        "easy": {
+          "line": "Beauty and terror arrive together; both must be received.",
+          "npc": "Tomas Vale",
+          "title": "The Quiet Ground of Meridia"
+        },
+        "medium": {
+          "line": "Nothing is refused; all is faced.",
+          "npc": "Halden Root",
+          "title": "The Living Wall of Meridia"
+        },
+        "hard": {
+          "line": "The self must hold what arrives without sorting.",
+          "npc": "Mira Solen",
+          "title": "The Open Field of Meridia"
+        }
+      },
+      "prompts": {
+        "easy": "Do one thing for Casey this week that reflects who you've become in this friendship \u2014 not who you were when it started.",
+        "medium": "Name something Casey has given you repeatedly \u2014 then give it back before the week is out.",
+        "hard": "Do something for Casey this week that could only come from someone who has known them the way you have \u2014 the act that only you could give."
+      },
+      "uploaded": false,
+      "crop_saved": false
+    }
+  ]
+}
