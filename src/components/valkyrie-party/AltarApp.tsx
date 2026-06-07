@@ -50,6 +50,8 @@ const PARTY_PANEL = 'rgba(255, 243, 220, 0.09)'
 const PARTY_GOLD = '#FFB000'
 const PARTY_CREAM = '#FFF3DC'
 const PARTY_TEAL = '#2DE2C6'
+const CORK = '#6f4028'
+const PAPER = '#fff6dc'
 
 const CATEGORY_OPTIONS = [
   ['all', 'All'],
@@ -149,6 +151,68 @@ function Panel({ title, action, children }: { title: string; action?: ReactNode;
   )
 }
 
+function BoardCard({ entry, onOpen }: { entry: AltarBoardEntry; onOpen: () => void }) {
+  const { post, reactions } = entry
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={{
+        border: 'none',
+        borderRadius: 10,
+        background: PAPER,
+        color: '#412313',
+        padding: '0.8rem',
+        minHeight: 180,
+        display: 'grid',
+        alignContent: 'start',
+        gap: '0.45rem',
+        textAlign: 'left',
+        boxShadow: '0 8px 22px rgba(0,0,0,0.22)',
+        transform: `rotate(${((post.id.charCodeAt(0) % 5) - 2) * 1.2}deg)`,
+        cursor: 'pointer',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'start' }}>
+        <strong style={{ color: '#a04f00', fontSize: '0.92rem' }}>{post.title || post.category.replace('_', ' ')}</strong>
+        <span style={{ color: '#117e73', fontSize: '0.75rem' }}>{post.author_name}</span>
+      </div>
+      <p style={{ margin: 0, lineHeight: 1.35, fontSize: '0.95rem' }}>{post.body.slice(0, 180)}{post.body.length > 180 ? '…' : ''}</p>
+      {post.media?.[0] ? <img src={post.media[0].url} alt={post.media[0].alt || 'Altar upload'} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 8 }} /> : null}
+      <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginTop: 'auto', fontSize: '0.85rem' }}>
+        {REACTIONS.map(([key, emoji]) => (
+          <span key={key}>{emoji} {reactions[key] || 0}</span>
+        ))}
+      </div>
+    </button>
+  )
+}
+
+function EmptyBoardSpot({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        borderRadius: 12,
+        border: '2px dashed rgba(255,243,220,0.28)',
+        background: 'rgba(255,243,220,0.05)',
+        minHeight: 170,
+        color: 'rgba(255,243,220,0.72)',
+        display: 'grid',
+        placeItems: 'center',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '2rem', lineHeight: 1 }}>+</div>
+        <div>Add a note here</div>
+      </div>
+    </button>
+  )
+}
+
 export function AltarApp() {
   const [playerName, setPlayerName] = useState('')
   const [adminToken, setAdminToken] = useState('')
@@ -160,13 +224,9 @@ export function AltarApp() {
   const [saves, setSaves] = useState<KeepSave[]>([])
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [exportBlob, setExportBlob] = useState('')
-  const [composer, setComposer] = useState({
-    title: '',
-    body: '',
-    category: 'blessing',
-    tags: '',
-    anonymous: false,
-  })
+  const [composer, setComposer] = useState({ title: '', body: '', category: 'blessing', tags: '', anonymous: false })
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [focusedEntry, setFocusedEntry] = useState<AltarBoardEntry | null>(null)
 
   useEffect(() => {
     setPlayerName(window.localStorage.getItem('valkyrie_party_player') || '')
@@ -177,12 +237,16 @@ export function AltarApp() {
     const query = filter !== 'all' ? `?category=${encodeURIComponent(filter)}` : ''
     const json = await getJson<{ posts: AltarBoardEntry[]; categories: string[]; reaction_types: string[] }>(`/api/party/valkyrie/altar${query}`)
     setBoard(json)
-  }, [filter])
+    if (focusedEntry) {
+      const refreshed = json.posts.find((entry) => entry.post.id === focusedEntry.post.id) || null
+      setFocusedEntry(refreshed)
+    }
+  }, [filter, focusedEntry])
 
   const loadPlayerContext = useCallback(async () => {
     const [discoveryJson, savesJson] = await Promise.all([
-      getJson<DiscoveryData>(`/api/party/valkyrie/discovery`),
-      getJson<{ saves: KeepSave[] }>(`/api/party/valkyrie/altar/saves`),
+      getJson<DiscoveryData>(`/api/party/valkyrie/discovery`).catch(() => ({ discovered_count: 0, total_cards: 0 })),
+      getJson<{ saves: KeepSave[] }>(`/api/party/valkyrie/altar/saves`).catch(() => ({ saves: [] })),
     ])
     setDiscovery(discoveryJson)
     setSaves(savesJson.saves || [])
@@ -197,37 +261,37 @@ export function AltarApp() {
   }, [loadPlayerContext])
 
   const saveIds = useMemo(() => new Set(saves.map((save) => save.post?.id).filter(Boolean)), [saves])
+  const visiblePosts = board?.posts || []
+  const emptySlots = Math.max(6, 12 - visiblePosts.length)
 
-  const submitPost = useCallback(
-    async (file: File | null) => {
-      if (!composer.body.trim()) return
-      setBusy(true)
-      try {
-        let assetUrl = ''
-        if (file) {
-          const uploaded = await uploadPartyAsset(file, { kind: 'altar' })
-          assetUrl = uploaded.url
-        }
-        await postJson('/api/party/valkyrie/altar', {
-          title: composer.title,
-          body: composer.body,
-          category: composer.category,
-          tags: composer.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-          anonymous: composer.anonymous,
-          asset_url: assetUrl,
-        })
-        setComposer({ title: '', body: '', category: composer.category, tags: '', anonymous: false })
-        setNotice('Your offering is now on the altar.')
-        await loadBoard()
-        await loadPlayerContext().catch(() => undefined)
-      } catch (err) {
-        setNotice(err instanceof Error ? err.message : 'Could not post to altar')
-      } finally {
-        setBusy(false)
+  const submitPost = useCallback(async (file: File | null) => {
+    if (!composer.body.trim()) return
+    setBusy(true)
+    try {
+      let assetUrl = ''
+      if (file) {
+        const uploaded = await uploadPartyAsset(file, { kind: 'altar' })
+        assetUrl = uploaded.url
       }
-    },
-    [composer, loadBoard, loadPlayerContext]
-  )
+      await postJson('/api/party/valkyrie/altar', {
+        title: composer.title,
+        body: composer.body,
+        category: composer.category,
+        tags: composer.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+        anonymous: composer.anonymous,
+        asset_url: assetUrl,
+      })
+      setComposer({ title: '', body: '', category: composer.category, tags: '', anonymous: false })
+      setComposerOpen(false)
+      setNotice('Your offering is now on the altar.')
+      await loadBoard()
+      await loadPlayerContext().catch(() => undefined)
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not post to altar')
+    } finally {
+      setBusy(false)
+    }
+  }, [composer, loadBoard, loadPlayerContext])
 
   const sendReply = useCallback(async (postId: string) => {
     const body = replyDrafts[postId]?.trim()
@@ -269,6 +333,7 @@ export function AltarApp() {
       await postJson('/api/party/valkyrie/altar/delete', payload)
       await loadBoard()
       await loadPlayerContext().catch(() => undefined)
+      setFocusedEntry(null)
     } catch (err) {
       setNotice(err instanceof Error ? err.message : 'Could not delete')
     }
@@ -280,6 +345,7 @@ export function AltarApp() {
       await postJson('/api/party/valkyrie/admin/altar-delete', { admin_token: adminToken, ...payload })
       window.localStorage.setItem('valkyrie_party_admin', adminToken)
       await loadBoard()
+      setFocusedEntry(null)
     } catch (err) {
       setNotice(err instanceof Error ? err.message : 'Could not admin-delete')
     }
@@ -299,7 +365,7 @@ export function AltarApp() {
 
   return (
     <main style={{ minHeight: '100vh', background: `radial-gradient(circle at 18% 8%, rgba(255,176,0,0.28), transparent 28%), radial-gradient(circle at 82% 4%, rgba(255,77,46,0.24), transparent 26%), linear-gradient(180deg, ${PARTY_BG}, #220700 72%)`, color: PARTY_CREAM, fontFamily: 'Georgia, serif', padding: '1.25rem' }}>
-      <div style={{ width: '100%', maxWidth: 1120, margin: '0 auto', display: 'grid', gap: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gap: '1rem' }}>
         <header style={{ display: 'grid', gap: '0.7rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
@@ -321,7 +387,7 @@ export function AltarApp() {
           </p>
           {discovery && (
             <p style={{ margin: 0, opacity: 0.72 }}>
-              You&apos;ve discovered {discovery.discovered_count} of {discovery.total_cards} oracle cards. Public altar posts can become keepsakes without exposing private card mail.
+              You&apos;ve discovered {discovery.discovered_count} of {discovery.total_cards} oracle cards. Tap an open space on the corkboard to add a note or image.
             </p>
           )}
         </header>
@@ -332,157 +398,146 @@ export function AltarApp() {
           </div>
         )}
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(280px, 0.65fr)', gap: '1rem', alignItems: 'start' }}>
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            <Panel
-              title="Make An Offering"
-              action={
-                <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ ...fieldStyle(), width: 180, minHeight: 0, padding: '0.55rem 0.7rem' }}>
-                  {CATEGORY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              }
-            >
-              <div style={{ display: 'grid', gap: '0.7rem' }}>
-                <input value={composer.title} onChange={(e) => setComposer((draft) => ({ ...draft, title: e.target.value }))} placeholder="Optional title" style={fieldStyle()} />
-                <textarea value={composer.body} onChange={(e) => setComposer((draft) => ({ ...draft, body: e.target.value }))} placeholder="Leave a blessing, memory, invitation, question, or public answer." style={fieldStyle(true)} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.7rem' }}>
-                  <select value={composer.category} onChange={(e) => setComposer((draft) => ({ ...draft, category: e.target.value }))} style={fieldStyle()}>
-                    {CATEGORY_OPTIONS.filter(([value]) => value !== 'all').map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                  <input value={composer.tags} onChange={(e) => setComposer((draft) => ({ ...draft, tags: e.target.value }))} placeholder="Tags, comma-separated" style={fieldStyle()} />
-                </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', opacity: 0.88 }}>
-                  <input type="checkbox" checked={composer.anonymous} onChange={(e) => setComposer((draft) => ({ ...draft, anonymous: e.target.checked }))} />
-                  Post anonymously
-                </label>
-                <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
-                  <label style={buttonStyle(false, busy)}>
-                    Add photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={busy}
-                      onChange={async (e) => {
-                        const file = e.currentTarget.files?.[0] || null
-                        if (file) await submitPost(file)
-                        e.currentTarget.value = ''
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                  <button type="button" disabled={busy || !composer.body.trim()} onClick={() => submitPost(null)} style={buttonStyle(true, busy || !composer.body.trim())}>
-                    Post to altar
-                  </button>
-                </div>
-              </div>
-            </Panel>
-
-            <div style={{ display: 'grid', gap: '0.85rem' }}>
-              {(board?.posts || []).map(({ post, replies, reactions, saved_count }) => (
-                <Panel
-                  key={post.id}
-                  title={post.title || CATEGORY_OPTIONS.find(([value]) => value === post.category)?.[1] || 'Offering'}
-                  action={<span style={{ color: PARTY_TEAL, fontSize: '0.8rem' }}>{post.author_name} · {new Date(post.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
-                >
-                  <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    <p style={{ margin: 0, lineHeight: 1.55 }}>{post.body}</p>
-                    {post.media?.length ? (
-                      <div style={{ display: 'grid', gap: '0.6rem' }}>
-                        {post.media.map((media) => (
-                          <img key={media.id} src={media.url} alt={media.alt || 'Altar upload'} style={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,176,0,0.22)' }} />
-                        ))}
-                      </div>
-                    ) : null}
-                    {post.tags?.length ? (
-                      <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                        {post.tags.map((tag) => <span key={tag} style={{ border: '1px solid rgba(255,176,0,0.2)', borderRadius: 999, padding: '0.18rem 0.5rem', fontSize: '0.76rem', opacity: 0.8 }}>#{tag}</span>)}
-                      </div>
-                    ) : null}
-                    <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                      {REACTIONS.map(([value, label]) => (
-                        <button key={value} type="button" onClick={() => reactToPost(post.id, value)} style={buttonStyle()}>
-                          <span aria-hidden="true" style={{ fontSize: '1.05rem' }}>{label}</span> {reactions[value] || 0}
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                      <button type="button" disabled={saveIds.has(post.id)} onClick={() => savePost(post.id)} style={keepButtonStyle(saveIds.has(post.id))}>
-                        {saveIds.has(post.id) ? `✨ In your keepsakes · ${saved_count}` : `✨ Keep in my keepsakes · ${saved_count}`}
-                      </button>
-                      {!post.anonymous && post.author_name === playerName && (
-                        <button type="button" onClick={() => deleteOwn({ post_id: post.id })} style={buttonStyle()}>
-                          Delete my post
-                        </button>
-                      )}
-                      {adminToken.trim() && (
-                        <button type="button" onClick={() => adminDelete({ post_id: post.id })} style={buttonStyle()}>
-                          Admin delete
-                        </button>
-                      )}
-                    </div>
-                    <div style={{ display: 'grid', gap: '0.5rem', borderTop: '1px solid rgba(255,176,0,0.14)', paddingTop: '0.75rem' }}>
-                      {replies.map((reply) => (
-                        <div key={reply.id} style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 8, padding: '0.65rem' }}>
-                          <p style={{ margin: '0 0 0.2rem', color: PARTY_GOLD, fontSize: '0.82rem' }}>{reply.author_name}</p>
-                          <p style={{ margin: 0, lineHeight: 1.45 }}>{reply.body}</p>
-                          <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                            {!reply.anonymous && reply.author_name === playerName && (
-                              <button type="button" onClick={() => deleteOwn({ reply_id: reply.id })} style={buttonStyle()}>
-                                Delete my reply
-                              </button>
-                            )}
-                            {adminToken.trim() && (
-                              <button type="button" onClick={() => adminDelete({ reply_id: reply.id })} style={buttonStyle()}>
-                                Admin delete
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      <textarea value={replyDrafts[post.id] || ''} onChange={(e) => setReplyDrafts((drafts) => ({ ...drafts, [post.id]: e.target.value }))} placeholder="Reply to this altar note" style={fieldStyle(true)} />
-                      <button type="button" disabled={busy || !(replyDrafts[post.id] || '').trim()} onClick={() => sendReply(post.id)} style={buttonStyle(true, busy || !(replyDrafts[post.id] || '').trim())}>
-                        Reply
-                      </button>
-                    </div>
-                  </div>
-                </Panel>
-              ))}
+        <section style={{ background: `linear-gradient(180deg, rgba(111,64,40,0.95), rgba(88,48,28,0.95))`, border: '1px solid rgba(255,214,150,0.26)', borderRadius: 18, padding: '1rem', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05), 0 18px 40px rgba(0,0,0,0.24)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+            <div>
+              <h2 style={{ margin: 0, color: '#ffe4b0', fontSize: '1.2rem' }}>Public Altar Board</h2>
+              <p style={{ margin: '0.25rem 0 0', color: 'rgba(255,243,220,0.82)' }}>Pinned offerings, public answers, photos, and sparks. Tap an empty spot to add something.</p>
             </div>
+            <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ ...fieldStyle(), width: 190, minHeight: 0, padding: '0.55rem 0.7rem' }}>
+              {CATEGORY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
           </div>
-
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            <Panel title="Your Keepsakes">
-              {saves.length ? (
-                <div style={{ display: 'grid', gap: '0.55rem', maxHeight: 360, overflow: 'auto' }}>
-                  {saves.map((save) => (
-                    <div key={save.id} style={{ borderTop: '1px solid rgba(255,176,0,0.16)', paddingTop: '0.55rem' }}>
-                      <p style={{ margin: '0 0 0.18rem', color: PARTY_GOLD, fontSize: '0.84rem' }}>{save.post?.title || 'Untitled offering'}</p>
-                      <p style={{ margin: 0, opacity: 0.76, fontSize: '0.84rem', lineHeight: 1.35 }}>{save.post?.body || 'Missing post'}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ margin: 0, opacity: 0.72, lineHeight: 1.45 }}>When a public note touches you, keep it here.</p>
-              )}
-            </Panel>
-
-            <Panel title="Admin Tools">
-              <div style={{ display: 'grid', gap: '0.6rem' }}>
-                <input value={adminToken} onChange={(e) => setAdminToken(e.target.value)} placeholder="Admin token" style={fieldStyle()} />
-                <button type="button" disabled={!adminToken.trim()} onClick={exportBoard} style={buttonStyle(true, !adminToken.trim())}>
-                  Export altar
-                </button>
-                <p style={{ margin: 0, opacity: 0.7, fontSize: '0.84rem', lineHeight: 1.4 }}>
-                  Admin can delete any post or reply and export the full altar board after the party. Anonymous authors stay anonymous here too.
-                </p>
-                {exportBlob && (
-                  <textarea readOnly value={exportBlob} style={{ ...fieldStyle(true), minHeight: 220 }} />
-                )}
-              </div>
-            </Panel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.9rem' }}>
+            {visiblePosts.map((entry) => <BoardCard key={entry.post.id} entry={entry} onOpen={() => setFocusedEntry(entry)} />)}
+            {Array.from({ length: emptySlots }).map((_, index) => <EmptyBoardSpot key={`empty-${index}`} onClick={() => setComposerOpen(true)} />)}
           </div>
         </section>
+
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', alignItems: 'start' }}>
+          <Panel title="Make An Offering">
+            <p style={{ margin: '0 0 0.75rem', opacity: 0.8, lineHeight: 1.45 }}>Use this when you want to compose carefully. For quick posting, just tap an open board spot.</p>
+            <div style={{ display: 'grid', gap: '0.7rem' }}>
+              <input value={composer.title} onChange={(e) => setComposer((draft) => ({ ...draft, title: e.target.value }))} placeholder="Optional title" style={fieldStyle()} />
+              <textarea value={composer.body} onChange={(e) => setComposer((draft) => ({ ...draft, body: e.target.value }))} placeholder="Leave a blessing, memory, invitation, question, or public answer." style={fieldStyle(true)} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.7rem' }}>
+                <select value={composer.category} onChange={(e) => setComposer((draft) => ({ ...draft, category: e.target.value }))} style={fieldStyle()}>
+                  {CATEGORY_OPTIONS.filter(([value]) => value !== 'all').map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+                <input value={composer.tags} onChange={(e) => setComposer((draft) => ({ ...draft, tags: e.target.value }))} placeholder="Tags, comma-separated" style={fieldStyle()} />
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', opacity: 0.88 }}>
+                <input type="checkbox" checked={composer.anonymous} onChange={(e) => setComposer((draft) => ({ ...draft, anonymous: e.target.checked }))} />
+                Post anonymously
+              </label>
+              <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
+                <label style={buttonStyle(false, busy)}>
+                  Add photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={busy}
+                    onChange={async (e) => {
+                      const file = e.currentTarget.files?.[0] || null
+                      if (file) await submitPost(file)
+                      e.currentTarget.value = ''
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+                <button type="button" disabled={busy || !composer.body.trim()} onClick={() => submitPost(null)} style={buttonStyle(true, busy || !composer.body.trim())}>
+                  Post to altar
+                </button>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel title="Your Keepsakes">
+            {saves.length ? (
+              <div style={{ display: 'grid', gap: '0.55rem', maxHeight: 360, overflow: 'auto' }}>
+                {saves.map((save) => (
+                  <div key={save.id} style={{ borderTop: '1px solid rgba(255,176,0,0.16)', paddingTop: '0.55rem' }}>
+                    <p style={{ margin: '0 0 0.18rem', color: PARTY_GOLD, fontSize: '0.84rem' }}>{save.post?.title || 'Untitled offering'}</p>
+                    <p style={{ margin: 0, opacity: 0.76, fontSize: '0.84rem', lineHeight: 1.35 }}>{save.post?.body || 'Missing post'}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, opacity: 0.72, lineHeight: 1.45 }}>When a public note touches you, keep it here.</p>
+            )}
+          </Panel>
+
+          <Panel title="Admin Tools">
+            <div style={{ display: 'grid', gap: '0.6rem' }}>
+              <input value={adminToken} onChange={(e) => setAdminToken(e.target.value)} placeholder="Admin token" style={fieldStyle()} />
+              <button type="button" disabled={!adminToken.trim()} onClick={exportBoard} style={buttonStyle(true, !adminToken.trim())}>
+                Export altar
+              </button>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: '0.84rem', lineHeight: 1.4 }}>
+                Admin can delete any post or reply and export the full altar board after the party. Anonymous authors stay anonymous here too.
+              </p>
+              {exportBlob && <textarea readOnly value={exportBlob} style={{ ...fieldStyle(true), minHeight: 220 }} />}
+            </div>
+          </Panel>
+        </section>
       </div>
+
+      {composerOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'grid', placeItems: 'center', padding: '1rem', zIndex: 40 }}>
+          <div style={{ width: 'min(100%, 520px)', background: '#2b130a', border: '1px solid rgba(255,176,0,0.35)', borderRadius: 14, padding: '1rem', display: 'grid', gap: '0.75rem' }}>
+            <h2 style={{ margin: 0, color: PARTY_GOLD }}>Add to the altar</h2>
+            <input value={composer.title} onChange={(e) => setComposer((draft) => ({ ...draft, title: e.target.value }))} placeholder="Optional title" style={fieldStyle()} />
+            <textarea value={composer.body} onChange={(e) => setComposer((draft) => ({ ...draft, body: e.target.value }))} placeholder="Write your note or offering" style={fieldStyle(true)} />
+            <select value={composer.category} onChange={(e) => setComposer((draft) => ({ ...draft, category: e.target.value }))} style={fieldStyle()}>
+              {CATEGORY_OPTIONS.filter(([value]) => value !== 'all').map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setComposerOpen(false)} style={buttonStyle()}>Cancel</button>
+              <button type="button" disabled={busy || !composer.body.trim()} onClick={() => submitPost(null)} style={buttonStyle(true, busy || !composer.body.trim())}>Pin note</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {focusedEntry && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', display: 'grid', placeItems: 'center', padding: '1rem', zIndex: 50 }}>
+          <div style={{ width: 'min(100%, 760px)', maxHeight: '88vh', overflow: 'auto', background: '#2b130a', border: '1px solid rgba(255,176,0,0.35)', borderRadius: 14, padding: '1rem', display: 'grid', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'start', flexWrap: 'wrap' }}>
+              <div>
+                <h2 style={{ margin: 0, color: PARTY_GOLD }}>{focusedEntry.post.title || focusedEntry.post.category.replace('_', ' ')}</h2>
+                <p style={{ margin: '0.3rem 0 0', color: PARTY_TEAL }}>{focusedEntry.post.author_name}</p>
+              </div>
+              <button type="button" onClick={() => setFocusedEntry(null)} style={buttonStyle()}>Close</button>
+            </div>
+            <p style={{ margin: 0, lineHeight: 1.55 }}>{focusedEntry.post.body}</p>
+            {focusedEntry.post.media?.length ? focusedEntry.post.media.map((media) => <img key={media.id} src={media.url} alt={media.alt || 'Altar upload'} style={{ width: '100%', maxHeight: 420, objectFit: 'cover', borderRadius: 10 }} />) : null}
+            <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
+              {REACTIONS.map(([value, label]) => (
+                <button key={value} type="button" onClick={() => reactToPost(focusedEntry.post.id, value)} style={buttonStyle()}>{label} {focusedEntry.reactions[value] || 0}</button>
+              ))}
+              <button type="button" disabled={saveIds.has(focusedEntry.post.id)} onClick={() => savePost(focusedEntry.post.id)} style={keepButtonStyle(saveIds.has(focusedEntry.post.id))}>
+                {saveIds.has(focusedEntry.post.id) ? `✨ In your keepsakes · ${focusedEntry.saved_count}` : `✨ Keep in my keepsakes · ${focusedEntry.saved_count}`}
+              </button>
+              {!focusedEntry.post.anonymous && focusedEntry.post.author_name === playerName && <button type="button" onClick={() => deleteOwn({ post_id: focusedEntry.post.id })} style={buttonStyle()}>Delete my post</button>}
+              {adminToken.trim() && <button type="button" onClick={() => adminDelete({ post_id: focusedEntry.post.id })} style={buttonStyle()}>Admin delete</button>}
+            </div>
+            <div style={{ display: 'grid', gap: '0.5rem', borderTop: '1px solid rgba(255,176,0,0.14)', paddingTop: '0.75rem' }}>
+              {focusedEntry.replies.map((reply) => (
+                <div key={reply.id} style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 8, padding: '0.65rem' }}>
+                  <p style={{ margin: '0 0 0.2rem', color: PARTY_GOLD, fontSize: '0.82rem' }}>{reply.author_name}</p>
+                  <p style={{ margin: 0, lineHeight: 1.45 }}>{reply.body}</p>
+                  <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
+                    {!reply.anonymous && reply.author_name === playerName && <button type="button" onClick={() => deleteOwn({ reply_id: reply.id })} style={buttonStyle()}>Delete my reply</button>}
+                    {adminToken.trim() && <button type="button" onClick={() => adminDelete({ reply_id: reply.id })} style={buttonStyle()}>Admin delete</button>}
+                  </div>
+                </div>
+              ))}
+              <textarea value={replyDrafts[focusedEntry.post.id] || ''} onChange={(e) => setReplyDrafts((drafts) => ({ ...drafts, [focusedEntry.post.id]: e.target.value }))} placeholder="Reply to this altar note" style={fieldStyle(true)} />
+              <button type="button" disabled={busy || !(replyDrafts[focusedEntry.post.id] || '').trim()} onClick={() => sendReply(focusedEntry.post.id)} style={buttonStyle(true, busy || !(replyDrafts[focusedEntry.post.id] || '').trim())}>Reply</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

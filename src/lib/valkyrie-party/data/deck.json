@@ -53,37 +53,92 @@
     "date": "2026-06-07",
     "guest_of_honor": "Valkyrie",
     "location": "Party location TBD",
-    "host_note": "Bring yourself, a towel, your most luxurious robe, and your inner pamperer. No lavender, no nuts, and body-positive spa energy only.",
+    "host_note": "Bring yourself, a towel, your most luxurious robe, and your inner pamperer. No lavender, no nuts, and body-positive spa energy only. Times are a real flow now, but still soft enough for check-ins and treasure interruptions.",
     "schedule": [
       {
         "time": "3:00 PM",
-        "title": "Arrival, robes, sign-in, and first sparks",
-        "details": "Claim your player name, test/send COVID pic as needed, settle into the spa altar, and draw your first spark."
+        "title": "Doors open",
+        "details": "Arrival, robes, sign-in, settle in, and first sparks."
+      },
+      {
+        "time": "3:30 PM",
+        "title": "Snacks and virgin mimosas",
+        "details": "Land gently, nibble, sip, and ease into the room."
       },
       {
         "time": "4:00 PM",
-        "title": "Optional microdose intention circle",
-        "details": "Gentle connection and relaxation add-on with personal responsibility, limits, and harm reduction."
+        "title": "Microdosing intention circle and drop",
+        "details": "Optional intention setting, harm reduction, limits, and gentle relational landing for anyone partaking."
       },
       {
         "time": "4:30 PM",
-        "title": "Open spa flow",
-        "details": "Sugar/salt scrub, moisturizing, robes, masks, stretching, sauna, fire basking, nail care, partner stretching, and body-care magic. We can interrupt the flow for check-ins."
+        "title": "Hottub hotseat",
+        "details": "A receiving moment in the water for warmth, presence, and playful attention."
+      },
+      {
+        "time": "5:15 PM",
+        "title": "Showers",
+        "details": "Rinse, reset, and transition into the scrub sequence."
       },
       {
         "time": "5:30 PM",
-        "title": "Treasure Valkyrie moments",
-        "details": "Group massage, hot tub hotseat, three minute game, and other moments where the Fire Bird receives without having to manage the room."
+        "title": "Group salt scrub and exfoliate",
+        "details": "Shared body-care ritual with consent, care, and treasure energy."
+      },
+      {
+        "time": "5:45 PM",
+        "title": "Quick rinses / hose down",
+        "details": "Fast rinse moment before moisturizing."
+      },
+      {
+        "time": "6:00 PM",
+        "title": "Group moisturize",
+        "details": "Lotion, softness, and collective tending."
+      },
+      {
+        "time": "6:15 PM",
+        "title": "Face masks, robes, and start fire",
+        "details": "Mask up, robe up, and shift into the softer fire-side arc of the evening."
+      },
+      {
+        "time": "6:20 PM",
+        "title": "Cucumber over eyes, hot face towels",
+        "details": "Extra spa softness and sensory downshift."
       },
       {
         "time": "6:30 PM",
-        "title": "Sushi, juice bar, and rainbow ganache",
-        "details": "Nourish bodies with sushi, vegetarian sushi, mocktails, juice, and the Birthday Rainbow Chocolate Ganache Experience."
+        "title": "Sushi and mocktail service",
+        "details": "Nourishment lands: sushi, vegetarian sushi, mocktails, juice, and tasty care."
       },
       {
-        "time": "Open",
-        "title": "Altar notes, card mail, and check-ins",
-        "details": "Draw cards, send prompts, answer friends, leave public offerings, collect treasures, and pause whenever the room needs a check-in."
+        "time": "6:45 PM",
+        "title": "Kyr as sushi platter",
+        "details": "One piece for each year, with receiving at the center of the ritual."
+      },
+      {
+        "time": "7:00 PM",
+        "title": "Partner stretching, massage gun, lounging, and stories about Kyr",
+        "details": "Body care, stretching, massage tools, lounging, and story-sharing about the guest of honor."
+      },
+      {
+        "time": "7:30 PM",
+        "title": "Birthday spankings? Birthday dance jam?",
+        "details": "Possible playful branch depending on consent, mood, and the room."
+      },
+      {
+        "time": "8:00 PM",
+        "title": "One full round of 3-Minute Game",
+        "details": "Facilitated by someone other than Kyr so the Fire Bird gets to receive."
+      },
+      {
+        "time": "8:30 PM",
+        "title": "Group cuddle puddle",
+        "details": "Soft landing, closeness, and end-of-night treasure energy."
+      },
+      {
+        "time": "9:00 PM",
+        "title": "Goodnight",
+        "details": "Close the rite and send people home warm."
       }
     ]
   },
@@ -94,7 +149,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "I",
       "title": "The Door Opens",
@@ -107,7 +162,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "II",
       "title": "The True Name",
@@ -120,7 +175,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "III",
       "title": "The Side Quest",
@@ -133,7 +188,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "IV",
       "title": "The Legendary Snack",
@@ -146,7 +201,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "V",
       "title": "The Laughing Shield",
@@ -159,7 +214,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "VI",
       "title": "The Friendship Signal",
@@ -172,7 +227,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "VII",
       "title": "The Treasure Chest",
@@ -185,7 +240,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "VIII",
       "title": "The Future Crown",
@@ -198,7 +253,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "IX",
       "title": "The Secret Door",
@@ -211,7 +266,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "X",
       "title": "The Party Spell",
@@ -224,7 +279,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "Page",
       "title": "The First Try",
@@ -237,7 +292,7 @@
         "code": "VK",
         "name": "Valkyrie",
         "domain": "Bless the hero in the room",
-        "icon": "★"
+        "icon": "\u2605"
       },
       "rank": "Queen",
       "title": "The Room That Knows",
