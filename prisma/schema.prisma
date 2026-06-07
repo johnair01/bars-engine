@@ -79,6 +79,8 @@ model Player {
   hasCompletedFirstQuest         Boolean                     @default(false)
   hasCreatedFirstQuest           Boolean                     @default(false)
   onboardingCompletedAt          DateTime?
+  practiceOrientationComplete      Boolean                     @default(false)
+  practiceOrientationCompletedAt   DateTime?
   inviteId                       String
   invitedByPlayerId              String?
   nationId                       String?
@@ -2039,6 +2041,228 @@ model EventInvite {
   @@map("event_invites")
 }
 
+model PartyExperience {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  title             String
+  subtitle          String   @default("")
+  invitationText    String   @default("")
+  hostNote          String   @default("")
+  storyJson         Json     @default("{}")
+  themeJson         Json     @default("{}")
+  partyDateLabel    String?  @map("party_date_label")
+  location          String?
+  scheduleJson      Json     @default("[]") @map("schedule_json")
+  createdByPlayerId String?  @map("created_by_player_id")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("party_experiences")
+}
+
+model PartyParticipant {
+  id              String   @id @default(cuid())
+  partyId         String   @map("party_id")
+  playerId        String?  @map("player_id")
+  clientSessionId String?  @map("client_session_id")
+  displayName     String   @map("display_name")
+  email           String?
+  keepPartyData   Boolean  @default(true) @map("keep_party_data")
+  wantsFullSignup Boolean  @default(false) @map("wants_full_signup")
+  isHost          Boolean  @default(false) @map("is_host")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([partyId, displayName])
+  @@index([partyId, playerId])
+  @@index([partyId, clientSessionId])
+  @@map("party_participants")
+}
+
+model PartyOracleDiscovery {
+  id         String   @id @default(cuid())
+  partyId    String   @map("party_id")
+  playerId   String   @map("player_id")
+  baseCardId String   @map("base_card_id")
+  source     String   @default("draw")
+  createdAt  DateTime @default(now())
+
+  @@index([partyId, playerId])
+  @@index([partyId, baseCardId])
+  @@map("party_oracle_discoveries")
+}
+
+model PartyOracleAnswer {
+  id         String   @id @default(cuid())
+  partyId    String   @map("party_id")
+  playerId   String   @map("player_id")
+  baseCardId String   @map("base_card_id")
+  depth      String   @default("hard")
+  scope      String   @default("private")
+  answerText String   @map("answer_text")
+  createdAt  DateTime @default(now())
+
+  @@index([partyId, playerId])
+  @@index([partyId, baseCardId])
+  @@map("party_oracle_answers")
+}
+
+model PartyCardThread {
+  id                String    @id @default(cuid())
+  partyId           String    @map("party_id")
+  baseCardId        String    @map("base_card_id")
+  senderPlayerId    String    @map("sender_player_id")
+  recipientPlayerId String    @map("recipient_player_id")
+  senderNote        String    @default("") @map("sender_note")
+  status            String    @default("sent")
+  answerText        String?   @map("answer_text")
+  answerPrivateNote String?   @map("answer_private_note")
+  answeredAt        DateTime? @map("answered_at")
+  createdAt         DateTime  @default(now())
+
+  @@index([partyId, senderPlayerId, status])
+  @@index([partyId, recipientPlayerId, status])
+  @@index([partyId, baseCardId])
+  @@map("party_card_threads")
+}
+
+model PartyPlayerCard {
+  id             String   @id @default(cuid())
+  partyId        String   @map("party_id")
+  authorPlayerId String   @map("author_player_id")
+  baseCardId     String   @map("base_card_id")
+  title          String
+  prompt         String
+  flavor         String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([partyId, baseCardId])
+  @@index([partyId, authorPlayerId])
+  @@map("party_player_cards")
+}
+
+model PartyQuestCard {
+  id              String   @id @default(cuid())
+  partyId         String   @map("party_id")
+  authorPlayerId  String?  @map("author_player_id")
+  title           String
+  prompt          String
+  category        String   @default("treasure")
+  kind            String   @default("ask")
+  face            String?
+  waveMode        String?  @map("wave_mode")
+  materials       String   @default("")
+  waveJson        Json     @default("{}") @map("wave_json")
+  gameMasterJson  Json     @default("{}") @map("game_master_json")
+  seed            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([partyId, createdAt])
+  @@index([partyId, seed])
+  @@map("party_quest_cards")
+}
+
+model PartyQuestCompletion {
+  id          String   @id @default(cuid())
+  partyId     String   @map("party_id")
+  questCardId String   @map("quest_card_id")
+  playerId    String   @map("player_id")
+  assetId     String?  @map("asset_id")
+  caption     String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([partyId, questCardId])
+  @@index([partyId, playerId])
+  @@map("party_quest_completions")
+}
+
+model PartyAltarPost {
+  id              String    @id @default(cuid())
+  partyId         String    @map("party_id")
+  authorPlayerId  String?   @map("author_player_id")
+  clientSessionId String?   @map("client_session_id")
+  displayName     String    @map("display_name")
+  anonymous       Boolean   @default(false)
+  category        String    @default("other")
+  tagsJson        Json      @default("[]") @map("tags_json")
+  title           String    @default("")
+  body            String
+  sourceJson      Json      @default("{}") @map("source_json")
+  assetId         String?   @map("asset_id")
+  createdAt       DateTime  @default(now())
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@index([partyId, category, createdAt])
+  @@index([partyId, authorPlayerId])
+  @@index([partyId, clientSessionId])
+  @@map("party_altar_posts")
+}
+
+model PartyAltarReply {
+  id              String    @id @default(cuid())
+  partyId         String    @map("party_id")
+  postId          String    @map("post_id")
+  authorPlayerId  String?   @map("author_player_id")
+  clientSessionId String?   @map("client_session_id")
+  displayName     String    @map("display_name")
+  anonymous       Boolean   @default(false)
+  body            String
+  createdAt       DateTime  @default(now())
+  deletedAt       DateTime? @map("deleted_at")
+
+  @@index([partyId, postId, createdAt])
+  @@index([partyId, authorPlayerId])
+  @@index([partyId, clientSessionId])
+  @@map("party_altar_replies")
+}
+
+model PartyAltarReaction {
+  id        String   @id @default(cuid())
+  partyId   String   @map("party_id")
+  postId    String   @map("post_id")
+  playerId  String   @map("player_id")
+  reaction  String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, playerId, reaction])
+  @@index([partyId, postId])
+  @@index([partyId, playerId])
+  @@map("party_altar_reactions")
+}
+
+model PartyKeepsake {
+  id           String   @id @default(cuid())
+  partyId      String   @map("party_id")
+  playerId     String   @map("player_id")
+  artifactType String   @map("artifact_type")
+  artifactId   String   @map("artifact_id")
+  note         String   @default("")
+  snapshotJson Json     @default("{}") @map("snapshot_json")
+  createdAt    DateTime @default(now())
+
+  @@unique([partyId, playerId, artifactType, artifactId])
+  @@index([partyId, playerId, createdAt])
+  @@map("party_keepsakes")
+}
+
+model PartyOracleCardOverride {
+  id                String   @id @default(cuid())
+  partyId           String   @map("party_id")
+  cardId            String   @map("card_id")
+  title             String?
+  promptsJson       Json?    @map("prompts_json")
+  flavorJson        Json?    @map("flavor_json")
+  imageAssetId      String?  @map("image_asset_id")
+  cropJson          Json?    @map("crop_json")
+  updatedByPlayerId String?  @map("updated_by_player_id")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([partyId, cardId])
+  @@index([partyId, updatedAt])
+  @@map("party_oracle_card_overrides")
+}
+
 model GameboardSlot {
   id                String              @id @default(cuid())
   instanceId        String
@@ -3932,11 +4156,12 @@ enum CampaignDeckTopology {
   CAMPAIGN_DECK_64
 }
 
-/// Deck type enumeration for BarDeck variants
+/// Deck type enumeration for BarDeck variants (see .specify/specs/deck-product-grammar/spec.md)
 enum DeckType {
   SCENE_ATLAS
-  FRIENDSHIP_52
-  FRIENDSHIP_64
+  APPLICATION_52
+  CAMPAIGN_LATTICE_64
+  EXPLORATION_64
 }
 
 /// Campaign Self-Serve (CSS): L1 wizard + L2 skinning + L3 schema-ready

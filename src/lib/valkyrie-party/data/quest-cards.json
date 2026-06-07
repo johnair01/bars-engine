@@ -1,0 +1,279 @@
+[
+  {
+    "id": "quest-mq41i0m7-vcefi4",
+    "title": "Integration Minute",
+    "prompt": "Find me if you want one minute to name what you are taking from this party and how you want to remember it.",
+    "category": "altar",
+    "kind": "offer",
+    "face": "sage",
+    "wave_mode": "grow_up",
+    "materials": "One reflective minute",
+    "author": "Wendell",
+    "wave": {
+      "wake_up": "",
+      "clean_up": "",
+      "grow_up": "Grow the moment into something someone can carry.",
+      "show_up": ""
+    },
+    "game_master": {
+      "challenger": "",
+      "diplomat": "",
+      "shaman": "",
+      "architect": "",
+      "regent": "Creates quests of belonging, culture, care norms, and being treasured in a held space. This face asks: what does this quest make more normal in the room?",
+      "sage": "Sage: help the party become wisdom, not just experience."
+    },
+    "created_at": "2026-06-07T17:12:15.775Z",
+    "seed": false
+  },
+  {
+    "id": "quest-seed-1",
+    "title": "Three Minute Treasure",
+    "prompt": "Choose one person and spend three minutes making them feel luxuriously appreciated.",
+    "category": "treasure",
+    "kind": "ask",
+    "materials": "Timer, consent, attention",
+    "author": "Party Deck",
+    "wave": {
+      "wake_up": "Notice who seems ready to receive attention.",
+      "clean_up": "Ask what kind of appreciation would feel good.",
+      "grow_up": "Stay specific instead of performing.",
+      "show_up": "Offer the appreciation and let it land."
+    },
+    "game_master": {
+      "challenger": "Be brave enough to be direct.",
+      "diplomat": "Make consent and pacing explicit.",
+      "shaman": "Track the feeling in the room.",
+      "architect": "Use the timer.",
+      "regent": "Make the care feel part of the party culture.",
+      "sage": "Keep it simple and true."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-2",
+    "title": "Happy Apples",
+    "prompt": "Name three tiny things that are genuinely good right now. Share one with someone nearby.",
+    "category": "joy",
+    "kind": "ask",
+    "materials": "A tiny bit of attention",
+    "author": "Emotional First Aid Kit",
+    "wave": {
+      "wake_up": "Notice your current emotional weather.",
+      "clean_up": "Find three specific apples, not a forced silver lining.",
+      "grow_up": "Let small good things count.",
+      "show_up": "Share one apple with someone."
+    },
+    "game_master": {
+      "challenger": "Do not dismiss the small thing.",
+      "diplomat": "Offer your apple without requiring a response.",
+      "shaman": "Let the nervous system taste the good.",
+      "architect": "Use three concrete observations.",
+      "regent": "Let small joys become part of the room culture.",
+      "sage": "Notice what changes after naming them."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-3",
+    "title": "Grounding Cord",
+    "prompt": "Imagine a cord from your body into the earth. Breathe down the cord for one minute, then choose your next move.",
+    "category": "grounding",
+    "kind": "ask",
+    "materials": "A seat or steady stance",
+    "author": "Emotional First Aid Kit",
+    "wave": {
+      "wake_up": "Notice whether you are floating, rushing, or bracing.",
+      "clean_up": "Let excess charge move down the cord.",
+      "grow_up": "Remember that grounded choice is still choice.",
+      "show_up": "Take one next action from your body."
+    },
+    "game_master": {
+      "challenger": "Stay with the full minute.",
+      "diplomat": "Give yourself privacy if needed.",
+      "shaman": "Feel the charge move.",
+      "architect": "Make the image simple.",
+      "regent": "Let grounding support belonging without taking over.",
+      "sage": "Ask what is true from the ground."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-4",
+    "title": "Rose Tool",
+    "prompt": "Picture a rose at the edge of your space. Let it mark the boundary between your feelings and the room.",
+    "category": "boundary",
+    "kind": "ask",
+    "materials": "Imagination",
+    "author": "Emotional First Aid Kit",
+    "wave": {
+      "wake_up": "Notice what you are absorbing.",
+      "clean_up": "Let the rose hold the boundary.",
+      "grow_up": "Practice caring without merging.",
+      "show_up": "Return to the party with your own center."
+    },
+    "game_master": {
+      "challenger": "Let the boundary be real.",
+      "diplomat": "Stay connected without overextending.",
+      "shaman": "Track what belongs to you.",
+      "architect": "Place the rose clearly.",
+      "regent": "Let boundaries protect the shared culture.",
+      "sage": "Separate signal from static."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-5",
+    "title": "WAVE Check",
+    "prompt": "Let one emotion arrive without fixing it. Name it, breathe with it, and ask what it wants you to know.",
+    "category": "emotional_first_aid",
+    "kind": "ask",
+    "materials": "Two quiet minutes",
+    "author": "Emotional First Aid Kit",
+    "wave": {
+      "wake_up": "Name the emotion.",
+      "clean_up": "Stop arguing with it.",
+      "grow_up": "Ask what capacity it is requesting.",
+      "show_up": "Take one kind next step."
+    },
+    "game_master": {
+      "challenger": "Feel without fleeing.",
+      "diplomat": "Negotiate with the part kindly.",
+      "shaman": "Let the emotion become information.",
+      "architect": "Use the WAVE sequence.",
+      "regent": "Let emotional honesty become socially welcome.",
+      "sage": "Listen for the clean signal."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-6",
+    "title": "3-2-1 Mini",
+    "prompt": "Choose a charged figure or thought. Say: there it is, you are, I am. Notice what comes back into you.",
+    "category": "shadow",
+    "kind": "ask",
+    "materials": "Journal optional",
+    "author": "Emotional First Aid Kit",
+    "wave": {
+      "wake_up": "Spot the charge.",
+      "clean_up": "Speak to it instead of about it.",
+      "grow_up": "Own the part that is yours.",
+      "show_up": "Choose from integration."
+    },
+    "game_master": {
+      "challenger": "Tell the truth about the projection.",
+      "diplomat": "Do not weaponize the insight.",
+      "shaman": "Let the shadow speak.",
+      "architect": "Use the three steps.",
+      "regent": "Let integration make you more trustworthy in the room.",
+      "sage": "Keep only what is actually yours."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-7",
+    "title": "Basic Qi Gong Reset",
+    "prompt": "Stand, soften your knees, lift your arms on inhale, lower them on exhale. Do eight slow rounds.",
+    "category": "body",
+    "kind": "ask",
+    "materials": "Standing room",
+    "author": "Party Deck",
+    "wave": {
+      "wake_up": "Notice your body state.",
+      "clean_up": "Let breath and motion smooth the edges.",
+      "grow_up": "Let simple repetition regulate you.",
+      "show_up": "Return with more steadiness."
+    },
+    "game_master": {
+      "challenger": "Slow down.",
+      "diplomat": "Make space for bodies around you.",
+      "shaman": "Feel the energy shift.",
+      "architect": "Count eight rounds.",
+      "regent": "Let regulation support the group field.",
+      "sage": "Trust the basic move."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-8",
+    "title": "Partner Stretch Offer",
+    "prompt": "Offer a consent-forward stretch, roller, or percussion-gun assist. Let the receiver set the pace.",
+    "category": "spa",
+    "kind": "offer",
+    "materials": "Stretch tool optional",
+    "author": "Party Deck",
+    "wave": {
+      "wake_up": "Notice who might want body care.",
+      "clean_up": "Ask clearly and accept no easily.",
+      "grow_up": "Follow instead of managing.",
+      "show_up": "Offer steady care."
+    },
+    "game_master": {
+      "challenger": "Ask directly.",
+      "diplomat": "Consent is the structure.",
+      "shaman": "Listen with your hands and eyes.",
+      "architect": "Set a clear container.",
+      "regent": "Make body care feel held and honorable.",
+      "sage": "Stop before it becomes too much."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-9",
+    "title": "Breath Reset",
+    "prompt": "Try four rounds of box breathing: inhale four, hold four, exhale four, hold four. Then notice what changed.",
+    "category": "breath",
+    "kind": "ask",
+    "materials": "One quiet minute",
+    "author": "Party Deck",
+    "wave": {
+      "wake_up": "Notice activation.",
+      "clean_up": "Give breath a shape.",
+      "grow_up": "Practice changing state deliberately.",
+      "show_up": "Rejoin from regulation."
+    },
+    "game_master": {
+      "challenger": "Complete all four rounds.",
+      "diplomat": "Do it privately or invite someone gently.",
+      "shaman": "Feel the nervous system shift.",
+      "architect": "Count the box.",
+      "regent": "Let shared regulation become normal.",
+      "sage": "Compare before and after."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  },
+  {
+    "id": "quest-seed-10",
+    "title": "Get Tea With Wendell",
+    "prompt": "Find Wendell at the party and claim a tea moment for decompression, integration, gossip, or care.",
+    "category": "altar",
+    "kind": "offer",
+    "materials": "Find Wendell, choose tea or a tea-equivalent",
+    "author": "Wendell",
+    "wave": {
+      "wake_up": "Notice whether you want a live care conversation.",
+      "clean_up": "Name the kind of tea you want.",
+      "grow_up": "Let care happen while the party is alive.",
+      "show_up": "Find Wendell and claim the tea moment."
+    },
+    "game_master": {
+      "challenger": "Ask for the kind of connection you want.",
+      "diplomat": "Make the offer easy to accept or decline.",
+      "shaman": "Let tea be integration.",
+      "architect": "Find a workable time and place at the party.",
+      "regent": "Let a small ritual of care become part of the party.",
+      "sage": "Know whether this is support, celebration, or reflection."
+    },
+    "created_at": "2026-06-07T12:00:00.000Z",
+    "seed": true
+  }
+]

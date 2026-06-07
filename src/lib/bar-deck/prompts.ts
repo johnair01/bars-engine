@@ -106,8 +106,11 @@ export function getCanonicalPrompts(): Array<{
   return result
 }
 
-/** 52 canonical + 12 extension cards (ranks 14–16 × 4 suits) for FRIENDSHIP_64 decks. */
-export function getFriendship64Prompts(): Array<{
+/**
+ * 64-slot campaign lattice (52 base + 12 extension ranks).
+ * Not book exploration — see DeckType.CAMPAIGN_LATTICE_64 and deck-product-grammar spec.
+ */
+export function getCampaignLattice64Prompts(): Array<{
   suit: AllyshipDomainKey
   rank: number
   promptTitle: string
@@ -129,3 +132,6 @@ export function getFriendship64Prompts(): Array<{
   }
   return [...base, ...extra]
 }
+
+/** @deprecated Use getCampaignLattice64Prompts */
+export const getFriendship64Prompts = getCampaignLattice64Prompts
