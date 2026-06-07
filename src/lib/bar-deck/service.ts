@@ -1,23 +1,32 @@
 /**
  * BAR Deck Service — draw, hand, discard, shuffle, bind, play
- * Spec: BAR System v1
+ * Spec: BAR System v1; deck layers: .specify/specs/deck-product-grammar/spec.md
  */
 
 import type { Prisma } from '@prisma/client'
 import { CampaignDeckTopology, DeckType } from '@prisma/client'
 import { db } from '@/lib/db'
-import { getCanonicalPrompts, getFriendship64Prompts } from './prompts'
+import { getCampaignLattice64Prompts, getCanonicalPrompts } from './prompts'
 
 function deckTypeForTopology(t: CampaignDeckTopology): DeckType {
-  return t === CampaignDeckTopology.CAMPAIGN_DECK_64 ? DeckType.FRIENDSHIP_64 : DeckType.FRIENDSHIP_52
+  return t === CampaignDeckTopology.CAMPAIGN_DECK_64
+    ? DeckType.CAMPAIGN_LATTICE_64
+    : DeckType.APPLICATION_52
 }
 
 function promptsForDeckType(dt: DeckType) {
-  return dt === DeckType.FRIENDSHIP_64 ? getFriendship64Prompts() : getCanonicalPrompts()
+  if (dt === DeckType.CAMPAIGN_LATTICE_64) return getCampaignLattice64Prompts()
+  if (dt === DeckType.EXPLORATION_64) {
+    throw new Error(
+      'EXPLORATION_64 decks are published book oracles — not auto-seeded by ensureCampaignDeck'
+    )
+  }
+  return getCanonicalPrompts()
 }
 
 function targetCardCount(dt: DeckType): number {
-  return dt === DeckType.FRIENDSHIP_64 ? 64 : 52
+  if (dt === DeckType.CAMPAIGN_LATTICE_64 || dt === DeckType.EXPLORATION_64) return 64
+  return 52
 }
 
 type BarDeckWithCards = Prisma.BarDeckGetPayload<{ include: { cards: true } }>
@@ -44,7 +53,7 @@ function isToday(d: Date): boolean {
 }
 
 /**
- * Ensure campaign has a BarDeck with 52 cards. Create if missing.
+ * Ensure campaign has a BarDeck with 52 (or 64 lattice) cards. Create if missing.
  */
 export async function ensureCampaignDeck(instanceId: string): Promise<string> {
   const instance = await db.instance.findUnique({
