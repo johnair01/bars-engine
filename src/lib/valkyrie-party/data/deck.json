@@ -1,0 +1,248 @@
+{
+  "deck_slug": "valkyrie-birthday-party",
+  "deck_name": "Valkyrie's Birthday Oracle",
+  "for": "Valkyrie",
+  "made_by": "Wendell and the party",
+  "forked_from": {
+    "route": "/oracle",
+    "deck_slug": "casey-birthday",
+    "source_file": "data/deck.json"
+  },
+  "theme": {
+    "title": "Get FUCKING Treasured",
+    "subtitle": "A rainbow phoenix spa oracle for treasuring Valkyrie, yourselves, and each other.",
+    "aesthetic": "Fire Bird rainbow phoenix luxury spa altar",
+    "accent": "#FFB000",
+    "background": "#5B160B",
+    "cream": "#FFF3DC",
+    "fire": "#FF4D2E",
+    "water": "#38BDF8",
+    "wood": "#41D96B",
+    "metal": "#F7E7A6",
+    "earth": "#D97745",
+    "rose": "#FF6A2A",
+    "teal": "#2DE2C6"
+  },
+  "story": {
+    "premise": "Valkyrie is the Fire Bird at the center of a home-spa treasure rite. Guests arrive as high-quality humans and cryptids bringing warmth, attention, care, and embodied delight.",
+    "invocation": "Treasure Valkyrie. Treasure yourselves. Treasure each other.",
+    "beats": [
+      {
+        "title": "Enter the Spa Altar",
+        "body": "Claim your player name, robe energy, and intention for the room."
+      },
+      {
+        "title": "Draw a Spark",
+        "body": "Shuffle the oracle, reveal a sign, and notice what kind of care wants to move."
+      },
+      {
+        "title": "Pass the Flame",
+        "body": "Send cards to friends when a prompt feels like theirs to answer."
+      },
+      {
+        "title": "Leave an Offering",
+        "body": "Use the Shared Altar for blessings, memories, jokes, public answers, and treasures."
+      },
+      {
+        "title": "Gather the Keepsake",
+        "body": "Save the notes, cards, and answers that touched you into your deck."
+      }
+    ]
+  },
+  "party": {
+    "date": "2026-06-07",
+    "guest_of_honor": "Valkyrie",
+    "location": "Party location TBD",
+    "host_note": "Bring yourself, a towel, your most luxurious robe, and your inner pamperer. No lavender, no nuts, and body-positive spa energy only.",
+    "schedule": [
+      {
+        "time": "3:00 PM",
+        "title": "Arrival, robes, sign-in, and first sparks",
+        "details": "Claim your player name, test/send COVID pic as needed, settle into the spa altar, and draw your first spark."
+      },
+      {
+        "time": "4:00 PM",
+        "title": "Optional microdose intention circle",
+        "details": "Gentle connection and relaxation add-on with personal responsibility, limits, and harm reduction."
+      },
+      {
+        "time": "4:30 PM",
+        "title": "Open spa flow",
+        "details": "Sugar/salt scrub, moisturizing, robes, masks, stretching, sauna, fire basking, nail care, partner stretching, and body-care magic. We can interrupt the flow for check-ins."
+      },
+      {
+        "time": "5:30 PM",
+        "title": "Treasure Valkyrie moments",
+        "details": "Group massage, hot tub hotseat, three minute game, and other moments where the Fire Bird receives without having to manage the room."
+      },
+      {
+        "time": "6:30 PM",
+        "title": "Sushi, juice bar, and rainbow ganache",
+        "details": "Nourish bodies with sushi, vegetarian sushi, mocktails, juice, and the Birthday Rainbow Chocolate Ganache Experience."
+      },
+      {
+        "time": "Open",
+        "title": "Altar notes, card mail, and check-ins",
+        "details": "Draw cards, send prompts, answer friends, leave public offerings, collect treasures, and pause whenever the room needs a check-in."
+      }
+    ]
+  },
+  "cards": [
+    {
+      "id": "VK-A",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "I",
+      "title": "The Door Opens",
+      "prompt": "What blessing should follow Valkyrie into this next year?",
+      "flavor": "Every good party begins when someone lets the future enter wearing shoes."
+    },
+    {
+      "id": "VK-2",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "II",
+      "title": "The True Name",
+      "prompt": "What is one thing Valkyrie should never forget about who they are?",
+      "flavor": "A true name is not a label. It is a room with all the lights on."
+    },
+    {
+      "id": "VK-3",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "III",
+      "title": "The Side Quest",
+      "prompt": "Give Valkyrie a tiny quest for the year ahead.",
+      "flavor": "The main story gets jealous when the side quests are this good."
+    },
+    {
+      "id": "VK-4",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "IV",
+      "title": "The Legendary Snack",
+      "prompt": "Invent a magical snack, drink, or treat named after Valkyrie.",
+      "flavor": "Some enchantments are cast with frosting."
+    },
+    {
+      "id": "VK-5",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "V",
+      "title": "The Laughing Shield",
+      "prompt": "What ridiculous power should protect Valkyrie from boring days?",
+      "flavor": "A shield made of laughter still counts as armor."
+    },
+    {
+      "id": "VK-6",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "VI",
+      "title": "The Friendship Signal",
+      "prompt": "Write the bat-signal version of how Valkyrie can summon their people.",
+      "flavor": "The right people know the shape of your flare."
+    },
+    {
+      "id": "VK-7",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "VII",
+      "title": "The Treasure Chest",
+      "prompt": "What treasure has Valkyrie already been carrying?",
+      "flavor": "Some treasure is not hidden. It is simply undernamed."
+    },
+    {
+      "id": "VK-8",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "VIII",
+      "title": "The Future Crown",
+      "prompt": "What should Valkyrie become wildly confident about?",
+      "flavor": "A crown can be a posture before it is an object."
+    },
+    {
+      "id": "VK-9",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "IX",
+      "title": "The Secret Door",
+      "prompt": "What new door should open for Valkyrie this year?",
+      "flavor": "The secret door was waiting for someone dramatic enough to notice it."
+    },
+    {
+      "id": "VK-10",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "X",
+      "title": "The Party Spell",
+      "prompt": "Write a one-sentence spell for the party to cast together.",
+      "flavor": "A room full of people saying yes can become weather."
+    },
+    {
+      "id": "VK-J",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "Page",
+      "title": "The First Try",
+      "prompt": "What should Valkyrie try even if they are not good at it yet?",
+      "flavor": "The first try is already a small form of bravery."
+    },
+    {
+      "id": "VK-Q",
+      "suit": {
+        "code": "VK",
+        "name": "Valkyrie",
+        "domain": "Bless the hero in the room",
+        "icon": "★"
+      },
+      "rank": "Queen",
+      "title": "The Room That Knows",
+      "prompt": "What does everyone here know is wonderful about Valkyrie?",
+      "flavor": "Some truths get louder when the whole room holds them."
+    }
+  ]
+}
