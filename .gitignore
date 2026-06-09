@@ -1,3 +1,14 @@
 .DS_Store
 .obsidian/workspace.json
 **/.canvas.data.json
+
+# Dev artifacts — local only, never sync or commit
+**/node_modules/
+**/.npm-cache/
+**/dev/dist/
+
+# Browser scrape junk (Casey deck symbols research)
+**/symbols_raw/Symbols_files/
+
+# Nested game repo (own git remote); do not embed in vault history
+The Library/04 Quests/Campaigns/inner-garden/
