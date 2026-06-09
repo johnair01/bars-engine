@@ -903,12 +903,28 @@ app.post("/api/party/valkyrie/altar/saves", (req, res) => {
     if (!save) {
       return res.status(400).json({ ok: false, error: "Player and post are required" });
     }
+    const posts = readJsonList(PARTY_ALTAR_POSTS_JSON);
+    const post = posts.find((entry) => entry.id === save.artifact_id && !entry.deleted_at);
+    if (!post) {
+      return res.status(404).json({ ok: false, error: "Altar post not found" });
+    }
     const saves = readJsonList(PARTY_PERSONAL_SAVES_JSON);
     const existing = saves.find((entry) => entry.player_name === save.player_name && entry.artifact_id === save.artifact_id);
     if (existing) return res.json({ ok: true, save: existing, duplicate: true });
-    saves.unshift(save);
+    saves.unshift({
+      ...save,
+      snapshot: {
+        title: post.title,
+        body: post.body,
+        category: post.category,
+        author_name: post.author_name,
+        media: Array.isArray(post.media) ? post.media : [],
+        tags: Array.isArray(post.tags) ? post.tags : [],
+        created_at: post.created_at,
+      },
+    });
     writeJsonList(PARTY_PERSONAL_SAVES_JSON, saves);
-    res.json({ ok: true, save });
+    res.json({ ok: true, save: saves[0] });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err) });
   }
@@ -924,7 +940,7 @@ app.get("/api/party/valkyrie/altar/saves", (req, res) => {
       ok: true,
       saves: saves.map((save) => ({
         ...save,
-        post: posts.find((post) => post.id === save.artifact_id) || null,
+        post: posts.find((post) => post.id === save.artifact_id) || save.snapshot || null,
       })),
     });
   } catch (err) {

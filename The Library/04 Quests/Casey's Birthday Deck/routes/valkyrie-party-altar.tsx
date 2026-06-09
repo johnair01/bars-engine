@@ -62,11 +62,11 @@ const CATEGORY_OPTIONS = [
 ] as const;
 
 const REACTIONS = [
-  ["triumph", "Triumph / Fire"],
-  ["poignance", "Poignance / Water"],
-  ["bliss", "Bliss / Wood"],
-  ["excitement", "Excitement / Metal"],
-  ["peace", "Peace / Earth"],
+  ["triumph", "🔥"],
+  ["poignance", "💧"],
+  ["bliss", "🌿"],
+  ["excitement", "⚙️"],
+  ["peace", "🪨"],
 ] as const;
 
 async function getJson<T>(url: string): Promise<T> {
@@ -99,6 +99,22 @@ function buttonStyle(primary = false, disabled = false): CSSProperties {
     color: disabled ? "rgba(255,243,220,0.5)" : PARTY_CREAM,
     padding: "0.55rem 0.8rem",
     font: "inherit",
+    cursor: disabled ? "not-allowed" : "pointer",
+  };
+}
+
+function keepButtonStyle(disabled = false): CSSProperties {
+  return {
+    borderRadius: 999,
+    border: "2px solid rgba(255, 214, 102, 0.82)",
+    background: disabled
+      ? "rgba(255,214,102,0.12)"
+      : "linear-gradient(135deg, rgba(255,214,102,0.24), rgba(255,92,50,0.42))",
+    color: disabled ? "rgba(255,243,220,0.65)" : "#fff7ea",
+    padding: "0.7rem 1rem",
+    font: "inherit",
+    fontWeight: 700,
+    boxShadow: disabled ? "none" : "0 0 0 1px rgba(255,255,255,0.08), 0 14px 28px rgba(255,118,49,0.18)",
     cursor: disabled ? "not-allowed" : "pointer",
   };
 }
@@ -374,13 +390,13 @@ export default function ValkyriePartyAltar() {
                     <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap" }}>
                       {REACTIONS.map(([value, label]) => (
                         <button key={value} type="button" onClick={() => reactToPost(post.id, value)} style={buttonStyle()}>
-                          {label} {reactions[value] || 0}
+                          <span aria-hidden="true" style={{ fontSize: "1.05rem" }}>{label}</span> {reactions[value] || 0}
                         </button>
                       ))}
                     </div>
                     <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap" }}>
-                      <button type="button" disabled={!playerName.trim() || saveIds.has(post.id)} onClick={() => savePost(post.id)} style={buttonStyle(false, !playerName.trim() || saveIds.has(post.id))}>
-                        {saveIds.has(post.id) ? "Saved to keepsakes" : `Keep this (${saved_count})`}
+                      <button type="button" disabled={!playerName.trim() || saveIds.has(post.id)} onClick={() => savePost(post.id)} style={keepButtonStyle(!playerName.trim() || saveIds.has(post.id))}>
+                        {saveIds.has(post.id) ? `✨ In your keepsakes · ${saved_count}` : `✨ Keep in my keepsakes · ${saved_count}`}
                       </button>
                       {!post.anonymous && post.author_name === playerName && (
                         <button type="button" onClick={() => deleteOwn({ post_id: post.id })} style={buttonStyle()}>
