@@ -54,7 +54,10 @@ yarn-error.log*
 
 # embedded repos (avoid accidental add)
 LibreSprite/
-.claude/
+# Keep Claude config local, but share the project SessionStart hook + settings.
+.claude/*
+!.claude/settings.json
+.claude/settings.local.json
 
 # typescript
 *.tsbuildinfo
