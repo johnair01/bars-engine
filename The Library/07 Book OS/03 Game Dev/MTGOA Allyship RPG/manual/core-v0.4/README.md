@@ -71,6 +71,9 @@ This folder is the current canonical design entry point for the MTGOA RPG.
 - `Opening Chapter Prose Draft - v0.5.md`
   - revised opening prose applying source onboarding analysis
 
+- `Chapter 2 Prose Draft - The Ship And The Table v0.1.md`
+  - book-prose setup chapter for table protocols, ship creation, shared authority, artifacts, and first mission field setup
+
 - `Character Creation - v0.4.md`
   - draft student character creation
 
