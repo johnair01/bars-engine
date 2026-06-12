@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { LEVEL1_PRIYA } from "@/engine/trust/level1Priya";
 import { TRUST_RULES as R } from "@/engine/trust/trustRules";
+import type { EncounterConfig } from "@/engine/trust/trustTypes";
 import {
   allDomainsTouched,
   currentNeed,
@@ -29,6 +30,9 @@ import {
 
 interface Props {
   onExit: () => void;
+  /** Which encounter to run. Defaults to the Level-1 tutorial; pass BOSS_PRIYA
+   *  for the full-difficulty fight. The screen is config-agnostic. */
+  encounter?: EncounterConfig;
 }
 
 /** A simple labelled value meter (trust has no fixed max; stress caps at rupture). */
@@ -47,8 +51,8 @@ function Meter({ label, value, max, tone }: { label: string; value: number; max:
   );
 }
 
-export function TrustEncounterScreen({ onExit }: Props) {
-  const [state, dispatch] = useReducer(trustReducer, LEVEL1_PRIYA, initTrustEncounter);
+export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props) {
+  const [state, dispatch] = useReducer(trustReducer, encounter, initTrustEncounter);
 
   const need = currentNeed(state);
   const config = state.config;
