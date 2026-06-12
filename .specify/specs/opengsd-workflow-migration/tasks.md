@@ -29,8 +29,10 @@ parity is verified. `[x]` = done.
       → produces `priya-baseline.png` + `priya-baseline.a11y.json`.
 - [ ] Wire visual-diff into the `UI_COVENANT` loop (element=color, altitude=border,
       stage=density); demo: an intentional color change must surface a diff.
-- [ ] Add the MTGOA `verify:ui` npm script to the game package (lives on PR #91 /
-      `claude/sweet-hopper-hs4pw2`) so it ships with the app.
+- [x] Add the MTGOA `verify:ui` npm script to the game package
+      (`mtgoa-game/scripts/verify-ui.sh`: build → `vite preview` → GSD Browser
+      capture → teardown) so it ships with the app. *(awaits a Chrome-reachable
+      run to produce the first committed baseline.)*
 
 ## Phase 2 — GSD Pi pilot (parallel to bespoke; no removals)
 - [ ] `npx @opengsd/gsd-pi@latest`; complete setup; select LLM provider (default to
