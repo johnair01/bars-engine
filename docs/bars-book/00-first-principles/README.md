@@ -35,11 +35,17 @@ Dreams do not create shadows.
 
 Dreams illuminate shadows that were already present.
 
+Meaningful dreams naturally generate charge.
+
 ---
 
 ### The Shadow Dividend
 
 Every metabolized charge generates a BAR.
+
+Identified charge may itself be a BAR Seed.
+
+The shadow is where the BARs are.
 
 ---
 
@@ -66,6 +72,12 @@ Domains tell us where transformation happens.
 
 Moves tell us how transformation happens.
 
+Every meaningful domain requires all five moves.
+
+The weighting changes.
+
+The capacities do not.
+
 ---
 
 ### Recursive Transformation
@@ -81,6 +93,63 @@ BARs create wiser action.
 Action transforms reality.
 
 Reality generates new dreams.
+
+---
+
+### Recursive Development Principle
+
+Development does not occur by completing the Five Moves once.
+
+Development occurs by repeatedly applying the Five Moves at increasing levels of complexity.
+
+The Five Moves are how we spiral.
+
+The Game Masters are where we spiral.
+
+---
+
+### The Five Moves are Developmental Metabolism
+
+Open Up.
+Wake Up.
+Clean Up.
+Grow Up.
+Show Up.
+
+These are not categories.
+
+They are capacities.
+
+Together they metabolize charge into wisdom, action, relationship, and development.
+
+---
+
+### Orientation Over Information
+
+Humans do not primarily suffer from a lack of information.
+
+They suffer from a loss of orientation.
+
+BARs preserve orientation across time, complexity, transformation, and uncertainty.
+
+---
+
+### The Soul is a World
+
+The inner life behaves more like a world than a machine.
+
+It contains:
+
+- allies
+- daemons
+- quests
+- campaigns
+- landmarks
+- villages
+- talismans
+- maps
+
+BARs are artifacts of cartography.
 
 ---
 
