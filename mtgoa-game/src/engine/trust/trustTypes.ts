@@ -44,6 +44,8 @@ export interface EncounterConfig {
   /** The live need each turn. Length 1 = constant (L1). Longer = alternating. */
   needSequence: Element[];
   startingStress: number;
+  /** Shadows to dissolve before conversion. Defaults to TRUST_RULES (2). */
+  convertThreshold?: number;
   shadows: TrustShadow[];
   deck: TrustCard[];
   capstone: { title: string; body: string };
