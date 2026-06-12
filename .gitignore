@@ -54,7 +54,10 @@ yarn-error.log*
 
 # embedded repos (avoid accidental add)
 LibreSprite/
-.claude/
+# Keep Claude config local, but share the project SessionStart hook + settings.
+.claude/*
+!.claude/settings.json
+.claude/settings.local.json
 
 # typescript
 *.tsbuildinfo
@@ -96,3 +99,6 @@ chatgpt_repo_snapshot_*/
 /specify_specs_tree.txt
 /possible_backlog_files.txt
 /schema.prisma.copy.txt
+
+# GSD Browser visual-verification artifacts (commit curated baselines deliberately)
+.gsd-artifacts/
