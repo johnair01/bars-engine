@@ -26,11 +26,14 @@ optional enhancer, never a dependency.
 |-------|----------|
 | **Mechanism** | **Scripted-first / dual-track.** A pure `intakeReducer` state machine drives the six questions deterministically and emits an `IntakeConfig`. No LLM required to complete Applied Mode. |
 | **LLM role** | **Optional enhancer only.** When `aiEnabled()`, the existing `intakeStep()` may rephrase prompts / reflect answers back conversationally; on absence or failure it falls back to the scripted copy. Output contract (`IntakeConfig`) is identical either way. |
-| **Target engine** | **The trust/attune engine** (`engine/trust`), NOT the legacy channel engine. Intake synthesizes an `EncounterConfig`, so generated encounters are completable by construction. *(Decision to ratify — see Open Questions.)* |
+| **Target engine** | **The trust/attune engine** (`engine/trust`), NOT the legacy channel engine. Intake synthesizes an `EncounterConfig`, so generated encounters are completable by construction. *(Ratified 2026-06-12.)* |
 | **Reuse the screen** | Route the synthesized `EncounterConfig` straight into the existing `TrustEncounterScreen` (already accepts an `encounter` prop after the Boss Priya work). No new play UI. |
 | **Synthesis is pure + proven** | `buildEncounterFromIntake(config): EncounterConfig` is a pure function with a **completability sim test** proving *any* intake output yields a winnable encounter (smart + safe-floor policies), reusing the trust sim harness. |
-| **Dual-track gating** | Because intake no longer needs AI, **un-gate Applied Mode** in `ModeSelect` (today it's disabled unless `aiEnabled()`). Relabel the AI state as "enhanced" vs "scripted," not enabled vs disabled. |
-| **Phase placement** | Applied Mode: `mode-select → intake → (trust) encounter`. Superpower select is skipped in Applied Mode (the player authors the encounter, not a roster pick). *(Confirm — see Open Questions.)* |
+| **Dual-track gating** | Because intake no longer needs AI, **un-gate Applied Mode** in `ModeSelect` (today it's disabled unless `aiEnabled()`). Relabel the AI state as "enhanced" vs "scripted," not enabled vs disabled. **This deliberately overrides** the current documented stance in `intake.ts` and `ModeSelect.tsx` ("Applied Mode requires the AI backend; without it degrade to Character Select"). *(Ratified 2026-06-12.)* |
+| **Superpower select** | **Skipped** in Applied Mode — the player authors the encounter rather than picking a roster archetype. Flow: `mode-select → intake → (trust) encounter`. *(Ratified 2026-06-12.)* |
+| **Epiphany (Q5)** | Synthesized as a **hidden card revealed at conversion** (faithful to "hidden card" in `INTAKE_SYSTEM`), not capstone flavor. Requires a minimal engine addition: `hidden?: boolean` on `TrustCard` — omitted from the hand until `converted`, then surfaced as the root-realization beat. **Optional for the win**, so the completability proof is unaffected. *(Ratified 2026-06-12.)* |
+| **Need rhythm** | 2–3 stuck channels are **paired** (`[a,a,b,b,…]`, cap 3 distinct) to avoid the alternation softlock hit on Boss Priya; a single stuck channel is a constant L1-style need. *(Ratified 2026-06-12.)* |
+| **Target channel (Q2)** | Thematic/display only — the trust engine has no `targetChannel` field; needs come from `needSequence`. No mechanical role. |
 | **Compound emotions** | Q4 maps to `stuckChannels[]`, surfacing `COMPOUND_EMOTIONS` (Betrayal = Water+Fire, Shame = Water+Metal) so a single felt word can yield two stuck channels → two shadow channels. |
 
 ## Conceptual Model
@@ -103,12 +106,30 @@ Synthesis rules (completable by construction):
 - `shadows`: one per stuck channel (named from `forestSeeds` when available,
   else a default), each `channel` = that stuck channel.
 - `deck`: an `align` card per stuck channel (inner track) + the four standard
-  domain cards (outer track), `Direct Action` `herOnly`.
-- `capstone`: `{ title: milestoneTitle, body: milestoneBody }`; `epiphany` woven
-  into the conversion log / capstone body.
+  domain cards (outer track), `Direct Action` `herOnly`, **plus one `hidden`
+  `align` card carrying the `epiphany`** (revealed at conversion — see engine
+  note below).
+- `capstone`: `{ title: milestoneTitle, body: milestoneBody }`.
 - `startingStress`: derived from Q3 pressure (default `2`, clamped below
   `ruptureAt`).
 - `targetChannel`: thematic tone (display only; not mechanically enforced).
+
+### Engine addition: hidden card (minimal)
+
+```ts
+// engine/trust/trustTypes.ts — extend TrustCard
+export interface TrustCard {
+  // …existing fields…
+  /** Hidden from the playable hand until the NPC is converted, then revealed
+   *  as a root-realization beat. Optional for the win (does not gate capstone). */
+  hidden?: boolean;
+}
+```
+
+- `trustEngine.ts`: exclude `hidden` cards from the visible/playable hand while
+  `!converted`; surface them once `converted` flips true. No new win condition.
+- `TrustEncounterScreen.tsx`: render the revealed card with its epiphany text at
+  conversion.
 
 ### Optional LLM enhancer (unchanged contract)
 
@@ -145,8 +166,9 @@ and still completable.
 - **FR3**: Unit tests: six answers produce a fully-populated `IntakeConfig`; Q4 compound word (e.g. "betrayal") yields two stuck channels; `RESET` returns to step 0.
 
 ### Phase 2: Intake → encounter synthesis
-- **FR4**: `engine/intake/buildEncounter.ts` — `buildEncounterFromIntake` per synthesis rules; multi-channel needs are paired for rhythm.
-- **FR5**: `engine/intake/__tests__/intakeCompletability.sim.test.ts` — for a representative spread of intake outputs (1 stuck channel; 2 via compound; 3 distinct), the generated `EncounterConfig` is won by both the smart and safe-floor policies (reuse the trust sim harness), and both her-only/locked invariants hold.
+- **FR4a**: `engine/trust/trustTypes.ts` + `trustEngine.ts` — add optional `hidden?: boolean` to `TrustCard`; exclude hidden cards from the playable hand while `!converted`, reveal once `converted`. No new win condition. Existing trust suites stay green.
+- **FR4b**: `engine/intake/buildEncounter.ts` — `buildEncounterFromIntake` per synthesis rules; multi-channel needs are paired for rhythm (cap 3); emit one `hidden` `align` card carrying the `epiphany`.
+- **FR5**: `engine/intake/__tests__/intakeCompletability.sim.test.ts` — for a representative spread of intake outputs (1 stuck channel; 2 via compound; 3 distinct), the generated `EncounterConfig` is won by both the smart and safe-floor policies (reuse the trust sim harness); her-only/locked invariants hold; the hidden epiphany card is absent from the hand pre-conversion and present post-conversion, and is **not** required to win.
 
 ### Phase 3: IntakeConversation UI + wiring (dual-track)
 - **FR6**: `screens/IntakeConversation.tsx` — renders the current question, a free-text input, a running transcript, and a back/restart affordance; drives `intakeReducer`; on completion calls `buildEncounterFromIntake` and hands the `EncounterConfig` up.
@@ -181,7 +203,7 @@ and still completable.
   2. ModeSelect → **Applied Mode** is enabled (labelled "scripted").
   3. Answer all six questions; include a compound feeling word (e.g. "betrayal") at Q4.
   4. Confirm you land in a trust encounter whose **capstone title = your Q1 answer** and whose **shadows reflect Q4/Q6**, with two stuck channels from the compound word.
-  5. Play it to a win (the generated encounter is completable).
+  5. Play it to a win (the generated encounter is completable). At conversion, confirm the **hidden epiphany card (your Q5 answer)** is revealed.
   6. (Optional) Set `VITE_AI_ENDPOINT`, repeat, confirm prompts are conversational and the result is still completable.
 - **Automated proof**: `npm test` — `intakeCompletability.sim.test.ts` green (generated encounters winnable).
 
@@ -192,11 +214,12 @@ and still completable.
 - `mtgoa-game/src/screens/TrustEncounterScreen.tsx` (already takes an `encounter` prop)
 - `mtgoa-game/src/data/channels.ts` (`Element`, `COMPOUND_EMOTIONS`), `domains.ts` (`DomainName`)
 
-## Open Questions (ratify at review)
+## Ratified Decisions (2026-06-12)
 
-1. **Target engine** — confirm intake feeds the **trust/attune** engine (completable) and we do *not* wire it into the legacy channel NPC pipeline. (Strongly recommended; the channel engine is proven unwinnable.)
-2. **Superpower select in Applied Mode** — skip it (player authors the encounter) or keep it as a flavor pick before intake? Spec assumes **skip**.
-3. **Q4 → need rhythm** — for 2–3 stuck channels, pair them for rhythm (recommended). Single stuck channel → constant L1-style need. Confirm the cap (e.g. max 3 distinct needs).
+1. **Target engine** = trust/attune; do **not** wire intake into the legacy channel pipeline. ✅
+2. **Epiphany (Q5)** = hidden card revealed at conversion (minimal `hidden?` engine addition), not capstone flavor. ✅
+3. **Superpower select** = skipped in Applied Mode. ✅
+4. **Need rhythm** = paired (`[a,a,b,b,…]`), cap 3 distinct; single channel = constant. ✅
 
 ## References
 

@@ -37,12 +37,19 @@ language model to function. All work is under `mtgoa-game/`.
 
 ## Phase 2: Intake → encounter synthesis (pure, proven)
 
+### 2.0 Engine: hidden card (minimal)
+**Files**: `mtgoa-game/src/engine/trust/trustTypes.ts`, `trustEngine.ts`, `screens/TrustEncounterScreen.tsx`
+- Add `hidden?: boolean` to `TrustCard`.
+- In `trustEngine.ts`, filter `hidden` cards out of the visible/playable hand while `!converted`; include them once `converted` is true. No change to the win condition (`converted && allDomainsTouched && capstone`).
+- `TrustEncounterScreen` renders the revealed card (epiphany text) at conversion.
+- Re-run existing `level1`/`boss` sim suites — must stay green (hidden card is additive/optional).
+
 ### 2.1 Builder
 **File**: `mtgoa-game/src/engine/intake/buildEncounter.ts` (new)
 - `buildEncounterFromIntake(config): EncounterConfig`.
 - `needSequence`: dedupe `stuckChannels`; if length ≥ 2, expand to **paired** rhythm `[a,a,b,b,...]`; cap distinct needs at 3.
-- `shadows`: one per stuck channel; `name`/`text` from `forestSeeds[i]` when present, else default copy; `channel` = stuck channel. Ensure ≥ 2 shadows so conversion threshold (2) is reachable — if only one stuck channel, emit 2 shadows on that channel.
-- `deck`: `align` card per distinct stuck channel + the four standard domain cards (`Direct Action` `herOnly`). Reuse domain copy from the Priya exemplars.
+- `shadows`: one per stuck channel; `name`/`text` from `forestSeeds[i]` when present, else default copy; `channel` = stuck channel. Ensure ≥ 2 shadows so conversion threshold (`R.shadow.convertThreshold`) is reachable — if only one stuck channel, emit 2 shadows on that channel.
+- `deck`: `align` card per distinct stuck channel + the four standard domain cards (`Direct Action` `herOnly`) + **one `hidden` `align` card carrying the `epiphany`** (id `align-epiphany`, channel = first stuck channel). Reuse domain copy from the Priya exemplars.
 - `capstone`: `{ title: milestoneTitle, body: milestoneBody }`.
 - `startingStress`: map Q3 pressure → `2` default, clamp `< RULES.stress.ruptureAt`.
 - `npcId: "applied-<slug>"`, `npcName`: derived or "Your Encounter"; `level: 1`.
@@ -51,7 +58,7 @@ language model to function. All work is under `mtgoa-game/`.
 **File**: `mtgoa-game/src/engine/intake/__tests__/intakeCompletability.sim.test.ts` (new)
 - Import the smart + safe-floor policies (lift the shared policy/`run` helper out of `trust/__tests__` into a tiny test util, or re-declare locally to avoid touching shipped trust tests).
 - Fixtures: intake configs with 1, 2 (compound), and 3 distinct stuck channels.
-- Assert each generated `EncounterConfig`: smart policy → `win`; safe-floor → `win`; her-only domain locked pre-conversion; careful reader never exceeds starting stress.
+- Assert each generated `EncounterConfig`: smart policy → `win`; safe-floor → `win`; her-only domain locked pre-conversion; careful reader never exceeds starting stress; hidden epiphany card absent from hand pre-conversion, present post-conversion, and not required to win.
 
 ## Phase 3: IntakeConversation UI + wiring (dual-track)
 
@@ -81,12 +88,15 @@ language model to function. All work is under `mtgoa-game/`.
 
 | Action | Path |
 |--------|------|
+| Modify | `mtgoa-game/src/engine/trust/trustTypes.ts` (add `hidden?`) |
+| Modify | `mtgoa-game/src/engine/trust/trustEngine.ts` (hide until converted) |
 | Create | `mtgoa-game/src/engine/intake/intakeMachine.ts` |
 | Create | `mtgoa-game/src/engine/intake/matchElement.ts` |
 | Create | `mtgoa-game/src/engine/intake/buildEncounter.ts` |
 | Create | `mtgoa-game/src/engine/intake/__tests__/intakeMachine.test.ts` |
 | Create | `mtgoa-game/src/engine/intake/__tests__/intakeCompletability.sim.test.ts` |
 | Create | `mtgoa-game/src/screens/IntakeConversation.tsx` |
+| Modify | `mtgoa-game/src/screens/TrustEncounterScreen.tsx` (reveal hidden card at conversion) |
 | Modify | `mtgoa-game/src/App.tsx` |
 | Modify | `mtgoa-game/src/screens/ModeSelect.tsx` |
 | Modify | `mtgoa-game/.env.example` (document VITE_AI_ENDPOINT as optional enhancer) |

@@ -10,9 +10,11 @@
 
 ## Phase 2: Intake → encounter synthesis (pure, proven)
 
+- [ ] Add `hidden?: boolean` to `TrustCard` in `src/engine/trust/trustTypes.ts`; in `trustEngine.ts` hide such cards from the playable hand until `converted`, reveal after. Confirm existing `level1`/`boss` sim suites stay green.
+- [ ] Surface the revealed hidden card (epiphany text) at conversion in `src/screens/TrustEncounterScreen.tsx`.
 - [ ] Extract smart/safe-floor policies + `run` helper into `src/engine/trust/simPolicies.ts`; update `trust/__tests__/*.sim.test.ts` to import them (no behavior change).
-- [ ] Create `src/engine/intake/buildEncounter.ts` — `buildEncounterFromIntake(config)` per synthesis rules (paired needs, ≥2 shadows, align+domain deck, capstone, clamped stress).
-- [ ] Create `src/engine/intake/__tests__/intakeCompletability.sim.test.ts` — 1 / 2-compound / 3 stuck-channel fixtures; smart win, safe-floor win, her-only locked pre-conversion, no forced stress.
+- [ ] Create `src/engine/intake/buildEncounter.ts` — `buildEncounterFromIntake(config)` per synthesis rules (paired needs cap 3, ≥2 shadows, align+domain deck, hidden `align-epiphany` card, capstone, clamped stress).
+- [ ] Create `src/engine/intake/__tests__/intakeCompletability.sim.test.ts` — 1 / 2-compound / 3 stuck-channel fixtures; smart win, safe-floor win, her-only locked pre-conversion, no forced stress, hidden epiphany card absent pre-conversion / present post-conversion / not required to win.
 
 ## Phase 3: IntakeConversation UI + wiring (dual-track)
 
