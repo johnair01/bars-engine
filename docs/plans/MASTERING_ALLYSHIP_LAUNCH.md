@@ -61,9 +61,29 @@ Script: `scripts/export-oracle-deck-pdf.ts`.
 **Next (B2):** apply per-card `crop` metadata; card-back sheet; per-card PNG export
 + zip for The Game Crafter / MPC; cut/safe guides.
 
-### Track A — Commerce spine (THE engineering blocker) — NOT STARTED
-The "buy on Gumroad → unlock app goodies" flow. **Decision (see below):
-redesign, don't reuse `RedemptionPack`.** Until shipped, fulfillment is manual.
+### Track A — Commerce spine — v1 SHIPPED (code), DEPLOY PENDING
+The "buy on Gumroad → unlock app goodies" flow. Built **additively** (the dead
+`RedemptionPack` is left untouched — removable later):
+- **Schema + migration:** `Entitlement` + `RedemptionCode`
+  (`prisma/migrations/20260612230000_add_entitlement_redemption_code/`) — two
+  new tables + one FK to `players`, **no drops/alters** (non-destructive).
+- **Grant config:** `src/lib/launch/grants.ts` — SKU → grant type/duration +
+  bundled capabilities (book-digital ⇒ 30-day `app-access`; game-subscription ⇒
+  app-access + book + deck; founding-ally ⇒ lifetime app-access + deck).
+- **Service:** `src/lib/entitlements/service.ts` — `mintRedemptionCode`,
+  `redeemCode` (atomic, idempotent), `grantEntitlement`, `getActiveEntitlements`,
+  `hasCapability` / `hasAppAccess`.
+- **Actions:** `src/actions/entitlements.ts` — `redeemLaunchCode` (buyer),
+  `mintLaunchCode` (admin, week-one manual fulfillment).
+- **UI:** `/redeem` page + form (auth-aware, `?code=` prefill).
+
+**Deploy step (needs a DB — run in an env with `DATABASE_URL`):**
+`npx prisma migrate deploy` → `npm run db:record-schema-hash`.
+
+**Track A remaining:** Gumroad webhook → `mintRedemptionCode` (auto-mint on sale)
++ delivery of the code/link to buyers; wire `hasCapability`/`hasAppAccess` gates
+into the app's paid surfaces (game/deck/handbook reading); admin mint UI; later,
+remove the `RedemptionPack` scaffold in a deliberate cleanup.
 
 ### Track C — Book + RPG handbook deliverables — NOT STARTED
 Polish `.specify/books/book-mtgoa.txt` → digital book (PDF/EPUB); compile the
