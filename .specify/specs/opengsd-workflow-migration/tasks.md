@@ -10,18 +10,27 @@ parity is verified. `[x]` = done.
 - [ ] Owner confirms scope/sequencing of this spec.
 
 ## Phase 1 — GSD Browser (net-new, no risk to existing flows)
-- [ ] Provision headless Chromium for the runtime(s) that will run it:
-      `npx playwright install --with-deps chromium` (or distro chromium), wired
-      into a session-start / CI setup step.
-- [ ] `GSD_BROWSER_DEBUG=1 gsd-browser navigate https://example.com` — confirm the
-      daemon starts once Chromium is present.
-- [ ] Boot the MTGOA app (`cd mtgoa-game && npm run dev`) and capture a baseline:
-      `gsd-browser navigate http://localhost:5173/#l1-priya`
-      `gsd-browser screenshot --out .gsd-artifacts/priya-baseline.png`
-      `gsd-browser accessibility-tree --out .gsd-artifacts/priya-a11y.json`
-- [ ] Add `verify:ui` npm script (boot app → capture → diff).
+- [x] Provisioning script + browser resolution: `scripts/setup-gsd-browser.sh`
+      (`resolve` / `--install` / `--check`); resolves macOS Chrome, real Linux
+      binaries, or Playwright Chromium; `GSD_CHROME_PATH` override.
+- [x] SessionStart hook (`.claude/settings.json`) runs `--check` — fast, non-fatal
+      browser-readiness status on every web/CLI session.
+- [x] Generic capture script: `scripts/gsd-ui-verify.sh <url> [out] [name]`
+      (navigate → full-page PNG → accessibility-tree JSON).
+- [ ] **BLOCKED in sandbox — egress policy.** Chromium cannot be installed here:
+      `cdn.playwright.dev`, `dl.google.com`, `storage.googleapis.com` all return
+      `host_not_allowed`; Ubuntu Noble `chromium-browser` is a snap shim (won't run
+      headless). **To unblock:** allowlist `cdn.playwright.dev` in the env's network
+      egress (then `scripts/setup-gsd-browser.sh --install`), OR run the capture on a
+      machine with Chrome (e.g. macOS) where `setup-gsd-browser.sh` auto-resolves it.
+- [ ] Capture the MTGOA baseline (run where Chrome is available):
+      `cd mtgoa-game && npm run dev` then
+      `scripts/gsd-ui-verify.sh http://localhost:5173/#l1-priya .gsd-artifacts priya-baseline`
+      → produces `priya-baseline.png` + `priya-baseline.a11y.json`.
 - [ ] Wire visual-diff into the `UI_COVENANT` loop (element=color, altitude=border,
       stage=density); demo: an intentional color change must surface a diff.
+- [ ] Add the MTGOA `verify:ui` npm script to the game package (lives on PR #91 /
+      `claude/sweet-hopper-hs4pw2`) so it ships with the app.
 
 ## Phase 2 — GSD Pi pilot (parallel to bespoke; no removals)
 - [ ] `npx @opengsd/gsd-pi@latest`; complete setup; select LLM provider (default to

@@ -96,3 +96,6 @@ chatgpt_repo_snapshot_*/
 /specify_specs_tree.txt
 /possible_backlog_files.txt
 /schema.prisma.copy.txt
+
+# GSD Browser visual-verification artifacts (commit curated baselines deliberately)
+.gsd-artifacts/
