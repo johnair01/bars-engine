@@ -27,7 +27,8 @@ interface Props {
 export function DomainScreen({ state, dispatch }: Props) {
   if (!state.npc) return null;
   const dysregulated = state.playerStress >= RULES.stress.dysregulationThreshold;
-  const counterableNames = state.activeShadows.map((s) => s.counter);
+  // A card counters a board shadow when card.counters === that shadow's name.
+  const counterableNames = state.activeShadows.map((s) => s.name);
   const pendingShadows = activeShadowCount(state.npcStress);
 
   return (
