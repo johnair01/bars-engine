@@ -7,7 +7,7 @@
  * it on TrustEncounterScreen — superpower select is skipped (the player authors
  * the encounter). Character Select keeps the legacy channel-engine loop.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useGame } from "@/hooks/useGame";
 import { ModeSelect } from "@/screens/ModeSelect";
@@ -38,6 +38,21 @@ export default function App() {
           : null
       : null;
   const [trustProto, setTrustProto] = useState(initialProto);
+
+  // Deep links for preview deploys (e.g. Vercel branch previews): `#applied`
+  // (alias `#intake`) jumps straight into Applied Mode intake. The prototype
+  // hashes above (`#l1-priya`, `#boss-priya`) are handled separately, at mount.
+  useEffect(() => {
+    const enterFromHash = () => {
+      const hash = window.location.hash;
+      if ((hash === "#applied" || hash === "#intake") && state.mode !== "applied") {
+        dispatch({ type: "SELECT_MODE", mode: "applied" });
+      }
+    };
+    enterFromHash();
+    window.addEventListener("hashchange", enterFromHash);
+    return () => window.removeEventListener("hashchange", enterFromHash);
+  }, [state.mode, dispatch]);
 
   if (trustProto) {
     return (
