@@ -60,6 +60,31 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         </Link>
                     </>
                 )}
+                {!isAuthenticated && (
+                    <>
+                        <Link
+                            href="/pricing"
+                            title="The book, the deck, and the game — start here."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/pricing')}`}
+                        >
+                            START
+                        </Link>
+                        <Link
+                            href="/handbook"
+                            title="Read the front of the book, phone-first. Free."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/handbook')}`}
+                        >
+                            BOOK
+                        </Link>
+                        <Link
+                            href="/play/"
+                            title="Play the allyship engine in your browser. No account needed."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/play')}`}
+                        >
+                            PLAY
+                        </Link>
+                    </>
+                )}
                 {isAdmin && (
                     <Link href="/admin" className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/admin')}`}>
                         CONTROL
