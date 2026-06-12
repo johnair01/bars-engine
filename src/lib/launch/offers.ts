@@ -102,7 +102,9 @@ export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
   {
     key: 'book-digital',
     name: 'Mastering Allyship — Digital',
-    blurb: 'The book, instantly. Pay what feels right — $15 is the suggested seed.',
+    blurb:
+      'The book, instantly — and a 30-day key into the app to play what you read. Pay what feels right; $15 is the suggested seed.',
+    includes: ['The digital book', '30 days of app access'],
     group: 'digital',
     priceCents: 1500,
     pwyw: true,
