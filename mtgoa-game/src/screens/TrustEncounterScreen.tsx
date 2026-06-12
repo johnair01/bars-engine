@@ -26,6 +26,7 @@ import {
   currentNeed,
   initTrustEncounter,
   trustReducer,
+  visibleHand,
 } from "@/engine/trust/trustEngine";
 
 interface Props {
@@ -205,7 +206,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
           </Button>
         </div>
         <div className="flex flex-wrap gap-3">
-          {config.deck.map((card) => {
+          {visibleHand(state).map((card) => {
             const isAlign = card.kind === "align";
             const aligned = isAlign && state.needRevealed && card.channel === need;
             const touched = !isAlign && !!card.domain && state.domainsTouched.includes(card.domain);
@@ -217,7 +218,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
                 onClick={() => dispatch({ type: "PLAY", cardId: card.id })}
                 className={cn(
                   "flex w-44 flex-col gap-1 rounded-card border bg-card p-3 text-left transition-colors hover:bg-surf disabled:opacity-40 disabled:hover:bg-card",
-                  channelClass[card.channel].border,
+                  card.hidden ? "border-accent ring-1 ring-accent" : channelClass[card.channel].border,
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -226,7 +227,11 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
                 </div>
                 <p className="text-[11px] text-dim">{card.text}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
+                  {card.hidden ? (
+                    <Badge className="bg-accent/20 text-accent">revealed · root realization</Badge>
+                  ) : (
+                    <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
+                  )}
                   {aligned && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
                   {touched && <Badge className="bg-accent/20 text-accent">engaged</Badge>}
                   {locked && <Badge className="bg-surf text-muted">her-only</Badge>}

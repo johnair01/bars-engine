@@ -11,67 +11,9 @@
 import { describe, expect, it } from "vitest";
 
 import { LEVEL1_PRIYA } from "../level1Priya";
-import { TRUST_RULES as R } from "../trustRules";
 import type { EncounterConfig } from "../trustTypes";
-import {
-  allDomainsTouched,
-  currentNeed,
-  initTrustEncounter,
-  trustReducer,
-  type TrustAction,
-  type TrustState,
-} from "../trustEngine";
-
-const TURN_CAP = 60;
-
-type Policy = (s: TrustState) => TrustAction | null;
-
-function run(config: EncounterConfig, policy: Policy) {
-  let s = initTrustEncounter(config);
-  let guard = 0;
-  while (s.result === null && guard < TURN_CAP) {
-    const action = policy(s);
-    if (!action) break;
-    s = trustReducer(s, action);
-    guard += 1;
-  }
-  return s;
-}
-
-/** Convert first (align → dissolve ×2), then engage all four domains, then capstone. */
-const smartPolicy: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  if (!s.converted) {
-    if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0) {
-      return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-    }
-    const need = currentNeed(s);
-    const aligner = s.config.deck.find((c) => c.kind === "align" && c.channel === need);
-    return aligner ? { type: "PLAY", cardId: aligner.id } : { type: "BASIC" };
-  }
-  const domain = s.config.deck.find(
-    (c) => c.kind === "domain" && c.domain && !s.domainsTouched.includes(c.domain),
-  );
-  return domain ? { type: "PLAY", cardId: domain.id } : null;
-};
-
-/** Never plays an align card — only attunes and "shows up honestly" to bank trust.
- *  Proves the floor: even a player with no good cards still completes. */
-const safeFloorPolicy: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  if (!s.converted) {
-    if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0) {
-      return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-    }
-    return { type: "BASIC" };
-  }
-  const domain = s.config.deck.find(
-    (c) => c.kind === "domain" && c.domain && !s.domainsTouched.includes(c.domain),
-  );
-  return domain ? { type: "PLAY", cardId: domain.id } : null;
-};
+import { initTrustEncounter, trustReducer } from "../trustEngine";
+import { run, smartPolicy, safeFloorPolicy, TURN_CAP } from "../simPolicies";
 
 describe("trust engine — Level-1 Priya completability", () => {
   it("smart play reaches a win", () => {
