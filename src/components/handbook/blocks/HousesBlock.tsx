@@ -1,13 +1,22 @@
 "use client";
 
 import { COLOR, FONT } from "@/lib/handbook/tokens";
+import type { AllyshipDomainKey } from "@/lib/allyship-domains";
 
 // Canonical House copy — static block; the only data is the player's choice.
-export const HOUSES: { name: string; domain: string; question: string; accent: string; domainColor: string }[] = [
-  { name: "Provisioners", domain: "GATHER RESOURCES", question: "“What is actually depleted?”", accent: COLOR.provisioners, domainColor: "#c08a5a" },
-  { name: "Weavers", domain: "SKILLFUL ORGANIZING", question: "“What structure lets work continue?”", accent: COLOR.weavers, domainColor: "#c8975a" },
-  { name: "Linekeepers", domain: "DIRECT ACTION", question: "“What line must be drawn?”", accent: COLOR.linekeepers, domainColor: "#d06a52" },
-  { name: "Lanternbearers", domain: "RAISE AWARENESS", question: "“What truth must become visible?”", accent: COLOR.lanternbearers, domainColor: COLOR.gold },
+// Each House maps 1:1 onto an allyship domain (the domain caption is its label).
+export const HOUSES: {
+  name: string;
+  domain: string;
+  domainKey: AllyshipDomainKey;
+  question: string;
+  accent: string;
+  domainColor: string;
+}[] = [
+  { name: "Provisioners", domain: "GATHER RESOURCES", domainKey: "GATHERING_RESOURCES", question: "“What is actually depleted?”", accent: COLOR.provisioners, domainColor: "#c08a5a" },
+  { name: "Weavers", domain: "SKILLFUL ORGANIZING", domainKey: "SKILLFUL_ORGANIZING", question: "“What structure lets work continue?”", accent: COLOR.weavers, domainColor: "#c8975a" },
+  { name: "Linekeepers", domain: "DIRECT ACTION", domainKey: "DIRECT_ACTION", question: "“What line must be drawn?”", accent: COLOR.linekeepers, domainColor: "#d06a52" },
+  { name: "Lanternbearers", domain: "RAISE AWARENESS", domainKey: "RAISE_AWARENESS", question: "“What truth must become visible?”", accent: COLOR.lanternbearers, domainColor: COLOR.gold },
 ];
 
 export function HousesBlock({

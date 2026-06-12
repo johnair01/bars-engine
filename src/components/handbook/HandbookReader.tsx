@@ -5,13 +5,14 @@ import { COLOR, FONT } from "@/lib/handbook/tokens";
 import { SEAL, SPREAD_ART } from "@/lib/handbook/assets";
 import type { Block, Chapter } from "@/lib/handbook/content";
 import { createHandbookBar } from "@/actions/handbook-bar";
+import { addCampaignDomainPreference } from "@/actions/campaign-domain-preference";
 import { HeroBlock } from "@/components/handbook/blocks/HeroBlock";
 import { ProseBlock } from "@/components/handbook/blocks/ProseBlock";
 import { PullquoteBlock } from "@/components/handbook/blocks/PullquoteBlock";
 import { LetterBlock } from "@/components/handbook/blocks/LetterBlock";
 import { MovesBlock } from "@/components/handbook/blocks/MovesBlock";
 import { HandlesBlock } from "@/components/handbook/blocks/HandlesBlock";
-import { HousesBlock } from "@/components/handbook/blocks/HousesBlock";
+import { HousesBlock, HOUSES } from "@/components/handbook/blocks/HousesBlock";
 import { RollBlock, type DiceResult } from "@/components/handbook/blocks/RollBlock";
 import { BarPromptBlock } from "@/components/handbook/blocks/BarPromptBlock";
 import { NationsBlock } from "@/components/handbook/blocks/NationsBlock";
@@ -98,15 +99,23 @@ export function HandbookReader({ chapterId }: { chapterId: string }) {
     return () => body.removeEventListener("scroll", onScroll);
   }, [chapter]);
 
-  // HOOK A — House select. Persists to the player's identity once available;
-  // localStorage is the fallback for logged-out readers (and until a House
-  // field exists on the player record).
+  // HOOK A — House select. Records the player's allyship domain on their
+  // identity (campaignDomainPreference), added non-destructively so it doesn't
+  // clobber any domains they curated in the Market. localStorage mirrors the
+  // reader's own choice and is the fallback for logged-out readers.
   const pickHouse = useCallback((name: string) => {
     setHouse(name);
     try {
       localStorage.setItem(LS_HOUSE, name);
     } catch {
       /* ignore */
+    }
+    const domainKey = HOUSES.find((h) => h.name === name)?.domainKey;
+    if (domainKey) {
+      // Fire-and-forget: the localStorage write above already reflects the UI.
+      void addCampaignDomainPreference(domainKey).catch(() => {
+        /* logged-out / transient — localStorage fallback stands */
+      });
     }
   }, []);
 
