@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg text-text antialiased;
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+      Arial, sans-serif;
+  }
+}
+
+@layer components {
+  /* Uppercase micro-label used on tags/meta. Mirrors tokens.typography.label. */
+  .ds-label {
+    @apply text-[10px] font-semibold uppercase tracking-label;
+  }
+}
