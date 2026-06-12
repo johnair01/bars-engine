@@ -54,7 +54,10 @@ yarn-error.log*
 
 # embedded repos (avoid accidental add)
 LibreSprite/
-.claude/
+# .claude/ is local-only EXCEPT the shared project settings + committed hooks
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 
 # typescript
 *.tsbuildinfo
