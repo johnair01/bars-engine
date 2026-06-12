@@ -1,12 +1,12 @@
 #!/bin/bash
-# SessionStart hook — bridge committed "run" skills into the path the `run` skill
-# auto-discovers. The run skill greps .claude/skills/*/SKILL.md, but this repo
-# gitignores .claude/ and keeps committed skills in .agents/skills/. Without this
-# bridge, run-* skills (e.g. run-mtgoa-game) are invisible to that discovery.
+# SessionStart hook — mirror every committed skill into the path Claude Code
+# discovers skills from. Committed skills live in .agents/skills/, but this repo
+# gitignores .claude/, so none of them are visible to skill discovery. This hook
+# symlinks each .agents/skills/<name> into .claude/skills/<name>.
 #
-# Scope: only `.agents/skills/run-*` — surfacing run-skills, NOT registering every
-# reference-doc skill as invocable. Idempotent; only manages symlinks it owns and
-# never clobbers a real file/dir.
+# Full mirror: ALL skills (run-* and the reference-doc skills alike). Idempotent;
+# only manages symlinks it owns, never clobbers a real file/dir, and prunes its
+# own stale symlinks whose source skill has been removed.
 set -euo pipefail
 
 root="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
@@ -17,7 +17,9 @@ dst="$root/.claude/skills"
 mkdir -p "$dst"
 
 shopt -s nullglob
-for d in "$src"/run-*/; do
+
+# Mirror every skill dir.
+for d in "$src"/*/; do
   name="$(basename "$d")"
   link="$dst/$name"
   if [ -L "$link" ]; then
@@ -27,6 +29,15 @@ for d in "$src"/run-*/; do
   else
     ln -s "${d%/}" "$link"
   fi
+done
+
+# Prune symlinks we own that point into .agents/skills but whose source is gone.
+for link in "$dst"/*; do
+  [ -L "$link" ] || continue
+  target="$(readlink "$link")"
+  case "$target" in
+    "$src"/*) [ -e "$link" ] || rm -f "$link" ;;
+  esac
 done
 
 exit 0
