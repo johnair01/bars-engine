@@ -32,6 +32,7 @@ import {
   currentNeed,
   initTrustEncounter,
   trustReducer,
+  visibleHand,
 } from "@/engine/trust/trustEngine";
 
 const RUNGS: { label: string; config: EncounterConfig }[] = [
@@ -42,24 +43,9 @@ const RUNGS: { label: string; config: EncounterConfig }[] = [
 
 interface Props {
   onExit: () => void;
-  /** Which encounter to open on. Defaults to L1; pass L2/Boss to start higher.
-   *  The in-screen switcher can move between rungs regardless. */
+  /** Which encounter to run. Defaults to the Level-1 tutorial; pass BOSS_PRIYA
+   *  for the full-difficulty fight. The screen is config-agnostic. */
   encounter?: EncounterConfig;
-}
-
-/** Wrapper: owns rung selection; re-mounts the game (fresh reducer) on switch. */
-export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props) {
-  const start = Math.max(0, RUNGS.findIndex((r) => r.config === encounter));
-  const [rungIdx, setRungIdx] = useState(start);
-  return (
-    <TrustGame
-      key={rungIdx}
-      config={RUNGS[rungIdx].config}
-      rungIdx={rungIdx}
-      onPickRung={setRungIdx}
-      onExit={onExit}
-    />
-  );
 }
 
 /** A simple labelled value meter (trust has no fixed max; stress caps at rupture). */
@@ -78,26 +64,8 @@ function Meter({ label, value, max, tone }: { label: string; value: number; max:
   );
 }
 
-function RungSwitcher({ rungIdx, onPickRung }: { rungIdx: number; onPickRung: (i: number) => void }) {
-  return (
-    <div className="flex gap-1">
-      {RUNGS.map((r, i) => (
-        <Button key={r.label} size="sm" variant={i === rungIdx ? "default" : "outline"} onClick={() => onPickRung(i)}>
-          {r.label}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-interface GameProps extends Props {
-  config: EncounterConfig;
-  rungIdx: number;
-  onPickRung: (i: number) => void;
-}
-
-function TrustGame({ config, rungIdx, onPickRung, onExit }: GameProps) {
-  const [state, dispatch] = useReducer(trustReducer, config, initTrustEncounter);
+export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props) {
+  const [state, dispatch] = useReducer(trustReducer, encounter, initTrustEncounter);
 
   const need = currentNeed(state);
   const threshold = convertThreshold(config);
@@ -255,7 +223,7 @@ function TrustGame({ config, rungIdx, onPickRung, onExit }: GameProps) {
           </Button>
         </div>
         <div className="flex flex-wrap gap-3">
-          {config.deck.map((card) => {
+          {visibleHand(state).map((card) => {
             const isAlign = card.kind === "align";
             const matches = isAlign && card.channel === need;
             const touched = !isAlign && !!card.domain && state.domainsTouched.includes(card.domain);
@@ -267,7 +235,7 @@ function TrustGame({ config, rungIdx, onPickRung, onExit }: GameProps) {
                 onClick={() => dispatch({ type: "PLAY", cardId: card.id })}
                 className={cn(
                   "flex w-44 flex-col gap-1 rounded-card border bg-card p-3 text-left transition-colors hover:bg-surf disabled:opacity-40 disabled:hover:bg-card",
-                  channelClass[card.channel].border,
+                  card.hidden ? "border-accent ring-1 ring-accent" : channelClass[card.channel].border,
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -276,8 +244,12 @@ function TrustGame({ config, rungIdx, onPickRung, onExit }: GameProps) {
                 </div>
                 <p className="text-[11px] text-dim">{card.text}</p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
-                  {isAlign && state.needRevealed && matches && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
+                  {card.hidden ? (
+                    <Badge className="bg-accent/20 text-accent">revealed · root realization</Badge>
+                  ) : (
+                    <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
+                  )}
+                  {aligned && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
                   {touched && <Badge className="bg-accent/20 text-accent">engaged</Badge>}
                   {locked && <Badge className="bg-surf text-muted">her-only</Badge>}
                 </div>

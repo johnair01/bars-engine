@@ -26,7 +26,7 @@ import type { EncounterConfig } from "./trustTypes";
 export const BOSS_PRIYA: EncounterConfig = {
   npcId: "npc-008",
   npcName: "Priya",
-  level: 3,
+  level: 2,
   // Full boss: a moving need. Paired so each channel gets a read-beat and a
   // respond-beat. Cycles Water → Fire → Metal — grief, suppressed anger, the
   // need to keep control — and repeats.

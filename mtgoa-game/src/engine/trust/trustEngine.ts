@@ -17,7 +17,7 @@
 import type { Element } from "@/data/channels";
 import { DOMAIN_NAMES, type DomainName } from "@/data/domains";
 import { TRUST_RULES as R } from "./trustRules";
-import type { EncounterConfig, TrustShadow } from "./trustTypes";
+import type { EncounterConfig, TrustCard, TrustShadow } from "./trustTypes";
 
 export type TrustResult = "win" | "loss-rupture" | null;
 
@@ -55,9 +55,10 @@ export function allDomainsTouched(state: TrustState): boolean {
   return DOMAIN_NAMES.every((d) => state.domainsTouched.includes(d));
 }
 
-/** Shadows to dissolve before she converts — per-level, falling back to the rule. */
-export function convertThreshold(config: EncounterConfig): number {
-  return config.convertThreshold ?? R.shadow.convertThreshold;
+/** The cards currently in the playable hand. `hidden` cards (the epiphany) stay
+ *  out of hand until the NPC is converted, then surface as the revealed beat. */
+export function visibleHand(state: TrustState): TrustCard[] {
+  return state.config.deck.filter((c) => !c.hidden || state.converted);
 }
 
 export function initTrustEncounter(config: EncounterConfig): TrustState {
@@ -120,6 +121,11 @@ export function trustReducer(state: TrustState, action: TrustAction): TrustState
     case "PLAY": {
       const card = state.config.deck.find((c) => c.id === action.cardId);
       if (!card) return state;
+
+      // Hidden cards (the epiphany) haven't surfaced until she's converted.
+      if (card.hidden && !state.converted) {
+        return { ...state, log: logLine(state, `${card.name} hasn't surfaced yet.`) };
+      }
 
       if (card.kind === "align") {
         const need = currentNeed(state);

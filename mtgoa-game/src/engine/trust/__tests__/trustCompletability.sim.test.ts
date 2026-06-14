@@ -15,76 +15,9 @@
 import { describe, expect, it } from "vitest";
 
 import { LEVEL1_PRIYA } from "../level1Priya";
-import { LEVEL2_PRIYA } from "../level2Priya";
-import { TRUST_RULES as R } from "../trustRules";
 import type { EncounterConfig } from "../trustTypes";
-import {
-  allDomainsTouched,
-  convertThreshold,
-  currentNeed,
-  initTrustEncounter,
-  trustReducer,
-  type TrustAction,
-  type TrustState,
-} from "../trustEngine";
-
-const TURN_CAP = 160;
-
-type Policy = (s: TrustState) => TrustAction | null;
-
-function run(config: EncounterConfig, policy: Policy) {
-  let s = initTrustEncounter(config);
-  let guard = 0;
-  while (s.result === null && guard < TURN_CAP) {
-    const action = policy(s);
-    if (!action) break;
-    s = trustReducer(s, action);
-    guard += 1;
-  }
-  return s;
-}
-
-const matchingAligner = (s: TrustState) => {
-  const need = currentNeed(s);
-  return s.config.deck.find((c) => c.kind === "align" && c.channel === need);
-};
-const untouchedDomain = (s: TrustState) =>
-  s.config.deck.find((c) => c.kind === "domain" && c.domain && !s.domainsTouched.includes(c.domain));
-const canConvert = (s: TrustState) => s.dissolvedShadowIds.length < convertThreshold(s.config);
-
-/** Novice: read the beat (attune), then meet it; dissolve when affordable. */
-const novice: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (s.converted) return untouchedDomain(s) ? { type: "PLAY", cardId: untouchedDomain(s)!.id } : null;
-  if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0 && canConvert(s)) {
-    return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-  }
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  const aligner = matchingAligner(s);
-  return aligner ? { type: "PLAY", cardId: aligner.id } : { type: "BASIC" };
-};
-
-/** Expert: never attunes — meets each beat's need straight from the rhythm. */
-const expert: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (s.converted) return untouchedDomain(s) ? { type: "PLAY", cardId: untouchedDomain(s)!.id } : null;
-  if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0 && canConvert(s)) {
-    return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-  }
-  const aligner = matchingAligner(s);
-  return aligner ? { type: "PLAY", cardId: aligner.id } : null;
-};
-
-/** Floor: no align cards — only attune + "show up honestly" to bank trust. */
-const floor: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (s.converted) return untouchedDomain(s) ? { type: "PLAY", cardId: untouchedDomain(s)!.id } : null;
-  if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0 && canConvert(s)) {
-    return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-  }
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  return { type: "BASIC" };
-};
+import { initTrustEncounter, trustReducer } from "../trustEngine";
+import { run, smartPolicy, safeFloorPolicy, TURN_CAP } from "../simPolicies";
 
 const LEVELS = [
   { name: "L1 (fixed need)", config: LEVEL1_PRIYA },
