@@ -177,14 +177,23 @@ Five products. **Repo reality (verified):** `src/lib/marketing/products.ts` has 
 **Book / Deck / Game** and **no prices** — everything reads "Free." So prices must be
 **set**, and the RPG Book + pins must be **added** to the catalog.
 
-| Item | In catalog? | Draft price (host to confirm) |
+**Confirmed prices (host, 2026-06-14):**
+
+| Item | In catalog? | Price |
 |---|---|---|
-| The Book — *Mastering the Game of Allyship* | ✅ "The Book" | **$30** (pre-order, in hands end of July) |
-| The Roleplaying Game Book | ❌ add | **$40** |
-| The Deck (scene cards) | ✅ "The Deck" | **$25** |
-| Igniting Joy (the app/game) | ✅ "The Game" (rename) | **$5/mo or $50 lifetime** |
-| Allyship enamel pins | ❌ add | **$12 ea / 3 for $30** |
-| Founder bundle (all) | — | **$99** (hero unit) |
+| The Book — *Mastering the Game of Allyship* — digital | ✅ "The Book" | **$15** |
+| The Book — physical (pre-order, in hands end of July) | ✅ | **$25** |
+| The Roleplaying Game Book — physical | ❌ add | **$49** |
+| The Roleplaying Game Book — digital | ❌ add | **$30** |
+| The Deck (scene cards) — physical | ✅ "The Deck" | **$30** |
+| **Digital access subscription** | — | **$10/mo** → digital book + digital RPG book + Igniting Joy |
+| **Founder bundle** | — | **$150 lifetime** → the app + digital versions of all products |
+| Allyship enamel pins | ❌ add | **TBD — not yet priced** |
+
+- The **$10/mo digital subscription** is a recurring revenue stream living *inside* Wall 2
+  (commerce), distinct from Wall 3's patronage — but worth noting both create monthly $.
+- **Igniting Joy** — host referred to it once as "the app/game" and once as "the book";
+  **needs disambiguation** (is it the app, a book, or both?) before the catalog is built.
 
 - **Not strictly a pre-sale:** by the party the book may be done; digital items launch
   *ahead* of the 18th. Honest promise on the page: **"book in hands by end of July."**
@@ -203,7 +212,7 @@ Mastering Allyship non-profit docs.)
 - **Framing = sustaining member / patron**, not "donor" (honest + warmer for the
   Portland anti-extraction ethos). Tiers e.g. **$6 / $18 / $50 per month**, each naming a perk.
 - **No fiscal sponsor yet** → cannot honestly say "tax-deductible." **MVP:** skip the
-  501c3 path; **party tickets** (in person $25 / digital $10, draft) absorb the
+  501c3 path; **party tickets** (**$30**, in person or digital — confirmed) absorb the
   charitable-flavored giving as a clean transaction.
 - **ACTION ITEM (research, non-blocking):** evaluate a **fiscal sponsor / 501c3** so a
   future version of Wall 3 *can* offer tax-deductible giving.
@@ -215,10 +224,12 @@ Mastering Allyship non-profit docs.)
 ## 14. Updated open questions (post Round 2)
 
 Resolved: §11 Q2 (earmark — givers pick a wall, unallocated → car), Q3 (in-kind — parallel
-"hands & beams" readout). Still open:
-1. **Confirm/adjust the draft price points** in §13 Wall 2 (esp. Igniting Joy sub vs. lifetime, bundle price).
-2. **Car research output** → Wall 1 `targetValue` (pending the Portland/Wichita/Seattle–Tacoma research).
-3. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
-4. **Party ticket prices** ($25 / $10 draft) and that they route to Wall 3.
+"hands & beams" readout), Wall 2 prices (§13, confirmed), party ticket ($30, confirmed). Still open:
+1. **Enamel pins price** — only Wall 2 item still unpriced.
+2. **Igniting Joy** — app vs. book disambiguation (blocks catalog build).
+3. **Car research output** → Wall 1 `targetValue` (Portland/Wichita/Seattle–Tacoma research — *in progress*).
+4. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
 5. Name-display consent on planks (§11 Q4 — still open).
 6. Stretch behavior past each wall's target.
+7. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields, the RPG
+   Book + pins added, "The Game" → Igniting Joy rename, and physical/digital variants.
