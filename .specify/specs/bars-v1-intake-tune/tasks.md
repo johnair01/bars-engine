@@ -3,23 +3,25 @@
 > Implement per [spec.md](./spec.md) and [plan.md](./plan.md). Check off as you go.
 > Run `npm run build` + `npm run check` after each phase (fail-fix).
 
-## Phase 1 — Foundation (server, no migration)
-- [ ] T1.1 Confirm `mergeSeedMetabolization` / `serializeSeedMetabolization` shapes in
+## Phase 1 — Foundation (server, no migration) — ✅ done (6f62d3d)
+- [x] T1.1 Confirm `mergeSeedMetabolization` / `serializeSeedMetabolization` shapes in
       `src/lib/bar-seed-metabolization/parse.ts`.
-- [ ] T1.2 In `createPlayerBar` (`src/actions/bars.ts`) add to `create({data})`:
+- [x] T1.2 In `createPlayerBar` (`src/actions/bars.ts`) add to `create({data})`:
       `nation: fieldTint ?? null` + `seedMetabolization` = `{ maturity:'captured', soilKind:'holding_pen' }`.
-- [ ] T1.3 Same stamp in `createBarForUpload`.
-- [ ] T1.4 `npm run check` — verify new captures persist `maturity:'captured'`.
+- [x] T1.3 Same stamp in `createBarForUpload`.
+- [x] T1.4 `npm run check` passes; round-trip test confirms stored stamp parses to
+      `maturity:'captured'` + element tint persists. (Also: keep threshold lowered 3→1 char.)
 
-## Phase 2 — Capture reskin (`/bars/create`)
-- [ ] T2.1 Rebuild `CreateBarForm` / `src/app/bars/create/page.tsx` as cultivation-surface
-      quick-capture; keep submit logic. Tokens from `cultivation-cards.css` + `card-tokens.ts`.
-- [ ] T2.2 Add locked provenance chip: `<time> · <time-of-day>` derived from `createdAt`.
-- [ ] T2.3 Add optional 5-sigil field-tint row (火 水 木 金 土) → sets `nation` + tints card.
-- [ ] T2.4 Keep photo (Blob) + inspiration (`socialLinks[]`) affordances.
-- [ ] T2.5 CTA exactly **"Keep · tune later"**, disabled until ≥1 char or a photo.
-- [ ] T2.6 Kept confirmation ("A seed is on the board") → default `/bars`; secondary "Tune now →".
-- [ ] T2.7 `npm run build` + `npm run check`.
+## Phase 2 — Capture reskin (`/bars/create`) — ✅ done (6f62d3d)
+- [x] T2.1 Rebuilt `CreateBarFormPage` + `page.tsx` as cultivation-surface quick-capture
+      (`.cultivation-card` + `card-tokens`); submit logic preserved.
+- [x] T2.2 Locked provenance chip: `<time> · <time-of-day>` (client-derived from now; createdAt auto).
+- [x] T2.3 Optional 5-sigil field-tint row (火 水 木 金 土) → sets `nation` + tints card live.
+- [x] T2.4 Photo + inspiration (`socialLinks[]`) affordances preserved behind the media toggle.
+      ⚠️ Photo Blob upload path unverified locally (no `BLOB_READ_WRITE_TOKEN`); code unchanged.
+- [x] T2.5 CTA exactly **"Keep · tune later"**, disabled until ≥1 char or a photo.
+- [x] T2.6 Kept confirmation ("A seed is on the board") → "To the board" `/bars`; secondary "Tune now →".
+- [x] T2.7 `npm run check` passes (0 errors); route serves 200 with new copy.
 
 ## Phase 3 — Tune gate (`/bars/[id]/tune`)
 - [ ] T3.1 Add `tuneBar(barId, patch)` to `src/actions/bars.ts` per spec contract; owner-guard +
