@@ -43,6 +43,22 @@ The same **`BLOB_READ_WRITE_TOKEN`** enables a **private** mirror of cert / site
 
 No secrets or real URLs belong in the repo; only this doc and `.env.example` (with placeholders).
 
+### Book launch paywall (BLP)
+
+Gates the `/handbook` reader behind a Gumroad purchase (see [.specify/specs/book-launch-paywall/spec.md](../.specify/specs/book-launch-paywall/spec.md)).
+
+| Var | Phase | Purpose |
+|-----|-------|---------|
+| `GUMROAD_PRODUCT_ID` | 1 | Gumroad product id used to verify license keys (`v2/licenses/verify`). |
+| `GUMROAD_PRODUCT_URL` | 1 | Public Gumroad product URL the "Buy on Gumroad" CTA links to. |
+| `GUMROAD_MAX_USES` | 1 | Max redemptions per license key before it's rejected (default `3`). |
+| `GUMROAD_VERIFY_MODE` | 1 | `live` (default) hits Gumroad; `mock` accepts `TEST-…` keys / rejects `REFUND-…` for tests + the verification quest + local dev. |
+| `BOOK_FILE_BLOB_KEY` | 2 | Blob key/URL of the generated book file streamed by `/api/handbook/download` (produced by the PDF/EPUB pipeline, `1.80 DPX`). |
+| `GUMROAD_ACCESS_TOKEN` | 3 | Gumroad API token for the sale/refund webhook + admin sync. |
+| `GUMROAD_WEBHOOK_SECRET` | 3 | Shared secret guarding `POST /api/gumroad/webhook`. |
+
+The Prologue (`front-of-book`) is always free — no entitlement required — so the marketing funnel works without any of these set. Verification keys never reach the client; verification is server-only.
+
 ---
 
 ## Production deploy checklist
