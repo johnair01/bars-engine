@@ -14,9 +14,20 @@
 
 ## Phase 1: Event identity
 
-- [ ] Stand up a fresh **event-mode `Instance`** for the July party (NOT the
-      retired residency `campaignRef`); copy holds both framings.
-- [ ] Confirm host inputs: date, RSVP cap, fundraising target, Partiful URL/slug.
+- [ ] Stand up a fresh **event-mode `Instance`** for the **July 18, 2026** party
+      (NOT the retired residency `campaignRef`); copy holds both framings.
+- [x] Confirm event **date → July 18, 2026**.
+- [ ] Confirm remaining host inputs: RSVP cap, fundraising target, Partiful URL/slug.
+
+## Phase 1b: Milestone BAR (the barn) — design done, build pending
+
+- [x] Brainstorm + design: [milestone-bar-brainstorm.md](./milestone-bar-brainstorm.md).
+- [ ] Host decisions: target $, earmark policy, in-kind readout, name consent (§11).
+- [ ] Create the `CampaignMilestone` ("the barn") for the event.
+- [ ] Extend `CampaignMilestoneStrip` with barn framing + 3-segment + "hands & beams".
+- [ ] DSW money path moves the headline; in-kind (OBT) shows as named beams.
+- [ ] Tiers: first plank / walls (33·66%) / roof (100% → group BAR with stamps).
+- [ ] (Fast-follow) live `/event/barn` kiosk for the 18th.
 
 ## Phase 2: Invite + funnel linkage
 

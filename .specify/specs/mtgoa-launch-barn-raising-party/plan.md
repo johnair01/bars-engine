@@ -18,7 +18,11 @@ residency into this event, wire the funnel to the event, and pass the go-live ga
   (Wendell's move). Invite + `/event` copy must hold both without burying either.
 - **The ask is plural.** Money/time/space/host all count; copy names all three
   goals (move / launch / ongoing work) with move first.
-- **Date is TBD.** July 2026, specific day to be confirmed by host before invites.
+- **Date: July 18, 2026** (confirmed by host). RSVP cap + fundraising target still TBD.
+- **The Milestone BAR is the centerpiece.** Designed as a "barn raising" — see
+  [milestone-bar-brainstorm.md](./milestone-bar-brainstorm.md). v1: one
+  `CampaignMilestone`, money headline + in-kind "hands & beams" readout, tiers
+  (first plank / walls / roof).
 
 ## Sequencing
 
@@ -31,7 +35,8 @@ residency into this event, wire the funnel to the event, and pass the go-live ga
 
 ## Open questions for the host
 
-- Exact July date + RSVP cap?
-- Fundraising target ($) for the milestone bar?
-- Partiful URL / event slug?
+- ~~Exact July date~~ → **July 18, 2026** ✓. RSVP cap?
+- Fundraising target ($) for the Milestone BAR? (+ earmark / in-kind readout / name
+  consent — see milestone-bar-brainstorm §11)
+- Partiful URL / event slug? (backlog item **PARV** tracks the integration)
 - On-site: PMEL bingo, `/game` kiosk, or both?

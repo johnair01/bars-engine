@@ -20,8 +20,8 @@ party itself: the game *is* the fundraiser.
 
 ## Purpose
 
-Run a **July 2026 fundraiser party at the Bruised Banana** that is **two things at
-once**:
+Run a **July 18, 2026 fundraiser party at the Bruised Banana** that is **two things
+at once**:
 
 1. **Mastering the Game of Allyship — Launch Party.** Public debut of the game
    (playable now at `/game`), the book (`/handbook`), and the deck — the funnel
@@ -53,7 +53,7 @@ community's AI allergy is respected (Core Principle: non-AI is first-class).
 party is both a game launch and Wendell's send-off, **so** I know why to come and
 what the ask is.
 **Acceptance**: An event **invite BAR** (per [EIP](../event-invite-party-initiation/spec.md))
-with a **Partiful** CTA, dated July 2026, names both framings and links to
+with a **Partiful** CTA, dated **July 18, 2026**, names both framings and links to
 `/pricing` (understand the offering) and `/event` (RSVP/contribute).
 
 ### P2: Understand-before-login funnel
@@ -87,9 +87,13 @@ login/signup verified; pre-launch seeds applied.
 
 ## Functional Requirements
 
-- **FR1 — Event identity.** An `Instance` (event mode) represents the July party
-  with both framings in its copy; it is NOT the retired residency campaign.
-  Branding/dates configurable (date **TBD — confirm July 2026 day**).
+- **FR1 — Event identity.** An `Instance` (event mode) represents the **July 18,
+  2026** party with both framings in its copy; it is NOT the retired residency
+  campaign. Branding/dates configurable.
+- **FR1b — Milestone BAR.** A `CampaignMilestone` ("the barn") tracks the
+  fundraise; contributions (money via DSW + in-kind offer BARs) raise it. Design:
+  [milestone-bar-brainstorm.md](./milestone-bar-brainstorm.md). One barn, three
+  walls (Move / Launch / Ongoing); money headline + a "hands & beams" in-kind readout.
 - **FR2 — Invite.** One invite BAR (EIP) with Partiful + both framings + funnel
   links; discoverable in Vault when the host owns the active event.
 - **FR3 — Funnel linkage.** Invite + `/event` link to `/pricing`, `/game`,
