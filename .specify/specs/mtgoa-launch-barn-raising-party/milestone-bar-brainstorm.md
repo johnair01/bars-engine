@@ -228,14 +228,33 @@ Mastering Allyship non-profit docs.)
 |---|---|---|
 | **Raftermate** | **$6** | Name on the digital barn wall (consent-aware); monthly patron dispatch; a stamped **patron BAR** (in-game artifact, $0 to make) |
 | **Beam** | **$18** | + **The App included** ($10/mo value baked in) + early access to event tickets |
-| **Post** | **$50** | + a **voice/vote in what gets built or written next** + name read aloud at events + quarterly patron group call |
-| **Keystone** | **$100** | + a **quarterly 1:1** with host (allyship coaching) + name on the physical barn banner + comped event tickets |
+| **Post** | **$50** | + a **voice/vote in what gets built or written next** + name read aloud at events + **quarterly patron group call** |
+| **Keystone** | **$100** | + **founding member of the Allyship Dojo** (live group classes + rank progression) + name on the physical barn banner + comped event tickets |
 | **Name your own** | custom | honor-system; flows straight to runway |
 
 - **Perk design rule:** recognition + access + community only — nothing that costs the
   solo host money or heavy labor, and **no Wall 2 sellable products given away** (keeps
   commerce intact). The **App bundles at Beam** so a $10/mo subscriber upgrades to $18/mo
   patronage for +$8 — product and patronage reinforce, not compete.
+
+**The Allyship Dojo (the Keystone offer):** a live, game-native practice circle — the
+**real-world instantiation of a School aboard the School Ship** (reuses the RPG's existing
+*Schools* + *Schools-and-Ranks advancement*). Keystone patrons are its **founding students**
+and **earn ranks** as they practice. Patron profile: DEI practitioners, coaches, therapists,
+facilitators, educators, People/HR leaders, managers (pro-development buyers for whom
+$100/mo undercuts coaching/courses), plus mission-aligned professionals. What they expect:
+real access to the host, genuine skill growth + feedback, peers at their level, and to feel
+their money sustains the mission. Design for **easy + joyful + sustainable** fulfillment:
+  1. **Run on the product's rails** — each session works a **Deck** scene or **App**
+     encounter; prep ≈ zero, and sessions become playtest data + recordings → app/book
+     content (fulfillment *feeds* development — generative dependency).
+  2. **Members bring real roadblocks** → metabolized live into BARs / Roadblock Quests
+     (composting their material, not generating new content).
+  3. **One repeatable ritual** — open → scene → practice → metabolize → close (muscle memory, no fresh prep).
+  4. **Cadence: MONTHLY (90 min) live as the sustainable v1; WEEKLY as a labeled stretch**
+     once a cohort can co-hold it. (Avoid promising weekly solo from day one — "speed is honest.")
+  5. **Founding-cohort identity** — named in app/book credits + a permanent provenance BAR ($0 to give, high meaning).
+  - The lighter **quarterly group call** lives at the **$50 Post** tier so the ladder steps up cleanly.
 - **Readout = "% of $6,000/mo monthly runway committed."** $6k/mo is the **horizon**, not
   the party-night ask.
 - **Party-night Wall 3 sub-goal (recommended): $1,500/mo = 25% of runway.** Reachable mix
@@ -255,8 +274,10 @@ Mastering Allyship non-profit docs.)
 
 Resolved: §11 Q2 (earmark), Q3 (in-kind readout), Wall 2 prices incl. **pins $15** (§13),
 party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (§13),
-**Wall 1 target = $8,500** (§13), **Wall 3 tier ladder v1 + $1,500/mo party sub-goal** (§13). Still open:
-1. **Wall 3 perks** — confirm host can fulfill the $50 vote/voice + $100 quarterly 1:1, and the party-night $1,500/mo sub-goal.
+**Wall 1 target = $8,500** (§13), **Wall 3 tier ladder v1 + $1,500/mo party sub-goal**
+(§13, host-confirmed), **Keystone = Allyship Dojo** (group, founding students, ranks; quarterly
+1:1 dropped). Still open:
+1. **Dojo cadence** — monthly (recommended, sustainable) vs. weekly out of the gate. (Host leaning weekly→maybe monthly.)
 2. Name-display consent on planks (§11 Q4 — still open).
 3. Stretch behavior past each wall's target.
 4. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
