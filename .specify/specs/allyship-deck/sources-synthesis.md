@@ -172,9 +172,21 @@ These are **lenses, not a matrix to enumerate** (governance §6). The player can
 > face). Capability/channel is therefore a *selectable dimension at consult time*, not a fixed tag
 > on a face. (Supersedes the earlier "tag each face-move with one capability" idea.)
 
-## 8a. OPEN GAP — GM-face sublevels (author to provide)
+## 8a. RESOLVED — submoves = Move × Operation (see move-library-core-rules.md)
 
-**Each GM face has sublevels within it, and those sublevels have their own moves.** This is **not in
+> **Resolved 2026-06-14** by the author's **BARs Engine Core Rules** →
+> [`move-library-core-rules.md`](./move-library-core-rules.md). The "sublevels with moves" are the
+> **36 submoves**: each of the **6 Basic Moves** (Wake / Open / Clean / Grow / Show / Level Up)
+> passes through the **6 Operations** (Shaman → Challenger → Regent → Architect → Diplomat → Sage).
+> **Faces = operations, not classes.** Open Up is Basic Move **#2** (not "the 5th move"); Level Up
+> is the optional 6th meta-move. Channel is chosen inside Clean Up; domain inside Show Up;
+> transformation types are Transcend / Translate / **Neutralize**. **The deck's move library = these
+> 36 submoves.** Treat `move-library-core-rules.md` as authoritative where it conflicts with the
+> inferences below.
+
+### (historical) the gap as first logged
+
+**Each GM face has sublevels within it, and those sublevels have their own moves.** This was **not in
 the uploaded docs** (the only sub-structures there are the EA-Cradle **gates 1–8** and **4 forms**,
 which belong to the *channel/cultivation* system, not the faces) and **not yet defined in the repo**.
 
