@@ -1,13 +1,13 @@
 /**
  * build-game.mjs — builds the standalone mtgoa-game Vite SPA into the Next.js
- * app's `public/play/` so it ships with the same Vercel deploy (option 2:
+ * app's `public/game/` so it ships with the same Vercel deploy (option 2:
  * embedded under `/play/`, deep link `/play/#applied`).
  *
  * Why a separate step: `mtgoa-game/` is NOT part of the root npm workspaces
  * (`packages/*`), so the root install does not bring in its dependencies. This
  * installs them (prefer the lockfile via `npm ci`, fall back to `npm install`)
  * and runs the game's own `tsc -b && vite build`, which Vite writes to
- * `../public/play` (see mtgoa-game/vite.config.ts).
+ * `../public/game` (see mtgoa-game/vite.config.ts).
  *
  * Set SKIP_GAME_BUILD=1 to opt out (e.g. a fast web-only local build).
  */
@@ -26,7 +26,7 @@ if (process.env.SKIP_GAME_BUILD === "1") {
 
 const run = (cmd) => execSync(cmd, { cwd: gameDir, stdio: "inherit", shell: true });
 
-console.log("▶ Building mtgoa-game into public/play …");
+console.log("▶ Building mtgoa-game into public/game …");
 try {
   // Prefer a clean, lockfile-pinned install; fall back if no lockfile present.
   // `--include=dev` is REQUIRED: Vercel builds with NODE_ENV=production, under
@@ -40,7 +40,7 @@ try {
     run("npm install --include=dev --no-audit --no-fund");
   }
   run("npm run build");
-  console.log("✓ mtgoa-game built → public/play");
+  console.log("✓ mtgoa-game built → public/game");
 } catch (err) {
   console.error("");
   console.error("❌ mtgoa-game build failed — /play will be missing from this deploy.");

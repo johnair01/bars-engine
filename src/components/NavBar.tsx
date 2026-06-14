@@ -58,6 +58,13 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                         >
                             PLAY
                         </Link>
+                        <Link
+                            href="/bars/create"
+                            title="Forge a BAR: turn a charged moment into an artifact you can grow into a quest."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/create')}`}
+                        >
+                            + BAR
+                        </Link>
                     </>
                 )}
                 {!isAuthenticated && (
@@ -77,9 +84,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             BOOK
                         </Link>
                         <Link
-                            href="/play/"
-                            title="Play the allyship engine in your browser. No account needed."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/play')}`}
+                            href="/game/"
+                            title="Play Mastering the Game of Allyship in your browser. No account needed."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/game')}`}
                         >
                             PLAY
                         </Link>

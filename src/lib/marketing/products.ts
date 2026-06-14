@@ -65,9 +65,9 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
     tagline: "Play the allyship engine",
     description:
       "Face an encounter, read what the other person actually needs, and metabolize it into a win. Playable right now in your browser — no account.",
-    href: "/play/",
+    href: "/game/",
     cta: "Play now",
-    secondary: { label: "Try Applied Mode", href: "/play/#applied" },
+    secondary: { label: "Try Applied Mode", href: "/game/#applied" },
     publicAccess: true,
     accent: {
       ring: "hover:border-emerald-600/60",

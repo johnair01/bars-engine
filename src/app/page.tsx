@@ -176,7 +176,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
 
           <Link
-            href="/play/"
+            href="/game/"
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Play the game
