@@ -4,6 +4,36 @@
 > `sources-synthesis.md` where they conflict. The move library = **6 Basic Moves × 6 Operations =
 > 36 submoves.**
 
+## Revisions (author 2026-06-14, same session) — these override the body below
+
+1. **Level Up is NOT a separate Basic Move — Grow Up *is* Level Up.** Developmental advancement
+   (face-as-levels, the 6×6 spiral) is the progression dimension *of Grow Up*. → **5 Basic Moves**:
+   **Wake Up · Open Up · Clean Up · Grow Up · Show Up.** ("Open Up is the 5th move" = the fifth one
+   named; it sits at position 2 in the loop.)
+2. **Submove count → 5 Basic Moves × 6 Operations = 30 submoves.**
+3. **Introduce the 4 Domains as a multiplying axis:** Gather Resources · Raise Awareness ·
+   Direct Action · Skillful Organizing. Each submove is expressed per domain →
+   **30 × 4 = 120 domain-contextualized move cards.** (Domain is no longer only chosen inside
+   Show Up; it contextualizes every card.)
+4. **Deck size:** ~150 cards is acceptable/desired. Beyond the 120 move cards, the deck includes an
+   **instruction / guidebook card set** (the deck teaches its own use, in-deck) → **~150 total**.
+
+### Deck composition (target)
+
+| Set | Count | Notes |
+|-----|-------|-------|
+| **Move cards** | **120** | 5 moves × 6 operations × 4 domains; each in skill-stack anatomy |
+| **Instruction / guidebook cards** | ~30 (author floated ~52) | how to draw, how to consult, the BAR flow, the capability model, problem→move index |
+| *(optional framing)* | — | move / operation / capability / domain "title" cards if wanted |
+| **Total** | **~150** | author comfortable at this scale |
+
+> **Authoring note (honest):** 120 distinct move cards is a real content load. The move-grammar
+> resolver + domain inflection can generate the *base* sentence per (operation × move × domain);
+> human polish + the skill-stack anatomy (Primary Question / Optimizes For / Forbidden Moves /
+> Failure Modes / Remediation) make each card distinct. This is the assembly pipeline (ADK Phase 1).
+
+---
+
 ## Fundamental structure
 
 Six **Basic Moves**:
