@@ -266,6 +266,28 @@ their money sustains the mission. Design for **easy + joyful + sustainable** ful
 - **ACTION ITEM (research, non-blocking):** evaluate a **fiscal sponsor / 501c3** so a
   future version of Wall 3 *can* offer tax-deductible giving.
 
+### Completion & overflow behavior (all walls) — "the wall is up, keep building"
+
+Decided by host. A filled wall is **not a dead end** — it redirects energy (honors the
+anti-extraction ethos: mutual aid + participation, never "close the register"):
+
+- **Default overflow:** extra dollars on a filled wall roll to **Wall 3 runway** (the
+  never-finished wall). Wall 3 absorbs all surplus.
+- **On any wall completing, surface a "keep building" panel** with, in order:
+  1. **Cross-wall** — point to any wall not yet full (finish the barn).
+  2. **Purchases (Wall 2)** — invite donors to *buy* (book / deck / RPG book / App /
+     Founder bundle); convert generosity into product adoption.
+  3. **In-kind (hands & beams)** — donate **time + expertise + task help**: get the book
+     done, support the non-profit. Maps to DSW time/host paths + OBT offer BARs (§4).
+  4. **Access check** — make sure they can reach the other walls' offerings (claim the App,
+     grab their bundle, get into the Dojo).
+- This makes every completion a **"what's next" engine**, and maps cleanly to the four
+  moves: Clean Up (give) → Grow Up (pledge/buy/offer skill) → Show Up (do a task / be there).
+
+### Name-display consent (resolves §11 Q4)
+- **Opt-in.** Giver names appear on planks/the barn wall **only if they choose**; default is
+  anonymous/handle-less. (Portland anti-extraction ethos — no one is surfaced without consent.)
+
 ### Scale assumptions (for modeling totals)
 - **~50 in person** (safe goal) + a **digital event** + **smaller lead-up events**.
 - Combined headline barn = Wall 1 (car) + Wall 2 (pre-sale $) + Wall 3 (first-month runway).
@@ -276,10 +298,9 @@ Resolved: §11 Q2 (earmark), Q3 (in-kind readout), Wall 2 prices incl. **pins $1
 party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (§13),
 **Wall 1 target = $8,500** (§13), **Wall 3 tier ladder v1 + $1,500/mo party sub-goal**
 (§13, host-confirmed), **Keystone = Allyship Dojo** (group, founding students, ranks; quarterly
-1:1 dropped). Still open:
-1. **Dojo cadence** — monthly (recommended, sustainable) vs. weekly out of the gate. (Host leaning weekly→maybe monthly.)
-2. Name-display consent on planks (§11 Q4 — still open).
-3. Stretch behavior past each wall's target.
-4. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
+1:1 dropped), **name consent = opt-in** (§13), **overflow → Wall 3 + "keep building" redirect
+panel** (§13). **Design is fully decided.** Remaining = implementation + one soft call:
+1. **Dojo cadence** — captured as monthly v1 / weekly stretch; host to confirm if they'd rather launch weekly.
+2. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
    physical/digital variants, the **RPG Book, enamel pins, and Igniting Joy** added, and the
    "The Game" entry reframed as **The App** ($10/mo) with the Founder bundle ($150 lifetime).
