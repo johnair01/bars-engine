@@ -6,28 +6,11 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import {
     effectiveMaturity,
-    mergeSeedMetabolization,
     parseSeedMetabolization,
     type MaturityPhase,
     type SoilKind,
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
-import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
-
-// Element channel ('nation' column) — valid capture-time field-tint values.
-// Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
-// UI tokens into the server-action bundle).
-const ELEMENT_KEYS = ['fire', 'water', 'wood', 'metal', 'earth'] as const
-function normalizeFieldTint(raw: string | null | undefined): string | null {
-    const v = (raw || '').trim().toLowerCase()
-    return (ELEMENT_KEYS as readonly string[]).includes(v) ? v : null
-}
-
-/** Maturity + provenance stamped on every fresh capture (G2/G3). createdAt is auto. */
-const CAPTURE_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
-    maturity: 'captured',
-    soilKind: 'holding_pen',
-})
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -35,14 +18,7 @@ const CAPTURE_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
 
 async function getPlayerId(): Promise<string | null> {
     const cookieStore = await cookies()
-    const fromCookie = cookieStore.get('bars_player_id')?.value
-    if (fromCookie) return fromCookie
-    // DEV BYPASS: mirror getCurrentPlayer() so dogfooding (capture, tune, listings)
-    // works without a logged-in session. Dev-only; never applies in production.
-    if (process.env.NODE_ENV === 'development' && process.env.DEV_PLAYER_ID) {
-        return process.env.DEV_PLAYER_ID
-    }
-    return null
+    return cookieStore.get('bars_player_id')?.value ?? null
 }
 
 /**
@@ -97,7 +73,6 @@ export async function createBarForUpload(data: {
     tags?: string
     socialLinks?: string
     hasPhotos?: boolean
-    fieldTint?: string
 }): Promise<{ barId?: string; error?: string }> {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
@@ -106,14 +81,13 @@ export async function createBarForUpload(data: {
     const tags = (data.tags || '').trim()
     const socialLinksRaw = (data.socialLinks || '').trim()
     const hasPhotos = !!data.hasPhotos
-    const fieldTint = normalizeFieldTint(data.fieldTint)
 
-    if (content.length < 1 && !hasPhotos) {
-        return { error: 'Add a line of text or a photo to keep' }
+    if (content.length < 3 && !hasPhotos) {
+        return { error: 'Add some text (at least 3 characters) or a photo' }
     }
 
-    const title = content.length >= 1 ? deriveTitle(content) : 'Photo'
-    const description = content.length >= 1 ? content : 'Photo'
+    const title = content.length >= 3 ? deriveTitle(content) : 'Photo'
+    const description = content.length >= 3 ? content : 'Photo'
 
     try {
         const bar = await db.customBar.create({
@@ -128,9 +102,6 @@ export async function createBarForUpload(data: {
                 storyContent: tags || null,
                 inputs: '[]',
                 rootId: 'temp',
-                // Capture-time element tint (optional) + maturity/provenance stamp (G2/G3).
-                nation: fieldTint,
-                seedMetabolization: CAPTURE_SEED_METABOLIZATION,
             }
         })
 
@@ -155,8 +126,6 @@ export async function createBarForUpload(data: {
         }
 
         revalidatePath('/bars')
-        revalidatePath('/bars/garden')
-        revalidatePath('/hand')
         revalidatePath('/')
         return { barId: bar.id }
     } catch (e: unknown) {
@@ -173,15 +142,14 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
     const content = (formData.get('content') as string || '').trim()
     const tags = (formData.get('tags') as string || '').trim()
     const socialLinksRaw = (formData.get('socialLinks') as string || '').trim()
-    const fieldTint = normalizeFieldTint(formData.get('fieldTint') as string | null)
     const photoFront = formData.get('photoFront') as File | null
     const photoBack = formData.get('photoBack') as File | null
 
-    const hasContent = content.length >= 1
+    const hasContent = content.length >= 3
     const hasPhoto = (photoFront && photoFront.size > 0) || (photoBack && photoBack.size > 0)
 
     if (!hasContent && !hasPhoto) {
-        return { error: 'Add a line of text or a photo to keep' }
+        return { error: 'Add some text or a photo' }
     }
 
     const title = hasContent ? deriveTitle(content) : 'Photo'
@@ -200,9 +168,6 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
                 storyContent: tags || null,
                 inputs: '[]',
                 rootId: 'temp',
-                // Capture-time element tint (optional) + maturity/provenance stamp (G2/G3).
-                nation: fieldTint,
-                seedMetabolization: CAPTURE_SEED_METABOLIZATION,
             }
         })
 
@@ -236,8 +201,6 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
         console.log(`[BAR] Created bar (${bar.id}) by player ${playerId}`)
 
         revalidatePath('/bars')
-        revalidatePath('/bars/garden')
-        revalidatePath('/hand')
         revalidatePath('/')
         return { success: true, barId: bar.id }
     } catch (e: unknown) {
@@ -480,7 +443,7 @@ export async function listMyBars() {
     return db.customBar.findMany({
         where: {
             creatorId: playerId,
-            type: { in: [...CAPTURE_BAR_TYPES] },
+            type: 'bar',
             status: 'active',
             archivedAt: null,
         },
@@ -521,7 +484,7 @@ export async function listMyBarsForGarden(filters: BarGardenFilters = {}) {
     const bars = await db.customBar.findMany({
         where: {
             creatorId: playerId,
-            type: { in: [...CAPTURE_BAR_TYPES] },
+            type: { in: ['bar', 'charge_capture'] },
             status: 'active',
             ...(includeComposted ? {} : { archivedAt: null }),
         },

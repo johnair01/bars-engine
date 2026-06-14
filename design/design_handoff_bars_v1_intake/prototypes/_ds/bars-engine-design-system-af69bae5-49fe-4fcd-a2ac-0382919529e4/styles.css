@@ -1,0 +1,11 @@
+/* BARS Engine — Design System entry point.
+ *
+ * Consumers link THIS file only. It is a list of @imports — no rules live here.
+ * Everything it transitively reaches is shipped: tokens, fonts, card aesthetics.
+ */
+
+@import "tokens/fonts.css";
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/cards.css";

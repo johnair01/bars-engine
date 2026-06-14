@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+  <script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: #161310; }
+    *::-webkit-scrollbar { height: 9px; width: 9px; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px; }
+    .scr::-webkit-scrollbar { display: none; }
+    .scr { scrollbar-width: none; }
+    textarea::placeholder { color: var(--bars-text-muted); }
+    .pkw { color: var(--bars-water-gem); }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(ellipse 1100px 560px at 16% -8%, rgba(124,58,237,0.06), transparent 60%), #161310;padding:48px 48px 90px;font-family:var(--bars-font-body);color:var(--bars-text-primary);box-sizing:border-box;">
+  <div style="max-width:1180px;margin:0 auto;">
+
+  <!-- header -->
+  <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div>
+      <div style="display:flex;align-items:center;gap:11px;">
+        <span style="width:10px;height:10px;border-radius:2px;background:var(--bars-liminal);box-shadow:0 0 12px 2px var(--bars-liminal-glow);"></span>
+        <span class="bars-label" style="color:var(--bars-text-secondary);font-size:11px;">BARS Engine · v1 Intake · Interactive prototype</span>
+      </div>
+      <h1 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.03em;font-size:38px;line-height:1.05;margin:14px 0 0;">Capture → Keep → Tune</h1>
+      <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:14.5px;line-height:1.55;max-width:560px;margin:12px 0 0;">A click-through of the v1 flow. Type a charge, keep it — a brief confirmation lands you back on the board — then tune the channels, where the card glows up and the <strong style="color:var(--bars-text-primary);font-weight:700;">live payload</strong> on the right shows exactly what persists. This is the spec Claude Code builds to.</p>
+    </div>
+    <button onClick="{{ reset }}" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:var(--bars-text-secondary);font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;">↺ Reset flow</button>
+  </header>
+
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:40px;margin-top:40px;align-items:start;">
+
+    <!-- ───────── PHONE ───────── -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <!-- step rail -->
+      <div style="display:flex;align-items:center;gap:8px;padding-left:6px;">
+        <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:{{ capColor }};">① Capture</span>
+        <span style="color:var(--bars-text-muted);font-size:12px;">→</span>
+        <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:{{ keptColor }};">② Kept</span>
+        <span style="color:var(--bars-text-muted);font-size:12px;">→</span>
+        <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:{{ tuneColor }};">③ Tune</span>
+      </div>
+
+      <div style="width:390px;flex:0 0 auto;background:#050403;border-radius:46px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+        <div class="scr" style="background:var(--bars-bg-base);border-radius:36px;overflow:hidden auto;height:812px;display:flex;flex-direction:column;position:relative;">
+
+          <!-- ===== CAPTURE SCREEN ===== -->
+          <sc-if value="{{ isCapture }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px 8px;">
+              <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-secondary);font-variant-numeric:tabular-nums;">11:42</span>
+              <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">New BAR</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦ 1428</span>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;padding:14px 18px 20px;gap:16px;">
+              <!-- provenance · locked -->
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-secondary);"><span style="width:5px;height:5px;border-radius:50%;background:var(--bars-wood-gem);box-shadow:0 0 6px 1px var(--bars-wood-glow);"></span>provenance locked</span>
+                <span style="font-family:var(--bars-font-mono);font-size:9.5px;color:var(--bars-text-muted);">11:42 PM · dusk</span>
+              </div>
+
+              <!-- the blank card -->
+              <div style="position:relative;border-radius:var(--bars-radius-lg);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px var(--bars-line-strong), 0 18px 40px -18px rgba(0,0,0,0.85);background:{{ captureBg }};transition:background 0.4s ease;">
+                <textarea value="{{ text }}" onInput="{{ onText }}" placeholder="A line. A scrap. Whatever wants to go on the board." rows="6" style="width:100%;box-sizing:border-box;resize:none;border:none;outline:none;background:transparent;padding:20px;font-family:var(--bars-font-body);font-size:18px;line-height:1.55;color:var(--bars-text-primary);min-height:170px;"></textarea>
+                <div style="position:absolute;left:16px;bottom:11px;font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.4);pointer-events:none;">untuned seed</div>
+              </div>
+
+              <!-- optional field tint -->
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-muted);">Field tint <span style="text-transform:none;letter-spacing:0;">— optional, pre-tunes the element</span></span>
+                <div style="display:flex;gap:9px;">
+                  <sc-for list="{{ fieldChips }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.sig }}</button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <!-- media row (visual only in proto) -->
+              <div style="display:flex;gap:9px;">
+                <span style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">◳ Photo</span>
+                <span style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">“ Inspiration</span>
+              </div>
+
+              <div style="flex:1;"></div>
+
+              <button onClick="{{ keep }}" style="{{ keepStyle }}">Keep · tune later</button>
+              <p style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);text-align:center;margin:0;line-height:1.4;">Kept as a <code style="font-family:var(--bars-font-mono);font-size:10.5px;color:var(--bars-text-secondary);">captured</code> seed. Tuning is never required to keep.</p>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ===== KEPT · CONFIRMATION ===== -->
+          <sc-if value="{{ isKept }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px 8px;">
+              <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-secondary);font-variant-numeric:tabular-nums;">11:42</span>
+              <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Kept</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦ 1428</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 28px;">
+              <div style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bars-wood-frame) 22%, transparent);box-shadow:inset 0 0 0 1.5px var(--bars-wood-frame), 0 0 32px -6px var(--bars-wood-glow);">
+                <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-wood-gem);text-shadow:0 0 10px var(--bars-wood-glow);">◇</span>
+              </div>
+              <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.02em;font-size:24px;color:var(--bars-text-primary);margin:20px 0 0;">A seed is on the board</h2>
+              <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:9px 0 0;max-width:262px;">Kept as a <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">captured</code> seed, provenance locked. Tune it whenever you're ready — or leave it to compost.</p>
+              <div style="margin-top:18px;width:100%;max-width:282px;padding:13px 15px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);text-align:left;">
+                <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-muted);">Just kept</span>
+                <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.45;color:var(--bars-text-primary);margin:5px 0 0;">{{ cardText }}</p>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;padding:0 18px 22px;">
+              <button onClick="{{ toBoard }}" style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">To the board</button>
+              <button onClick="{{ tuneNow }}" style="width:100%;padding:13px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:transparent;color:var(--bars-text-secondary);font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;box-shadow:inset 0 0 0 1px var(--bars-line);">Tune now →</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- ===== TUNE SCREEN ===== -->
+          <sc-if value="{{ isTune }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px 8px;">
+              <button onClick="{{ back }}" style="border:none;background:transparent;cursor:pointer;font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-text-secondary);padding:0;">←</button>
+              <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Tune BAR</span>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;color:{{ readyColor }};">{{ maturityShort }}</span>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;padding:10px 18px 20px;gap:15px;">
+              <!-- live card -->
+              <div style="display:flex;justify-content:center;">
+                <div class="bars-card" data-element="{{ elementKey }}" data-altitude="{{ altitudeKey }}" style="position:relative;width:188px;aspect-ratio:5/7;display:flex;flex-direction:column;transition:box-shadow 0.45s cubic-bezier(0.16,1,0.3,1);">
+                  <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+                  <div class="bars-card__body" style="flex:1;padding:14px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                      <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:{{ nationColor }};">{{ nationLabel }}</span>
+                      <span style="font-family:var(--bars-font-mono);font-size:8.5px;color:var(--bars-text-muted);">{{ altitudeShort }}</span>
+                    </div>
+                    <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.5;color:var(--bars-text-primary);margin:0;flex:1;">{{ cardText }}</p>
+                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;border-top:1px solid var(--bars-line);padding-top:8px;min-height:14px;">
+                      <sc-if value="{{ move }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-text-secondary);padding:3px 6px;border-radius:4px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">{{ moveLabel }}</span></sc-if>
+                      <sc-if value="{{ charge }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-text-muted);padding:3px 5px;">{{ charge }}</span></sc-if>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- maturity ladder -->
+              <div style="display:flex;align-items:center;gap:5px;">
+                <sc-for list="{{ ladder }}" as="p" hint-placeholder-count="4">
+                  <div style="{{ p.style }}"></div>
+                </sc-for>
+                <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.05em;color:var(--bars-text-secondary);margin-left:4px;white-space:nowrap;">{{ maturityLabel }}</span>
+              </div>
+
+              <!-- charge name -->
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Name the charge <span style="color:var(--bars-text-secondary);">→ emotionalAlchemyTag</span></span>
+                <input value="{{ charge }}" onInput="{{ onCharge }}" placeholder="grief · relief · pride…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:none;outline:none;border-radius:8px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:var(--bars-text-primary);font-family:var(--bars-font-body);font-size:13px;">
+              </div>
+
+              <!-- channel · element -->
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Element <span style="color:var(--bars-text-secondary);">→ nation</span></span>
+                <div style="display:flex;gap:8px;">
+                  <sc-for list="{{ elementChips }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.sig }}</button>
+                  </sc-for>
+                </div>
+                <a href="Elements%20and%20Emotional%20Alchemy.dc.html" target="_blank" style="display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;text-decoration:none;font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.03em;margin-top:1px;">
+                  <span style="color:var(--bars-fire-gem);">Fire</span><span style="color:var(--bars-text-muted);">·</span><span style="color:var(--bars-water-gem);">Water</span><span style="color:var(--bars-text-muted);">·</span><span style="color:var(--bars-earth-gem);">Earth</span><span style="color:var(--bars-text-muted);">·</span><span style="color:var(--bars-metal-gem);">Metal</span><span style="color:var(--bars-text-muted);">·</span><span style="color:var(--bars-wood-gem);">Wood</span>
+                  <span style="color:var(--bars-text-secondary);text-decoration:underline;text-underline-offset:2px;">how they channel emotion →</span>
+                </a>
+              </div>
+
+              <!-- channel · altitude -->
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Altitude <span style="color:var(--bars-text-secondary);">→ intensity</span></span>
+                <div style="display:flex;gap:7px;">
+                  <sc-for list="{{ altitudeChips }}" as="c" hint-placeholder-count="3">
+                    <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <!-- channel · move -->
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Move <span style="color:var(--bars-text-secondary);">→ moveType</span> <span style="color:var(--bars-liminal-glow);text-transform:none;letter-spacing:0;">· now 5</span></span>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+                  <sc-for list="{{ moveChips }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.onClick }}" style="{{ c.style }}"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:12px;">{{ c.label }}</span><span style="font-family:var(--bars-font-body);font-size:9.5px;color:var(--bars-text-muted);">{{ c.sub }}</span></button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="flex:1;"></div>
+              <button onClick="{{ graduate }}" style="{{ graduateStyle }}">{{ graduateLabel }}</button>
+            </div>
+          </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ───────── SPEC PANEL ───────── -->
+    <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:24px;">
+
+      <!-- live payload -->
+      <div style="background:var(--bars-bg-base);border-radius:var(--bars-radius-lg);box-shadow:inset 0 0 0 1px var(--bars-line-strong);padding:22px 24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Live payload · db.customBar</span>
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--bars-wood-gem);box-shadow:0 0 8px 1px var(--bars-wood-glow);"></span>
+        </div>
+        <div style="font-family:var(--bars-font-mono);font-size:12.5px;line-height:1.85;margin-top:14px;white-space:pre-wrap;">{ <span style="color:var(--bars-text-muted);">// captured + tuned</span>
+  <span class="pkw">description</span>: <span style="color:var(--bars-wood-gem);">{{ pText }}</span>,
+  <span class="pkw">type</span>: <span style="color:var(--bars-wood-gem);">'charge_capture'</span>,
+  <span class="pkw">nation</span>: <span style="color:{{ pNationColor }};">{{ pNation }}</span>,
+  <span class="pkw">intensity</span>: <span style="color:{{ pIntColor }};">{{ pIntensity }}</span>,
+  <span class="pkw">emotionalAlchemyTag</span>: <span style="color:{{ pChargeColor }};">{{ pCharge }}</span>,
+  <span class="pkw">moveType</span>: <span style="color:{{ pMoveColor }};">{{ pMove }}</span>,
+  <span class="pkw">seedMetabolization</span>: { <span class="pkw">maturity</span>: <span style="color:var(--bars-liminal-glow);">{{ pMaturity }}</span> },
+  <span class="pkw">createdAt</span>: <span style="color:var(--bars-text-secondary);">'…'</span> <span style="color:var(--bars-text-muted);">// locked</span>
+}</div>
+      </div>
+
+      <!-- interaction → action map -->
+      <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 24px;">
+        <span class="bars-label" style="color:var(--bars-text-muted);">Interaction → server action</span>
+        <div style="display:flex;flex-direction:column;gap:11px;margin-top:14px;">
+          <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);min-width:120px;">Keep · tune later</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">createPlayerBar()</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);min-width:120px;">Pick a channel</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">tuneBar()</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);min-width:120px;">Maturity bump</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">updateBarSeedMaturity()</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);min-width:120px;">Show up · graduate</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">growQuestFromBar()</span></div>
+        </div>
+      </div>
+
+      <!-- settled -->
+      <div style="background:color-mix(in srgb,var(--bars-wood-frame) 9%,transparent);border-radius:var(--bars-radius-lg);box-shadow:inset 0 0 0 1px var(--bars-wood-frame);padding:18px 22px;">
+        <span class="bars-label" style="color:var(--bars-wood-gem);">Settled · wiring decisions</span>
+        <ul style="margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+          <li style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;">Altitude reuses the existing <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">intensity</code> column — values <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">dissatisfied/neutral/satisfied</code>. No migration.</li>
+          <li style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;">After Keep: a brief confirmation, then back to the board. Tune is an optional affordance — never forced.</li>
+          <li style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;">Graduating to a quest requires a tuned BAR; a seed/onboarding step guarantees the player has <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">nation</code> + <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">archetype</code> first.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'capture',
+    text: '',
+    charge: '',
+    field: null,      // capture-time tint
+    element: null,    // nation
+    altitude: null,   // intensity
+    move: null,       // moveType
+  };
+
+  ELS = [
+    { k: 'fire',  sig: '火', nation: 'Pyrakanth', gem: 'var(--bars-fire-gem)',  frame: 'var(--bars-fire-frame)' },
+    { k: 'water', sig: '水', nation: 'Lamenth',   gem: 'var(--bars-water-gem)', frame: 'var(--bars-water-frame)' },
+    { k: 'wood',  sig: '木', nation: 'Virelune',  gem: 'var(--bars-wood-gem)',  frame: 'var(--bars-wood-frame)' },
+    { k: 'metal', sig: '金', nation: 'Argyra',    gem: 'var(--bars-metal-gem)', frame: 'var(--bars-metal-frame)' },
+    { k: 'earth', sig: '土', nation: 'Meridia',   gem: 'var(--bars-earth-gem)', frame: 'var(--bars-earth-frame)' },
+  ];
+  ALTS = [
+    { k: 'dissatisfied', label: 'Dissatisfied', short: 'raw' },
+    { k: 'neutral',      label: 'Neutral',      short: 'working' },
+    { k: 'satisfied',    label: 'Satisfied',    short: 'paved' },
+  ];
+  MOVES = [
+    { k: 'wakeUp',  label: 'Wake Up',  sub: 'notice' },
+    { k: 'openUp',  label: 'Open Up',  sub: 'receive', fifth: true },
+    { k: 'cleanUp', label: 'Clean Up', sub: 'metabolize' },
+    { k: 'growUp',  label: 'Grow Up',  sub: 'capacity' },
+    { k: 'showUp',  label: 'Show Up',  sub: 'act' },
+  ];
+  PHASES = ['captured', 'context_named', 'elaborated', 'shared_or_acted'];
+
+  set(patch) { this.setState(patch); }
+  keep = () => { if (this.state.text.trim().length < 1) return; this.setState({ screen: 'kept' }); };
+  tuneNow = () => this.setState({ screen: 'tune', element: this.state.field });
+  toBoard = () => this.setState({ screen: 'capture', text: '', charge: '', field: null, element: null, altitude: null, move: null });
+  back = () => this.setState({ screen: 'capture' });
+  reset = () => this.setState({ screen: 'capture', text: '', charge: '', field: null, element: null, altitude: null, move: null });
+  graduate = () => { if (this.phaseIdx() >= 3) this.setState({ /* would call growQuestFromBar */ }); };
+
+  phaseIdx() {
+    const s = this.state;
+    return (s.element ? 1 : 0) + (s.altitude ? 1 : 0) + (s.move ? 1 : 0);
+  }
+  elGem(k) { const e = this.ELS.find((x) => x.k === k); return e ? e.gem : 'var(--bars-text-muted)'; }
+
+  chip(selected, gem, frame) {
+    return {
+      width: '40px', height: '40px', flex: '1', border: 'none', borderRadius: '9px', cursor: 'pointer', padding: 0,
+      fontFamily: 'var(--bars-font-body)', fontSize: '17px', color: selected ? gem : 'var(--bars-text-secondary)',
+      background: selected ? 'color-mix(in srgb,' + frame + ' 20%, transparent)' : 'var(--bars-surface-inset)',
+      boxShadow: selected ? 'inset 0 0 0 1.5px ' + frame + ', 0 0 16px -6px ' + gem : 'inset 0 0 0 1px var(--bars-line)',
+      transition: 'all 0.18s ease', textShadow: selected ? '0 0 8px ' + gem : 'none',
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const idx = this.phaseIdx();
+    const phase = this.PHASES[idx];
+    const phaseLabels = { captured: 'Captured · raw', context_named: 'Context named', elaborated: 'Elaborated', shared_or_acted: 'Ready to play' };
+    const ready = idx >= 3;
+
+    // capture field background
+    const fieldBg = {
+      fire:  'radial-gradient(ellipse at 50% 30%, color-mix(in srgb,var(--bars-fire-frame) 42%, #1a0e0a), #120b09 78%)',
+      water: 'radial-gradient(ellipse at 50% 30%, color-mix(in srgb,var(--bars-water-frame) 42%, #08151b), #0a1013 78%)',
+      wood:  'radial-gradient(ellipse at 50% 30%, color-mix(in srgb,var(--bars-wood-frame) 42%, #0c1810), #0b110d 78%)',
+      metal: 'radial-gradient(ellipse at 50% 30%, color-mix(in srgb,var(--bars-metal-frame) 38%, #14171a), #0e1012 78%)',
+      earth: 'radial-gradient(ellipse at 50% 30%, color-mix(in srgb,var(--bars-earth-frame) 40%, #1a140a), #120f0a 78%)',
+    };
+    const captureBg = s.field ? fieldBg[s.field] : 'var(--bars-surface-card)';
+
+    // capture field chips
+    const fieldChips = this.ELS.map((e) => ({
+      sig: e.sig, onClick: () => this.set({ field: s.field === e.k ? null : e.k }),
+      style: this.chip(s.field === e.k, e.gem, e.frame),
+    }));
+    // tune element chips
+    const elementChips = this.ELS.map((e) => ({
+      sig: e.sig, onClick: () => this.set({ element: e.k }),
+      style: this.chip(s.element === e.k, e.gem, e.frame),
+    }));
+    // altitude chips
+    const altGem = this.elGem(s.element);
+    const altitudeChips = this.ALTS.map((a) => ({
+      label: a.label, onClick: () => this.set({ altitude: a.k }),
+      style: {
+        flex: '1', padding: '9px 4px', border: 'none', borderRadius: '8px', cursor: 'pointer',
+        fontFamily: 'var(--bars-font-mono)', fontSize: '9.5px', letterSpacing: '0.04em', textTransform: 'uppercase',
+        color: s.altitude === a.k ? 'var(--bars-text-primary)' : 'var(--bars-text-secondary)',
+        background: s.altitude === a.k ? 'color-mix(in srgb,' + altGem + ' 18%, transparent)' : 'var(--bars-surface-inset)',
+        boxShadow: s.altitude === a.k ? 'inset 0 0 0 1.5px ' + altGem : 'inset 0 0 0 1px var(--bars-line)',
+        transition: 'all 0.18s ease',
+      },
+    }));
+    // move chips
+    const moveChips = this.MOVES.map((m) => {
+      const acc = m.fifth ? 'var(--bars-liminal)' : 'var(--bars-wood-frame)';
+      return {
+      label: m.label, sub: m.sub, onClick: () => this.set({ move: m.k }),
+      style: {
+        display: 'flex', flexDirection: 'column', gap: '1px', alignItems: 'flex-start',
+        padding: '9px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
+        background: s.move === m.k ? 'color-mix(in srgb,' + acc + ' 16%, transparent)' : 'var(--bars-surface-inset)',
+        boxShadow: s.move === m.k ? 'inset 0 0 0 1.5px ' + acc : (m.fifth ? 'inset 0 0 0 1px var(--bars-liminal)' : 'inset 0 0 0 1px var(--bars-line)'),
+        transition: 'all 0.18s ease',
+      },
+    }; });
+
+    // maturity ladder pips
+    const ladder = [0, 1, 2, 3].map((i) => ({
+      style: {
+        height: '4px', flex: '1', borderRadius: '2px',
+        background: i < idx ? 'var(--bars-wood-gem)' : (i === idx && idx < 3 ? 'var(--bars-wood-gem)' : 'var(--bars-line-strong)'),
+        boxShadow: i <= idx && idx > 0 ? '0 0 8px -1px var(--bars-wood-glow)' : 'none',
+        opacity: i <= idx ? 1 : 0.5, transition: 'all 0.3s ease',
+      },
+    }));
+
+    const el = this.ELS.find((x) => x.k === s.element);
+    const altObj = this.ALTS.find((x) => x.k === s.altitude);
+    const moveObj = this.MOVES.find((x) => x.k === s.move);
+
+    const keepEnabled = s.text.trim().length >= 1;
+    const keepStyle = {
+      width: '100%', padding: '15px', border: 'none', borderRadius: 'var(--bars-radius-md)', cursor: keepEnabled ? 'pointer' : 'not-allowed',
+      background: keepEnabled ? 'var(--bars-liminal)' : 'var(--bars-surface-inset)',
+      color: keepEnabled ? '#fff' : 'var(--bars-text-muted)',
+      fontFamily: 'var(--bars-font-display)', fontWeight: 700, fontSize: '15px',
+      boxShadow: keepEnabled ? '0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)' : 'inset 0 0 0 1px var(--bars-line)',
+      transition: 'all 0.2s ease',
+    };
+    const graduateStyle = {
+      width: '100%', padding: '15px', border: 'none', borderRadius: 'var(--bars-radius-md)', cursor: ready ? 'pointer' : 'not-allowed',
+      background: ready ? 'var(--bars-liminal)' : 'var(--bars-surface-inset)',
+      color: ready ? '#fff' : 'var(--bars-text-muted)',
+      fontFamily: 'var(--bars-font-display)', fontWeight: 700, fontSize: '15px',
+      boxShadow: ready ? '0 0 28px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18)' : 'inset 0 0 0 1px var(--bars-line)',
+      transition: 'all 0.25s ease',
+    };
+
+    const q = (v) => (v == null || v === '' ? 'null' : "'" + v + "'");
+    const muted = 'var(--bars-text-muted)';
+
+    return {
+      isCapture: s.screen === 'capture', isKept: s.screen === 'kept', isTune: s.screen === 'tune',
+      capColor: s.screen === 'capture' ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+      keptColor: s.screen === 'kept' ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+      tuneColor: s.screen === 'tune' ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+      reset: this.reset, keep: this.keep, tuneNow: this.tuneNow, toBoard: this.toBoard, back: this.back, graduate: this.graduate,
+      text: s.text, onText: (e) => this.set({ text: e.target.value }),
+      charge: s.charge, move: s.move, onCharge: (e) => this.set({ charge: e.target.value }),
+      captureBg, fieldChips, elementChips, altitudeChips, moveChips, ladder, keepStyle, graduateStyle,
+      elementKey: s.element || '', altitudeKey: s.altitude || 'dissatisfied',
+      cardText: s.text.trim() || 'The river doesn’t argue with the rock.',
+      nationLabel: el ? el.sig + ' ' + el.nation : 'untuned · raw',
+      nationColor: el ? el.gem : 'var(--bars-text-muted)',
+      altitudeShort: altObj ? altObj.short : '—',
+      moveLabel: moveObj ? moveObj.label.toUpperCase() : '',
+      maturityShort: ready ? 'READY' : phase.replace('_', ' ').toUpperCase(),
+      maturityLabel: phaseLabels[phase],
+      readyColor: ready ? 'var(--bars-liminal-glow)' : 'var(--bars-text-muted)',
+      graduateLabel: ready ? 'Show up — enter the game →' : 'Assign all three to play',
+      // payload panel
+      pText: s.text.trim() ? "'" + (s.text.trim().length > 22 ? s.text.trim().slice(0, 22) + '…' : s.text.trim()) + "'" : 'null',
+      pNation: q(s.element), pNationColor: s.element ? 'var(--bars-wood-gem)' : muted,
+      pIntensity: q(s.altitude), pIntColor: s.altitude ? 'var(--bars-wood-gem)' : muted,
+      pCharge: q(s.charge || null), pChargeColor: s.charge ? 'var(--bars-wood-gem)' : muted,
+      pMove: q(s.move), pMoveColor: s.move ? 'var(--bars-wood-gem)' : muted,
+      pMaturity: "'" + phase + "'",
+    };
+  }
+}
+</script>
+</body>
+</html>

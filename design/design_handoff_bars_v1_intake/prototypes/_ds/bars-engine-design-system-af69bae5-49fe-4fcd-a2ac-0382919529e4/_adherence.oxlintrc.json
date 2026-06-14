@@ -1,0 +1,362 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/cards/**",
+              "components/core/**",
+              "ui_kits/bars-engine/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Jost|Nunito|Space Mono))/i]",
+        "message": "Font not provided by the design system. Available: Jost, Nunito, Space Mono."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|element|altitude|style|key|ref|className|style|children)$/]",
+        "message": "<Badge> doesn't accept that prop. Declared props: children, variant, element, altitude, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|size|element|disabled|sigil|fullWidth|type|onClick|style|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: children, variant, size, element, disabled, sigil, fullWidth, type, onClick, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='type'] > Literal[value!=/^(?:button|submit|reset)$/]",
+        "message": "<Button> type must be one of 'button' | 'submit' | 'reset'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='ChromeLabel'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|tone|element|dot|style|key|ref|className|style|children)$/]",
+        "message": "<ChromeLabel> doesn't accept that prop. Declared props: children, tone, element, dot, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='CultivationCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:element|altitude|stage|interactive|selected|disabled|loading|ritual|animated|floating|className|style|children|key|ref|className|style|children)$/]",
+        "message": "<CultivationCard> doesn't accept that prop. Declared props: element, altitude, stage, interactive, selected, disabled, loading, ritual, animated, floating, className, style, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='ElementSigil'] > JSXAttribute > JSXIdentifier[name!=/^(?:element|size|framed|glow|style|key|ref|className|style|children)$/]",
+        "message": "<ElementSigil> doesn't accept that prop. Declared props: element, size, framed, glow, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='ElementSigil'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg|xl)$/]",
+        "message": "<ElementSigil> size must be one of 'sm' | 'md' | 'lg' | 'xl'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='MoveIcon'] > JSXAttribute > JSXIdentifier[name!=/^(?:move|size|color|title|style|key|ref|className|style|children)$/]",
+        "message": "<MoveIcon> doesn't accept that prop. Declared props: move, size, color, title, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='VibulonStat'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|label|align|size|delta|style|key|ref|className|style|children)$/]",
+        "message": "<VibulonStat> doesn't accept that prop. Declared props: value, label, align, size, delta, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='VibulonStat'] > JSXAttribute[name.name='align'] > Literal[value!=/^(?:left|right)$/]",
+        "message": "<VibulonStat> align must be one of 'left' | 'right'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='VibulonStat'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg)$/]",
+        "message": "<VibulonStat> size must be one of 'sm' | 'md' | 'lg'."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "Badge": {
+        "replaces": []
+      },
+      "Button": {
+        "replaces": []
+      },
+      "ChromeLabel": {
+        "replaces": []
+      },
+      "CultivationCard": {
+        "replaces": []
+      },
+      "ElementSigil": {
+        "replaces": []
+      },
+      "MoveIcon": {
+        "replaces": []
+      },
+      "VibulonStat": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--bars-alt-border-width-dissatisfied",
+      "--bars-alt-border-width-neutral",
+      "--bars-alt-border-width-satisfied",
+      "--bars-alt-glow-dissatisfied",
+      "--bars-alt-glow-neutral",
+      "--bars-alt-glow-satisfied",
+      "--bars-alt-opacity-dissatisfied",
+      "--bars-alt-opacity-neutral",
+      "--bars-alt-opacity-satisfied",
+      "--bars-bg-base",
+      "--bars-border-opacity",
+      "--bars-border-width",
+      "--bars-channel-anger",
+      "--bars-channel-fear",
+      "--bars-channel-joy",
+      "--bars-channel-neutrality",
+      "--bars-channel-sadness",
+      "--bars-dur-base",
+      "--bars-dur-fast",
+      "--bars-dur-press",
+      "--bars-dur-slow",
+      "--bars-earth-frame",
+      "--bars-earth-gem",
+      "--bars-earth-glow",
+      "--bars-earth-grad-from",
+      "--bars-earth-grad-to",
+      "--bars-earth-sigil",
+      "--bars-ease-out",
+      "--bars-element-frame",
+      "--bars-element-gem",
+      "--bars-element-glow",
+      "--bars-element-grad-from",
+      "--bars-element-grad-to",
+      "--bars-fire-frame",
+      "--bars-fire-gem",
+      "--bars-fire-glow",
+      "--bars-fire-grad-from",
+      "--bars-fire-grad-to",
+      "--bars-fire-sigil",
+      "--bars-float-period",
+      "--bars-float-period-neutral",
+      "--bars-float-period-satisfied",
+      "--bars-font-body",
+      "--bars-font-display",
+      "--bars-font-mono",
+      "--bars-glow-radius",
+      "--bars-inset-top",
+      "--bars-leading-normal",
+      "--bars-leading-snug",
+      "--bars-leading-tight",
+      "--bars-liminal",
+      "--bars-liminal-glow",
+      "--bars-line",
+      "--bars-line-dashed",
+      "--bars-line-strong",
+      "--bars-metal-frame",
+      "--bars-metal-gem",
+      "--bars-metal-glow",
+      "--bars-metal-grad-from",
+      "--bars-metal-grad-to",
+      "--bars-metal-sigil",
+      "--bars-radius-2xl",
+      "--bars-radius-full",
+      "--bars-radius-lg",
+      "--bars-radius-md",
+      "--bars-radius-sm",
+      "--bars-radius-xl",
+      "--bars-shadow-elevated",
+      "--bars-shadow-inset-top",
+      "--bars-shadow-pressed",
+      "--bars-space-1",
+      "--bars-space-10",
+      "--bars-space-12",
+      "--bars-space-2",
+      "--bars-space-3",
+      "--bars-space-4",
+      "--bars-space-5",
+      "--bars-space-6",
+      "--bars-space-8",
+      "--bars-surface-card",
+      "--bars-surface-elevated",
+      "--bars-surface-inset",
+      "--bars-text-2xl",
+      "--bars-text-2xs",
+      "--bars-text-3xl",
+      "--bars-text-4xl",
+      "--bars-text-base",
+      "--bars-text-lg",
+      "--bars-text-muted",
+      "--bars-text-primary",
+      "--bars-text-secondary",
+      "--bars-text-sm",
+      "--bars-text-xl",
+      "--bars-text-xs",
+      "--bars-tracking-normal",
+      "--bars-tracking-tight",
+      "--bars-tracking-wide",
+      "--bars-tracking-widest",
+      "--bars-water-frame",
+      "--bars-water-gem",
+      "--bars-water-glow",
+      "--bars-water-grad-from",
+      "--bars-water-grad-to",
+      "--bars-water-sigil",
+      "--bars-weight-black",
+      "--bars-weight-bold",
+      "--bars-weight-medium",
+      "--bars-weight-regular",
+      "--bars-weight-semibold",
+      "--bars-wood-frame",
+      "--bars-wood-gem",
+      "--bars-wood-glow",
+      "--bars-wood-grad-from",
+      "--bars-wood-grad-to",
+      "--bars-wood-sigil"
+    ],
+    "tokenKinds": {
+      "--bars-bg-base": "color",
+      "--bars-surface-card": "color",
+      "--bars-surface-elevated": "color",
+      "--bars-surface-inset": "color",
+      "--bars-text-primary": "font",
+      "--bars-text-secondary": "font",
+      "--bars-text-muted": "font",
+      "--bars-line": "color",
+      "--bars-line-strong": "color",
+      "--bars-line-dashed": "color",
+      "--bars-inset-top": "spacing",
+      "--bars-liminal": "color",
+      "--bars-liminal-glow": "color",
+      "--bars-fire-sigil": "other",
+      "--bars-fire-frame": "color",
+      "--bars-fire-glow": "color",
+      "--bars-fire-gem": "color",
+      "--bars-fire-grad-from": "color",
+      "--bars-fire-grad-to": "color",
+      "--bars-water-sigil": "other",
+      "--bars-water-frame": "color",
+      "--bars-water-glow": "color",
+      "--bars-water-gem": "color",
+      "--bars-water-grad-from": "color",
+      "--bars-water-grad-to": "color",
+      "--bars-wood-sigil": "other",
+      "--bars-wood-frame": "color",
+      "--bars-wood-glow": "color",
+      "--bars-wood-gem": "color",
+      "--bars-wood-grad-from": "color",
+      "--bars-wood-grad-to": "color",
+      "--bars-metal-sigil": "other",
+      "--bars-metal-frame": "color",
+      "--bars-metal-glow": "color",
+      "--bars-metal-gem": "color",
+      "--bars-metal-grad-from": "color",
+      "--bars-metal-grad-to": "color",
+      "--bars-earth-sigil": "other",
+      "--bars-earth-frame": "color",
+      "--bars-earth-glow": "color",
+      "--bars-earth-gem": "color",
+      "--bars-earth-grad-from": "color",
+      "--bars-earth-grad-to": "color",
+      "--bars-channel-anger": "color",
+      "--bars-channel-sadness": "color",
+      "--bars-channel-joy": "color",
+      "--bars-channel-fear": "color",
+      "--bars-channel-neutrality": "color",
+      "--bars-element-frame": "color",
+      "--bars-element-glow": "color",
+      "--bars-element-gem": "color",
+      "--bars-element-grad-from": "color",
+      "--bars-element-grad-to": "color",
+      "--bars-font-display": "font",
+      "--bars-font-body": "font",
+      "--bars-font-mono": "font",
+      "--bars-text-2xs": "font",
+      "--bars-text-xs": "font",
+      "--bars-text-sm": "font",
+      "--bars-text-base": "font",
+      "--bars-text-lg": "font",
+      "--bars-text-xl": "font",
+      "--bars-text-2xl": "font",
+      "--bars-text-3xl": "font",
+      "--bars-text-4xl": "font",
+      "--bars-weight-regular": "font",
+      "--bars-weight-medium": "font",
+      "--bars-weight-semibold": "font",
+      "--bars-weight-bold": "font",
+      "--bars-weight-black": "font",
+      "--bars-leading-tight": "font",
+      "--bars-leading-snug": "font",
+      "--bars-leading-normal": "font",
+      "--bars-tracking-tight": "font",
+      "--bars-tracking-normal": "font",
+      "--bars-tracking-wide": "font",
+      "--bars-tracking-widest": "font",
+      "--bars-space-1": "spacing",
+      "--bars-space-2": "spacing",
+      "--bars-space-3": "spacing",
+      "--bars-space-4": "spacing",
+      "--bars-space-5": "spacing",
+      "--bars-space-6": "spacing",
+      "--bars-space-8": "spacing",
+      "--bars-space-10": "spacing",
+      "--bars-space-12": "spacing",
+      "--bars-radius-sm": "radius",
+      "--bars-radius-md": "radius",
+      "--bars-radius-lg": "radius",
+      "--bars-radius-xl": "radius",
+      "--bars-radius-2xl": "radius",
+      "--bars-radius-full": "radius",
+      "--bars-alt-border-width-dissatisfied": "spacing",
+      "--bars-alt-border-width-neutral": "spacing",
+      "--bars-alt-border-width-satisfied": "spacing",
+      "--bars-alt-opacity-dissatisfied": "other",
+      "--bars-alt-opacity-neutral": "other",
+      "--bars-alt-opacity-satisfied": "other",
+      "--bars-alt-glow-dissatisfied": "spacing",
+      "--bars-alt-glow-neutral": "spacing",
+      "--bars-alt-glow-satisfied": "spacing",
+      "--bars-border-width": "color",
+      "--bars-border-opacity": "color",
+      "--bars-glow-radius": "radius",
+      "--bars-shadow-inset-top": "shadow",
+      "--bars-shadow-pressed": "shadow",
+      "--bars-shadow-elevated": "shadow",
+      "--bars-ease-out": "other",
+      "--bars-dur-press": "other",
+      "--bars-dur-fast": "other",
+      "--bars-dur-base": "other",
+      "--bars-dur-slow": "other",
+      "--bars-float-period-neutral": "other",
+      "--bars-float-period-satisfied": "other",
+      "--bars-float-period": "other"
+    },
+    "fontFamilies": [
+      "Jost",
+      "Nunito",
+      "Space Mono"
+    ]
+  }
+}
