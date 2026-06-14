@@ -82,7 +82,9 @@ if (!access.allowed) return <Paywall title="…" authed={access.authed} />
 
 ## 5. Go-live checklist
 
-1. Apply migrations: `npx prisma migrate deploy` → `npm run db:record-schema-hash`.
+1. Apply migrations: **`npm run db:migrate:deploy`** (resolves the direct
+   Postgres URL from `.env`/`.env.local` and records the schema hash). Plain
+   `npx prisma migrate deploy` fails if only the Accelerate URL is present.
 2. Upload the finished digital files (book, RPG handbook, deck, …) at
    **`/admin/deliverables`** — buyers download them at `/downloads`.
 3. Create each Gumroad product; enable license keys; set receipt → `/redeem`.

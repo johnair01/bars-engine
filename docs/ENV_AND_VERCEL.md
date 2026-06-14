@@ -53,7 +53,7 @@ Before merging schema changes or deploying to production:
 |-------|--------|
 | **DATABASE_URL** | Set for **Production** scope in Vercel Dashboard → Settings → Environment Variables. |
 | **Migration file** | Every schema change must have a migration file. Run `npx prisma migrate dev --name describe_change` before commit. **`prisma db push` is forbidden** (see [PRISMA_MIGRATE_STRATEGY.md](PRISMA_MIGRATE_STRATEGY.md)). |
-| **Migrate deploy** | Test locally: `DATABASE_URL="<prod-url>" npx prisma migrate deploy` must succeed. If it fails, fix before merging. |
+| **Migrate deploy** | Run **`npm run db:migrate:deploy`** — it loads `.env`/`.env.local`, picks the **direct** Postgres URL (rejecting the Accelerate `prisma+postgres://` URL that `vercel env pull` provides, which can't migrate), exports it as `DATABASE_URL`, runs `prisma migrate deploy`, and records the schema hash. (Equivalent manual form: `DATABASE_URL="<direct-prod-url>" npx prisma migrate deploy`.) `npm run db:migrate:status` does the same for a read-only status check. |
 | **Diagnose first** | If prod login fails, run `DATABASE_URL="<prod>" npm run diagnose:prod-db` before applying fixes. |
 
 **Build behavior**:
