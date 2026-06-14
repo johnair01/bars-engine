@@ -19,6 +19,19 @@ export function isFreeChapter(chapterId: string): boolean {
 }
 
 /**
+ * Non-free chapters that actually have in-app content authored (a JSON in
+ * public/handbook/). Empty at launch — the paid product ships as a Gumroad PDF
+ * and the in-app reader gains chapters over time (content pipeline, 1.79 HCP).
+ * Add ids here as chapters are published so the gate renders the reader instead
+ * of the "unlocked, coming soon" panel.
+ */
+export const PUBLISHED_CHAPTER_IDS: string[] = []
+
+export function isPublishedChapter(chapterId: string): boolean {
+  return PUBLISHED_CHAPTER_IDS.includes(chapterId)
+}
+
+/**
  * Whether the given player holds an active entitlement for the book.
  * Fails closed: any unexpected error denies access (callers still allow free
  * chapters explicitly via isFreeChapter).

@@ -50,8 +50,8 @@ const passages = [
   {
     name: 'STEP_4',
     pid: '5',
-    text: '### Step 4: Chapter unlocks\n\n[Open /handbook/chapter-one](/handbook/chapter-one) again now that you are entitled. Confirm the paywall is **gone** and the reader shell loads (content arrives once chapters are authored via the content pipeline).',
-    cleanText: 'Step 4: Chapter unlocks. Open /handbook/chapter-one again now that you are entitled. Confirm the paywall is gone and the reader shell loads (content arrives once chapters are authored via the content pipeline).',
+    text: '### Step 4: Chapter unlocks\n\n[Open /handbook/chapter-one](/handbook/chapter-one) again now that you are entitled. Confirm the paywall is **gone** — you now see the **"You’re unlocked"** panel pointing to your Gumroad download (in-app chapters arrive as they are authored).',
+    cleanText: "Step 4: Chapter unlocks. Open /handbook/chapter-one again now that you are entitled. Confirm the paywall is gone — you now see the You're unlocked panel pointing to your Gumroad download (in-app chapters arrive as they are authored).",
     links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }],
   },
   {
