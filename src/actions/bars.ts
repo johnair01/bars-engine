@@ -12,6 +12,7 @@ import {
     type SoilKind,
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
+import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
 
 // Element channel ('nation' column) — valid capture-time field-tint values.
 // Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
@@ -479,7 +480,7 @@ export async function listMyBars() {
     return db.customBar.findMany({
         where: {
             creatorId: playerId,
-            type: 'bar',
+            type: { in: [...CAPTURE_BAR_TYPES] },
             status: 'active',
             archivedAt: null,
         },
@@ -520,7 +521,7 @@ export async function listMyBarsForGarden(filters: BarGardenFilters = {}) {
     const bars = await db.customBar.findMany({
         where: {
             creatorId: playerId,
-            type: { in: ['bar', 'charge_capture'] },
+            type: { in: [...CAPTURE_BAR_TYPES] },
             status: 'active',
             ...(includeComposted ? {} : { archivedAt: null }),
         },

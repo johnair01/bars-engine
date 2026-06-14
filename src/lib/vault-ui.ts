@@ -18,6 +18,14 @@ export const VAULT_ROOM_LIST_CAP = 200
 /** Staleness: "idle" if created before this many days ago (CustomBar has no updatedAt). */
 export const VAULT_STALE_DAYS = 30
 
+/**
+ * Capture BAR types — the two BSM-eligible kinds a captured charge can take.
+ * Both entry points (the /bars/create quick-capture → 'bar', the Vault
+ * "Capture charge" → 'charge_capture') produce a captured seed; surfaces that
+ * list captures should treat them identically. Keep board + Vault in lockstep.
+ */
+export const CAPTURE_BAR_TYPES = ['bar', 'charge_capture'] as const
+
 export function daysAgoDate(days: number): Date {
     const d = new Date()
     d.setDate(d.getDate() - days)
