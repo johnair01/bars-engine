@@ -34,7 +34,14 @@ const CAPTURE_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
 
 async function getPlayerId(): Promise<string | null> {
     const cookieStore = await cookies()
-    return cookieStore.get('bars_player_id')?.value ?? null
+    const fromCookie = cookieStore.get('bars_player_id')?.value
+    if (fromCookie) return fromCookie
+    // DEV BYPASS: mirror getCurrentPlayer() so dogfooding (capture, tune, listings)
+    // works without a logged-in session. Dev-only; never applies in production.
+    if (process.env.NODE_ENV === 'development' && process.env.DEV_PLAYER_ID) {
+        return process.env.DEV_PLAYER_ID
+    }
+    return null
 }
 
 /**
@@ -147,6 +154,8 @@ export async function createBarForUpload(data: {
         }
 
         revalidatePath('/bars')
+        revalidatePath('/bars/garden')
+        revalidatePath('/hand')
         revalidatePath('/')
         return { barId: bar.id }
     } catch (e: unknown) {
@@ -226,6 +235,8 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
         console.log(`[BAR] Created bar (${bar.id}) by player ${playerId}`)
 
         revalidatePath('/bars')
+        revalidatePath('/bars/garden')
+        revalidatePath('/hand')
         revalidatePath('/')
         return { success: true, barId: bar.id }
     } catch (e: unknown) {
