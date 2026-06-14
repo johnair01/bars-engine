@@ -100,9 +100,21 @@ Migration was applied via `prisma migrate deploy` (2026-06-14).
    `GUMROAD_PRODUCT_MAP` (optional JSON `{permalink|id|name: OfferKey}`; otherwise
    product permalinks are derived from the `NEXT_PUBLIC_GUMROAD_*_URL` links).
 
-**Track A remaining:** wire `hasCapability`/`hasAppAccess` gates into the
-remaining paid surfaces (game, handbook reading, 30-day app access); subscription
-**renewal** auto-extension (recurring Gumroad charges → extend entitlement);
+- **Game / app-access gating (soft):** `/play` + `/adventures` gated on
+  `app-access` with `{ soft: true }` — dormant until `ENABLE_LAUNCH_GATES=true`
+  and grandfathering players created before `LAUNCH_GATE_CUTOFF`, so the existing
+  community is never locked out (only post-launch signups must purchase).
+- **Subscription renewals:** Gumroad recurring charges (`is_recurring_charge`)
+  → `extendSubscription(subscription_id, days)` extends the entitlement;
+  `subscriptionId` is tracked on `RedemptionCode` + `Entitlement`
+  (migration `20260614033000_add_entitlement_subscription_id`, additive).
+
+**Operational setup:** see the runbook —
+[docs/runbooks/GUMROAD_LAUNCH_SETUP.md](../runbooks/GUMROAD_LAUNCH_SETUP.md)
+(products, license keys, Ping URL, env, go-live + gate-enablement checklist).
+
+**Track A remaining:** subscription **cancellation** handling (currently lapses
+at expiry); gate any further paid surfaces (e.g. handbook reading) as needed;
 admin mint UI for `mintLaunchCode`; later, remove the `RedemptionPack` scaffold.
 
 ### Track C — Book + RPG handbook deliverables — NOT STARTED

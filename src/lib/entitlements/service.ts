@@ -111,6 +111,8 @@ export interface MintInput {
   sku: OfferKey | string
   source?: string
   externalOrderId?: string | null
+  /** Gumroad subscription id — lets renewals find and extend the entitlement. */
+  subscriptionId?: string | null
   /** Use this exact code (e.g. a Gumroad license key) instead of generating one. */
   code?: string | null
   /** Days the buyer has to claim the code; omitted ⇒ no claim deadline. */
@@ -119,7 +121,7 @@ export interface MintInput {
 
 /** Mint an unredeemed code for a purchase (webhook or admin). Idempotent. */
 export async function mintRedemptionCode(input: MintInput) {
-  const { sku, source = 'gumroad', externalOrderId = null, claimWindowDays } = input
+  const { sku, source = 'gumroad', externalOrderId = null, subscriptionId = null, claimWindowDays } = input
   const explicitCode = input.code ? input.code.trim().toUpperCase() : null
 
   // Idempotency: one code per external order.
@@ -150,6 +152,7 @@ export async function mintRedemptionCode(input: MintInput) {
           grantDurationDays: grant.durationDays ?? null,
           source,
           externalOrderId,
+          subscriptionId,
           status: 'unredeemed',
           expiresAt,
         },
@@ -159,6 +162,26 @@ export async function mintRedemptionCode(input: MintInput) {
     }
   }
   throw new Error('Failed to mint redemption code')
+}
+
+/**
+ * Subscription renewal: extend active entitlements for a Gumroad subscription by
+ * `durationDays`, from the later of now or the current expiry (so a renewal that
+ * arrives early stacks rather than truncating). Returns how many were extended.
+ */
+export async function extendSubscription(subscriptionId: string, durationDays: number): Promise<number> {
+  const now = new Date()
+  const active = await db.entitlement.findMany({
+    where: { subscriptionId, status: 'active' },
+  })
+  let extended = 0
+  for (const ent of active) {
+    const base = ent.expiresAt && ent.expiresAt > now ? ent.expiresAt : now
+    const expiresAt = new Date(base.getTime() + durationDays * 24 * 60 * 60 * 1000)
+    await db.entitlement.update({ where: { id: ent.id }, data: { expiresAt } })
+    extended++
+  }
+  return extended
 }
 
 /**
@@ -217,6 +240,7 @@ export async function redeemCode(rawCode: string, playerId: string): Promise<Red
         status: 'active',
         source: rc.source,
         externalOrderId: rc.externalOrderId,
+        subscriptionId: rc.subscriptionId,
         startsAt: redeemedAt,
         expiresAt,
       },

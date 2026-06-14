@@ -15,8 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
-import { mintRedemptionCode, revokeByExternalOrderId } from '@/lib/entitlements/service'
+import { mintRedemptionCode, revokeByExternalOrderId, extendSubscription } from '@/lib/entitlements/service'
 import { resolveSkuFromGumroad } from '@/lib/launch/gumroad'
+import { grantForSku } from '@/lib/launch/grants'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -81,10 +82,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, action: 'ignored_unrecognized_product' })
     }
 
+    const subscriptionId = get('subscription_id')
+
+    // Recurring renewal charge → extend the existing entitlement, don't re-mint.
+    if (subscriptionId && get('is_recurring_charge') === 'true') {
+      const days = grantForSku(sku).durationDays ?? 30
+      const extended = await extendSubscription(subscriptionId, days)
+      return NextResponse.json({ ok: true, action: 'renewed', sku, extended })
+    }
+
     const rc = await mintRedemptionCode({
       sku,
       source: 'gumroad',
       externalOrderId: saleId,
+      subscriptionId,
       code: get('license_key'),
     })
 

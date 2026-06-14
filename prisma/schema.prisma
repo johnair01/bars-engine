@@ -2411,6 +2411,7 @@ model Entitlement {
   status          String    @default("active")
   source          String    @default("gumroad")
   externalOrderId String?
+  subscriptionId  String?
   startsAt        DateTime  @default(now())
   expiresAt       DateTime?
   metadata        String?
@@ -2421,6 +2422,7 @@ model Entitlement {
   @@unique([playerId, sku, externalOrderId])
   @@index([playerId, status])
   @@index([sku, status])
+  @@index([subscriptionId])
   @@map("entitlements")
 }
 
@@ -2434,6 +2436,7 @@ model RedemptionCode {
   grantDurationDays  Int?
   source             String    @default("gumroad")
   externalOrderId    String?   @unique
+  subscriptionId     String?
   status             String    @default("unredeemed")
   redeemedByPlayerId String?
   entitlementId      String?   @unique

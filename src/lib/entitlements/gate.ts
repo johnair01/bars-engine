@@ -2,8 +2,14 @@
  * Capability gating for paid surfaces (Track A).
  *
  * Server-only. `checkAccess` resolves the signed-in player, grants admins a
- * bypass, and otherwise checks an active entitlement capability. Premium pages
- * call this and render their content or a <Paywall/> accordingly.
+ * bypass, and otherwise checks an active entitlement capability.
+ *
+ * Two gate strengths:
+ *   - hard (default): always enforced — for net-new premium surfaces (e.g. /deck).
+ *   - soft (`{ soft: true }`): dormant until `ENABLE_LAUNCH_GATES=true`, and even
+ *     then grandfathers players who existed before `LAUNCH_GATE_CUTOFF`. This is
+ *     for surfaces the existing community already uses (the game / app access),
+ *     so we never lock them out — only post-launch signups must purchase.
  */
 
 import { getCurrentPlayer } from '@/lib/auth'
@@ -17,7 +23,23 @@ export interface AccessResult {
   playerId: string | null
 }
 
-export async function checkAccess(capability: Capability): Promise<AccessResult> {
+function launchGatesEnabled(): boolean {
+  return process.env.ENABLE_LAUNCH_GATES === 'true'
+}
+
+/** Players created before LAUNCH_GATE_CUTOFF keep access when soft gates switch on. */
+function isGrandfathered(createdAt: Date): boolean {
+  const raw = process.env.LAUNCH_GATE_CUTOFF
+  if (!raw) return false
+  const cutoff = new Date(raw)
+  if (Number.isNaN(cutoff.getTime())) return false
+  return createdAt < cutoff
+}
+
+export async function checkAccess(
+  capability: Capability,
+  opts: { soft?: boolean } = {},
+): Promise<AccessResult> {
   const player = await getCurrentPlayer()
   if (!player) {
     return { authed: false, isAdmin: false, allowed: false, playerId: null }
@@ -29,6 +51,13 @@ export async function checkAccess(capability: Capability): Promise<AccessResult>
     return { authed: true, isAdmin: true, allowed: true, playerId: player.id }
   }
 
-  const allowed = await hasCapability(player.id, capability)
-  return { authed: true, isAdmin: false, allowed, playerId: player.id }
+  if (await hasCapability(player.id, capability)) {
+    return { authed: true, isAdmin: false, allowed: true, playerId: player.id }
+  }
+
+  if (opts.soft && (!launchGatesEnabled() || isGrandfathered(player.createdAt))) {
+    return { authed: true, isAdmin: false, allowed: true, playerId: player.id }
+  }
+
+  return { authed: true, isAdmin: false, allowed: false, playerId: player.id }
 }
