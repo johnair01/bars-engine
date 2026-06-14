@@ -29,19 +29,22 @@ const run = (cmd) => execSync(cmd, { cwd: gameDir, stdio: "inherit", shell: true
 console.log("▶ Building mtgoa-game into public/play …");
 try {
   // Prefer a clean, lockfile-pinned install; fall back if no lockfile present.
+  // `--include=dev` is REQUIRED: Vercel builds with NODE_ENV=production, under
+  // which npm omits devDependencies — but the game's build tools (vite,
+  // @vitejs/plugin-react, typescript, tailwind) all live in devDependencies, so
+  // without this the `tsc -b && vite build` step fails (TS2307 / missing vite).
   const hasLock = existsSync(path.join(gameDir, "package-lock.json"));
-  const alreadyInstalled = existsSync(path.join(gameDir, "node_modules"));
   if (hasLock) {
-    run("npm ci");
-  } else if (!alreadyInstalled) {
-    run("npm install");
+    run("npm ci --include=dev --no-audit --no-fund");
+  } else {
+    run("npm install --include=dev --no-audit --no-fund");
   }
   run("npm run build");
   console.log("✓ mtgoa-game built → public/play");
 } catch (err) {
   console.error("");
   console.error("❌ mtgoa-game build failed — /play will be missing from this deploy.");
-  console.error("   Local repro: cd mtgoa-game && npm ci && npm run build");
+  console.error("   Local repro: cd mtgoa-game && npm ci --include=dev && npm run build");
   console.error("   To unblock a web-only build temporarily: SKIP_GAME_BUILD=1 npm run build");
   console.error("");
   process.exit(1);
