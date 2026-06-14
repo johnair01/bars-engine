@@ -152,3 +152,73 @@ later; never required.)
 
 > Decision needed from host before build: §11 Q1 (target), Q2 (earmark), Q3 (in-kind
 > readout), Q4 (name consent). Everything else can proceed.
+
+---
+
+## 13. Round 2 — host interview (2026-06-14): the three walls are three *kinds* of money
+
+The "three walls" sharpened from labels-on-one-dollar to **three distinct transaction
+types**, each with different mechanics, obligations, and giver flow. Still **one barn,
+three walls** (host confirmed §3 Option A), but each wall's "give" button does the right thing.
+
+| Wall | Kind | Mechanic | Tax-deductible? | Fulfillment |
+|---|---|---|---|---|
+| **1. Replace the car** | Personal **gift** | Plain ask, fills first | No | None |
+| **2. Pre-sale** | **Commerce** | Purchase → owe a product | No | Host fulfills |
+| **3. Runway / "non-profit"** | **Recurring patronage** | $/month pledge | Not yet (no fiscal sponsor) | Ongoing access/perks |
+
+### Wall 1 — The car (gift, PRIORITY)
+- The exploded car was valued at **$7,000**; this anchors a rough wall target (pending research).
+- Host names this the **priority wall** — highest sympathy, gets dollars flowing; should fill first / be most visible. Unallocated gifts default here.
+- **ACTION ITEM (research):** reliable replacement car *type + price* in the **Portland, Wichita, and Seattle–Tacoma** areas (host moving between these). Baseline: ~$7k value to match. Output sets Wall 1's `targetValue`.
+
+### Wall 2 — Pre-sale (commerce, "the one that gets $$ flowing")
+Five products. **Repo reality (verified):** `src/lib/marketing/products.ts` has only
+**Book / Deck / Game** and **no prices** — everything reads "Free." So prices must be
+**set**, and the RPG Book + pins must be **added** to the catalog.
+
+| Item | In catalog? | Draft price (host to confirm) |
+|---|---|---|
+| The Book — *Mastering the Game of Allyship* | ✅ "The Book" | **$30** (pre-order, in hands end of July) |
+| The Roleplaying Game Book | ❌ add | **$40** |
+| The Deck (scene cards) | ✅ "The Deck" | **$25** |
+| Igniting Joy (the app/game) | ✅ "The Game" (rename) | **$5/mo or $50 lifetime** |
+| Allyship enamel pins | ❌ add | **$12 ea / 3 for $30** |
+| Founder bundle (all) | — | **$99** (hero unit) |
+
+- **Not strictly a pre-sale:** by the party the book may be done; digital items launch
+  *ahead* of the 18th. Honest promise on the page: **"book in hands by end of July."**
+- **Fulfillment:** host fulfills personally.
+- **Tracking:** **dollars AND units** (host: enables **daily player outreach targets** —
+  e.g. "to hit N bundles by the 18th, each player reaches out to X people/day").
+
+### Wall 3 — Runway (recurring patronage, NOT a lump sum)
+Host framing: *"I need money to stay alive and runway to make that money. Book done →
+host more events → sell merch at events → continue the game. Ultimate goal: **$6,000/month**
+to cover expenses. It's a **kickstarter for continued giving**."* (Detailed in the
+Mastering Allyship non-profit docs.)
+
+- **Natural unit = $/month recurring**, not total raised. Render as **"% of $6k/mo monthly
+  runway committed"** or **"N months of runway funded."** The wall that *keeps standing*, not one that finishes.
+- **Framing = sustaining member / patron**, not "donor" (honest + warmer for the
+  Portland anti-extraction ethos). Tiers e.g. **$6 / $18 / $50 per month**, each naming a perk.
+- **No fiscal sponsor yet** → cannot honestly say "tax-deductible." **MVP:** skip the
+  501c3 path; **party tickets** (in person $25 / digital $10, draft) absorb the
+  charitable-flavored giving as a clean transaction.
+- **ACTION ITEM (research, non-blocking):** evaluate a **fiscal sponsor / 501c3** so a
+  future version of Wall 3 *can* offer tax-deductible giving.
+
+### Scale assumptions (for modeling totals)
+- **~50 in person** (safe goal) + a **digital event** + **smaller lead-up events**.
+- Combined headline barn = Wall 1 (car) + Wall 2 (pre-sale $) + Wall 3 (first-month runway).
+
+## 14. Updated open questions (post Round 2)
+
+Resolved: §11 Q2 (earmark — givers pick a wall, unallocated → car), Q3 (in-kind — parallel
+"hands & beams" readout). Still open:
+1. **Confirm/adjust the draft price points** in §13 Wall 2 (esp. Igniting Joy sub vs. lifetime, bundle price).
+2. **Car research output** → Wall 1 `targetValue` (pending the Portland/Wichita/Seattle–Tacoma research).
+3. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
+4. **Party ticket prices** ($25 / $10 draft) and that they route to Wall 3.
+5. Name-display consent on planks (§11 Q4 — still open).
+6. Stretch behavior past each wall's target.
