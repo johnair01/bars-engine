@@ -251,8 +251,9 @@ their money sustains the mission. Design for **easy + joyful + sustainable** ful
   2. **Members bring real roadblocks** → metabolized live into BARs / Roadblock Quests
      (composting their material, not generating new content).
   3. **One repeatable ritual** — open → scene → practice → metabolize → close (muscle memory, no fresh prep).
-  4. **Cadence: MONTHLY (90 min) live as the sustainable v1; WEEKLY as a labeled stretch**
-     once a cohort can co-hold it. (Avoid promising weekly solo from day one — "speed is honest.")
+  4. **Cadence: BIWEEKLY live (~2×/month, 60–90 min)** — host-confirmed. Middle path:
+     more intimacy than monthly, half the facilitation load of weekly. (Weekly remains a
+     future stretch once a cohort can co-hold it; monthly is the fallback if load bites.)
   5. **Founding-cohort identity** — named in app/book credits + a permanent provenance BAR ($0 to give, high meaning).
   - The lighter **quarterly group call** lives at the **$50 Post** tier so the ladder steps up cleanly.
 - **Readout = "% of $6,000/mo monthly runway committed."** $6k/mo is the **horizon**, not
@@ -299,8 +300,8 @@ party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (�
 **Wall 1 target = $8,500** (§13), **Wall 3 tier ladder v1 + $1,500/mo party sub-goal**
 (§13, host-confirmed), **Keystone = Allyship Dojo** (group, founding students, ranks; quarterly
 1:1 dropped), **name consent = opt-in** (§13), **overflow → Wall 3 + "keep building" redirect
-panel** (§13). **Design is fully decided.** Remaining = implementation + one soft call:
-1. **Dojo cadence** — captured as monthly v1 / weekly stretch; host to confirm if they'd rather launch weekly.
-2. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
+panel** (§13), **Dojo cadence = biweekly live** (§13, host-confirmed). **Design is fully
+decided — only implementation remains:**
+1. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
    physical/digital variants, the **RPG Book, enamel pins, and Igniting Joy** added, and the
    "The Game" entry reframed as **The App** ($10/mo) with the Founder bundle ($150 lifetime).
