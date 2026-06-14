@@ -219,7 +219,28 @@ Mastering Allyship non-profit docs.)
 - **Natural unit = $/month recurring**, not total raised. Render as **"% of $6k/mo monthly
   runway committed"** or **"N months of runway funded."** The wall that *keeps standing*, not one that finishes.
 - **Framing = sustaining member / patron**, not "donor" (honest + warmer for the
-  Portland anti-extraction ethos). Tiers e.g. **$6 / $18 / $50 per month**, each naming a perk.
+  Portland anti-extraction ethos). One-time gifts mint a **plank**; recurring patrons are
+  the **standing frame that keeps the barn up** — hence load-bearing tier names.
+
+**Tier ladder (v1 — host to confirm perks + party sub-goal):**
+
+| Tier | $/mo | Perks (each tier includes all below it) |
+|---|---|---|
+| **Raftermate** | **$6** | Name on the digital barn wall (consent-aware); monthly patron dispatch; a stamped **patron BAR** (in-game artifact, $0 to make) |
+| **Beam** | **$18** | + **The App included** ($10/mo value baked in) + early access to event tickets |
+| **Post** | **$50** | + a **voice/vote in what gets built or written next** + name read aloud at events + quarterly patron group call |
+| **Keystone** | **$100** | + a **quarterly 1:1** with host (allyship coaching) + name on the physical barn banner + comped event tickets |
+| **Name your own** | custom | honor-system; flows straight to runway |
+
+- **Perk design rule:** recognition + access + community only — nothing that costs the
+  solo host money or heavy labor, and **no Wall 2 sellable products given away** (keeps
+  commerce intact). The **App bundles at Beam** so a $10/mo subscriber upgrades to $18/mo
+  patronage for +$8 — product and patronage reinforce, not compete.
+- **Readout = "% of $6,000/mo monthly runway committed."** $6k/mo is the **horizon**, not
+  the party-night ask.
+- **Party-night Wall 3 sub-goal (recommended): $1,500/mo = 25% of runway.** Reachable mix
+  with ~50 in-person + digital: 20 Raftermate ($120) + 25 Beam ($450) + 12 Post ($600) +
+  3 Keystone ($300) = **$1,470/mo**. Gives the room a winnable "first quarter of the roof" moment.
 - **No fiscal sponsor yet** → cannot honestly say "tax-deductible." **MVP:** skip the
   501c3 path; **party tickets** (**$30**, in person or digital — confirmed) absorb the
   charitable-flavored giving as a clean transaction.
@@ -234,8 +255,8 @@ Mastering Allyship non-profit docs.)
 
 Resolved: §11 Q2 (earmark), Q3 (in-kind readout), Wall 2 prices incl. **pins $15** (§13),
 party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (§13),
-**Wall 1 target = $8,500** (§13). Still open:
-1. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
+**Wall 1 target = $8,500** (§13), **Wall 3 tier ladder v1 + $1,500/mo party sub-goal** (§13). Still open:
+1. **Wall 3 perks** — confirm host can fulfill the $50 vote/voice + $100 quarterly 1:1, and the party-night $1,500/mo sub-goal.
 2. Name-display consent on planks (§11 Q4 — still open).
 3. Stretch behavior past each wall's target.
 4. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
