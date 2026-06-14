@@ -163,9 +163,33 @@ which is exactly what "go through the game master faces" asks for.
 | **Capabilities / channels** | Agency(Fire) · Exploration(Metal) · Rest(Earth) · Participation(Wood) · Connection(Water) | *what gets restored* (§7) |
 | **GM Faces** | Shaman · Challenger · Regent · Architect · Diplomat · Sage (×2 moves = 12) | the *voice/lens* that performs the move |
 
-These are **lenses, not a matrix to enumerate** (governance §6). A given face-move is *tagged* with
-a throughput move + a capability; the player can consult by any axis (face / capability / move) or
-draw at random.
+These are **lenses, not a matrix to enumerate** (governance §6). The player can consult by any axis
+(face / capability / move) or draw at random.
+
+> **Correction (author 2026-06-14): faces are channel-agnostic.** Do **not** map a face to one
+> channel. **Each of the six faces can hold and perform in all five channels** — face × channel is a
+> full cross-product (the Shaman can act through Fire, Water, Metal, Wood, or Earth; so can every
+> face). Capability/channel is therefore a *selectable dimension at consult time*, not a fixed tag
+> on a face. (Supersedes the earlier "tag each face-move with one capability" idea.)
+
+## 8a. OPEN GAP — GM-face sublevels (author to provide)
+
+**Each GM face has sublevels within it, and those sublevels have their own moves.** This is **not in
+the uploaded docs** (the only sub-structures there are the EA-Cradle **gates 1–8** and **4 forms**,
+which belong to the *channel/cultivation* system, not the faces) and **not yet defined in the repo**.
+
+Adjacent repo scaffolding to **reconcile with** when this is pulled out (so we don't reinvent):
+- **Six Faces as Levels** — `.specify/specs/golden-path-onboarding-action-loop/SIX_FACES_AS_LEVELS_BAR_GAP_ANALYSIS.md`
+  (the six faces as a 1–6 progression for player/nation/archetype).
+- **`FACE_TRIGRAM`** — `src/lib/quest-grammar/iching-faces.ts` (face ↔ trigram; face ↔ canonical hexagram proposed).
+- **`orientationFaceSubPackets.ts`** — each face is a *lens* that elicits a subset of
+  `TransformationMove` fields (face-as-authoring-lens, not face-sublevels).
+- **`TransformationMove` registry** — `src/lib/transformation-move-registry/` — the real move-library
+  entry schema (move_category, wcgs_stage, quest_usage, prompt_templates, …).
+
+→ **Action:** author to define, per face, its **sublevels and the moves each sublevel owns**; then
+we fold that into the move-library schema (likely: `face → sublevel → move[]`, each move written in
+the skill-stack anatomy, performable in any channel).
 
 ## Implications for the spec (proposed, pending author confirmation)
 
@@ -173,13 +197,16 @@ draw at random.
    - **12 Face-move cards** — the practical spells (copy ~drafted in `move-grammar`).
    - **5 Move cards** — Wake / Clean / Grow / Show / **Open Up** (the developmental arc; "major" cards).
    - **5 Capability cards** — Agency / Exploration / Rest / Participation / Connection.
-   Each face-move is *tagged* with a throughput move + a capability so all three axes are
-   navigable. Identity (nation/archetype, the 40 art assets) is a **separate lens / the visual
-   layer**, not a multiplier. Consult by face, by capability ("what's offline"), by move, or draw
-   at random. Stays in the lean ~25–40 target; deep matrix stays latent.
+   Each face can be performed **in any of the 5 channels** (faces are channel-agnostic, §8); channel/
+   capability is chosen at consult time, not fixed per card. Identity (nation/archetype, the 40 art
+   assets) is a **separate lens / the visual layer**, not a multiplier. Consult by face, by capability
+   ("what's offline"), by move, or draw at random. Stays in the lean ~25–40 target; deep matrix latent.
+   **NB:** the per-face **sublevels-with-moves** (§8a) are still to be supplied by the author and will
+   expand the face axis once defined.
 2. **Card schema:** extend `AllyshipCard` with the skill-stack anatomy (`primaryQuestion`,
    `optimizesFor`, `forbiddenMoves`, `failureModes`, `remediation`) + axis tags
-   (`face`, `faceMoveType`, `throughputMove`, `capability`, `channel`, `domain`).
+   (`face`, `faceSublevel?`, `faceMoveType`, `throughputMove`, `channel`/`capability` as a
+   *performable set, not a single value*, `domain`).
 3. **5th move:** **Open Up** — confirmed; home capability = Water/Connection.
 4. **Capability Model is canonical:** Fire→Triumph (Agency), Metal→Wonder (Exploration),
    Earth→Peace (Rest), Wood→Bliss (Participation), Water→Poignance (Connection). Supersedes the
