@@ -174,9 +174,8 @@ three walls** (host confirmed §3 Option A), but each wall's "give" button does 
   Picks: **2014–2015 Toyota Corolla** (top), Honda Civic / Mazda3, CR-V/Camry. Hard-avoid
   Nissan CVT + Ford PowerShift. Cheapest to acquire = **Portland** (no sales tax, ~$400 over
   sticker) vs. Seattle (~$760–950) and Wichita (~$575 + annual property tax).
-- **Recommended Wall 1 `targetValue` = $8,500** (≈$7k car + ~$600 tax/title/reg + ~$600 PPI
-  & first maintenance + ~$300 contingency). Lean alternative: **$7,000 flat** ("replace what
-  was lost"). **Host to confirm which figure.**
+- ✅ **Wall 1 `targetValue` = $8,500 (CONFIRMED by host)** — ≈$7k car + ~$600 tax/title/reg
+  + ~$600 PPI & first maintenance + ~$300 contingency.
 
 ### Wall 2 — Pre-sale (commerce, "the one that gets $$ flowing")
 Five products. **Repo reality (verified):** `src/lib/marketing/products.ts` has only
@@ -192,14 +191,18 @@ Five products. **Repo reality (verified):** `src/lib/marketing/products.ts` has 
 | The Roleplaying Game Book — physical | ❌ add | **$49** |
 | The Roleplaying Game Book — digital | ❌ add | **$30** |
 | The Deck (scene cards) — physical | ✅ "The Deck" | **$30** |
-| **Digital access subscription** | — | **$10/mo** → digital book + digital RPG book + Igniting Joy |
+| **Igniting Joy** — a separate digital-only book | ❌ add | bundled (no standalone price) — included with the App |
+| **The App** — *bars-engine Mastering Allyship* subscription | ✅ "The Game" | **$10/mo** → the app + digital book + digital RPG book + Igniting Joy |
 | **Founder bundle** | — | **$150 lifetime** → the app + digital versions of all products |
-| Allyship enamel pins | ❌ add | **TBD — not yet priced** |
+| Allyship enamel pins | ❌ add | **$15** |
 
-- The **$10/mo digital subscription** is a recurring revenue stream living *inside* Wall 2
-  (commerce), distinct from Wall 3's patronage — but worth noting both create monthly $.
-- **Igniting Joy** — host referred to it once as "the app/game" and once as "the book";
-  **needs disambiguation** (is it the app, a book, or both?) before the catalog is built.
+- **Product taxonomy (clarified by host):** *The App* is the **bars-engine Mastering
+  Allyship app** (the catalog's "The Game" entry = the playable engine inside it). The
+  **$10/mo subscription** unlocks the app and bundles the **digital book, digital RPG book,
+  and Igniting Joy**. **Igniting Joy** is **another book the host wrote** — **digital-only**,
+  not sold standalone, **included automatically with app signup**.
+- The $10/mo subscription is a recurring revenue stream living *inside* Wall 2 (commerce),
+  distinct from Wall 3's patronage — but both create monthly $.
 
 - **Not strictly a pre-sale:** by the party the book may be done; digital items launch
   *ahead* of the 18th. Honest promise on the page: **"book in hands by end of July."**
@@ -229,13 +232,12 @@ Mastering Allyship non-profit docs.)
 
 ## 14. Updated open questions (post Round 2)
 
-Resolved: §11 Q2 (earmark — givers pick a wall, unallocated → car), Q3 (in-kind — parallel
-"hands & beams" readout), Wall 2 prices (§13, confirmed), party ticket ($30, confirmed). Still open:
-1. **Enamel pins price** — only Wall 2 item still unpriced.
-2. **Igniting Joy** — app vs. book disambiguation (blocks catalog build).
-3. **Car research output** → Wall 1 `targetValue` (Portland/Wichita/Seattle–Tacoma research — *in progress*).
-4. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
-5. Name-display consent on planks (§11 Q4 — still open).
-6. Stretch behavior past each wall's target.
-7. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields, the RPG
-   Book + pins added, "The Game" → Igniting Joy rename, and physical/digital variants.
+Resolved: §11 Q2 (earmark), Q3 (in-kind readout), Wall 2 prices incl. **pins $15** (§13),
+party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (§13),
+**Wall 1 target = $8,500** (§13). Still open:
+1. **Wall 3 monthly tiers + perks** — confirm $6/$18/$50 and what each unlocks.
+2. Name-display consent on planks (§11 Q4 — still open).
+3. Stretch behavior past each wall's target.
+4. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
+   physical/digital variants, the **RPG Book, enamel pins, and Igniting Joy** added, and the
+   "The Game" entry reframed as **The App** ($10/mo) with the Founder bundle ($150 lifetime).
