@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+  <script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: #161310; }
+    *::-webkit-scrollbar { height: 10px; width: 10px; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px; }
+    textarea::placeholder { color: var(--bars-text-muted); }
+    .bar-screen::-webkit-scrollbar { display: none; }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(ellipse 1200px 600px at 20% -10%, rgba(124,58,237,0.06), transparent 60%), radial-gradient(ellipse 900px 500px at 95% 5%, rgba(212,160,23,0.05), transparent 55%), #161310;padding:56px 56px 110px;font-family:var(--bars-font-body);color:var(--bars-text-primary);box-sizing:border-box;">
+
+  <!-- ─────────────── HEADER / DESIGN REASONING ─────────────── -->
+  <header style="max-width:1180px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="width:11px;height:11px;border-radius:2px;background:var(--bars-liminal);box-shadow:0 0 12px 2px var(--bars-liminal-glow);"></span>
+      <span class="bars-label" style="color:var(--bars-text-secondary);font-size:11px;">BARS Engine · Design Exploration</span>
+    </div>
+    <h1 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.03em;font-size:52px;line-height:1.05;margin:18px 0 0;max-width:820px;">BAR intake &amp; the deck system</h1>
+    <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:17px;line-height:1.6;max-width:680px;margin:18px 0 0;text-wrap:pretty;">A BAR begins as a blank card — anything you can scribble, paste, or speak, kept for safekeeping the moment inspiration arrives. The surface stays free. The structure comes later, when you <em style="color:var(--bars-text-primary);font-style:normal;">tune</em> the card into game-ready data.</p>
+
+    <!-- the core model -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:36px;background:var(--bars-line);border-radius:var(--bars-radius-xl);overflow:hidden;max-width:1020px;box-shadow:var(--bars-shadow-inset-top), 0 30px 60px -30px rgba(0,0,0,0.8);">
+      <div style="background:var(--bars-surface-card);padding:24px 26px;">
+        <div style="display:flex;align-items:center;gap:9px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">01</span><span class="bars-label" style="color:var(--bars-earth-gem);">Capture · freedom</span></div>
+        <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;margin:12px 0 6px;">The blank card</h3>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13.5px;line-height:1.55;margin:0;">Zero required fields. Write a line, sketch, paste a quote, snap a photo. Time, place &amp; the <em style="font-style:normal;color:var(--bars-text-primary);">sensation</em> are captured silently as provenance.</p>
+      </div>
+      <div style="background:var(--bars-surface-card);padding:24px 26px;">
+        <div style="display:flex;align-items:center;gap:9px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">02</span><span class="bars-label" style="color:var(--bars-fire-gem);">Tune · alchemy</span></div>
+        <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;margin:12px 0 6px;">Add the channels</h3>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13.5px;line-height:1.55;margin:0;">Optional for keeping, <strong style="color:var(--bars-text-primary);font-weight:700;">required to play</strong>. Name the charge; assign element, altitude &amp; a move. Each tap encodes the card further — a raw seed metabolizes into structured game data.</p>
+      </div>
+      <div style="background:var(--bars-surface-card);padding:24px 26px;">
+        <div style="display:flex;align-items:center;gap:9px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">03</span><span class="bars-label" style="color:var(--bars-liminal-glow);">Extend · output</span></div>
+        <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;margin:12px 0 6px;">Everywhere it travels</h3>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13.5px;line-height:1.55;margin:0;">The same BAR becomes a quest, a deck entry, a printed card with a QR home, or a book-activity artifact. One capture, many products.</p>
+      </div>
+    </div>
+  </header>
+
+  <main style="display:flex;flex-direction:column;gap:72px;margin-top:72px;">
+
+    <!-- ═══════════════ SECTION 0 · THE LIFECYCLE ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-liminal-glow);">The map · read this first</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:40px;margin:0;line-height:1.05;">From captured idea to game artifact</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:16px;line-height:1.6;margin:6px 0 0;text-wrap:pretty;">A BAR captures a <strong style="color:var(--bars-text-primary);font-weight:700;">charge</strong> — an emotional kernel marked by element and satisfaction. Capture is the MVP and stays free-form. But <strong style="color:var(--bars-text-primary);font-weight:700;">tuning is the gate</strong>: a BAR can't enter the game until it's attuned. The core loop alchemizes <em style="font-style:normal;color:var(--bars-text-primary);">dissatisfied</em> charge into <em style="font-style:normal;color:var(--bars-text-primary);">satisfied</em> through play; inspiration arrives already satisfied, ready to bloom into an artifact. Provenance is locked at capture and never lost.</p>
+      </div>
+
+      <!-- THE TRACK -->
+      <div style="margin-top:40px;background:linear-gradient(180deg,#1d1a16,#161310);border-radius:var(--bars-radius-2xl);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 90px rgba(0,0,0,0.4);padding:40px 36px 34px;overflow-x:auto;">
+        <div style="display:flex;align-items:stretch;gap:0;min-width:1000px;">
+
+          <!-- STATE 1 · SPARK -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:178px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">01</span><span class="bars-label" style="color:var(--bars-text-secondary);">Spark</span></div>
+            <div class="bars-card" data-altitude="dissatisfied" style="position:relative;aspect-ratio:5/7;display:flex;flex-direction:column;">
+              <div class="bars-card__gradient"></div>
+              <div class="bars-card__body" style="flex:1;padding:15px;display:flex;flex-direction:column;gap:8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-muted);">untuned · raw</span>
+                <p style="font-family:var(--bars-font-body);font-size:14.5px;line-height:1.5;color:var(--bars-text-primary);margin:0;flex:1;">The river doesn't argue with the rock.</p>
+                <div style="display:flex;align-items:center;gap:6px;border-top:1px dashed var(--bars-line-dashed);padding-top:9px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--bars-text-muted);"></span><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;color:var(--bars-text-muted);">seed · 11:42 PM</span></div>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;margin:0;letter-spacing:-0.01em;">Capture the charge</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-muted);margin:5px 0 0;">A blank card. Inspiration + provenance, nothing required.</p>
+              <span style="display:inline-block;margin-top:8px;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-wood-gem);">↳ screen · New BAR</span>
+            </div>
+          </div>
+
+          <!-- GATE · tuning required -->
+          <div style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 4px;align-self:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 8px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-liminal) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-liminal);">
+              <span style="font-size:15px;color:var(--bars-liminal-glow);">◈</span>
+              <span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-liminal-glow);text-align:center;line-height:1.3;">Gate<br>tune to<br>enter</span>
+            </div>
+            <span style="font-size:18px;color:var(--bars-liminal-glow);">→</span>
+          </div>
+
+          <!-- STATE 2 · ATTUNE -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:178px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">02</span><span class="bars-label" style="color:var(--bars-water-gem);">Attune</span></div>
+            <div class="bars-card" data-element="water" data-altitude="neutral" style="position:relative;aspect-ratio:5/7;display:flex;flex-direction:column;">
+              <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+              <div class="bars-card__body" style="flex:1;padding:15px;display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-water-gem);">水 Lamenth</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">working</span></div>
+                <p style="font-family:var(--bars-font-body);font-size:14.5px;line-height:1.5;color:var(--bars-text-primary);margin:0;flex:1;">The river doesn't argue with the rock.</p>
+                <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;border-top:1px solid var(--bars-line);padding-top:9px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-text-secondary);padding:3px 6px;border-radius:4px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">clean up</span><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-text-muted);padding:3px 6px;">grief</span></div>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;margin:0;letter-spacing:-0.01em;">Tune the channels</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-muted);margin:5px 0 0;">Name the charge; assign element, altitude &amp; a move. <strong style="color:var(--bars-text-secondary);font-weight:700;">Required.</strong></p>
+              <span style="display:inline-block;margin-top:8px;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-wood-gem);">↳ screen · Tune BAR</span>
+            </div>
+          </div>
+
+          <!-- connector · compile -->
+          <div style="flex:0 0 80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;align-self:center;">
+            <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">compile</span>
+            <span style="font-size:18px;color:var(--bars-text-secondary);">→</span>
+          </div>
+
+          <!-- STATE 3 · BLOOM = GAME ARTIFACT -->
+          <div style="flex:1.05;display:flex;flex-direction:column;gap:14px;min-width:186px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">03</span><span class="bars-label" style="color:var(--bars-water-gem);">Bloom</span></div><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:#fff;background:var(--bars-liminal);padding:3px 7px;border-radius:4px;box-shadow:0 0 14px -4px var(--bars-liminal-glow);">Game artifact</span></div>
+            <div class="bars-card" data-element="water" data-altitude="satisfied" style="position:relative;aspect-ratio:5/7;display:flex;flex-direction:column;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 2px var(--bars-water-frame), 0 0 20px 1px var(--bars-water-glow), 0 0 0 4px color-mix(in srgb,var(--bars-liminal) 30%,transparent);">
+              <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+              <div class="bars-art-window" style="height:84px;border-top-left-radius:var(--bars-radius-lg);border-top-right-radius:var(--bars-radius-lg);"><img src="assets/card-art/lamenth-still-point.png" alt=""></div>
+              <div class="bars-card__body" style="flex:1;padding:13px 14px;display:flex;flex-direction:column;gap:7px;">
+                <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-water-gem);">Quest · Clean Up</span>
+                <p style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;line-height:1.25;color:var(--bars-text-primary);margin:0;flex:1;">Sit with the grief you keep outrunning.</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bars-line);padding-top:8px;"><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-water-gem);">+18 ♦</span><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);">Enter scene →</span></div>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;margin:0;letter-spacing:-0.01em;">Bloom into an artifact</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-muted);margin:5px 0 0;">A satisfied charge blooms into a <strong style="color:var(--bars-text-secondary);font-weight:700;">Quest</strong> — an action that resolves the charge. Some quests evolve into a Talisman or Daemon you keep.</p>
+              <span style="display:inline-block;margin-top:8px;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-wood-gem);">↳ screen · Quest detail</span>
+            </div>
+          </div>
+
+          <!-- connector · show up -->
+          <div style="flex:0 0 80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;align-self:center;">
+            <span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">show up</span>
+            <span style="font-size:18px;color:var(--bars-text-secondary);">→</span>
+          </div>
+
+          <!-- STATE 4 · PAVED -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:178px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">04</span><span class="bars-label" style="color:var(--bars-earth-gem);">Paved</span></div>
+            <div class="bars-card" data-element="earth" data-altitude="satisfied" style="position:relative;aspect-ratio:5/7;display:flex;flex-direction:column;">
+              <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+              <div class="bars-card__body" style="flex:1;padding:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;">
+                <div style="width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bars-earth-frame) 22%,transparent);box-shadow:inset 0 0 0 1.5px var(--bars-earth-frame), 0 0 18px -4px var(--bars-earth-glow);"><span style="font-size:20px;color:var(--bars-earth-gem);">✓</span></div>
+                <span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;line-height:1.25;color:var(--bars-text-primary);">A yellow brick is paved.</span>
+                <span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-earth-gem);">+18 ♦ minted</span>
+              </div>
+            </div>
+            <div>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;margin:0;letter-spacing:-0.01em;">Pave the road</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-muted);margin:5px 0 0;">Complete the quest. Charge becomes action; the brick joins your road.</p>
+              <span style="display:inline-block;margin-top:8px;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-wood-gem);">↳ screen · The road</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- METADATA ACCRETION STRIP -->
+        <div style="margin-top:30px;border-top:1px solid var(--bars-line);padding-top:18px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);display:block;margin-bottom:12px;">Metadata accretes silently · the same record the game, decks &amp; print all read</span>
+          <div style="display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-secondary);">At spark</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;line-height:1.7;color:var(--bars-text-muted);">text · provenance · stage:seed</span>
+            </div>
+            <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-water-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-water-frame);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-water-gem);">+ at attune</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;line-height:1.7;color:var(--bars-text-secondary);">charge · element · altitude · move</span>
+            </div>
+            <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-liminal) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-liminal);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-liminal-glow);">+ at bloom</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;line-height:1.7;color:var(--bars-text-secondary);">artifact · type · reward · provenance-ref</span>
+            </div>
+            <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-earth-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-earth-frame);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-earth-gem);">+ at paved</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;line-height:1.7;color:var(--bars-text-secondary);">completedAt · vibulonsMinted · brick</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROVENANCE RIBBON -->
+      <div style="margin-top:22px;display:flex;align-items:flex-start;gap:16px;padding:18px 22px;border-radius:var(--bars-radius-lg);background:linear-gradient(90deg, color-mix(in srgb,var(--bars-wood-frame) 16%,transparent), transparent 72%);box-shadow:inset 0 0 0 1px var(--bars-line);">
+        <span style="font-size:18px;color:var(--bars-wood-gem);line-height:1.2;">⚓</span>
+        <div style="flex:1;">
+          <span class="bars-label" style="color:var(--bars-wood-gem);">Provenance · immutable</span>
+          <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:6px 0 0;text-wrap:pretty;">Time, place &amp; the sensation are locked at capture. Attuning or growing a BAR changes its <em style="font-style:normal;color:var(--bars-text-primary);">layout</em> — and a bloomed artifact looks nothing like the seed — but every state keeps a thread back to the original spark. You can always return to where the idea came from.</p>
+        </div>
+      </div>
+
+      <!-- CHARGE + THE TWO LOOPS -->
+      <div style="margin-top:18px;display:flex;gap:18px;flex-wrap:wrap;align-items:stretch;">
+        <div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:12px;padding:20px 22px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);">
+          <span class="bars-label" style="color:var(--bars-text-secondary);">Charge = element × satisfaction</span>
+          <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-muted);margin:0;">The raw material a BAR holds. Element gives it a nation &amp; color; satisfaction gives it direction. Altitude tunes intensity.</p>
+          <div style="display:flex;gap:8px;margin-top:2px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;padding:12px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">Dissatisfied</span>
+              <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-secondary);line-height:1.4;">friction, stuckness — fuel for play</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;padding:12px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-earth-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-earth-frame);">
+              <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-earth-gem);">Satisfied</span>
+              <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-secondary);line-height:1.4;">inspiration, resolve — ready to build</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;margin-top:4px;">
+            <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-fire-gem);text-shadow:0 0 8px var(--bars-fire-glow);">火</span>
+            <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-water-gem);text-shadow:0 0 8px var(--bars-water-glow);">水</span>
+            <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-wood-gem);text-shadow:0 0 8px var(--bars-wood-glow);">木</span>
+            <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-metal-gem);text-shadow:0 0 8px var(--bars-metal-glow);">金</span>
+            <span style="font-family:var(--bars-font-body);font-size:23px;color:var(--bars-earth-gem);text-shadow:0 0 8px var(--bars-earth-glow);">土</span>
+            <span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);margin-left:4px;">five elements</span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:13px;padding:20px 22px;border-radius:var(--bars-radius-lg);background:var(--bars-surface-card);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);">
+          <span class="bars-label" style="color:var(--bars-text-secondary);">The two loops</span>
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);padding:6px 10px;border-radius:6px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">dissatisfied</span>
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-liminal-glow);">— play →</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-earth-gem);padding:6px 10px;border-radius:6px;background:color-mix(in srgb,var(--bars-earth-frame) 14%,transparent);box-shadow:inset 0 0 0 1px var(--bars-earth-frame);">satisfied</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.55;color:var(--bars-text-secondary);margin:0;"><strong style="color:var(--bars-text-primary);font-weight:700;">Metabolize</strong> — the main game loop turns dissatisfied charge into satisfied through moves &amp; play.</p>
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-earth-gem);padding:6px 10px;border-radius:6px;background:color-mix(in srgb,var(--bars-earth-frame) 14%,transparent);box-shadow:inset 0 0 0 1px var(--bars-earth-frame);">satisfied</span>
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-liminal-glow);">— bloom →</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:#fff;padding:6px 10px;border-radius:6px;background:var(--bars-liminal);box-shadow:0 0 14px -4px var(--bars-liminal-glow);">artifact</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.55;color:var(--bars-text-secondary);margin:0;"><strong style="color:var(--bars-text-primary);font-weight:700;">Create</strong> — a satisfied charge, often inspiration captured already satisfied, blooms into a useful artifact.</p>
+        </div>
+      </div>
+
+      <!-- BLOOM → QUEST → EVOLUTIONS -->
+      <div style="margin-top:18px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;"><span class="bars-label" style="color:var(--bars-text-secondary);white-space:nowrap;">Bloom into a Quest — then evolve what you keep</span><span style="flex:1;height:1px;background:var(--bars-line);"></span></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;">
+          <div class="bars-card" data-element="water" data-altitude="satisfied" style="flex:1.5;min-width:300px;position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__glow"></div><div class="bars-card__body" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span class="bars-label" style="color:var(--bars-water-gem);">The universal bloom</span><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:19px;margin:0;letter-spacing:-0.01em;">Quest</h4><p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.55;color:var(--bars-text-secondary);margin:0;">An action designed to resolve a charge — often by transferring it to another person. Every satisfied charge blooms into a quest first; some quests are built to evolve.</p><div style="display:flex;gap:7px;margin-top:2px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-text-secondary);padding:4px 8px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">resolve</span><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--bars-water-gem);padding:4px 8px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">transfer</span></div></div></div>
+          <div style="flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;align-self:center;"><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-text-muted);">complete</span><span style="font-size:18px;color:var(--bars-liminal-glow);">→</span><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-text-muted);">evolves</span></div>
+          <div style="flex:1;min-width:250px;display:flex;flex-direction:column;gap:12px;">
+            <div class="bars-card" data-element="earth" data-altitude="satisfied" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__glow"></div><div class="bars-card__body" style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-earth-gem);">Create-Talisman quest →</span><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:1px 0 0;letter-spacing:-0.01em;">Talisman</h4><p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">An item that embodies the charge — forged on completing its quest, then carried.</p></div></div>
+            <div class="bars-card" data-element="fire" data-altitude="satisfied" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__glow"></div><div class="bars-card__body" style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-fire-gem);">Create-Daemon quest →</span><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:1px 0 0;letter-spacing:-0.01em;">Daemon</h4><p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">A creature that personifies your inner charge — a companion that levels up with you.</p></div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap;">
+          <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-text-muted);">A tuned BAR is also reusable</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);"><span style="color:var(--bars-water-gem);">→</span> deck / spellbook</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);"><span style="color:var(--bars-earth-gem);">→</span> printed poker card</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);"><span style="color:var(--bars-wood-gem);">→</span> book artifact</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SECTION 1 · CAPTURE ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:720px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 01 · Ergonomic capture</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">Grab a blank card</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">Three takes on intake — from a single-tap scratch surface to optional-depth quick capture to capturing from anywhere (book, voice, camera, paste). Fast by default; deep when you want it.</p>
+      </div>
+
+      <div style="display:flex;gap:52px;flex-wrap:wrap;align-items:flex-start;margin-top:36px;">
+
+        <!-- V1 · Stories-rich canvas (INTERACTIVE) -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">V1 · live</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Stories-rich canvas</h3></div>
+            <p style="font-family:var(--bars-font-body);color:var(--bars-text-muted);font-size:13px;margin:0;max-width:360px;line-height:1.5;">A BAR is data <em style="font-style:normal;color:var(--bars-text-secondary);">and</em> art. <strong style="color:var(--bars-text-secondary);font-weight:700;">Drag the text</strong>, recolor &amp; resize it, swap the field — then share to Stories or render a video.</p>
+          </div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div class="bar-screen" style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:806px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:14px;color:var(--bars-text-muted);">←</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">New BAR</span>
+                <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);">⤓</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;padding:10px 16px 16px;gap:12px;">
+                <!-- provenance · immutable -->
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.05em;color:var(--bars-text-secondary);"><span style="width:5px;height:5px;border-radius:50%;background:var(--bars-wood-gem);box-shadow:0 0 6px 1px var(--bars-wood-glow);"></span>provenance locked</span>
+                  <span style="font-family:var(--bars-font-mono);font-size:9.5px;color:var(--bars-text-muted);">11:42 PM · reservoir · dusk</span>
+                </div>
+                <!-- THE CANVAS -->
+                <div ref="{{ canvasRef }}" onPointerDown="{{ onCanvasDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" style="position:relative;aspect-ratio:5/7;border-radius:var(--bars-radius-lg);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 0 0 1px var(--bars-line-strong), 0 18px 40px -16px rgba(0,0,0,0.85);touch-action:none;background:{{ canvasBg }};">
+                  <sc-for list="{{ boxes }}" as="box" hint-placeholder-count="3">
+                    <div onPointerDown="{{ box.onDown }}" style="{{ box.style }}">{{ box.text }}</div>
+                  </sc-for>
+                  <div style="position:absolute;left:13px;bottom:11px;font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.38);pointer-events:none;">untuned seed</div>
+                </div>
+                <!-- TEXT controls -->
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <button onClick="{{ bumpDown }}" style="width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:var(--bars-text-secondary);font-family:var(--bars-font-display);font-weight:700;font-size:12px;">A−</button>
+                  <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);min-width:30px;text-align:center;font-variant-numeric:tabular-nums;">{{ selSize }}</span>
+                  <button onClick="{{ bumpUp }}" style="width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:var(--bars-text-primary);font-family:var(--bars-font-display);font-weight:700;font-size:16px;">A+</button>
+                  <div style="flex:1;"></div>
+                  <div style="display:flex;gap:7px;align-items:center;">
+                    <sc-for list="{{ swatches }}" as="sw" hint-placeholder-count="5">
+                      <button onClick="{{ sw.onClick }}" style="{{ sw.style }}"></button>
+                    </sc-for>
+                  </div>
+                </div>
+                <!-- FIELD + media -->
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <span class="bars-label" style="color:var(--bars-text-muted);font-size:10px;">Field</span>
+                  <div style="display:flex;gap:8px;">
+                    <sc-for list="{{ bgChips }}" as="bgc" hint-placeholder-count="3">
+                      <button onClick="{{ bgc.onClick }}" style="{{ bgc.style }}"></button>
+                    </sc-for>
+                  </div>
+                  <div style="flex:1;"></div>
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:8px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">◳ photo</span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:8px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">✦ sticker</span>
+                </div>
+                <!-- SHARE row -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px;">
+                  <span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--bars-text-secondary);">◰ Stories</span>
+                  <span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--bars-text-secondary);">▶ Video</span>
+                  <span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--bars-text-secondary);">＋ Deck</span>
+                </div>
+                <button style="width:100%;padding:14px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Keep · tune later</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V2 · Quick capture w/ optional depth (static) -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">V2</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Quick sheet · optional depth</h3></div>
+            <p style="font-family:var(--bars-font-body);color:var(--bars-text-muted);font-size:13px;margin:0;max-width:360px;line-height:1.5;">A thumb-reach sheet. Capture in one line; expand only if the spark wants more.</p>
+          </div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:752px;display:flex;flex-direction:column;position:relative;">
+              <!-- dimmed board behind -->
+              <div style="flex:1;padding:18px;opacity:0.32;filter:blur(1px);display:flex;flex-direction:column;gap:12px;">
+                <div class="bars-card" data-element="fire" data-altitude="neutral" style="height:90px;"><div class="bars-card__gradient"></div></div>
+                <div class="bars-card" data-element="water" data-altitude="dissatisfied" style="height:90px;"><div class="bars-card__gradient"></div></div>
+                <div class="bars-card" data-element="wood" data-altitude="neutral" style="height:90px;"><div class="bars-card__gradient"></div></div>
+              </div>
+              <!-- the sheet -->
+              <div style="position:absolute;left:0;right:0;bottom:0;background:var(--bars-surface-elevated);border-top-left-radius:var(--bars-radius-2xl);border-top-right-radius:var(--bars-radius-2xl);box-shadow:var(--bars-shadow-elevated);padding:18px 18px 24px;display:flex;flex-direction:column;gap:16px;">
+                <div style="width:38px;height:4px;border-radius:2px;background:var(--bars-line-strong);align-self:center;"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span class="bars-label" style="color:var(--bars-text-secondary);">Capture a BAR</span>
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">11:42 PM · auto-located</span>
+                </div>
+                <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:16px;min-height:108px;">
+                  <p style="font-family:var(--bars-font-body);font-size:17px;line-height:1.6;color:var(--bars-text-primary);margin:0;">The river doesn't argue with the rock — it just keeps showing up.<span style="display:inline-block;width:2px;height:20px;background:var(--bars-liminal-glow);margin-left:2px;vertical-align:-4px;box-shadow:0 0 8px var(--bars-liminal-glow);"></span></p>
+                </div>
+                <!-- optional depth disclosure -->
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-text-muted);">+ add depth (optional)</span>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--bars-radius-sm);background:color-mix(in srgb, var(--bars-water-frame) 18%, transparent);box-shadow:inset 0 0 0 1px var(--bars-water-frame);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);"><span style="color:var(--bars-water-gem);text-shadow:0 0 6px var(--bars-water-glow);">水</span> Lamenth</span>
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">“ source</span>
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">＋ deck</span>
+                  </div>
+                </div>
+                <button style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Keep · tune later</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V3 · Capture from anywhere (static) -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">V3</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Capture from anywhere</h3></div>
+            <p style="font-family:var(--bars-font-body);color:var(--bars-text-muted);font-size:13px;margin:0;max-width:360px;line-height:1.5;">The spark rarely arrives as text. Pull it from a book page, your voice, the camera, or the clipboard.</p>
+          </div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:752px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-secondary);font-variant-numeric:tabular-nums;">11:42</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Capture</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦&nbsp;1428</span>
+              </div>
+              <div style="flex:1;padding:16px 18px 20px;display:flex;flex-direction:column;gap:14px;">
+                <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:22px;letter-spacing:-0.01em;margin:4px 0 0;">Where did it come from?</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:18px 16px;display:flex;flex-direction:column;gap:10px;min-height:120px;">
+                    <span style="font-size:22px;color:var(--bars-earth-gem);">“</span>
+                    <span style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;">From the book</span>
+                    <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.45;">Scan a page · highlight a line</span>
+                  </div>
+                  <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:18px 16px;display:flex;flex-direction:column;gap:10px;min-height:120px;">
+                    <span style="font-size:20px;color:var(--bars-fire-gem);">●</span>
+                    <span style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;">Voice note</span>
+                    <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.45;">Speak it · transcribed</span>
+                  </div>
+                  <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:18px 16px;display:flex;flex-direction:column;gap:10px;min-height:120px;">
+                    <span style="font-size:20px;color:var(--bars-water-gem);">◳</span>
+                    <span style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;">Photo / sketch</span>
+                    <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.45;">Snap it · draw it</span>
+                  </div>
+                  <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:18px 16px;display:flex;flex-direction:column;gap:10px;min-height:120px;">
+                    <span style="font-size:18px;color:var(--bars-wood-gem);">⎘</span>
+                    <span style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;">Paste</span>
+                    <span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.45;">From clipboard</span>
+                  </div>
+                </div>
+                <!-- poetic image mode -->
+                <div class="bars-card" data-element="metal" data-altitude="neutral" style="margin-top:2px;">
+                  <div class="bars-card__gradient"></div>
+                  <div class="bars-card__body" style="padding:16px 18px;display:flex;flex-direction:column;gap:7px;">
+                    <span class="bars-label" style="color:var(--bars-metal-gem);">Poetic image mode</span>
+                    <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:0;">Some sparks arrive as images that only make sense later. Keep them raw — no caption required. They surface again when the moment is right.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════ SECTION 2 · UPGRADE TO GAME DATA ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:760px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 02 · Tune · the alchemy</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">Tune a raw BAR into game data</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">This is the bridge between a free scribble and the engine. Each channel you assign encodes the card further — and the same taps populate the structured payload every other product reads. <strong style="color:var(--bars-text-primary);font-weight:700;">Tap the channels below; the card and the payload respond live.</strong></p>
+      </div>
+
+      <div style="display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start;margin-top:36px;">
+
+        <!-- INTERACTIVE TUNING PHONE -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-fire-gem);font-size:11px;">Live</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">The tuning surface</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <button onClick="{{ resetTune }}" style="background:none;border:none;cursor:pointer;font-family:var(--bars-font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);padding:0;">↺ reset</button>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Tune BAR</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);font-variant-numeric:tabular-nums;">{{ progressLabel }}</span>
+              </div>
+
+              <div style="flex:1;padding:12px 18px 18px;display:flex;flex-direction:column;gap:16px;">
+                <!-- the BAR being tuned -->
+                <div class="bars-card" data-element="{{ tElAttr }}" data-altitude="{{ tAltAttr }}" style="position:relative;">
+                  <div class="bars-card__gradient"></div>
+                  <div class="bars-card__glow"></div>
+                  <sc-if value="{{ tElAttr }}">
+                    <div class="bars-art-window" style="height:150px;border-top-left-radius:var(--bars-radius-lg);border-top-right-radius:var(--bars-radius-lg);">
+                      <div style="{{ artBg }}"></div>
+                    </div>
+                  </sc-if>
+                  <div class="bars-card__body" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:11px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                      <div style="display:flex;align-items:center;gap:9px;">
+                        <span style="font-size:22px;color:var(--bars-element-gem);text-shadow:0 0 10px var(--bars-element-glow);">{{ tElSig }}</span>
+                        <span class="bars-label" style="color:var(--bars-element-gem);">{{ tElName }}</span>
+                      </div>
+                      <span style="{{ statusStyle }}">{{ statusBadge }}</span>
+                    </div>
+                    <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:14px 16px;">
+                      <p style="font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);margin:0;">The river doesn't argue with the rock — it just keeps showing up.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ELEMENT picker -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span class="bars-label" style="color:var(--bars-text-secondary);">Element · which nation holds it</span>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;">
+                    <sc-for list="{{ els }}" as="el" hint-placeholder-count="5">
+                      <button onClick="{{ el.onClick }}" data-element="{{ el.k }}" style="{{ el.style }}">
+                        <span style="font-size:19px;color:var(--bars-element-gem);text-shadow:0 0 8px var(--bars-element-glow);">{{ el.sig }}</span>
+                        <span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.02em;text-transform:uppercase;color:var(--bars-text-muted);white-space:nowrap;">{{ el.nation }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <!-- ALTITUDE picker -->
+                <div style="display:flex;flex-direction:column;gap:8px;" data-element="{{ tElAttr }}">
+                  <span class="bars-label" style="color:var(--bars-text-secondary);">Altitude · how metabolized</span>
+                  <div style="display:flex;gap:7px;">
+                    <sc-for list="{{ alts }}" as="alt" hint-placeholder-count="3">
+                      <button onClick="{{ alt.onClick }}" style="{{ alt.style }}">{{ alt.l }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <!-- MOVE picker -->
+                <div style="display:flex;flex-direction:column;gap:8px;" data-element="{{ tElAttr }}">
+                  <span class="bars-label" style="color:var(--bars-text-secondary);">Move · the throughput</span>
+                  <div style="display:flex;gap:7px;">
+                    <sc-for list="{{ moves }}" as="move" hint-placeholder-count="4">
+                      <button onClick="{{ move.onClick }}" style="{{ move.style }}">{{ move.l }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSPECTOR · what the game receives -->
+        <div style="display:flex;flex-direction:column;gap:18px;width:380px;flex:0 0 auto;padding-top:42px;">
+          <div class="bars-card" data-element="metal" data-altitude="neutral" style="position:relative;">
+            <div class="bars-card__gradient"></div>
+            <div class="bars-card__body" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+              <span class="bars-label" style="color:var(--bars-metal-gem);">Encoded metadata</span>
+              <div style="display:flex;flex-direction:column;gap:0;">
+                <sc-for list="{{ meta }}" as="m" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--bars-line);">
+                    <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-text-muted);">{{ m.label }}</span>
+                    <span style="{{ m.valStyle }}">{{ m.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:18px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <span class="bars-label" style="color:var(--bars-text-secondary);">Game payload · live</span>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-wood-gem);">● syncing</span>
+            </div>
+            <pre style="font-family:var(--bars-font-mono);font-size:11.5px;line-height:1.65;color:var(--bars-text-secondary);margin:0;white-space:pre-wrap;word-break:break-word;">{{ gameData }}</pre>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.55;color:var(--bars-text-muted);margin:0;">The player never sees this. They tap feelings; the engine receives a typed, extensible record — quests, decks, and print all read the same shape.</p>
+        </div>
+      </div>
+
+      <!-- ONE CAPTURE → MANY PRODUCTS -->
+      <div style="margin-top:48px;max-width:1180px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <span class="bars-label" style="color:var(--bars-text-secondary);white-space:nowrap;">One capture → many products</span>
+          <span style="flex:1;height:1px;background:var(--bars-line);"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;">
+          <div class="bars-card" data-element="fire" data-altitude="satisfied" style="position:relative;">
+            <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+            <div class="bars-card__body" style="padding:18px;display:flex;flex-direction:column;gap:8px;min-height:130px;">
+              <span class="bars-label" style="color:var(--bars-fire-gem);">→ Quest</span>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:2px 0 0;letter-spacing:-0.01em;">A playable scene</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">Blooms onto the road with a move &amp; a Vibulon reward.</p>
+            </div>
+          </div>
+          <div class="bars-card" data-element="wood" data-altitude="neutral" style="position:relative;">
+            <div class="bars-card__gradient"></div>
+            <div class="bars-card__body" style="padding:18px;display:flex;flex-direction:column;gap:8px;min-height:130px;">
+              <span class="bars-label" style="color:var(--bars-wood-gem);">→ Deck entry</span>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:2px 0 0;letter-spacing:-0.01em;">A card in a set</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">Curated into a personal or shareable deck.</p>
+            </div>
+          </div>
+          <div class="bars-card" data-element="metal" data-altitude="neutral" style="position:relative;">
+            <div class="bars-card__gradient"></div>
+            <div class="bars-card__body" style="padding:18px;display:flex;flex-direction:column;gap:8px;min-height:130px;">
+              <span class="bars-label" style="color:var(--bars-metal-gem);">→ Print</span>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:2px 0 0;letter-spacing:-0.01em;">A physical card</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">Pressed to stock with a QR that links home.</p>
+            </div>
+          </div>
+          <div class="bars-card" data-element="water" data-altitude="neutral" style="position:relative;">
+            <div class="bars-card__gradient"></div>
+            <div class="bars-card__body" style="padding:18px;display:flex;flex-direction:column;gap:8px;min-height:130px;">
+              <span class="bars-label" style="color:var(--bars-water-gem);">→ Book artifact</span>
+              <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:2px 0 0;letter-spacing:-0.01em;">An activity record</h4>
+              <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">Memorializes an insight from a chapter exercise.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SECTION 2.5 · ARTIFACTS ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:760px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 03 · Bloom · the artifacts</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">Quests, Talismans &amp; Daemons</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">A satisfied charge blooms into a <strong style="color:var(--bars-text-primary);font-weight:700;">Quest</strong> — an action that resolves it, often by transferring the charge to someone else. Two special quests <em style="font-style:normal;color:var(--bars-text-primary);">evolve</em>: complete a Create-Talisman quest to forge a <strong style="color:var(--bars-text-primary);font-weight:700;">Talisman</strong>, or a Create-Daemon quest to hatch a <strong style="color:var(--bars-text-primary);font-weight:700;">Daemon</strong>. Each keeps a thread back to the original seed.</p>
+        <span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);margin-top:2px;">Daemon / Talisman art shown is placeholder — final assets pull from the card-art registry.</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin:0 0 22px;"><span class="bars-label" style="color:var(--bars-text-secondary);white-space:nowrap;">Three kinds of quest</span><span style="flex:1;height:1px;background:var(--bars-line);"></span></div>
+      <div style="display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start;">
+
+        <!-- QUEST (transfer) -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-water-gem);font-size:11px;">01</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Quest · resolve &amp; transfer</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Road</span><span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Quest</span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦&nbsp;1428</span></div>
+              <div class="bars-card" data-element="water" data-altitude="satisfied" style="position:relative;margin:6px 16px 0;border-radius:var(--bars-radius-lg);overflow:hidden;">
+                <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+                <div class="bars-art-window" style="height:158px;"><img src="assets/card-art/lamenth-still-point.png" alt=""></div>
+              </div>
+              <div style="flex:1;padding:16px 18px 18px;display:flex;flex-direction:column;gap:13px;">
+                <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-water-gem);">水 Clean Up</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">· transfer quest</span></div>
+                <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-0.01em;line-height:1.2;margin:0;">Sit with the grief you keep outrunning.</h3>
+                <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:14px;display:flex;flex-direction:column;gap:9px;">
+                  <span class="bars-label" style="color:var(--bars-text-muted);font-size:9.5px;">Resolve by transferring the charge</span>
+                  <div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--bars-water-frame) 30%,transparent);box-shadow:inset 0 0 0 1px var(--bars-water-frame);display:flex;align-items:center;justify-content:center;font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-water-gem);">M</div><div style="flex:1;"><span style="display:block;font-family:var(--bars-font-body);font-size:14px;color:var(--bars-text-primary);line-height:1.3;">Write the letter to Mom you never sent.</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">recipient · Mom</span></div></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-water-gem);">reward · +18 ♦</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">domain · family</span></div>
+                <button style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Enter scene →</button>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:7px;border-top:1px dashed var(--bars-line-dashed);padding-top:10px;"><span style="font-size:12px;color:var(--bars-wood-gem);">⚓</span><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-muted);">↩ from seed · the reservoir · dusk · 11:42 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CREATE-DAEMON QUEST -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-fire-gem);font-size:11px;">02</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Create-Daemon quest</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div class="bars-card" data-element="fire" style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;box-shadow:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Road</span><span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Quest</span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦&nbsp;1428</span></div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-fire-gem);">火 Show Up</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">· create-daemon</span></div>
+                <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-0.01em;line-height:1.2;margin:0;">Give the 2am ambition a face.</h3>
+                <div style="display:flex;flex-direction:column;gap:11px;background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:15px;">
+                  <span class="bars-label" style="color:var(--bars-text-muted);font-size:9.5px;">Hatching ritual · 2 of 4</span>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:color-mix(in srgb,var(--bars-element-frame) 30%,transparent);box-shadow:inset 0 0 0 1px var(--bars-element-frame);color:var(--bars-element-gem);">✓</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-muted);text-decoration:line-through;text-decoration-color:var(--bars-line-strong);">Name the charge</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:color-mix(in srgb,var(--bars-element-frame) 30%,transparent);box-shadow:inset 0 0 0 1px var(--bars-element-frame);color:var(--bars-element-gem);">✓</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-muted);text-decoration:line-through;text-decoration-color:var(--bars-line-strong);">Choose its element — fire</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:transparent;"></span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-primary);">Sketch or pick its form</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:transparent;"></span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-primary);">Speak its first words</span></div>
+                </div>
+                <!-- locked evolution preview -->
+                <div style="display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:var(--bars-radius-md);border:1.5px dashed var(--bars-fire-frame);background:color-mix(in srgb,var(--bars-fire-frame) 8%,transparent);">
+                  <div style="width:48px;height:62px;border-radius:8px;flex-shrink:0;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--bars-text-muted);">⌬</div>
+                  <div style="flex:1;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-fire-gem);">Evolves into a Daemon</span><div style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:var(--bars-text-primary);margin-top:3px;">??? → Emberkin</div><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">unlocks below on completion</span></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-fire-gem);">reward · +22 ♦</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">domain · self</span></div>
+                <button style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Continue ritual →</button>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:7px;border-top:1px dashed var(--bars-line-dashed);padding-top:10px;"><span style="font-size:12px;color:var(--bars-wood-gem);">⚓</span><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-muted);">↩ from seed · the reservoir · dusk · 11:42 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CREATE-TALISMAN QUEST -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">03</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Create-Talisman quest</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div class="bars-card" data-element="earth" style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;box-shadow:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Road</span><span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Quest</span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦&nbsp;1428</span></div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-earth-gem);">土 Clean Up</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">· create-talisman</span></div>
+                <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-0.01em;line-height:1.2;margin:0;">Forge the calm into something you can hold.</h3>
+                <div style="display:flex;flex-direction:column;gap:11px;background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:15px;">
+                  <span class="bars-label" style="color:var(--bars-text-muted);font-size:9.5px;">Forging ritual · 2 of 4</span>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:color-mix(in srgb,var(--bars-element-frame) 30%,transparent);box-shadow:inset 0 0 0 1px var(--bars-element-frame);color:var(--bars-element-gem);">✓</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-muted);text-decoration:line-through;text-decoration-color:var(--bars-line-strong);">Name the charge</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:color-mix(in srgb,var(--bars-element-frame) 30%,transparent);box-shadow:inset 0 0 0 1px var(--bars-element-frame);color:var(--bars-element-gem);">✓</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-muted);text-decoration:line-through;text-decoration-color:var(--bars-line-strong);">Choose its element — earth</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:transparent;"></span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-primary);">Define its effect</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);color:transparent;"></span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-primary);">Seal the object</span></div>
+                </div>
+                <!-- locked evolution preview -->
+                <div style="display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:var(--bars-radius-md);border:1.5px dashed var(--bars-earth-frame);background:color-mix(in srgb,var(--bars-earth-frame) 8%,transparent);">
+                  <div style="width:48px;height:62px;border-radius:8px;flex-shrink:0;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--bars-text-muted);">⌬</div>
+                  <div style="flex:1;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-earth-gem);">Evolves into a Talisman</span><div style="font-family:var(--bars-font-display);font-weight:700;font-size:15px;color:var(--bars-text-primary);margin-top:3px;">??? → Still-Point Stone</div><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">unlocks below on completion</span></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-earth-gem);">reward · +16 ♦</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">domain · self</span></div>
+                <button style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Forge →</button>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:7px;border-top:1px dashed var(--bars-line-dashed);padding-top:10px;"><span style="font-size:12px;color:var(--bars-wood-gem);">⚓</span><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-muted);">↩ from seed · the reservoir · dusk · 11:42 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;">
+        <span style="flex:1;max-width:200px;height:1px;background:var(--bars-line);"></span>
+        <span style="display:inline-flex;align-items:center;gap:8px;font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--bars-liminal-glow);padding:7px 13px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-liminal) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-liminal);">complete the ritual — it evolves into ↓</span>
+        <span style="flex:1;max-width:200px;height:1px;background:var(--bars-line);"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin:40px 0 22px;"><span class="bars-label" style="color:var(--bars-text-secondary);white-space:nowrap;">What two of them evolve into</span><span style="flex:1;height:1px;background:var(--bars-line);"></span></div>
+      <div style="display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start;">
+
+        <!-- DAEMON -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-fire-gem);font-size:11px;">✦ evolved</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Daemon · companion</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Bestiary</span><span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Daemon</span><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-fire-gem);">火</span></div>
+              <div style="position:relative;height:300px;overflow:hidden;margin:6px 0 0;">
+                <img src="assets/card-art/pyrakanth-decisive-storm.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center 20%;">
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,12,9,0.05),rgba(15,12,9,0.35) 55%,var(--bars-bg-base));"></div>
+                <div style="position:absolute;left:20px;right:20px;bottom:14px;display:flex;align-items:flex-end;justify-content:space-between;"><div><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-fire-gem);">Pyrakanth daemon</span><h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:30px;letter-spacing:-0.02em;margin:5px 0 0;color:#fff;">Emberkin</h2></div><span style="font-family:var(--bars-font-mono);font-size:10px;color:#fff;padding:4px 9px;border-radius:5px;background:rgba(0,0,0,0.4);box-shadow:inset 0 0 0 1px var(--bars-fire-frame);">Lv 2</span></div>
+              </div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:13px;">
+                <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:0;"><span class="bars-label" style="color:var(--bars-fire-gem);">Personifies</span><br>The restless ambition you keep feeding at 2am.</p>
+                <div style="display:flex;flex-direction:column;gap:6px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="bars-label" style="color:var(--bars-text-muted);font-size:9.5px;">Charge · fire × satisfied</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-fire-gem);">88%</span></div><div style="height:7px;border-radius:4px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);overflow:hidden;"><div style="width:88%;height:100%;border-radius:4px;background:var(--bars-fire-gem);box-shadow:0 0 10px var(--bars-fire-glow);"></div></div></div>
+                <div style="display:flex;gap:8px;"><span style="flex:1;text-align:center;font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--bars-text-secondary);padding:9px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">Wake Up</span><span style="flex:1;text-align:center;font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--bars-text-secondary);padding:9px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">Show Up</span></div>
+                <div style="display:inline-flex;align-self:flex-start;align-items:center;gap:6px;padding:7px 11px;border-radius:var(--bars-radius-sm);background:color-mix(in srgb,var(--bars-fire-frame) 16%,transparent);box-shadow:inset 0 0 0 1px var(--bars-fire-frame);font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-primary);">✦ Evolved from · Create-Daemon quest ✓</div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:7px;border-top:1px dashed var(--bars-line-dashed);padding-top:10px;"><span style="font-size:12px;color:var(--bars-wood-gem);">⚓</span><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-muted);">↩ from seed · the reservoir · dusk · 11:42 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TALISMAN -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">✦ evolved</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Talisman · item</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Satchel</span><span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Talisman</span><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-earth-gem);">土</span></div>
+              <div style="padding:18px 18px 0;display:flex;justify-content:center;">
+                <div style="position:relative;width:188px;aspect-ratio:5/7;border-radius:var(--bars-radius-lg);overflow:hidden;box-shadow:inset 0 0 0 1.5px var(--bars-earth-frame), 0 0 26px -4px var(--bars-earth-glow), 0 18px 38px -16px rgba(0,0,0,0.85);">
+                  <img src="assets/card-art/meridia-bold-heart.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center 22%;">
+                  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%, transparent 35%, rgba(8,6,4,0.55) 100%);"></div>
+                  <div style="position:absolute;inset:6px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(212,160,23,0.35);pointer-events:none;"></div>
+                </div>
+              </div>
+              <div style="flex:1;padding:16px 18px 18px;display:flex;flex-direction:column;gap:13px;">
+                <div style="text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-earth-gem);">Meridia · earth</span><h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:24px;letter-spacing:-0.01em;margin:5px 0 0;">Still-Point Stone</h2></div>
+                <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.55;color:var(--bars-text-secondary);margin:0;text-align:center;">Embodies the calm you found under pressure.</p>
+                <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:14px;display:flex;flex-direction:column;gap:7px;"><span class="bars-label" style="color:var(--bars-text-muted);font-size:9.5px;">When equipped</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-primary);line-height:1.4;">Clean Up moves gain <strong style="font-weight:700;">+1 clarity</strong> and cost <strong style="font-weight:700;">−1 ♦</strong>.</span></div>
+                <div style="display:inline-flex;align-self:flex-start;align-items:center;gap:6px;padding:7px 11px;border-radius:var(--bars-radius-sm);background:color-mix(in srgb,var(--bars-earth-frame) 16%,transparent);box-shadow:inset 0 0 0 1px var(--bars-earth-frame);font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-primary);">✦ Forged from · Create-Talisman quest ✓</div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:7px;border-top:1px dashed var(--bars-line-dashed);padding-top:10px;"><span style="font-size:12px;color:var(--bars-wood-gem);">⚓</span><span style="font-family:var(--bars-font-mono);font-size:9.5px;letter-spacing:0.04em;color:var(--bars-text-muted);">↩ from seed · the reservoir · dusk · 11:42 PM</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════════ SECTION 3 · DECKS ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:760px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 04 · Decks · curate &amp; collect</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">Build a deck from your BARs</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">A deck is a <strong style="color:var(--bars-text-primary);font-weight:700;">spellbook</strong> — mix and match your influences into something workable for the goal in front of you. Curate your own BARs into a set, or draw on curated decks: <strong style="color:var(--bars-text-primary);font-weight:700;">/oracle</strong>, <strong style="color:var(--bars-text-primary);font-weight:700;">/valkyrie-party</strong>, and decks distilled from books, experts &amp; wisdom traditions into BARs. Anyone can publish; expert decks are interviewed &amp; curated.</p>
+      </div>
+
+      <div style="display:flex;gap:52px;flex-wrap:wrap;align-items:flex-start;margin-top:36px;">
+
+        <!-- DECK BUILDER -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-water-gem);font-size:11px;">V1</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Deck builder · personal</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;" data-element="water">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Decks</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Build</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">done</span>
+              </div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:16px;">
+                <!-- deck cover -->
+                <div class="bars-card" data-element="water" data-altitude="satisfied" style="position:relative;">
+                  <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+                  <div class="bars-art-window" style="height:128px;border-top-left-radius:var(--bars-radius-lg);border-top-right-radius:var(--bars-radius-lg);"><img src="assets/card-art/lamenth-still-point.png" alt=""></div>
+                  <div class="bars-card__body" style="padding:14px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;">
+                    <div>
+                      <span class="bars-label" style="color:var(--bars-water-gem);">Personal deck · Lamenth-leaning</span>
+                      <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-0.01em;margin:5px 0 0;display:flex;align-items:center;gap:8px;">Still Waters <span style="font-size:13px;color:var(--bars-text-muted);">✎</span></h3>
+                    </div>
+                    <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-water-gem);white-space:nowrap;">12 BARs</span>
+                  </div>
+                </div>
+                <!-- BAR grid -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="bars-card" data-element="water" data-altitude="neutral" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__body" style="padding:11px 12px;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;"><span style="font-family:var(--bars-font-body);font-size:11.5px;line-height:1.4;color:var(--bars-text-primary);">The river doesn't argue with the rock.</span><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.12em;color:var(--bars-text-muted);text-transform:uppercase;">水 · clean up</span></div></div>
+                  <div class="bars-card" data-element="metal" data-altitude="neutral" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__body" style="padding:11px 12px;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;"><span style="font-family:var(--bars-font-body);font-size:11.5px;line-height:1.4;color:var(--bars-text-primary);">Clarity is a kind of mercy.</span><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.12em;color:var(--bars-text-muted);text-transform:uppercase;">金 · wake up</span></div></div>
+                  <div class="bars-card" data-element="wood" data-altitude="dissatisfied" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__body" style="padding:11px 12px;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;"><span style="font-family:var(--bars-font-body);font-size:11.5px;line-height:1.4;color:var(--bars-text-primary);">What I tend, tends me back.</span><span style="font-family:var(--bars-font-mono);font-size:8px;letter-spacing:0.12em;color:var(--bars-text-muted);text-transform:uppercase;">木 · seed</span></div></div>
+                  <!-- add slot -->
+                  <div style="border:1.5px dashed var(--bars-line-dashed);border-radius:var(--bars-radius-lg);min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--bars-text-muted);"><span style="font-size:20px;line-height:1;">＋</span><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;">add BAR</span></div>
+                </div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;gap:10px;">
+                  <button style="flex:1;padding:13px;border-radius:var(--bars-radius-md);cursor:pointer;background:transparent;border:1px solid var(--bars-water-frame);color:var(--bars-text-primary);font-family:var(--bars-font-mono);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;box-shadow:0 0 16px -6px var(--bars-water-glow);">Order in print</button>
+                  <button style="flex:1;padding:13px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:14px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Publish</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DECK STORE -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-water-gem);font-size:11px;">V2</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Deck library · curated &amp; yours</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-secondary);font-variant-numeric:tabular-nums;">11:42</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Decks</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">♦&nbsp;1428</span>
+              </div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;gap:6px;">
+                  <span style="flex:1;text-align:center;padding:9px;border-radius:var(--bars-radius-md);background:var(--bars-surface-elevated);box-shadow:inset 0 0 0 1px var(--bars-line-strong);font-family:var(--bars-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--bars-text-primary);">Curated</span>
+                  <span style="flex:1;text-align:center;padding:9px;border-radius:var(--bars-radius-md);background:transparent;box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--bars-text-muted);">Yours · 3</span>
+                </div>
+                <!-- featured: The Oracle -->
+                <div class="bars-card" data-element="water" data-altitude="satisfied" style="position:relative;">
+                  <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+                  <div class="bars-art-window" style="height:150px;border-top-left-radius:var(--bars-radius-lg);border-top-right-radius:var(--bars-radius-lg);"><img src="assets/card-art/lamenth-truth-seer.png" alt=""></div>
+                  <div class="bars-card__body" style="padding:15px 16px;display:flex;flex-direction:column;gap:9px;">
+                    <div style="display:flex;align-items:center;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:3px 8px;border-radius:var(--bars-radius-sm);background:color-mix(in srgb,var(--bars-water-frame) 22%,transparent);box-shadow:inset 0 0 0 1px var(--bars-water-frame);color:var(--bars-text-primary);">Prompt deck</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-text-muted);">/oracle</span></div>
+                    <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:22px;letter-spacing:-0.01em;margin:0;">The Oracle</h3>
+                    <p style="font-family:var(--bars-font-body);font-size:13px;line-height:1.5;color:var(--bars-text-secondary);margin:0;">44 BARs that prompt more BARs. Draw one when you're stuck — answer it by making your own.</p>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+                      <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">Play free · <span style="color:var(--bars-water-gem);">Print $38</span></span>
+                      <button style="padding:9px 16px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:13px;box-shadow:0 0 20px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Get deck</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- valkyrie party row -->
+                <div class="bars-card" data-element="fire" data-altitude="neutral" style="position:relative;">
+                  <div class="bars-card__gradient"></div>
+                  <div class="bars-card__body" style="padding:12px;display:flex;gap:12px;align-items:center;">
+                    <div class="bars-art-window" style="width:64px;height:64px;border-radius:var(--bars-radius-md);flex-shrink:0;"><img src="assets/card-art/pyrakanth-decisive-storm.png" alt=""></div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-fire-gem);">Party deck</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">/valkyrie-party</span></div>
+                      <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:3px 0 2px;letter-spacing:-0.01em;">Valkyrie Party</h4>
+                      <span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">Group play · 60 prompt BARs</span>
+                    </div>
+                    <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-fire-gem);white-space:nowrap;">$44</span>
+                  </div>
+                </div>
+                <!-- nation starters row -->
+                <div class="bars-card" data-element="wood" data-altitude="neutral" style="position:relative;">
+                  <div class="bars-card__gradient"></div>
+                  <div class="bars-card__body" style="padding:12px;display:flex;gap:12px;align-items:center;">
+                    <div class="bars-art-window" style="width:64px;height:64px;border-radius:var(--bars-radius-md);flex-shrink:0;"><img src="assets/card-art/virelune-subtle-influence.png" alt=""></div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-wood-gem);">Book companion</span></div>
+                      <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:3px 0 2px;letter-spacing:-0.01em;">Five Nations Starter</h4>
+                      <span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">Pairs with the book · 25 BARs</span>
+                    </div>
+                    <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);white-space:nowrap;">$29</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DECK CONCEPT NOTE -->
+        <div style="width:300px;flex:0 0 auto;padding-top:42px;display:flex;flex-direction:column;gap:16px;">
+          <div class="bars-card" data-element="earth" data-altitude="neutral" style="position:relative;">
+            <div class="bars-card__gradient"></div>
+            <div class="bars-card__body" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+              <span class="bars-label" style="color:var(--bars-earth-gem);">Two kinds of deck</span>
+              <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.6;color:var(--bars-text-secondary);margin:0;"><strong style="color:var(--bars-text-primary);font-weight:700;">Personal</strong> — BARs you captured, curated into a set to revisit or print.</p>
+              <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.6;color:var(--bars-text-secondary);margin:0;"><strong style="color:var(--bars-text-primary);font-weight:700;">Curated / prompt</strong> — published sets where each BAR is a prompt. Drawing one invites you to make a BAR in reply. The deck grows the player.</p>
+            </div>
+          </div>
+          <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:16px 18px;">
+            <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.55;color:var(--bars-text-muted);margin:0;">Every published deck carries the same typed BAR payload, so a prompt drawn here can seed a quest, mint Vibulons, or print — without re-authoring.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SECTION 4 · BOOK & PRODUCT BRIDGE ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:760px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 05 · Bridge · book &amp; products</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">BARs travel with the book</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">Activities in <em style="color:var(--bars-text-primary);font-style:normal;">Mastering the Game of Allyship</em> ask you to write a BAR — to collect an insight or memorialize an experience. Each BAR knows its chapter, and every printed card carries a QR home.</p>
+      </div>
+
+      <div style="display:flex;gap:52px;flex-wrap:wrap;align-items:flex-start;margin-top:36px;">
+
+        <!-- BOOK ACTIVITY CAPTURE -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-wood-gem);font-size:11px;">V1</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Book-activity capture</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Book</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Activity</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">ch.7</span>
+              </div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:15px;">
+                <!-- book excerpt -->
+                <div style="background:#efe7d6;border-radius:var(--bars-radius-lg);padding:20px 22px;box-shadow:var(--bars-shadow-inset-top), 0 10px 30px -12px rgba(0,0,0,0.6);position:relative;overflow:hidden;">
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--bars-earth-frame);"></div>
+                  <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#9a8c6f;">Chapter 7 · Clean Up</span>
+                  <p style="font-family:Georgia, 'Times New Roman', serif;font-size:15px;line-height:1.65;color:#2c2519;margin:10px 0 0;">"Name the charge you've been carrying. Don't fix it yet — just write it on a blank card and <span style="background:#e8d27a;padding:0 2px;border-radius:2px;">let it exist outside you.</span>"</p>
+                  <span style="display:block;font-family:Georgia,serif;font-style:italic;font-size:12px;color:#7a6c52;margin-top:12px;">— Activity 3, page 142</span>
+                </div>
+                <!-- bridge arrow -->
+                <div style="display:flex;align-items:center;gap:10px;justify-content:center;color:var(--bars-text-muted);">
+                  <span style="height:1px;flex:1;background:var(--bars-line);"></span>
+                  <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;">writes a BAR ↓</span>
+                  <span style="height:1px;flex:1;background:var(--bars-line);"></span>
+                </div>
+                <!-- capture prefilled w/ book context -->
+                <div class="bars-card" data-element="water" data-altitude="dissatisfied" style="position:relative;flex:1;">
+                  <div class="bars-card__gradient"></div>
+                  <div class="bars-card__body" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;">
+                    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                      <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.06em;color:var(--bars-text-secondary);padding:4px 8px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">↩ ch.7 · activity 3</span>
+                      <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.06em;color:var(--bars-text-muted);padding:4px 8px;border-radius:var(--bars-radius-sm);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">artifact</span>
+                    </div>
+                    <p style="font-family:var(--bars-font-body);font-size:16px;line-height:1.6;color:var(--bars-text-primary);margin:0;flex:1;">The resentment I keep rehearsing in the shower.<span style="display:inline-block;width:2px;height:18px;background:var(--bars-liminal-glow);margin-left:2px;vertical-align:-3px;box-shadow:0 0 8px var(--bars-liminal-glow);"></span></p>
+                    <button style="width:100%;padding:14px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:14px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Keep · linked to Ch.7</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAPTER-LINKED BARS -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-wood-gem);font-size:11px;">V2</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">BARs referenced in a chapter</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Library</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">From the book</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">⋯</span>
+              </div>
+              <div style="flex:1;padding:16px 18px 18px;display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <span class="bars-label" style="color:var(--bars-wood-gem);">Chapter 7 · Clean Up</span>
+                  <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:23px;letter-spacing:-0.01em;margin:6px 0 0;">Metabolizing the charge</h3>
+                  <p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-muted);margin:8px 0 0;line-height:1.55;">3 BARs you captured from this chapter's activities.</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:11px;">
+                  <div class="bars-card" data-element="water" data-altitude="neutral" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__body" style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-water-gem);">Activity 3 · artifact</span><p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.5;color:var(--bars-text-primary);margin:0;">The resentment I keep rehearsing in the shower.</p></div></div>
+                  <div class="bars-card" data-element="metal" data-altitude="satisfied" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__glow"></div><div class="bars-card__body" style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-metal-gem);">Activity 5 · insight</span><p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.5;color:var(--bars-text-primary);margin:0;">Naming it drained half its weight.</p></div></div>
+                  <div class="bars-card" data-element="wood" data-altitude="dissatisfied" style="position:relative;"><div class="bars-card__gradient"></div><div class="bars-card__body" style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--bars-text-muted);">Activity 7 · seed</span><p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.5;color:var(--bars-text-primary);margin:0;">Forgiveness as compost, not erasure.</p></div></div>
+                </div>
+                <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:13px 15px;display:flex;align-items:center;gap:10px;margin-top:2px;">
+                  <span style="font-size:16px;color:var(--bars-earth-gem);">▦</span>
+                  <span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.45;">Tap any BAR to tune it, add it to a deck, or send it to the road.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR CARD BACK -->
+        <div style="width:300px;flex:0 0 auto;padding-top:42px;display:flex;flex-direction:column;gap:16px;">
+          <span class="bars-label" style="color:var(--bars-text-secondary);">The printed card back</span>
+          <div style="aspect-ratio:5/7;border-radius:18px;background:linear-gradient(160deg,#13110e,#070605);box-shadow:inset 0 0 0 1px rgba(212,160,23,0.35), inset 0 1px 0 rgba(255,255,255,0.06), 0 30px 60px -24px rgba(0,0,0,0.9);padding:26px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+              <span style="font-size:30px;color:var(--bars-earth-gem);text-shadow:0 0 14px var(--bars-earth-glow);">土</span>
+              <span class="bars-label" style="color:var(--bars-text-secondary);letter-spacing:0.28em;">BARS Engine</span>
+            </div>
+            <!-- stylized QR -->
+            <svg width="120" height="120" viewBox="0 0 29 29" style="background:#efe7d6;border-radius:8px;padding:3px;box-sizing:border-box;">
+              <g fill="#1a160e">
+                <path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM22 0h7v7h-7zM23 1v5h5V1zM24 2h3v3h-3zM0 22h7v7H0zM1 23v5h5v-5zM2 24h3v3H2z"/>
+                <rect x="9" y="1" width="1" height="1"/><rect x="11" y="0" width="1" height="2"/><rect x="13" y="1" width="2" height="1"/><rect x="16" y="0" width="1" height="1"/><rect x="19" y="1" width="1" height="2"/>
+                <rect x="9" y="4" width="2" height="1"/><rect x="12" y="3" width="1" height="2"/><rect x="14" y="4" width="1" height="1"/><rect x="17" y="3" width="2" height="1"/><rect x="20" y="4" width="1" height="1"/>
+                <rect x="1" y="9" width="2" height="1"/><rect x="4" y="9" width="1" height="2"/><rect x="0" y="12" width="1" height="1"/><rect x="2" y="13" width="2" height="1"/><rect x="5" y="11" width="1" height="2"/>
+                <rect x="9" y="9" width="2" height="2"/><rect x="12" y="10" width="1" height="1"/><rect x="14" y="9" width="2" height="1"/><rect x="11" y="13" width="1" height="2"/><rect x="9" y="16" width="1" height="1"/><rect x="13" y="15" width="2" height="1"/><rect x="16" y="13" width="1" height="2"/><rect x="15" y="11" width="1" height="1"/><rect x="18" y="10" width="1" height="2"/><rect x="20" y="9" width="1" height="1"/><rect x="17" y="9" width="1" height="1"/>
+                <rect x="22" y="9" width="1" height="2"/><rect x="24" y="10" width="2" height="1"/><rect x="27" y="9" width="1" height="1"/><rect x="23" y="12" width="1" height="1"/><rect x="25" y="13" width="1" height="2"/><rect x="27" y="12" width="1" height="2"/>
+                <rect x="9" y="19" width="1" height="2"/><rect x="11" y="20" width="2" height="1"/><rect x="14" y="19" width="1" height="1"/><rect x="16" y="20" width="1" height="2"/><rect x="13" y="23" width="1" height="1"/><rect x="10" y="24" width="2" height="1"/><rect x="15" y="25" width="2" height="1"/><rect x="9" y="27" width="1" height="1"/>
+                <rect x="19" y="22" width="2" height="1"/><rect x="22" y="23" width="1" height="2"/><rect x="24" y="22" width="1" height="1"/><rect x="26" y="23" width="2" height="1"/><rect x="20" y="25" width="1" height="2"/><rect x="23" y="26" width="2" height="1"/><rect x="26" y="26" width="1" height="2"/><rect x="19" y="19" width="2" height="1"/><rect x="23" y="19" width="1" height="2"/><rect x="26" y="19" width="1" height="1"/>
+              </g>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;color:var(--bars-text-secondary);">SCAN TO PLAY THIS BAR</span>
+              <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-earth-gem);">bars.game/b/7f3a2c</span>
+            </div>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:12.5px;line-height:1.55;color:var(--bars-text-muted);margin:0;">Every physical card resolves to its live BAR — opening the deck, the quest, or the chapter it came from.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SECTION 5 · PRINT & COMMERCE ═══════════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:38px;max-width:760px;">
+        <span class="bars-label" style="color:var(--bars-text-secondary);">Flow 06 · Print · the physical product</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.02em;font-size:34px;margin:0;">Press your BARs to card stock</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:0;text-wrap:pretty;">The same encoded BAR renders to print three ways. Pick the feel, then order — a physical deck of your own cards, each with a QR back to the game.</p>
+      </div>
+
+      <!-- TREATMENTS -->
+      <span class="bars-label" style="color:var(--bars-text-secondary);display:block;margin:32px 0 16px;">Three print treatments · poker stock (2.5 × 3.5″)</span>
+      <div style="background:linear-gradient(180deg,#26221c,#1c1916);border-radius:var(--bars-radius-xl);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 80px rgba(0,0,0,0.4);padding:44px 40px;display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;">
+
+        <!-- A · Faithful dark -->
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+          <div class="bars-card" data-element="fire" data-altitude="satisfied" style="position:relative;width:232px;aspect-ratio:5/7;display:flex;flex-direction:column;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 2px var(--bars-fire-frame), 0 0 22px 2px var(--bars-fire-glow), 0 24px 50px -18px rgba(0,0,0,0.9);">
+            <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+            <div class="bars-art-window" style="height:150px;border-top-left-radius:var(--bars-radius-lg);border-top-right-radius:var(--bars-radius-lg);"><img src="assets/card-art/pyrakanth-bold-heart.png" alt=""></div>
+            <div class="bars-card__body" style="flex:1;padding:16px 17px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--bars-fire-gem);">火 Pyrakanth</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:var(--bars-text-muted);">show up</span></div>
+              <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:18px;letter-spacing:-0.01em;line-height:1.2;margin:0;color:var(--bars-text-primary);">Name the thing you keep avoiding.</h3>
+              <div style="flex:1;"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bars-line);padding-top:9px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;color:var(--bars-text-muted);">PROSPECT PARK · '26</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:var(--bars-fire-gem);">♦ 14</span></div>
+            </div>
+          </div>
+          <div style="text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Faithful</span><p style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);margin:3px 0 0;max-width:200px;line-height:1.45;">The screen card, pressed. Glow printed as spot gloss on matte black.</p></div>
+        </div>
+
+        <!-- B · Print-optimized light -->
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+          <div style="position:relative;width:232px;aspect-ratio:5/7;border-radius:var(--bars-radius-lg);background:#f1e9d7;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,0.12), 0 24px 50px -18px rgba(0,0,0,0.85);display:flex;flex-direction:column;">
+            <div style="height:6px;background:var(--bars-fire-frame);"></div>
+            <div style="padding:15px 16px 0;display:flex;align-items:center;justify-content:space-between;"><span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#b5440f;">火 Pyrakanth</span><span style="font-family:var(--bars-font-mono);font-size:9px;color:#9a8c6f;">show up</span></div>
+            <div style="margin:11px 16px 0;height:128px;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 2px var(--bars-fire-frame);"><img src="assets/card-art/pyrakanth-bold-heart.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;"></div>
+            <div style="flex:1;padding:13px 16px 15px;display:flex;flex-direction:column;">
+              <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:18px;letter-spacing:-0.01em;line-height:1.2;margin:0;color:#241d12;">Name the thing you keep avoiding.</h3>
+              <div style="flex:1;"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #d8cbac;padding-top:9px;"><span style="font-family:var(--bars-font-mono);font-size:8.5px;letter-spacing:0.1em;color:#9a8c6f;">PROSPECT PARK · '26</span><span style="font-family:var(--bars-font-mono);font-size:10px;color:#b5440f;">♦ 14</span></div>
+            </div>
+          </div>
+          <div style="text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Print-optimized</span><p style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);margin:3px 0 0;max-width:200px;line-height:1.45;">Warm paper, ink-friendly. Reads in any light; cheapest to fulfill.</p></div>
+        </div>
+
+        <!-- C · Oracle foil -->
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+          <div style="position:relative;width:232px;aspect-ratio:5/7;border-radius:var(--bars-radius-lg);background:radial-gradient(ellipse at 50% 32%, #1a1611, #0a0807 70%);overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(212,160,23,0.55), inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 50px -18px rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:26px 20px;text-align:center;">
+            <div style="position:absolute;inset:7px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(212,160,23,0.28);pointer-events:none;"></div>
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.28em;text-transform:uppercase;background:linear-gradient(90deg,#9a7b2a,#f4d77a,#9a7b2a);-webkit-background-clip:text;background-clip:text;color:transparent;">The Oracle</span>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+              <span style="font-size:64px;line-height:1;background:linear-gradient(150deg,#7a5f1e,#f6dd86 45%,#caa544 70%,#8c6c25);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 12px rgba(212,160,23,0.4));">火</span>
+              <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:18px;letter-spacing:0.01em;line-height:1.3;margin:0;color:#ede4cf;">Name the thing<br>you keep avoiding.</h3>
+            </div>
+            <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.18em;color:rgba(212,160,23,0.7);">DRAW · ANSWER · MAKE</span>
+          </div>
+          <div style="text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Oracle foil</span><p style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);margin:3px 0 0;max-width:200px;line-height:1.45;">Premium tactile edition. Gold foil sigil, deckled edge, for prompt decks.</p></div>
+        </div>
+      </div>
+
+      <!-- COMMERCE -->
+      <div style="display:flex;gap:52px;flex-wrap:wrap;align-items:flex-start;margin-top:48px;">
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">V1</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Order your deck in print</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px 8px;">
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">← Still Waters</span>
+                <span class="bars-label" style="letter-spacing:0.32em;color:var(--bars-text-muted);">Print order</span>
+                <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);"> </span>
+              </div>
+              <div style="flex:1;padding:14px 18px 18px;display:flex;flex-direction:column;gap:16px;">
+                <!-- fanned preview -->
+                <div style="height:178px;position:relative;display:flex;align-items:center;justify-content:center;">
+                  <div class="bars-card" data-element="metal" data-altitude="neutral" style="position:absolute;width:108px;aspect-ratio:5/7;transform:rotate(-16deg) translateX(-58px);box-shadow:0 14px 30px -12px rgba(0,0,0,0.8);"><div class="bars-card__gradient"></div></div>
+                  <div class="bars-card" data-element="wood" data-altitude="neutral" style="position:absolute;width:108px;aspect-ratio:5/7;transform:rotate(16deg) translateX(58px);box-shadow:0 14px 30px -12px rgba(0,0,0,0.8);"><div class="bars-card__gradient"></div></div>
+                  <div class="bars-card" data-element="water" data-altitude="satisfied" style="position:relative;width:116px;aspect-ratio:5/7;box-shadow:0 18px 36px -12px rgba(0,0,0,0.85);z-index:2;"><div class="bars-card__gradient"></div><div class="bars-card__glow"></div><div class="bars-art-window" style="height:62px;border-top-left-radius:var(--bars-radius-md);border-top-right-radius:var(--bars-radius-md);"><img src="assets/card-art/lamenth-still-point.png" alt=""></div></div>
+                </div>
+                <div style="text-align:center;">
+                  <h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:21px;letter-spacing:-0.01em;margin:0;">Still Waters · 12 BARs</h3>
+                  <span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-muted);">Your personal deck</span>
+                </div>
+                <!-- treatment select -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span class="bars-label" style="color:var(--bars-text-secondary);">Treatment</span>
+                  <div style="display:flex;gap:7px;">
+                    <span style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-water-frame) 16%,transparent);box-shadow:inset 0 0 0 1.5px var(--bars-water-frame);font-family:var(--bars-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--bars-text-primary);">Faithful</span>
+                    <span style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--bars-text-muted);">Print</span>
+                    <span style="flex:1;text-align:center;padding:10px 6px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);font-family:var(--bars-font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--bars-text-muted);">Foil</span>
+                  </div>
+                </div>
+                <!-- line items -->
+                <div style="display:flex;flex-direction:column;gap:0;background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:4px 14px;">
+                  <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);">12 cards · matte 330gsm</span><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">$24.00</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);">Tuck box + QR backs</span><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">$9.00</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:11px 0;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);font-weight:600;">Total</span><span style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-water-gem);">$33.00</span></div>
+                </div>
+                <div style="flex:1;"></div>
+                <button style="width:100%;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Checkout · ships in 5 days</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BUY CURATED DECK -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:baseline;gap:9px;"><span class="bars-label" style="color:var(--bars-earth-gem);font-size:11px;">V2</span><h3 style="font-family:var(--bars-font-display);font-weight:700;letter-spacing:-0.01em;font-size:18px;margin:0;">Buy a curated print deck</h3></div>
+          <div style="width:380px;flex:0 0 auto;background:#050403;border-radius:44px;padding:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 44px 90px -34px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.045);">
+            <div style="background:var(--bars-bg-base);border-radius:34px;overflow:hidden;min-height:760px;display:flex;flex-direction:column;">
+              <div style="position:relative;height:300px;overflow:hidden;">
+                <img src="assets/card-art/lamenth-truth-seer.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;">
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,12,9,0.2),rgba(15,12,9,0.5) 55%,var(--bars-bg-base));"></div>
+                <div style="position:absolute;left:20px;top:16px;display:flex;align-items:center;gap:8px;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:#fff;">←</span></div>
+                <div style="position:absolute;left:22px;right:22px;bottom:18px;">
+                  <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bars-water-gem);">Prompt deck · /oracle</span>
+                  <h2 style="font-family:var(--bars-font-display);font-weight:800;font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:#fff;">The Oracle</h2>
+                </div>
+              </div>
+              <div style="flex:1;padding:18px;display:flex;flex-direction:column;gap:15px;">
+                <p style="font-family:var(--bars-font-body);font-size:14px;line-height:1.6;color:var(--bars-text-secondary);margin:0;">44 foil-pressed prompt cards. Draw one when you're stuck; answer it by capturing a BAR of your own. The deck that makes more decks.</p>
+                <div style="display:flex;gap:18px;">
+                  <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:22px;color:var(--bars-text-primary);">44</span><span style="display:block;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">prompts</span></div>
+                  <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:22px;color:var(--bars-text-primary);">Foil</span><span style="display:block;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">edition</span></div>
+                  <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:22px;color:var(--bars-earth-gem);">QR</span><span style="display:block;font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--bars-text-muted);">to play</span></div>
+                </div>
+                <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-md);box-shadow:inset 0 0 0 1px var(--bars-line);padding:13px 15px;display:flex;align-items:center;gap:11px;">
+                  <span style="font-size:15px;color:var(--bars-wood-gem);">▣</span>
+                  <span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.45;">Includes the digital deck free — scan any card to play.</span>
+                </div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="flex:1;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:26px;color:var(--bars-text-primary);">$38</span><span style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);"> + shipping</span></div>
+                  <button style="flex:1.4;padding:15px;border:none;border-radius:var(--bars-radius-md);cursor:pointer;background:var(--bars-liminal);color:#fff;font-family:var(--bars-font-display);font-weight:700;font-size:15px;box-shadow:0 0 24px -6px var(--bars-liminal-glow), inset 0 1px 0 rgba(255,255,255,0.18);">Add to cart</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLOSING NOTE -->
+        <div style="width:300px;flex:0 0 auto;padding-top:42px;display:flex;flex-direction:column;gap:16px;">
+          <div class="bars-card" data-element="earth" data-altitude="satisfied" style="position:relative;">
+            <div class="bars-card__gradient"></div><div class="bars-card__glow"></div>
+            <div class="bars-card__body" style="padding:20px;display:flex;flex-direction:column;gap:11px;">
+              <span class="bars-label" style="color:var(--bars-earth-gem);">The throughline</span>
+              <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.6;color:var(--bars-text-secondary);margin:0;">One blank-card capture. The player keeps total freedom; the engine quietly gains a typed, extensible record.</p>
+              <p style="font-family:var(--bars-font-body);font-size:13.5px;line-height:1.6;color:var(--bars-text-secondary);margin:0;">That single BAR becomes a quest, a deck entry, a printed card, or a book artifact — and a scanned QR brings any of them home.</p>
+            </div>
+          </div>
+          <div style="background:var(--bars-surface-inset);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-wood-frame);padding:16px 18px;">
+            <span class="bars-label" style="color:var(--bars-wood-gem);display:block;margin-bottom:10px;">Settled · build decisions</span>
+            <div style="display:flex;flex-direction:column;gap:11px;">
+              <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:12.5px;color:var(--bars-text-primary);">Tuning</span><p style="margin:2px 0 0;font-family:var(--bars-font-body);font-size:12px;line-height:1.5;color:var(--bars-text-secondary);">Optional to keep; <strong style="color:var(--bars-text-primary);font-weight:700;">required before a BAR graduates to a quest</strong>.</p></div>
+              <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:12.5px;color:var(--bars-text-primary);">Deck publishing</span><p style="margin:2px 0 0;font-family:var(--bars-font-body);font-size:12px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:var(--bars-text-primary);font-weight:700;">Vetted authors only</strong> at launch.</p></div>
+              <div><span style="font-family:var(--bars-font-display);font-weight:700;font-size:12.5px;color:var(--bars-text-primary);">Print</span><p style="margin:2px 0 0;font-family:var(--bars-font-body);font-size:12px;line-height:1.5;color:var(--bars-text-secondary);"><strong style="color:var(--bars-text-primary);font-weight:700;">MakePlayingCards.com</strong> — design to MPC poker: 2.5×3.5″ card, 822×1122px @300dpi (incl. bleed).</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  canvasRef = React.createRef();
+  grabOff = { x: 0, y: 0 };
+  state = {
+    text: '', spark: 2, tEl: null, tAlt: null, tMove: null,
+    bg: 'water', sel: 'b1', dragId: null,
+    boxes: [
+      { id: 'b1', x: 9, y: 13, text: "The river doesn't\nargue with the rock", size: 27, color: '#F4EFE7', weight: 800, font: 'var(--bars-font-display)' },
+      { id: 'b2', x: 14, y: 50, text: 'it just keeps\nshowing up.', size: 19, color: 'var(--bars-water-gem)', weight: 600, font: 'var(--bars-font-body)' },
+      { id: 'b3', x: 10, y: 83, text: 'dusk \u00b7 the reservoir', size: 12, color: 'rgba(244,239,231,0.6)', weight: 500, font: 'var(--bars-font-mono)' },
+    ],
+  };
+
+  onBoxDown(id, e) {
+    e.stopPropagation();
+    const rect = this.canvasRef.current.getBoundingClientRect();
+    const b = this.state.boxes.find((x) => x.id === id);
+    this.grabOff = { x: e.clientX - (rect.left + (b.x / 100) * rect.width), y: e.clientY - (rect.top + (b.y / 100) * rect.height) };
+    this.setState({ dragId: id, sel: id });
+  }
+  onCanvasDown = () => { if (!this.state.dragId) this.setState({ sel: null }); };
+  onMove = (e) => {
+    if (!this.state.dragId || !this.canvasRef.current) return;
+    const rect = this.canvasRef.current.getBoundingClientRect();
+    let x = ((e.clientX - this.grabOff.x - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - this.grabOff.y - rect.top) / rect.height) * 100;
+    x = Math.max(2, Math.min(86, x)); y = Math.max(2, Math.min(92, y));
+    this.setState((st) => ({ boxes: st.boxes.map((b) => (b.id === st.dragId ? { ...b, x, y } : b)) }));
+  };
+  onUp = () => { if (this.state.dragId) this.setState({ dragId: null }); };
+  setColor(c) { this.setState((st) => ({ boxes: st.boxes.map((b) => (b.id === st.sel ? { ...b, color: c } : b)) })); }
+  bumpSize(d) { this.setState((st) => ({ boxes: st.boxes.map((b) => (b.id === st.sel ? { ...b, size: Math.max(11, Math.min(46, b.size + d)) } : b)) })); }
+  setBg(bg) { this.setState({ bg }); }
+
+  renderVals() {
+    const s = this.state;
+    const setState = (o) => this.setState(o);
+
+    // ── Capture (V1) ──
+    const sparkBase = {
+      width: '22px', height: '22px', borderRadius: '50%', border: 'none',
+      cursor: 'pointer', padding: 0, transition: 'all var(--bars-dur-base) ease-out',
+    };
+    const sparks = [0, 1, 2, 3].map((i) => ({
+      i,
+      onClick: () => setState({ spark: i }),
+      style: i <= s.spark
+        ? { ...sparkBase, background: 'var(--bars-fire-gem)', boxShadow: '0 0 10px 1px var(--bars-fire-glow), inset 0 1px 0 rgba(255,255,255,0.3)' }
+        : { ...sparkBase, background: 'transparent', boxShadow: 'inset 0 0 0 1.5px var(--bars-line-strong)' },
+    }));
+    const captureAlt = s.text.trim().length ? 'neutral' : 'dissatisfied';
+    const charCount = s.text.length;
+
+    // ── Tuning (Section 2) ──
+    const ELS = [
+      { k: 'fire',  sig: '火', nation: 'Pyrakanth' },
+      { k: 'water', sig: '水', nation: 'Lamenth' },
+      { k: 'wood',  sig: '木', nation: 'Virelune' },
+      { k: 'metal', sig: '金', nation: 'Argyra' },
+      { k: 'earth', sig: '土', nation: 'Meridia' },
+    ];
+    const ALTS = [
+      { k: 'dissatisfied', l: 'Raw' },
+      { k: 'neutral',      l: 'Working' },
+      { k: 'satisfied',    l: 'Metabolized' },
+    ];
+    const MOVES = [
+      { k: 'wake-up',  l: 'Wake Up' },
+      { k: 'clean-up', l: 'Clean Up' },
+      { k: 'grow-up',  l: 'Grow Up' },
+      { k: 'show-up',  l: 'Show Up' },
+    ];
+    const ART = {
+      fire: 'assets/card-art/pyrakanth-bold-heart.png',
+      water: 'assets/card-art/lamenth-still-point.png',
+      wood: 'assets/card-art/virelune-joyful-connector.png',
+      metal: 'assets/card-art/argyra-decisive-storm.png',
+      earth: 'assets/card-art/meridia-bold-heart.png',
+    };
+
+    const elBtn = (sel) => ({
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+      padding: '11px 0', borderRadius: 'var(--bars-radius-md)', cursor: 'pointer', border: 'none',
+      background: sel ? 'color-mix(in srgb, var(--bars-element-frame) 18%, transparent)' : 'var(--bars-surface-inset)',
+      boxShadow: sel ? 'inset 0 0 0 1.5px var(--bars-element-frame), 0 0 12px -3px var(--bars-element-glow)' : 'inset 0 0 0 1px var(--bars-line)',
+      transition: 'all var(--bars-dur-base) ease-out',
+    });
+    const els = ELS.map((e) => ({
+      ...e, selected: s.tEl === e.k, onClick: () => setState({ tEl: e.k }),
+      style: elBtn(s.tEl === e.k),
+    }));
+
+    const pillBtn = (sel) => ({
+      flex: 1, padding: '10px 8px', borderRadius: 'var(--bars-radius-md)', cursor: 'pointer', border: 'none',
+      fontFamily: 'var(--bars-font-mono)', fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase',
+      background: sel ? 'color-mix(in srgb, var(--bars-element-frame) 16%, transparent)' : 'var(--bars-surface-inset)',
+      boxShadow: sel ? 'inset 0 0 0 1.5px var(--bars-element-frame)' : 'inset 0 0 0 1px var(--bars-line)',
+      color: sel ? 'var(--bars-text-primary)' : 'var(--bars-text-muted)',
+      transition: 'all var(--bars-dur-base) ease-out',
+    });
+    const alts = ALTS.map((a) => ({ ...a, onClick: () => setState({ tAlt: a.k }), style: pillBtn(s.tAlt === a.k) }));
+    const moves = MOVES.map((m) => ({ ...m, onClick: () => setState({ tMove: m.k }), style: pillBtn(s.tMove === m.k) }));
+
+    const nation = (ELS.find((e) => e.k === s.tEl) || {}).nation;
+    const altLabel = (ALTS.find((a) => a.k === s.tAlt) || {}).l;
+    const moveLabel = (MOVES.find((m) => m.k === s.tMove) || {}).l;
+    const upgraded = !!(s.tEl && s.tAlt && s.tMove);
+    const progress = [s.tEl, s.tAlt, s.tMove].filter(Boolean).length;
+
+    const metaRow = (label, value, on) => ({
+      label, value,
+      valStyle: {
+        fontFamily: 'var(--bars-font-mono)', fontSize: '12px', fontVariantNumeric: 'tabular-nums',
+        color: on ? 'var(--bars-text-primary)' : 'var(--bars-text-muted)',
+      },
+    });
+    const meta = [
+      metaRow('Provenance', '11:42 PM · Prospect Park', true),
+      metaRow('Element', nation || '— untuned', !!nation),
+      metaRow('Altitude', altLabel || '—', !!altLabel),
+      metaRow('Move', moveLabel || '—', !!moveLabel),
+      metaRow('Stage', upgraded ? 'seed → growing' : 'seed', upgraded),
+      metaRow('Vibulon yield', upgraded ? '+14 ♦' : 'locked', upgraded),
+    ];
+
+    const gameData =
+      '{\n' +
+      '  "id": "bar_7f3a2c",\n' +
+      '  "text": "The river doesn\'t argue\\n          with the rock.",\n' +
+      '  "element": ' + (s.tEl ? '"' + s.tEl + '"' : 'null') + ',\n' +
+      '  "altitude": ' + (s.tAlt ? '"' + s.tAlt + '"' : 'null') + ',\n' +
+      '  "move": ' + (s.tMove ? '"' + s.tMove + '"' : 'null') + ',\n' +
+      '  "stage": "' + (upgraded ? 'growing' : 'seed') + '",\n' +
+      '  "provenance": { "place": "prospect_park" },\n' +
+      '  "bookRef": "ch.7 · activity 3"\n' +
+      '}';
+
+    const _bg = { water: 'radial-gradient(ellipse at 50% 28%, color-mix(in srgb,var(--bars-water-frame) 60%, #08151b), #05090c 76%)', fire: 'radial-gradient(ellipse at 50% 32%, color-mix(in srgb,var(--bars-fire-frame) 55%, #1c0a04), #0b0402 76%)', wood: 'radial-gradient(ellipse at 50% 28%, color-mix(in srgb,var(--bars-wood-frame) 50%, #06140c), #040a06 76%)' };
+    const canvasBg = _bg[s.bg] || _bg.water;
+    const boxEls = s.boxes.map((b) => ({
+      id: b.id, text: b.text, onDown: (e) => this.onBoxDown(b.id, e),
+      style: { position: 'absolute', left: b.x + '%', top: b.y + '%', maxWidth: '80%', margin: 0,
+        fontFamily: b.font, fontWeight: b.weight, fontSize: b.size + 'px', lineHeight: 1.2, color: b.color,
+        cursor: 'grab', whiteSpace: 'pre-wrap', padding: '3px 6px', borderRadius: '6px', userSelect: 'none',
+        touchAction: 'none', textShadow: '0 1px 14px rgba(0,0,0,0.6)', outlineOffset: '1px',
+        outline: s.sel === b.id ? '1.5px dashed rgba(255,255,255,0.75)' : 'none',
+        background: s.sel === b.id ? 'rgba(0,0,0,0.12)' : 'transparent' },
+    }));
+    const _pal = ['#F4EFE7', 'var(--bars-water-gem)', 'var(--bars-fire-gem)', 'var(--bars-wood-gem)', 'var(--bars-earth-gem)'];
+    const swatches = _pal.map((c) => ({ onClick: () => this.setColor(c),
+      style: { width: '20px', height: '20px', borderRadius: '50%', border: 'none', cursor: 'pointer', padding: 0, background: c, boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,0.3)' } }));
+    const _bgcol = { water: 'var(--bars-water-gem)', fire: 'var(--bars-fire-gem)', wood: 'var(--bars-wood-gem)' };
+    const bgChips = ['water', 'fire', 'wood'].map((k) => ({ onClick: () => this.setBg(k),
+      style: { width: '22px', height: '22px', borderRadius: '6px', border: 'none', cursor: 'pointer', padding: 0, background: _bgcol[k],
+        boxShadow: s.bg === k ? '0 0 0 2px var(--bars-bg-base), 0 0 0 3.5px ' + _bgcol[k] : 'inset 0 0 0 1px rgba(255,255,255,0.2)' } }));
+    const _selBox = s.boxes.find((b) => b.id === s.sel);
+    const selSize = _selBox ? _selBox.size + 'pt' : '—';
+
+    return {
+      canvasRef: this.canvasRef, onCanvasDown: this.onCanvasDown, onMove: this.onMove, onUp: this.onUp,
+      boxes: boxEls, canvasBg, swatches, bgChips, selSize,
+      bumpUp: () => this.bumpSize(2), bumpDown: () => this.bumpSize(-2),
+      text: s.text, onText: (e) => setState({ text: e.target.value }), charCount,
+      sparks, captureAlt,
+      els, alts, moves,
+      tElAttr: s.tEl || '', tAltAttr: s.tAlt || 'dissatisfied',
+      tElName: nation ? nation : 'No element', tElSig: (ELS.find((e) => e.k === s.tEl) || {}).sig || '◇',
+      artBg: {
+        width: '100%', height: '100%',
+        backgroundImage: 'url("' + (ART[s.tEl] || ART.fire) + '")',
+        backgroundSize: 'cover', backgroundPosition: 'center top',
+      },
+      upgraded, progressLabel: progress + ' / 3 channels tuned',
+      meta, gameData,
+      statusBadge: upgraded ? 'QUEST-READY' : 'DRAFT · UNTUNED',
+      statusStyle: {
+        fontFamily: 'var(--bars-font-mono)', fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase',
+        padding: '5px 10px', borderRadius: 'var(--bars-radius-sm)',
+        color: upgraded ? '#fff' : 'var(--bars-text-muted)',
+        background: upgraded ? 'var(--bars-liminal)' : 'transparent',
+        boxShadow: upgraded ? '0 0 16px -4px var(--bars-liminal-glow)' : 'inset 0 0 0 1px var(--bars-line)',
+      },
+      resetTune: () => setState({ tEl: null, tAlt: null, tMove: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>
