@@ -169,29 +169,37 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
-            href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+            href="/pricing"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
-            Support the Residency
+            Explore the book, deck &amp; game
           </Link>
 
           <Link
-            href={`/campaign${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+            href="/game/"
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Play the game
           </Link>
 
-          <Link
-            href="/login"
-            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
-          >
-            Log In
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
+            >
+              Support
+            </Link>
+            <Link
+              href="/login"
+              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
+            >
+              Log In
+            </Link>
+          </div>
         </div>
 
-        <div className="text-xs text-zinc-700 mt-8 text-center max-w-md">
-          Learn the story and contribute at the event. Existing players can log in to continue.
+        <div className="text-xs text-zinc-600 mt-8 text-center max-w-md">
+          New here? Start with the book, deck, and game — most of it is free, no account needed. Existing players can log in to continue.
         </div>
       </div>
     )

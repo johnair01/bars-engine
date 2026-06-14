@@ -1,6 +1,10 @@
 /**
  * ModeSelect — Character Select vs Applied Mode (Core Architecture § Two Game Modes).
- * Applied Mode needs the AI intake backend; without it, it degrades to a note.
+ *
+ * Applied Mode is always available: intake runs as a scripted, no-AI conversation
+ * (engine/intake) that synthesizes a completable trust encounter. An AI backend,
+ * when configured, only *enhances* the intake's reflections — it is no longer a
+ * gate. (Dual-track: the scripted path is first-class, not a fallback.)
  */
 import type { Dispatch } from "react";
 import type { Action } from "@/engine/gameState";
@@ -13,7 +17,7 @@ interface Props {
 }
 
 export function ModeSelect({ dispatch }: Props) {
-  const applied = aiEnabled();
+  const enhanced = aiEnabled();
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
       <header className="flex flex-col gap-1">
@@ -39,7 +43,7 @@ export function ModeSelect({ dispatch }: Props) {
           </CardContent>
         </Card>
 
-        <Card className={applied ? "" : "opacity-60"}>
+        <Card>
           <CardHeader>
             <CardTitle>Applied Mode</CardTitle>
           </CardHeader>
@@ -50,11 +54,13 @@ export function ModeSelect({ dispatch }: Props) {
             </p>
             <Button
               variant="subtle"
-              disabled={!applied}
               onClick={() => dispatch({ type: "SELECT_MODE", mode: "applied" })}
             >
-              {applied ? "Begin Intake" : "Requires AI backend"}
+              Begin Intake
             </Button>
+            <span className="text-[11px] text-muted">
+              {enhanced ? "AI backend connected — intake reflections enhanced." : "Runs fully scripted — no AI required."}
+            </span>
           </CardContent>
         </Card>
       </div>

@@ -12,68 +12,9 @@
 import { describe, expect, it } from "vitest";
 
 import { BOSS_PRIYA } from "../bossPriya";
-import { TRUST_RULES as R } from "../trustRules";
 import type { EncounterConfig } from "../trustTypes";
-import {
-  allDomainsTouched,
-  currentNeed,
-  initTrustEncounter,
-  trustReducer,
-  type TrustAction,
-  type TrustState,
-} from "../trustEngine";
-
-const TURN_CAP = 120;
-
-type Policy = (s: TrustState) => TrustAction | null;
-
-function run(config: EncounterConfig, policy: Policy) {
-  let s = initTrustEncounter(config);
-  let guard = 0;
-  while (s.result === null && guard < TURN_CAP) {
-    const action = policy(s);
-    if (!action) break;
-    s = trustReducer(s, action);
-    guard += 1;
-  }
-  return s;
-}
-
-/** Read the moving need, respond in-channel to bank trust, dissolve to convert,
- *  then engage all four domains (including the two her-only ones), then capstone. */
-const smartPolicy: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  if (!s.converted) {
-    if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0) {
-      return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-    }
-    const need = currentNeed(s);
-    const aligner = s.config.deck.find((c) => c.kind === "align" && c.channel === need);
-    return aligner ? { type: "PLAY", cardId: aligner.id } : { type: "BASIC" };
-  }
-  const domain = s.config.deck.find(
-    (c) => c.kind === "domain" && c.domain && !s.domainsTouched.includes(c.domain),
-  );
-  return domain ? { type: "PLAY", cardId: domain.id } : null;
-};
-
-/** Never plays an align card — only attunes and "shows up honestly" to bank trust.
- *  Proves the floor: even a player who never risks a read-response still completes. */
-const safeFloorPolicy: Policy = (s) => {
-  if (s.converted && allDomainsTouched(s)) return { type: "CAPSTONE" };
-  if (!s.needRevealed) return { type: "ATTUNE" };
-  if (!s.converted) {
-    if (s.trust >= R.shadow.dissolveCost && s.shadows.length > 0) {
-      return { type: "DISSOLVE", shadowId: s.shadows[0].id };
-    }
-    return { type: "BASIC" };
-  }
-  const domain = s.config.deck.find(
-    (c) => c.kind === "domain" && c.domain && !s.domainsTouched.includes(c.domain),
-  );
-  return domain ? { type: "PLAY", cardId: domain.id } : null;
-};
+import { allDomainsTouched, initTrustEncounter, trustReducer } from "../trustEngine";
+import { run, smartPolicy, safeFloorPolicy, TURN_CAP } from "../simPolicies";
 
 describe("trust engine — Boss Priya completability", () => {
   it("smart play reaches a win", () => {
