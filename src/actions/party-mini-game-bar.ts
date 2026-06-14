@@ -178,14 +178,14 @@ export async function createPartyMiniGameMomentBar(
             update: { status: 'assigned' },
             create: { playerId, questId: inviteQuest.id, status: 'assigned', assignedAt: new Date() },
           })
-          revalidatePath('/hand/quests')
+          revalidatePath('/vault/quests')
         } catch (e) {
           console.warn('[party-mini-game-bar] invite follow-up quest skipped', e)
         }
       }
     }
 
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/')
     return { success: true, barId: newBar.id }
   } catch (e: unknown) {

@@ -85,7 +85,7 @@ export async function updateEventInviteBarLinks(formData: FormData): Promise<Upd
     data: { partifulUrl, eventSlug },
   })
 
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath(`/invite/event/${barId}`)
   return { ok: true }
 }
@@ -151,7 +151,7 @@ export async function updateEventInviteBarContent(input: {
     },
   })
 
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath('/event')
   revalidatePath(`/invite/event/${barId}`)
   return { ok: true }

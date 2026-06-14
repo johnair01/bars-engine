@@ -102,7 +102,7 @@ function cardClubAnchors(campaignClearingHref: string) {
       tileX: 7,
       tileY: 2,
       label: 'Game Master Regent Face',
-      config: JSON.stringify({ externalPath: '/hand/library' })
+      config: JSON.stringify({ externalPath: '/vault/library' })
     },
     // Interior tile — (14,9) is map corner (impassable); no walkable neighbor within range 1 for Interact.
     { anchorType: 'giacomo_npc',      tileX: 12, tileY: 3,  label: 'Giacomo' },

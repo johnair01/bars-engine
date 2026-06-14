@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
-import { updateEventInviteBarContent } from '@/app/hand/event-invite-bar-actions'
+import { updateEventInviteBarContent } from '@/app/vault/event-invite-bar-actions'
 import { parseEventInviteStory } from '@/lib/event-invite-story/schema'
 import { EventInviteStoryBuilder } from '@/components/event-invite/EventInviteStoryBuilder'
 

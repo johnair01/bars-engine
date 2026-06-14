@@ -11,7 +11,7 @@ import { VaultSummaryStrip } from '@/components/hand/VaultSummaryStrip'
 import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
 
 /**
- * @page /hand
+ * @page /vault
  * @entity SYSTEM
  * @description Vault lobby showing player's personal workspace: charges, quests, BARs, compost, invites, and 4-move dashboard
  * @permissions authenticated
@@ -19,7 +19,7 @@ import { VaultMoveDashboard } from '@/components/hand/VaultMoveDashboard'
  * @relationships BAR (charges, drafts, BARs), QUEST (player quests), CAMPAIGN (invites), EVENT (invite BARs)
  * @energyCost 0
  * @dimensions WHO:player, WHAT:vault lobby, WHERE:hand, ENERGY:move_dashboard, PERSONAL_THROUGHPUT:vault_counts
- * @example /hand?quest=quest-123
+ * @example /vault?quest=quest-123
  * @agentDiscoverable false
  */
 
@@ -64,7 +64,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                         Home
                     </Link>
                     <Link
-                        href="/hand"
+                        href="/vault"
                         className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800/80"
                     >
                         Retry
@@ -99,7 +99,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
     if (highlightQuestId) {
         const questExists = personalQuestsRaw.some((q: { id: string }) => q.id === highlightQuestId)
         if (questExists) {
-            redirect(`/hand/quests?quest=${highlightQuestId}`)
+            redirect(`/vault/quests?quest=${highlightQuestId}`)
         }
     }
 
@@ -163,7 +163,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                             {staleItems} item{staleItems !== 1 ? 's' : ''} idle 30+ days — ready to compost.
                         </p>
                         <Link
-                            href="/hand/compost"
+                            href="/vault/compost"
                             className="text-xs font-medium text-sky-400 hover:text-sky-300 whitespace-nowrap"
                         >
                             Compost now →
@@ -224,13 +224,13 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
 
             <div className="flex flex-wrap gap-2">
                 <Link
-                    href="/hand/forge-invitation"
+                    href="/vault/forge-invitation"
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-800/50 bg-emerald-950/20 text-sm text-emerald-400 hover:text-emerald-300 hover:border-emerald-700/60 transition-colors"
                 >
                     ✨ Forge Invitation
                 </Link>
                 <Link
-                    href="/hand/moves"
+                    href="/vault/moves"
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
                     Moves Reference

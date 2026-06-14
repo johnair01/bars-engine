@@ -267,7 +267,7 @@ export async function createQuestFrom321Metadata(
 
     console.log('[createQuestFrom321Metadata] success', { questId: quest.id })
     revalidatePath('/')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     return { success: true, questId: quest.id }
   } catch (e: unknown) {
     console.error('[charge-metabolism] createQuestFrom321Metadata failed:', e)

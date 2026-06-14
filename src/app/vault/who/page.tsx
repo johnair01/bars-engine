@@ -7,13 +7,13 @@ import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultWhoContactsSection } from '@/components/hand/VaultWhoContactsSection'
 
 /**
- * @page /hand/who
+ * @page /vault/who
  * @entity BAR
  * @description Vault Who room showing people and moments named from event bingo and Wake Up moves - private BARs to open, tend, or play
  * @permissions authenticated
  * @relationships BAR (who/contact BARs), PLAYER (vault data), EVENT (bingo contacts)
  * @dimensions WHO:player, WHAT:who room, WHERE:vault, ENERGY:contacts, PERSONAL_THROUGHPUT:contact_count
- * @example /hand/who
+ * @example /vault/who
  * @agentDiscoverable false
  */
 
@@ -36,22 +36,22 @@ export default async function HandWhoRoomPage() {
           wakeUp: {
             label: 'Charge captures',
             note: 'What’s alive in you — separate from this list.',
-            href: '/hand/charges',
+            href: '/vault/charges',
           },
           cleanUp: {
             label: 'Compost',
             note: 'Salvage or archive when a moment has done its job.',
-            href: '/hand/compost',
+            href: '/vault/compost',
           },
           growUp: {
             label: 'Other drafts',
             note: 'Work-in-progress BARs that aren’t on this ledger.',
-            href: '/hand/drafts',
+            href: '/vault/drafts',
           },
           showUp: {
             label: 'Quests & invitations',
             note: 'Place quests or follow up in the world.',
-            href: '/hand/quests',
+            href: '/vault/quests',
           },
         }}
       />

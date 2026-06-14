@@ -139,7 +139,7 @@ Per [.specify/specs/vault-page-experience/spec.md](../.specify/specs/vault-page-
 
 Unset or empty env uses the default. Invalid values fall back to the default.
 
-**Vault Compost (Phase C):** Player flow at **`/hand/compost`** — salvage lines are stored on `CompostLedger`; eligible items are private drafts and unplaced personal quests (see `src/lib/vault-queries.ts` `compostEligibleWhere`). Batch size cap is `COMPOST_MAX_SOURCES` in `src/lib/vault-compost.ts` (not env in v1).
+**Vault Compost (Phase C):** Player flow at **`/vault/compost`** — salvage lines are stored on `CompostLedger`; eligible items are private drafts and unplaced personal quests (see `src/lib/vault-queries.ts` `compostEligibleWhere`). Batch size cap is `COMPOST_MAX_SOURCES` in `src/lib/vault-compost.ts` (not env in v1).
 
 ## GitHub Codespaces
 

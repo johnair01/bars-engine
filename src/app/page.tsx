@@ -693,7 +693,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             {activeBars.length > 5 && (
               <div className="mt-4">
                 <Link
-                  href="/hand"
+                  href="/vault"
                   className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 font-medium"
                 >
                   View Vault →

@@ -148,7 +148,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
           revalidatePath('/bars')
           revalidatePath(`/bars/${barId}`)
-          revalidatePath('/hand')
+          revalidatePath('/vault')
           const swapSlug = bar.collapsedFromInstance?.slug
           if (swapSlug) {
             revalidatePath(`/swap/${swapSlug}/gallery`)

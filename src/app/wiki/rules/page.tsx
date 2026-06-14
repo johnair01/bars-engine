@@ -176,7 +176,7 @@ export default function RulesPage() {
           <Link href="/bars/create" className="text-xs px-3 py-2 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/30 transition-colors">
             Create a BAR →
           </Link>
-          <Link href="/hand/quests" className="text-xs px-3 py-2 rounded-lg border border-amber-800/50 text-amber-400 hover:bg-amber-950/30 transition-colors">
+          <Link href="/vault/quests" className="text-xs px-3 py-2 rounded-lg border border-amber-800/50 text-amber-400 hover:bg-amber-950/30 transition-colors">
             View your quests →
           </Link>
           <Link href="/shadow/321" className="text-xs px-3 py-2 rounded-lg border border-sky-800/50 text-sky-400 hover:bg-sky-950/30 transition-colors">

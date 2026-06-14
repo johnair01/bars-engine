@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import { EVENT_INVITE_ALLOWED_SLUGS } from '@/lib/event-invite-party'
-import { updateEventInviteBarLinks } from '@/app/hand/event-invite-bar-actions'
+import { updateEventInviteBarLinks } from '@/app/vault/event-invite-bar-actions'
 
 function eventSlugSelectValue(slug: string): string {
   const t = slug.trim()

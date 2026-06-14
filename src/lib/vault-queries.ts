@@ -1,5 +1,5 @@
 /**
- * Shared Prisma loaders for Vault lobby (`/hand`) and room pages (`/hand/charges`, …).
+ * Shared Prisma loaders for Vault lobby (`/vault`) and room pages (`/vault/charges`, …).
  * @see .specify/specs/vault-page-experience/spec.md
  */
 import { dbBase } from '@/lib/db'

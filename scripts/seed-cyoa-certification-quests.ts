@@ -3769,7 +3769,7 @@ async function seed() {
         {
             name: 'STEP_2',
             pid: '3',
-            text: '### Step 2: Vault Create BAR\n\nOpen [/hand](/hand). The primary CTA should say **Create a BAR** and go to [/bars/create](/bars/create) (not charge capture).',
+            text: '### Step 2: Vault Create BAR\n\nOpen [/hand](/vault). The primary CTA should say **Create a BAR** and go to [/bars/create](/bars/create) (not charge capture).',
             cleanText: 'Step 2: Vault CTA.',
             links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },

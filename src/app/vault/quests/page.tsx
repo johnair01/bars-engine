@@ -7,7 +7,7 @@ import { VaultPersonalQuestsBlock } from '@/components/hand/VaultPersonalQuestsB
 import { PlacementModal } from '@/components/hand/PlacementModal'
 
 /**
- * @page /hand/quests
+ * @page /vault/quests
  * @entity QUEST
  * @description Vault room showing unplaced personal quests
  * @permissions authenticated
@@ -15,7 +15,7 @@ import { PlacementModal } from '@/components/hand/PlacementModal'
  * @energyCost 0 (read-only view)
  * @dimensions WHO:currentPlayer, WHAT:QUEST, WHERE:vault, PERSONAL_THROUGHPUT:stage
  * @relationships displays unplaced QUESTs from BARs or 321
- * @example /hand/quests?quest=quest_123
+ * @example /vault/quests?quest=quest_123
  * @agentDiscoverable false
  */
 export default async function HandQuestsRoomPage(props: { searchParams: Promise<{ quest?: string }> }) {
@@ -45,7 +45,7 @@ export default async function HandQuestsRoomPage(props: { searchParams: Promise<
                     cleanUp: {
                         label: 'Compost stale quests',
                         note: "Release quests you no longer need — salvage what's useful.",
-                        href: '/hand/compost',
+                        href: '/vault/compost',
                     },
                     growUp: {
                         label: 'Unpack a quest deeper',

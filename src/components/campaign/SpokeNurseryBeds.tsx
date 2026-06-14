@@ -110,7 +110,7 @@ function BedSection(props: {
                 <span className="text-zinc-600">
                   Water {k.wateringComplete}/{k.wateringTotal}
                 </span>
-                <Link href="/hand" className="text-purple-400 hover:text-purple-300 text-[11px]">
+                <Link href="/vault" className="text-purple-400 hover:text-purple-300 text-[11px]">
                   Vault →
                 </Link>
               </li>

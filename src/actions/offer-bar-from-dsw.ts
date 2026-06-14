@@ -67,7 +67,7 @@ export async function createOfferBarFromDsw(input: OfferBarCreateInput): Promise
     })
 
     revalidatePath('/', 'layout')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/bars')
     return { success: true, barId: bar.id }
   } catch (e) {

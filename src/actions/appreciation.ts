@@ -180,7 +180,7 @@ export async function sendAppreciationAction(
   revalidatePath('/')
   revalidatePath('/wallet')
   revalidatePath('/bars/available')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
 
   await fireTrigger('VIBEULON_SENT')
 

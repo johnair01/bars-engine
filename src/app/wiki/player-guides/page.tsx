@@ -37,7 +37,7 @@ const GUIDES = {
       status: 'live' as const,
     },
     {
-      href: '/hand',
+      href: '/vault',
       title: 'Your Hand (in-app)',
       blurb: 'Charge captures, drafts, quests-in-progress — main workspace after onboarding.',
       status: 'live' as const,

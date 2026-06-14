@@ -61,7 +61,7 @@ export async function attachArtifactToMarketplaceSlot(input: {
   })
 
   revalidatePath('/campaign/marketplace')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   return { success: true }
 }
 

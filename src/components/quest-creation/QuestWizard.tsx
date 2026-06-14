@@ -207,7 +207,7 @@ export function QuestWizard({
                 if (gameboardContext) {
                     router.push(`/campaign/board?ref=${encodeURIComponent(gameboardContext.campaignRef)}`)
                 } else if (result?.visibility === 'private') {
-                    router.push('/hand')
+                    router.push('/vault')
                 } else {
                     router.push('/bars/available')
                 }

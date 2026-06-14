@@ -37,7 +37,7 @@ export default async function BarsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <Link
-                            href="/hand"
+                            href="/vault"
                             className="px-4 py-2 border border-zinc-700 hover:border-purple-600/50 text-purple-400/90 hover:text-purple-300 font-medium rounded-lg transition"
                         >
                             Vault

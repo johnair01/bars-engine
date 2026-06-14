@@ -89,7 +89,7 @@ function deriveSuggestion(props: CompassProps): CompassSuggestion {
       move: 'Grow Up',
       tagline: 'You have metabolized charge. Now deepen your capacity — unpack a quest.',
       action: 'View your quests',
-      href: '/hand/quests',
+      href: '/vault/quests',
       accentClass: 'text-violet-400',
       borderClass: 'border-violet-800/50',
     }

@@ -7,13 +7,13 @@ import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultInvitationBarsList } from '@/components/hand/VaultInvitationBarsList'
 
 /**
- * @page /hand/invitations
+ * @page /vault/invitations
  * @entity BAR
  * @description Vault invitations room showing invitation BARs forged by player - copy invite/claim URLs to share with others
  * @permissions authenticated
  * @relationships BAR (invitation type), PLAYER (vault data, inviter)
  * @dimensions WHO:player, WHAT:invitations room, WHERE:vault, ENERGY:invitations, PERSONAL_THROUGHPUT:invitation_count
- * @example /hand/invitations
+ * @example /vault/invitations
  * @agentDiscoverable false
  */
 
@@ -42,12 +42,12 @@ export default async function HandInvitationsRoomPage() {
                     cleanUp: {
                         label: 'Compost old invitations',
                         note: 'Release unclaimed invites you no longer need.',
-                        href: '/hand/compost',
+                        href: '/vault/compost',
                     },
                     growUp: {
                         label: 'Forge a new invitation',
                         note: 'Create a new personalized invitation BAR.',
-                        href: '/hand/forge-invitation',
+                        href: '/vault/forge-invitation',
                     },
                     showUp: {
                         label: 'Share an invite link',
@@ -61,7 +61,7 @@ export default async function HandInvitationsRoomPage() {
             {data.invitationCount === 0 ? (
                 <div className="text-center py-16 border border-dashed border-zinc-800 rounded-xl text-zinc-500 text-sm">
                     No invitation BARs yet.{' '}
-                    <Link href="/hand/forge-invitation" className="text-emerald-400 hover:text-emerald-300">
+                    <Link href="/vault/forge-invitation" className="text-emerald-400 hover:text-emerald-300">
                         Forge invitation →
                     </Link>
                 </div>

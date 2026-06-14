@@ -31,7 +31,7 @@ export default async function GameMapPage() {
           <h1 className="text-3xl font-bold text-white tracking-tight">Game map</h1>
           <p className="text-zinc-400 text-sm max-w-2xl">
             Four spaces of the Narrative OS — Library, Dojo, Forest, Forge. Move tags (Wake Up / Clean Up / Grow Up / Show Up) hint at throughput; your{' '}
-            <Link href="/hand" className="text-amber-400/90 hover:text-amber-300 underline-offset-2 hover:underline">
+            <Link href="/vault" className="text-amber-400/90 hover:text-amber-300 underline-offset-2 hover:underline">
               Vault
             </Link>{' '}
             stays in the top nav. API:{' '}

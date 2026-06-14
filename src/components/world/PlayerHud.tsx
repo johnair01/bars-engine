@@ -14,8 +14,8 @@ import { HandModal } from './HandModal'
  * Position: bottom-right (top-right collided with the spoke welcome overlay).
  * D-pad is at bottom-left, carrying indicator is at bottom-center.
  *
- * Hand button opens a modal (NOT the /hand vault page). Vault is accessed by
- * leaving the play space (the modal links to /hand for now until /hand is
+ * Hand button opens a modal (NOT the /vault vault page). Vault is accessed by
+ * leaving the play space (the modal links to /vault for now until /vault is
  * formally renamed to /vault).
  */
 

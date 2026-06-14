@@ -6,13 +6,13 @@ import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultPrivateDraftsSection } from '@/components/hand/VaultPrivateDraftsSection'
 
 /**
- * @page /hand/drafts
+ * @page /vault/drafts
  * @entity BAR
  * @description Vault drafts room showing work-in-progress BARs - pick up, edit, release to bowl, or publish when ready
  * @permissions authenticated
  * @relationships BAR (draft type), PLAYER (vault data)
  * @dimensions WHO:player, WHAT:drafts room, WHERE:vault, ENERGY:drafts, PERSONAL_THROUGHPUT:draft_count
- * @example /hand/drafts
+ * @example /vault/drafts
  * @agentDiscoverable false
  */
 
@@ -40,7 +40,7 @@ export default async function HandDraftsRoomPage() {
                     cleanUp: {
                         label: 'Compost stale drafts',
                         note: 'Salvage useful parts and release what you no longer need.',
-                        href: '/hand/compost',
+                        href: '/vault/compost',
                     },
                     growUp: {
                         label: 'Browse all BARs',

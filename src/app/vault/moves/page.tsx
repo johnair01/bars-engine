@@ -1,13 +1,13 @@
 import Link from 'next/link'
 
 /**
- * @page /hand/moves
+ * @page /vault/moves
  * @entity SYSTEM
  * @description Reference page explaining the 4 Moves framework (Wake Up, Clean Up, Grow Up, Show Up) - personal throughput system
  * @permissions public
  * @relationships SYSTEM (moves framework)
  * @dimensions WHO:player, WHAT:moves reference, WHERE:hand, ENERGY:moves_knowledge
- * @example /hand/moves
+ * @example /vault/moves
  * @agentDiscoverable false
  */
 
@@ -42,7 +42,7 @@ export default function HandMovesPage() {
   return (
     <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-4xl mx-auto space-y-8">
       <header className="space-y-2">
-        <Link href="/hand" className="text-zinc-500 hover:text-white text-sm">
+        <Link href="/vault" className="text-zinc-500 hover:text-white text-sm">
           ← Back to Vault
         </Link>
         <h1 className="text-3xl font-bold text-white">Moves Library</h1>
@@ -64,7 +64,7 @@ export default function HandMovesPage() {
       </section>
 
       <div className="text-xs text-zinc-500 flex gap-4 flex-wrap">
-        <Link href="/hand" className="hover:text-zinc-300">
+        <Link href="/vault" className="hover:text-zinc-300">
           ← Vault
         </Link>
         <Link href="/wiki/moves" className="hover:text-zinc-300">

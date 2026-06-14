@@ -102,7 +102,7 @@ export function DashboardTwoChannelHub({ activeInstanceId, campaignHomeHref }: H
             title={SCENE_ATLAS_DISPLAY_NAME}
             description="52-cell private deck"
           />
-          <DashboardChannelRow href="/hand" title="Hand / Vault" description="Drafts, who moments & quests" />
+          <DashboardChannelRow href="/vault" title="Hand / Vault" description="Drafts, who moments & quests" />
         </ChannelPanel>
 
         <ChannelPanel element="fire" channelLabel="Collective">

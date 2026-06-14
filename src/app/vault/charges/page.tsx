@@ -7,13 +7,13 @@ import { VaultFourMovesStrip } from '@/components/hand/VaultFourMovesStrip'
 import { VaultChargeList } from '@/components/hand/VaultChargeList'
 
 /**
- * @page /hand/charges
+ * @page /vault/charges
  * @entity BAR
  * @description Vault charges room showing all charge captures - felt charges to turn into quests, explore, or metabolize
  * @permissions authenticated
  * @relationships BAR (charge_capture type), PLAYER (vault data)
  * @dimensions WHO:player, WHAT:charges room, WHERE:vault, ENERGY:charges, PERSONAL_THROUGHPUT:charge_count
- * @example /hand/charges
+ * @example /vault/charges
  * @agentDiscoverable false
  */
 

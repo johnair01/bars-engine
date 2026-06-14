@@ -145,7 +145,7 @@ export default async function PlayPage() {
                 return (
                   <Link
                     key={thread.id}
-                    href={currentQuest ? `/quest/${currentQuest.quest.id}` : `/hand`}
+                    href={currentQuest ? `/quest/${currentQuest.quest.id}` : `/vault`}
                     className="flex items-center justify-between w-full bg-zinc-900/60 border border-zinc-800 hover:border-amber-600/40 hover:bg-zinc-900 rounded-2xl px-5 py-4 transition-all group"
                   >
                     <div className="min-w-0 flex-1">

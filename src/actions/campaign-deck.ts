@@ -530,7 +530,7 @@ export async function completeSpokeSession(
           },
         })
         if ('questId' in questResult) {
-          revalidatePath('/hand')
+          revalidatePath('/vault')
           revalidatePath('/')
           revalidatePath('/campaign/hub')
         } else {

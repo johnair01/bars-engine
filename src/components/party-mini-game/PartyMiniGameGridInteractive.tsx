@@ -209,7 +209,7 @@ export function PartyMiniGameGridInteractive({ game, eventKey, sectionId, player
               </p>
               {loggedIn && (
                 <Link
-                  href="/hand"
+                  href="/vault"
                   className="inline-block mt-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors"
                   style={{
                     borderColor: 'var(--element-frame)',

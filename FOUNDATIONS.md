@@ -166,7 +166,7 @@ The ritual for metabolizing roadblocks:
 - What they need to do next
 
 **Completion contract**: Each branch of a major flow must end with either:
-- A clear destination (redirect to the created artifact: /hand?quest=, /daemons, /growth-scene/[id])
+- A clear destination (redirect to the created artifact: /vault?quest=, /daemons, /growth-scene/[id])
 - A success notification (toast or banner) plus redirect
 - Explicit error feedback with retry guidance
 

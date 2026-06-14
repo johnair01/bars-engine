@@ -221,7 +221,7 @@ export function CampaignHubView({
               ) : null}
               <div className="flex flex-wrap gap-x-4 gap-y-1 items-center">
                 <Link
-                  href="/hand"
+                  href="/vault"
                   className="text-[10px] text-emerald-600 hover:text-emerald-400 transition min-h-[44px] inline-flex items-center"
                 >
                   See all your BARs →

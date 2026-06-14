@@ -11,7 +11,7 @@ type VaultRoomHeaderProps = {
 export function VaultRoomHeader({ title, description }: VaultRoomHeaderProps) {
     return (
         <header className="space-y-2">
-            <Link href="/hand" className="text-zinc-500 hover:text-white text-sm inline-block">
+            <Link href="/vault" className="text-zinc-500 hover:text-white text-sm inline-block">
                 ← Vault
             </Link>
             <h1 className="text-3xl font-bold text-white">{title}</h1>

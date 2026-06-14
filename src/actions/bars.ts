@@ -156,7 +156,7 @@ export async function createBarForUpload(data: {
 
         revalidatePath('/bars')
         revalidatePath('/bars/garden')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/')
         return { barId: bar.id }
     } catch (e: unknown) {
@@ -237,7 +237,7 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
 
         revalidatePath('/bars')
         revalidatePath('/bars/garden')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/')
         return { success: true, barId: bar.id }
     } catch (e: unknown) {
@@ -846,7 +846,7 @@ export async function growQuestFromBar(barId: string): Promise<{ questId?: strin
         }
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath(`/bars/${barId}`)
         return { questId: quest.id }
     } catch (e) {
@@ -978,7 +978,7 @@ export async function createSupportingBarForQuest(
       },
     })
 
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     return { success: true, barId: bar.id }
   } catch (e) {
     console.error('[createSupportingBarForQuest]', e)

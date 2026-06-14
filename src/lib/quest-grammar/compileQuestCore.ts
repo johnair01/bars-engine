@@ -306,7 +306,7 @@ function generateChoices(
   const isFinal = beatType === 'consequence' || beatType === 'anchor'
   if (isFinal) {
     if (isAuthenticated) {
-      return [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/hand' }]
+      return [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/vault' }]
     }
     return [{ text: 'Create my account', buttonLabel: 'Sect: Create my account', targetId: 'signup' }]
   }

@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { ForgeInvitationForm } from './ForgeInvitationForm'
 
 /**
- * @page /hand/forge-invitation
+ * @page /vault/forge-invitation
  * @entity BAR
  * @description Forge new invitation BAR with personalized message, nation, and Game Master face selection
  * @permissions authenticated
  * @relationships BAR (invitation creation), NATION, DAEMON (game master faces)
  * @dimensions WHO:player, WHAT:invitation forge, WHERE:vault, ENERGY:invitation_creation
- * @example /hand/forge-invitation
+ * @example /vault/forge-invitation
  * @agentDiscoverable false
  */
 
@@ -38,7 +38,7 @@ export default async function ForgeInvitationPage() {
     return (
         <div className="min-h-screen text-zinc-200 font-sans p-6 sm:p-12 max-w-2xl mx-auto space-y-8">
             <header className="space-y-2">
-                <Link href="/hand" className="text-zinc-500 hover:text-white text-sm">
+                <Link href="/vault" className="text-zinc-500 hover:text-white text-sm">
                     ← Back to Vault
                 </Link>
                 <h1 className="text-3xl font-bold text-white">Forge an Invitation</h1>

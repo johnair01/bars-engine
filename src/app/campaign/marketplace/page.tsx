@@ -80,7 +80,7 @@ export default async function CampaignMarketplacePage(props: {
               >
                 Featured field
               </Link>
-              <Link href="/hand" className="text-zinc-500 hover:text-emerald-400">
+              <Link href="/vault" className="text-zinc-500 hover:text-emerald-400">
                 Vault
               </Link>
             </div>
