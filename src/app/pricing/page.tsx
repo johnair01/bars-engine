@@ -3,9 +3,11 @@ import Link from "next/link";
 import { getAppConfig } from "@/actions/config";
 import {
   MARKETING_PRODUCTS,
+  checkoutHref,
   formatPrice,
   otherProducts,
 } from "@/lib/marketing/products";
+import { BarnRaisingBar } from "@/components/event/BarnRaisingBar";
 
 export const metadata: Metadata = {
   title: "Get Started — Mastering the Game of Allyship",
@@ -77,7 +79,7 @@ export default async function PricingPage() {
                   p.prices.map((v) => (
                     <div
                       key={v.label}
-                      className="flex items-baseline justify-between gap-3"
+                      className="flex items-center justify-between gap-3"
                     >
                       <span className="text-xs text-zinc-400">
                         {v.label}
@@ -87,9 +89,12 @@ export default async function PricingPage() {
                           </span>
                         )}
                       </span>
-                      <span className={`text-sm font-bold ${p.accent.text}`}>
+                      <Link
+                        href={checkoutHref(p, v)}
+                        className={`shrink-0 rounded-md border border-zinc-700 px-2.5 py-1 text-sm font-bold transition-colors hover:border-zinc-500 ${p.accent.text}`}
+                      >
                         {formatPrice(v)}
-                      </span>
+                      </Link>
                     </div>
                   ))
                 ) : (
@@ -142,6 +147,11 @@ export default async function PricingPage() {
               </div>
             </article>
           ))}
+        </section>
+
+        {/* Barn raising teaser — the send-off centerpiece */}
+        <section aria-label="Barn raising">
+          <BarnRaisingBar variant="teaser" />
         </section>
 
         {/* Funnel CTAs: support + account */}
