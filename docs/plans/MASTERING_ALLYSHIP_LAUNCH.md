@@ -113,9 +113,13 @@ Migration was applied via `prisma migrate deploy` (2026-06-14).
 [docs/runbooks/GUMROAD_LAUNCH_SETUP.md](../runbooks/GUMROAD_LAUNCH_SETUP.md)
 (products, license keys, Ping URL, env, go-live + gate-enablement checklist).
 
-**Track A remaining:** subscription **cancellation** handling (currently lapses
-at expiry); gate any further paid surfaces (e.g. handbook reading) as needed;
-admin mint UI for `mintLaunchCode`; later, remove the `RedemptionPack` scaffold.
+- **Subscription cancellation:** webhook distinguishes a graceful cancellation
+  (keeps access until expiry) from a final `subscription_ended` event
+  (`endSubscription` expires access now). One endpoint, payload-driven.
+
+**Track A remaining:** gate any further paid surfaces (e.g. handbook reading) as
+needed; admin mint UI for `mintLaunchCode`; later, remove the `RedemptionPack`
+scaffold.
 
 ### Track C — Book + RPG handbook deliverables — NOT STARTED
 Polish `.specify/books/book-mtgoa.txt` → digital book (PDF/EPUB); compile the

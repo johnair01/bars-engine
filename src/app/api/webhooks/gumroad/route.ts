@@ -15,7 +15,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
-import { mintRedemptionCode, revokeByExternalOrderId, extendSubscription } from '@/lib/entitlements/service'
+import {
+  mintRedemptionCode,
+  revokeByExternalOrderId,
+  extendSubscription,
+  endSubscription,
+} from '@/lib/entitlements/service'
 import { resolveSkuFromGumroad } from '@/lib/launch/gumroad'
 import { grantForSku } from '@/lib/launch/grants'
 
@@ -54,12 +59,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'wrong_seller' }, { status: 401 })
   }
 
-  const saleId = get('sale_id') ?? get('order_number')
-  if (!saleId) {
-    return NextResponse.json({ ok: false, error: 'missing_sale_id' }, { status: 400 })
-  }
-
   try {
+    const subscriptionId = get('subscription_id')
+
+    // Subscription ended (final: failed payment / period ended / cancellation now
+    // in effect) → cut access immediately.
+    if (subscriptionId && (get('ended_reason') || get('subscription_ended_at'))) {
+      const ended = await endSubscription(subscriptionId)
+      return NextResponse.json({
+        ok: true,
+        action: 'subscription_ended',
+        reason: get('ended_reason'),
+        ended,
+      })
+    }
+    // Plain cancellation that still has paid time left → graceful: keep access
+    // until the entitlement lapses at its expiry (no more renewals will arrive).
+    if (subscriptionId && (get('cancelled') === 'true' || get('cancelled_at'))) {
+      return NextResponse.json({ ok: true, action: 'cancellation_noted' })
+    }
+
+    // Everything below is a sale-shaped event and needs an order id.
+    const saleId = get('sale_id') ?? get('order_number')
+    if (!saleId) {
+      // Not a ping we handle — acknowledge so Gumroad stops retrying.
+      return NextResponse.json({ ok: true, action: 'ignored_no_sale_id' })
+    }
+
     // Refund / chargeback → void + revoke.
     if (get('refunded') === 'true' || get('disputed') === 'true') {
       await revokeByExternalOrderId(saleId)
@@ -81,8 +107,6 @@ export async function POST(req: NextRequest) {
       })
       return NextResponse.json({ ok: true, action: 'ignored_unrecognized_product' })
     }
-
-    const subscriptionId = get('subscription_id')
 
     // Recurring renewal charge → extend the existing entitlement, don't re-mint.
     if (subscriptionId && get('is_recurring_charge') === 'true') {

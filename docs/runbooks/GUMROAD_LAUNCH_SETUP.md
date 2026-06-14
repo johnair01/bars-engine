@@ -38,8 +38,20 @@ https://<app-domain>/api/webhooks/gumroad?token=<GUMROAD_WEBHOOK_SECRET>
 
 The webhook verifies the secret (timing-safe), maps the sale’s product to an
 `OfferKey`, and mints a `RedemptionCode` keyed to the Gumroad `sale_id`
-(idempotent). Recurring renewal charges extend the subscriber’s entitlement;
-refunds/disputes void the code and revoke the entitlement.
+(idempotent). One endpoint handles every event by inspecting the payload:
+
+| Event | Behavior |
+| :-- | :-- |
+| Sale | Mint a `RedemptionCode` (license key = code). |
+| Recurring charge (`is_recurring_charge`) | Extend the entitlement (stacks from current expiry). |
+| Refund / dispute | Void the code + revoke the entitlement. |
+| Subscription **ended** (`ended_reason` / `subscription_ended_at`) | Expire access now. |
+| Subscription **cancelled** (still paid time left) | No change — access lapses at expiry. |
+
+**Register the same URL** for the subscription resources too (Gumroad
+Settings → Advanced → Ping, plus resource subscriptions for
+`cancellation` / `subscription_ended` / `refund` / `dispute`) so renewals and
+cancellations reach the endpoint.
 
 ## 3. Environment variables (Vercel)
 
@@ -87,6 +99,5 @@ Before the webhook is configured, an admin can mint a code with the
 
 ## Known follow-ups
 
-- Subscription **cancellation** webhook (let lapse at expiry for now).
 - Wire app-access/capability gates into more surfaces as needed.
 - Remove the dead `RedemptionPack` model in a later deliberate cleanup.

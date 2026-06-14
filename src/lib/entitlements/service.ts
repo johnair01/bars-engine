@@ -185,6 +185,21 @@ export async function extendSubscription(subscriptionId: string, durationDays: n
 }
 
 /**
+ * Subscription ended (final): expire active entitlements for the subscription
+ * now. Used when Gumroad reports the subscription has actually ended
+ * (failed payment, period ended, or cancellation taking effect). A plain
+ * cancellation that still has paid time left is NOT this — let it lapse at
+ * expiry. Idempotent. Returns how many were ended.
+ */
+export async function endSubscription(subscriptionId: string): Promise<number> {
+  const res = await db.entitlement.updateMany({
+    where: { subscriptionId, status: 'active' },
+    data: { status: 'expired', expiresAt: new Date() },
+  })
+  return res.count
+}
+
+/**
  * Refund/chargeback handling: void the code and revoke any entitlement tied to a
  * Gumroad order. Idempotent — safe to replay.
  */
