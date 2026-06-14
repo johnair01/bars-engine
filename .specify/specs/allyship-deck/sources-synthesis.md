@@ -133,16 +133,53 @@ Refinements that change how cards are written:
 draw/consult → the deck names the move that restores access.* The Capability Model is the strongest
 candidate for the deck's organizing spine (see architecture question, §Implications).
 
+## 8. The Six Faces of the Game Master — the THIRD axis (already in code)
+
+`src/lib/move-grammar/` already encodes the canonical six faces, each with **two moves** = **12
+face-moves**, and each move already has written `defaultBody` copy that reads as spell text
+(context → primary question → the practice). This is a major existing asset for the move library.
+
+| Face | Move A | Move B | Essence |
+|------|--------|--------|---------|
+| **Shaman** | create_ritual | name_shadow_belief | hold what can't be held; name what's unsaid |
+| **Challenger** | issue_challenge | propose_move | touch the edge; name the next honest action |
+| **Regent** | declare_period | grant_role | name the moment; formalize a capacity |
+| **Architect** | offer_blueprint | design_layout | make structure visible; make complexity navigable |
+| **Diplomat** | offer_connection | host_event | cross a threshold; convene a field |
+| **Sage** | witness | cast_hexagram | see without fixing; mirror the question underneath |
+
+Example written copy (Shaman / name_shadow_belief): *"Shadow beliefs run the system from below.
+The Shaman names what everyone knows but no one has said… What is the belief underneath the
+behavior? Name it plainly. Watch what opens."* — i.e. the face-moves are **drafted move cards**.
+
+The faces are a **consultation lens** ("approach this as the Shaman / the Challenger / the Sage"),
+which is exactly what "go through the game master faces" asks for.
+
+## The three axes (how the move library is organized)
+
+| Axis | Members | Role |
+|------|---------|------|
+| **Throughput moves** | Wake Up · Clean Up · Grow Up · Show Up · **Open Up** | the developmental arc — *what kind of progress* |
+| **Capabilities / channels** | Agency(Fire) · Exploration(Metal) · Rest(Earth) · Participation(Wood) · Connection(Water) | *what gets restored* (§7) |
+| **GM Faces** | Shaman · Challenger · Regent · Architect · Diplomat · Sage (×2 moves = 12) | the *voice/lens* that performs the move |
+
+These are **lenses, not a matrix to enumerate** (governance §6). A given face-move is *tagged* with
+a throughput move + a capability; the player can consult by any axis (face / capability / move) or
+draw at random.
+
 ## Implications for the spec (proposed, pending author confirmation)
 
-1. **Architecture:** lean — the **5 moves** are the spine; the **Capability Model** (§7) is the
-   second axis (each card restores a capability: Agency/Exploration/Rest/Participation/Connection).
-   Each move has a small set of cards tagged with channel/capability / form / domain so depth is
-   latent. Target a *small* deck (~25–40 cards), not 52+. *(Open architecture question: are the
-   five capabilities/channels the suits, or are the five moves the suits? — author to weigh in.)*
+1. **Architecture (lean, three-axis) — proposed v1 composition (~22 cards):**
+   - **12 Face-move cards** — the practical spells (copy ~drafted in `move-grammar`).
+   - **5 Move cards** — Wake / Clean / Grow / Show / **Open Up** (the developmental arc; "major" cards).
+   - **5 Capability cards** — Agency / Exploration / Rest / Participation / Connection.
+   Each face-move is *tagged* with a throughput move + a capability so all three axes are
+   navigable. Identity (nation/archetype, the 40 art assets) is a **separate lens / the visual
+   layer**, not a multiplier. Consult by face, by capability ("what's offline"), by move, or draw
+   at random. Stays in the lean ~25–40 target; deep matrix stays latent.
 2. **Card schema:** extend `AllyshipCard` with the skill-stack anatomy (`primaryQuestion`,
-   `optimizesFor`, `forbiddenMoves`, `failureModes`, `remediation`) + latent tags
-   (`channel`, `capability`, `form`, `moveType`).
+   `optimizesFor`, `forbiddenMoves`, `failureModes`, `remediation`) + axis tags
+   (`face`, `faceMoveType`, `throughputMove`, `capability`, `channel`, `domain`).
 3. **5th move:** **Open Up** — confirmed; home capability = Water/Connection.
 4. **Capability Model is canonical:** Fire→Triumph (Agency), Metal→Wonder (Exploration),
    Earth→Peace (Rest), Wood→Bliss (Participation), Water→Poignance (Connection). Supersedes the
