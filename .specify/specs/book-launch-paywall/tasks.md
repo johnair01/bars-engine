@@ -30,9 +30,13 @@ Implements [spec.md](./spec.md) per [plan.md](./plan.md). Order is API-first. Ch
 
 ## Verification Quest (required — do not mark UI complete without it)
 
-- [ ] **T18** — Twine story `cert-book-launch-paywall-v1` (5 passages, spec § Verification Quest); final passage no-link.
-- [ ] **T19** — `scripts/seed-cert-book-launch-paywall.ts` (idempotent; `CustomBar` `isSystem:true`, `visibility:'public'`, id `cert-book-launch-paywall-v1`) + `npm run seed:cert:book-paywall` in `package.json`. Uses mock-mode `TEST-` key for the redeem step.
-- [ ] **T20** — Run the quest end-to-end in preview; confirm reward mints on the final passage.
+- [x] **T18** — Twine story `cert-book-launch-paywall-v1` (4 Phase-1 steps + FEEDBACK + END_SUCCESS, final passage no-link). The download step (spec step 5) is appended when Phase 2 lands.
+- [x] **T19** — `scripts/seed-cert-book-launch-paywall.ts` (idempotent; `CustomBar` `isSystem:true`, `visibility:'public'`, id `cert-book-launch-paywall-v1`) + `npm run seed:cert:book-paywall`. Steps use a mock-mode `TEST-` key for the redeem step.
+- [~] **T20** — Run the quest end-to-end in preview; confirm reward mints on the final passage. **Pending a reachable DB** (no `DATABASE_URL` in this container) — run `npm run seed:cert:book-paywall` then complete the quest on the deployed preview.
+
+## Unit tests
+
+- [x] **UT1** — `src/lib/__tests__/book-launch-paywall.test.ts` (`npm run test:book-paywall`): `verifyLicense` mock branches + `isFreeChapter` + `hasBookAccess(null)`. Passing.
 
 ## Definition of done
 
