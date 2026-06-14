@@ -2449,6 +2449,25 @@ model RedemptionCode {
   @@map("redemption_codes")
 }
 
+// Uploaded digital deliverable for a launch SKU (e.g. the finished book or RPG
+// handbook PDF/EPUB from external editorial software). One current file per SKU;
+// re-upload replaces it. Served via the gated /api/deliverables/[sku] route to
+// players who hold the matching entitlement capability.
+model DigitalDeliverable {
+  id           String   @id @default(cuid())
+  sku          String   @unique
+  title        String
+  fileName     String
+  fileUrl      String
+  contentType  String?
+  sizeBytes    Int?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("digital_deliverables")
+}
+
 model Donation {
   id              String           @id @default(cuid())
   instanceId      String

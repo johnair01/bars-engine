@@ -46,10 +46,11 @@ export const SKU_CAPABILITIES: Record<OfferKey, Capability[]> = {
   'deck-digital': [],
   // The game subscription includes the digital book + digital deck access.
   'game-subscription': ['app-access', 'book-digital', 'deck-digital'],
-  'book-physical': [],
-  'rpg-handbook-physical': [],
-  // Founding Ally: lifetime app access + deck access (physical goods fulfilled separately).
-  'founding-ally': ['app-access', 'deck-digital'],
+  // Physical buyers also get the matching digital file to download.
+  'book-physical': ['book-digital'],
+  'rpg-handbook-physical': ['rpg-handbook-digital'],
+  // Founding Ally: lifetime app access + every digital file.
+  'founding-ally': ['app-access', 'deck-digital', 'book-digital', 'rpg-handbook-digital'],
 }
 
 /** All capabilities a SKU confers, including itself. */

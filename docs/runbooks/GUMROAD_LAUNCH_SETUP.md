@@ -83,7 +83,9 @@ if (!access.allowed) return <Paywall title="…" authed={access.authed} />
 ## 5. Go-live checklist
 
 1. Apply migrations: `npx prisma migrate deploy` → `npm run db:record-schema-hash`.
-2. Create each Gumroad product; enable license keys; set receipt → `/redeem`.
+2. Upload the finished digital files (book, RPG handbook, deck, …) at
+   **`/admin/deliverables`** — buyers download them at `/downloads`.
+3. Create each Gumroad product; enable license keys; set receipt → `/redeem`.
 3. Set the Ping URL with `?token=…`.
 4. Set `GUMROAD_WEBHOOK_SECRET` and the `NEXT_PUBLIC_GUMROAD_*_URL` links.
 5. Test: buy a cheap/test product → confirm a `RedemptionCode` row appears →

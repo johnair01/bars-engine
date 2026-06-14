@@ -79,13 +79,19 @@ export async function getActiveEntitlements(playerId: string) {
   })
 }
 
+/** All capabilities the player currently holds (incl. bundled implications). */
+export async function getCapabilities(playerId: string): Promise<Set<Capability>> {
+  const active = await getActiveEntitlements(playerId)
+  const caps = new Set<Capability>()
+  for (const ent of active) {
+    for (const c of capabilitiesForSku(ent.sku as OfferKey)) caps.add(c)
+  }
+  return caps
+}
+
 /** Whether the player currently holds a capability (incl. bundled implications). */
 export async function hasCapability(playerId: string, capability: Capability): Promise<boolean> {
-  const active = await getActiveEntitlements(playerId)
-  for (const ent of active) {
-    if (capabilitiesForSku(ent.sku as OfferKey).includes(capability)) return true
-  }
-  return false
+  return (await getCapabilities(playerId)).has(capability)
 }
 
 /** Convenience: does the player have any active app access right now? */
