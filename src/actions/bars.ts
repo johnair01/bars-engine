@@ -6,11 +6,27 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import {
     effectiveMaturity,
+    mergeSeedMetabolization,
     parseSeedMetabolization,
     type MaturityPhase,
     type SoilKind,
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
+
+// Element channel ('nation' column) — valid capture-time field-tint values.
+// Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
+// UI tokens into the server-action bundle).
+const ELEMENT_KEYS = ['fire', 'water', 'wood', 'metal', 'earth'] as const
+function normalizeFieldTint(raw: string | null | undefined): string | null {
+    const v = (raw || '').trim().toLowerCase()
+    return (ELEMENT_KEYS as readonly string[]).includes(v) ? v : null
+}
+
+/** Maturity + provenance stamped on every fresh capture (G2/G3). createdAt is auto. */
+const CAPTURE_SEED_METABOLIZATION = mergeSeedMetabolization(null, {
+    maturity: 'captured',
+    soilKind: 'holding_pen',
+})
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -73,6 +89,7 @@ export async function createBarForUpload(data: {
     tags?: string
     socialLinks?: string
     hasPhotos?: boolean
+    fieldTint?: string
 }): Promise<{ barId?: string; error?: string }> {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
@@ -81,13 +98,14 @@ export async function createBarForUpload(data: {
     const tags = (data.tags || '').trim()
     const socialLinksRaw = (data.socialLinks || '').trim()
     const hasPhotos = !!data.hasPhotos
+    const fieldTint = normalizeFieldTint(data.fieldTint)
 
-    if (content.length < 3 && !hasPhotos) {
-        return { error: 'Add some text (at least 3 characters) or a photo' }
+    if (content.length < 1 && !hasPhotos) {
+        return { error: 'Add a line of text or a photo to keep' }
     }
 
-    const title = content.length >= 3 ? deriveTitle(content) : 'Photo'
-    const description = content.length >= 3 ? content : 'Photo'
+    const title = content.length >= 1 ? deriveTitle(content) : 'Photo'
+    const description = content.length >= 1 ? content : 'Photo'
 
     try {
         const bar = await db.customBar.create({
@@ -102,6 +120,9 @@ export async function createBarForUpload(data: {
                 storyContent: tags || null,
                 inputs: '[]',
                 rootId: 'temp',
+                // Capture-time element tint (optional) + maturity/provenance stamp (G2/G3).
+                nation: fieldTint,
+                seedMetabolization: CAPTURE_SEED_METABOLIZATION,
             }
         })
 
@@ -142,14 +163,15 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
     const content = (formData.get('content') as string || '').trim()
     const tags = (formData.get('tags') as string || '').trim()
     const socialLinksRaw = (formData.get('socialLinks') as string || '').trim()
+    const fieldTint = normalizeFieldTint(formData.get('fieldTint') as string | null)
     const photoFront = formData.get('photoFront') as File | null
     const photoBack = formData.get('photoBack') as File | null
 
-    const hasContent = content.length >= 3
+    const hasContent = content.length >= 1
     const hasPhoto = (photoFront && photoFront.size > 0) || (photoBack && photoBack.size > 0)
 
     if (!hasContent && !hasPhoto) {
-        return { error: 'Add some text or a photo' }
+        return { error: 'Add a line of text or a photo to keep' }
     }
 
     const title = hasContent ? deriveTitle(content) : 'Photo'
@@ -168,6 +190,9 @@ export async function createPlayerBar(prevState: { error?: string; success?: boo
                 storyContent: tags || null,
                 inputs: '[]',
                 rootId: 'temp',
+                // Capture-time element tint (optional) + maturity/provenance stamp (G2/G3).
+                nation: fieldTint,
+                seedMetabolization: CAPTURE_SEED_METABOLIZATION,
             }
         })
 

@@ -31,6 +31,8 @@ const eslintConfig = defineConfig([
     // Vendor / third-party dirs:
     "LibreSprite/**",
     "backend/.venv/**",
+    // Design handoff bundle — vendored reference material, not project source:
+    "design/**",
   ]),
 ]);
 
