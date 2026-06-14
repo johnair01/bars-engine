@@ -170,7 +170,13 @@ three walls** (host confirmed §3 Option A), but each wall's "give" button does 
 ### Wall 1 — The car (gift, PRIORITY)
 - The exploded car was valued at **$7,000**; this anchors a rough wall target (pending research).
 - Host names this the **priority wall** — highest sympathy, gets dollars flowing; should fill first / be most visible. Unallocated gifts default here.
-- **ACTION ITEM (research):** reliable replacement car *type + price* in the **Portland, Wichita, and Seattle–Tacoma** areas (host moving between these). Baseline: ~$7k value to match. Output sets Wall 1's `targetValue`.
+- ✅ **RESEARCH DONE** → see [`car-replacement-research.md`](./car-replacement-research.md).
+  Picks: **2014–2015 Toyota Corolla** (top), Honda Civic / Mazda3, CR-V/Camry. Hard-avoid
+  Nissan CVT + Ford PowerShift. Cheapest to acquire = **Portland** (no sales tax, ~$400 over
+  sticker) vs. Seattle (~$760–950) and Wichita (~$575 + annual property tax).
+- **Recommended Wall 1 `targetValue` = $8,500** (≈$7k car + ~$600 tax/title/reg + ~$600 PPI
+  & first maintenance + ~$300 contingency). Lean alternative: **$7,000 flat** ("replace what
+  was lost"). **Host to confirm which figure.**
 
 ### Wall 2 — Pre-sale (commerce, "the one that gets $$ flowing")
 Five products. **Repo reality (verified):** `src/lib/marketing/products.ts` has only
