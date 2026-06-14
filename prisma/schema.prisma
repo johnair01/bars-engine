@@ -79,8 +79,8 @@ model Player {
   hasCompletedFirstQuest         Boolean                     @default(false)
   hasCreatedFirstQuest           Boolean                     @default(false)
   onboardingCompletedAt          DateTime?
-  practiceOrientationComplete      Boolean                     @default(false)
-  practiceOrientationCompletedAt   DateTime?
+  practiceOrientationComplete    Boolean                     @default(false)
+  practiceOrientationCompletedAt DateTime?
   inviteId                       String
   invitedByPlayerId              String?
   nationId                       String?
@@ -201,9 +201,30 @@ model Player {
   vibulonEvents                  VibulonEvent[]
   creatorVibulons                Vibulon[]                   @relation("VibulonCreator")
   vibulons                       Vibulon[]
+  bookEntitlements               BookEntitlement[]           @relation("PlayerBookEntitlements")
 
   @@unique([contactType, contactValue])
   @@map("players")
+}
+
+/// Book launch paywall — a player's right to read + download a book (see .specify/specs/book-launch-paywall/spec.md).
+/// Modeled on the Invite redemption pattern. Granted by redeeming a Gumroad license key.
+model BookEntitlement {
+  id            String    @id @default(cuid())
+  playerId      String
+  bookKey       String    @default("mtgoa")
+  source        String    @default("gumroad") // gumroad | admin | comp
+  licenseKey    String?
+  gumroadSaleId String?
+  status        String    @default("active") // active | revoked | refunded
+  grantedAt     DateTime  @default(now())
+  revokedAt     DateTime?
+  metadata      String? // JSON: purchaser email, product id, uses
+  player        Player    @relation("PlayerBookEntitlements", fields: [playerId], references: [id])
+
+  @@unique([playerId, bookKey])
+  @@unique([bookKey, licenseKey])
+  @@map("book_entitlements")
 }
 
 /// Vault compost sessions — salvage payload for future “hard compost” organizer (see .specify/specs/vault-page-experience/spec.md)
@@ -2143,20 +2164,20 @@ model PartyPlayerCard {
 }
 
 model PartyQuestCard {
-  id              String   @id @default(cuid())
-  partyId         String   @map("party_id")
-  authorPlayerId  String?  @map("author_player_id")
-  title           String
-  prompt          String
-  category        String   @default("treasure")
-  kind            String   @default("ask")
-  face            String?
-  waveMode        String?  @map("wave_mode")
-  materials       String   @default("")
-  waveJson        Json     @default("{}") @map("wave_json")
-  gameMasterJson  Json     @default("{}") @map("game_master_json")
-  seed            Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  partyId        String   @map("party_id")
+  authorPlayerId String?  @map("author_player_id")
+  title          String
+  prompt         String
+  category       String   @default("treasure")
+  kind           String   @default("ask")
+  face           String?
+  waveMode       String?  @map("wave_mode")
+  materials      String   @default("")
+  waveJson       Json     @default("{}") @map("wave_json")
+  gameMasterJson Json     @default("{}") @map("game_master_json")
+  seed           Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([partyId, createdAt])
   @@index([partyId, seed])
@@ -3825,7 +3846,7 @@ model Campaign {
   /// See PHASE2A_BACKFILL_LOGIC_DESIGN.md for full schema.
   campaignFlavorLayers Json?
   /// DAOE Phase 3: Player Personality Intake — stored player profile + NPC tone weights
-  personalityProfile  Json?
+  personalityProfile   Json?
   /// DAOE Phase 4: Campaign suspension kill-switch — set when subscription revoked, cleared on restore
   suspendedAt          DateTime?
   /// Scheduled start
