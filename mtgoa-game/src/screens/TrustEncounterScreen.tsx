@@ -9,9 +9,10 @@
  *   DOMAINS (some are her-only) → CAPSTONE.
  *
  * Ladder: L1 = a single fixed need; L2 = a paired Water/Fire rhythm; Boss = the
- * full three-channel moving need. Switch rungs with the level buttons.
+ * full three-channel moving need. The encounter to run is chosen by the caller
+ * (e.g. the Applied Mode intake) via the `encounter` prop.
  */
-import { useReducer, useState } from "react";
+import { useReducer } from "react";
 
 import { CHANNELS } from "@/data/channels";
 import { DOMAIN_NAMES } from "@/data/domains";
@@ -22,8 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { LEVEL1_PRIYA } from "@/engine/trust/level1Priya";
-import { LEVEL2_PRIYA } from "@/engine/trust/level2Priya";
-import { BOSS_PRIYA } from "@/engine/trust/bossPriya";
 import { TRUST_RULES as R } from "@/engine/trust/trustRules";
 import type { EncounterConfig } from "@/engine/trust/trustTypes";
 import {
@@ -34,12 +33,6 @@ import {
   trustReducer,
   visibleHand,
 } from "@/engine/trust/trustEngine";
-
-const RUNGS: { label: string; config: EncounterConfig }[] = [
-  { label: "L1", config: LEVEL1_PRIYA },
-  { label: "L2", config: LEVEL2_PRIYA },
-  { label: "Boss", config: BOSS_PRIYA },
-];
 
 interface Props {
   onExit: () => void;
@@ -66,6 +59,7 @@ function Meter({ label, value, max, tone }: { label: string; value: number; max:
 
 export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props) {
   const [state, dispatch] = useReducer(trustReducer, encounter, initTrustEncounter);
+  const config = state.config;
 
   const need = currentNeed(state);
   const threshold = convertThreshold(config);
@@ -87,7 +81,6 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => dispatch({ type: "RESET" })}>Play again</Button>
-          <RungSwitcher rungIdx={rungIdx} onPickRung={onPickRung} />
           <Button variant="ghost" onClick={onExit}>Exit prototype</Button>
         </div>
         <LogPanel log={state.log} />
@@ -107,10 +100,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
           </div>
           <span className="text-xs text-muted">Turn {state.turn} · {config.npcName} (Diplomat)</span>
         </div>
-        <div className="flex items-center gap-2">
-          <RungSwitcher rungIdx={rungIdx} onPickRung={onPickRung} />
-          <Button variant="ghost" size="sm" onClick={onExit}>Exit</Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={onExit}>Exit</Button>
       </header>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_minmax(220px,auto)]">
@@ -249,7 +239,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
                   ) : (
                     <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
                   )}
-                  {aligned && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
+                  {matches && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
                   {touched && <Badge className="bg-accent/20 text-accent">engaged</Badge>}
                   {locked && <Badge className="bg-surf text-muted">her-only</Badge>}
                 </div>

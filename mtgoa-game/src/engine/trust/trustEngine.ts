@@ -55,6 +55,12 @@ export function allDomainsTouched(state: TrustState): boolean {
   return DOMAIN_NAMES.every((d) => state.domainsTouched.includes(d));
 }
 
+/** Shadows that must be dissolved before she converts. Per-encounter override
+ *  (config.convertThreshold) falls back to the global rule. */
+export function convertThreshold(config: EncounterConfig): number {
+  return config.convertThreshold ?? R.shadow.convertThreshold;
+}
+
 /** The cards currently in the playable hand. `hidden` cards (the epiphany) stay
  *  out of hand until the NPC is converted, then surface as the revealed beat. */
 export function visibleHand(state: TrustState): TrustCard[] {
