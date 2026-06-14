@@ -77,13 +77,33 @@ The "buy on Gumroad → unlock app goodies" flow. Built **additively** (the dead
   `mintLaunchCode` (admin, week-one manual fulfillment).
 - **UI:** `/redeem` page + form (auth-aware, `?code=` prefill).
 
-**Deploy step (needs a DB — run in an env with `DATABASE_URL`):**
-`npx prisma migrate deploy` → `npm run db:record-schema-hash`.
+- **Gumroad webhook:** `POST /api/webhooks/gumroad` — verifies a shared secret,
+  resolves the sale's product → OfferKey (`src/lib/launch/gumroad.ts`), and mints
+  a `RedemptionCode` (idempotent on Gumroad `sale_id`). Refund/dispute →
+  `revokeByExternalOrderId`. **Delivery without email infra:** enable Gumroad
+  license keys so the license key *is* the redemption code (Gumroad emails it to
+  the buyer); otherwise we generate one.
+- **Access gate:** `checkAccess(capability)` (`src/lib/entitlements/gate.ts`,
+  admin bypass) + `<Paywall/>`. First gated surface: **`/deck`** (digital deck,
+  `deck-digital`). `/oracle` (Casey's gift) is intentionally left public.
 
-**Track A remaining:** Gumroad webhook → `mintRedemptionCode` (auto-mint on sale)
-+ delivery of the code/link to buyers; wire `hasCapability`/`hasAppAccess` gates
-into the app's paid surfaces (game/deck/handbook reading); admin mint UI; later,
-remove the `RedemptionPack` scaffold in a deliberate cleanup.
+Migration was applied via `prisma migrate deploy` (2026-06-14).
+
+### Gumroad setup (seller config)
+
+1. Per product: enable **"Generate a unique license key per sale."**
+2. Set the product's after-purchase content/receipt to link to **`/redeem`**
+   (the buyer pastes their license key there).
+3. Set the **Ping** URL to
+   `https://<app>/api/webhooks/gumroad?token=<GUMROAD_WEBHOOK_SECRET>`.
+4. Env: `GUMROAD_WEBHOOK_SECRET` (required), `GUMROAD_SELLER_ID` (optional pin),
+   `GUMROAD_PRODUCT_MAP` (optional JSON `{permalink|id|name: OfferKey}`; otherwise
+   product permalinks are derived from the `NEXT_PUBLIC_GUMROAD_*_URL` links).
+
+**Track A remaining:** wire `hasCapability`/`hasAppAccess` gates into the
+remaining paid surfaces (game, handbook reading, 30-day app access); subscription
+**renewal** auto-extension (recurring Gumroad charges → extend entitlement);
+admin mint UI for `mintLaunchCode`; later, remove the `RedemptionPack` scaffold.
 
 ### Track C — Book + RPG handbook deliverables — NOT STARTED
 Polish `.specify/books/book-mtgoa.txt` → digital book (PDF/EPUB); compile the

@@ -111,17 +111,25 @@ export interface MintInput {
   sku: OfferKey | string
   source?: string
   externalOrderId?: string | null
+  /** Use this exact code (e.g. a Gumroad license key) instead of generating one. */
+  code?: string | null
   /** Days the buyer has to claim the code; omitted ⇒ no claim deadline. */
   claimWindowDays?: number
 }
 
-/** Mint an unredeemed code for a purchase (webhook or admin). */
+/** Mint an unredeemed code for a purchase (webhook or admin). Idempotent. */
 export async function mintRedemptionCode(input: MintInput) {
   const { sku, source = 'gumroad', externalOrderId = null, claimWindowDays } = input
+  const explicitCode = input.code ? input.code.trim().toUpperCase() : null
 
   // Idempotency: one code per external order.
   if (externalOrderId) {
     const existing = await db.redemptionCode.findUnique({ where: { externalOrderId } })
+    if (existing) return existing
+  }
+  // Idempotency: a provided code (license key) may already exist.
+  if (explicitCode) {
+    const existing = await db.redemptionCode.findUnique({ where: { code: explicitCode } })
     if (existing) return existing
   }
 
@@ -131,12 +139,12 @@ export async function mintRedemptionCode(input: MintInput) {
       ? new Date(Date.now() + claimWindowDays * 24 * 60 * 60 * 1000)
       : null
 
-  // Retry on the rare code collision.
+  // Retry on the rare generated-code collision (explicit codes don't retry).
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       return await db.redemptionCode.create({
         data: {
-          code: generateCode(),
+          code: explicitCode ?? generateCode(),
           sku,
           grantType: grant.grantType,
           grantDurationDays: grant.durationDays ?? null,
@@ -147,10 +155,27 @@ export async function mintRedemptionCode(input: MintInput) {
         },
       })
     } catch (err) {
-      if (attempt === 4) throw err // give up after collisions
+      if (explicitCode || attempt === 4) throw err // explicit code: don't retry; else give up
     }
   }
   throw new Error('Failed to mint redemption code')
+}
+
+/**
+ * Refund/chargeback handling: void the code and revoke any entitlement tied to a
+ * Gumroad order. Idempotent — safe to replay.
+ */
+export async function revokeByExternalOrderId(externalOrderId: string) {
+  await db.$transaction([
+    db.redemptionCode.updateMany({
+      where: { externalOrderId, status: { not: 'redeemed' } },
+      data: { status: 'void' },
+    }),
+    db.entitlement.updateMany({
+      where: { externalOrderId, status: 'active' },
+      data: { status: 'revoked' },
+    }),
+  ])
 }
 
 export type RedeemResult =
