@@ -34,6 +34,15 @@ Implements [spec.md](./spec.md) per [plan.md](./plan.md). Order is API-first. Ch
 - [x] **T19** — `scripts/seed-cert-book-launch-paywall.ts` (idempotent; `CustomBar` `isSystem:true`, `visibility:'public'`, id `cert-book-launch-paywall-v1`) + `npm run seed:cert:book-paywall`. Steps use a mock-mode `TEST-` key for the redeem step.
 - [~] **T20** — Run the quest end-to-end in preview; confirm reward mints on the final passage. **Pending a reachable DB** (no `DATABASE_URL` in this container) — run `npm run seed:cert:book-paywall` then complete the quest on the deployed preview.
 
+## Phase 1.5 — Launch funnel (SKU: Gumroad PDF + reader-as-sample)
+
+Decided 2026-06-14: sell the full book as a Gumroad-hosted PDF; the in-app reader is the free Prologue sample and gains chapters over time. The PDF is supplied by the author.
+
+- [x] **L1** — `FooterBlock` CTA is a real link to the gated next chapter (`/handbook/chapter-one`) so the free Prologue funnels to the paywall. Dropped the "PROTOTYPE" footer note.
+- [x] **L2** — `UnlockedComingSoon` panel: entitled readers opening an unauthored chapter see an honest "you're unlocked / download on Gumroad / chapters arriving" surface instead of a load error.
+- [x] **L3** — `PUBLISHED_CHAPTER_IDS` / `isPublishedChapter` in `book-access`; gated route branches entitled → reader (published) vs coming-soon (not yet). Empty at launch.
+- [ ] **L4 (ops, not code)** — Create the Gumroad product (license keys on; upload the PDF), set Vercel **Production** env: `GUMROAD_PRODUCT_ID`, `GUMROAD_PRODUCT_URL`, leave `GUMROAD_VERIFY_MODE` live. Seed `npm run seed:cert:book-paywall` and walk it once.
+
 ## Unit tests
 
 - [x] **UT1** — `src/lib/__tests__/book-launch-paywall.test.ts` (`npm run test:book-paywall`): `verifyLicense` mock branches + `isFreeChapter` + `hasBookAccess(null)`. Passing.
