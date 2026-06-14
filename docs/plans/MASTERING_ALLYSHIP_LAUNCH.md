@@ -121,11 +121,18 @@ Migration was applied via `prisma migrate deploy` (2026-06-14).
 needed; admin mint UI for `mintLaunchCode`; later, remove the `RedemptionPack`
 scaffold.
 
-### Track C — Book + RPG handbook deliverables — NOT STARTED
-Polish `.specify/books/book-mtgoa.txt` → digital book (PDF/EPUB); compile the
-scattered rules (`mtgoa-game/src/engine/rules.ts`, `FOUNDATIONS.md`,
-`ARCHITECTURE.md`, wiki handbook) into one RPG handbook PDF. Feeds physical
-preorders + the digital book/handbook SKUs.
+### Track C — Book + RPG handbook deliverables — v1 SHIPPED (PDF)
+Reusable manuscript→PDF exporter `scripts/export-book-pdf.ts` (pdf-lib, standard
+fonts, no network; handles Markdown + plain prose with heuristic headings;
+WinAnsi-sanitized). 6×9 book trim, title page, chapters, page numbers.
+- **Digital book:** `npm run book:export-mtgoa` → `exports/mtgoa-book.pdf`
+  (from `.specify/books/book-mtgoa.txt`, ~39pp).
+- **RPG handbook:** `content/handbook/mtgoa-rpg-handbook.md` compiled from the
+  game's canon (`mtgoa-game/src/data`, `engine/rules.ts`) →
+  `npm run handbook:export` → `exports/mtgoa-rpg-handbook.pdf` (~15pp).
+PDFs are regenerable artifacts (gitignored); the script + handbook source are
+committed. **Next (C2):** EPUB output; cover art; deeper handbook (per-NPC
+encounters, move tables); these feed the physical print SKUs.
 
 ## Track A design decision — entitlement primitive
 
