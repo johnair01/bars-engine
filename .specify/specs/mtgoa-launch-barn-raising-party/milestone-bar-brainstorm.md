@@ -302,6 +302,11 @@ party ticket ($30), **Igniting Joy = digital-only book bundled with the App** (�
 1:1 dropped), **name consent = opt-in** (§13), **overflow → Wall 3 + "keep building" redirect
 panel** (§13), **Dojo cadence = biweekly live** (§13, host-confirmed). **Design is fully
 decided — only implementation remains:**
-1. **Implementation TODO:** `src/lib/marketing/products.ts` needs price fields +
-   physical/digital variants, the **RPG Book, enamel pins, and Igniting Joy** added, and the
-   "The Game" entry reframed as **The App** ($10/mo) with the Founder bundle ($150 lifetime).
+1. ✅ **DONE — catalog priced** (strand `catalog-pricing`, commit on `claude/jolly-lovelace-xlbbni`):
+   `src/lib/marketing/products.ts` now carries price variants (once/month/lifetime) +
+   `formatPrice`/`lowestPrice`/`otherProducts` helpers; added RPG Book, Igniting Joy (bundled),
+   pins, and the Founder bundle; "The Game" reframed as **The App** ($10/mo). `/pricing`
+   renders prices.
+   - **Still stubbed:** no real **checkout** — `href`s point at the closest internal surface
+     (e.g. `/event`, `/handbook`); swap for store/checkout URLs when they exist. This is the
+     next implementation step to make Wall 2 transact.
