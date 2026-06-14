@@ -1,8 +1,17 @@
 # Spec: Bruised Banana Residency Ship — Main Game Loop + Daemons Stub
 
+> **⚠ REFRAMED (2026-06-14).** The **Bruised Banana Residency is cancelled** — we
+> are no longer running the residency. The **substance of this spec still stands**:
+> the main game loop must be verified and prod-ready before *any* launch. That
+> readiness now serves the **July 2026 fundraiser party at the Bruised Banana
+> venue** — see the coordinator
+> [mtgoa-launch-barn-raising-party](../mtgoa-launch-barn-raising-party/spec.md).
+> Read "residency" below as "the upcoming launch event"; the loop-readiness and
+> daemons-stub requirements are unchanged.
+
 ## Purpose
 
-Ship the Bruised Banana residency so players can play through the main game loop: sign in → open quest → complete → mint vibeulons → see wallet → repeat. Create the daemons backlog prompt for future inner-work collectibles (talismans earned from participation, usable in quests).
+Ship the main game loop so players can play through it: sign in → open quest → complete → mint vibeulons → see wallet → repeat. Create the daemons backlog prompt for future inner-work collectibles (talismans earned from participation, usable in quests). **(Originally framed for the Bruised Banana residency; now serves the July launch party — see the reframe banner above.)**
 
 **Problem**: Vercel deploy is no longer blocked; prod DB may still need verification. Main loop must be verified and prod-ready before residency launch. Daemons (inner work → unlock collectibles → use in quests) was discussed but has no spec.
 

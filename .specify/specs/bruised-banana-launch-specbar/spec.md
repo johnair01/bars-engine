@@ -1,5 +1,15 @@
 # SpecBAR: Bruised Banana Campaign Launch — Oneshot Interactive Onboarding
 
+> **⚠ REFRAMED (2026-06-14).** The **Bruised Banana Residency/campaign is
+> retired.** The launch thread this SpecBAR coordinates now points at the **July
+> 2026 fundraiser party at the Bruised Banana venue** (a *Mastering the Game of
+> Allyship* Launch Party + *Wendell's Leaving Portland* Barn Raising) — see the
+> active coordinator
+> [mtgoa-launch-barn-raising-party](../mtgoa-launch-barn-raising-party/spec.md).
+> The **substance stands**: the interactive 6-Unpacking-Questions onboarding kernel
+> is still how the Campaign Owner oneshots the launch. Read "Bruised Banana
+> campaign/instance" below as "the July launch event Instance."
+
 ## What This Is (Game Language)
 
 This is an **emergent SpecBAR** — a kernel that compresses the launch thread for the Bruised Banana campaign. A SpecBAR is a BAR (compressed unit of potential) that holds a spec; it affects the larger thread of work. This SpecBAR coordinates multiple specs toward one goal: **oneshot the Bruised Banana campaign in an interactive, immersive onboarding flow**.
