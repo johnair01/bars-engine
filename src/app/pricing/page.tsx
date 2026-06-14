@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAppConfig } from "@/actions/config";
-import { MARKETING_PRODUCTS, otherProducts } from "@/lib/marketing/products";
+import {
+  MARKETING_PRODUCTS,
+  formatPrice,
+  otherProducts,
+} from "@/lib/marketing/products";
 
 export const metadata: Metadata = {
   title: "Get Started — Mastering the Game of Allyship",
@@ -44,8 +48,9 @@ export default async function PricingPage() {
           </h1>
           <p className="max-w-2xl text-lg text-zinc-400">{heroSubtitle}</p>
           <p className="max-w-xl text-sm text-zinc-500">
-            One practice, three doors: the book, the deck, and the game. Start
-            anywhere — most of it is free, no account needed.
+            One practice, many doors: the app, the book, the RPG, the deck, and
+            more. Start anywhere — most of it has a free preview, no account
+            needed.
           </p>
         </header>
 
@@ -66,6 +71,34 @@ export default async function PricingPage() {
                 {p.description}
               </p>
 
+              {/* Pricing — variants, or a bundled/included note */}
+              <div className="flex flex-col gap-1.5 border-t border-zinc-800 pt-3">
+                {p.prices.length > 0 ? (
+                  p.prices.map((v) => (
+                    <div
+                      key={v.label}
+                      className="flex items-baseline justify-between gap-3"
+                    >
+                      <span className="text-xs text-zinc-400">
+                        {v.label}
+                        {v.note && (
+                          <span className="block text-[10px] text-zinc-600">
+                            {v.note}
+                          </span>
+                        )}
+                      </span>
+                      <span className={`text-sm font-bold ${p.accent.text}`}>
+                        {formatPrice(v)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs italic text-zinc-500">
+                    {p.priceNote ?? "Free"}
+                  </span>
+                )}
+              </div>
+
               <div className="flex flex-col gap-2">
                 <Link
                   href={p.href}
@@ -81,11 +114,13 @@ export default async function PricingPage() {
                     {p.secondary.label}
                   </Link>
                 )}
-                <span className="text-[11px] text-zinc-500">
-                  {p.publicAccess
-                    ? "Free · no account needed"
-                    : "Create a free account to open it"}
-                </span>
+                {p.prices.length === 0 && (
+                  <span className="text-[11px] text-zinc-500">
+                    {p.publicAccess
+                      ? "Free · no account needed"
+                      : "Create a free account to open it"}
+                  </span>
+                )}
               </div>
 
               {/* Cross-sell: every door points to the others */}
