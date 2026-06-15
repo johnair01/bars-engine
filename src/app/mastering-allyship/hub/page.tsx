@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
 import { getCurrentPlayer } from '@/lib/auth'
 import {
     loadAllMtgoaSpokes,
@@ -9,6 +8,8 @@ import {
 import { getParentBindingForChild } from '@/lib/campaign-hub/spoke-bindings'
 import { NationProvider } from '@/lib/ui/nation-provider'
 import { CultivationCard } from '@/components/ui/CultivationCard'
+import { CardTable } from '@/components/menu/CardTable'
+import { DeckCard } from '@/components/menu/DeckCard'
 import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
 import {
     funnelForSpoke,
@@ -22,8 +23,8 @@ import {
  * @description MTGOA Book/Game hub — the curriculum as a **deck of cards on a slate table**
  *   (skeuomorphic CYOA menu). PUBLIC sub-landing/funnel: anyone can browse and "Draw" a card
  *   toward its July 18 funnel door; only the deeper gated content requires auth. Cards take
- *   the player's nation element (earth fallback when logged out).
- *   Spec: .specify/specs/mtgoa-menu-skeuomorphic-cyoa/
+ *   the player's nation element (earth fallback when logged out). Built on the reusable
+ *   CardTable + DeckCard primitives. Spec: .specify/specs/mtgoa-menu-skeuomorphic-cyoa/
  * @permissions public
  * @example /mastering-allyship/hub
  * @agentDiscoverable true
@@ -85,107 +86,53 @@ export default async function MtgoaHubPage() {
                     </header>
 
                     {/* The deck — eight spokes as cards laid on a slate table */}
-                    <section
-                        aria-label="The Mastering the Game of Allyship deck"
-                        className="card-table p-4 sm:p-6"
-                    >
-                        <ol className="grid gap-4 sm:grid-cols-2">
-                            {spokes.map((spoke, idx) => {
-                                const f = funnelForSpoke(idx)
-                                if (!spoke || !f) {
+                    <section aria-label="The Mastering the Game of Allyship deck">
+                        <CardTable>
+                            <ol className="grid gap-4 sm:grid-cols-2">
+                                {spokes.map((spoke, idx) => {
+                                    const f = funnelForSpoke(idx)
+                                    if (!spoke || !f) {
+                                        return (
+                                            <li key={idx} className="card-table__slot">
+                                                <CultivationCard
+                                                    altitude="dissatisfied"
+                                                    stage="seed"
+                                                    disabled
+                                                    className="h-full"
+                                                    aria-label={`Spoke ${idx + 1} — coming soon`}
+                                                >
+                                                    <div className="p-4 text-sm text-zinc-500">
+                                                        Spoke {idx + 1} — coming soon
+                                                    </div>
+                                                </CultivationCard>
+                                            </li>
+                                        )
+                                    }
+
+                                    const tintHex = f.wallTint
+                                        ? ELEMENT_TOKENS[RIBBON_TINT_ELEMENT[f.wallTint]].glow
+                                        : undefined
+
                                     return (
-                                        <li key={idx} className="card-table__slot">
-                                            <CultivationCard
-                                                altitude="dissatisfied"
-                                                stage="seed"
-                                                disabled
-                                                className="h-full"
-                                                aria-label={`Spoke ${idx + 1} — coming soon`}
-                                            >
-                                                <div className="p-4 text-sm text-zinc-500">
-                                                    Spoke {idx + 1} — coming soon
-                                                </div>
-                                            </CultivationCard>
+                                        <li key={spoke.id} className="card-table__slot">
+                                            <DeckCard
+                                                numeral={f.numeral}
+                                                title={spoke.title}
+                                                href={f.href}
+                                                meta={`Kotter ${spoke.kotterStage}`}
+                                                emoji={spoke.emoji}
+                                                chip={spoke.predictedFeelings?.[0]}
+                                                ribbon={{
+                                                    label: `${FUNNEL_BAND_LABEL[f.band]} · ${f.ribbon}`,
+                                                    tintHex,
+                                                }}
+                                                ariaLabel={`${f.numeral}. ${spoke.title} — ${f.ribbon}`}
+                                            />
                                         </li>
                                     )
-                                }
-
-                                const tintHex = spoke && f.wallTint
-                                    ? ELEMENT_TOKENS[RIBBON_TINT_ELEMENT[f.wallTint]].glow
-                                    : undefined
-                                const feeling = spoke.predictedFeelings?.[0]
-
-                                return (
-                                    <li key={spoke.id} className="card-table__slot">
-                                        <Link
-                                            href={f.href}
-                                            aria-label={`${f.numeral}. ${spoke.title} — ${f.ribbon}`}
-                                            className="block h-full focus:outline-none"
-                                        >
-                                            <CultivationCard
-                                                altitude="neutral"
-                                                stage="growing"
-                                                animated
-                                                className="h-full"
-                                                aria-label={`${f.numeral}. ${spoke.title}`}
-                                            >
-                                                <div className="flex h-full flex-col gap-3 p-4">
-                                                    {/* Chapter numeral + Kotter stage / emoji */}
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <span
-                                                            className="text-3xl font-bold tabular-nums leading-none"
-                                                            style={{ color: 'var(--element-gem)' }}
-                                                        >
-                                                            {f.numeral}
-                                                        </span>
-                                                        <span className="flex items-center gap-1.5 text-zinc-500">
-                                                            <span className="text-[10px] uppercase tracking-wide">
-                                                                Kotter {spoke.kotterStage}
-                                                            </span>
-                                                            <span className="text-lg" aria-hidden="true">
-                                                                {spoke.emoji ?? '○'}
-                                                            </span>
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Title */}
-                                                    <h3 className="text-base font-bold text-zinc-100">
-                                                        {spoke.title}
-                                                    </h3>
-
-                                                    {/* Feeling chip */}
-                                                    {feeling && (
-                                                        <div>
-                                                            <span className="inline-block rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300">
-                                                                {feeling}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex-1" />
-
-                                                    {/* Funnel ribbon (wayfinding) + Draw affordance — thumb zone */}
-                                                    <div className="flex items-center justify-between gap-2 pt-1">
-                                                        <span
-                                                            className="card-funnel-ribbon text-[11px] font-semibold text-zinc-200"
-                                                            style={{ '--ribbon-tint': tintHex } as CSSProperties}
-                                                        >
-                                                            {FUNNEL_BAND_LABEL[f.band]} · {f.ribbon}
-                                                        </span>
-                                                        <span
-                                                            className="text-sm font-bold"
-                                                            style={{ color: 'var(--element-gem)' }}
-                                                        >
-                                                            Draw →
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </CultivationCard>
-                                        </Link>
-                                    </li>
-                                )
-                            })}
-                        </ol>
+                                })}
+                            </ol>
+                        </CardTable>
                     </section>
 
                     {/* Footer note */}
