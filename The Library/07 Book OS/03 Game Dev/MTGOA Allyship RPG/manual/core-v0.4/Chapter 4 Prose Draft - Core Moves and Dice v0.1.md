@@ -431,13 +431,13 @@ Gain 1 Adversity when:
 - a Belief wound move meaningfully complicates your action
 - the Guide offers Adversity for accepting a harder truth, ugly choice, or delayed consequence
 
-Spend 1 Adversity to:
+Spend Adversity to:
 
-- add +1 to your own roll after rolling
-- add +1 to another student's roll if your character can help
-- ask one honest question about the scene
-- introduce a useful but costly resource
-- activate a move that requires Adversity
+- spend 1 to add +1 to your own roll after rolling
+- spend 1 to add +1 to another student's roll if your character can help
+- spend 1 to ask one honest question about the scene
+- spend 1 to introduce a useful but costly resource
+- activate a move that requires Adversity, including a Belief Power Move with a listed Adversity cost
 
 ### Clarity
 

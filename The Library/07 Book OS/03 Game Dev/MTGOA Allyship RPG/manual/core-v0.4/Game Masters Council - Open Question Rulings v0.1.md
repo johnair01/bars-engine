@@ -38,9 +38,9 @@ Ruling:
 
 Each Belief gets a small three-part move structure:
 
-1. **Wound Move**: what happens when the Belief drives action under pressure.
-2. **Growth Move**: what becomes possible when the student notices the Belief and chooses contact, repair, or capacity.
-3. **Power Move**: how the student's superpower becomes clean, bounded, and useful when not driven by the wound.
+1. **Wound Move**: the easy move. It gives an immediate benefit when the Belief drives action under pressure, but creates long-term consequences.
+2. **Growth Move**: the costly move. It asks for a real-time cost, delay, vulnerability, resource spend, or lost opportunity, but creates a sustainable outcome.
+3. **Power Move**: the earned move. It is unlocked by spending Adversity and shows how the student's superpower becomes clean, bounded, and useful.
 
 Why this serves the ideal reader:
 
@@ -48,15 +48,61 @@ One wound move and one growth move may feel too thin for a reader who wants char
 
 Design note:
 
-The Wound Move should be tempting. The Growth Move should feel relieving. The Power Move should feel cool.
+The Wound Move should be tempting because it works now. The Growth Move should hurt a little because it interrupts the old survival pattern. The Power Move should feel cool because the player earned it through adversity instead of being granted it as a moral prize.
+
+Mechanical pattern:
+
+- **Wound Move**: take the easy benefit now; mark a future consequence.
+- **Growth Move**: pay the real-time cost now; create a more stable outcome.
+- **Power Move**: spend Adversity to unlock a clean superpower use.
 
 Example:
 
 Belief: **I'm Not Worthy**
 
-- Wound Move: overpay for trust
-- Growth Move: receive care without immediately balancing the ledger
-- Power Move: become a conduit of abundance without self-erasure
+Wound Move: **Overpay For Trust**
+
+When someone trusts, praises, protects, or supports you and your Belief says you must earn it immediately, you may take +1 forward or gain 1 Clarity by overfunctioning right now.
+
+If you do, choose one long-term consequence:
+
+- mark 1 Tension
+- give the Guide 1 Heat with a House, faction, or relationship affected by your overreach
+- advance your Belief clock by 1
+- create an obligation you must answer during downtime
+
+Growth Move: **Let The Ledger Stay Open**
+
+When you receive care and do not immediately repay it, say what it costs you in the moment:
+
+- you lose time
+- you let someone else lead
+- you admit a need
+- you leave a task unfinished
+- you ask the table for support
+- you accept that someone may be disappointed
+
+Then choose one sustainable outcome:
+
+- clear 1 Tension
+- mark Growth
+- restore 1 Trust with someone who needed you to stop overfunctioning
+- prevent your Belief clock from advancing in this scene
+- create a cleaner Bond question for downtime
+
+Power Move: **Abundance Without Erasure**
+
+After you have marked Growth from this Belief at least once, you may spend 3 Adversity to unlock this move for the episode.
+
+When you resource someone from enoughness instead of self-erasure, name what you can offer and what you will not sacrifice. Then choose two:
+
+- the support reaches the real need
+- you do not take on the whole burden
+- someone else gains room to contribute
+- you clear 1 Tension or reduce 1 Heat caused by overfunctioning
+- you create a durable resource the crew can use later
+
+If you use this move in a way that violates the boundary you named, the Guide may advance your Belief clock or convert the support into an obligation.
 
 ## Question 2: Should belief advancement unlock mechanical bonuses, narrative permissions, or both?
 
@@ -69,6 +115,7 @@ Belief advancement should unlock:
 - a new way to use the student's superpower
 - one mechanical option that reduces overfunctioning
 - one narrative permission that changes how the student can be seen
+- access to an earned Power Move purchased with Adversity
 
 Why this serves the ideal reader:
 
@@ -88,11 +135,15 @@ The first teaches a pattern. The second rewards emotional usefulness as a stat.
 
 Ruling:
 
-Belief scenes require three safety gates:
+Belief scenes should not each carry their own bespoke safety move.
 
-1. **Consent Gate**: the player can always say whether the Belief is in play.
-2. **Fiction Gate**: the Belief must change a concrete situation, not become free-floating self-analysis.
-3. **Exit Gate**: every Belief scene needs a playable next action.
+Safety belongs at the Guide / table procedure level so it protects the whole game instead of becoming another move players must remember under emotional pressure.
+
+Guides use three global safety rules:
+
+1. **Consent Before Depth**: the player can always say whether the Belief is in play.
+2. **Fiction Before Analysis**: the Belief must change a concrete situation, not become free-floating self-analysis.
+3. **Exit Before Intensity**: every Belief scene needs a playable next action, pause, repair, or boundary.
 
 Why this serves the ideal reader:
 
@@ -106,25 +157,30 @@ Guide language:
 
 > "What action, request, repair, or boundary could move this forward?"
 
+Design note:
+
+Do not write "safety moves" inside individual Belief moves. Put safety procedures in Chapter 9 and reference them from Chapter 6.
+
 ## Question 4: How many superpower archetypes are needed for the core book?
 
 Ruling:
 
-Five core superpower archetypes, matching the ensemble roles:
+Six core superpower archetypes.
 
-- **Spark**: catalyze motion, courage, and ignition
-- **Anchor**: stabilize, protect, and hold contact
-- **Builder**: shape systems, tools, and containers
-- **Scout**: perceive paths, risks, openings, and hidden routes
-- **Witness**: reveal meaning, memory, pattern, and truth
+- **Connector**: creates relationships, circuits, translation, belonging, and mutual recognition
+- **Strategist**: sees the board, models consequences, sequences action, and finds leverage
+- **Disruptor**: interrupts patterns, breaks false inevitability, and makes stuck systems move
+- **Escape Artist**: finds exits, slips constraints, survives capture, and opens impossible routes
+- **Alchemist**: metabolizes waste, grief, conflict, and failure into usable capacity
+- **Storyteller**: shapes meaning, memory, morale, narrative, and public imagination
 
 Why this serves the ideal reader:
 
-Five is enough to feel like a team. It echoes the ensemble role structure and gives players a familiar Dimension 20 / animated-series logic. More archetypes can come later as expansions.
+Six is enough to feel mythic without becoming an encyclopedia. These are not team roles. Team Roles describe how a student functions in the crew. Superpowers describe the extraordinary capacity the student brings into the fiction.
 
 Design note:
 
-Superpowers should not be literal combat powers only. They are dramatic capacities. A Spark might ignite courage, not fire. A Builder might build a coalition map, a shelter, or a ritual container. A Witness might make a suppressed pattern visible.
+Superpowers should not be literal combat powers only. They are dramatic capacities that can be expressed socially, magically, strategically, emotionally, or physically. A Connector might create a psychic bridge or introduce the right two people. An Alchemist might transmute toxic runoff or turn a failed apology into a new ritual of repair.
 
 ## Question 5: Are superpowers selected separately, derived from Belief, or chosen through a prompt matrix?
 
@@ -148,13 +204,17 @@ Example:
 
 Belief: **I Don't Belong**
 
-Superpower Archetype: **Scout**
+Superpower Archetype: **Escape Artist**
 
-Power expression: sense thresholds, hidden paths, and rooms that reject people before anyone says no
+Power expression: sense thresholds, hidden paths, locked exits, and rooms that reject people before anyone says no
 
 Wound distortion: disappear before being excluded
 
 Clean use: find the door others were taught not to look for
+
+Team Role distinction:
+
+The same student might be a **Builder** on the team and an **Escape Artist** by superpower. Their crew relies on them to build containers, but their mythic gift is finding exits from systems that were designed to hold people in place.
 
 ## Chapter 7: The Six Schools
 
@@ -204,15 +264,16 @@ Ruling:
 
 Schools train how superpowers are used under pressure.
 
-Houses give the social practice. Beliefs reveal the wound. Superpowers express the gift. Schools teach mastery.
+Houses give the social practice. Team Roles describe crew function. Beliefs reveal the wound. Superpowers express the gift. Schools teach mastery.
 
 Examples:
 
-- Body trains a Spark to feel ignition before setting the room on fire.
-- Line trains an Anchor to hold a boundary without absorbing every impact.
-- Oath trains a Builder to make promises that do not become cages.
-- Pattern trains a Witness to see structure without turning people into diagrams.
-- Bridge trains a Scout to cross difference without abandoning themselves.
+- Body trains a Disruptor to feel the charge before breaking the room open.
+- Line trains a Connector to make contact without dissolving boundaries.
+- Oath trains a Strategist to make plans that do not become cages.
+- Pattern trains a Storyteller to shape meaning without turning people into symbols.
+- Bridge trains an Escape Artist to cross difference without abandoning themselves.
+- Horizon trains an Alchemist to transform failure without romanticizing harm.
 - Horizon trains any archetype to act from long-view responsibility.
 
 Why this serves the ideal reader:
@@ -533,4 +594,3 @@ The ideal reader should feel they bought:
 - campaign content that can keep expanding
 
 The manual must feel like a magic school handbook that secretly knows why the nicest person at the table is tired.
-

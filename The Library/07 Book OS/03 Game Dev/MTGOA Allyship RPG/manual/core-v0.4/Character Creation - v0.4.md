@@ -128,6 +128,8 @@ Your Ensemble Role is your function on the mission team.
 
 This is the five-person team structure.
 
+It is not your superpower. Your Role describes what the team tends to rely on you for. Your superpower is a separate mythic capacity developed through the Beliefs and Superpowers rules.
+
 Choose one. If your table likes TV ensemble language, think of these as Ace, Leader, Engineer, Rookie, and Veteran in a more MTGOA-native register.
 
 ### Spark

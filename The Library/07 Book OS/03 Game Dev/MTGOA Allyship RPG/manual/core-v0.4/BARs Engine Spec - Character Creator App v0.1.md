@@ -104,6 +104,10 @@ Support:
 
 ## 4. Allyship Gift
 
+Allyship Gift is an admission-layer prompt, not the student's full superpower archetype.
+
+Superpower archetype is selected separately in the Beliefs and Superpowers module.
+
 Options:
 
 - Signal Gift
@@ -205,6 +209,8 @@ App support:
 
 ## 8. Ensemble Role
 
+Ensemble Role describes team function. It must remain separate from Superpower Archetype.
+
 Options:
 
 - Spark
@@ -256,6 +262,34 @@ App support:
 - choose directly
 - roll
 - answer "under pressure I..." questions for recommendation
+
+## 9A. Superpower Archetype
+
+Superpower Archetype describes the student's extraordinary capacity in the fiction.
+
+Options:
+
+- Connector
+- Strategist
+- Disruptor
+- Escape Artist
+- Alchemist
+- Storyteller
+
+Each option displays:
+
+- power fantasy
+- clean use
+- wound distortion
+- sample Power Move
+- possible Belief pairings
+
+App support:
+
+- choose separately from Ensemble Role
+- prompt matrix connecting Belief, power expression, wound distortion, and clean use
+- Adversity cost display for Power Moves
+- warning if user tries to treat Role and Superpower as the same field
 
 ## 10. Offer, Cost, Line, Bond
 

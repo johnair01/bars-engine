@@ -632,7 +632,56 @@ Design needs:
 - House move cards
 - House trust tracker
 
-## Chapter 6: The Six Schools
+## Chapter 6: Beliefs, Shadows, And Superpowers
+
+Source influence:
+
+- Hearts Blazing motives / frailty
+- Dungeon World XP on misses
+- Kids on Bikes adversity
+- superhero school fantasy
+
+Purpose:
+
+- turn self-sabotaging beliefs into playable subclasses
+- connect beliefs to superpowers without making wounds deterministic
+- make inner work gameable without becoming therapy homework
+
+Contents:
+
+1. What Beliefs Are
+2. Belief Is Not Diagnosis
+3. Wound Move, Growth Move, And Power Move
+4. Superpowers Are Separate From Team Roles
+5. Connector
+6. Strategist
+7. Disruptor
+8. Escape Artist
+9. Alchemist
+10. Storyteller
+11. I'm Not Good Enough
+12. I'm Not Ready
+13. I Don't Belong
+14. I'm Insignificant
+15. I'm Not Worthy
+16. I'm Not Capable
+17. Belief Advancement
+18. Rewriting The Sentence
+19. Repair And Integration
+
+Needed artifacts:
+
+- full belief subclass sheets
+- superpower archetype sheets
+
+Design needs:
+
+- belief cards
+- superpower cards
+- growth sentence worksheet
+- shadow warning sidebars
+
+## Chapter 7: The Six Schools
 
 Source influence:
 
@@ -645,6 +694,7 @@ Purpose:
 - make each School feel like a real tradition
 - connect Schools to stats
 - explain ranks, trials, shadow exams, and teachers
+- let School heads speak in their own voices after a Deputy / Regent introduction
 
 Contents:
 
@@ -687,45 +737,6 @@ Design needs:
 - teacher portraits
 - rank badge system
 - School maps / room illustrations
-
-## Chapter 7: Beliefs, Shadows, And Growth
-
-Source influence:
-
-- Hearts Blazing motives / frailty
-- Dungeon World XP on misses
-- Kids on Bikes adversity
-
-Purpose:
-
-- turn self-sabotaging beliefs into playable subclasses
-- make inner work gameable without becoming therapy homework
-
-Contents:
-
-1. What Beliefs Are
-2. Belief Is Not Diagnosis
-3. Wound Move And Growth Move
-4. I'm Not Good Enough
-5. I'm Not Ready
-6. I Don't Belong
-7. I'm Insignificant
-8. I'm Not Worthy
-9. I'm Not Capable
-10. Belief Advancement
-11. Rewriting The Sentence
-12. Shadow Exams
-13. Repair And Integration
-
-Needed artifact:
-
-- full belief subclass sheets
-
-Design needs:
-
-- belief cards
-- growth sentence worksheet
-- shadow warning sidebars
 
 ## Chapter 8: Episodes, Missions, And Downtime
 
@@ -1076,8 +1087,8 @@ Recommended next work:
 3. Create Your Student
 4. Core Moves And Dice
 5. The Four Houses
-6. The Six Schools
-7. Beliefs, Shadows, And Growth
+6. Beliefs, Shadows, And Superpowers
+7. The Six Schools
 8. Episodes, Missions, And Downtime
 9. Guide Rules
 10. Campaign Fields And Packet Design

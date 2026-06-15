@@ -665,6 +665,10 @@ Your Ensemble Role names how the crew tends to use you when pressure rises.
 
 It is not your class.
 
+It is also not your superpower.
+
+Your Role is your function in the crew. Your superpower is the extraordinary capacity you bring into the fiction, chosen later through the Belief and Superpower rules.
+
 Roles do not need to be unique. This is fortunate, because no known crew has ever distributed itself according to administrative preference.
 
 Two Sparks mean the crew may move quickly and argue over who created the opening. Two Anchors mean the crew may stabilize beautifully and then spend twenty minutes mistaking hesitation for care. Notice overlaps. Notice gaps. Do not fix them too quickly. The mess is playable.

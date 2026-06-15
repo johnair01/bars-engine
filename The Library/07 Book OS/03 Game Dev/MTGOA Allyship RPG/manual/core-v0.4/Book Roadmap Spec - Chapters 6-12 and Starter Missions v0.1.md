@@ -19,12 +19,13 @@ Chapters 6-12 must now answer:
 
 1. How do self-sabotaging beliefs become playable growth arcs?
 2. How do beliefs connect to superpowers?
-3. How do students bring those beliefs and powers into mastery traditions?
-3. What does an episode actually look like?
-4. How does a Guide run the game without becoming the moral judge?
-5. How do campaign packets work as paid content?
-6. How does advancement and graduation work over time?
-7. What starter missions let a table play immediately?
+3. How do team Roles differ from superpowers?
+4. How do students bring those beliefs and powers into mastery traditions?
+5. What does an episode actually look like?
+6. How does a Guide run the game without becoming the moral judge?
+7. How do campaign packets work as paid content?
+8. How does advancement and graduation work over time?
+9. What starter missions let a table play immediately?
 
 The design should preserve the current method:
 
@@ -48,6 +49,8 @@ Beliefs answer: **What false story does pressure activate?**
 
 Superpowers answer: **What gift became powerful because you had to survive with it?**
 
+Team Roles answer: **What function do you serve in the crew?**
+
 Schools will later answer: **How are you learning to master yourself under pressure?**
 
 The goal is to make inner work gameable without becoming therapy homework. Beliefs should create field consequences, not confession scenes for their own sake. Superpowers should make the belief material feel exciting, mythic, and playable.
@@ -66,7 +69,8 @@ The reader should finish Chapter 6 feeling:
 
 - My belief is not a diagnosis.
 - My belief gives me dramatic pressure and growth moves.
-- My superpower is not separate from my wound; it is what my gift learned to become under pressure.
+- My superpower is related to my wound without being determined by it.
+- I understand that my team Role and my superpower are different choices.
 - I know how my belief gets activated.
 - I know how to play the belief without making the table responsible for fixing me.
 - I know how rewriting the belief becomes advancement.
@@ -84,7 +88,10 @@ The reader should finish Chapter 6 feeling:
 
 - Belief is not diagnosis
 - belief as part of character creation
-- wound move and growth move
+- wound move, growth move, and power move
+- Wound Moves are easier in the moment but have long-term consequences.
+- Growth Moves cost in real time but create sustainable outcomes.
+- Power Moves are earned and bought with Adversity tokens.
 - activation trigger
 - temptation
 - shadow tell
@@ -93,6 +100,7 @@ The reader should finish Chapter 6 feeling:
 - integration scene
 - interaction with Open Up and Clean Up
 - connection between Belief and superpower
+- distinction between team Role and superpower
 - six belief sheets:
   - I'm Not Good Enough
   - I'm Not Ready
@@ -100,16 +108,24 @@ The reader should finish Chapter 6 feeling:
   - I'm Insignificant
   - I'm Not Worthy
   - I'm Not Capable
-- superpower archetypes as "the gift under pressure"
+- six superpower archetypes:
+  - Connector
+  - Strategist
+  - Disruptor
+  - Escape Artist
+  - Alchemist
+  - Storyteller
 - guidance for choosing a superpower without making trauma glamorous
+- guidance for purchasing Power Moves with Adversity
 
 ## Open Design Questions
 
 1. Does every belief get one wound move and one growth move, or a small move tree?
 2. Should belief advancement unlock mechanical bonuses, narrative permissions, or both?
-3. How does the Guide keep belief scenes safe without flattening them?
+3. How does the Guide create global safety around belief scenes without putting safety inside every move?
 4. How many superpower archetypes are needed for the core book?
 5. Are superpowers selected separately, derived from Belief, or chosen through a prompt matrix?
+6. How do team Roles and superpowers remain distinct on the character sheet?
 
 ## Chapter 7: The Six Schools
 
