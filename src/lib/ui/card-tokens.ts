@@ -200,6 +200,12 @@ export const SURFACE_TOKENS = {
   textSecondary: '#a09e98',   // zinc-400 equivalent
   textMuted:     '#6b6965',   // only at text-sm or larger — never text-xs
   // text-zinc-600 at text-xs = ~3.2:1 contrast — FORBIDDEN
+  // Card-table menu surface (cool slate) — pairs with `.card-table` in cultivation-cards.css.
+  // Cool/bluish on purpose so it reads as stone *under* the warm card bodies.
+  // Keep these in sync with the hex mirrored in `.card-table`.
+  tableSlate:       '#15161a', // slate base (cooler than warm bgBase)
+  tableSlateCenter: '#1d1f25', // lit center (top-left light source)
+  tableSlateEdge:   '#0b0c0f', // vignette edge (darkened rim)
 } as const
 
 // ─── Helper: build CSS custom properties for a card element ──────────────────

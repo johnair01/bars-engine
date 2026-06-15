@@ -11,8 +11,8 @@
 - [x] **T0.5** Launch-goals respec for card-face content (C8) — **done via six-faces analysis** ([SIX_FACES_FUNNEL_ANALYSIS.md](./SIX_FACES_FUNNEL_ANALYSIS.md)): Kotter arc = funnel ladder; per-spoke ribbon map; spoke list unchanged. Implementation adds a `spokeFunnelMap` → ribbon (FR4); live wall targets depend on MBLD.
 
 ## Phase 1 — Token & material foundation
-- [ ] **T1.1** Add agreed texture/bevel tokens to `src/lib/ui/card-tokens.ts` (no component-local values).
-- [ ] **T1.2** Add skeuomorphic classes to `src/styles/cultivation-cards.css` (top-edge highlight, bevel, chosen material). Warm near-black surface, **not pure black**.
+- [x] **T1.1** Add slate-table surface tokens (`tableSlate`/`tableSlateCenter`/`tableSlateEdge`) to `src/lib/ui/card-tokens.ts` (`SURFACE_TOKENS`).
+- [x] **T1.2** Add skeuomorphic classes to `src/styles/cultivation-cards.css`: `.card-table` (cool slate + vignette + grain), `.card-table__slot` (cast shadow), `.card-funnel-ribbon` (semantic `--ribbon-tint`). Warm card bodies keep the existing top-edge highlight.
 
 ## Phase 2 — Hub redesign
 - [ ] **T2.1** Rebuild `/mastering-allyship/hub` around the chosen object metaphor; spokes as tactile CYOA doorways.
