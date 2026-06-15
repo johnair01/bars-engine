@@ -80,7 +80,7 @@ export async function requireBookAccess(
 ): Promise<{ id: string }> {
   const player = await getCurrentPlayer()
   if (!(await hasBookAccess(player, bookKey))) {
-    redirect('/handbook/unlock')
+    redirect('/redeem?next=/handbook')
   }
   return player as { id: string }
 }

@@ -1,6 +1,6 @@
-# Launch × Paywall Integration — Phase 1 (book sellable on one model)
+# Launch × Paywall Integration (book sellable on one model)
 
-> **Status:** Phase 1 IMPLEMENTED. Phases 2–3 deferred (see end).
+> **Status:** Phases 1–3 IMPLEMENTED.
 > Branch: `claude/lpi-book-sellable`.
 
 ## Problem
@@ -48,16 +48,34 @@ A single entitlement can't carry two different lifetimes, so we split the *read*
 `verifyLicense` (book `GUMROAD_PRODUCT_ID`), the webhook, `/redeem`, `/handbook/unlock`, and the
 capability/grant maps are unchanged. The two unlock surfaces now produce the **same** entitlement.
 
+## What changed (Phase 2 — per-SKU license verification)
+
+Every SKU can now be unlocked by its Gumroad license key, not just the book.
+
+| File | Change |
+|------|--------|
+| `src/lib/gumroad.ts` | `verifyLicense(key, { sku })` resolves the product id from `GUMROAD_PRODUCT_ID_<SKU>` (book-digital still honours the legacy `GUMROAD_PRODUCT_ID`). New `resolveLicense(key)` probes a bare key across every configured SKU and returns the one it belongs to — incrementing the use counter only on the matching product (wrong products return `invalid` and never increment). |
+
+## What changed (Phase 3 — one unlock surface, retire BookEntitlement)
+
+| File | Change |
+|------|--------|
+| `src/actions/entitlements.ts` | `redeemLaunchCode` now accepts a minted code **or** a raw license key: try `redeemCode`, then fall back to `resolveLicense` + `grantEntitlement`. |
+| `src/app/redeem/*` | `/redeem` is the single unlock surface — copy covers "code or license key"; a validated `?next=` param routes the buyer onward (and survives login) and auto-routes on success. |
+| `src/app/handbook/unlock/page.tsx` | Now a redirect to `/redeem?next=/handbook` (bookmarks + the verification quest still land right). `UnlockForm` and the `redeemBookLicense` action are deleted; `requireBookAccess` and `PaywallCTA` point at `/redeem?next=/handbook`. |
+| `prisma/schema.prisma` + migration | `BookEntitlement` model + the `Player` relation removed; `…_drop_book_entitlement` migration drops the `book_entitlements` table. |
+
 ## Verification
 
-- `npm run check` — 0 errors. `book-launch-paywall` unit test green.
-- Behavior: a book buyer who unlocks at `/handbook/unlock` **or** `/redeem` gets the reader,
-  the downloadable copy, and a 30-day app trial; the reader persists after the trial lapses;
-  bundle holders read while their grant is live.
+- `npm run check` — 0 errors; `npm run build` clean; `book-launch-paywall` unit test green.
+- `prisma validate` passes; drop migration generated DB-free via `migrate diff` and applies on
+  the next `db:migrate:deploy` (could not be applied here — no DB in the build container).
+- Behavior: a buyer who unlocks at `/handbook/unlock` (→ `/redeem`) **or** `/redeem` directly,
+  with a minted code **or** a Gumroad license key, gets the reader, the downloadable copy, and a
+  30-day app trial; the reader persists after the trial lapses; bundle holders read while live.
 
-## Deferred
+## Follow-ups (not blocking)
 
-- **Phase 2** — per-SKU Gumroad products so `verifyLicense` can unlock the deck / handbook / etc.
-  by license too (today `verifyLicense` targets the single book `GUMROAD_PRODUCT_ID`).
-- **Phase 3** — drop the now-unused `BookEntitlement` model + migration; consolidate the duplicate
-  unlock surfaces (`/handbook/unlock` ↔ `/redeem`) and paywall components into one.
+- Set `GUMROAD_PRODUCT_ID_<SKU>` for the non-book SKUs to light up their license-verify fallback.
+- A license redeemed via the `resolveLicense` fallback for a *subscription* SKU has no
+  `subscriptionId` link, so it won't auto-renew — acceptable degradation for a missed webhook.

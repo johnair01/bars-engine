@@ -80,7 +80,7 @@ export function PaywallCTA() {
         </a>
 
         <Link
-          href="/handbook/unlock"
+          href="/redeem?next=/handbook"
           style={{
             display: "block",
             fontFamily: FONT.label,

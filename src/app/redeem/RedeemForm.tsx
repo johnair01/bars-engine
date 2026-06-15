@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { redeemLaunchCode } from '@/actions/entitlements'
 
 type Result = Awaited<ReturnType<typeof redeemLaunchCode>>
 
-export function RedeemForm({ initialCode }: { initialCode: string }) {
+export function RedeemForm({ initialCode, next }: { initialCode: string; next?: string }) {
+  const router = useRouter()
   const [code, setCode] = useState(initialCode)
   const [result, setResult] = useState<Result | null>(null)
   const [pending, startTransition] = useTransition()
@@ -15,24 +17,32 @@ export function RedeemForm({ initialCode }: { initialCode: string }) {
     e.preventDefault()
     if (!code.trim() || pending) return
     startTransition(async () => {
-      setResult(await redeemLaunchCode(code))
+      const r = await redeemLaunchCode(code)
+      setResult(r)
+      // When the entry point asked to return somewhere (e.g. the reader),
+      // route straight there on success — parity with the old unlock form.
+      if (r.ok && next) {
+        router.push(next)
+        router.refresh()
+      }
     })
   }
 
   const ok = result?.ok === true
+  const continueHref = next || '/'
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <label htmlFor="redeem-code" className="block">
         <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-zinc-400">
-          Purchase code
+          Code or license key
         </span>
         <input
           id="redeem-code"
           name="code"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="MAL-XXXX-XXXX"
+          placeholder="MAL-XXXX-XXXX or your Gumroad key"
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
@@ -63,10 +73,10 @@ export function RedeemForm({ initialCode }: { initialCode: string }) {
           <p>{result.message}</p>
           {ok && (
             <Link
-              href="/"
+              href={continueHref}
               className="mt-2 inline-block font-bold text-emerald-300 underline-offset-2 hover:underline"
             >
-              Enter the app →
+              {next ? 'Continue →' : 'Enter the app →'}
             </Link>
           )}
           {!ok && 'needsAuth' in result && result.needsAuth && (

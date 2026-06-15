@@ -8,19 +8,24 @@ export const metadata: Metadata = {
   description: 'Redeem a purchase code to unlock your app access and goodies.',
 }
 
-type Props = { searchParams: Promise<{ code?: string }> }
+type Props = { searchParams: Promise<{ code?: string; next?: string }> }
 
 /**
- * /redeem — claim a purchase code (from Gumroad) for app access.
- * Track A: the buyer-facing half of the "buy → unlock" spine.
+ * /redeem — the single buyer-facing unlock surface: claim a purchase code OR a
+ * raw Gumroad license key for app access. `?next=` routes the buyer onward after
+ * a successful redeem (e.g. /handbook/unlock sends readers here with next=/handbook).
  */
 export default async function RedeemPage({ searchParams }: Props) {
   const sp = await searchParams
   const player = await getCurrentPlayer()
   const initialCode = (sp.code ?? '').trim()
-  const loginHref = `/login?callbackUrl=${encodeURIComponent(
-    initialCode ? `/redeem?code=${encodeURIComponent(initialCode)}` : '/redeem',
-  )}`
+  // Only allow internal paths as a return target (no open redirect).
+  const next = sp.next && sp.next.startsWith('/') ? sp.next : undefined
+  const selfHref = `/redeem?${new URLSearchParams({
+    ...(initialCode ? { code: initialCode } : {}),
+    ...(next ? { next } : {}),
+  }).toString()}`
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(selfHref)}`
 
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-16">
@@ -29,14 +34,15 @@ export default async function RedeemPage({ searchParams }: Props) {
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
             Mastering the Game of Allyship
           </p>
-          <h1 className="text-3xl font-bold text-[#e8e6e0]">Redeem your code</h1>
+          <h1 className="text-3xl font-bold text-[#e8e6e0]">Redeem your purchase</h1>
           <p className="text-sm leading-relaxed text-[#a09e98]">
-            Enter the code from your purchase to unlock your access and goodies in the app.
+            Enter the code from your purchase — or the license key from your Gumroad receipt — to
+            unlock your access and goodies in the app.
           </p>
         </header>
 
         {player ? (
-          <RedeemForm initialCode={initialCode} />
+          <RedeemForm initialCode={initialCode} next={next} />
         ) : (
           <div className="space-y-4 text-center">
             <p className="text-sm text-[#a09e98]">
