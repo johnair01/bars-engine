@@ -68,6 +68,9 @@ This folder is the current canonical design entry point for the MTGOA RPG.
 - `Book Outline - Reverse Source Synthesis v0.1.md`
   - reverse outline of source texts and proposed full MTGOA manual structure
 
+- `Book Roadmap Spec - Chapters 6-12 and Starter Missions v0.1.md`
+  - planning spec for the remaining manual chapters and four House-aligned starter mission concepts
+
 - `Opening Chapter Prose Draft - v0.4.md`
   - draft of the manual's opening reader experience in book voice
 
