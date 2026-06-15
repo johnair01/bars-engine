@@ -1,15 +1,41 @@
 /**
  * Gumroad license verification — the only Gumroad I/O surface.
  *
- * The book is sold on Gumroad; each sale auto-issues a unique license key.
- * We verify that key server-side via Gumroad's `v2/licenses/verify` API and
- * turn a valid purchase into a BookEntitlement (see book-launch-paywall spec).
+ * Each launch SKU is sold on Gumroad; a sale auto-issues a unique license key.
+ * We verify that key server-side via Gumroad's `v2/licenses/verify` API and turn
+ * a valid purchase into an `Entitlement` (see launch-paywall-integration spec).
+ *
+ * Per-SKU products: the product id is resolved from `GUMROAD_PRODUCT_ID_<SKU>`
+ * (e.g. `GUMROAD_PRODUCT_ID_DECK_DIGITAL`); `book-digital` also honours the
+ * legacy `GUMROAD_PRODUCT_ID`. `resolveLicense` probes a bare key across every
+ * configured SKU so /redeem can verify a license whose sale webhook never fired.
  *
  * Isolated here so it can be mock-mode flagged (GUMROAD_VERIFY_MODE=mock) for
  * tests, the verification quest, and local dev without a real sale.
  */
 
+import { LAUNCH_OFFERS, type OfferKey } from '@/lib/launch/offers'
+
 const GUMROAD_VERIFY_URL = 'https://api.gumroad.com/v2/licenses/verify'
+
+/** Env var holding a SKU's Gumroad product id, e.g. GUMROAD_PRODUCT_ID_DECK_DIGITAL. */
+function envKeyForSku(sku: OfferKey): string {
+  return `GUMROAD_PRODUCT_ID_${sku.toUpperCase().replace(/-/g, '_')}`
+}
+
+/** The configured Gumroad product id for a SKU, if any. */
+function productIdForSku(sku: OfferKey): string | undefined {
+  const specific = process.env[envKeyForSku(sku)]?.trim()
+  if (specific) return specific
+  // book-digital keeps the original single-product env for back-compat.
+  if (sku === 'book-digital') return process.env.GUMROAD_PRODUCT_ID?.trim() || undefined
+  return undefined
+}
+
+/** SKUs that have a Gumroad product id wired, in registry order. */
+function skusWithProduct(): OfferKey[] {
+  return LAUNCH_OFFERS.map((o) => o.key).filter((k) => productIdForSku(k) !== undefined)
+}
 
 export type VerifyResult =
   | { ok: true; saleId: string; uses: number; email?: string; refunded: boolean }
@@ -28,10 +54,12 @@ function maxUses(): number {
  * @param opts.increment Whether to increment Gumroad's `uses` counter.
  *   Pass `true` on first redemption; `false` on re-checks (gate) so only
  *   redemptions count against the share cap.
+ * @param opts.sku Which SKU's Gumroad product to verify against. Omitted ⇒ the
+ *   legacy single book product (`GUMROAD_PRODUCT_ID`).
  */
 export async function verifyLicense(
   licenseKey: string,
-  opts?: { increment?: boolean }
+  opts?: { increment?: boolean; sku?: OfferKey }
 ): Promise<VerifyResult> {
   const key = licenseKey.trim()
   if (!key) return { ok: false, reason: 'invalid' }
@@ -40,7 +68,7 @@ export async function verifyLicense(
     return verifyMock(key)
   }
 
-  const productId = process.env.GUMROAD_PRODUCT_ID
+  const productId = opts?.sku ? productIdForSku(opts.sku) : process.env.GUMROAD_PRODUCT_ID?.trim()
   if (!productId) return { ok: false, reason: 'config' }
 
   let json: GumroadVerifyResponse
@@ -77,6 +105,55 @@ export async function verifyLicense(
     email: p.email,
     refunded: false,
   }
+}
+
+export type ResolveResult =
+  | { matched: true; sku: OfferKey; result: VerifyResult }
+  | { matched: false }
+
+/**
+ * Probe a raw Gumroad license key against every SKU with a configured product
+ * id and return the first it belongs to. A key valid for a product but refunded
+ * / over-used is still a match (so the caller can surface that reason); a key
+ * `invalid` for a product just means "wrong product — keep looking".
+ *
+ * Used by /redeem as a fallback when no minted RedemptionCode exists (the sale
+ * webhook misfired). Probing with `increment` only bumps the use counter on the
+ * product the key actually belongs to — wrong products return `invalid` and
+ * never increment.
+ */
+export async function resolveLicense(
+  licenseKey: string,
+  opts?: { increment?: boolean }
+): Promise<ResolveResult> {
+  const key = licenseKey.trim()
+  if (!key) return { matched: false }
+  const increment = opts?.increment ?? true
+
+  if ((process.env.GUMROAD_VERIFY_MODE ?? 'live') === 'mock') {
+    const result = verifyMock(key)
+    if (result.ok) return { matched: true, sku: mockSkuFor(key), result }
+    if (result.reason === 'refunded') return { matched: true, sku: mockSkuFor(key), result }
+    return { matched: false }
+  }
+
+  for (const sku of skusWithProduct()) {
+    const result = await verifyLicense(key, { increment, sku })
+    if (result.ok) return { matched: true, sku, result }
+    // Belongs to this product but isn't redeemable — stop and surface why.
+    if (result.reason === 'refunded' || result.reason === 'over_uses') {
+      return { matched: true, sku, result }
+    }
+    // 'invalid' (wrong product) / 'network' / 'config' → try the next product.
+  }
+  return { matched: false }
+}
+
+/** Map a mock key to a SKU: `TEST-<sku>-…` targets one; otherwise the book. */
+function mockSkuFor(key: string): OfferKey {
+  const captured = key.match(/^TEST-(.+)-/i)?.[1]?.toLowerCase()
+  const hit = LAUNCH_OFFERS.find((o) => o.key === captured)
+  return hit ? hit.key : 'book-digital'
 }
 
 /**
