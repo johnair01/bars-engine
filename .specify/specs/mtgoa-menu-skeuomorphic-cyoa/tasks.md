@@ -15,10 +15,11 @@
 - [x] **T1.2** Add skeuomorphic classes to `src/styles/cultivation-cards.css`: `.card-table` (cool slate + vignette + grain), `.card-table__slot` (cast shadow), `.card-funnel-ribbon` (semantic `--ribbon-tint`). Warm card bodies keep the existing top-edge highlight.
 
 ## Phase 2 — Hub redesign
-- [ ] **T2.1** Rebuild `/mastering-allyship/hub` around the chosen object metaphor; spokes as tactile CYOA doorways.
-- [ ] **T2.2** CYOA affordance per spoke (Begin/Continue, chapter/Kotter stage, progress, lock) in the thumb zone.
-- [ ] **T2.3** Implement all 8 covenant interaction states on interactive surfaces; entry/idle motion with `prefers-reduced-motion` guard.
-- [ ] **T2.4** (If in scope) apply treatment to `/mastering-allyship/spoke/[index]`.
+- [x] **T2.1** Rebuild `/mastering-allyship/hub` as a **deck on the slate `.card-table`**; spokes are `CultivationCard`s. **Also made the page PUBLIC** (removed auth redirect) — it's a sub-landing/funnel, not gated content.
+- [x] **T2.2** CYOA affordance per spoke: chapter numeral, Kotter stage, feeling chip, wall-tinted **funnel ribbon**, **"Draw →"**; whole card links to its public funnel door.
+- [x] **T2.3** Interaction states + motion via the `CultivationCard` primitive (hover/focus/active/selected/etc. in CSS) + `animated` entry; reduced-motion already guarded in `cultivation-cards.css`.
+- [ ] **T2.4** Apply treatment to `/mastering-allyship/spoke/[index]` (in scope; not yet started).
+- [ ] **T2.5** Extract the reusable **card-table menu primitive** (scope D11) once the spoke page confirms the shared shape.
 
 ## Phase 3 — Accessibility + covenant check
 - [ ] **T3.1** Run covenant §Step 5 checklist: contrast ≥4.5:1, 44px targets, no `text-zinc-600` at `text-xs`, no arbitrary Tailwind aesthetic values, aria-labels, reduced-motion guards.
