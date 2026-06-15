@@ -18,8 +18,8 @@
 - [x] **T2.1** Rebuild `/mastering-allyship/hub` as a **deck on the slate `.card-table`**; spokes are `CultivationCard`s. **Also made the page PUBLIC** (removed auth redirect) — it's a sub-landing/funnel, not gated content.
 - [x] **T2.2** CYOA affordance per spoke: chapter numeral, Kotter stage, feeling chip, wall-tinted **funnel ribbon**, **"Draw →"**; whole card links to its public funnel door.
 - [x] **T2.3** Interaction states + motion via the `CultivationCard` primitive (hover/focus/active/selected/etc. in CSS) + `animated` entry; reduced-motion already guarded in `cultivation-cards.css`.
-- [ ] **T2.4** Apply treatment to `/mastering-allyship/spoke/[index]` (in scope; not yet started).
-- [ ] **T2.5** Extract the reusable **card-table menu primitive** (scope D11) once the spoke page confirms the shared shape.
+- [x] **T2.4** Redesigned `/mastering-allyship/spoke/[index]` as "the drawn card, opened" on the slate `CardTable` (header, feelings, funnel ribbon + door CTA, description well, WAVE move wells); **made PUBLIC**.
+- [x] **T2.5** Extracted the reusable primitives in `src/components/menu/`: **`CardTable`** (slate tray, used by hub + spoke) and **`DeckCard`** (the deck-card cookie cutter, used by the hub). Hub refactored onto both; available for other menu surfaces.
 
 ## Phase 3 — Accessibility + covenant check
 - [ ] **T3.1** Run covenant §Step 5 checklist: contrast ≥4.5:1, 44px targets, no `text-zinc-600` at `text-xs`, no arbitrary Tailwind aesthetic values, aria-labels, reduced-motion guards.
