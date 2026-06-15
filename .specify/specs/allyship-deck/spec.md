@@ -2,150 +2,135 @@
 
 ## Purpose
 
-A **consultable deck** of allyship cards: you draw at random for inspiration, or consult deliberately to solve a specific allyship problem. A companion **guidebook** teaches how to use the deck against real situations. It ships as a **digital deck** (in-app, consultable) and **print-house-ready files** for a physical deck — saleable to Kickstarter backers and as a standalone product, independent of the book's timeline.
+A **consultable deck** of allyship "spells" — you draw at random for inspiration, or consult
+deliberately to solve a specific allyship problem (for yourself, or on a campaign/milestone that
+helps others). A companion **guidebook (delivered as in-deck cards)** teaches its use. Ships as a
+**digital deck** (in-app, consultable) and **print-house-ready files** — saleable to Kickstarter
+backers and as a standalone product, independent of the book's timeline.
 
-**Problem**: The deck system is ~65% built (40 card-art PNGs, 18 card templates, move-grammar resolver, `CultivationCard` + card tokens, 4 card backs) but has **no consultable experience and no print pipeline** — the two things that make it a shippable product. The interactive *play* deck is blocked on a `PlayerDeck` migration; a *consultable/print* deck is not, so this is unblocked.
+**Practice:** Deftness Development — spec kit first, data/contract before UI, deterministic over AI.
+Deck content is authored/assembled data, not model output.
 
-**Practice**: Deftness Development — spec kit first, data/contract before UI, deterministic over AI. The deck content is authored data, not model output.
+> **Canonical design docs (read these — this spec points to them, doesn't duplicate):**
+> - [`move-library-core-rules.md`](./move-library-core-rules.md) — **authoritative** move grammar.
+> - [`sources-synthesis.md`](./sources-synthesis.md) — synthesis of the design documents.
+> - [`slice-open-up-gathering-resources.md`](./slice-open-up-gathering-resources.md) — worked card template + schema.
+> - [`test-playthrough-800-fundraiser.md`](./test-playthrough-800-fundraiser.md) — end-to-end validation.
 
 ## Design Decisions
 
 | Topic | Decision |
 |-------|----------|
-| Core metaphor | A **spellbook / oracle of allyship moves**. Two modes: **draw** (random inspiration) and **consult** (problem → relevant cards). |
-| Reuse | **Fork the Oracle feature** (`src/components/oracle/OracleReader.tsx`, `/oracle`, `src/lib/oracle/cardLayout.ts`, `deck.json` schema) — already a themed, consultable deck with shuffle/grid/single views. The handbook reader was built this same way. |
-| Card composition | Combines **identity** (nation/archetype, the 40 art cards) **and move/domain** action cards, unified under the **5 moves** — the four base moves (Wake Up, Clean Up, Grow Up, Show Up) plus a **5th move that "opens up"** (progression card; definition author-supplied — see § Open inputs). |
-| Content source | Existing `src/lib/deck-templates/*` (card text), `card-art-registry` + `public/card-art/*` (art), and `src/lib/move-grammar/*` (composed move sentences) feed a single **`allyship-deck.json`** (Oracle deck schema, extended). |
-| Card geometry | Oracle layout is **300×420 (5:7)** = the **2.5"×3.5"** poker ratio. Digital renders at screen scale; print export renders the same cards at **300 dpi (750×1050) + 0.125" bleed (→ 825×1125)**, configurable per print house. |
-| Delivery | **Digital deck** (in-app consultable) **+ print-house-ready files** (per-card front images + shared back + manifest). Print-and-play is out of scope unless requested. |
-| Access model | **Deferred** (§ Open inputs). v1 can ship the digital deck as a free/sample experience; selling it later reuses the `BookEntitlement` pattern as `DeckEntitlement`. No schema change in v1. |
-| Guidebook | A **problem → moves/cards** mapping (data) + a guidebook surface in the deck UI and an exportable document. Copy is author-owned. |
+| Core metaphor | A spellbook/oracle of allyship **moves**: **draw** (random) and **consult** (problem → move). |
+| Reuse | **Fork the Oracle feature** (`OracleReader`, `/oracle`, `cardLayout.ts` = 300×420 ≈ 2.5×3.5). |
+| Move grammar | **5 Basic Moves × 6 Operations × 4 Domains = 120 move cards** + **30 instruction cards = ~150.** See core rules. |
+| Basic Moves | Wake Up · Open Up · Clean Up · Grow Up · Show Up. (**Grow Up = Level Up**; no separate Level Up move.) |
+| Operations (Faces) | Shaman · Challenger · Regent · Architect · Diplomat · Sage — **operations, not classes**; every move passes through all six. **Channel-agnostic.** |
+| Domains | Gather Resources · Raise Awareness · Direct Action · Skillful Organizing — a multiplying axis (contextualizes every card). |
+| Capability Model | Fire/Agency · Water/Connection · Metal/Exploration · Earth/Rest · Wood/Participation. A move restores a capability. |
+| Card anatomy | Skill-stack: Primary Question · Optimizes For · Forbidden Moves · Failure Modes · Remediation (+ flavor). |
+| Subject toggle | Every card has `primaryQuestion` (introspective) **and** `campaignQuestion` (for-others/milestone); consult-mode switch. Same 120 cards. |
+| Content source | Assembled deterministically from the canonical grammar (`src/lib/allyship-deck/move-library.ts`); authored overrides for polished cards; art = separate identity lens (`public/card-art/*`). |
+| Delivery | **Digital deck** (consultable) **+ print-house-ready files** (per-card fronts + back + manifest, 2.5×3.5 @300dpi + bleed). |
+| Access model | Deferred. v1 may ship free/sample; selling later reuses the `BookEntitlement` pattern as `DeckEntitlement`. No DB in v1. |
 
 ## Conceptual Model
 
-Game language (WHO/WHAT/WHERE/Energy/Moves):
+Three axes (lenses, **not** a matrix to enumerate beyond the 120):
 
-| Dimension | In the deck |
-|-----------|-------------|
-| **WHO** | Identity cards — Nation (element) × Archetype (trigram). The 40 art cards. |
-| **WHERE** | Allyship domains — Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing. Card `domain`. |
-| **Moves** | The spine: **Wake Up · Clean Up · Grow Up · Show Up · [5th move]**. Card `move`. |
-| **Energy** | n/a for consult/print v1 (no vibeulon economy in the deck experience). |
+| Axis | Members | Role |
+|------|---------|------|
+| **Basic Moves** | Wake · Open · Clean · Grow · Show | the developmental loop / *what kind of progress* |
+| **Operations** | Shaman · Challenger · Regent · Architect · Diplomat · Sage | the *operation* performed (Notice/Challenge/Steward/Amplify/Care/Integrate) |
+| **Domains** | Gather Resources · Raise Awareness · Direct Action · Skillful Organizing | the allyship *context* (WHERE) |
 
-Use modes:
-- **Draw** — shuffle, reveal 1–3 cards for inspiration (Oracle "shuffle" view).
-- **Consult** — pick a problem (or browse) → the guidebook surfaces the relevant move(s) and cards (Oracle "grid"/"single" + a new problem index).
+Plus the **Capability Model** (what's restored) and the **subject toggle** (self ↔ campaign).
+Complete BAR flow (the game loop): Charge → Wake (Awareness) → Open (Experience) → Clean (Insight)
+→ Grow (Wisdom/Capacity) → Show (Artifact). Show Up artifacts include **Deck Card** (the game makes the game).
 
 ## Data / API contracts (data-first)
 
-### `allyship-deck.json` (static, public — Oracle schema extended)
+### `allyship-deck.json` (static, public)
+
+Assembled by `scripts/assemble-allyship-deck.ts` from `src/lib/allyship-deck/move-library.ts`.
+Card schema (full in the slice doc):
 
 ```ts
-type AllyshipMove = 'wake_up' | 'clean_up' | 'grow_up' | 'show_up' | 'open_up' /* 5th — name TBD */
-type AllyshipDomainKey = 'GATHERING_RESOURCES' | 'DIRECT_ACTION' | 'RAISE_AWARENESS' | 'SKILLFUL_ORGANIZING'
-
-interface AllyshipCard {
-  id: string                  // e.g. "WAKE-DA-01"
-  move: AllyshipMove          // the spine
-  domain: AllyshipDomainKey | null
-  identity?: { nationKey?: string; archetypeKey?: string } // art cards
-  artKey?: string             // → public/card-art/{nation}-{archetype}.png, or move icon
-  rank?: string
+interface MoveCard {
+  id: string                 // `${MOVE}-${DOMAIN}-${OPERATION}` e.g. "OPEN-GR-SHAMAN"
+  kind: 'move'
+  move: BasicMove; operation: Operation; domain: AllyshipDomain
+  outputBar: OutputBar       // fixed by move (open_up → 'experience')
   title: string
-  prompt: string              // the consult question
-  flavor?: string
-  guidance: string            // how to apply this move/card to a problem
+  submovePrompt: string      // canonical (core rules)
+  primaryQuestion: string    // introspective register
+  campaignQuestion: string   // for-others / milestone register
+  defaultSubject?: 'self' | 'other' | 'collective'
+  optimizesFor: string; forbiddenMoves: string[]; failureModes: string[]; remediation: string
+  flavor?: string; capabilities?: Capability[]; artKey?: string
+  status: 'authored' | 'generated'   // generated = scaffold awaiting human polish
 }
-
+interface InstructionCard { id; kind:'instruction'; topic; title; body }
 interface AllyshipDeck {
-  deck_slug: 'allyship-deck'
-  deck_name: string
-  theme: { /* colors per move/element, reuse card-tokens */ }
-  problems: { id: string; label: string; cardIds: string[] }[] // guidebook index
-  cards: AllyshipCard[]
+  deck_slug: 'allyship-deck'; deck_name: string; theme: Record<string,string>
+  problems: { id: string; label: string; cardIds: string[] }[]  // consult index
+  cards: (MoveCard | InstructionCard)[]
 }
 ```
 
-### Print export (Route Handler or script)
-
-```ts
-// scripts/export-allyship-deck.ts  (deterministic; no model calls)
-// Renders each AllyshipCard front at PRINT_W×PRINT_H + bleed via headless browser,
-// plus the shared back, into /output/allyship-deck/{cardId}.png and a manifest.json
-// sized for the chosen print house (default 2.5×3.5 @300dpi, 0.125" bleed).
-```
-
-- **Digital deck**: static JSON + client reader (no server action needed for consult). Selling later → Server Action `redeemDeckLicense` (mirror `redeemBookLicense`).
+### Print export (CLI/build step)
+`scripts/export-allyship-deck.ts` — renders fronts + shared back at 2.5×3.5 @300dpi + 0.125" bleed
+→ `/output/allyship-deck/` + manifest. Reuses `oracle/cardLayout.ts`. Honors quarantine list.
 
 ## User Stories
-
-### P1: Draw for inspiration
-**As someone stuck on allyship**, I want to shuffle and reveal a card, so I get an unexpected move to consider. **Acceptance**: `/deck` shuffle view reveals a random card with its move, prompt, and guidance.
-
-### P2: Consult to solve a problem
-**As someone facing a specific situation**, I want to pick my problem and see the relevant cards, so the deck points me to the right move. **Acceptance**: a problem index maps a chosen problem → the guidebook's recommended move(s) and card(s).
-
-### P3: Browse the full deck
-**As a curious reader**, I want to browse all cards by move/domain/identity. **Acceptance**: grid view filterable by move and domain.
-
-### P4: Print-house-ready files
-**As the publisher**, I want per-card front images + back at print spec, so I can fulfill a physical deck. **Acceptance**: `export-allyship-deck` produces correctly-sized, bleed-margined images + a manifest for every card.
-
-### P5: Guidebook
-**As a new owner**, I want a guidebook explaining how to use the deck. **Acceptance**: an in-app guidebook surface + an exportable guidebook document, driven by the `problems` index and per-card `guidance`.
-
-### P6: Verification quest (§ Verification Quest)
+- **P1 Draw** — shuffle, reveal a card for inspiration.
+- **P2 Consult** — pick a problem (or capability that's "offline") → recommended cards.
+- **P3 Browse** — grid filtered by move / operation / domain.
+- **P4 Campaign mode** — toggle to the `campaignQuestion` register for a milestone/campaign (e.g. the $800 fundraiser).
+- **P5 Print files** — per-card fronts + back at print spec.
+- **P6 Guidebook** — in-deck instruction cards teach use.
+- **P7 Verification quest** (§ Verification Quest).
 
 ## Functional Requirements
 
-### Phase 1 — Deck data + assembly
-- **FR1**: `AllyshipDeck`/`AllyshipCard` types + `public/allyship-deck/allyship-deck.json`.
-- **FR2**: An **assembly script** (`scripts/assemble-allyship-deck.ts`) that builds the JSON from `deck-templates`, `card-art-registry`, and `move-grammar` (deterministic; author fills copy/guidance + the 5th move).
+### Phase 1 — Deck data + assembly  ← *this build*
+- **FR1**: `src/lib/allyship-deck/types.ts` — canonical types.
+- **FR2**: `src/lib/allyship-deck/move-library.ts` — data tables: 5 moves, 6 operations, the 30
+  canonical submoves, 4 domains, 5 capabilities; authored overrides (the Open Up × GR slice).
+- **FR3**: `scripts/assemble-allyship-deck.ts` (`npm run deck:assemble`) → `public/allyship-deck/allyship-deck.json`:
+  generates 120 move cards (both question registers; `status:'generated'` with authored overrides
+  merged) + a starter instruction-card set + a seeded `problems` index. Deterministic; no AI.
 
 ### Phase 2 — Digital consultable deck
-- **FR3**: `/deck` route + `AllyshipDeckReader` (forked from `OracleReader`): **draw** (shuffle), **browse** (grid, filter by move/domain), **single** card view with prompt + guidance.
-- **FR4**: **Consult** mode — problem picker driven by `deck.problems` → highlights recommended cards.
+- **FR4**: `/deck` route + `AllyshipDeckReader` forked from `OracleReader` (draw / browse+filter / single).
+- **FR5**: Consult mode (problem/capability index) + **subject toggle** (self ↔ campaign).
 
-### Phase 3 — Guidebook
-- **FR5**: In-app guidebook surface (how-to + problem index). **FR6**: exportable guidebook document (markdown/PDF) from the same data.
+### Phase 3 — Guidebook (instruction cards) — in-app surface + export.
+### Phase 4 — Print-house export (`export-allyship-deck.ts`).
+### Phase 5 — (optional) sell the digital deck (`DeckEntitlement`, mirrors book paywall).
 
-### Phase 4 — Print-house export
-- **FR7**: `scripts/export-allyship-deck.ts` renders fronts + back at print spec (default 2.5×3.5 @300dpi + bleed) → `/output/allyship-deck/` + manifest. Reuses card geometry from `cardLayout.ts`.
-
-### Phase 5 — (optional) Sell the deck
-- **FR8**: `DeckEntitlement` + `redeemDeckLicense` mirroring the book paywall, if the digital deck is gated. Schema change — own spec section then.
-
-## Non-Functional Requirements
-- Deterministic content (no AI on the deck/print path). Art QA: honor the registry's **quarantine list** (watermarked cards excluded from print). Accessibility: deck reader keyboard-navigable. No `public/` writes in serverless (print export is a build/CLI step writing to `/output`, not a runtime route).
-
-## Scaling Checklist (filesystem / export)
-| Touchpoint | Mitigation |
-|------------|------------|
-| Print render output | Write to `/output` via CLI/build step, not a serverless route; large binaries not committed (gitignore `/output/allyship-deck/`). |
-| Headless browser for print | Playwright as a dev/CI dependency; run as a script, not in request path. |
+## Non-Functional
+Deterministic content (no AI on deck/print path). Honor `card-art-registry` quarantine list. No
+`public/` writes in serverless (print export is a CLI/build step → `/output`, gitignored). Reader keyboard-navigable.
 
 ## Persisted data & Prisma
-**None in v1** (digital deck is static JSON; print is a CLI step). Only Phase 5 (selling the digital deck) adds `DeckEntitlement` — defer until chosen.
+**None in v1** (static JSON + CLI export). Only Phase 5 adds `DeckEntitlement`.
 
-## Open inputs (author-owned — flagged, non-blocking)
-- **The 5th move**: name + meaning (placeholder `open_up`). Drives a move icon + the spine.
-- **Final card list + copy**: per-card `title`/`prompt`/`flavor`/`guidance`. Engine + schema ship; copy fills in.
-- **Guidebook copy** + the `problems` index entries.
-- **Print house target** (The Game Crafter vs MakePlayingCards) → exact size/bleed (default poker 2.5×3.5 + 0.125").
-- **Access model** (free vs sold) → whether Phase 5 is needed.
+## Open inputs (author-owned; engine ships first)
+Per-card polish (titles, anatomy, flavor, campaignQuestion) for the 114 generated cards · the 30
+instruction cards' copy · print-house target (size/bleed) · access model (free vs sold).
 
 ## Verification Quest (required — UX feature)
-- **ID**: `cert-allyship-deck-v1`
-- **Frame**: Bruised Banana Fundraiser — "Verify the Allyship Deck so backers can consult it and we can fulfill the Kickstarter."
-- **Steps**: (1) open `/deck`, draw a card; (2) browse the grid, filter by a move; (3) open a card, read its guidance; (4) use Consult — pick a problem, see recommended cards; (5) confirm the guidebook surface explains how to use the deck.
-- Reference: [cyoa-certification-quests](../cyoa-certification-quests/).
+- **ID** `cert-allyship-deck-v1` — frame: Bruised Banana Fundraiser ("verify the deck so backers can
+  consult it and we can fulfill the Kickstarter").
+- Steps: open `/deck` & draw; browse+filter by a move; open a card (read anatomy); Consult — pick a
+  problem → recommended cards; flip the **campaign toggle** and confirm the question reframes; confirm
+  an instruction card explains use. Reference: [cyoa-certification-quests](../cyoa-certification-quests/).
 
 ## Dependencies
-- Existing: Oracle feature (`OracleReader`, `cardLayout`, `deck.json`), `deck-templates/*`, `card-art-registry` + `public/card-art/*`, `move-grammar/*`, `card-tokens`, `cultivation-cards.css`, card backs.
-- Supersedes/absorbs the print half of backlog `1.80 DPX`.
-- Independent of `PlayerDeck`/`PlayerCard` (the blocked *play* deck) and of the book launch.
+Oracle (`OracleReader`/`cardLayout`/`deck.json`), `card-art-registry` + `public/card-art/*`,
+`card-tokens`, `cultivation-cards.css`, card backs. Supersedes the print half of `1.80 DPX`.
+Independent of `PlayerDeck`/`PlayerCard` and of the book launch.
 
 ## References
-- Oracle: [src/components/oracle/OracleReader.tsx](../../../src/components/oracle/OracleReader.tsx), [src/lib/oracle/cardLayout.ts](../../../src/lib/oracle/cardLayout.ts), [src/lib/valkyrie-party/data/deck.json](../../../src/lib/valkyrie-party/data/deck.json)
-- Deck system: [.specify/specs/deck-card-move-grammar/](../deck-card-move-grammar/), [seed-deck-card-move-grammar.yaml](../../../seed-deck-card-move-grammar.yaml)
-- Tokens/CSS: [src/lib/ui/card-tokens.ts](../../../src/lib/ui/card-tokens.ts), [src/styles/cultivation-cards.css](../../../src/styles/cultivation-cards.css)
+See the canonical design docs listed under **Purpose**; Oracle code under **Design Decisions**.
