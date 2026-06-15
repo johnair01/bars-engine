@@ -3,7 +3,7 @@
  * @see .specify/specs/vault-page-experience/spec.md
  */
 import { dbBase } from '@/lib/db'
-import { daysAgoDate, VAULT_ROOM_LIST_CAP, VAULT_SERVER_LIST_CAP, VAULT_STALE_DAYS } from '@/lib/vault-ui'
+import { CAPTURE_BAR_TYPES, daysAgoDate, VAULT_ROOM_LIST_CAP, VAULT_SERVER_LIST_CAP, VAULT_STALE_DAYS } from '@/lib/vault-ui'
 import { whoContactGrammarOrFilter } from '@/lib/vault-who-contacts'
 
 export const draftWhere = (playerId: string) => ({
@@ -108,7 +108,7 @@ async function fetchChargeBarsSelect(playerId: string, take: number) {
     return dbBase.customBar.findMany({
         where: {
             creatorId: playerId,
-            type: 'charge_capture',
+            type: { in: [...CAPTURE_BAR_TYPES] },
             status: 'active',
         },
         orderBy: { createdAt: 'desc' },
@@ -186,7 +186,7 @@ export async function loadVaultCoreData(playerId: string, scope: VaultScope) {
         invitationBars,
     ] = await Promise.all([
         dbBase.customBar.count({
-            where: { creatorId: playerId, type: 'charge_capture', status: 'active' },
+            where: { creatorId: playerId, type: { in: [...CAPTURE_BAR_TYPES] }, status: 'active' },
         }),
         dbBase.customBar.count({ where: genericPrivateDraftWhere(playerId) }),
         dbBase.customBar.count({ where: whoContactVaultWhere(playerId) }),

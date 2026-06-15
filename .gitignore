@@ -106,5 +106,5 @@ chatgpt_repo_snapshot_*/
 # GSD Browser visual-verification artifacts (commit curated baselines deliberately)
 .gsd-artifacts/
 
-# Allyship deck review/print artifacts
-/output/
+# Generated export artifacts — regenerable PDFs (deck/book/handbook); see Track B
+/exports/

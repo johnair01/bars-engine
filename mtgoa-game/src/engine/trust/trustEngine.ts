@@ -55,6 +55,12 @@ export function allDomainsTouched(state: TrustState): boolean {
   return DOMAIN_NAMES.every((d) => state.domainsTouched.includes(d));
 }
 
+/** Shadows that must be dissolved before she converts. Per-encounter override
+ *  (config.convertThreshold) falls back to the global rule. */
+export function convertThreshold(config: EncounterConfig): number {
+  return config.convertThreshold ?? R.shadow.convertThreshold;
+}
+
 /** The cards currently in the playable hand. `hidden` cards (the epiphany) stay
  *  out of hand until the NPC is converted, then surface as the revealed beat. */
 export function visibleHand(state: TrustState): TrustCard[] {
@@ -104,6 +110,10 @@ export function trustReducer(state: TrustState, action: TrustAction): TrustState
 
   switch (action.type) {
     case "ATTUNE": {
+      // Attune reveals the live need and spends the turn. On alternating levels
+      // the need is authored in pairs, so you read on the first beat and respond
+      // on the second while that need is still live. Learning the rhythm lets an
+      // expert skip the read and respond straight away — that's the skill.
       const need = currentNeed(state);
       const s: TrustState = {
         ...state,
@@ -170,7 +180,7 @@ export function trustReducer(state: TrustState, action: TrustAction): TrustState
         npcStress: Math.max(R.stress.min, state.npcStress - R.stress.dissolveRelief),
         log: logLine(state, `Dissolved ${shadow.name} (-${R.shadow.dissolveCost} trust).`),
       };
-      if (!s.converted && s.dissolvedShadowIds.length >= R.shadow.convertThreshold) {
+      if (!s.converted && s.dissolvedShadowIds.length >= convertThreshold(state.config)) {
         s = { ...s, converted: true, log: logLine(s, `${state.config.npcName} crosses the threshold — now she plays with you.`) };
       }
       return advanceTurn(s);

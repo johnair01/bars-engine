@@ -1,12 +1,16 @@
 /**
- * TrustEncounterScreen — the playable Level-1 Priya loop on the trust/attune
- * engine (engine/trust). Self-contained: it owns its own reducer so it does not
- * touch the channel-engine game state. Mounted from App via a prototype toggle.
+ * TrustEncounterScreen — the playable Priya ladder on the trust/attune engine
+ * (engine/trust). Self-contained: it owns its own reducer so it does not touch
+ * the channel-engine game state. Mounted from App via a prototype toggle.
  *
  * The loop on screen:
- *   ATTUNE to reveal her live need → play a matching card for TRUST → spend trust
- *   to DISSOLVE shadows → convert her → engage all four DOMAINS (Direct Action is
- *   her-only) → CAPSTONE to win. "Show Up Honestly" is the always-safe basic move.
+ *   ATTUNE to read her live need (spends the beat) → play a matching card for
+ *   TRUST → spend trust to DISSOLVE shadows → convert her → engage all four
+ *   DOMAINS (some are her-only) → CAPSTONE.
+ *
+ * Ladder: L1 = a single fixed need; L2 = a paired Water/Fire rhythm; Boss = the
+ * full three-channel moving need. The encounter to run is chosen by the caller
+ * (e.g. the Applied Mode intake) via the `encounter` prop.
  */
 import { useReducer } from "react";
 
@@ -23,6 +27,7 @@ import { TRUST_RULES as R } from "@/engine/trust/trustRules";
 import type { EncounterConfig } from "@/engine/trust/trustTypes";
 import {
   allDomainsTouched,
+  convertThreshold,
   currentNeed,
   initTrustEncounter,
   trustReducer,
@@ -54,10 +59,11 @@ function Meter({ label, value, max, tone }: { label: string; value: number; max:
 
 export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props) {
   const [state, dispatch] = useReducer(trustReducer, encounter, initTrustEncounter);
+  const config = state.config;
 
   const need = currentNeed(state);
-  const config = state.config;
-  const convertNeeded = R.shadow.convertThreshold;
+  const threshold = convertThreshold(config);
+  const alternating = config.needSequence.length > 1;
   const ready = state.converted && allDomainsTouched(state);
 
   if (state.phase === "end") {
@@ -69,13 +75,11 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
             {won ? "You found what's still possible." : "Rupture — she walled off and left."}
           </h2>
           <p className="mt-2 text-card-body text-dim">
-            {won
-              ? config.capstone.body
-              : "Too many misreads raised her defenses past the breaking point. Read her before you act."}
+            {won ? config.capstone.body : "Too many misreads raised her defenses past the breaking point. Read her before you act."}
           </p>
-          <p className="mt-3 text-xs text-muted">Resolved in {state.turn - 1} turns.</p>
+          <p className="mt-3 text-xs text-muted">Level {config.level} · resolved in {state.turn - 1} turns.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => dispatch({ type: "RESET" })}>Play again</Button>
           <Button variant="ghost" onClick={onExit}>Exit prototype</Button>
         </div>
@@ -96,13 +100,16 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
           </div>
           <span className="text-xs text-muted">Turn {state.turn} · {config.npcName} (Diplomat)</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={onExit}>Exit prototype</Button>
+        <Button variant="ghost" size="sm" onClick={onExit}>Exit</Button>
       </header>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_minmax(220px,auto)]">
         {/* Live need / inner track */}
         <div className="flex flex-col gap-3 rounded-card border border-border bg-surf p-4">
-          <span className="ds-label text-muted">Her live need</span>
+          <div className="flex items-center justify-between">
+            <span className="ds-label text-muted">Her live need</span>
+            {alternating && <span className="text-[10px] text-muted">she moves — learn the rhythm to respond without reading</span>}
+          </div>
           {state.needRevealed ? (
             <div className="flex items-center gap-3">
               <span className={cn("text-3xl", channelClass[need].text)}>{CHANNELS[need].glyph}</span>
@@ -116,7 +123,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
               <span className="text-3xl text-muted">?</span>
               <div>
                 <p className="text-base font-bold text-dim">Unread</p>
-                <p className="text-[11px] text-muted">Attune to reveal what she needs.</p>
+                <p className="text-[11px] text-muted">Attune to reveal (it spends the beat) — or respond from the rhythm.</p>
               </div>
             </div>
           )}
@@ -138,7 +145,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
           <Meter label="Trust" value={state.trust} max={Math.max(6, state.trust)} tone="bg-accent" />
           <Meter label={`${config.npcName} stress`} value={state.npcStress} max={R.stress.ruptureAt} tone="bg-fire" />
           <span className="text-[10px] text-muted">
-            Dissolved {state.dissolvedShadowIds.length}/{convertNeeded} to convert · dissolve costs {R.shadow.dissolveCost} trust
+            Dissolved {state.dissolvedShadowIds.length}/{threshold} to convert · dissolve costs {R.shadow.dissolveCost} trust
           </span>
         </div>
       </section>
@@ -208,7 +215,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
         <div className="flex flex-wrap gap-3">
           {visibleHand(state).map((card) => {
             const isAlign = card.kind === "align";
-            const aligned = isAlign && state.needRevealed && card.channel === need;
+            const matches = isAlign && card.channel === need;
             const touched = !isAlign && !!card.domain && state.domainsTouched.includes(card.domain);
             const locked = !!card.herOnly && !state.converted;
             return (
@@ -232,7 +239,7 @@ export function TrustEncounterScreen({ onExit, encounter = LEVEL1_PRIYA }: Props
                   ) : (
                     <Badge className="bg-surf text-muted">{isAlign ? "inner · align" : `outer · ${card.domain}`}</Badge>
                   )}
-                  {aligned && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
+                  {matches && <Badge className="bg-accent/20 text-accent">matches need</Badge>}
                   {touched && <Badge className="bg-accent/20 text-accent">engaged</Badge>}
                   {locked && <Badge className="bg-surf text-muted">her-only</Badge>}
                 </div>
