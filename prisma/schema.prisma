@@ -201,30 +201,9 @@ model Player {
   vibulonEvents                  VibulonEvent[]
   creatorVibulons                Vibulon[]                   @relation("VibulonCreator")
   vibulons                       Vibulon[]
-  bookEntitlements               BookEntitlement[]           @relation("PlayerBookEntitlements")
 
   @@unique([contactType, contactValue])
   @@map("players")
-}
-
-/// Book launch paywall — a player's right to read + download a book (see .specify/specs/book-launch-paywall/spec.md).
-/// Modeled on the Invite redemption pattern. Granted by redeeming a Gumroad license key.
-model BookEntitlement {
-  id            String    @id @default(cuid())
-  playerId      String
-  bookKey       String    @default("mtgoa")
-  source        String    @default("gumroad") // gumroad | admin | comp
-  licenseKey    String?
-  gumroadSaleId String?
-  status        String    @default("active") // active | revoked | refunded
-  grantedAt     DateTime  @default(now())
-  revokedAt     DateTime?
-  metadata      String? // JSON: purchaser email, product id, uses
-  player        Player    @relation("PlayerBookEntitlements", fields: [playerId], references: [id])
-
-  @@unique([playerId, bookKey])
-  @@unique([bookKey, licenseKey])
-  @@map("book_entitlements")
 }
 
 /// Vault compost sessions — salvage payload for future “hard compost” organizer (see .specify/specs/vault-page-experience/spec.md)
