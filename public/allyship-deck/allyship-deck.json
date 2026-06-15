@@ -16,7 +16,7 @@
   "counts": {
     "move": 120,
     "instruction": 27,
-    "authored": 6,
+    "authored": 30,
     "total": 147
   },
   "problems": [
@@ -135,21 +135,28 @@
       "operation": "shaman",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Shaman · Wake Up · Gather Resources",
+      "title": "What's Actually Scarce",
       "submovePrompt": "Notice the signal. What is here?",
-      "primaryQuestion": "What is here?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Shaman: What is here?)",
+      "primaryQuestion": "What is actually depleted here — and what only feels depleted?",
+      "campaignQuestion": "What does this effort actually lack — money, time, hands, or hope?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Seeing the real resource gap before reacting to the felt one.",
       "forbiddenMoves": [
-        "— author —"
+        "Assuming scarcity without looking",
+        "Counting only money",
+        "Panic-inventory"
       ],
       "failureModes": [
-        "— author —"
+        "Confusing \"I'm tired\" with \"we're broke\"",
+        "Resource tunnel-vision"
       ],
-      "remediation": "Notice the signal — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one resource that, if present, would change everything.",
+      "capabilities": [
+        "exploration",
+        "rest"
+      ],
+      "status": "authored",
+      "flavor": "Not every empty cup is the same cup."
     },
     {
       "id": "WAKE-GR-CHALLENGER",
@@ -158,21 +165,27 @@
       "operation": "challenger",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Challenger · Wake Up · Gather Resources",
+      "title": "The Number You Won't Look At",
       "submovePrompt": "Notice resistance. What resists being seen?",
-      "primaryQuestion": "What resists being seen?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Challenger: What resists?)",
+      "primaryQuestion": "What resource truth am I refusing to look at directly?",
+      "campaignQuestion": "What number are we avoiding — the real cost, the real shortfall?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Surfacing the avoided figure so planning can be honest.",
       "forbiddenMoves": [
-        "— author —"
+        "Vague \"we'll figure it out\"",
+        "Rounding away the gap",
+        "Magical thinking"
       ],
       "failureModes": [
-        "— author —"
+        "Optimism as avoidance",
+        "Budgets that omit the scary line"
       ],
-      "remediation": "Notice resistance — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the exact amount needed. Look at it for ten seconds.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-GR-REGENT",
@@ -181,21 +194,27 @@
       "operation": "regent",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Regent · Wake Up · Gather Resources",
+      "title": "What's Worth Funding",
       "submovePrompt": "Notice stewardship. What deserves attention?",
-      "primaryQuestion": "What deserves attention?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Of all that is depleted, what actually deserves resourcing first?",
+      "campaignQuestion": "What in this campaign most deserves the resources we can gather?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Prioritizing the resource need that matters most.",
       "forbiddenMoves": [
-        "— author —"
+        "Funding the loudest need",
+        "Spreading thin",
+        "Neglecting the core"
       ],
       "failureModes": [
-        "— author —"
+        "Resourcing optics over substance",
+        "Everything is \"priority\""
       ],
-      "remediation": "Notice stewardship — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Rank the top three needs. Fund the first before the rest.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-GR-ARCHITECT",
@@ -204,21 +223,27 @@
       "operation": "architect",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Architect · Wake Up · Gather Resources",
+      "title": "The Untapped Vein",
       "submovePrompt": "Notice potential. What value wants to increase?",
-      "primaryQuestion": "What value wants to increase?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What resource is already here, underused, waiting to be grown?",
+      "campaignQuestion": "What asset does this campaign already have that we could multiply?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Spotting latent resources with upside.",
       "forbiddenMoves": [
-        "— author —"
+        "Only seeing lack",
+        "Ignoring what's already working",
+        "Sunk-cost gazing"
       ],
       "failureModes": [
-        "— author —"
+        "Scarcity blindness to existing assets",
+        "Under-leveraging a strength"
       ],
-      "remediation": "Notice potential — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name one resource you already have that could double.",
+      "capabilities": [
+        "exploration",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-GR-DIPLOMAT",
@@ -227,21 +252,27 @@
       "operation": "diplomat",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Diplomat · Wake Up · Gather Resources",
+      "title": "Who Holds the Purse",
       "submovePrompt": "Notice relationships. What relational dynamics matter?",
-      "primaryQuestion": "What relational dynamics matter?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Whose resources, trust, or permission actually shape this?",
+      "campaignQuestion": "Who are the givers, gatekeepers, and stakeholders in this ask?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Seeing the relational map of resource flow and power.",
       "forbiddenMoves": [
-        "— author —"
+        "Ignoring gatekeepers",
+        "Treating money as apolitical",
+        "Bypassing consent"
       ],
       "failureModes": [
-        "— author —"
+        "Missing who controls access",
+        "Stepping on a key relationship"
       ],
-      "remediation": "Notice relationships — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "List who must say yes for resources to move. Start there.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-GR-SAGE",
@@ -250,21 +281,26 @@
       "operation": "sage",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "awareness",
-      "title": "Sage · Wake Up · Gather Resources",
+      "title": "The Story the Lack Tells",
       "submovePrompt": "Notice meaning. What larger pattern is emerging?",
-      "primaryQuestion": "What larger pattern is emerging?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Gather Resources? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What pattern does this scarcity reveal about how I resource my life?",
+      "campaignQuestion": "What does this shortfall reveal about the larger system around it?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to detect charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Reading scarcity as a signal about a bigger pattern.",
       "forbiddenMoves": [
-        "— author —"
+        "Treating each shortfall as isolated",
+        "Bypassing into \"abundance mindset\""
       ],
       "failureModes": [
-        "— author —"
+        "Missing the recurring pattern",
+        "Spiritualizing systemic lack"
       ],
-      "remediation": "Notice meaning — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Ask whether this lack has happened before. Name the pattern.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-RA-SHAMAN",
@@ -1283,21 +1319,25 @@
       "operation": "shaman",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Shaman · Clean Up · Gather Resources",
+      "title": "Name the Money Feeling",
       "submovePrompt": "Identify channel. Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "primaryQuestion": "Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Shaman: What is here?)",
+      "primaryQuestion": "Which channel is live around this resource — fear, anger, sadness, numbness, or reach?",
+      "campaignQuestion": "What emotional channel is driving how we're resourcing this — and is it clean?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Locating the active channel so the charge can move.",
       "forbiddenMoves": [
-        "— author —"
+        "Acting on the charge before naming it",
+        "Assuming it's \"just logistics\""
       ],
       "failureModes": [
-        "— author —"
+        "Fear masquerading as strategy",
+        "Anger budgeting"
       ],
-      "remediation": "Identify channel — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the channel out loud: \"This is fear / anger / sadness about money.\"",
+      "capabilities": [
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-GR-CHALLENGER",
@@ -1306,21 +1346,28 @@
       "operation": "challenger",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Challenger · Clean Up · Gather Resources",
+      "title": "The Money Story",
       "submovePrompt": "Challenge interpretation. What story am I believing?",
-      "primaryQuestion": "What story am I believing?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Challenger: What resists?)",
+      "primaryQuestion": "What story about deserving, scarcity, or worth am I treating as fact?",
+      "campaignQuestion": "What limiting story — \"we can't ask for that much\" — are we believing?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Exposing the inherited resource script.",
       "forbiddenMoves": [
-        "— author —"
+        "Defending the story",
+        "\"But it's true\"",
+        "Identifying with the lack"
       ],
       "failureModes": [
-        "— author —"
+        "Scarcity script as identity",
+        "Inherited shame as realism"
       ],
-      "remediation": "Challenge interpretation — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the story as a sentence. Then write the version that isn't certain.",
+      "capabilities": [
+        "agency",
+        "exploration"
+      ],
+      "status": "authored",
+      "flavor": "Inherited scripts run the budget until you read them aloud."
     },
     {
       "id": "CLEAN-GR-REGENT",
@@ -1329,21 +1376,26 @@
       "operation": "regent",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Regent · Clean Up · Gather Resources",
+      "title": "The Capability You're Missing",
       "submovePrompt": "Identify missing move. What capability is unavailable?",
-      "primaryQuestion": "What capability is unavailable?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which capability is offline — can I not act, connect, explore, rest, or participate around this?",
+      "campaignQuestion": "What capability does this campaign lack — agency to ask, connection to mobilize?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Naming the missing capability behind the resource block.",
       "forbiddenMoves": [
-        "— author —"
+        "Adding tactics when the block is a missing capability",
+        "Willpower over capacity"
       ],
       "failureModes": [
-        "— author —"
+        "Doing more of a move you can't yet make",
+        "Capability-blind planning"
       ],
-      "remediation": "Identify missing move — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Match the block to a capability. That's the move to grow next.",
+      "capabilities": [
+        "agency",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-GR-ARCHITECT",
@@ -1352,21 +1404,27 @@
       "operation": "architect",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Architect · Clean Up · Gather Resources",
+      "title": "Move the Charge",
       "submovePrompt": "Select transformation. Transcend, Translate, or Neutralize?",
-      "primaryQuestion": "Transcend, Translate, or Neutralize?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Do I transcend this feeling, translate it to another channel, or neutralize it?",
+      "campaignQuestion": "How do we convert this campaign's charge into usable fuel — transcend, translate, neutralize?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Choosing the alchemical operation that frees resourcing.",
       "forbiddenMoves": [
-        "— author —"
+        "Suppressing the charge",
+        "Venting it onto others",
+        "Forcing positivity"
       ],
       "failureModes": [
-        "— author —"
+        "Neutralizing what should be transcended",
+        "Dumping anger on donors"
       ],
-      "remediation": "Select transformation — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick one: transcend (let it ripen), translate (e.g. fear → agency), or neutralize. Then do it.",
+      "capabilities": [
+        "agency",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-GR-DIPLOMAT",
@@ -1375,21 +1433,26 @@
       "operation": "diplomat",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Diplomat · Clean Up · Gather Resources",
+      "title": "Fear Into Invitation",
       "submovePrompt": "Choose destination. Which channel would better serve this situation?",
-      "primaryQuestion": "Which channel would better serve this situation?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Which channel, if I moved this charge there, would serve the ask better?",
+      "campaignQuestion": "What would the ask feel like if it came from connection instead of fear?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Aiming the charge toward a relationally generative channel.",
       "forbiddenMoves": [
-        "— author —"
+        "Asking from resentment",
+        "Guilt-tripping",
+        "Performing calm"
       ],
       "failureModes": [
-        "— author —"
+        "Fear-driven asks that repel",
+        "Manipulation dressed as warmth"
       ],
-      "remediation": "Choose destination — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Re-aim the ask from Connection: invite people into something good.",
+      "capabilities": [
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-GR-SAGE",
@@ -1398,21 +1461,27 @@
       "operation": "sage",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "insight",
-      "title": "Sage · Clean Up · Gather Resources",
+      "title": "What the Shortfall Taught",
       "submovePrompt": "Extract insight. What does this teach me?",
-      "primaryQuestion": "What does this teach me?",
-      "campaignQuestion": "What move is missing for this campaign, in Gather Resources? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What does this resource struggle teach me that I can keep?",
+      "campaignQuestion": "What's the durable lesson this campaign's resourcing is offering?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to transform charge — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Converting the struggle into reusable insight (a BAR).",
       "forbiddenMoves": [
-        "— author —"
+        "Rushing past the lesson",
+        "\"Just get the money\"",
+        "Premature closure"
       ],
       "failureModes": [
-        "— author —"
+        "Repeating the lesson because it wasn't extracted",
+        "Hollow takeaways"
       ],
-      "remediation": "Extract insight — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write one sentence you'll carry into the next ask.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-SHAMAN",
@@ -1835,21 +1904,26 @@
       "operation": "shaman",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Shaman · Grow Up · Gather Resources",
+      "title": "The Capacity Trying to Grow",
       "submovePrompt": "Identify emerging capacity. What wants to grow?",
-      "primaryQuestion": "What wants to grow?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Shaman: What is here?)",
+      "primaryQuestion": "What resourcing capacity in me is trying to grow right now?",
+      "campaignQuestion": "What capability is this campaign asking us to develop?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Noticing the growth edge the resource work is surfacing.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing growth",
+        "Skipping the seedling",
+        "Importing someone else's path"
       ],
       "failureModes": [
-        "— author —"
+        "Naming a capacity you wish for over the one actually emerging"
       ],
-      "remediation": "Identify emerging capacity — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the capacity one size bigger than today. Practice it once.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-CHALLENGER",
@@ -1858,21 +1932,25 @@
       "operation": "challenger",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Challenger · Grow Up · Gather Resources",
+      "title": "The Edge of the Ask",
       "submovePrompt": "Identify developmental edge. What must evolve?",
-      "primaryQuestion": "What must evolve?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Challenger: What resists?)",
+      "primaryQuestion": "What must evolve in me to ask or steward at the next level?",
+      "campaignQuestion": "What must the team learn to resource this at the scale it needs?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Locating the precise developmental edge.",
       "forbiddenMoves": [
-        "— author —"
+        "Comfortable practice that isn't the edge",
+        "Busywork as growth"
       ],
       "failureModes": [
-        "— author —"
+        "Training the strength, avoiding the edge",
+        "Pseudo-growth"
       ],
-      "remediation": "Identify developmental edge — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the thing that scares you slightly. That's the edge — step to it.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-REGENT",
@@ -1881,21 +1959,27 @@
       "operation": "regent",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Regent · Grow Up · Gather Resources",
+      "title": "Worth Practicing",
       "submovePrompt": "Steward growth. What deserves practice?",
-      "primaryQuestion": "What deserves practice?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which resourcing skill deserves deliberate, repeated practice?",
+      "campaignQuestion": "What practice should this campaign repeat until it is reliable?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Committing to repeatable practice over one-off effort.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoping skill appears",
+        "One-and-done",
+        "Practicing the wrong rep"
       ],
       "failureModes": [
-        "— author —"
+        "Inconsistency",
+        "Stewarding everything so nothing deepens"
       ],
-      "remediation": "Steward growth — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Choose one rep (\"make one real ask weekly\"). Schedule it.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-ARCHITECT",
@@ -1904,21 +1988,27 @@
       "operation": "architect",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Architect · Grow Up · Gather Resources",
+      "title": "Strengthen the Channel",
       "submovePrompt": "Amplify capacity. What capability wants strengthening?",
-      "primaryQuestion": "What capability wants strengthening?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Which existing capability, if strengthened, would unlock resourcing?",
+      "campaignQuestion": "What capacity, amplified, would most increase what we can gather?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Investing growth where it compounds.",
       "forbiddenMoves": [
-        "— author —"
+        "Spreading practice thin",
+        "Strengthening the irrelevant",
+        "Vanity skills"
       ],
       "failureModes": [
-        "— author —"
+        "Growth without leverage",
+        "Polishing a capability you don't need"
       ],
-      "remediation": "Amplify capacity — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick the capability with the highest leverage. Train it deliberately.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-DIPLOMAT",
@@ -1927,21 +2017,27 @@
       "operation": "diplomat",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Diplomat · Grow Up · Gather Resources",
+      "title": "Growing Without Leaving People",
       "submovePrompt": "Relate growth. How does this affect others?",
-      "primaryQuestion": "How does this affect others?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "As I grow my capacity to resource, how does it land on the people around me?",
+      "campaignQuestion": "How does scaling this campaign affect the relationships that carry it?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Growing in a way that strengthens, not strains, relationships.",
       "forbiddenMoves": [
-        "— author —"
+        "Growth that burns helpers",
+        "Leaving people behind",
+        "Extractive scaling"
       ],
       "failureModes": [
-        "— author —"
+        "Capacity gains that cost trust",
+        "Isolating success"
       ],
-      "remediation": "Relate growth — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name one person your growth affects. Bring them with you.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-SAGE",
@@ -1950,21 +2046,27 @@
       "operation": "sage",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "wisdom",
-      "title": "Sage · Grow Up · Gather Resources",
+      "title": "Who Resourcing Is Making Me",
       "submovePrompt": "Integrate growth. Who am I becoming?",
-      "primaryQuestion": "Who am I becoming?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Gather Resources? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "Who am I becoming through learning to gather and steward resources?",
+      "campaignQuestion": "What is this campaign making us, as a community, become?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to develop capability — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Integrating the identity shift the work is producing.",
       "forbiddenMoves": [
-        "— author —"
+        "Skipping reflection",
+        "Achievement without integration",
+        "A new mask"
       ],
       "failureModes": [
-        "— author —"
+        "Capacity gained, self un-integrated",
+        "Growth that doesn't stick"
       ],
-      "remediation": "Integrate growth — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Finish the sentence: \"I am becoming someone who ______.\"",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-SHAMAN",
@@ -2387,21 +2489,26 @@
       "operation": "shaman",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Shaman · Show Up · Gather Resources",
+      "title": "Aim the Resources",
       "submovePrompt": "Choose domain. Where will I invest this?",
-      "primaryQuestion": "Where will I invest this?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Shaman: What is here?)",
+      "primaryQuestion": "Where exactly will I invest what I've gathered?",
+      "campaignQuestion": "Where will this campaign's resources actually go — concretely?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Committing gathered resources to a specific target.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoarding \"until ready\"",
+        "Vague allocation",
+        "Endless gathering"
       ],
       "failureModes": [
-        "— author —"
+        "Resources that never deploy",
+        "Paralysis by optimization"
       ],
-      "remediation": "Choose domain — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the first concrete place the resources go this week.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-GR-CHALLENGER",
@@ -2410,21 +2517,27 @@
       "operation": "challenger",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Challenger · Show Up · Gather Resources",
+      "title": "The Ask Goes Live",
       "submovePrompt": "Create intervention. What must change?",
-      "primaryQuestion": "What must change?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Challenger: What resists?)",
+      "primaryQuestion": "What concrete resourcing act must I take now?",
+      "campaignQuestion": "What intervention launches the gather — the page, the ask, the event?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Shipping the actual ask or intervention.",
       "forbiddenMoves": [
-        "— author —"
+        "One more prep step",
+        "Private readiness",
+        "Soft launch to no one"
       ],
       "failureModes": [
-        "— author —"
+        "Perpetual pre-launch",
+        "The ask that never posts"
       ],
-      "remediation": "Create intervention — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Post the ask today. Make it real and specific.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored",
+      "flavor": "A proposal names the next step when no one else will."
     },
     {
       "id": "SHOW-GR-REGENT",
@@ -2433,21 +2546,27 @@
       "operation": "regent",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Regent · Show Up · Gather Resources",
+      "title": "Hold the Funds Well",
       "submovePrompt": "Create stewardship. What deserves ongoing support?",
-      "primaryQuestion": "What deserves ongoing support?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "What ongoing stewardship will keep these resources trustworthy?",
+      "campaignQuestion": "How will we steward and account for what is given — transparently?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Building accountable stewardship of gathered resources.",
       "forbiddenMoves": [
-        "— author —"
+        "Opaque handling",
+        "Spending without record",
+        "Mission drift"
       ],
       "failureModes": [
-        "— author —"
+        "Trust eroded by sloppiness",
+        "Funds without follow-through"
       ],
-      "remediation": "Create stewardship — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Set one transparency practice (a public update, a ledger). Keep it.",
+      "capabilities": [
+        "rest",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-GR-ARCHITECT",
@@ -2456,21 +2575,27 @@
       "operation": "architect",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Architect · Show Up · Gather Resources",
+      "title": "Build the Ladder",
       "submovePrompt": "Create structure. What value am I amplifying?",
-      "primaryQuestion": "What value am I amplifying?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What structure makes the resourcing repeatable and growing?",
+      "campaignQuestion": "What structure — milestones, tiers, matches — amplifies this campaign?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Creating structure that compounds resource flow.",
       "forbiddenMoves": [
-        "— author —"
+        "One-off heroics",
+        "Structure for its own sake",
+        "Over-engineering"
       ],
       "failureModes": [
-        "— author —"
+        "A push that can't repeat",
+        "Scaffolding nobody uses"
       ],
-      "remediation": "Create structure — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Add one structural lever: a milestone ladder ($200 / $400 / $800) or a match.",
+      "capabilities": [
+        "participation",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-GR-DIPLOMAT",
@@ -2479,21 +2604,27 @@
       "operation": "diplomat",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Diplomat · Show Up · Gather Resources",
+      "title": "Invite, Don't Extract",
       "submovePrompt": "Create relationship. Who must be involved? What power dynamic must be addressed?",
-      "primaryQuestion": "Who must be involved? What power dynamic must be addressed?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Who must be invited, and what power dynamic must I name to do this cleanly?",
+      "campaignQuestion": "Who do we invite to give — and whose consent and power must we honor?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Resourcing through invitation and honored consent, not extraction.",
       "forbiddenMoves": [
-        "— author —"
+        "Pressuring givers",
+        "Using someone's story without consent",
+        "Debt-making"
       ],
       "failureModes": [
-        "— author —"
+        "Extraction dressed as community",
+        "Transactional asks that sour"
       ],
-      "remediation": "Create relationship — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Invite one person with full consent and no strings. Name the dynamic aloud.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-GR-SAGE",
@@ -2502,21 +2633,27 @@
       "operation": "sage",
       "domain": "GATHERING_RESOURCES",
       "outputBar": "artifact",
-      "title": "Sage · Show Up · Gather Resources",
+      "title": "What Remains After",
       "submovePrompt": "Create legacy. What artifact remains?",
-      "primaryQuestion": "What artifact remains?",
-      "campaignQuestion": "What must we create or do for this campaign, in Gather Resources? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What lasting artifact or story will remain from this resourcing?",
+      "campaignQuestion": "What does this campaign leave behind — capacity, relationships, a story?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to invest capacity — in the context of need, asking, and marshaling resources.",
+      "optimizesFor": "Ensuring the effort leaves durable value beyond the dollars.",
       "forbiddenMoves": [
-        "— author —"
+        "Burning the bridge after",
+        "No thank-you",
+        "The story untold"
       ],
       "failureModes": [
-        "— author —"
+        "Money raised, nothing built",
+        "Goodwill spent and not renewed"
       ],
-      "remediation": "Create legacy — in the context of need, asking, and marshaling resources.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the artifact that outlives the campaign. Tell its story to one giver.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-RA-SHAMAN",
