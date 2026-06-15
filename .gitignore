@@ -108,3 +108,6 @@ chatgpt_repo_snapshot_*/
 
 # Generated export artifacts — regenerable PDFs (deck/book/handbook); see Track B
 /exports/
+
+# Allyship deck review/print artifacts (regenerable; not committed)
+/output/
