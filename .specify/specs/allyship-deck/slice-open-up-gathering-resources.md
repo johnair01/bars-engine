@@ -30,8 +30,12 @@ export interface MoveCard {
   title: string              // evocative card name
   submovePrompt: string      // canonical submove line (core rules)
 
+  // subject toggle (ADOPTED 2026-06-15) — same card, two readings
+  primaryQuestion: string    // introspective register — "what am I feeling?"
+  campaignQuestion: string   // for-others / milestone register — "what does this campaign need?"
+  defaultSubject?: 'self' | 'other' | 'collective' // default lens; overridable at draw time
+
   // skill-stack anatomy (the "spell")
-  primaryQuestion: string
   optimizesFor: string
   forbiddenMoves: string[]
   failureModes: string[]
@@ -58,7 +62,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-SHAMAN — "The Empty Cup"
 - **Operation / Move / Domain:** Shaman · Open Up · Gathering Resources
 - **Submove (canonical):** *Allow experience — what am I actually feeling?*
-- **Primary Question:** What does the lack actually *feel* like in my body, before I reach for a plan?
+- **Primary Question (self):** What does the lack actually *feel* like in my body, before I reach for a plan?
+- **Campaign Question (other/collective):** What does *their* need actually feel like — and what dignity sits beneath the dollar amount?
 - **Optimizes For:** Honest contact with the felt sense of need, so resourcing starts from truth, not panic.
 - **Forbidden Moves:** Jumping straight to a budget/plan · numbing the need · performing abundance you don't feel.
 - **Failure Modes:** Spiritual bypass ("I don't really need anything") · scarcity panic · talking about "the money" with no body in it.
@@ -69,7 +74,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-CHALLENGER — "The Ask You're Avoiding"
 - **Operation / Move / Domain:** Challenger · Open Up · Gathering Resources
 - **Submove (canonical):** *Allow discomfort — what am I avoiding feeling?*
-- **Primary Question:** What resource am I afraid to ask for — and what am I avoiding feeling about needing it?
+- **Primary Question (self):** What resource am I afraid to ask for — and what am I avoiding feeling about needing it?
+- **Campaign Question (other/collective):** What ask *for them* am I avoiding — and whose comfort am I protecting by not making it?
 - **Optimizes For:** Contact with the avoided discomfort of dependence; surfacing the *real* ask under the safe one.
 - **Forbidden Moves:** Rescuing yourself just to avoid asking · self-sufficiency performance · resentment in place of a request.
 - **Failure Modes:** **Fake asking** (asking for rescue, not to be changed) · martyrdom · saying "no" *for* people before they can answer.
@@ -80,7 +86,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-REGENT — "Stay With the Need"
 - **Operation / Move / Domain:** Regent · Open Up · Gathering Resources
 - **Submove (canonical):** *Hold responsibility — can I stay with this?*
-- **Primary Question:** Can I hold this need as *mine to steward* — without collapsing into helplessness or dumping it on someone else?
+- **Primary Question (self):** Can I hold this need as *mine to steward* — without collapsing into helplessness or dumping it on someone else?
+- **Campaign Question (other/collective):** Can I steward *their* need without making it my emergency — or quietly taking it over?
 - **Optimizes For:** Staying present and responsible to the gap long enough to act from steadiness.
 - **Forbidden Moves:** Making your need someone else's emergency · abdicating it entirely · grabbing total control to feel safe.
 - **Failure Modes:** Helplessness handoff · savior-summoning · white-knuckling it alone.
@@ -90,7 +97,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-ARCHITECT — "The Hidden Supply"
 - **Operation / Move / Domain:** Architect · Open Up · Gathering Resources
 - **Submove (canonical):** *Receive the resource — what energy is hidden here?*
-- **Primary Question:** What resource is already within reach that I haven't let myself receive?
+- **Primary Question (self):** What resource is already within reach that I haven't let myself receive?
+- **Campaign Question (other/collective):** What resource or network for *this campaign* is already available that I haven't activated yet?
 - **Optimizes For:** Perceiving latent/available resources — skills, relationships, slack, standing offers.
 - **Forbidden Moves:** Hoarding · discounting what's offered · the reflexive "it's not enough."
 - **Failure Modes:** Scarcity blindness · refusing help that's right there · over-counting the future while starving the present.
@@ -100,7 +108,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-DIPLOMAT — "The Tenderness of Asking"
 - **Operation / Move / Domain:** Diplomat · Open Up · Gathering Resources
 - **Submove (canonical):** *Care for experience — how can I relate compassionately to this?*
-- **Primary Question:** How can I relate to this need — mine and others' — with care instead of shame or scorekeeping?
+- **Primary Question (self):** How can I relate to this need — mine and others' — with care instead of shame or scorekeeping?
+- **Campaign Question (other/collective):** Did they consent to this ask — and how do I invite givers without shaming the person *or* the givers? *(consent + power-dynamics check)*
 - **Optimizes For:** A compassionate relational stance toward resource flow; giving and receiving without debt-shame.
 - **Forbidden Moves:** Transactional scorekeeping · leveraging guilt · pity dressed as generosity.
 - **Failure Modes:** Obligation webs · charity-as-power-over · resentment-laden giving.
@@ -110,7 +119,8 @@ Challenger=Challenge, Regent=Steward, Architect=Amplify, Diplomat=Care, Sage=Int
 ### OPEN-GR-SAGE — "When You Stop Fighting the Lack"
 - **Operation / Move / Domain:** Sage · Open Up · Gathering Resources
 - **Submove (canonical):** *Witness experience — what happens when I stop fighting it?*
-- **Primary Question:** What becomes clear about this need when I stop fighting it and simply witness it?
+- **Primary Question (self):** What becomes clear about this need when I stop fighting it and simply witness it?
+- **Campaign Question (other/collective):** When I stop forcing the campaign, what does it reveal it actually needs?
 - **Optimizes For:** Integrated seeing of the resource pattern — the larger truth about what the need is *really* about.
 - **Forbidden Moves:** Forcing the insight · bypassing into "it's all fine" · premature meaning-making.
 - **Failure Modes:** Spiritual gloss · passivity disguised as acceptance · analysis standing in for witness.

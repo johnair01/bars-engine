@@ -15,8 +15,15 @@
    Direct Action · Skillful Organizing. Each submove is expressed per domain →
    **30 × 4 = 120 domain-contextualized move cards.** (Domain is no longer only chosen inside
    Show Up; it contextualizes every card.)
-4. **Deck size:** ~150 cards is acceptable/desired. Beyond the 120 move cards, the deck includes an
-   **instruction / guidebook card set** (the deck teaches its own use, in-deck) → **~150 total**.
+4. **Deck size:** ~150 cards total = **120 move cards + 30 instruction/guidebook cards** (the deck
+   teaches its own use, in-deck).
+5. **Subject toggle (adopted 2026-06-15):** every move card carries **two readings** of its question —
+   `primaryQuestion` (introspective, "what am I feeling?") and `campaignQuestion` (for-others /
+   milestone, "what does this campaign need?") — with a consult-mode switch ("work on myself" vs
+   "work a campaign"). Same 120 cards; no doubling. Validated by the $800-fundraiser test
+   ([`test-playthrough-800-fundraiser.md`](./test-playthrough-800-fundraiser.md)). Put consent +
+   power-dynamics explicitly on **Diplomat** cards in campaign mode; allow domain switching
+   mid-campaign.
 
 ### Deck composition (target)
 
