@@ -31,6 +31,7 @@
 **Pass**, with one documented minor deviation (inline breadcrumb link height). All blocking
 items (contrast, hardcoded hex/arbitrary aesthetics, focus visibility) are resolved.
 
-## Not yet done (Phase 4)
-- Verification quest `cert-mtgoa-menu-redesign-v1` (Twine + seed) — required to mark the
-  UX feature fully complete per the spec-kit-translator skill.
+## Phase 4 (verification quest) — authored
+- `cert-mtgoa-menu-redesign-v1` Twine + seed authored:
+  `scripts/seed-cert-mtgoa-menu-redesign.ts` (`npm run seed:cert:mtgoa-menu-redesign`).
+  Remaining: run the seed + walk it end-to-end (needs a DB).

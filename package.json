@@ -131,6 +131,7 @@
     "sync:verification-backlog": "tsx scripts/sync-verification-backlog.ts",
     "seed:copy-quality": "tsx scripts/seed-onboarding-copy-quality-quest.ts",
     "seed:cert:donation-honor": "tsx scripts/seed-event-donation-honor-cert.ts",
+    "seed:cert:mtgoa-menu-redesign": "tsx scripts/seed-cert-mtgoa-menu-redesign.ts",
     "seed:wake-up": "tsx scripts/seed-wake-up-adventure.ts",
     "seed:mtgoa-ch1": "tsx scripts/seed-mtgoa-chapter1-cyoa.ts",
     "seed:bruised-banana": "tsx scripts/seed-bruised-banana-adventure.ts",

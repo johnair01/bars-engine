@@ -25,9 +25,9 @@
 - [x] **T3.1** Ran covenant §Step 5 checklist → [COVENANT_AUDIT.md](./COVENANT_AUDIT.md). **Pass** (1 documented minor: breadcrumb link height). Fixed: contrast (`zinc-500`→`zinc-400` at small sizes), hardcoded `bg-[#0a0908]`→`SURFACE_TOKENS.bgBase`, focus visibility on the card link (`focus:outline-none`→visible ring), 44px on standalone links.
 
 ## Phase 4 — Verification quest (required)
-- [ ] **T4.1** Author Twine passages for `cert-mtgoa-menu-redesign-v1` (4 steps; final no link).
-- [ ] **T4.2** `scripts/seed-cert-mtgoa-menu-redesign.ts` + npm script (idempotent; `isSystem`, `visibility: 'public'`).
-- [ ] **T4.3** Walk the quest; capture before/after screenshots.
+- [x] **T4.1** Authored Twine passages for `cert-mtgoa-menu-redesign-v1` (4 steps: public+tactile deck, read-at-a-glance, draw routing, reduced-motion; final no link → mints reward).
+- [x] **T4.2** `scripts/seed-cert-mtgoa-menu-redesign.ts` + `seed:cert:mtgoa-menu-redesign` npm script (idempotent upsert; `isSystem`, `visibility: 'public'`, resets PlayerQuest/TwineRun).
+- [ ] **T4.3** Run `npm run seed:cert:mtgoa-menu-redesign` and walk the quest end-to-end (**needs a DB** — pairs with local DB work).
 
 ## Phase 5 — Fail-fix
 - [ ] **T5.1** `npm run build`.
