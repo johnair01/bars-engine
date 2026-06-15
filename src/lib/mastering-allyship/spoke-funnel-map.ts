@@ -1,4 +1,5 @@
 import type { WallKey } from "@/lib/event/barn-raising";
+import type { ElementKey } from "@/lib/ui/card-tokens";
 
 /**
  * Spoke → July 18 funnel map (the card-face ribbon for the MtGoA deck menu).
@@ -106,4 +107,16 @@ export const FUNNEL_BAND_LABEL: Record<FunnelBand, string> = {
   "first-gift": "First gift",
   become: "Become",
   "co-create": "Co-create",
+};
+
+/**
+ * Wall → a *semantic* element whose token tints the ribbon (NOT the card frame).
+ * Keeps the covenant's element=frame channel intact (the card frame stays the player's
+ * nation); the ribbon is a small wayfinding accent. Free-door spokes (`wallTint: null`)
+ * use the neutral slate default in `.card-funnel-ribbon`.
+ */
+export const RIBBON_TINT_ELEMENT: Record<WallKey, ElementKey> = {
+  car: "earth", // warm gold — the priority gift
+  presale: "wood", // jade — growth / commerce
+  runway: "water", // flow — ongoing patronage
 };
