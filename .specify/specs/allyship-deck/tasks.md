@@ -1,44 +1,52 @@
 # Tasks: Allyship Deck
 
-Implements [spec.md](./spec.md) per [plan.md](./plan.md). Data-first. No DB in v1.
+Implements [spec.md](./spec.md). Data-first. Canonical grammar:
+[`move-library-core-rules.md`](./move-library-core-rules.md). No DB in v1.
 
-## Phase 1 — Deck data + assembly
-- [ ] **T1** — `src/lib/allyship-deck/types.ts`: `AllyshipDeck`, `AllyshipCard`, `AllyshipMove` (5 moves incl. placeholder 5th).
-- [ ] **T2** — `scripts/assemble-allyship-deck.ts` (`npm run deck:assemble`): build `public/allyship-deck/allyship-deck.json` from `deck-templates/*` + `card-art-registry` + `move-grammar`. Deterministic; placeholder `prompt`/`guidance` where author copy is pending; honor quarantine list.
-- [ ] **T3** — Commit the generated `allyship-deck.json` (so the reader works before author copy lands).
+## Phase 1 — Deck data + assembly  ← current build
+- [ ] **T1** — `src/lib/allyship-deck/types.ts`: `BasicMove`, `Operation`, `AllyshipDomain`,
+  `Capability`, `OutputBar`, `MoveCard`, `InstructionCard`, `AllyshipDeck` (per spec schema; incl.
+  `primaryQuestion` + `campaignQuestion` + `status`).
+- [ ] **T2** — `src/lib/allyship-deck/move-library.ts`: canonical data — 5 moves (label/purpose/
+  question/outputBar), 6 operations (verb/essence), the **30 submoves** (move×operation: action +
+  question), 4 domains (label/abbr/lens), 5 capabilities (channel→capability), and **authored
+  overrides** (the 6 Open Up × Gathering Resources slice cards, fully written).
+- [ ] **T3** — `scripts/assemble-allyship-deck.ts` (`npm run deck:assemble`): generate the **120**
+  move cards (5×6×4) — both question registers, `status:'generated'`, authored overrides merged
+  (`status:'authored'`) — plus a **starter instruction-card set** and a seeded **`problems`** index;
+  write `public/allyship-deck/allyship-deck.json`. Deterministic; no AI.
+- [ ] **T4** — Validate output: 120 move cards, unique ids, every (move×op×domain) present, 6
+  authored; commit the generated `allyship-deck.json`. Add a small assert test
+  (`npm run test:allyship-deck`).
+- [ ] **T5** — `npm run check` green.
 
 ## Phase 2 — Digital consultable deck
-- [ ] **T4** — `src/app/deck/{layout,page}.tsx` — `/deck` route (mirror `/oracle` + `/handbook`).
-- [ ] **T5** — `src/components/deck/AllyshipDeckReader.tsx` forked from `OracleReader`: draw (shuffle), browse (grid + filter by move/domain), single card (prompt + guidance).
-- [ ] **T6** — `src/components/deck/ConsultIndex.tsx`: problem picker from `deck.problems` → highlight recommended cards.
+- [ ] **T6** — `src/app/deck/{layout,page}.tsx` — `/deck` route (mirror `/oracle`).
+- [ ] **T7** — `AllyshipDeckReader` forked from `OracleReader`: draw / browse+filter (move/op/domain) / single (anatomy).
+- [ ] **T8** — Consult mode (problem + capability index) + **subject toggle** (self ↔ campaign) that swaps `primaryQuestion`/`campaignQuestion`.
 
-## Phase 3 — Guidebook
-- [ ] **T7** — `src/components/deck/GuidebookPanel.tsx`: in-app how-to + problem index.
-- [ ] **T8** — guidebook export (markdown/PDF) from the same data (`npm run deck:guidebook`).
+## Phase 3 — Guidebook (instruction cards)
+- [ ] **T9** — In-app guidebook surface (how to draw/consult, BAR flow, capability model, problem→move index).
+- [ ] **T10** — Guidebook export from the same data.
 
 ## Phase 4 — Print-house export
-- [ ] **T9** — `src/lib/deck/cardLayout.ts` (reuse Oracle geometry) + print constants (default 2.5×3.5 @300dpi, 0.125" bleed; env/flag overridable).
-- [ ] **T10** — `scripts/export-allyship-deck.ts` (`npm run deck:export`): Playwright render fronts + shared back → `/output/allyship-deck/` + `manifest.json`; skip + report quarantined cards. Add `/output/allyship-deck/` to `.gitignore`.
-- [ ] **T11** — Verify one front + back at 300dpi before batch; confirm bleed/size in manifest.
+- [ ] **T11** — `src/lib/deck/cardLayout.ts` (reuse Oracle geometry) + print constants (2.5×3.5 @300dpi + 0.125" bleed, overridable).
+- [ ] **T12** — `scripts/export-allyship-deck.ts` (`npm run deck:export`): Playwright render fronts + back → `/output/allyship-deck/` + manifest; skip+report quarantined; gitignore `/output/allyship-deck/`.
 
-## Phase 5 — (optional) Sell the digital deck
-- [ ] **T12** — If gated: `DeckEntitlement` model + migration + `redeemDeckLicense` (mirror book paywall). Add § Persisted data then.
+## Phase 5 — (optional) sell the digital deck
+- [ ] **T13** — `DeckEntitlement` + `redeemDeckLicense` mirroring the book paywall (adds § Persisted data).
 
 ## Verification Quest (required)
-- [ ] **T13** — Twine `cert-allyship-deck-v1` (5 steps per spec); final passage no-link.
-- [ ] **T14** — `scripts/seed-cert-allyship-deck.ts` + `npm run seed:cert:allyship-deck` (idempotent; `isSystem`/public; Bruised Banana frame).
-- [ ] **T15** — Run end-to-end in preview.
+- [ ] **T14** — Twine `cert-allyship-deck-v1` (steps per spec); final passage no-link.
+- [ ] **T15** — `scripts/seed-cert-allyship-deck.ts` + `npm run seed:cert:allyship-deck` (idempotent; isSystem/public; Bruised Banana frame).
+- [ ] **T16** — Run end-to-end in preview.
 
-## Open inputs to collect from author (track, non-blocking)
-- [ ] 5th move name + meaning (replace `open_up` placeholder).
-- [ ] Per-card copy: `title`/`prompt`/`flavor`/`guidance`.
-- [ ] `problems` index entries + guidebook copy.
-- [ ] Print house target → final size/bleed.
-- [ ] Access model (free vs sold) → whether Phase 5 runs.
+## Author-owned inputs (track; engine ships first)
+- [ ] Polish the 114 generated cards (titles, anatomy, flavor, campaignQuestion).
+- [ ] The 30 instruction cards' copy.
+- [ ] Print-house target → size/bleed. Access model (free vs sold).
 
-## Definition of done (v1: digital + print, content-pending)
-- [ ] `npm run deck:assemble` produces valid JSON; committed.
-- [ ] `/deck` draws, browses/filters, consults, shows guidebook.
-- [ ] `npm run deck:export` produces print-spec files + manifest for all non-quarantined cards.
-- [ ] `npm run check` + `npm run build` green; verification quest seeded + passing.
-- [ ] BACKLOG `1.81 ADK` updated; `npm run backlog:seed`.
+## Definition of done (Phase 1)
+- [ ] `npm run deck:assemble` → valid `allyship-deck.json` with 120 move cards (6 authored) + instruction set + problems index; committed.
+- [ ] `npm run test:allyship-deck` + `npm run check` green.
+- [ ] BACKLOG `1.81 ADK` updated.
