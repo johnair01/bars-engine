@@ -12,6 +12,7 @@ import { FACE_META, GAME_MASTER_FACES } from '@/lib/quest-grammar/types'
 
 const WAVE_LABELS: Record<PersonalMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',

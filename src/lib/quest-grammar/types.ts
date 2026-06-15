@@ -125,8 +125,8 @@ export interface UnpackingAnswers {
   q6Context?: string
 }
 
-/** 4 moves (personal throughput). Used for mastery: Wake Up = choice-based; Show Up = action-based. */
-export type PersonalMoveType = 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
+/** 5 moves (personal throughput): Wake → Open → Clean → Grow → Show. Used for mastery: Wake Up = choice-based; Show Up = action-based. */
+export type PersonalMoveType = 'wakeUp' | 'openUp' | 'cleanUp' | 'growUp' | 'showUp'
 
 export type QuestModel = 'personal' | 'communal'
 
@@ -185,7 +185,7 @@ export interface NodeAnchors {
   consequenceCue?: string
 }
 
-export type WaveStage = 'Wake' | 'Clean' | 'Grow' | 'Show'
+export type WaveStage = 'Wake' | 'Open' | 'Clean' | 'Grow' | 'Show'
 export type TranslateCategory = 'Generative' | 'Control'
 
 export interface NodeEmotional {

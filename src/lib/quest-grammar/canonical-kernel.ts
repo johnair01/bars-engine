@@ -51,6 +51,9 @@ const ELEMENT_TO_DOMAINS: Record<ElementKey, string[]> = {
 /** WAVE stage → primary domain. */
 const WAVE_TO_DOMAIN: Record<PersonalMoveType, string> = {
   wakeUp: 'Raise Awareness',
+  // Open Up shares "Raise Awareness" for now (opening expands awareness/possibility).
+  // Flagged in spec Open Questions — revisit when Nation move fields roll out.
+  openUp: 'Raise Awareness',
   cleanUp: 'Skillful Organizing',
   growUp: 'Gather Resource',
   showUp: 'Direct Action',

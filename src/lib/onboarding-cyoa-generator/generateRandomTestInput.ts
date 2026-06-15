@@ -14,7 +14,7 @@ import {
   generateRandomUnpacking,
   getArchetypePrimaryWave,
 } from '@/lib/quest-grammar'
-import type { IChingContext } from '@/lib/quest-grammar'
+import type { IChingContext, PersonalMoveType } from '@/lib/quest-grammar'
 import type { ElementKey } from '@/lib/quest-grammar/elements'
 import type { RandomTestInput } from './types'
 
@@ -55,7 +55,7 @@ export async function generateRandomTestInput(): Promise<RandomTestInput> {
   let nationId: string | null = null
   let playbookId: string | null = null
   let nationElement: ElementKey | undefined
-  let archetypePrimaryWave: 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp' | undefined
+  let archetypePrimaryWave: PersonalMoveType | undefined
 
   if (nations.length > 0) {
     const nation = nations[Math.floor(Math.random() * nations.length)]!

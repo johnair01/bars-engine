@@ -25,18 +25,21 @@ Schema: `CustomBar.allyshipDomain`, `Player.campaignDomainPreference`
 
 **Parser context**: For AI classification (book analysis), see `src/lib/allyship-domains-parser-context.ts`.
 
-## The 4 Moves (Personal Throughput)
+## The 5 Moves (Personal Throughput)
 
-How people get things done. Distinct from allyship domains.
+How people get things done. Distinct from allyship domains. WAVE order: **Wake → Open → Clean → Grow → Show**.
 
 | Move | Meaning |
 |------|---------|
 | **Wake Up** | See more of what's available (who, what, where, how) |
+| **Open Up** | Open to receive (others, feedback, input), open possibilities (reveal hidden options), and open to emergence (let something new come through) — the receptive/generative phase after noticing a charge |
 | **Clean Up** | Get more emotional energy; unblock vibeulon-generating actions |
 | **Grow Up** | Increase skill capacity through developmental lines |
 | **Show Up** | Do the work of completing quests |
 
-Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
+Moves are **independent of the 5 elements** — adding Open Up does not force a 5-move-to-5-element alignment.
+
+Schema/grammar: `CustomBar.moveType`; `PersonalMoveType` / `WaveStage` in `src/lib/quest-grammar/types.ts`. `Nation.openUp` is not yet a field (deferred — see `.specify/specs/fifth-move-open-up`).
 
 ## Relationship
 
@@ -47,7 +50,7 @@ Schema: `Nation.wakeUp`, `Nation.cleanUp`, etc.; `CustomBar.moveType`
 
 ## Emotional Alchemy (Narrative Movement)
 
-Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). WAVE: Wake → Clean → Grow → Show. 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative.
+Energy economy, not morality. 5 elements (Metal=Fear, Water=Sadness, Wood=Joy, Fire=Anger, Earth=Neutrality). The elemental energy WAVE keeps its four stages here (Wake → Clean → Grow → Show) with 15 canonical moves: 5 Transcend (+2), 5 Generative (+1), 5 Control (-1). Control = high-cost precision, not negative. (Personal-throughput adds **Open Up** as a fifth move — Wake → Open → Clean → Grow → Show — but the 15 elemental moves are **not** remapped to it; moves and elements stay independent.)
 
 **Transcend vs Translate**: Transcend = altitude within channel (dissatisfied→satisfied). Translate = channel-to-channel. Generative and Control are translate moves (in/out of alignment).
 

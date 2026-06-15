@@ -30,13 +30,16 @@ The game is structured around five dimensions. Use this ontology when writing sp
 | **WHAT** | The work | Quests |
 | **WHERE** | Context of work | Allyship domains (Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing) |
 | **Energy** | What makes things happen | Vibeulons |
-| **Personal throughput** | How people get things done | 4 moves: Wake Up, Clean Up, Grow Up, Show Up |
+| **Personal throughput** | How people get things done | 5 moves: Wake Up, Open Up, Clean Up, Grow Up, Show Up |
 
-**4 moves (personal throughput)** — distinct from allyship domains:
+**5 moves (personal throughput)** — distinct from allyship domains. WAVE order: Wake → Open → Clean → Grow → Show:
 - **Wake Up** — See more of what's available (who, what, where, how)
+- **Open Up** — Open to receive, open possibilities, open to emergence — the receptive/generative phase after noticing a charge
 - **Clean Up** — Get more emotional energy; unblock vibeulon-generating actions
 - **Grow Up** — Increase skill capacity through developmental lines
 - **Show Up** — Do the work of completing quests
+
+Moves are independent of the 5 elements (adding Open Up does not force a 5↔5 alignment).
 
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
 

@@ -16,7 +16,7 @@ The five dimensions (WHO, WHAT, WHERE, Energy, Personal throughput) map to schem
 
 **Allyship domains** (WHERE): `GATHERING_RESOURCES`, `DIRECT_ACTION`, `RAISE_AWARENESS`, `SKILLFUL_ORGANIZING`. Quests can have `allyshipDomain`; players can filter by `campaignDomainPreference`.
 
-**4 moves** (personal throughput): Wake Up = see more, Clean Up = emotional energy/unblocking, Grow Up = skill capacity, Show Up = completing quests. Distinct from the 8 archetype moves (Kotter stages).
+**5 moves** (personal throughput), WAVE order Wake → Open → Clean → Grow → Show: Wake Up = see more, Open Up = open to receive/possibilities/emergence, Clean Up = emotional energy/unblocking, Grow Up = skill capacity, Show Up = completing quests. Moves are independent of the 5 elements. Distinct from the 8 archetype moves (Kotter stages). (`Nation.openUp` schema field deferred — grammar/types updated first.)
 
 **Domain × Kotter**: The same 8 Kotter stages manifest differently per allyship domain. See [.agent/context/kotter-by-domain.md](.agent/context/kotter-by-domain.md).
 
