@@ -4,13 +4,13 @@
 
 ## Phase 0 — Prerequisites
 
-- [ ] **T0.1** Verify `HandSlot` Prisma model + base Hand actions exist (`getPlayerHand`, `addBarToHand`, `resolveOverflow`, `promoteVaultBarToHand`) and `OverflowModal` component. If absent → implement [`hand-vault-bounded-inventory`](../hand-vault-bounded-inventory/spec.md) first.
-- [ ] **T0.2** Land [`hand-vault-rename`](../hand-vault-rename/spec.md) so `/hand` route/title/concept agree before nav edits.
-- [ ] **T0.3** Add `src/lib/bar-home.ts` — pure `maturity → home surface` map (table from plan).
+- [x] **T0.1** Verify `HandSlot` Prisma model + base Hand actions exist (`getPlayerHand`, `addBarToHand`, `resolveOverflow`, `promoteVaultBarToHand`). Shipped in [`hand-vault-bounded-inventory`](../hand-vault-bounded-inventory/spec.md) Phase 1. (`OverflowModal` component is Phase 2 UI, in progress with Claude Design.)
+- [x] **T0.2** Land [`hand-vault-rename`](../hand-vault-rename/spec.md) so `/hand` route/title/concept agree before nav edits.
+- [x] **T0.3** Add `src/lib/bar-home.ts` — pure `maturity → home surface` map (table from plan).
 
 ## Phase 1 — Capture-First (API → UI)
 
-- [ ] **T1.1** `src/actions/capture-bar.ts` — implement `captureBar({ content, title?, destination='vault' })` per contract. Create BAR as `captured`; route to Hand (via `addBarToHand`) or Vault; return `overflow` when Hand requested but full (BAR parked in Vault).
+- [x] **T1.1** `src/actions/capture-bar.ts` — `captureBar({ content, title?, destination='vault' })`. Creates BAR as `captured` (stamped via `mergeSeedMetabolization`); routes to Hand (via `addBarToHand`) or Vault; returns `overflow` when Hand requested but full (BAR parked in Vault). Type-check green.
 - [ ] **T1.2** `src/components/now/CaptureBox.tsx` — dominant, always-on, mobile-first capture. One action to save; destination choice **Add to Hand / Send to Vault (default)**.
 - [ ] **T1.3** Wire `OverflowModal` into CaptureBox when `captureBar` returns `overflow`; resolve via existing `resolveOverflow`.
 - [ ] **T1.4** Slim `src/components/charge-capture/ChargeCaptureForm.tsx` to capture-now/contextualize-later (or mark superseded by CaptureBox).
