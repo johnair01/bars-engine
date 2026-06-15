@@ -23,7 +23,15 @@
 - [x] **T4.2** Grep for positional indexing on move arrays (`[0]`..`[3]`) that assumes four moves; fix if any.
 - [x] **T4.3** Check off tasks; commit (no Prisma change).
 
-## Out of scope (later slices)
-- [ ] `Nation.openUp` schema field + migration; Archetype WAVE profiles.
-- [ ] move UIs / dashboards / room-stage renderers that hardcode four moves.
-- [ ] mapping any of the 15 emotional moves to `openUp` as `primaryWaveStage`.
+## Follow-on slices
+
+### Slice A — Nation/Archetype data layer ✅ (done)
+- [x] **A.1** Add `Nation.openUp` + `Archetype.openUp` `String?` fields; additive migration `…_add_open_up_move_fields` (applied + client regenerated). `Archetype.primaryWaveStage` already `String?` — accepts `'openUp'` with no schema change.
+- [x] **A.2** Write path: `admin.ts` `updateNation`/`updateArchetype` accept + persist `openUp`; admin edit forms (`/admin/world/nation/[id]`, `/admin/world/archetype/[id]`) gain an Open Up textarea.
+- [x] **A.3** Display path: `ArchetypeHandbookContent`, `OnboardingRecommendation`, `wiki/nations`, `wiki/archetypes` render Open Up; feeding selects (`guided-onboarding.ts`, wiki pages) add `openUp: true`.
+- [ ] **A.4** Content (deferred): populate per-nation / per-archetype Open Up text (seed/admin) — data exists but is null until authored.
+
+## Still out of scope (later slices)
+- [ ] move UIs / dashboards / room-stage renderers that hardcode four moves (slice B).
+- [ ] spoke seed-bed 5th "Open Up" bed (`SpokeMoveBedMoveType`) (slice C).
+- [ ] mapping any of the 15 emotional moves to `openUp` as `primaryWaveStage` (slice D).

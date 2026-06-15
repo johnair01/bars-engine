@@ -78,7 +78,7 @@ export async function getOrientationHandbookEntry(kind: 'nation' | 'playbook', i
         if (kind === 'nation') {
             const entry = await db.nation.findUnique({
                 where: { id },
-                select: { id: true, name: true, description: true, imgUrl: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true }
+                select: { id: true, name: true, description: true, imgUrl: true, wakeUp: true, openUp: true, cleanUp: true, growUp: true, showUp: true }
             })
             if (!entry) return { error: 'Nation not found' }
             return { success: true, entry }
@@ -86,7 +86,7 @@ export async function getOrientationHandbookEntry(kind: 'nation' | 'playbook', i
 
         const entry = await db.archetype.findUnique({
             where: { id },
-            select: { id: true, name: true, description: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true, content: true }
+            select: { id: true, name: true, description: true, wakeUp: true, openUp: true, cleanUp: true, growUp: true, showUp: true, content: true }
         })
         if (!entry) return { error: 'Archetype not found' }
         return { success: true, entry }

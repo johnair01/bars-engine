@@ -1308,6 +1308,7 @@ model Nation {
   imgUrl      String?
   archived    Boolean      @default(false)
   wakeUp      String?
+  openUp      String?
   cleanUp     String?
   growUp      String?
   showUp      String?
@@ -1450,6 +1451,7 @@ model Archetype {
   lightSignposts    String?
   examples          String?
   wakeUp            String?
+  openUp            String?
   cleanUp           String?
   growUp            String?
   showUp            String?
