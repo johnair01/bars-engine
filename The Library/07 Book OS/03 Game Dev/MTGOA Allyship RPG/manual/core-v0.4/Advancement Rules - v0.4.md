@@ -274,7 +274,7 @@ After 3 Role progress marks, upgrade your Role move.
 
 Example:
 
-Ace's Flash of Brilliance no longer automatically draws attention on a miss; instead, the Guide chooses attention or cost.
+Spark's Flash of Brilliance no longer automatically draws attention on a miss; instead, the Guide chooses attention or cost.
 
 ## Legacy
 

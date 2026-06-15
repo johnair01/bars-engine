@@ -551,6 +551,7 @@ Contents:
 2. When To Roll
 3. Basic Moves
    - Wake Up
+   - Open Up
    - Clean Up
    - Grow Up
    - Show Up

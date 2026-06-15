@@ -6,9 +6,10 @@ Purpose: decide how players touch the dice, what stats measure, and how the sour
 
 ## Design Problem
 
-The old draft made the four Basic Move categories into stats:
+The old draft made the Basic Move categories into stats:
 
 - Wake Up
+- Open Up
 - Clean Up
 - Grow Up
 - Show Up
@@ -23,7 +24,7 @@ The stronger architecture is:
 - **Stats** = which School-taught discipline the character is using to make the move
 - **House / Role / Belief / School moves** = specialized permissions, bonuses, costs, and options that slot into the Basic Moves
 
-This keeps Wake Up, Clean Up, Grow Up, and Show Up as the spine without making them do every job.
+This keeps Wake Up, Open Up, Clean Up, Grow Up, and Show Up as the spine without making them do every job.
 
 ## Source Findings
 
@@ -215,6 +216,12 @@ Examples:
 - roll +Shape when you trace a system pattern
 - roll +Speak when you ask the question that makes the hidden thing visible
 
+### Open Up
+
+- roll +Steady when you name a limit before crossing it
+- roll +Tend when you ask for support or receive care cleanly
+- roll +Speak when you reveal a truth that makes honest contact possible
+
 ### Clean Up
 
 - roll +Tend when you repair harm through care or resource
@@ -381,7 +388,7 @@ For v0.4 playtest, use:
 
 - 2d6 + stat
 - six School-owned approach stats: Sense, Act, Steady, Shape, Tend, Speak
-- Wake Up / Clean Up / Grow Up / Show Up as Basic Move categories
+- Wake Up / Open Up / Clean Up / Grow Up / Show Up as Basic Move categories
 - category-specific benefit and cost lists
 - Adversity as tactical miss currency
 - Growth as advancement currency
@@ -408,6 +415,7 @@ It should include:
 - stat assignment rules
 - roll procedure
 - Wake Up move
+- Open Up move
 - Clean Up move
 - Grow Up move
 - Show Up move
