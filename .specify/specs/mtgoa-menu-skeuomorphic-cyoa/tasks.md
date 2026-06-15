@@ -22,7 +22,7 @@
 - [x] **T2.5** Extracted the reusable primitives in `src/components/menu/`: **`CardTable`** (slate tray, used by hub + spoke) and **`DeckCard`** (the deck-card cookie cutter, used by the hub). Hub refactored onto both; available for other menu surfaces.
 
 ## Phase 3 — Accessibility + covenant check
-- [ ] **T3.1** Run covenant §Step 5 checklist: contrast ≥4.5:1, 44px targets, no `text-zinc-600` at `text-xs`, no arbitrary Tailwind aesthetic values, aria-labels, reduced-motion guards.
+- [x] **T3.1** Ran covenant §Step 5 checklist → [COVENANT_AUDIT.md](./COVENANT_AUDIT.md). **Pass** (1 documented minor: breadcrumb link height). Fixed: contrast (`zinc-500`→`zinc-400` at small sizes), hardcoded `bg-[#0a0908]`→`SURFACE_TOKENS.bgBase`, focus visibility on the card link (`focus:outline-none`→visible ring), 44px on standalone links.
 
 ## Phase 4 — Verification quest (required)
 - [ ] **T4.1** Author Twine passages for `cert-mtgoa-menu-redesign-v1` (4 steps; final no link).

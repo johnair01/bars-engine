@@ -6,7 +6,7 @@ import { loadMtgoaQuestMapCard } from '@/lib/campaign-hub/mtgoa-quest-map'
 import { NationProvider } from '@/lib/ui/nation-provider'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { CardTable } from '@/components/menu/CardTable'
-import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { ELEMENT_TOKENS, SURFACE_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
 import {
     funnelForSpoke,
     FUNNEL_BAND_LABEL,
@@ -45,10 +45,16 @@ const MOVE_LABEL: Record<string, string> = {
 
 function ErrorShell({ message }: { message: string }) {
     return (
-        <div className="min-h-screen bg-[#0a0908] text-zinc-200 p-8 flex items-center justify-center">
+        <div
+            className="min-h-screen text-zinc-200 p-8 flex items-center justify-center"
+            style={{ backgroundColor: SURFACE_TOKENS.bgBase }}
+        >
             <div className="max-w-md text-center space-y-4">
                 <h1 className="text-xl font-bold">{message}</h1>
-                <Link href="/mastering-allyship/hub" className="text-sm text-zinc-400 hover:text-zinc-200">
+                <Link
+                    href="/mastering-allyship/hub"
+                    className="inline-flex min-h-[44px] items-center justify-center text-sm text-zinc-400 hover:text-zinc-200"
+                >
                     ← Back to the deck
                 </Link>
             </div>
@@ -91,10 +97,13 @@ export default async function MtgoaSpokePage(props: {
 
     return (
         <NationProvider element={element} archetypeName={null} earthFallback={!element}>
-            <div className="min-h-screen bg-[#0a0908] text-zinc-200 p-6 md:p-10">
+            <div
+                className="min-h-screen text-zinc-200 p-6 md:p-10"
+                style={{ backgroundColor: SURFACE_TOKENS.bgBase }}
+            >
                 <div className="max-w-2xl mx-auto space-y-6">
                     {/* Breadcrumb */}
-                    <nav className="text-xs text-zinc-500 flex items-center gap-2">
+                    <nav className="text-xs text-zinc-400 flex items-center gap-2">
                         <Link href="/mastering-allyship/hub" className="hover:text-zinc-300">
                             ← the deck
                         </Link>
@@ -115,7 +124,7 @@ export default async function MtgoaSpokePage(props: {
                                     {/* Header */}
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="space-y-1.5">
-                                            <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-zinc-500">
+                                            <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-zinc-400">
                                                 <span>Kotter {spoke.kotterStage}</span>
                                                 {spoke.allyshipDomain && (
                                                     <>
@@ -187,7 +196,7 @@ export default async function MtgoaSpokePage(props: {
                                     {/* WAVE moves */}
                                     {moveKeys.length > 0 && (
                                         <div className="space-y-2">
-                                            <h2 className="text-[11px] uppercase tracking-wider text-zinc-500">
+                                            <h2 className="text-[11px] uppercase tracking-wider text-zinc-400">
                                                 WAVE move applications
                                             </h2>
                                             <dl className="grid gap-2 sm:grid-cols-2">
@@ -216,7 +225,7 @@ export default async function MtgoaSpokePage(props: {
                     <div className="text-center">
                         <Link
                             href="/mastering-allyship/hub"
-                            className="text-sm text-zinc-400 hover:text-zinc-200"
+                            className="inline-flex min-h-[44px] items-center justify-center text-sm text-zinc-400 hover:text-zinc-200"
                         >
                             ← Back to the deck
                         </Link>

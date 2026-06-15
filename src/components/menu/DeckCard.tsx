@@ -51,7 +51,7 @@ export function DeckCard({
     <Link
       href={href}
       aria-label={ariaLabel ?? `${numeral}. ${title}`}
-      className="block h-full focus:outline-none"
+      className="block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
     >
       <CultivationCard
         element={element}
@@ -70,7 +70,7 @@ export function DeckCard({
               {numeral}
             </span>
             {(meta || emoji) && (
-              <span className="flex items-center gap-1.5 text-zinc-500">
+              <span className="flex items-center gap-1.5 text-zinc-400">
                 {meta && <span className="text-[10px] uppercase tracking-wide">{meta}</span>}
                 {emoji && (
                   <span className="text-lg" aria-hidden="true">

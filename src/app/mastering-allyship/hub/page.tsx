@@ -10,7 +10,7 @@ import { NationProvider } from '@/lib/ui/nation-provider'
 import { CultivationCard } from '@/components/ui/CultivationCard'
 import { CardTable } from '@/components/menu/CardTable'
 import { DeckCard } from '@/components/menu/DeckCard'
-import { ELEMENT_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
+import { ELEMENT_TOKENS, SURFACE_TOKENS, type ElementKey } from '@/lib/ui/card-tokens'
 import {
     funnelForSpoke,
     FUNNEL_BAND_LABEL,
@@ -58,11 +58,14 @@ export default async function MtgoaHubPage() {
 
     return (
         <NationProvider element={element} archetypeName={null} earthFallback={!element}>
-            <div className="min-h-screen bg-[#0a0908] text-zinc-200 p-6 md:p-10">
+            <div
+                className="min-h-screen text-zinc-200 p-6 md:p-10"
+                style={{ backgroundColor: SURFACE_TOKENS.bgBase }}
+            >
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Breadcrumb */}
                     {parentBinding && (
-                        <nav className="text-xs text-zinc-500 flex items-center gap-2">
+                        <nav className="text-xs text-zinc-400 flex items-center gap-2">
                             <Link
                                 href={`/campaign/hub?ref=${encodeURIComponent(parentBinding.parentCampaignRef)}`}
                                 className="hover:text-zinc-300 transition"
@@ -80,7 +83,7 @@ export default async function MtgoaHubPage() {
                     <header className="space-y-2">
                         <h1 className="text-2xl md:text-3xl font-bold text-zinc-100">{meta.name}</h1>
                         <p className="text-sm text-zinc-400 max-w-2xl">{meta.targetDescription}</p>
-                        <p className="text-xs text-zinc-500 italic">
+                        <p className="text-xs text-zinc-400 italic">
                             Draw a card to begin — most doors are free. {meta.desiredFeeling}.
                         </p>
                     </header>
@@ -136,7 +139,7 @@ export default async function MtgoaHubPage() {
                     </section>
 
                     {/* Footer note */}
-                    <p className="text-xs text-zinc-500 italic">
+                    <p className="text-xs text-zinc-400 italic">
                         The deck is the menu. Free doors lead; gifts, roles, and co-creation come later
                         in the arc — always your choice.
                     </p>
