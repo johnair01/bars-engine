@@ -4,10 +4,11 @@
 > Read `UI_COVENANT.md` at session start. Run `npm run build` + `npm run check` before done.
 
 ## Phase 0 — Design intake (GATE)
-- [ ] **T0.1** Read `UI_COVENANT.md`, `card-tokens.ts`, `cultivation-cards.css`, `CultivationCard.tsx`, `HandbookReader.tsx`.
-- [ ] **T0.2** Run the intake with the host (§Phase 0 A–D): object metaphor, material, light/depth, CYOA reading, token scope.
-- [ ] **T0.3** Write `design-intake.md` (answered brief) + a **token-map table** (every visual decision → a token).
-- [ ] **T0.4** Confirm scope: hub only, or hub + spoke page + reusable menu pattern.
+- [x] **T0.1** Read `UI_COVENANT.md` + handbook + tokens.
+- [x] **T0.2** Run the intake with the host — deck-on-slate-table; CultivationCards in player's nation element; "Draw"; open board.
+- [x] **T0.3** Write `design-intake.md` (answered brief) + token-map table.
+- [x] **T0.4** Confirm scope — hub + spoke page + reusable menu primitive.
+- [ ] **T0.5** **OPEN — launch-goals respec for card-face content (C8):** decide what each of the 8 cards foregrounds to serve the July 18 funnel (product/barn links, launch-path markers). Gate for FR4 card content. *Needs host.*
 
 ## Phase 1 — Token & material foundation
 - [ ] **T1.1** Add agreed texture/bevel tokens to `src/lib/ui/card-tokens.ts` (no component-local values).

@@ -26,12 +26,18 @@ and apply the three-channel encoding (element=color, altitude=border, stage=dens
 | Intake first | **Phase 0 is a structured design intake** (below). No production CSS until the object metaphor + token map are chosen with the host. This is the "whole design intake" the host asked for. |
 | Anchor to the covenant | The redesign **realigns to `UI_COVENANT.md`**, not a new system. Skeuomorphism = the covenant's "Physical Card Feel" applied at full strength (top-edge highlight, frame, glow, warm near-black `#1a1a18` card body on `#0a0908` bg — **not** pure black). |
 | Brand colors kept | Existing brand hues stay; what changes is **materiality + light** (bevels, insets, paper/wood/cloth texture, depth), not the palette. Decorative color stays forbidden (covenant Law 9). |
-| Skeuomorphic reference | The **handbook** (`HandbookReader` — "pretends to be a book") is the north star. The menu becomes a real object too (candidate metaphors in intake: a **book's table of contents**, a **field map/quest board**, a **deck laid on a table**). |
-| CYOA framing | The eight spokes present as **a path you choose**, not a list — entries read as doorways/chapters with a clear "begin/continue" affordance and progress, feeding the CYOA spoke pipeline (GSCP, generated-spoke-cyoa). |
+| Skeuomorphic reference | **DECIDED (intake 2026-06-15):** a **deck of cards on a dark-slate table**; each spoke is a `CultivationCard` carrying the **player's nation element**; **"Draw"** a card to enter. The handbook ("pretends to be a book") remains the materiality north star. See [`design-intake.md`](./design-intake.md). |
+| CYOA framing | **Open board** — all eight spokes freely choosable (no gating, no lock-shaming). Entries read as cards you draw into the spoke, feeding the CYOA pipeline (GSCP). |
 | No arbitrary Tailwind aesthetics | Per covenant Law 7: game aesthetic via CSS classes/tokens, never Tailwind arbitrary color/shadow values. New textures live in `cultivation-cards.css`. |
 | Accessibility is a gate | WCAG AA (4.5:1 body, 3:1 large/UI), 44px targets, `prefers-reduced-motion` guards — covenant Law 11. |
 
 ## Phase 0 — Design Intake (the deliverable the host asked for)
+
+> **✅ ANSWERED 2026-06-15 → [`design-intake.md`](./design-intake.md).** Outcome: deck of
+> cards on a dark-slate table; `CultivationCard`s in the player's nation element; "Draw" to
+> enter; open board; scope = hub + spoke + reusable primitive. **One item still open:**
+> **C8 card-face content** is blocked on a short *launch-goals respec* (what each card
+> foregrounds to serve the July 18 funnel). The questions below are kept for the record.
 
 Resolve these **with the host** before implementation. Capture answers in
 `design-intake.md` in this folder (the brief), then map every visual decision to a token.
