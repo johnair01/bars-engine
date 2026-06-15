@@ -34,9 +34,11 @@ element**, and you **"Draw"** a card to enter its spoke.
 - **C7 — Reading:** **Open board.** All eight cards are freely choosable — no linear gating,
   no lock-shaming (honors the covenant's non-pressure ethos). A suggested-next may be added
   later but is not required.
-- **C8 — Card face content:** **OPEN — to be respec'd against the launch goals.** The host
-  wants each card's at-a-glance content to serve the **July 18 launch / barn-raising funnel**,
-  not just echo current spoke metadata. See *Open items* below.
+- **C8 — Card face content:** **RESOLVED via [SIX_FACES_FUNNEL_ANALYSIS.md](./SIX_FACES_FUNNEL_ANALYSIS.md).**
+  Each card shows: roman numeral + title, emoji + Kotter stage, one feeling chip, a quiet
+  **funnel ribbon** (one congruent hook, tinted with its barn-wall token), and the "Draw →"
+  affordance. The Kotter arc maps 1:1 to the funnel ladder (free doors → first gift → become →
+  co-create), so each hook is the spoke's natural destination, not a bolt-on.
 - **C9 — Enter affordance:** **"Draw"** — tapping a card draws it to enter the spoke. Primary
   action sits in the thumb zone (covenant Law 5).
 
@@ -69,11 +71,10 @@ element**, and you **"Draw"** a card to enter its spoke.
 
 ## Open items (need host before/along implementation)
 
-1. **Card-face content respec (C8).** What does each of the 8 cards foreground to serve the
-   launch? Candidates to decide: which spokes map to **products** (book/RPG/deck/app) or to
-   the **barn raising**; whether cards show a **launch-path** marker (e.g. "leads to pre-sale"
-   / "supports the runway"); how this aligns with the **generated-spoke CYOA pipeline (GSCP)**
-   and the **barn (MBLD)**. *Likely its own short respec touching the spoke list itself.*
+1. ~~**Card-face content respec (C8).**~~ **DONE** — see
+   [SIX_FACES_FUNNEL_ANALYSIS.md](./SIX_FACES_FUNNEL_ANALYSIS.md). Spoke list unchanged; the
+   existing 8 ladder correctly onto the funnel. Implementation reads a small `spokeFunnelMap`
+   (the analysis table) → ribbon. Live destinations for spokes IV/VII/VIII depend on **MBLD**.
 2. **Progress/completion state** — wire only after a per-player spoke-progress source exists
    (may pull from GSCP). Until then cards render at neutral altitude, no lock state.
 3. **Reusable primitive surface** — confirm which *other* pages adopt the card-table menu

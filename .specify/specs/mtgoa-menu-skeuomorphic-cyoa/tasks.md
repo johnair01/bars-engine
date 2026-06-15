@@ -8,7 +8,7 @@
 - [x] **T0.2** Run the intake with the host — deck-on-slate-table; CultivationCards in player's nation element; "Draw"; open board.
 - [x] **T0.3** Write `design-intake.md` (answered brief) + token-map table.
 - [x] **T0.4** Confirm scope — hub + spoke page + reusable menu primitive.
-- [ ] **T0.5** **OPEN — launch-goals respec for card-face content (C8):** decide what each of the 8 cards foregrounds to serve the July 18 funnel (product/barn links, launch-path markers). Gate for FR4 card content. *Needs host.*
+- [x] **T0.5** Launch-goals respec for card-face content (C8) — **done via six-faces analysis** ([SIX_FACES_FUNNEL_ANALYSIS.md](./SIX_FACES_FUNNEL_ANALYSIS.md)): Kotter arc = funnel ladder; per-spoke ribbon map; spoke list unchanged. Implementation adds a `spokeFunnelMap` → ribbon (FR4); live wall targets depend on MBLD.
 
 ## Phase 1 — Token & material foundation
 - [ ] **T1.1** Add agreed texture/bevel tokens to `src/lib/ui/card-tokens.ts` (no component-local values).
