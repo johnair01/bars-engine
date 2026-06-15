@@ -84,6 +84,7 @@
     "test:book-paywall": "tsx src/lib/__tests__/book-launch-paywall.test.ts",
     "test:allyship-deck": "tsx src/lib/allyship-deck/__tests__/assemble.test.ts",
     "deck:assemble": "tsx scripts/assemble-allyship-deck.ts",
+    "deck:print-review": "npm run deck:assemble && python3 scripts/print_allyship_cards.py",
     "test:donation-cta-schema": "npx tsx src/lib/__tests__/donation-cta-schema.test.ts",
     "test:site-signal-schema": "npx tsx src/lib/__tests__/site-signal-schema.test.ts",
     "test:scl-portal": "npx tsx src/lib/__tests__/scl-portal-verification.test.ts",
