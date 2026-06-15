@@ -71,6 +71,9 @@ This folder is the current canonical design entry point for the MTGOA RPG.
 - `Book Roadmap Spec - Chapters 6-12 and Starter Missions v0.1.md`
   - planning spec for the remaining manual chapters and four House-aligned starter mission concepts
 
+- `Game Masters Council - Open Question Rulings v0.1.md`
+  - design rulings for remaining open questions aimed at the ideal MTGOA reader profile
+
 - `Opening Chapter Prose Draft - v0.4.md`
   - draft of the manual's opening reader experience in book voice
 

@@ -2,7 +2,7 @@
 
 Status: planning spec
 
-Purpose: define the next manual build sequence after Chapters 3-5, including Chapter 6-12 goals, target artifacts, and four starter mission concepts aligned with the four Houses.
+Purpose: define the next manual build sequence after Chapters 3-5, including Chapter 6-12 goals, target artifacts, the missing superpowers layer, and four starter mission concepts aligned with the four Houses.
 
 ## Core Goal
 
@@ -17,8 +17,9 @@ Chapters 1-5 now establish:
 
 Chapters 6-12 must now answer:
 
-1. How do students advance through mastery?
-2. How do self-sabotaging beliefs become playable growth arcs?
+1. How do self-sabotaging beliefs become playable growth arcs?
+2. How do beliefs connect to superpowers?
+3. How do students bring those beliefs and powers into mastery traditions?
 3. What does an episode actually look like?
 4. How does a Guide run the game without becoming the moral judge?
 5. How do campaign packets work as paid content?
@@ -33,15 +34,90 @@ The design should preserve the current method:
 - prose draft
 - BARs Engine product spec where the chapter implies an app feature
 
-## Chapter 6: The Six Schools
+## Chapter 6: Beliefs, Shadows, And Superpowers
 
 ## Function
 
-Chapter 6 completes the identity loop.
+Chapter 6 deepens character creation.
+
+Beliefs are personal enough that they belong before Schools. Students do not arrive as blank initiates waiting for a mastery path. They arrive with protective stories, distortions, gifts, powers, and ways of surviving attention.
 
 Houses answer: **What practice tradition claimed you first?**
 
-Schools answer: **How are you learning to master yourself under pressure?**
+Beliefs answer: **What false story does pressure activate?**
+
+Superpowers answer: **What gift became powerful because you had to survive with it?**
+
+Schools will later answer: **How are you learning to master yourself under pressure?**
+
+The goal is to make inner work gameable without becoming therapy homework. Beliefs should create field consequences, not confession scenes for their own sake. Superpowers should make the belief material feel exciting, mythic, and playable.
+
+## Source Influence
+
+- Hearts Blazing motives / frailty for dramatic vulnerability
+- Dungeon World advancement for growth through risk
+- Kids on Bikes adversity for useful failure
+- superhero school fantasy for powers as embodied metaphors
+- MTGOA self-sabotaging belief framework
+
+## Reader Need
+
+The reader should finish Chapter 6 feeling:
+
+- My belief is not a diagnosis.
+- My belief gives me dramatic pressure and growth moves.
+- My superpower is not separate from my wound; it is what my gift learned to become under pressure.
+- I know how my belief gets activated.
+- I know how to play the belief without making the table responsible for fixing me.
+- I know how rewriting the belief becomes advancement.
+
+## Target Artifacts
+
+- `Chapter 6 Source Gap Spec - Beliefs and Superpowers v0.1.md`
+- `Chapter 6 Prose Draft - Beliefs Shadows And Superpowers v0.1.md`
+- `Belief Sheet Template v0.1.md`
+- `Superpower Archetype Sheet Template v0.1.md`
+- six belief subclass sheets
+- superpower archetype sheets
+
+## Must Include
+
+- Belief is not diagnosis
+- belief as part of character creation
+- wound move and growth move
+- activation trigger
+- temptation
+- shadow tell
+- repair prompt
+- rewrite sentence
+- integration scene
+- interaction with Open Up and Clean Up
+- connection between Belief and superpower
+- six belief sheets:
+  - I'm Not Good Enough
+  - I'm Not Ready
+  - I Don't Belong
+  - I'm Insignificant
+  - I'm Not Worthy
+  - I'm Not Capable
+- superpower archetypes as "the gift under pressure"
+- guidance for choosing a superpower without making trauma glamorous
+
+## Open Design Questions
+
+1. Does every belief get one wound move and one growth move, or a small move tree?
+2. Should belief advancement unlock mechanical bonuses, narrative permissions, or both?
+3. How does the Guide keep belief scenes safe without flattening them?
+4. How many superpower archetypes are needed for the core book?
+5. Are superpowers selected separately, derived from Belief, or chosen through a prompt matrix?
+
+## Chapter 7: The Six Schools
+
+## Function
+
+Chapter 7 completes the mastery loop.
+
+Students bring their beliefs and superpowers to their Schools. The School does not erase the belief. It teaches the student how to practice with the gift and the wound under pressure.
 
 The Schools should feel as vivid as the Houses, but they should not duplicate them. Houses are cultures of practice. Schools are mastery traditions, each governed by a Face of the Game Master and interpreted through six altitudinal ranks.
 
@@ -54,7 +130,7 @@ The Schools should feel as vivid as the Houses, but they should not duplicate th
 
 ## Reader Need
 
-The reader should finish Chapter 6 feeling:
+The reader should finish Chapter 7 feeling:
 
 - I know what each School teaches.
 - I know how Schools are horizontal rather than linear.
@@ -62,16 +138,18 @@ The reader should finish Chapter 6 feeling:
 - I can picture the teachers and training spaces.
 - I know how stats belong to Schools.
 - I know what School advancement looks like in play.
+- I can hear each School head's voice.
 
 ## Target Artifacts
 
-- `Chapter 6 Source Gap Spec - The Six Schools v0.1.md`
-- `Chapter 6 Prose Draft - The Six Schools v0.1.md`
+- `Chapter 7 Source Gap Spec - The Six Schools v0.1.md`
+- `Chapter 7 Prose Draft - The Six Schools v0.1.md`
 - `BARs Engine Spec - School Advancement v0.1.md`
 
 ## Must Include
 
-- Deputy / Regent explanation of why Schools are not Houses
+- Deputy / Regent introduction explaining why Schools are not Houses
+- School heads speaking in their own voices
 - six School spreads:
   - School of the Body
   - School of the Line
@@ -91,65 +169,9 @@ The reader should finish Chapter 6 feeling:
 
 ## Open Design Questions
 
-1. Should School heads speak directly, or should Chapter 6 stay in Deputy / Regent voice?
-2. Are Schools presented before or after Beliefs in final book order?
-3. How many School moves are needed in the core book before the system feels complete?
-
-## Chapter 7: Beliefs, Shadows, And Growth
-
-## Function
-
-Chapter 7 turns self-sabotaging beliefs into playable subclasses.
-
-The goal is to make inner work gameable without becoming therapy homework.
-
-## Source Influence
-
-- Hearts Blazing motives / frailty for dramatic vulnerability
-- Dungeon World advancement for growth through risk
-- Kids on Bikes adversity for useful failure
-- MTGOA self-sabotaging belief framework
-
-## Reader Need
-
-The reader should finish Chapter 7 feeling:
-
-- My belief is not a diagnosis.
-- My belief gives me dramatic pressure and growth moves.
-- I know how my belief gets activated.
-- I know how to play the belief without making the table responsible for fixing me.
-- I know how rewriting the belief becomes advancement.
-
-## Target Artifacts
-
-- `Chapter 7 Source Gap Spec - Beliefs Shadows Growth v0.1.md`
-- `Chapter 7 Prose Draft - Beliefs Shadows Growth v0.1.md`
-- `Belief Sheet Template v0.1.md`
-- six belief subclass sheets
-
-## Must Include
-
-- Belief is not diagnosis
-- wound move and growth move
-- activation trigger
-- shadow tell
-- repair prompt
-- rewrite sentence
-- integration scene
-- interaction with Open Up and Clean Up
-- six belief sheets:
-  - I'm Not Good Enough
-  - I'm Not Ready
-  - I Don't Belong
-  - I'm Insignificant
-  - I'm Not Worthy
-  - I'm Not Capable
-
-## Open Design Questions
-
-1. Does every belief get one wound move and one growth move, or a small move tree?
-2. Should belief advancement unlock mechanical bonuses, narrative permissions, or both?
-3. How does the Guide keep belief scenes safe without flattening them?
+1. How distinct should each School head's voice be from the Deputy / Regent voice?
+2. How many School moves are needed in the core book before the system feels complete?
+3. How directly do Schools interact with superpowers?
 
 ## Chapter 8: Episodes, Missions, And Downtime
 
@@ -603,8 +625,8 @@ The mission teaches awareness as power and danger. It gives players a vivid, emo
 
 ## Recommended Build Order
 
-1. Chapter 6 Source Gap Spec and Prose Draft.
-2. Chapter 7 Belief Sheet Template and one complete sample belief.
+1. Chapter 6 Beliefs and Superpowers Source Gap Spec and Prose Draft.
+2. Chapter 7 Schools Source Gap Spec and Prose Draft.
 3. Chapter 8 Episode Runner spec, because it binds Houses, Schools, Beliefs, and missions into play.
 4. Chapter 9 Guide Rules, so the game can be facilitated.
 5. Chapter 12 Starter Mission packet for The Missing Water.
@@ -631,4 +653,3 @@ Paid add-ons can then include:
 - move resolver
 - episode runner
 - campaign packet builder
-
