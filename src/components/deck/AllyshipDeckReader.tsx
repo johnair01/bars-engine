@@ -101,11 +101,16 @@ export function AllyshipDeckReader() {
           </h1>
         </div>
 
-        {/* Subject toggle */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 12 }}>
-          <Toggle active={subject === "self"} onClick={() => setSubject("self")}>Work on myself</Toggle>
-          <Toggle active={subject === "campaign"} onClick={() => setSubject("campaign")}>Work a campaign</Toggle>
+        {/* Subject toggle — read each move as inner work, or in service of others */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 6 }}>
+          <Toggle active={subject === "self"} onClick={() => setSubject("self")}>Allyship for self</Toggle>
+          <Toggle active={subject === "campaign"} onClick={() => setSubject("campaign")}>Allyship for others</Toggle>
         </div>
+        <p style={{ fontFamily: FONT.body, fontSize: 12, color: COLOR.steel, textAlign: "center", margin: "0 0 16px" }}>
+          {subject === "self"
+            ? "Reading each move as your own inner work."
+            : "Reading each move for a campaign, milestone, or relationship in service of others."}
+        </p>
 
         {/* Mode tabs */}
         <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
@@ -234,10 +239,13 @@ function CardDetail({
       <h2 style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 24, color: COLOR.paperHi, margin: "6px 0 10px" }}>
         {card.title}
       </h2>
+      <div style={{ ...fieldLabel, color: COLOR.cinnabar, marginBottom: 4 }}>
+        {subject === "campaign" ? "Allyship for others" : "Allyship for self"}
+      </div>
       <p style={{ fontFamily: FONT.body, fontStyle: "italic", fontSize: 18, color: COLOR.goldLt, lineHeight: 1.45, marginBottom: 14 }}>
         {question}
       </p>
-      <Field label={subject === "campaign" ? "For the campaign" : "Optimizes for"} text={card.optimizesFor} />
+      <Field label="Optimizes for" text={card.optimizesFor} />
       <FieldList label="Forbidden moves" items={card.forbiddenMoves} />
       <FieldList label="Failure modes" items={card.failureModes} />
       <Field label="Practice" text={card.remediation} highlight />

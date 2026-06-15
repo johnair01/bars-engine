@@ -71,7 +71,7 @@ function buildInstructionCards(): InstructionCard[] {
   add('howto', 'What this deck is', 'A spellbook of allyship moves. Draw a card for inspiration, or consult deliberately to find the move that restores a capability you have lost access to.', 1)
   add('howto', 'How to draw', 'Shuffle and reveal one card. Read its question. Do its remediation — the small practice at the bottom. That is the whole move.', 2)
   add('howto', 'How to consult', 'Name your situation. Find the matching problem, or the capability that feels offline, and follow it to the cards that restore it.', 3)
-  add('howto', 'Self vs campaign', 'Every move card reads two ways. Working on yourself? Use the first question. Working a milestone or campaign that helps others? Use the campaign question.', 4)
+  add('howto', 'Allyship for self vs others', 'Every move card reads two ways. Allyship for self: use the first question for your own inner work. Allyship for others: use the campaign question for a milestone, campaign, or relationship in service of someone else.', 4)
   add('howto', 'Reading a card', 'A card names an Operation (how you act), a Move (what kind of progress), and a Domain (the allyship context). The question opens it; the remediation closes it.', 5)
   add('howto', 'The BAR flow', 'The loop: a Charge moves through Wake Up (Awareness) → Open Up (Experience) → Clean Up (Insight) → Grow Up (Capacity) → Show Up (Artifact). Each move makes a BAR.', 6)
   add('howto', 'You are restoring capability', 'You are never trying to eliminate emotion. Every stuck feeling is a capability gone offline. The move restores access.', 7)
