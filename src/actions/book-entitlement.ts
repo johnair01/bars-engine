@@ -5,6 +5,10 @@ import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { verifyLicense } from '@/lib/gumroad'
 import { DEFAULT_BOOK_KEY } from '@/lib/book-access'
+import { grantEntitlement } from '@/lib/entitlements/service'
+
+/** The launch entitlement SKU a verified book license grants. */
+const BOOK_SKU = 'book-digital'
 
 export type RedeemResult =
   | { success: true; bookKey: string }
@@ -20,11 +24,18 @@ const ERRORS: Record<string, string> = {
 }
 
 /**
- * Redeem a Gumroad license key into a BookEntitlement for the current player.
+ * Redeem a Gumroad license key into the unified launch `Entitlement` for the
+ * current player.
  *
  * Mirrors the Invite redemption pattern (acceptGoldenPathInvitation): verify an
  * external token, then write the access record. Requires a logged-in player so
  * the entitlement attaches to identity; logged-out callers get { needsLogin }.
+ *
+ * One entitlement model: the verified purchase grants `book-digital`, which
+ * confers perpetual book ownership (the /handbook reader + the downloadable
+ * copy) plus its bundled 30-day app-access trial — the same record the Gumroad
+ * webhook + /redeem path produces, so a license key now resolves identically
+ * wherever it's entered (launch-paywall-integration spec).
  */
 export async function redeemBookLicense(input: {
   licenseKey: string
@@ -37,39 +48,30 @@ export async function redeemBookLicense(input: {
   const player = await getCurrentPlayer()
   if (!player) return { needsLogin: true }
 
-  // Already entitled — idempotent success (e.g. re-submitting the same key).
-  const existing = await db.bookEntitlement.findUnique({
-    where: { playerId_bookKey: { playerId: player.id, bookKey } },
-    select: { status: true },
+  // Already redeemed this book — idempotent success, and skip re-verifying so a
+  // re-submit doesn't burn a use against Gumroad's shared license cap.
+  const existing = await db.entitlement.findFirst({
+    where: { playerId: player.id, sku: BOOK_SKU, status: 'active' },
+    select: { id: true },
   })
-  if (existing?.status === 'active') return { success: true, bookKey }
+  if (existing) return { success: true, bookKey }
 
   const verified = await verifyLicense(licenseKey, { increment: true })
   if (!verified.ok) {
     return { error: ERRORS[verified.reason] ?? ERRORS.invalid }
   }
 
-  await db.bookEntitlement.upsert({
-    where: { playerId_bookKey: { playerId: player.id, bookKey } },
-    create: {
-      playerId: player.id,
-      bookKey,
-      source: 'gumroad',
-      licenseKey,
-      gumroadSaleId: verified.saleId,
-      status: 'active',
-      metadata: JSON.stringify({ email: verified.email, uses: verified.uses }),
-    },
-    update: {
-      status: 'active',
-      licenseKey,
-      gumroadSaleId: verified.saleId,
-      revokedAt: null,
-      metadata: JSON.stringify({ email: verified.email, uses: verified.uses }),
-    },
+  // Idempotent on the Gumroad sale id, so a replay (or the webhook racing this
+  // path) can't double-grant.
+  await grantEntitlement({
+    playerId: player.id,
+    sku: BOOK_SKU,
+    source: 'gumroad',
+    externalOrderId: verified.saleId,
   })
 
   revalidatePath('/handbook')
   revalidatePath('/handbook/unlock')
+  revalidatePath('/downloads')
   return { success: true, bookKey }
 }
