@@ -17,8 +17,8 @@
 
 ## Phase 2 — Daily Charge on the Hand
 
-- [ ] **T2.1** `src/actions/daily-charge.ts` — `getTodayChargeTargets()` (returns `alreadyDoneToday` + advanceable Hand BARs) reusing existing charge/check-in "done today" state.
-- [ ] **T2.2** `applyDailyCharge({ mode: 'mint' | 'advance', … })`; `advance` rejects `bar-not-in-hand` for Vault-only BARs.
+- [x] **T2.1** `src/actions/daily-charge.ts` — `getTodayChargeTargets()` returns `alreadyDoneToday` (reuses `getTodayCharge`) + advanceable Hand BARs (in-hand, BSM-supporting, not yet `integrated`).
+- [x] **T2.2** `applyDailyCharge({ mode: 'mint' | 'advance', … })`: one charge/day (rejects `already-done-today`); `mint` creates a `charge_capture` BAR (optional `destination: 'hand'`); `advance` pushes a Hand BAR one maturity phase and rejects `bar-not-in-hand` for Vault-only BARs. Type-check green.
 - [ ] **T2.3** `src/components/now/DailyChargePanel.tsx` — mint vs advance picker over Hand BARs; on Vault-only intent, prompt to `promoteVaultBarToHand` first.
 
 ## Phase 3 — "Now" Home + Nav + Maturity Routing
