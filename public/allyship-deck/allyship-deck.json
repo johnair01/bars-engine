@@ -16,7 +16,7 @@
   "counts": {
     "move": 120,
     "instruction": 27,
-    "authored": 30,
+    "authored": 120,
     "total": 147
   },
   "problems": [
@@ -309,21 +309,28 @@
       "operation": "shaman",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Shaman · Wake Up · Raise Awareness",
+      "title": "What's Going Unseen",
       "submovePrompt": "Notice the signal. What is here?",
-      "primaryQuestion": "What is here?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Shaman: What is here?)",
+      "primaryQuestion": "What truth here is going unseen or unsaid?",
+      "campaignQuestion": "What in this situation is invisible that needs to become visible?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Noticing what's hidden or ignored before trying to amplify anything.",
       "forbiddenMoves": [
-        "— author —"
+        "Assuming everyone already sees it",
+        "Amplifying noise",
+        "Performing awareness"
       ],
       "failureModes": [
-        "— author —"
+        "Blindness to the obvious",
+        "Seeing only what confirms you"
       ],
-      "remediation": "Notice the signal — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name one thing present in the room that no one is naming.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored",
+      "flavor": "The unseen runs the room until someone points at it."
     },
     {
       "id": "WAKE-RA-CHALLENGER",
@@ -332,21 +339,27 @@
       "operation": "challenger",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Challenger · Wake Up · Raise Awareness",
+      "title": "What Doesn't Want Light",
       "submovePrompt": "Notice resistance. What resists being seen?",
-      "primaryQuestion": "What resists being seen?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Challenger: What resists?)",
+      "primaryQuestion": "What truth is being actively kept from view — including by me?",
+      "campaignQuestion": "What is this system structured to keep invisible?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Surfacing the actively suppressed, not just the overlooked.",
       "forbiddenMoves": [
-        "— author —"
+        "Polite avoidance",
+        "\"Not my place\" as cover",
+        "Flinching from the hard thing"
       ],
       "failureModes": [
-        "— author —"
+        "Collusion with the cover-up",
+        "Comfort chosen over truth"
       ],
-      "remediation": "Notice resistance — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the thing the room is working hard not to see.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-RA-REGENT",
@@ -355,21 +368,27 @@
       "operation": "regent",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Regent · Wake Up · Raise Awareness",
+      "title": "What Deserves the Spotlight",
       "submovePrompt": "Notice stewardship. What deserves attention?",
-      "primaryQuestion": "What deserves attention?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Of all that could be seen, what most deserves attention right now?",
+      "campaignQuestion": "Whose truth or which issue most deserves visibility here?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Directing limited attention where it matters most.",
       "forbiddenMoves": [
-        "— author —"
+        "Chasing every injustice at once",
+        "Attention for attention's sake",
+        "Centering yourself"
       ],
       "failureModes": [
-        "— author —"
+        "Scattered outrage",
+        "Spotlight on the trivial"
       ],
-      "remediation": "Notice stewardship — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Choose the one truth worth the room's full attention.",
+      "capabilities": [
+        "rest",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-RA-ARCHITECT",
@@ -378,21 +397,27 @@
       "operation": "architect",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Architect · Wake Up · Raise Awareness",
+      "title": "The Story That Could Land",
       "submovePrompt": "Notice potential. What value wants to increase?",
-      "primaryQuestion": "What value wants to increase?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What truth, if made visible, would change the most?",
+      "campaignQuestion": "What framing or story has the most potential to shift understanding?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Spotting the high-leverage truth worth amplifying.",
       "forbiddenMoves": [
-        "— author —"
+        "Amplifying the loudest thing",
+        "Ignoring framing",
+        "Data with no story"
       ],
       "failureModes": [
-        "— author —"
+        "Missing the story that would move people",
+        "Truth that doesn't travel"
       ],
-      "remediation": "Notice potential — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one fact that, if everyone saw it, would change things.",
+      "capabilities": [
+        "exploration",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-RA-DIPLOMAT",
@@ -401,21 +426,27 @@
       "operation": "diplomat",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Diplomat · Wake Up · Raise Awareness",
+      "title": "Whose Voice Is Missing",
       "submovePrompt": "Notice relationships. What relational dynamics matter?",
-      "primaryQuestion": "What relational dynamics matter?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Whose perspective is absent from what's being seen?",
+      "campaignQuestion": "Whose voice must be centered — and who has been speaking over them?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Noticing the relational and power shape of attention.",
       "forbiddenMoves": [
-        "— author —"
+        "Speaking for others",
+        "Tokenizing",
+        "Ignoring who is absent"
       ],
       "failureModes": [
-        "— author —"
+        "Amplifying yourself over those affected",
+        "Missing the silenced"
       ],
-      "remediation": "Notice relationships — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name who isn't in the conversation. Bring their voice, or make room for it.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-RA-SAGE",
@@ -424,21 +455,27 @@
       "operation": "sage",
       "domain": "RAISE_AWARENESS",
       "outputBar": "awareness",
-      "title": "Sage · Wake Up · Raise Awareness",
+      "title": "The Pattern Beneath the Incident",
       "submovePrompt": "Notice meaning. What larger pattern is emerging?",
-      "primaryQuestion": "What larger pattern is emerging?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Raise Awareness? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What larger pattern does this single incident reveal?",
+      "campaignQuestion": "What systemic truth is this moment a symptom of?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to detect charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Seeing the structure behind the event.",
       "forbiddenMoves": [
-        "— author —"
+        "Treating the symptom as the whole",
+        "Isolated outrage",
+        "Bypassing the pattern"
       ],
       "failureModes": [
-        "— author —"
+        "Missing the system",
+        "Framing a pattern as a one-off"
       ],
-      "remediation": "Notice meaning — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Connect this incident to the pattern it belongs to.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-SHAMAN",
@@ -447,21 +484,26 @@
       "operation": "shaman",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Shaman · Wake Up · Direct Action",
+      "title": "Where the Harm Is",
       "submovePrompt": "Notice the signal. What is here?",
-      "primaryQuestion": "What is here?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Shaman: What is here?)",
+      "primaryQuestion": "Where is harm actually happening right now?",
+      "campaignQuestion": "What concrete harm is this action meant to confront?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Locating the real harm before reacting.",
       "forbiddenMoves": [
-        "— author —"
+        "Abstract \"the system\"",
+        "Performative urgency",
+        "Acting before seeing"
       ],
       "failureModes": [
-        "— author —"
+        "Intervening where it's safe, not where harm is"
       ],
-      "remediation": "Notice the signal — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the specific harm, in specific terms.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-CHALLENGER",
@@ -470,21 +512,26 @@
       "operation": "challenger",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Challenger · Wake Up · Direct Action",
+      "title": "The Line You Won't Draw",
       "submovePrompt": "Notice resistance. What resists being seen?",
-      "primaryQuestion": "What resists being seen?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Challenger: What resists?)",
+      "primaryQuestion": "What boundary or confrontation am I avoiding seeing the need for?",
+      "campaignQuestion": "What line does this situation demand that we keep not drawing?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Surfacing the avoided confrontation.",
       "forbiddenMoves": [
-        "— author —"
+        "Keeping the peace at the cost of harm",
+        "Conflict-avoidance dressed as virtue"
       ],
       "failureModes": [
-        "— author —"
+        "Tolerating the intolerable",
+        "Politeness as complicity"
       ],
-      "remediation": "Notice resistance — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the line that needs drawing — the one you've been avoiding.",
+      "capabilities": [
+        "agency",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-REGENT",
@@ -493,21 +540,27 @@
       "operation": "regent",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Regent · Wake Up · Direct Action",
+      "title": "Which Fight Is Yours",
       "submovePrompt": "Notice stewardship. What deserves attention?",
-      "primaryQuestion": "What deserves attention?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Of all the harms, which is actually mine to confront?",
+      "campaignQuestion": "Which intervention here is ours to take responsibility for?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Choosing the right fight.",
       "forbiddenMoves": [
-        "— author —"
+        "Fighting everything at once",
+        "Martyrdom",
+        "Ignoring your actual leverage"
       ],
       "failureModes": [
-        "— author —"
+        "Spread-thin activism",
+        "Taking on the fight that isn't yours"
       ],
-      "remediation": "Notice stewardship — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one harm you're actually positioned to confront.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-ARCHITECT",
@@ -516,21 +569,26 @@
       "operation": "architect",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Architect · Wake Up · Direct Action",
+      "title": "The Pressure Point",
       "submovePrompt": "Notice potential. What value wants to increase?",
-      "primaryQuestion": "What value wants to increase?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Where would action have the most effect?",
+      "campaignQuestion": "What's the leverage point where intervention changes the most?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Spotting high-leverage intervention points.",
       "forbiddenMoves": [
-        "— author —"
+        "Symbolic gestures",
+        "Hitting where it's visible, not where it matters",
+        "Force without aim"
       ],
       "failureModes": [
-        "— author —"
+        "Effort that doesn't move the harm"
       ],
-      "remediation": "Notice potential — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the point where pressure actually shifts the outcome.",
+      "capabilities": [
+        "agency",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-DIPLOMAT",
@@ -539,21 +597,26 @@
       "operation": "diplomat",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Diplomat · Wake Up · Direct Action",
+      "title": "Who's at Risk",
       "submovePrompt": "Notice relationships. What relational dynamics matter?",
-      "primaryQuestion": "What relational dynamics matter?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Who bears the risk if I act — me, or someone more exposed?",
+      "campaignQuestion": "Whose safety and power are at stake in this action?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Seeing the risk and power map of action.",
       "forbiddenMoves": [
-        "— author —"
+        "Putting the vulnerable in front",
+        "Ignoring who pays",
+        "Reckless heroics"
       ],
       "failureModes": [
-        "— author —"
+        "Action that endangers those it claims to protect"
       ],
-      "remediation": "Notice relationships — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name who bears the risk. Don't spend others' safety.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-DA-SAGE",
@@ -562,21 +625,26 @@
       "operation": "sage",
       "domain": "DIRECT_ACTION",
       "outputBar": "awareness",
-      "title": "Sage · Wake Up · Direct Action",
+      "title": "What the Harm Repeats",
       "submovePrompt": "Notice meaning. What larger pattern is emerging?",
-      "primaryQuestion": "What larger pattern is emerging?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Direct Action? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What pattern of harm is this instance part of?",
+      "campaignQuestion": "What systemic cycle does this action interrupt?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to detect charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Seeing action in the pattern, not just the moment.",
       "forbiddenMoves": [
-        "— author —"
+        "Whack-a-mole",
+        "Treating each harm as isolated",
+        "Ignoring the root"
       ],
       "failureModes": [
-        "— author —"
+        "Addressing the instance, missing the cycle"
       ],
-      "remediation": "Notice meaning — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Connect this harm to the cycle it repeats, and aim there.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-SHAMAN",
@@ -585,21 +653,26 @@
       "operation": "shaman",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Shaman · Wake Up · Skillful Organizing",
+      "title": "What's Holding It Together",
       "submovePrompt": "Notice the signal. What is here?",
-      "primaryQuestion": "What is here?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Shaman: What is here?)",
+      "primaryQuestion": "What structure — or lack of it — is actually shaping this?",
+      "campaignQuestion": "What's the real organizational state: who's doing what, and what's missing?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Seeing the actual structure before redesigning anything.",
       "forbiddenMoves": [
-        "— author —"
+        "Assuming the org chart is reality",
+        "Reorganizing before observing"
       ],
       "failureModes": [
-        "— author —"
+        "Fixing imagined structure",
+        "Missing the informal one that runs things"
       ],
-      "remediation": "Notice the signal — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name how the work actually flows right now, not how it's supposed to.",
+      "capabilities": [
+        "exploration",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-CHALLENGER",
@@ -608,21 +681,26 @@
       "operation": "challenger",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Challenger · Wake Up · Skillful Organizing",
+      "title": "The Dysfunction No One Names",
       "submovePrompt": "Notice resistance. What resists being seen?",
-      "primaryQuestion": "What resists being seen?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Challenger: What resists?)",
+      "primaryQuestion": "What structural problem is everyone working around but not naming?",
+      "campaignQuestion": "What broken process are we all quietly compensating for?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Surfacing the unspoken dysfunction.",
       "forbiddenMoves": [
-        "— author —"
+        "Politeness about process",
+        "Blaming people for structural failures"
       ],
       "failureModes": [
-        "— author —"
+        "Heroics covering broken structure",
+        "The workaround becoming permanent"
       ],
-      "remediation": "Notice resistance — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the structural problem people keep absorbing personally.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-REGENT",
@@ -631,21 +709,25 @@
       "operation": "regent",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Regent · Wake Up · Skillful Organizing",
+      "title": "What Needs Tending",
       "submovePrompt": "Notice stewardship. What deserves attention?",
-      "primaryQuestion": "What deserves attention?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which part of the structure most needs stewarding right now?",
+      "campaignQuestion": "What in this organization most needs tending before it breaks?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Directing organizing attention well.",
       "forbiddenMoves": [
-        "— author —"
+        "Tending the visible over the load-bearing",
+        "Neglecting maintenance"
       ],
       "failureModes": [
-        "— author —"
+        "Polishing the front while the foundation cracks"
       ],
-      "remediation": "Notice stewardship — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the load-bearing part that needs care first.",
+      "capabilities": [
+        "rest",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-ARCHITECT",
@@ -654,21 +736,27 @@
       "operation": "architect",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Architect · Wake Up · Skillful Organizing",
+      "title": "The Structure That Wants to Exist",
       "submovePrompt": "Notice potential. What value wants to increase?",
-      "primaryQuestion": "What value wants to increase?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What structure is trying to emerge that would make this work better?",
+      "campaignQuestion": "What system, if built, would multiply the group's capacity?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Spotting the high-leverage structure to build.",
       "forbiddenMoves": [
-        "— author —"
+        "Structure for its own sake",
+        "Copying a template that doesn't fit",
+        "Premature scaling"
       ],
       "failureModes": [
-        "— author —"
+        "Building the wrong system",
+        "Missing the one that would help"
       ],
-      "remediation": "Notice potential — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the structure that would remove the most friction.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-DIPLOMAT",
@@ -677,21 +765,27 @@
       "operation": "diplomat",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Diplomat · Wake Up · Skillful Organizing",
+      "title": "Who Actually Decides",
       "submovePrompt": "Notice relationships. What relational dynamics matter?",
-      "primaryQuestion": "What relational dynamics matter?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Who holds real power and trust in how this gets organized?",
+      "campaignQuestion": "What's the real map of roles, power, and relationship here?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Seeing the relational and power structure, not just the formal one.",
       "forbiddenMoves": [
-        "— author —"
+        "Ignoring informal power",
+        "Org-chart blindness",
+        "Bypassing trust"
       ],
       "failureModes": [
-        "— author —"
+        "A plan that ignores who really decides",
+        "Stepping on relationships"
       ],
-      "remediation": "Notice relationships — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name who actually holds decision power and trust.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "WAKE-SO-SAGE",
@@ -700,21 +794,25 @@
       "operation": "sage",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "awareness",
-      "title": "Sage · Wake Up · Skillful Organizing",
+      "title": "The Pattern in the Chaos",
       "submovePrompt": "Notice meaning. What larger pattern is emerging?",
-      "primaryQuestion": "What larger pattern is emerging?",
-      "campaignQuestion": "What needs to be seen in this campaign, in Skillful Organizing? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What recurring organizational pattern keeps producing this?",
+      "campaignQuestion": "What systemic dynamic does this coordination problem reveal?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to detect charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Seeing the pattern behind the mess.",
       "forbiddenMoves": [
-        "— author —"
+        "Blaming individuals for systemic patterns",
+        "One-off fixes"
       ],
       "failureModes": [
-        "— author —"
+        "Fixing the instance while the pattern recurs"
       ],
-      "remediation": "Notice meaning — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Connect this breakdown to the pattern it repeats.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-GR-SHAMAN",
@@ -905,21 +1003,26 @@
       "operation": "shaman",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Shaman · Open Up · Raise Awareness",
+      "title": "What Seeing Costs",
       "submovePrompt": "Allow experience. What am I actually feeling?",
-      "primaryQuestion": "What am I actually feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Shaman: What is here?)",
+      "primaryQuestion": "What do I actually feel when I let this truth land?",
+      "campaignQuestion": "What does it cost us to really see what is happening here?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Letting the truth land in the body before reacting.",
       "forbiddenMoves": [
-        "— author —"
+        "Intellectualizing",
+        "Numbing to the truth",
+        "Performing feeling"
       ],
       "failureModes": [
-        "— author —"
+        "Knowing without feeling",
+        "Abstraction as armor"
       ],
-      "remediation": "Allow experience — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Let the truth land for one breath before you respond.",
+      "capabilities": [
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-RA-CHALLENGER",
@@ -928,21 +1031,27 @@
       "operation": "challenger",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Challenger · Open Up · Raise Awareness",
+      "title": "The Truth You're Numb To",
       "submovePrompt": "Allow discomfort. What am I avoiding feeling?",
-      "primaryQuestion": "What am I avoiding feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Challenger: What resists?)",
+      "primaryQuestion": "What truth am I keeping at arm's length because feeling it would change me?",
+      "campaignQuestion": "What are we avoiding feeling about this issue?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Contact with the truth you've gone numb to.",
       "forbiddenMoves": [
-        "— author —"
+        "\"Compassion fatigue\" as excuse",
+        "\"I can't with this\"",
+        "Selective numbness"
       ],
       "failureModes": [
-        "— author —"
+        "Chosen ignorance",
+        "Outrage with no real contact"
       ],
-      "remediation": "Allow discomfort — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Feel the thing you've gone numb to. Then decide from there.",
+      "capabilities": [
+        "connection",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-RA-REGENT",
@@ -951,21 +1060,27 @@
       "operation": "regent",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Regent · Open Up · Raise Awareness",
+      "title": "Stay Awake to It",
       "submovePrompt": "Hold responsibility. Can I stay with this?",
-      "primaryQuestion": "Can I stay with this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Can I stay aware of this truth without looking away?",
+      "campaignQuestion": "Can we keep this in view long enough to act, not just react?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Sustained attention without collapse or burnout.",
       "forbiddenMoves": [
-        "— author —"
+        "Doom-scrolling",
+        "One-day outrage",
+        "Abandoning the issue"
       ],
       "failureModes": [
-        "— author —"
+        "Awareness that flares and fades",
+        "Attention with no staying power"
       ],
-      "remediation": "Hold responsibility — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Choose one truth you'll keep in view past the news cycle.",
+      "capabilities": [
+        "rest",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-RA-ARCHITECT",
@@ -974,21 +1089,26 @@
       "operation": "architect",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Architect · Open Up · Raise Awareness",
+      "title": "The Energy in the Story",
       "submovePrompt": "Receive the resource. What energy is hidden here?",
-      "primaryQuestion": "What energy is hidden here?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What energy or motivation is hidden in what I've seen?",
+      "campaignQuestion": "What latent will-to-act lives inside this awareness?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Receiving the activating charge inside a hard truth.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoarding outrage",
+        "Despair as the endpoint",
+        "Information with no mobilizing energy"
       ],
       "failureModes": [
-        "— author —"
+        "Awareness that deadens instead of activates"
       ],
-      "remediation": "Receive the resource — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the energy this truth gives you. Aim it.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-RA-DIPLOMAT",
@@ -997,21 +1117,26 @@
       "operation": "diplomat",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Diplomat · Open Up · Raise Awareness",
+      "title": "Hold the Pain With Care",
       "submovePrompt": "Care for experience. How can I relate compassionately to this?",
-      "primaryQuestion": "How can I relate compassionately to this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "How do I hold this hard truth — and others' pain in it — with care?",
+      "campaignQuestion": "How do we relate to those harmed without spectacle or pity?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "A compassionate stance toward painful truth.",
       "forbiddenMoves": [
-        "— author —"
+        "Trauma as content",
+        "Pity",
+        "Centering your feelings over theirs"
       ],
       "failureModes": [
-        "— author —"
+        "Extractive empathy",
+        "Performing care"
       ],
-      "remediation": "Care for experience — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Relate to one person's reality with care, not as a case.",
+      "capabilities": [
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-RA-SAGE",
@@ -1020,21 +1145,27 @@
       "operation": "sage",
       "domain": "RAISE_AWARENESS",
       "outputBar": "experience",
-      "title": "Sage · Open Up · Raise Awareness",
+      "title": "When You Let It Be True",
       "submovePrompt": "Witness experience. What happens when I stop fighting it?",
-      "primaryQuestion": "What happens when I stop fighting it?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Raise Awareness? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What becomes clear when I stop arguing with this truth and just witness it?",
+      "campaignQuestion": "What clarity comes when we stop debating and simply witness what's real?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to receive charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Witness over debate.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing acceptance",
+        "Debate as avoidance",
+        "Spiritual bypass"
       ],
       "failureModes": [
-        "— author —"
+        "Analysis instead of witness",
+        "Arguing reality away"
       ],
-      "remediation": "Witness experience — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Witness the truth for three breaths without rebutting it.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-SHAMAN",
@@ -1043,21 +1174,26 @@
       "operation": "shaman",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Shaman · Open Up · Direct Action",
+      "title": "The Fear Under the Fight",
       "submovePrompt": "Allow experience. What am I actually feeling?",
-      "primaryQuestion": "What am I actually feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Shaman: What is here?)",
+      "primaryQuestion": "What am I actually feeling about stepping into this — fear, fury, dread?",
+      "campaignQuestion": "What does the team really feel about taking this risk?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Feeling the charge before acting on it.",
       "forbiddenMoves": [
-        "— author —"
+        "Bravado",
+        "Numbing the fear",
+        "Acting to escape the feeling"
       ],
       "failureModes": [
-        "— author —"
+        "Reckless action driven by unfelt fear"
       ],
-      "remediation": "Allow experience — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Feel the fear before you move. Then move anyway.",
+      "capabilities": [
+        "connection",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-CHALLENGER",
@@ -1066,21 +1202,26 @@
       "operation": "challenger",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Challenger · Open Up · Direct Action",
+      "title": "What Action Asks of You",
       "submovePrompt": "Allow discomfort. What am I avoiding feeling?",
-      "primaryQuestion": "What am I avoiding feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Challenger: What resists?)",
+      "primaryQuestion": "What discomfort of confrontation am I avoiding by staying still?",
+      "campaignQuestion": "What are we avoiding feeling that keeps us from acting?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Contact with the avoided cost of acting.",
       "forbiddenMoves": [
-        "— author —"
+        "Comfort as caution",
+        "\"Now's not the time\" forever",
+        "Freeze disguised as strategy"
       ],
       "failureModes": [
-        "— author —"
+        "Inaction rationalized",
+        "The moment passed"
       ],
-      "remediation": "Allow discomfort — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Feel what acting would cost. Weigh it against the cost of not acting.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-REGENT",
@@ -1089,21 +1230,27 @@
       "operation": "regent",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Regent · Open Up · Direct Action",
+      "title": "Can You Hold the Line",
       "submovePrompt": "Hold responsibility. Can I stay with this?",
-      "primaryQuestion": "Can I stay with this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Can I stay in this confrontation without collapsing or escalating?",
+      "campaignQuestion": "Can we sustain this action without burning out or losing control?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Staying steady inside conflict.",
       "forbiddenMoves": [
-        "— author —"
+        "Collapsing under pushback",
+        "Escalating to discharge tension",
+        "Abandoning it mid-fight"
       ],
       "failureModes": [
-        "— author —"
+        "Folding when it gets hard",
+        "Flaring out"
       ],
-      "remediation": "Hold responsibility — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Stay one beat longer in the discomfort than feels possible.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-ARCHITECT",
@@ -1112,21 +1259,26 @@
       "operation": "architect",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Architect · Open Up · Direct Action",
+      "title": "The Power in the Anger",
       "submovePrompt": "Receive the resource. What energy is hidden here?",
-      "primaryQuestion": "What energy is hidden here?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What usable power is hidden in this anger or urgency?",
+      "campaignQuestion": "What force does this moment's energy give the action?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Receiving anger as fuel for clean action.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoarding rage",
+        "Venting",
+        "Mistaking heat for direction"
       ],
       "failureModes": [
-        "— author —"
+        "Anger that burns the actor, not the harm"
       ],
-      "remediation": "Receive the resource — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the agency this anger gives you. Point it at the harm.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-DIPLOMAT",
@@ -1135,21 +1287,27 @@
       "operation": "diplomat",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Diplomat · Open Up · Direct Action",
+      "title": "Fierce and Caring",
       "submovePrompt": "Care for experience. How can I relate compassionately to this?",
-      "primaryQuestion": "How can I relate compassionately to this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "How do I confront harm while still relating to people with care?",
+      "campaignQuestion": "How do we act fiercely without dehumanizing even those we oppose?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Combining fierceness with care.",
       "forbiddenMoves": [
-        "— author —"
+        "Contempt",
+        "Collateral cruelty",
+        "Treating opponents as monsters"
       ],
       "failureModes": [
-        "— author —"
+        "Action that wounds indiscriminately",
+        "Care abandoned in the fight"
       ],
-      "remediation": "Care for experience — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the boundary fiercely; keep one thread of care for the human.",
+      "capabilities": [
+        "connection",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-DA-SAGE",
@@ -1158,21 +1316,27 @@
       "operation": "sage",
       "domain": "DIRECT_ACTION",
       "outputBar": "experience",
-      "title": "Sage · Open Up · Direct Action",
+      "title": "See Before You Strike",
       "submovePrompt": "Witness experience. What happens when I stop fighting it?",
-      "primaryQuestion": "What happens when I stop fighting it?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Direct Action? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What do I see clearly if I pause and witness before reacting?",
+      "campaignQuestion": "What clarity comes if we witness the full picture before intervening?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to receive charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Witness that sharpens action rather than delaying it.",
       "forbiddenMoves": [
-        "— author —"
+        "Reactivity",
+        "Striking blind",
+        "Paralysis disguised as reflection"
       ],
       "failureModes": [
-        "— author —"
+        "Action without sight",
+        "Endless \"seeing\" as avoidance"
       ],
-      "remediation": "Witness experience — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Witness the whole field for three breaths, then act with aim.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-SHAMAN",
@@ -1181,21 +1345,26 @@
       "operation": "shaman",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Shaman · Open Up · Skillful Organizing",
+      "title": "What the Mess Feels Like",
       "submovePrompt": "Allow experience. What am I actually feeling?",
-      "primaryQuestion": "What am I actually feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Shaman: What is here?)",
+      "primaryQuestion": "What do I actually feel inside this disorganization — overwhelm, resentment, dread?",
+      "campaignQuestion": "What's the felt experience of being in this structure, or its absence?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Feeling the human cost of the structure before fixing it.",
       "forbiddenMoves": [
-        "— author —"
+        "Jumping to a system",
+        "Treating people as resources",
+        "Numbing to the strain"
       ],
       "failureModes": [
-        "— author —"
+        "Process fixes that ignore how it feels to live in them"
       ],
-      "remediation": "Allow experience — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name what the current structure feels like to be inside.",
+      "capabilities": [
+        "connection",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-CHALLENGER",
@@ -1204,21 +1373,26 @@
       "operation": "challenger",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Challenger · Open Up · Skillful Organizing",
+      "title": "The Role You're Avoiding",
       "submovePrompt": "Allow discomfort. What am I avoiding feeling?",
-      "primaryQuestion": "What am I avoiding feeling?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Challenger: What resists?)",
+      "primaryQuestion": "What organizing responsibility am I avoiding because it's uncomfortable?",
+      "campaignQuestion": "What structural decision are we avoiding because it'll upset someone?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Contact with the avoided organizing work.",
       "forbiddenMoves": [
-        "— author —"
+        "Avoiding the hard role or delegation talk",
+        "Conflict-dodging dressed as harmony"
       ],
       "failureModes": [
-        "— author —"
+        "Structure left vague to avoid discomfort",
+        "Everyone quietly overworked"
       ],
-      "remediation": "Allow discomfort — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the role or decision you're avoiding.",
+      "capabilities": [
+        "agency",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-REGENT",
@@ -1227,21 +1401,26 @@
       "operation": "regent",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Regent · Open Up · Skillful Organizing",
+      "title": "Can You Hold the Whole",
       "submovePrompt": "Hold responsibility. Can I stay with this?",
-      "primaryQuestion": "Can I stay with this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Can I hold responsibility for this structure without controlling everything or dropping it?",
+      "campaignQuestion": "Can we steward this organization steadily, sharing the load?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Holding the whole without over-controlling or abdicating.",
       "forbiddenMoves": [
-        "— author —"
+        "Micromanagement",
+        "Abdication",
+        "Hero-coordinator burnout"
       ],
       "failureModes": [
-        "— author —"
+        "The structure depending on one exhausted person"
       ],
-      "remediation": "Hold responsibility — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Hold the whole for a beat; then hand one piece to someone you trust.",
+      "capabilities": [
+        "rest",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-ARCHITECT",
@@ -1250,21 +1429,26 @@
       "operation": "architect",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Architect · Open Up · Skillful Organizing",
+      "title": "The Capacity in the Room",
       "submovePrompt": "Receive the resource. What energy is hidden here?",
-      "primaryQuestion": "What energy is hidden here?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What organizing capacity or willingness is here, unused?",
+      "campaignQuestion": "What latent capacity in this group hasn't been activated?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Receiving the group's untapped capacity.",
       "forbiddenMoves": [
-        "— author —"
+        "Doing it all yourself",
+        "Discounting others' skills",
+        "Ignoring volunteers"
       ],
       "failureModes": [
-        "— author —"
+        "Scarcity of help while help stands unused"
       ],
-      "remediation": "Receive the resource — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name three people's capacities you haven't drawn on. Invite one.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-DIPLOMAT",
@@ -1273,21 +1457,27 @@
       "operation": "diplomat",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Diplomat · Open Up · Skillful Organizing",
+      "title": "Structure That Cares",
       "submovePrompt": "Care for experience. How can I relate compassionately to this?",
-      "primaryQuestion": "How can I relate compassionately to this?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "How do I build structure that holds people with care, not just efficiency?",
+      "campaignQuestion": "How do we organize in a way that tends relationships, not just tasks?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Humane structure.",
       "forbiddenMoves": [
-        "— author —"
+        "Efficiency over people",
+        "Treating people as interchangeable",
+        "Cold process"
       ],
       "failureModes": [
-        "— author —"
+        "A system that works and burns people",
+        "Extraction by spreadsheet"
       ],
-      "remediation": "Care for experience — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Design one part of the structure around how it cares for people.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "OPEN-SO-SAGE",
@@ -1296,21 +1486,26 @@
       "operation": "sage",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "experience",
-      "title": "Sage · Open Up · Skillful Organizing",
+      "title": "When You Stop Forcing Order",
       "submovePrompt": "Witness experience. What happens when I stop fighting it?",
-      "primaryQuestion": "What happens when I stop fighting it?",
-      "campaignQuestion": "What energy or need is trying to get through in this campaign, in Skillful Organizing? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What becomes clear when I stop forcing order and witness how the work wants to flow?",
+      "campaignQuestion": "What structure reveals itself when we stop imposing and start watching?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to receive charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Witnessing the natural flow before imposing structure.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing a system",
+        "Control as the only tool",
+        "Ignoring emergence"
       ],
       "failureModes": [
-        "— author —"
+        "Rigid structure fighting the actual work"
       ],
-      "remediation": "Witness experience — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Watch how the work actually wants to move for three breaths. Organize with that.",
+      "capabilities": [
+        "exploration",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-GR-SHAMAN",
@@ -1490,21 +1685,25 @@
       "operation": "shaman",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Shaman · Clean Up · Raise Awareness",
+      "title": "Name the Awareness Feeling",
       "submovePrompt": "Identify channel. Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "primaryQuestion": "Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Shaman: What is here?)",
+      "primaryQuestion": "Which channel is live in this awareness — anger, grief, fear, numbness, or reach?",
+      "campaignQuestion": "What emotional channel is driving how we raise this — and is it clean?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Locating the channel under the message.",
       "forbiddenMoves": [
-        "— author —"
+        "Messaging from raw charge",
+        "Assuming it's \"just the facts\""
       ],
       "failureModes": [
-        "— author —"
+        "Rage-posting",
+        "Grief dumped as advocacy"
       ],
-      "remediation": "Identify channel — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the channel before you publish a single word.",
+      "capabilities": [
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-CHALLENGER",
@@ -1513,21 +1712,27 @@
       "operation": "challenger",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Challenger · Clean Up · Raise Awareness",
+      "title": "The Story About the Truth",
       "submovePrompt": "Challenge interpretation. What story am I believing?",
-      "primaryQuestion": "What story am I believing?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Challenger: What resists?)",
+      "primaryQuestion": "What story am I telling about what I saw that may not be the whole truth?",
+      "campaignQuestion": "What narrative are we attached to that the facts might complicate?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Challenging your own framing before broadcasting it.",
       "forbiddenMoves": [
-        "— author —"
+        "Certainty",
+        "The single story",
+        "Defending the narrative over accuracy"
       ],
       "failureModes": [
-        "— author —"
+        "Righteous distortion",
+        "Truth bent to fit the story"
       ],
-      "remediation": "Challenge interpretation — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the version of events that complicates your story.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-REGENT",
@@ -1536,21 +1741,26 @@
       "operation": "regent",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Regent · Clean Up · Raise Awareness",
+      "title": "What Awareness Lacks",
       "submovePrompt": "Identify missing move. What capability is unavailable?",
-      "primaryQuestion": "What capability is unavailable?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Awareness alone isn't moving me — which capability is missing?",
+      "campaignQuestion": "We've raised awareness but nothing shifts — what capability is the gap?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Naming the missing capability behind stalled awareness.",
       "forbiddenMoves": [
-        "— author —"
+        "More awareness as the answer to everything",
+        "Willpower over capacity"
       ],
       "failureModes": [
-        "— author —"
+        "Awareness theater",
+        "The knowing-doing gap left unaddressed"
       ],
-      "remediation": "Identify missing move — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the capability awareness needs next — to act, connect, or organize.",
+      "capabilities": [
+        "agency",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-ARCHITECT",
@@ -1559,21 +1769,27 @@
       "operation": "architect",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Architect · Clean Up · Raise Awareness",
+      "title": "From Outrage to Aim",
       "submovePrompt": "Select transformation. Transcend, Translate, or Neutralize?",
-      "primaryQuestion": "Transcend, Translate, or Neutralize?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Do I transcend this charge, translate it (anger to clarity), or neutralize it before I speak?",
+      "campaignQuestion": "How do we convert this issue's charge into communicable clarity?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Choosing the alchemy that makes truth land.",
       "forbiddenMoves": [
-        "— author —"
+        "Venting as advocacy",
+        "Suppressing the charge",
+        "Performative calm"
       ],
       "failureModes": [
-        "— author —"
+        "Dumping charge on an audience",
+        "Sanitized into meaninglessness"
       ],
-      "remediation": "Select transformation — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick transcend / translate / neutralize, then craft the message.",
+      "capabilities": [
+        "agency",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-DIPLOMAT",
@@ -1582,21 +1798,26 @@
       "operation": "diplomat",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Diplomat · Clean Up · Raise Awareness",
+      "title": "The Tone That Reaches",
       "submovePrompt": "Choose destination. Which channel would better serve this situation?",
-      "primaryQuestion": "Which channel would better serve this situation?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "What emotional tone would let this truth actually reach people?",
+      "campaignQuestion": "From which channel would this message invite rather than alienate?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Aiming tone for reception, not just release.",
       "forbiddenMoves": [
-        "— author —"
+        "Shaming the audience",
+        "Purity tone",
+        "Despair-casting"
       ],
       "failureModes": [
-        "— author —"
+        "Messages that repel the persuadable",
+        "Preaching only to the choir"
       ],
-      "remediation": "Choose destination — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Re-aim the message from a channel that opens people, not closes them.",
+      "capabilities": [
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-RA-SAGE",
@@ -1605,21 +1826,27 @@
       "operation": "sage",
       "domain": "RAISE_AWARENESS",
       "outputBar": "insight",
-      "title": "Sage · Clean Up · Raise Awareness",
+      "title": "What the Truth Taught",
       "submovePrompt": "Extract insight. What does this teach me?",
-      "primaryQuestion": "What does this teach me?",
-      "campaignQuestion": "What move is missing for this campaign, in Raise Awareness? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What durable insight do I take from sitting with this truth?",
+      "campaignQuestion": "What's the lasting lesson this awareness work is offering us?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to transform charge — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Converting awareness into reusable wisdom.",
       "forbiddenMoves": [
-        "— author —"
+        "Rushing to post",
+        "The hot take over the insight",
+        "Closing too soon"
       ],
       "failureModes": [
-        "— author —"
+        "Lessons unlearned and repeated",
+        "Shallow takes"
       ],
-      "remediation": "Extract insight — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the one insight you'll keep, beyond this moment.",
+      "capabilities": [
+        "exploration",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-DA-SHAMAN",
@@ -1628,21 +1855,26 @@
       "operation": "shaman",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Shaman · Clean Up · Direct Action",
+      "title": "Name the Fight Feeling",
       "submovePrompt": "Identify channel. Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "primaryQuestion": "Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Shaman: What is here?)",
+      "primaryQuestion": "Which channel is driving this — clean fire, or fear or grief wearing fire's mask?",
+      "campaignQuestion": "What channel is fueling this action, and is it clean?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Locating the true channel under the urge to act.",
       "forbiddenMoves": [
-        "— author —"
+        "Acting on displaced charge",
+        "Assuming anger is automatically righteous"
       ],
       "failureModes": [
-        "— author —"
+        "Fear-driven aggression",
+        "Grief acted out as attack"
       ],
-      "remediation": "Identify channel — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the channel honestly before you intervene.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-DA-CHALLENGER",
@@ -1651,21 +1883,27 @@
       "operation": "challenger",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Challenger · Clean Up · Direct Action",
+      "title": "The Enemy Story",
       "submovePrompt": "Challenge interpretation. What story am I believing?",
-      "primaryQuestion": "What story am I believing?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Challenger: What resists?)",
+      "primaryQuestion": "What story about who's the enemy am I treating as fact?",
+      "campaignQuestion": "What us-versus-them narrative might be distorting our read?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Challenging the framing that justifies the action.",
       "forbiddenMoves": [
-        "— author —"
+        "Certainty about villains",
+        "Single-cause stories",
+        "Righteousness as proof"
       ],
       "failureModes": [
-        "— author —"
+        "Action built on a distorted enemy",
+        "Collateral injustice"
       ],
-      "remediation": "Challenge interpretation — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the version where the \"enemy\" is more complicated. Then aim true.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-DA-REGENT",
@@ -1674,21 +1912,26 @@
       "operation": "regent",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Regent · Clean Up · Direct Action",
+      "title": "What the Fight Needs",
       "submovePrompt": "Identify missing move. What capability is unavailable?",
-      "primaryQuestion": "What capability is unavailable?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "I'm stuck on this confrontation — which capability is missing?",
+      "campaignQuestion": "What capability does this action lack — agency, connection, structure?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Naming the missing capability behind stalled action.",
       "forbiddenMoves": [
-        "— author —"
+        "More force as the answer",
+        "Willpower over capacity"
       ],
       "failureModes": [
-        "— author —"
+        "Pushing harder on a missing capability",
+        "Burnout"
       ],
-      "remediation": "Identify missing move — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the capability the action needs next, and grow it.",
+      "capabilities": [
+        "agency",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-DA-ARCHITECT",
@@ -1697,21 +1940,27 @@
       "operation": "architect",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Architect · Clean Up · Direct Action",
+      "title": "Forge the Anger",
       "submovePrompt": "Select transformation. Transcend, Translate, or Neutralize?",
-      "primaryQuestion": "Transcend, Translate, or Neutralize?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Do I transcend this charge, translate it (fear to agency), or neutralize it before acting?",
+      "campaignQuestion": "How do we forge this charge into clean, aimed force?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Alchemizing charge into clean action.",
       "forbiddenMoves": [
-        "— author —"
+        "Venting onto targets",
+        "Suppression",
+        "Performative restraint"
       ],
       "failureModes": [
-        "— author —"
+        "Discharging on the wrong target",
+        "Force that scatters"
       ],
-      "remediation": "Select transformation — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick transcend / translate / neutralize, then act from the forged state.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored",
+      "flavor": "Forge anger into a boundary said, a limit set."
     },
     {
       "id": "CLEAN-DA-DIPLOMAT",
@@ -1720,21 +1969,27 @@
       "operation": "diplomat",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Diplomat · Clean Up · Direct Action",
+      "title": "From Rage to Resolve",
       "submovePrompt": "Choose destination. Which channel would better serve this situation?",
-      "primaryQuestion": "Which channel would better serve this situation?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Which channel, if I moved this charge there, would make the action cleaner?",
+      "campaignQuestion": "What would this action look like from resolve instead of rage?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Aiming the charge toward effective action.",
       "forbiddenMoves": [
-        "— author —"
+        "Acting from raw rage",
+        "Cold detachment",
+        "Performative calm"
       ],
       "failureModes": [
-        "— author —"
+        "Rage that sabotages the cause",
+        "Numbness that under-acts"
       ],
-      "remediation": "Choose destination — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Re-aim from resolve — an earned boundary, not blind heat.",
+      "capabilities": [
+        "agency",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-DA-SAGE",
@@ -1743,21 +1998,26 @@
       "operation": "sage",
       "domain": "DIRECT_ACTION",
       "outputBar": "insight",
-      "title": "Sage · Clean Up · Direct Action",
+      "title": "What the Confrontation Taught",
       "submovePrompt": "Extract insight. What does this teach me?",
-      "primaryQuestion": "What does this teach me?",
-      "campaignQuestion": "What move is missing for this campaign, in Direct Action? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What do I learn from this fight that I'll carry forward?",
+      "campaignQuestion": "What's the durable lesson this action is teaching us?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to transform charge — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Converting confrontation into wisdom.",
       "forbiddenMoves": [
-        "— author —"
+        "Rushing to the next fight",
+        "No debrief",
+        "The lesson skipped"
       ],
       "failureModes": [
-        "— author —"
+        "The same fight again, unlearned"
       ],
-      "remediation": "Extract insight — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the one lesson this confrontation taught you.",
+      "capabilities": [
+        "exploration",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-SHAMAN",
@@ -1766,21 +2026,25 @@
       "operation": "shaman",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Shaman · Clean Up · Skillful Organizing",
+      "title": "Name the Organizing Feeling",
       "submovePrompt": "Identify channel. Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "primaryQuestion": "Which channel is active — Fire, Water, Metal, Earth, or Wood?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Shaman: What is here?)",
+      "primaryQuestion": "Which channel is live in this coordination strain — fear, anger, overwhelm, numbness?",
+      "campaignQuestion": "What emotional channel is driving our organizing, and is it clean?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Locating the channel under the process strain.",
       "forbiddenMoves": [
-        "— author —"
+        "Building systems from anxiety",
+        "Assuming it's \"just logistics\""
       ],
       "failureModes": [
-        "— author —"
+        "Control-from-fear",
+        "Resentment baked into the structure"
       ],
-      "remediation": "Identify channel — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the channel before you redesign anything.",
+      "capabilities": [
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-CHALLENGER",
@@ -1789,21 +2053,27 @@
       "operation": "challenger",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Challenger · Clean Up · Skillful Organizing",
+      "title": "The 'Only I Can' Story",
       "submovePrompt": "Challenge interpretation. What story am I believing?",
-      "primaryQuestion": "What story am I believing?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Challenger: What resists?)",
+      "primaryQuestion": "What story about who can do this am I treating as fact?",
+      "campaignQuestion": "What belief — \"only we can,\" \"they'll mess it up\" — is blocking delegation?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Challenging the story that prevents sharing the work.",
       "forbiddenMoves": [
-        "— author —"
+        "Indispensability stories",
+        "Perfectionism as control",
+        "Distrust treated as fact"
       ],
       "failureModes": [
-        "— author —"
+        "The bottleneck enshrined",
+        "Everything routed through one person"
       ],
-      "remediation": "Challenge interpretation — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the story that keeps you the bottleneck. Then test it: hand one thing off.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-REGENT",
@@ -1812,21 +2082,25 @@
       "operation": "regent",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Regent · Clean Up · Skillful Organizing",
+      "title": "What the System Lacks",
       "submovePrompt": "Identify missing move. What capability is unavailable?",
-      "primaryQuestion": "What capability is unavailable?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "This keeps breaking — which capability is the structure missing?",
+      "campaignQuestion": "What capability does this organization lack — clarity, trust, follow-through?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Naming the missing capability behind the breakdown.",
       "forbiddenMoves": [
-        "— author —"
+        "Adding process to a capability gap",
+        "Rules over capacity"
       ],
       "failureModes": [
-        "— author —"
+        "More procedure, same dysfunction"
       ],
-      "remediation": "Identify missing move — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the capability the structure needs — not another rule.",
+      "capabilities": [
+        "participation",
+        "rest"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-ARCHITECT",
@@ -1835,21 +2109,27 @@
       "operation": "architect",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Architect · Clean Up · Skillful Organizing",
+      "title": "Redirect the Strain",
       "submovePrompt": "Select transformation. Transcend, Translate, or Neutralize?",
-      "primaryQuestion": "Transcend, Translate, or Neutralize?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Do I transcend this strain, translate it, or neutralize it before I (re)build?",
+      "campaignQuestion": "How do we convert organizing strain into clean structure?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Clearing the charge before designing.",
       "forbiddenMoves": [
-        "— author —"
+        "Building while activated",
+        "Venting via reorg",
+        "Suppression"
       ],
       "failureModes": [
-        "— author —"
+        "Structure that encodes the strain",
+        "Reorg as discharge"
       ],
-      "remediation": "Select transformation — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Clear the charge first; then design from steadiness.",
+      "capabilities": [
+        "rest",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-DIPLOMAT",
@@ -1858,21 +2138,27 @@
       "operation": "diplomat",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Diplomat · Clean Up · Skillful Organizing",
+      "title": "From Control to Trust",
       "submovePrompt": "Choose destination. Which channel would better serve this situation?",
-      "primaryQuestion": "Which channel would better serve this situation?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Which channel would let me organize from trust instead of control?",
+      "campaignQuestion": "What would this structure look like built from trust, not fear?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Aiming organizing energy toward trust.",
       "forbiddenMoves": [
-        "— author —"
+        "Control masquerading as rigor",
+        "Surveillance",
+        "Performative empowerment"
       ],
       "failureModes": [
-        "— author —"
+        "Structures that signal distrust",
+        "Disengagement"
       ],
-      "remediation": "Choose destination — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Re-aim one structure from trust — give real ownership, not just tasks.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "CLEAN-SO-SAGE",
@@ -1881,21 +2167,26 @@
       "operation": "sage",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "insight",
-      "title": "Sage · Clean Up · Skillful Organizing",
+      "title": "What the Breakdown Taught",
       "submovePrompt": "Extract insight. What does this teach me?",
-      "primaryQuestion": "What does this teach me?",
-      "campaignQuestion": "What move is missing for this campaign, in Skillful Organizing? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What does this organizing breakdown teach me to build differently?",
+      "campaignQuestion": "What's the durable lesson this coordination struggle offers?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to transform charge — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Converting breakdown into design wisdom.",
       "forbiddenMoves": [
-        "— author —"
+        "Rushing the next reorg",
+        "No retrospective",
+        "The lesson skipped"
       ],
       "failureModes": [
-        "— author —"
+        "Rebuilding the same flawed system"
       ],
-      "remediation": "Extract insight — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Write the one design principle this breakdown taught you.",
+      "capabilities": [
+        "exploration",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-GR-SHAMAN",
@@ -2075,21 +2366,26 @@
       "operation": "shaman",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Shaman · Grow Up · Raise Awareness",
+      "title": "The Witness Growing in You",
       "submovePrompt": "Identify emerging capacity. What wants to grow?",
-      "primaryQuestion": "What wants to grow?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Shaman: What is here?)",
+      "primaryQuestion": "What capacity to see or speak truth is trying to grow in me?",
+      "campaignQuestion": "What awareness-capacity is this work asking the group to develop?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Noticing the emerging witness or voice.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing eloquence",
+        "Performing growth",
+        "Borrowing someone else's voice"
       ],
       "failureModes": [
-        "— author —"
+        "Naming the capacity you wish for over the one emerging"
       ],
-      "remediation": "Identify emerging capacity — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the seeing or speaking capacity one size bigger than today.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-CHALLENGER",
@@ -2098,21 +2394,24 @@
       "operation": "challenger",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Challenger · Grow Up · Raise Awareness",
+      "title": "The Edge of Speaking",
       "submovePrompt": "Identify developmental edge. What must evolve?",
-      "primaryQuestion": "What must evolve?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Challenger: What resists?)",
+      "primaryQuestion": "What must evolve in me to name this truth out loud?",
+      "campaignQuestion": "What must we learn to tell this truth at the scale it needs?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Finding the truth-telling edge.",
       "forbiddenMoves": [
-        "— author —"
+        "Safe statements that aren't the edge",
+        "Hiding behind nuance"
       ],
       "failureModes": [
-        "— author —"
+        "Training comfortable speech, avoiding the edge"
       ],
-      "remediation": "Identify developmental edge — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the sentence you're scared to say. That's the edge.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-REGENT",
@@ -2121,21 +2420,26 @@
       "operation": "regent",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Regent · Grow Up · Raise Awareness",
+      "title": "Practice the Hard Conversation",
       "submovePrompt": "Steward growth. What deserves practice?",
-      "primaryQuestion": "What deserves practice?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which awareness skill — listening, naming, calling in — deserves deliberate practice?",
+      "campaignQuestion": "What communication practice should we repeat until it's reliable?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Committing to a repeatable practice over a single brave moment.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoping skill appears",
+        "One brave post, then silence"
       ],
       "failureModes": [
-        "— author —"
+        "Inconsistency",
+        "Practicing the wrong thing"
       ],
-      "remediation": "Steward growth — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick one rep — a weekly hard conversation. Schedule it.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-ARCHITECT",
@@ -2144,21 +2448,26 @@
       "operation": "architect",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Architect · Grow Up · Raise Awareness",
+      "title": "Sharpen the Signal",
       "submovePrompt": "Amplify capacity. What capability wants strengthening?",
-      "primaryQuestion": "What capability wants strengthening?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Which communication capability, if strengthened, would make my truth land better?",
+      "campaignQuestion": "What capacity, amplified, would most increase our reach?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Investing growth where reach compounds.",
       "forbiddenMoves": [
-        "— author —"
+        "Spreading practice thin",
+        "Vanity skills",
+        "Polishing the irrelevant"
       ],
       "failureModes": [
-        "— author —"
+        "Growth without leverage"
       ],
-      "remediation": "Amplify capacity — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick the highest-leverage skill — clarity, story, or listening. Train it.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-DIPLOMAT",
@@ -2167,21 +2476,26 @@
       "operation": "diplomat",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Diplomat · Grow Up · Raise Awareness",
+      "title": "Speaking Without Burning",
       "submovePrompt": "Relate growth. How does this affect others?",
-      "primaryQuestion": "How does this affect others?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "As I get bolder with truth, how does it land on the people around me?",
+      "campaignQuestion": "How does our louder voice affect allies, targets, and the harmed?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Growing voice without scorching relationships.",
       "forbiddenMoves": [
-        "— author —"
+        "Bravery that burns bridges needlessly",
+        "Leaving people behind"
       ],
       "failureModes": [
-        "— author —"
+        "Truth-telling that isolates",
+        "Collateral harm"
       ],
-      "remediation": "Relate growth — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name one relationship your bolder voice affects. Tend it.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-RA-SAGE",
@@ -2190,21 +2504,25 @@
       "operation": "sage",
       "domain": "RAISE_AWARENESS",
       "outputBar": "wisdom",
-      "title": "Sage · Grow Up · Raise Awareness",
+      "title": "Who Truth-Telling Makes You",
       "submovePrompt": "Integrate growth. Who am I becoming?",
-      "primaryQuestion": "Who am I becoming?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Raise Awareness? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "Who am I becoming as someone who sees and names what's real?",
+      "campaignQuestion": "What is this awareness work making us, as a community, become?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to develop capability — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Integrating the identity of a truth-teller.",
       "forbiddenMoves": [
-        "— author —"
+        "Skipping reflection",
+        "A righteous new mask"
       ],
       "failureModes": [
-        "— author —"
+        "Capacity gained, self un-integrated"
       ],
-      "remediation": "Integrate growth — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Finish the sentence: \"I am becoming someone who can see and say ______.\"",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-SHAMAN",
@@ -2213,21 +2531,26 @@
       "operation": "shaman",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Shaman · Grow Up · Direct Action",
+      "title": "The Courage Trying to Grow",
       "submovePrompt": "Identify emerging capacity. What wants to grow?",
-      "primaryQuestion": "What wants to grow?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Shaman: What is here?)",
+      "primaryQuestion": "What capacity for action or boundary is trying to grow in me?",
+      "campaignQuestion": "What action-capacity is this work asking us to develop?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Noticing the emerging courage.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing bravado",
+        "Performing fearlessness",
+        "Borrowed nerve"
       ],
       "failureModes": [
-        "— author —"
+        "Naming the courage you wish for over the one emerging"
       ],
-      "remediation": "Identify emerging capacity — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the boundary or action one size bigger than today. Take it once.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-CHALLENGER",
@@ -2236,21 +2559,24 @@
       "operation": "challenger",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Challenger · Grow Up · Direct Action",
+      "title": "The Edge of the Line",
       "submovePrompt": "Identify developmental edge. What must evolve?",
-      "primaryQuestion": "What must evolve?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Challenger: What resists?)",
+      "primaryQuestion": "What must evolve in me to draw the line this calls for?",
+      "campaignQuestion": "What must we learn to confront at the scale this needs?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Finding the action edge.",
       "forbiddenMoves": [
-        "— author —"
+        "Safe action that isn't the edge",
+        "Busywork as bravery"
       ],
       "failureModes": [
-        "— author —"
+        "Training comfort, avoiding the real confrontation"
       ],
-      "remediation": "Identify developmental edge — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the confrontation that scares you slightly. Step to it.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-REGENT",
@@ -2259,21 +2585,26 @@
       "operation": "regent",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Regent · Grow Up · Direct Action",
+      "title": "Practice Holding the Line",
       "submovePrompt": "Steward growth. What deserves practice?",
-      "primaryQuestion": "What deserves practice?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which action skill — saying no, staying steady, de-escalating — deserves practice?",
+      "campaignQuestion": "What action practice should we drill until it's reliable?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Repeatable practice of action skills.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoping courage appears",
+        "One brave act, then retreat"
       ],
       "failureModes": [
-        "— author —"
+        "Inconsistency",
+        "Drilling the wrong skill"
       ],
-      "remediation": "Steward growth — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick one rep — a small \"no\" daily. Practice it.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-ARCHITECT",
@@ -2282,21 +2613,26 @@
       "operation": "architect",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Architect · Grow Up · Direct Action",
+      "title": "Strengthen Your Stance",
       "submovePrompt": "Amplify capacity. What capability wants strengthening?",
-      "primaryQuestion": "What capability wants strengthening?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Which existing capability, if strengthened, would make my action more effective?",
+      "campaignQuestion": "What capacity, amplified, would most increase our impact?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Investing growth where impact compounds.",
       "forbiddenMoves": [
-        "— author —"
+        "Spreading thin",
+        "Vanity toughness",
+        "The irrelevant skill"
       ],
       "failureModes": [
-        "— author —"
+        "Growth without leverage"
       ],
-      "remediation": "Amplify capacity — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick the highest-leverage action capability. Train it.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-DIPLOMAT",
@@ -2305,21 +2641,25 @@
       "operation": "diplomat",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Diplomat · Grow Up · Direct Action",
+      "title": "Acting Without Abandoning",
       "submovePrompt": "Relate growth. How does this affect others?",
-      "primaryQuestion": "How does this affect others?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "As I get bolder in action, how does it land on those beside me?",
+      "campaignQuestion": "How does escalating this action affect allies and the people we protect?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Growing action without endangering or alienating allies.",
       "forbiddenMoves": [
-        "— author —"
+        "Heroics that strand the team",
+        "Risk imposed on others"
       ],
       "failureModes": [
-        "— author —"
+        "Bold action that isolates or endangers"
       ],
-      "remediation": "Relate growth — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name who your bolder action affects. Move with them, not past them.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-DA-SAGE",
@@ -2328,21 +2668,27 @@
       "operation": "sage",
       "domain": "DIRECT_ACTION",
       "outputBar": "wisdom",
-      "title": "Sage · Grow Up · Direct Action",
+      "title": "Who the Fight Makes You",
       "submovePrompt": "Integrate growth. Who am I becoming?",
-      "primaryQuestion": "Who am I becoming?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Direct Action? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "Who am I becoming as someone willing to act and confront?",
+      "campaignQuestion": "What is this struggle making us, as a community, become?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to develop capability — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Integrating the identity of one who acts.",
       "forbiddenMoves": [
-        "— author —"
+        "Skipping reflection",
+        "A hardened new mask",
+        "War without self"
       ],
       "failureModes": [
-        "— author —"
+        "Capacity gained, self un-integrated",
+        "Becoming what you fought"
       ],
-      "remediation": "Integrate growth — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Finish the sentence: \"I am becoming someone who can act and still ______.\"",
+      "capabilities": [
+        "connection",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-SHAMAN",
@@ -2351,21 +2697,26 @@
       "operation": "shaman",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Shaman · Grow Up · Skillful Organizing",
+      "title": "The Organizer Growing in You",
       "submovePrompt": "Identify emerging capacity. What wants to grow?",
-      "primaryQuestion": "What wants to grow?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Shaman: What is here?)",
+      "primaryQuestion": "What organizing or coordinating capacity is trying to grow in me?",
+      "campaignQuestion": "What organizing capacity is this work asking the group to develop?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Noticing the emerging organizer.",
       "forbiddenMoves": [
-        "— author —"
+        "Forcing leadership",
+        "Performing competence",
+        "Borrowed authority"
       ],
       "failureModes": [
-        "— author —"
+        "Naming the capacity you wish for over the one emerging"
       ],
-      "remediation": "Identify emerging capacity — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the organizing capacity one size bigger than today. Practice it once.",
+      "capabilities": [
+        "participation",
+        "exploration"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-CHALLENGER",
@@ -2374,21 +2725,26 @@
       "operation": "challenger",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Challenger · Grow Up · Skillful Organizing",
+      "title": "The Edge of Letting Go",
       "submovePrompt": "Identify developmental edge. What must evolve?",
-      "primaryQuestion": "What must evolve?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Challenger: What resists?)",
+      "primaryQuestion": "What must evolve in me to organize at the next level — often, to let go?",
+      "campaignQuestion": "What must the group learn to coordinate at the scale it needs?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Finding the organizing edge — often delegation and trust.",
       "forbiddenMoves": [
-        "— author —"
+        "Comfortable control that isn't the edge",
+        "Busywork"
       ],
       "failureModes": [
-        "— author —"
+        "Training the wrong muscle",
+        "Clinging to doing it yourself"
       ],
-      "remediation": "Identify developmental edge — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the thing you must stop doing yourself. Hand it off.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-REGENT",
@@ -2397,21 +2753,26 @@
       "operation": "regent",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Regent · Grow Up · Skillful Organizing",
+      "title": "Practice Delegating",
       "submovePrompt": "Steward growth. What deserves practice?",
-      "primaryQuestion": "What deserves practice?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "Which organizing skill — delegating, facilitating, documenting — deserves practice?",
+      "campaignQuestion": "What organizing practice should we repeat until it's reliable?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Repeatable practice of organizing skills.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoping coordination improves on its own",
+        "One good system, then drift"
       ],
       "failureModes": [
-        "— author —"
+        "Inconsistency",
+        "Practicing the wrong skill"
       ],
-      "remediation": "Steward growth — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick one rep — delegate one real thing weekly. Practice it.",
+      "capabilities": [
+        "rest",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-ARCHITECT",
@@ -2420,21 +2781,26 @@
       "operation": "architect",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Architect · Grow Up · Skillful Organizing",
+      "title": "Strengthen the System",
       "submovePrompt": "Amplify capacity. What capability wants strengthening?",
-      "primaryQuestion": "What capability wants strengthening?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "Which capability, if strengthened, would make the whole structure more effective?",
+      "campaignQuestion": "What capacity, amplified, would most increase the group's throughput?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Investing where structural leverage compounds.",
       "forbiddenMoves": [
-        "— author —"
+        "Spreading thin",
+        "Vanity process",
+        "Optimizing the irrelevant"
       ],
       "failureModes": [
-        "— author —"
+        "Growth without leverage"
       ],
-      "remediation": "Amplify capacity — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Pick the highest-leverage capability — clarity, trust, or follow-through. Build it.",
+      "capabilities": [
+        "participation",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-DIPLOMAT",
@@ -2443,21 +2809,26 @@
       "operation": "diplomat",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Diplomat · Grow Up · Skillful Organizing",
+      "title": "Growing the Team, Not Just You",
       "submovePrompt": "Relate growth. How does this affect others?",
-      "primaryQuestion": "How does this affect others?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "As I grow as an organizer, am I growing others' capacity too?",
+      "campaignQuestion": "How does scaling our structure develop people, not just exploit them?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Growing capacity in a way that develops others.",
       "forbiddenMoves": [
-        "— author —"
+        "Hoarding skill or authority",
+        "Growth that deskills the team",
+        "Extraction"
       ],
       "failureModes": [
-        "— author —"
+        "One strong organizer, a dependent group"
       ],
-      "remediation": "Relate growth — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name one person whose capacity your growth could grow. Invest in them.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "GROW-SO-SAGE",
@@ -2466,21 +2837,26 @@
       "operation": "sage",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "wisdom",
-      "title": "Sage · Grow Up · Skillful Organizing",
+      "title": "Who Organizing Makes You",
       "submovePrompt": "Integrate growth. Who am I becoming?",
-      "primaryQuestion": "Who am I becoming?",
-      "campaignQuestion": "What capacity must we build for this campaign, in Skillful Organizing? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "Who am I becoming as someone who builds and holds structure?",
+      "campaignQuestion": "What is this organizing work making us, as a community, become?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to develop capability — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Integrating the identity of a builder and steward.",
       "forbiddenMoves": [
-        "— author —"
+        "Skipping reflection",
+        "A controlling new mask"
       ],
       "failureModes": [
-        "— author —"
+        "Capacity gained, self un-integrated",
+        "Becoming the bottleneck you feared"
       ],
-      "remediation": "Integrate growth — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Finish the sentence: \"I am becoming someone who can build and still ______.\"",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-GR-SHAMAN",
@@ -2662,21 +3038,25 @@
       "operation": "shaman",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Shaman · Show Up · Raise Awareness",
+      "title": "Aim the Awareness",
       "submovePrompt": "Choose domain. Where will I invest this?",
-      "primaryQuestion": "Where will I invest this?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Shaman: What is here?)",
+      "primaryQuestion": "Where exactly will I direct this awareness into the world?",
+      "campaignQuestion": "Where will this campaign's message actually go — which audience, which channel?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Committing awareness to a specific target.",
       "forbiddenMoves": [
-        "— author —"
+        "Broadcasting everywhere",
+        "Vague \"spreading the word\""
       ],
       "failureModes": [
-        "— author —"
+        "Noise with no target",
+        "A message to no one"
       ],
-      "remediation": "Choose domain — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one audience and channel this truth goes to first.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-RA-CHALLENGER",
@@ -2685,21 +3065,26 @@
       "operation": "challenger",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Challenger · Show Up · Raise Awareness",
+      "title": "Say the Thing",
       "submovePrompt": "Create intervention. What must change?",
-      "primaryQuestion": "What must change?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Challenger: What resists?)",
+      "primaryQuestion": "What truth must I actually state — publicly or to someone's face — now?",
+      "campaignQuestion": "What's the intervention: the post, the testimony, the call-out or call-in?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Shipping the actual act of witness.",
       "forbiddenMoves": [
-        "— author —"
+        "One more draft",
+        "Private clarity",
+        "A soft hint instead of the thing"
       ],
       "failureModes": [
-        "— author —"
+        "The truth that never gets said"
       ],
-      "remediation": "Create intervention — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Say the thing today — specifically, to the people who need to hear it.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored",
+      "flavor": "The naming is the first move."
     },
     {
       "id": "SHOW-RA-REGENT",
@@ -2708,21 +3093,26 @@
       "operation": "regent",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Regent · Show Up · Raise Awareness",
+      "title": "Keep the Truth Alive",
       "submovePrompt": "Create stewardship. What deserves ongoing support?",
-      "primaryQuestion": "What deserves ongoing support?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "What ongoing practice keeps this truth in view after the moment passes?",
+      "campaignQuestion": "How do we steward this awareness so it doesn't fade with the news cycle?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Building durable, accountable attention.",
       "forbiddenMoves": [
-        "— author —"
+        "Post-and-forget",
+        "Performative one-offs",
+        "Abandoning the issue"
       ],
       "failureModes": [
-        "— author —"
+        "Awareness that spikes and dies"
       ],
-      "remediation": "Create stewardship — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Set one recurring act that keeps the truth present.",
+      "capabilities": [
+        "rest",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-RA-ARCHITECT",
@@ -2731,21 +3121,25 @@
       "operation": "architect",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Architect · Show Up · Raise Awareness",
+      "title": "Build the Megaphone",
       "submovePrompt": "Create structure. What value am I amplifying?",
-      "primaryQuestion": "What value am I amplifying?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What structure makes this truth travel further and repeat?",
+      "campaignQuestion": "What structure — a series, toolkit, or platform — amplifies the message?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Structure that compounds reach.",
       "forbiddenMoves": [
-        "— author —"
+        "Chasing one-off virality",
+        "Structure for its own sake"
       ],
       "failureModes": [
-        "— author —"
+        "A message that can't scale or repeat"
       ],
-      "remediation": "Create structure — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Add one structural lever: a series, a shareable artifact, or a coalition list.",
+      "capabilities": [
+        "participation",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-RA-DIPLOMAT",
@@ -2754,21 +3148,27 @@
       "operation": "diplomat",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Diplomat · Show Up · Raise Awareness",
+      "title": "Amplify, Don't Speak Over",
       "submovePrompt": "Create relationship. Who must be involved? What power dynamic must be addressed?",
-      "primaryQuestion": "Who must be involved? What power dynamic must be addressed?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Whose voice should I amplify, and what power dynamic must I name to do it right?",
+      "campaignQuestion": "Who must lead this message, and whose consent and centering matter?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "Raising awareness by centering the affected, not yourself.",
       "forbiddenMoves": [
-        "— author —"
+        "Speaking over",
+        "Savior framing",
+        "Using others' stories without consent"
       ],
       "failureModes": [
-        "— author —"
+        "Centering yourself",
+        "Extraction of testimony"
       ],
-      "remediation": "Create relationship — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Amplify one affected voice with consent; name your own role honestly.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-RA-SAGE",
@@ -2777,21 +3177,26 @@
       "operation": "sage",
       "domain": "RAISE_AWARENESS",
       "outputBar": "artifact",
-      "title": "Sage · Show Up · Raise Awareness",
+      "title": "What the Telling Leaves",
       "submovePrompt": "Create legacy. What artifact remains?",
-      "primaryQuestion": "What artifact remains?",
-      "campaignQuestion": "What must we create or do for this campaign, in Raise Awareness? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What lasting artifact of this truth will remain — a record, a story, a shift?",
+      "campaignQuestion": "What does this awareness campaign leave behind beyond the moment?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to invest capacity — in the context of attention, truth, and what must become visible.",
+      "optimizesFor": "A durable record or shift beyond the attention spike.",
       "forbiddenMoves": [
-        "— author —"
+        "Ephemeral outrage",
+        "Leaving no record",
+        "The story untold"
       ],
       "failureModes": [
-        "— author —"
+        "Attention spent, nothing retained"
       ],
-      "remediation": "Create legacy — in the context of attention, truth, and what must become visible.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the artifact — the documented account, the changed mind — that outlives the post.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-DA-SHAMAN",
@@ -2800,21 +3205,26 @@
       "operation": "shaman",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Shaman · Show Up · Direct Action",
+      "title": "Aim the Action",
       "submovePrompt": "Choose domain. Where will I invest this?",
-      "primaryQuestion": "Where will I invest this?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Shaman: What is here?)",
+      "primaryQuestion": "Where exactly will I direct this action?",
+      "campaignQuestion": "Where will this action land — which target, which moment?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Committing action to a specific target.",
       "forbiddenMoves": [
-        "— author —"
+        "Diffuse protest",
+        "Vague \"doing something\"",
+        "Endless prep"
       ],
       "failureModes": [
-        "— author —"
+        "Action with no target",
+        "Energy scattered"
       ],
-      "remediation": "Choose domain — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one place this action lands first.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-DA-CHALLENGER",
@@ -2823,21 +3233,26 @@
       "operation": "challenger",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Challenger · Show Up · Direct Action",
+      "title": "Make the Move",
       "submovePrompt": "Create intervention. What must change?",
-      "primaryQuestion": "What must change?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Challenger: What resists?)",
+      "primaryQuestion": "What concrete confrontation or intervention must I make now?",
+      "campaignQuestion": "What's the action that actually goes — the stand, the disruption, the demand?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Shipping the actual intervention.",
       "forbiddenMoves": [
-        "— author —"
+        "One more meeting",
+        "Private resolve",
+        "A hint instead of the act"
       ],
       "failureModes": [
-        "— author —"
+        "The action that never happens"
       ],
-      "remediation": "Create intervention — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Take the action today — specific, real, visible.",
+      "capabilities": [
+        "agency"
+      ],
+      "status": "authored",
+      "flavor": "A challenge opens a new front."
     },
     {
       "id": "SHOW-DA-REGENT",
@@ -2846,21 +3261,27 @@
       "operation": "regent",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Regent · Show Up · Direct Action",
+      "title": "Sustain the Pressure",
       "submovePrompt": "Create stewardship. What deserves ongoing support?",
-      "primaryQuestion": "What deserves ongoing support?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "What ongoing commitment keeps this action from being a one-off?",
+      "campaignQuestion": "How do we sustain and steward this action over time?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Durable, accountable pressure.",
       "forbiddenMoves": [
-        "— author —"
+        "One-day actions",
+        "Burnout sprints",
+        "Abandoning it after the headline"
       ],
       "failureModes": [
-        "— author —"
+        "Pressure that vanishes",
+        "Unsustained campaigns"
       ],
-      "remediation": "Create stewardship — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Set one sustainable recurring commitment to keep the pressure on.",
+      "capabilities": [
+        "rest",
+        "agency"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-DA-ARCHITECT",
@@ -2869,21 +3290,26 @@
       "operation": "architect",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Architect · Show Up · Direct Action",
+      "title": "Build the Leverage",
       "submovePrompt": "Create structure. What value am I amplifying?",
-      "primaryQuestion": "What value am I amplifying?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What structure makes this action repeatable and harder to ignore?",
+      "campaignQuestion": "What structure — escalation ladder, tactics, roles — amplifies the action?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Structure that compounds pressure.",
       "forbiddenMoves": [
-        "— author —"
+        "One-off heroics",
+        "Structure for show",
+        "Over-planning into paralysis"
       ],
       "failureModes": [
-        "— author —"
+        "Action that can't escalate or repeat"
       ],
-      "remediation": "Create structure — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Add one structural lever — an escalation step or a clear next demand.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-DA-DIPLOMAT",
@@ -2892,21 +3318,27 @@
       "operation": "diplomat",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Diplomat · Show Up · Direct Action",
+      "title": "Act With, Not For",
       "submovePrompt": "Create relationship. Who must be involved? What power dynamic must be addressed?",
-      "primaryQuestion": "Who must be involved? What power dynamic must be addressed?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Who must be involved, and what power dynamic must I name to act cleanly?",
+      "campaignQuestion": "Who leads this action, whose consent matters, and who must be protected?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Action rooted in consent and shared power, not saviorism.",
       "forbiddenMoves": [
-        "— author —"
+        "Acting for people without them",
+        "Exposing the vulnerable",
+        "Lone-wolf heroics"
       ],
       "failureModes": [
-        "— author —"
+        "\"Help\" that disempowers",
+        "Action that speaks over"
       ],
-      "remediation": "Create relationship — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Act with the affected, by their lead; name and protect who's at risk.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-DA-SAGE",
@@ -2915,21 +3347,27 @@
       "operation": "sage",
       "domain": "DIRECT_ACTION",
       "outputBar": "artifact",
-      "title": "Sage · Show Up · Direct Action",
+      "title": "What the Action Leaves",
       "submovePrompt": "Create legacy. What artifact remains?",
-      "primaryQuestion": "What artifact remains?",
-      "campaignQuestion": "What must we create or do for this campaign, in Direct Action? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What lasting change or precedent will this action leave?",
+      "campaignQuestion": "What does this action leave behind — a precedent, a protection, a shift?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to invest capacity — in the context of the line, intervention, and what must change.",
+      "optimizesFor": "Durable change beyond the moment of confrontation.",
       "forbiddenMoves": [
-        "— author —"
+        "Catharsis with no change",
+        "No follow-through",
+        "Precedent left unset"
       ],
       "failureModes": [
-        "— author —"
+        "A fight won, nothing changed",
+        "The harm returns"
       ],
-      "remediation": "Create legacy — in the context of the line, intervention, and what must change.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the change that must outlast the action; secure it.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-SO-SHAMAN",
@@ -2938,21 +3376,26 @@
       "operation": "shaman",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Shaman · Show Up · Skillful Organizing",
+      "title": "Aim the Structure",
       "submovePrompt": "Choose domain. Where will I invest this?",
-      "primaryQuestion": "Where will I invest this?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Shaman: What is here?)",
+      "primaryQuestion": "Where exactly will I invest this organizing energy?",
+      "campaignQuestion": "Where will this structure actually apply — which process, which team?",
       "defaultSubject": "self",
-      "optimizesFor": "Notice in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Committing organizing to a specific target.",
       "forbiddenMoves": [
-        "— author —"
+        "Reorganizing everything",
+        "Vague \"getting organized\"",
+        "Endless planning"
       ],
       "failureModes": [
-        "— author —"
+        "Systems built for nothing in particular"
       ],
-      "remediation": "Choose domain — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the one process this structure serves first.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-SO-CHALLENGER",
@@ -2961,21 +3404,26 @@
       "operation": "challenger",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Challenger · Show Up · Skillful Organizing",
+      "title": "Ship the System",
       "submovePrompt": "Create intervention. What must change?",
-      "primaryQuestion": "What must change?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Challenger: What resists?)",
+      "primaryQuestion": "What concrete structural change must I make now?",
+      "campaignQuestion": "What's the intervention — the role defined, the process launched, the meeting fixed?",
       "defaultSubject": "self",
-      "optimizesFor": "Challenge in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Shipping the actual structural change.",
       "forbiddenMoves": [
-        "— author —"
+        "One more planning doc",
+        "Private clarity",
+        "A suggestion instead of a change"
       ],
       "failureModes": [
-        "— author —"
+        "The reorg that never happens"
       ],
-      "remediation": "Create intervention — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Make the structural change today — define one role, fix one process.",
+      "capabilities": [
+        "agency",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-SO-REGENT",
@@ -2984,21 +3432,27 @@
       "operation": "regent",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Regent · Show Up · Skillful Organizing",
+      "title": "Tend the Structure",
       "submovePrompt": "Create stewardship. What deserves ongoing support?",
-      "primaryQuestion": "What deserves ongoing support?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Regent: What deserves responsibility?)",
+      "primaryQuestion": "What ongoing stewardship keeps this structure healthy over time?",
+      "campaignQuestion": "How do we maintain and steward this system so it doesn't rot?",
       "defaultSubject": "self",
-      "optimizesFor": "Steward in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Durable, accountable maintenance.",
       "forbiddenMoves": [
-        "— author —"
+        "Set-and-forget systems",
+        "No owner",
+        "Maintenance neglected"
       ],
       "failureModes": [
-        "— author —"
+        "Structure that decays",
+        "Nobody tending it"
       ],
-      "remediation": "Create stewardship — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Assign one owner and one review rhythm to the structure.",
+      "capabilities": [
+        "rest",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-SO-ARCHITECT",
@@ -3007,21 +3461,27 @@
       "operation": "architect",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Architect · Show Up · Skillful Organizing",
+      "title": "Build to Last",
       "submovePrompt": "Create structure. What value am I amplifying?",
-      "primaryQuestion": "What value am I amplifying?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Architect: What value wants to be increased?)",
+      "primaryQuestion": "What structure makes this repeatable, scalable, and resilient?",
+      "campaignQuestion": "What system — roles, process, handoffs — amplifies the group's work?",
       "defaultSubject": "self",
-      "optimizesFor": "Amplify in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Structure that compounds capacity.",
       "forbiddenMoves": [
-        "— author —"
+        "Heroic one-offs",
+        "Bureaucracy for show",
+        "Over-engineering"
       ],
       "failureModes": [
-        "— author —"
+        "A structure that can't scale or survive a departure"
       ],
-      "remediation": "Create structure — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Add one durable lever — a documented process, a clear role, a handoff.",
+      "capabilities": [
+        "participation",
+        "agency"
+      ],
+      "status": "authored",
+      "flavor": "Design is making complexity navigable without making it simple."
     },
     {
       "id": "SHOW-SO-DIPLOMAT",
@@ -3030,21 +3490,27 @@
       "operation": "diplomat",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Diplomat · Show Up · Skillful Organizing",
+      "title": "Share the Power",
       "submovePrompt": "Create relationship. Who must be involved? What power dynamic must be addressed?",
-      "primaryQuestion": "Who must be involved? What power dynamic must be addressed?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Diplomat: What relationships or power dynamics matter?)",
+      "primaryQuestion": "Who must hold real ownership, and what power dynamic must I name to build this fairly?",
+      "campaignQuestion": "How do we distribute roles and power so the structure is just, not concentrated?",
       "defaultSubject": "self",
-      "optimizesFor": "Care in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Structure that shares power and consent, rather than centralizing it.",
       "forbiddenMoves": [
-        "— author —"
+        "Concentrating power",
+        "Assigning roles without consent",
+        "Performative inclusion"
       ],
       "failureModes": [
-        "— author —"
+        "A structure that entrenches the few",
+        "Tokens without power"
       ],
-      "remediation": "Create relationship — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Distribute one piece of real ownership; name the power dynamic openly.",
+      "capabilities": [
+        "connection",
+        "participation"
+      ],
+      "status": "authored"
     },
     {
       "id": "SHOW-SO-SAGE",
@@ -3053,21 +3519,26 @@
       "operation": "sage",
       "domain": "SKILLFUL_ORGANIZING",
       "outputBar": "artifact",
-      "title": "Sage · Show Up · Skillful Organizing",
+      "title": "What the Structure Leaves",
       "submovePrompt": "Create legacy. What artifact remains?",
-      "primaryQuestion": "What artifact remains?",
-      "campaignQuestion": "What must we create or do for this campaign, in Skillful Organizing? (Sage: What larger truth is emerging?)",
+      "primaryQuestion": "What lasting capacity or institution will this organizing leave behind?",
+      "campaignQuestion": "What does this organizing leave behind — a durable structure, trained people?",
       "defaultSubject": "self",
-      "optimizesFor": "Integrate in order to invest capacity — in the context of structure, coordination, and who does what.",
+      "optimizesFor": "Durable institutional capacity beyond the effort.",
       "forbiddenMoves": [
-        "— author —"
+        "Structure that dies with you",
+        "No documentation",
+        "Capacity left uncaptured"
       ],
       "failureModes": [
-        "— author —"
+        "The work collapses when you leave"
       ],
-      "remediation": "Create legacy — in the context of structure, coordination, and who does what.",
-      "capabilities": [],
-      "status": "generated"
+      "remediation": "Name the structure or trained people that outlast you; secure them.",
+      "capabilities": [
+        "participation",
+        "connection"
+      ],
+      "status": "authored"
     },
     {
       "id": "INSTR-HOWTO-01",
