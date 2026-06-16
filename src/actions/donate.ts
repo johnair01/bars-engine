@@ -6,7 +6,12 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { maybeCompleteMilestoneAndAdvanceKotter } from '@/actions/campaign-deck'
-import { WALL_KEYS, type WallKey } from '@/lib/event/barn-raising'
+import {
+  WALL_KEYS,
+  keepBuildingAfterWall,
+  type WallKey,
+  type KeepBuildingGuidance,
+} from '@/lib/event/barn-raising'
 
 const PENDING_DONATION_COOKIE = 'bars_pending_donation'
 const DEFAULT_PACK_RATE_CENTS = 100 // 1 pack per $1
@@ -126,6 +131,8 @@ export type ReportDonationState = {
   amountCents?: number
   /** Vibeulons minted to the player when self-report succeeds (no intermediate “pack” step). */
   vibeulonsMinted?: number
+  /** FR6 — "keep building" redirect when this gift topped off a wall. */
+  keepBuilding?: KeepBuildingGuidance
 }
 
 function parseAmountCents(raw: FormDataEntryValue | null): number | null {
@@ -307,6 +314,7 @@ async function createDonationAndPacks(
   }
 
   let linkedMilestoneId: string | null = null
+  let creditedWallKey: WallKey | null = null
 
   try {
     const result = await db.$transaction(async (tx) => {
@@ -314,7 +322,7 @@ async function createDonationAndPacks(
         dsw?.milestoneId && campaignRef
           ? await tx.campaignMilestone.findFirst({
               where: { id: dsw.milestoneId, campaignRef, status: 'active' },
-              select: { id: true, title: true },
+              select: { id: true, title: true, wallKey: true },
             })
           : null
 
@@ -345,6 +353,9 @@ async function createDonationAndPacks(
           data: { currentValue: { increment: dollars } },
         })
         linkedMilestoneId = msRow.id
+        if (msRow.wallKey && WALL_KEY_SET.has(msRow.wallKey)) {
+          creditedWallKey = msRow.wallKey as WallKey
+        }
       }
 
       await tx.instance.update({
@@ -399,14 +410,28 @@ async function createDonationAndPacks(
     revalidatePath('/event/donate')
     revalidatePath('/event/donate/wizard')
     revalidatePath('/event/barn')
+    revalidatePath('/pricing')
     revalidatePath('/demo/bruised-banana/donate')
     revalidatePath('/')
     revalidatePath('/wallet')
+
+    // FR6 — "keep building": if this gift topped off a wall, point the giver to the next plank.
+    let keepBuilding: KeepBuildingGuidance | undefined
+    if (creditedWallKey) {
+      try {
+        const { getBarnSnapshot } = await import('@/actions/barn')
+        const snap = await getBarnSnapshot(campaignRef)
+        keepBuilding = keepBuildingAfterWall(snap, creditedWallKey) ?? undefined
+      } catch (e) {
+        console.warn('[donate] keepBuilding snapshot', e)
+      }
+    }
 
     return {
       success: true,
       amountCents,
       vibeulonsMinted,
+      ...(keepBuilding ? { keepBuilding } : {}),
     }
   } catch (e) {
     console.error('[donate] createDonationAndPacks failed:', e)
@@ -422,6 +447,7 @@ export async function processPendingDonation(playerId: string): Promise<{
   success?: boolean
   amountCents?: number
   vibeulonsMinted?: number
+  keepBuilding?: KeepBuildingGuidance
 } | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get(PENDING_DONATION_COOKIE)?.value
@@ -454,7 +480,12 @@ export async function processPendingDonation(playerId: string): Promise<{
   cookieStore.delete(PENDING_DONATION_COOKIE)
 
   if (result.success) {
-    return { success: true, amountCents: result.amountCents, vibeulonsMinted: result.vibeulonsMinted }
+    return {
+      success: true,
+      amountCents: result.amountCents,
+      vibeulonsMinted: result.vibeulonsMinted,
+      ...(result.keepBuilding ? { keepBuilding: result.keepBuilding } : {}),
+    }
   }
   return null
 }

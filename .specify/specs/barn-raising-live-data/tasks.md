@@ -18,13 +18,13 @@
 - [x] **T2.1** `src/actions/barn.ts` → `getBarnSnapshot(campaignRef)` (3 milestone reads → cents; in-kind hands count via `barId`).
 - [x] **T2.2** Unit test `src/lib/event/__tests__/barn-raising.test.ts` (cents conversion; `npm run test:barn` ✓).
 - [x] **T2.3** Wired `/event/barn` to `getBarnSnapshot` (try/catch → empty `BarnState`); `?preview=1` still forces fill.
-- [ ] **T2.4** `/pricing` teaser live snapshot — **deferred** (teaser renders the empty state; avoid touching `/pricing` which moved in PR #113).
+- [x] **T2.4** `/pricing` teaser live snapshot — wired to `getBarnSnapshot()` (DB-safe try/catch → empty state on DB-down). [slice 3]
 
 ## Phase 3 — Write path (checkout tagging) — SLICE 2 DONE
 - [x] **T3.1** `/event/donate` reads `product`/`variant`/`wall` and forwards into the self-report form.
 - [x] **T3.2** `donate.ts` persists `product`/`variant`/`wall` into `Donation.dswMeta`.
 - [x] **T3.3** `donate.ts` resolves the wall milestone by `(campaignRef, wallKey)` when no `milestoneId`; product purchases default to the **pre-sale** wall (set in `checkoutHref`).
-- [ ] **T3.4** Wall-complete "keep building" redirect (FR6) — deferred slice 3.
+- [x] **T3.4** Wall-complete "keep building" redirect (FR6) — `keepBuildingAfterWall(state, wall)` (pure, unit-tested) surfaced via `KeepBuildingCard` in the donate success path (both pending-cookie + logged-in direct submit). [slice 3]
 
 ## Phase 4 — Verification quest (required)
 - [x] **T4.1** Authored Twine passages for `cert-barn-raising-live-v1` (live walls → buy → self-report → pre-sale wall rises).
