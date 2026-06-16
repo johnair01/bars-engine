@@ -47,7 +47,7 @@ export default function CompostHeapPage() {
           Remember what you found here.
         </p>
         <Link
-          href="/bars/create?prefill=I+found+the+compost+heap"
+          href="/bars/capture?text=I+found+the+compost+heap"
           className="inline-block text-xs font-bold px-4 py-2 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/30 transition-colors"
         >
           Claim this BAR

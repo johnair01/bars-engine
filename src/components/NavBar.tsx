@@ -59,9 +59,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             PLAY
                         </Link>
                         <Link
-                            href="/bars/create"
+                            href="/bars/capture"
                             title="Forge a BAR: turn a charged moment into an artifact you can grow into a quest."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/create')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/bars/capture')}`}
                         >
                             + BAR
                         </Link>

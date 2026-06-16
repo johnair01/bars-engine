@@ -409,7 +409,7 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
     const externalDonateLink = links.find((l) => isExternalDonateLink(l.target))
     const normalLinks = links.filter((l) => !isExternalDonateLink(l.target) && l.target !== 'Signup' && l.target !== 'Preview')
 
-    /** Match Forge (`/bars/create`) shell: private draft lands in Vault. */
+    /** Match Forge (`/bars/capture`) shell: private draft lands in Vault. */
     const isForgeBarStep = currentPassage.name === 'Create a BAR'
     const shellClass = isForgeBarStep
         ? 'max-w-xl border-zinc-700 bg-zinc-950/80'

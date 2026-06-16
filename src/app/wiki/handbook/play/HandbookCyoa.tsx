@@ -182,7 +182,7 @@ const PASSAGES: Record<string, Passage> = {
       { text: 'Continue', target: 'finale' },
     ],
     links: [
-      { label: 'Create a BAR', href: '/bars/create' },
+      { label: 'Create a BAR', href: '/bars/capture' },
     ],
   },
 

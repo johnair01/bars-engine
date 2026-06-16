@@ -140,6 +140,16 @@ export function SeamBarCreate({
       >
         {submitting ? 'Sealing...' : 'Seal this commitment'}
       </button>
+
+      <p className="text-center text-xs text-zinc-600">
+        or{' '}
+        <a
+          href={`/bars/capture${barText.trim() ? `?text=${encodeURIComponent(barText.trim())}` : ''}`}
+          className="text-purple-500 hover:text-purple-400 underline underline-offset-2"
+        >
+          compose on the canvas →
+        </a>
+      </p>
     </div>
   )
 }
