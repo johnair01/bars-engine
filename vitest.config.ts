@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'node',
     include: [
       'src/actions/__tests__/campaign-attach.test.ts',
+      'src/actions/__tests__/campaign-milestone-authoring.test.ts',
       'src/lib/alchemy-engine/__tests__/ai-generation.test.ts',
       'src/lib/alchemy-engine/__tests__/arc-flow-wiring.test.ts',
       'src/lib/alchemy-engine/__tests__/e2e-arc-dissatisfied-to-epiphany.test.ts',

@@ -29,12 +29,18 @@ frames. Each phase is independently shippable.
 - [x] **T2.4** — 13 unit tests (`src/actions/__tests__/campaign-attach.test.ts`, vitest, db+auth
   mocked); registered in `vitest.config.ts`. `tsc --noEmit` + `eslint` clean (0 errors).
 
-## Phase 3 — Milestone authoring
-- [ ] **T3.1** — `src/actions/campaign-milestone-authoring.ts`: `proposeMilestone`,
-  `updateMilestoneCraft`, `approveMilestone` (steward+).
-- [ ] **T3.2** — Milestone craft UI (narrative "why it matters" + target + celebration copy).
-- [ ] **T3.3** — Celebration on reach (narrative beat + reward), extending BBMT.
-- [ ] **T3.4** — `npm run check`.
+## Phase 3 — Milestone authoring ✅ DONE
+- [x] **T3.1** — `src/actions/campaign-milestone-authoring.ts`: `proposeMilestone` (any member),
+  `updateMilestoneCraft` (proposer or steward+), `approveMilestone` (steward+), `listCampaignMilestones`.
+  Reuses `CampaignMilestone` (propose→active) + a paired `CampaignMilestoneMarker` for the celebration;
+  no migration. Steward gate reuses `assertCanEditInstanceDonation` resolved by campaignRef.
+- [x] **T3.2** — Craft UI: `MilestoneAuthoringPanel` (why-it-matters + target + celebration; inline
+  edit + approve) on steward-gated page `/campaign/[ref]/milestones`; "Milestones" hub nav button.
+- [x] **T3.3** — Celebration on reach: authoring writes a `CampaignMilestoneMarker` (triggerCount =
+  rounded target, narrativeText = celebration) — already rendered by `ContributionProgressBar` when a
+  player reaches the count. (Reward beyond the narrative beat deferred to roadmap.)
+- [x] **T3.4** — 12 unit tests (`src/actions/__tests__/campaign-milestone-authoring.test.ts`);
+  `tsc --noEmit` + `eslint` clean (0 errors); 25 TSG tests pass total.
 
 ## Phase 4 — Now page rewrite (delegate)
 - [ ] **T4.1** — Drive `now-event-vault-throughput-qol` to acceptance: high-contrast compass, ONE

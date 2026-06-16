@@ -134,6 +134,13 @@ export function CampaignHubView({
                   Fundraising settings
                 </CampaignOutlineNavButton>
               ) : null}
+              {showFundraisingSettings ? (
+                <CampaignOutlineNavButton
+                  href={`/campaign/${encodeURIComponent(campaignRef)}/milestones`}
+                >
+                  Milestones
+                </CampaignOutlineNavButton>
+              ) : null}
               <CampaignOutlineNavButton href={`/campaign/twine?ref=${campaignRef}`}>
                 Campaign story
               </CampaignOutlineNavButton>
