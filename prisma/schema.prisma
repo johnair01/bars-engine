@@ -79,8 +79,8 @@ model Player {
   hasCompletedFirstQuest         Boolean                     @default(false)
   hasCreatedFirstQuest           Boolean                     @default(false)
   onboardingCompletedAt          DateTime?
-  practiceOrientationComplete      Boolean                     @default(false)
-  practiceOrientationCompletedAt   DateTime?
+  practiceOrientationComplete    Boolean                     @default(false)
+  practiceOrientationCompletedAt DateTime?
   inviteId                       String
   invitedByPlayerId              String?
   nationId                       String?
@@ -181,6 +181,7 @@ model Player {
   questMoveLogs                  QuestMoveLog[]
   questProposals                 QuestProposal[]
   redemptionPacks                RedemptionPack[]
+  entitlements                   Entitlement[]
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
@@ -2142,20 +2143,20 @@ model PartyPlayerCard {
 }
 
 model PartyQuestCard {
-  id              String   @id @default(cuid())
-  partyId         String   @map("party_id")
-  authorPlayerId  String?  @map("author_player_id")
-  title           String
-  prompt          String
-  category        String   @default("treasure")
-  kind            String   @default("ask")
-  face            String?
-  waveMode        String?  @map("wave_mode")
-  materials       String   @default("")
-  waveJson        Json     @default("{}") @map("wave_json")
-  gameMasterJson  Json     @default("{}") @map("game_master_json")
-  seed            Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  partyId        String   @map("party_id")
+  authorPlayerId String?  @map("author_player_id")
+  title          String
+  prompt         String
+  category       String   @default("treasure")
+  kind           String   @default("ask")
+  face           String?
+  waveMode       String?  @map("wave_mode")
+  materials      String   @default("")
+  waveJson       Json     @default("{}") @map("wave_json")
+  gameMasterJson Json     @default("{}") @map("game_master_json")
+  seed           Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([partyId, createdAt])
   @@index([partyId, seed])
@@ -2393,6 +2394,78 @@ model RedemptionPack {
   @@index([playerId, status])
   @@index([instanceId, packType])
   @@map("redemption_packs")
+}
+
+// ── Entitlements & redemption (Mastering Allyship launch — Track A) ──
+// Replaces the never-migrated RedemptionPack scaffold for the
+// "buy on Gumroad → unlock app feature" flow. Additive only — RedemptionPack
+// is left in place and may be removed in a later deliberate step.
+//
+// A purchase grants an Entitlement. `sku` is the OfferKey from
+// src/lib/launch/offers.ts (e.g. book-digital, game-subscription, founding-ally).
+model Entitlement {
+  id              String    @id @default(cuid())
+  playerId        String
+  sku             String
+  grantType       String    @default("perpetual")
+  status          String    @default("active")
+  source          String    @default("gumroad")
+  externalOrderId String?
+  subscriptionId  String?
+  startsAt        DateTime  @default(now())
+  expiresAt       DateTime?
+  metadata        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, sku, externalOrderId])
+  @@index([playerId, status])
+  @@index([sku, status])
+  @@index([subscriptionId])
+  @@map("entitlements")
+}
+
+// Anonymous, pre-account redemption token. Minted on purchase (webhook or admin);
+// the buyer redeems it after signing in/up, which creates an Entitlement.
+model RedemptionCode {
+  id                 String    @id @default(cuid())
+  code               String    @unique
+  sku                String
+  grantType          String    @default("perpetual")
+  grantDurationDays  Int?
+  source             String    @default("gumroad")
+  externalOrderId    String?   @unique
+  subscriptionId     String?
+  status             String    @default("unredeemed")
+  redeemedByPlayerId String?
+  entitlementId      String?   @unique
+  expiresAt          DateTime?
+  metadata           String?
+  createdAt          DateTime  @default(now())
+  redeemedAt         DateTime?
+
+  @@index([sku, status])
+  @@map("redemption_codes")
+}
+
+// Uploaded digital deliverable for a launch SKU (e.g. the finished book or RPG
+// handbook PDF/EPUB from external editorial software). One current file per SKU;
+// re-upload replaces it. Served via the gated /api/deliverables/[sku] route to
+// players who hold the matching entitlement capability.
+model DigitalDeliverable {
+  id           String   @id @default(cuid())
+  sku          String   @unique
+  title        String
+  fileName     String
+  fileUrl      String
+  contentType  String?
+  sizeBytes    Int?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("digital_deliverables")
 }
 
 model Donation {
@@ -3752,7 +3825,7 @@ model Campaign {
   /// See PHASE2A_BACKFILL_LOGIC_DESIGN.md for full schema.
   campaignFlavorLayers Json?
   /// DAOE Phase 3: Player Personality Intake — stored player profile + NPC tone weights
-  personalityProfile  Json?
+  personalityProfile   Json?
   /// DAOE Phase 4: Campaign suspension kill-switch — set when subscription revoked, cleared on restore
   suspendedAt          DateTime?
   /// Scheduled start

@@ -42,6 +42,7 @@
     "scripts",
     "src/scripts",
     "chatgpt_repo_snapshot_*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "mtgoa-game"
   ]
 }

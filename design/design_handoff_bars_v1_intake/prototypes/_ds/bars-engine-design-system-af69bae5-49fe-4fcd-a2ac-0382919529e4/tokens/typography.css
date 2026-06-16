@@ -1,0 +1,77 @@
+/* BARS Engine — Typography Tokens
+ *
+ * Three roles (from UI_COVENANT):
+ *   • Display / chrome → geometric sans, tight tracking, bold     (titles, card names)
+ *   • Body / prose     → warm rounded sans                         (player content)
+ *   • Stats / labels   → tabular mono, often uppercase + tracked   (vibulons, micro-labels)
+ *
+ * The signature chrome label is mono, UPPERCASE, letter-spaced wide, and small —
+ * "field state", "VIBULON", nation names all read this way.
+ */
+
+:root {
+  /* ── Families ─────────────────────────────────────────────────────────── */
+  --bars-font-display: 'Jost', 'Futura PT', 'Futura', system-ui, sans-serif;
+  --bars-font-body:    'Nunito', ui-rounded, 'Segoe UI Rounded', system-ui, sans-serif;
+  --bars-font-mono:    'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ── Type scale (rem, 16px base) ──────────────────────────────────────── */
+  --bars-text-2xs: 0.625rem;  /* 10px — micro chrome labels (mono, tracked) */
+  --bars-text-xs:  0.75rem;   /* 12px — secondary labels */
+  --bars-text-sm:  0.875rem;  /* 14px — body small, muted floor */
+  --bars-text-base:1rem;      /* 16px — prose */
+  --bars-text-lg:  1.125rem;  /* 18px — vibulon count, lead-in */
+  --bars-text-xl:  1.25rem;   /* 20px — player name */
+  --bars-text-2xl: 1.5rem;    /* 24px — card / section titles */
+  --bars-text-3xl: 2rem;      /* 32px — screen titles */
+  --bars-text-4xl: 2.75rem;   /* 44px — hero / ritual moments */
+
+  /* ── Weights ──────────────────────────────────────────────────────────── */
+  --bars-weight-regular: 400;
+  --bars-weight-medium:  500;
+  --bars-weight-semibold:600;
+  --bars-weight-bold:    700;
+  --bars-weight-black:   800;
+
+  /* ── Line heights ─────────────────────────────────────────────────────── */
+  --bars-leading-tight:  1.15;
+  --bars-leading-snug:   1.35;
+  --bars-leading-normal: 1.6;
+
+  /* ── Tracking ─────────────────────────────────────────────────────────── */
+  --bars-tracking-tight:   -0.02em; /* display titles */
+  --bars-tracking-normal:  0;
+  --bars-tracking-wide:    0.08em;
+  --bars-tracking-widest:  0.2em;   /* the signature mono chrome label */
+}
+
+/* ─── Optional helper classes (consumers may use the vars directly) ──────── */
+.bars-title {
+  font-family: var(--bars-font-display);
+  font-weight: var(--bars-weight-bold);
+  letter-spacing: var(--bars-tracking-tight);
+  line-height: var(--bars-leading-tight);
+  color: var(--bars-text-primary);
+}
+
+.bars-prose {
+  font-family: var(--bars-font-body);
+  font-weight: var(--bars-weight-regular);
+  line-height: var(--bars-leading-normal);
+  color: var(--bars-text-primary);
+}
+
+/* The signature micro-label: mono, uppercase, tracked-wide, small. */
+.bars-label {
+  font-family: var(--bars-font-mono);
+  font-size: var(--bars-text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--bars-tracking-widest);
+  color: var(--bars-text-muted);
+}
+
+.bars-stat {
+  font-family: var(--bars-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--bars-weight-bold);
+}

@@ -1,0 +1,174 @@
+/* BARS Engine — Cultivation Card Aesthetics
+ *
+ * Ported from the source repo's cultivation-cards.css and rebound to --bars-* tokens.
+ * This file owns game-aesthetic VISUAL EFFECTS only — never layout.
+ *
+ * A card root must expose its element + altitude. The easiest way:
+ *   <div class="bars-card" data-element="fire" data-altitude="satisfied"> … </div>
+ * data-element binds --bars-element-* (see colors.css); data-altitude binds the
+ * border/glow channel below.
+ */
+
+/* ── Altitude channel binding ─────────────────────────────────────────────── */
+[data-altitude="dissatisfied"] {
+  --bars-border-width:   var(--bars-alt-border-width-dissatisfied);
+  --bars-border-opacity: var(--bars-alt-opacity-dissatisfied);
+  --bars-glow-radius:    var(--bars-alt-glow-dissatisfied);
+  --bars-float-period:   4s; /* @kind other */
+}
+[data-altitude="neutral"] {
+  --bars-border-width:   var(--bars-alt-border-width-neutral);
+  --bars-border-opacity: var(--bars-alt-opacity-neutral);
+  --bars-glow-radius:    var(--bars-alt-glow-neutral);
+  --bars-float-period:   var(--bars-float-period-neutral); /* @kind other */
+}
+[data-altitude="satisfied"] {
+  --bars-border-width:   var(--bars-alt-border-width-satisfied);
+  --bars-border-opacity: var(--bars-alt-opacity-satisfied);
+  --bars-glow-radius:    var(--bars-alt-glow-satisfied);
+  --bars-float-period:   var(--bars-float-period-satisfied); /* @kind other */
+}
+
+/* ── Base card ────────────────────────────────────────────────────────────
+   The inset 0 1px 0 highlight is the single most important trick for making a
+   flat dark card feel like a physical object. Do not remove it. ───────────── */
+.bars-card {
+  position: relative;
+  background-color: var(--bars-surface-card);
+  border-radius: var(--bars-radius-lg);
+  box-shadow:
+    var(--bars-shadow-inset-top),
+    0 0 0 var(--bars-border-width, 2px) color-mix(in srgb, var(--bars-element-frame, #3f3f46) calc(var(--bars-border-opacity, 0.7) * 100%), transparent),
+    0 0 var(--bars-glow-radius, 0px) 2px var(--bars-element-glow, transparent);
+  transition:
+    box-shadow var(--bars-dur-base) ease-out,
+    transform var(--bars-dur-fast) ease-out,
+    opacity var(--bars-dur-base) ease-out;
+}
+
+/* Hover — only on interactive cards. */
+.bars-card--interactive:hover {
+  transform: scale(1.02);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 0 var(--bars-border-width, 2px) var(--bars-element-frame, #3f3f46),
+    0 0 calc(var(--bars-glow-radius, 0px) + 4px) 3px var(--bars-element-glow, transparent);
+}
+
+/* Active (press) — shrink + inset shadow. */
+.bars-card--interactive:active {
+  transform: scale(0.97);
+  transition-duration: var(--bars-dur-press);
+  box-shadow:
+    var(--bars-shadow-pressed),
+    0 0 0 var(--bars-border-width, 2px) var(--bars-element-frame, #3f3f46);
+}
+
+/* Focus (keyboard). */
+.bars-card--interactive:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.3);
+  outline-offset: 2px;
+}
+
+/* Selected — pulse at satisfied glow. */
+.bars-card--selected {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 0 0 var(--bars-border-width, 2px) var(--bars-element-frame, #3f3f46),
+    0 0 16px 4px var(--bars-element-glow, transparent);
+  animation: bars-card-pulse 2s ease-in-out infinite;
+}
+@keyframes bars-card-pulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 var(--bars-border-width,2px) var(--bars-element-frame,#3f3f46), 0 0 16px 4px var(--bars-element-glow,transparent); }
+  50%      { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 var(--bars-border-width,2px) var(--bars-element-frame,#3f3f46), 0 0 24px 6px var(--bars-element-glow,transparent); }
+}
+
+/* Disabled — 30% opacity, no glow, inert. */
+.bars-card--disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 0 0 1px #3f3f46;
+}
+
+/* Ritual — alchemical moment: expanded double glow + scale up. */
+.bars-card--ritual {
+  transform: scale(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 0 0 var(--bars-border-width, 2px) var(--bars-element-frame, #3f3f46),
+    0 0 24px 8px var(--bars-element-glow, transparent),
+    0 0 48px 16px color-mix(in srgb, var(--bars-element-glow, transparent) 40%, transparent);
+  transition: all var(--bars-dur-slow) ease-out;
+}
+
+/* Composted — crosshatch texture overlay. */
+.bars-card--composted::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--bars-radius-lg);
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 6px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 6px);
+}
+
+/* ── Decorative layers ────────────────────────────────────────────────────── */
+.bars-card__gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--bars-radius-lg);
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at top left, var(--bars-element-grad-from, #18181b) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--bars-element-grad-from, #18181b) 60%, transparent) 0%, transparent 50%),
+    linear-gradient(160deg, var(--bars-element-grad-to, #09090b) 0%, var(--bars-bg-base) 100%);
+}
+.bars-card__glow {
+  position: absolute;
+  top: -32px; left: -32px;
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  filter: blur(24px);
+  background: color-mix(in srgb, var(--bars-element-glow, transparent) 12%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.bars-card__body { position: relative; z-index: 10; }
+
+/* ── Card art window ──────────────────────────────────────────────────────── */
+.bars-art-window {
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bars-element-frame, #3f3f46) calc(var(--bars-border-opacity, 0.7) * 100%), transparent);
+}
+.bars-art-window img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+
+/* Loading shimmer on the art window. */
+.bars-card--loading .bars-art-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  animation: bars-shimmer 1.5s linear infinite;
+  transform: translateX(-100%);
+}
+@keyframes bars-shimmer { to { transform: translateX(200%); } }
+
+/* ── Entry + idle float ───────────────────────────────────────────────────── */
+.bars-card-enter { animation: bars-card-entry var(--bars-dur-slow) ease-out forwards; }
+@keyframes bars-card-entry { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.bars-card-float { animation: bars-card-float var(--bars-float-period, 4s) ease-in-out infinite; }
+@keyframes bars-card-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bars-card, .bars-card--interactive:hover, .bars-card--interactive:active,
+  .bars-card--selected, .bars-card-enter, .bars-card-float, .bars-card--ritual {
+    animation: none !important;
+    transition: opacity var(--bars-dur-base) ease-out !important;
+    transform: none !important;
+  }
+  .bars-card--loading .bars-art-window::after { animation: none !important; }
+}

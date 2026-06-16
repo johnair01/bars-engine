@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+  <script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: #161310; }
+    *::-webkit-scrollbar { height: 10px; width: 10px; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px; }
+    .code { font-family: var(--bars-font-mono); font-size: 12.5px; line-height: 1.75; color: var(--bars-text-secondary); white-space: pre-wrap; }
+    .kw { color: var(--bars-liminal-glow); }
+    .cm { color: var(--bars-text-muted); }
+    .st { color: var(--bars-wood-gem); }
+    .fn { color: var(--bars-water-gem); }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(ellipse 1200px 600px at 18% -8%, rgba(124,58,237,0.07), transparent 60%), radial-gradient(ellipse 900px 520px at 96% 4%, rgba(212,160,23,0.05), transparent 55%), #161310;padding:56px 56px 130px;font-family:var(--bars-font-body);color:var(--bars-text-primary);box-sizing:border-box;">
+  <div style="max-width:1180px;margin:0 auto;">
+
+  <!-- ─────────── HEADER ─────────── -->
+  <header>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="width:11px;height:11px;border-radius:2px;background:var(--bars-liminal);box-shadow:0 0 12px 2px var(--bars-liminal-glow);"></span>
+      <span class="bars-label" style="color:var(--bars-text-secondary);font-size:11px;">BARS Engine · Implementation Plan</span>
+      <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.1em;color:var(--bars-text-muted);padding:3px 8px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">SPRINT · ENDS TODAY</span>
+    </div>
+    <h1 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.03em;font-size:50px;line-height:1.05;margin:18px 0 0;max-width:880px;">Ship v1 BAR intake into the engine</h1>
+    <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:17px;line-height:1.6;max-width:720px;margin:18px 0 0;text-wrap:pretty;">The single goal: <em style="font-style:normal;color:var(--bars-text-primary);">make capturing a charge so frictionless and so delightful that you keep doing it.</em> The intake screen is the front door to your own throughput — if it's a joy, you dogfood; if you dogfood, energy gets metabolized; metabolized energy is the only fuel that moves the milestones. Everything below is scoped to land that loop by end of day, building on the plumbing the engine already has.</p>
+
+    <!-- the throughput thesis -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:34px;background:var(--bars-line);border-radius:var(--bars-radius-xl);overflow:hidden;box-shadow:var(--bars-shadow-inset-top), 0 30px 60px -30px rgba(0,0,0,0.8);">
+      <div style="background:var(--bars-surface-card);padding:20px 22px;">
+        <span class="bars-label" style="color:var(--bars-earth-gem);font-size:10px;">01 · Delight</span>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13px;line-height:1.5;margin:9px 0 0;">A capture that feels good lowers the resistance to noticing.</p>
+      </div>
+      <div style="background:var(--bars-surface-card);padding:20px 22px;">
+        <span class="bars-label" style="color:var(--bars-fire-gem);font-size:10px;">02 · Capture</span>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13px;line-height:1.5;margin:9px 0 0;">More charge captured = more raw material in the reservoir.</p>
+      </div>
+      <div style="background:var(--bars-surface-card);padding:20px 22px;">
+        <span class="bars-label" style="color:var(--bars-water-gem);font-size:10px;">03 · Metabolize</span>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13px;line-height:1.5;margin:9px 0 0;">Tuning turns charge into game data — vibeulons minted.</p>
+      </div>
+      <div style="background:var(--bars-surface-card);padding:20px 22px;">
+        <span class="bars-label" style="color:var(--bars-wood-gem);font-size:10px;">04 · Throughput</span>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:13px;line-height:1.5;margin:9px 0 0;">Yellow brick paved. The sprint itself is the first BAR.</p>
+      </div>
+    </div>
+  </header>
+
+  <main style="display:flex;flex-direction:column;gap:66px;margin-top:72px;">
+
+    <!-- ═══════════ 1 · WHAT ALREADY EXISTS ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-water-gem);">Grounding · don't rebuild it</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">The engine already has the spine</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">A BAR intake route, a create action, the <code style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-text-primary);">CustomBar</code> model with every channel column we need, and the full maturity state machine all ship today. v1 is mostly <strong style="color:var(--bars-text-primary);font-weight:700;">reskin + wire</strong>, not new infrastructure. Verified against <code style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-text-primary);">johnair01/bars-engine@main</code>.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px;">
+        <!-- existing: routes -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Routes · src/app/bars</span>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;">
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);min-width:118px;">/bars/create</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">today's intake form (plain Tailwind)</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);min-width:118px;">/bars</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">the board / list of kept BARs</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);min-width:118px;">/bars/[id]</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">BAR detail (where Tune slots in)</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);min-width:118px;">/bars/garden</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">maturity-aware seed view</span></div>
+          </div>
+        </div>
+        <!-- existing: actions -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Server actions · src/actions</span>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;">
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);min-width:150px;">createPlayerBar()</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">text BAR · bars.ts</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);min-width:150px;">createBarForUpload()</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">photo BAR + Blob upload</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);min-width:150px;">updateBarSeedMaturity()</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">advances the gate</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);min-width:150px;">growQuestFromBar()</span><span style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);">graduate to quest</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- model coverage -->
+      <div style="margin-top:14px;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:24px 26px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Model · CustomBar — every intake channel already has a column</span>
+          <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.08em;color:var(--bars-wood-gem);padding:3px 9px;border-radius:5px;background:color-mix(in srgb,var(--bars-wood-frame) 16%,transparent);box-shadow:inset 0 0 0 1px var(--bars-wood-frame);">NO MIGRATION NEEDED FOR v1</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;">
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-primary);">description / title</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">the captured text</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-fire-gem);">nation</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">element channel</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">intensity</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">altitude channel</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-wood-gem);">moveType</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">the move channel</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-earth-gem);">emotionalAlchemyTag</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">name of the charge</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-liminal-glow);">seedMetabolization</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">maturity JSON</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);">createdAt</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">provenance · locked</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);">assets[] / barMedia[]</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">photos · sketches</span></div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:var(--bars-radius-md);background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);"><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);">socialLinks[]</span><span style="font-family:var(--bars-font-body);font-size:11.5px;color:var(--bars-text-muted);">inspirations</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 2 · THE GAP ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-fire-gem);">The gap · what v1 actually changes</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">Five gaps between today's form and the design</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">The current <code style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-text-primary);">CreateBarFormPage</code> persists text, photos and links — but it's a plain zinc/purple form, captures don't get a maturity phase, there's no provenance ritual, and there's no Tune gate. Here's the delta, each tagged IN or FAST-FOLLOW.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:30px;">
+        <!-- gap rows -->
+        <div style="display:flex;gap:18px;align-items:flex-start;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:20px 24px;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:2px;">G1</span>
+          <div style="flex:1;"><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:0;">Aesthetic — it doesn't feel like the world yet</h4><p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.5;margin:6px 0 0;max-width:760px;">Today: black + zinc-700 borders + purple-600 buttons, generic. Target: the OS-contains-cards surface — element-tinted field, inset highlight, provenance strip, <em style="font-style:normal;color:var(--bars-text-primary);">"Keep · tune later"</em>. This is the delight that drives dogfooding.</p></div>
+          <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:#fff;background:var(--bars-liminal);padding:4px 9px;border-radius:5px;align-self:center;box-shadow:0 0 14px -4px var(--bars-liminal-glow);">IN · v1</span>
+        </div>
+        <div style="display:flex;gap:18px;align-items:flex-start;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:20px 24px;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:2px;">G2</span>
+          <div style="flex:1;"><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:0;">Maturity isn't stamped at capture</h4><p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.5;margin:6px 0 0;max-width:760px;"><code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">createPlayerBar</code> never writes <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">seedMetabolization</code>, so new captures have a null maturity and fall out of the garden / gate logic. Fix: set <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);">maturity:'captured'</code> on create.</p></div>
+          <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:#fff;background:var(--bars-liminal);padding:4px 9px;border-radius:5px;align-self:center;box-shadow:0 0 14px -4px var(--bars-liminal-glow);">IN · v1</span>
+        </div>
+        <div style="display:flex;gap:18px;align-items:flex-start;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:20px 24px;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:2px;">G3</span>
+          <div style="flex:1;"><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:0;">No provenance ritual</h4><p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.5;margin:6px 0 0;max-width:760px;">The design locks time / place / sensation at the moment of capture. v1 stamps the cheap, immutable parts — <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">createdAt</code> + a derived time-of-day phrase ("dusk"). Place &amp; sensation are deferred.</p></div>
+          <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:#fff;background:var(--bars-liminal);padding:4px 9px;border-radius:5px;align-self:center;box-shadow:0 0 14px -4px var(--bars-liminal-glow);">IN · v1</span>
+        </div>
+        <div style="display:flex;gap:18px;align-items:flex-start;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:20px 24px;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:2px;">G4</span>
+          <div style="flex:1;"><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:0;">No Tune gate</h4><p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.5;margin:6px 0 0;max-width:760px;">The channel columns exist but nothing writes them, and there's no screen to assign element / altitude / move and advance maturity. Build <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);">/bars/[id]/tune</code> + a <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);">tuneBar()</code> action.</p></div>
+          <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:#fff;background:var(--bars-liminal);padding:4px 9px;border-radius:5px;align-self:center;box-shadow:0 0 14px -4px var(--bars-liminal-glow);">IN · v1</span>
+        </div>
+        <div style="display:flex;gap:18px;align-items:flex-start;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:20px 24px;opacity:0.82;">
+          <span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:2px;">G5</span>
+          <div style="flex:1;"><h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:16px;margin:0;">Stories-rich canvas (drag / recolor / share)</h4><p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.5;margin:6px 0 0;max-width:760px;">The draggable-text composer + share-to-Stories / video / deck needs a new <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">captureDesign</code> JSON column and an export pipeline. Real delight, but more than a day — it's the fast-follow that builds on a shipped capture loop.</p></div>
+          <span style="font-family:var(--bars-font-mono);font-size:9px;letter-spacing:0.1em;color:var(--bars-text-secondary);background:var(--bars-surface-inset);padding:4px 9px;border-radius:5px;align-self:center;box-shadow:inset 0 0 0 1px var(--bars-line);">FAST-FOLLOW</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 3 · TODAY'S SPRINT ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-liminal-glow);">The sprint · this is the BAR we're metabolizing today</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">Four blocks to a working Capture → Keep → Tune loop</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">~7 focused hours. Each block ends in something you can dogfood. No migration, no deploy-risk schema change — every channel rides existing columns.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:30px;">
+
+        <!-- BLOCK 1 -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-xl);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line), 0 18px 40px -28px rgba(0,0,0,0.8);padding:24px 26px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-earth-gem);">BLOCK 1</span><h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;margin:0;">Foundation — stamp maturity &amp; provenance</h3></div>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);padding:4px 10px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">~1.5h</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.55;margin:12px 0 0;max-width:840px;">Extend the create path so every capture is born with a phase and a locked timestamp. Pure server-side; unblocks the gate and the garden immediately.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-water-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">src/actions/bars.ts</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-water-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">src/lib/bar-seed-metabolization</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">+ provenance helper (time-of-day)</span>
+          </div>
+        </div>
+
+        <!-- BLOCK 2 -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-xl);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line), 0 18px 40px -28px rgba(0,0,0,0.8);padding:24px 26px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-fire-gem);">BLOCK 2</span><h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;margin:0;">Capture screen — reskin to the cultivation surface</h3></div>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);padding:4px 10px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">~2h</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.55;margin:12px 0 0;max-width:840px;">Rebuild <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">CreateBarFormPage</code> as the quick-capture sheet from the design (V2 of the explorations — the realistic one-day take, not the full drag canvas). Keep the existing submit logic intact; restyle, add the provenance strip, an optional element field-tint, and the <em style="font-style:normal;color:var(--bars-text-primary);">"Keep · tune later"</em> CTA.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-wood-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">src/app/bars/create/CreateBarFormPage.tsx</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">reuse cultivation-cards.css tokens</span>
+          </div>
+        </div>
+
+        <!-- BLOCK 3 -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-xl);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line), 0 18px 40px -28px rgba(0,0,0,0.8);padding:24px 26px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-water-gem);">BLOCK 3</span><h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;margin:0;">Tune gate — the alchemy screen</h3></div>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);padding:4px 10px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">~2.5h</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.55;margin:12px 0 0;max-width:840px;">New route <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-wood-gem);">/bars/[id]/tune</code> with a live <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">CultivationCard</code> preview. Tap element / altitude / move; each write goes through a new <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-water-gem);">tuneBar()</code> and bumps maturity via the existing <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">updateBarSeedMaturity()</code>.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-wood-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">+ src/app/bars/[id]/tune/page.tsx</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-wood-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">+ TuneBarClient.tsx</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-water-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">+ tuneBar() in bars.ts</span>
+          </div>
+        </div>
+
+        <!-- BLOCK 4 -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-xl);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line), 0 18px 40px -28px rgba(0,0,0,0.8);padding:24px 26px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-wood-gem);">BLOCK 4</span><h3 style="font-family:var(--bars-font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;margin:0;">Wire, polish &amp; dogfood</h3></div>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);padding:4px 10px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">~1h</span>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.55;margin:12px 0 0;max-width:840px;">After "Keep", route to the board with a quiet "tune now" affordance (not forced — capture stays free). Surface the maturity dot on list + detail. Run the dogfood smoke test below. Ship.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-wood-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">src/app/bars/page.tsx</span>
+            <span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-wood-gem);padding:5px 9px;border-radius:5px;background:var(--bars-surface-inset);box-shadow:inset 0 0 0 1px var(--bars-line);">src/app/bars/[id]/page.tsx</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════ 4 · SPEC · CAPTURE SCREEN ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-earth-gem);">Build-ready spec · Screen 1</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">Capture — the blank card</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">Route <code style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-wood-gem);">/bars/create</code>. One required thing: text or a photo. Everything else is optional. Provenance is silent and locked. Target time-to-keep: <strong style="color:var(--bars-text-primary);font-weight:700;">under 10 seconds</strong>.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-top:30px;align-items:start;">
+        <!-- field → column map -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Field → column</span>
+          <div style="display:flex;flex-direction:column;margin-top:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Capture text <span style="color:var(--bars-fire-gem);font-size:11px;">req*</span></span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">description + title</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Photo / sketch</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">assets[] (Blob)</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Inspirations (URLs)</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">socialLinks[]</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Field tint (optional)</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-water-gem);">nation</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--bars-line);"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Maturity (silent)</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-liminal-glow);">seedMetabolization</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 0;"><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-primary);">Provenance (silent)</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);">createdAt</span></div>
+          </div>
+        </div>
+        <!-- the contract -->
+        <div style="background:var(--bars-bg-base);border-radius:var(--bars-radius-lg);box-shadow:inset 0 0 0 1px var(--bars-line-strong);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Create contract · the only server change</span>
+<div class="code" style="margin-top:14px;"><span class="cm">// in createPlayerBar() / createBarForUpload()</span>
+<span class="cm">// add to db.customBar.create({ data: {...} }):</span>
+
+type: <span class="st">'charge_capture'</span>,   <span class="cm">// BSM-eligible type</span>
+nation: fieldTint ?? <span class="kw">null</span>,
+seedMetabolization: <span class="fn">JSON.stringify</span>({
+  maturity: <span class="st">'captured'</span>,
+  soilKind: <span class="st">'holding_pen'</span>,
+}),
+<span class="cm">// createdAt is auto · provenance locked</span></div>
+          <p style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.5;margin:14px 0 0;">Both BSM-eligible types (<code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">'bar'</code>, <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">'charge_capture'</code>) pass the maturity guards. Use <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">mergeSeedMetabolization()</code> rather than raw JSON if you prefer the helper.</p>
+        </div>
+      </div>
+
+      <!-- acceptance -->
+      <div style="margin-top:18px;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 26px;">
+        <span class="bars-label" style="color:var(--bars-wood-gem);">Acceptance · Capture</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin-top:14px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">A one-line note keeps with zero other taps and lands on <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">/bars</code>.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Kept BAR has <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">maturity:'captured'</code> in the DB.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Surface reads the cultivation aesthetic — no zinc/purple chrome.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Provenance strip shows locked time; nothing editable.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Photo + links paths still work (no regression).</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">CTA reads "Keep · tune later" — never "Forge".</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 5 · SPEC · TUNE GATE ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-water-gem);">Build-ready spec · Screen 2</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">Tune — the gate into the game</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">Route <code style="font-family:var(--bars-font-mono);font-size:13px;color:var(--bars-wood-gem);">/bars/[id]/tune</code>. Three channels turn a raw scribble into game data. Each assignment is one server write that also advances maturity. The card preview responds live so the alchemy is visible.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-top:30px;align-items:start;">
+        <!-- channel → column + maturity -->
+        <div style="background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">Channel → column → maturity bump</span>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-fire-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-fire-frame);">
+              <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Element <span style="color:var(--bars-fire-gem);font-size:11px;font-family:var(--bars-font-mono);">火水木金土</span></span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">→ nation</span></div>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.06em;color:var(--bars-wood-gem);text-transform:uppercase;">→ context_named</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-water-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-water-frame);">
+              <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Altitude</span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">→ intensity · + emotionalAlchemyTag</span></div>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.06em;color:var(--bars-wood-gem);text-transform:uppercase;">→ elaborated</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--bars-radius-md);background:color-mix(in srgb,var(--bars-wood-frame) 12%,transparent);box-shadow:inset 0 0 0 1px var(--bars-wood-frame);">
+              <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-family:var(--bars-font-display);font-weight:700;font-size:14px;color:var(--bars-text-primary);">Move</span><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-muted);">→ moveType (wake/clean/grow/show)</span></div>
+              <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.06em;color:var(--bars-liminal-glow);text-transform:uppercase;">ready · shared_or_acted</span>
+            </div>
+          </div>
+          <p style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.5;margin:14px 0 0;">Maturity only ever moves forward — clamp to the highest phase reached. <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">'integrated'</code> stays reserved for graduation via <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-secondary);">growQuestFromBar()</code>.</p>
+        </div>
+        <!-- tuneBar contract -->
+        <div style="background:var(--bars-bg-base);border-radius:var(--bars-radius-lg);box-shadow:inset 0 0 0 1px var(--bars-line-strong);padding:22px 24px;">
+          <span class="bars-label" style="color:var(--bars-text-muted);">New action · tuneBar()</span>
+<div class="code" style="margin-top:14px;"><span class="cm">// src/actions/bars.ts — owner-guarded, BSM-typed</span>
+<span class="kw">export async function</span> <span class="fn">tuneBar</span>(barId, patch: {
+  nation?: <span class="st">string</span>
+  intensity?: <span class="st">string</span>      <span class="cm">// altitude</span>
+  emotionalAlchemyTag?: <span class="st">string</span>
+  moveType?: <span class="st">string</span>
+}) {
+  <span class="cm">// 1 · auth: bars_player_id cookie</span>
+  <span class="cm">// 2 · guard: creator-only + type ∈ {bar,charge_capture}</span>
+  <span class="cm">// 3 · db.customBar.update({ data: patch })</span>
+  <span class="cm">// 4 · derive + updateBarSeedMaturity(barId, next)</span>
+  <span class="cm">// 5 · revalidate /bars, /bars/[id], /bars/garden</span>
+}</div>
+        </div>
+      </div>
+
+      <!-- acceptance tune -->
+      <div style="margin-top:18px;background:var(--bars-surface-card);border-radius:var(--bars-radius-lg);box-shadow:var(--bars-shadow-inset-top), inset 0 0 0 1px var(--bars-line);padding:22px 26px;">
+        <span class="bars-label" style="color:var(--bars-wood-gem);">Acceptance · Tune</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin-top:14px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Picking an element re-tints the live card to that nation.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Each channel persists immediately and survives reload.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Maturity advances and never regresses.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Altitude sets the card's <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">data-altitude</code> glow.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">A fully-tuned BAR shows a "ready" / graduate affordance.</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;"><span style="color:var(--bars-wood-gem);font-size:13px;line-height:1.4;">◇</span><span style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-secondary);line-height:1.45;">Tuning is optional for keeping — only required to play.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 6 · FAST-FOLLOWS ═══════════ -->
+    <section>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--bars-line);padding-top:36px;max-width:820px;">
+        <span class="bars-label" style="color:var(--bars-metal-gem);">After today · build on the shipped loop</span>
+        <h2 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.025em;font-size:36px;margin:0;line-height:1.05;">The delight fast-follows</h2>
+        <p style="font-family:var(--bars-font-body);color:var(--bars-text-secondary);font-size:15px;line-height:1.6;margin:4px 0 0;text-wrap:pretty;">Deliberately out of today's scope. Each is a self-contained slice that makes capture more delightful once the core loop is real and you're already dogfooding it.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px;">
+        <div class="bars-card" data-element="fire" data-altitude="neutral" style="position:relative;">
+          <div class="bars-card__gradient"></div>
+          <div class="bars-card__body" style="padding:20px 22px;display:flex;flex-direction:column;gap:8px;">
+            <span class="bars-label" style="color:var(--bars-fire-gem);">FF-A · Stories canvas</span>
+            <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:17px;margin:0;">Drag · recolor · share</h4>
+            <p style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;margin:0;">The full composer + share-to-Stories / video / deck. Adds a <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">captureDesign</code> JSON column (one migration) + export.</p>
+          </div>
+        </div>
+        <div class="bars-card" data-element="water" data-altitude="neutral" style="position:relative;">
+          <div class="bars-card__gradient"></div>
+          <div class="bars-card__body" style="padding:20px 22px;display:flex;flex-direction:column;gap:8px;">
+            <span class="bars-label" style="color:var(--bars-water-gem);">FF-B · Capture anywhere</span>
+            <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:17px;margin:0;">Book · voice · paste</h4>
+            <p style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;margin:0;">OCR a book page, dictate a voice note, paste from clipboard. Each routes into the same create contract.</p>
+          </div>
+        </div>
+        <div class="bars-card" data-element="wood" data-altitude="neutral" style="position:relative;">
+          <div class="bars-card__gradient"></div>
+          <div class="bars-card__body" style="padding:20px 22px;display:flex;flex-direction:column;gap:8px;">
+            <span class="bars-label" style="color:var(--bars-wood-gem);">FF-C · Graduate</span>
+            <h4 style="font-family:var(--bars-font-display);font-weight:700;font-size:17px;margin:0;">Bloom into a quest</h4>
+            <p style="font-family:var(--bars-font-body);font-size:12.5px;color:var(--bars-text-secondary);line-height:1.5;margin:0;">Wire the "Show up" CTA to <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">growQuestFromBar()</code> — needs profile nation + archetype set.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 6.5 · MODEL CHANGE · OPEN UP ═══════════ -->
+    <section>
+      <div style="background:color-mix(in srgb,var(--bars-fire-frame) 8%,transparent);border-radius:var(--bars-radius-xl);box-shadow:inset 0 0 0 1px var(--bars-fire-frame);padding:28px 30px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--bars-fire-gem);box-shadow:0 0 10px 1px var(--bars-fire-glow);"></span><span class="bars-label" style="color:var(--bars-fire-gem);">Model change · separate from the intake sprint</span></div>
+          <a href="Elements%20and%20Emotional%20Alchemy.dc.html" target="_blank" style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:0.06em;color:var(--bars-liminal-glow);text-decoration:underline;text-underline-offset:2px;">full rationale →</a>
+        </div>
+        <h3 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.02em;font-size:24px;margin:14px 0 0;max-width:760px;">Add a fifth move: <span style="color:var(--bars-liminal-glow);">Open Up</span></h3>
+        <p style="font-family:var(--bars-font-body);font-size:14px;color:var(--bars-text-secondary);line-height:1.55;margin:12px 0 0;max-width:780px;text-wrap:pretty;">The engine ships four moves (WAVE). Per Ken Wilber's <em style="font-style:normal;color:var(--bars-text-primary);">Finding Radical Wholeness</em>, add <code style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-primary);">openUp</code> — receive / soften, the aperture that lets the other four land honestly. Thread it through:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px 28px;margin-top:16px;">
+          <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-fire-gem);">1</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);line-height:1.5;">moveType values + labels — add <span style="color:var(--bars-text-primary);">'openUp'</span></span></div>
+          <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-fire-gem);">2</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);line-height:1.5;">.agent/context/emotional-alchemy-ontology.md — Open stage + move rows</span></div>
+          <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-fire-gem);">3</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);line-height:1.5;">packages/bars-core/src/quest-grammar — move-engine.ts, move-assignment.ts, types</span></div>
+          <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-fire-gem);">4</span><span style="font-family:var(--bars-font-mono);font-size:11.5px;color:var(--bars-text-secondary);line-height:1.5;">design-system MoveIcon — 5th glyph; Tune gate — Open Up chip</span></div>
+        </div>
+        <p style="font-family:var(--bars-font-body);font-size:12px;color:var(--bars-text-muted);line-height:1.5;margin:16px 0 0;max-width:780px;">Decide ordering first: Open Up reads as an aperture <em style="font-style:normal;color:var(--bars-text-secondary);">before</em> Clean Up, not a stage after Show Up. Settle that before touching completion logic. The v1 prototype already shows the fifth chip.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════ 7 · DEFINITION OF DONE ═══════════ -->
+    <section>
+      <div style="margin-top:6px;background:linear-gradient(180deg,#1d1a16,#161310);border-radius:var(--bars-radius-2xl);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 90px rgba(0,0,0,0.4);padding:36px 38px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--bars-wood-gem);box-shadow:0 0 10px 1px var(--bars-wood-glow);"></span>
+          <span class="bars-label" style="color:var(--bars-wood-gem);">Definition of done · the dogfood test</span>
+        </div>
+        <h3 style="font-family:var(--bars-font-display);font-weight:800;letter-spacing:-0.02em;font-size:26px;margin:14px 0 0;max-width:760px;">You have arrived successfully if, by end of day, you captured one charge in under ten seconds — and tuned one BAR into game data.</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 32px;margin-top:24px;max-width:900px;">
+          <div style="display:flex;gap:11px;align-items:flex-start;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:1px;">01</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.5;">Open <code style="font-family:var(--bars-font-mono);font-size:11px;color:var(--bars-text-primary);">/bars/create</code> on your phone, type a line, Keep. It feels good.</span></div>
+          <div style="display:flex;gap:11px;align-items:flex-start;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:1px;">02</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.5;">The card is on your board with locked provenance and a captured-phase dot.</span></div>
+          <div style="display:flex;gap:11px;align-items:flex-start;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:1px;">03</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.5;">Open it, tune element + altitude + move; watch it glow up to game-ready.</span></div>
+          <div style="display:flex;gap:11px;align-items:flex-start;"><span style="font-family:var(--bars-font-mono);font-size:12px;color:var(--bars-text-muted);padding-top:1px;">04</span><span style="font-family:var(--bars-font-body);font-size:13.5px;color:var(--bars-text-secondary);line-height:1.5;">No migration ran, no existing flow regressed, and you want to capture again.</span></div>
+        </div>
+        <p style="font-family:var(--bars-font-body);font-size:13px;color:var(--bars-text-muted);line-height:1.6;margin:24px 0 0;max-width:760px;text-wrap:pretty;">That last line is the whole point. The yardstick isn't "the feature works" — it's "<em style="font-style:normal;color:var(--bars-text-secondary);">you reach for it without thinking.</em>" Steady accumulation is the form; this sprint paves the first brick.</p>
+      </div>
+    </section>
+
+  </main>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

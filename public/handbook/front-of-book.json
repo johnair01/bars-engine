@@ -1,0 +1,63 @@
+{
+  "id": "front-of-book",
+  "kicker": "Mastering the Game of Allyship",
+  "title": "Prologue · The Call to Play",
+  "blocks": [
+    {
+      "type": "hero",
+      "art": "pyrakanth-bold-heart.png",
+      "kicker": "A SCHOOL-SHIP RPG",
+      "title": "Mastering the\nGame of Allyship",
+      "sub": "Become useful under pressure."
+    },
+    {
+      "type": "prose",
+      "kicker": "Prologue · The City With the Dry River",
+      "lead": "The first thing you notice is the silence.",
+      "paras": [
+        "Not the absence of sound. The square is full of it: banners snapping in dry wind, a councilor's amplified welcome ringing too bright against the old buildings.",
+        "But the people are silent where it matters. No one says the river is gone. No one says the council locked the water before the ship arrived.",
+        "Above the square, hidden by cloud and old agreements, the school-ship holds position. The Headmaster watches the ceremony through rain-glass windows."
+      ]
+    },
+    {
+      "type": "pullquote",
+      "text": "“They are grateful too early,” she says. “You will want to fix this. That is not yet the same as helping.”"
+    },
+    {
+      "type": "letter",
+      "kicker": "From the Headmaster",
+      "lead": "You were not chosen because you were ready. No one arrives ready.",
+      "paras": [
+        "Readiness is not the price of admission. **Willingness is.** You will be tempted to arrive as the answer. Do not. A clean intention can still bruise. This is not a reason to do nothing — it is a reason to train.",
+        "Welcome aboard. The ship is moving. The lesson will begin before you feel prepared."
+      ],
+      "signature": "the Headmaster",
+      "signatureNote": "— signed, but not named,",
+      "seal": "護"
+    },
+    {
+      "type": "prose",
+      "kicker": "What this game is",
+      "lead": "Each mission asks the same impossible question — **what does help require here?**",
+      "paras": [
+        "You play students of a hidden traveling academy that answers crises ordinary institutions cannot or will not resolve. This is not a game about proving your character is good. It is about what happens when your help meets reality."
+      ]
+    },
+    { "type": "moves" },
+    { "type": "houses" },
+    {
+      "type": "roll",
+      "scene": "The council keeps thanking the ship — but no one looks at the child holding the empty cup. You stop watching the stage and read the crowd. *Who tenses? Who looks away?*",
+      "move": "WAKE UP",
+      "stat": "+SENSE · Body"
+    },
+    {
+      "type": "barPrompt",
+      "kicker": "Your first move · write a BAR",
+      "prompt": "What signal brought you here — and the one move you are willing to make right now?"
+    },
+    { "type": "nations" },
+    { "type": "footer", "nextLabel": "Continue to Chapter One ›" }
+  ]
+}

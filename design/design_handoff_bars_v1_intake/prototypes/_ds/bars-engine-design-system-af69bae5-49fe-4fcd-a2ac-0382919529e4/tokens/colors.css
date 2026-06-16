@@ -1,0 +1,101 @@
+/* BARS Engine — Color Tokens
+ *
+ * The system is an "OS" that contains dark pixel-art cards. Surfaces are
+ * imperceptibly warm near-blacks; chromatic signal comes ONLY from the five
+ * Wuxing elements (frame / glow / gem). Saturation is deliberately low —
+ * cultivation is a long game, not a spectacle.
+ *
+ * Source of truth: src/lib/ui/card-tokens.ts (ELEMENT_TOKENS, SURFACE_TOKENS).
+ * Never hardcode hex in components — read these vars.
+ */
+
+:root {
+  /* ── Surfaces (Register 6 — Zone/Texture) ─────────────────────────────── */
+  --bars-bg-base:          #0a0908; /* screen background — warm near-black, NOT pure #000 */
+  --bars-surface-card:     #1a1a18; /* card body — never lighter than this beside a card */
+  --bars-surface-elevated: #242420; /* modals, bottom sheets */
+  --bars-surface-inset:    #111110; /* description wells inside cards */
+
+  /* ── Text (warm grayscale — never zinc-600 at text-xs) ────────────────── */
+  --bars-text-primary:   #e8e6e0; /* warm white */
+  --bars-text-secondary: #a09e98; /* labels, secondary prose */
+  --bars-text-muted:     #6b6965; /* only at >= 14px — forbidden at text-xs */
+
+  /* ── Hairlines & wells ────────────────────────────────────────────────── */
+  --bars-line:        rgba(255, 255, 255, 0.07); /* card hairline / divider */
+  --bars-line-strong: rgba(255, 255, 255, 0.12);
+  --bars-line-dashed: #2a2a27;                   /* dashed placeholder borders */
+  --bars-inset-top:   rgba(255, 255, 255, 0.06); /* the inset 0 1px highlight — load-bearing */
+
+  /* ── Liminal / primary action (RESERVED — never an element) ───────────── */
+  --bars-liminal:      #7c3aed; /* purple = action / liminal states ONLY */
+  --bars-liminal-glow: #a855f7;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Wuxing element palette — frame (border) / glow (shadow) / gem (accent)
+     plus the radial gradient pair used by .card-frame-gradient.
+     ───────────────────────────────────────────────────────────────────── */
+
+  /* Fire 火 — Pyrakanth — cinnabar / ember */
+  --bars-fire-sigil: '火'; /* @kind other */
+  --bars-fire-frame: #c1392b;
+  --bars-fire-glow:  #e8671a;
+  --bars-fire-gem:   #e74c3c;
+  --bars-fire-grad-from: #431407;
+  --bars-fire-grad-to:   #1c0700;
+
+  /* Water 水 — Lamenth — deep navy / teal */
+  --bars-water-sigil: '水'; /* @kind other */
+  --bars-water-frame: #1a3a5c;
+  --bars-water-glow:  #1a7a8a;
+  --bars-water-gem:   #2980b9;
+  --bars-water-grad-from: #0c1e3e;
+  --bars-water-grad-to:   #020c1f;
+
+  /* Wood 木 — Virelune — sage / jade */
+  --bars-wood-sigil: '木'; /* @kind other */
+  --bars-wood-frame: #4a7c59;
+  --bars-wood-glow:  #27ae60;
+  --bars-wood-gem:   #2ecc71;
+  --bars-wood-grad-from: #052e16;
+  --bars-wood-grad-to:   #011309;
+
+  /* Metal 金 — Argyra — silver-slate / chrome  (NOT purple) */
+  --bars-metal-sigil: '金'; /* @kind other */
+  --bars-metal-frame: #8e9aab;
+  --bars-metal-glow:  #bdc3c7;
+  --bars-metal-gem:   #bdc3c7;
+  --bars-metal-grad-from: #1e2530;
+  --bars-metal-grad-to:   #0d1017;
+
+  /* Earth 土 — Meridia — terracotta / ochre-amber */
+  --bars-earth-sigil: '土'; /* @kind other */
+  --bars-earth-frame: #b5651d;
+  --bars-earth-glow:  #d4a017;
+  --bars-earth-gem:   #d4a017;
+  --bars-earth-grad-from: #451a03;
+  --bars-earth-grad-to:   #1a0a00;
+
+  /* ── Emotional-alchemy channel accents (check-in rings) ───────────────── */
+  --bars-channel-anger:       #c1392b; /* Fire   */
+  --bars-channel-sadness:     #2980b9; /* Water  */
+  --bars-channel-joy:         #d4a017; /* Wood/Earth glow */
+  --bars-channel-fear:        #8e9aab; /* Metal  */
+  --bars-channel-neutrality:  #6b6965; /* Earth neutral */
+
+  /* ── Default semantic element (player with no nation set) ─────────────── */
+  --bars-element-frame: var(--bars-earth-frame);
+  --bars-element-glow:  var(--bars-earth-glow);
+  --bars-element-gem:   var(--bars-earth-gem);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Element scopes — set these on any subtree (or a card root) to bind the
+   generic --bars-element-* vars to one element. Drives frame/glow/gem and
+   the gradient wash without per-component hardcoding.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-element="fire"]  { --bars-element-frame: var(--bars-fire-frame);  --bars-element-glow: var(--bars-fire-glow);  --bars-element-gem: var(--bars-fire-gem);  --bars-element-grad-from: var(--bars-fire-grad-from);  --bars-element-grad-to: var(--bars-fire-grad-to);  }
+[data-element="water"] { --bars-element-frame: var(--bars-water-frame); --bars-element-glow: var(--bars-water-glow); --bars-element-gem: var(--bars-water-gem); --bars-element-grad-from: var(--bars-water-grad-from); --bars-element-grad-to: var(--bars-water-grad-to); }
+[data-element="wood"]  { --bars-element-frame: var(--bars-wood-frame);  --bars-element-glow: var(--bars-wood-glow);  --bars-element-gem: var(--bars-wood-gem);  --bars-element-grad-from: var(--bars-wood-grad-from);  --bars-element-grad-to: var(--bars-wood-grad-to);  }
+[data-element="metal"] { --bars-element-frame: var(--bars-metal-frame); --bars-element-glow: var(--bars-metal-glow); --bars-element-gem: var(--bars-metal-gem); --bars-element-grad-from: var(--bars-metal-grad-from); --bars-element-grad-to: var(--bars-metal-grad-to); }
+[data-element="earth"] { --bars-element-frame: var(--bars-earth-frame); --bars-element-glow: var(--bars-earth-glow); --bars-element-gem: var(--bars-earth-gem); --bars-element-grad-from: var(--bars-earth-grad-from); --bars-element-grad-to: var(--bars-earth-grad-to); }
