@@ -43,7 +43,38 @@ Moves are independent of the 5 elements (adding Open Up does not force a 5↔5 a
 
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
 
-> **Divergence from Wilber — "Open Up".** Ken Wilber added *Opening Up* as a fifth path in *Finding Radical Wholeness* (2024), where it means **developing your multiple intelligences / lines of development** (cognitive, emotional, moral, somatic, etc. — breadth across lines). **bars-engine's Open Up is intentionally a different concept: receptivity / intake** — opening to receive emotional energy, possibility, and emergence; the *intake (source) term* in the energy economy that admits fuel before Clean → Grow → Show metabolize it. Wilber's "lines" meaning is instead carried by our **Grow Up** ("increase skill capacity through developmental lines", above). So our five moves are *not* a relabeling of Wilber's five paths — Open Up is our own coinage. Do not attribute the receptivity meaning to Wilber.
+### How bars-engine maps to (and renames) Wilber
+
+The engine is built on Ken Wilber's Integral Theory but **deliberately re-slices and renames** his paths — do not assume a 1:1 relabel. Wilber's five paths (*Finding Radical Wholeness*, 2024) are **Waking / Growing / Opening / Cleaning / Showing Up**, each tied to an AQAL element. The engine distributes those across **two different axes**:
+
+| Engine concept | AQAL element | Wilber's name | Notes |
+|----------------|--------------|---------------|-------|
+| **Wake Up** (move) | states | Waking Up | ✓ same |
+| **Open Up** (move) | — (receptivity/intake) | *none* | **bars-engine original coinage** |
+| **Clean Up** (move) | shadow | Cleaning Up | ✓ same |
+| **Grow Up** (move) | lines / multiple intelligences | **Wilber's *Opening Up*** | ⚠️ name crosses over ("developmental lines", above) |
+| **Show Up** (move) | embodiment | Showing Up | ✓ same |
+| **Six Game Master Faces** (altitude) | levels / altitude | **Wilber's *Growing Up*** | ⚠️ vertical development lives in the faces, **not** the move named "Grow Up" |
+
+**Two key divergences:**
+
+1. **"Open Up" is our own concept** — receptivity / intake: opening to receive emotional energy, possibility, and emergence; the *intake (source) term* in the energy economy that admits fuel before the other moves metabolize it. It is **not** Wilber's *Opening Up* (which is lines/multiple intelligences — and which we instead carry in **Grow Up**). Do not attribute the receptivity meaning to Wilber.
+2. **Vertical development = the Six Faces, not "Grow Up"** — Wilber's *Growing Up* (climbing the altitude levels) is represented by the Game Master faces (see below). The WAVE move "Grow Up" is a *horizontal* in-the-moment capacity/lines move, not vertical altitude.
+
+### The Six Game Master Faces = Integral altitude levels
+
+The six faces are the **altitudinal (vertical) axis** — the developmental levels of Spiral Dynamics / Integral altitude, renamed game-native (`choiceType: 'altitudinal'` in `quest-grammar/types.ts`):
+
+| Face | Altitude | Character |
+|------|----------|-----------|
+| Shaman | Magenta | magic, tribal, ritual belonging |
+| Challenger | Red | power, impulse, edge |
+| Regent | Amber | order, rules, conformity |
+| Architect | Orange | rational, strategic, achievist |
+| Diplomat | Green | pluralistic, relational, care |
+| Sage | Teal | integral, systemic (second tier) |
+
+**Three orthogonal axes:** **horizontal** = the 5 WAVE moves (*how* I develop), **altitudinal** = the 6 faces (*what level/lens* guides me), **the board** = allyship domains × inner/outer (*where* the work lands). Moves are not faces; neither is a domain.
 
 **Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
 
