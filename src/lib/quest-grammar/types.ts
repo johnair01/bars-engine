@@ -128,6 +128,26 @@ export interface UnpackingAnswers {
 /** 5 moves (personal throughput): Wake → Open → Clean → Grow → Show. Used for mastery: Wake Up = choice-based; Show Up = action-based. */
 export type PersonalMoveType = 'wakeUp' | 'openUp' | 'cleanUp' | 'growUp' | 'showUp'
 
+/**
+ * Aspect of an allyship domain: left-hand (interior/self) vs right-hand (exterior/others).
+ * Inner = the development column (I/We interiors). Outer = the allyship column (It/Its
+ * exteriors, incl. acting with/for others). See .specify/specs/integral-axes/spec.md.
+ */
+export type AllyshipAspect = 'inner' | 'outer'
+
+/**
+ * A move's affinity for a cell of the 8-cell board (domain × aspect). Narrative-flavor
+ * only — drives Q1 of generated quests; no progress/energy/quest-selection effect.
+ * The 5 WAVE moves are the inner column. See .specify/specs/integral-axes/spec.md.
+ */
+export interface MoveCellAffinity {
+  /** Primary domain cell this move expresses in. */
+  domain: string
+  aspect: AllyshipAspect
+  /** Optional lighter secondary cell. */
+  secondary?: { domain: string; aspect: AllyshipAspect }
+}
+
 export type QuestModel = 'personal' | 'communal'
 
 export interface QuestCompileInput {

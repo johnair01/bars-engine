@@ -8,7 +8,7 @@
  */
 
 import type { ElementKey } from './elements'
-import type { PersonalMoveType } from './types'
+import type { PersonalMoveType, MoveCellAffinity } from './types'
 import type { CanonicalMove } from './move-engine'
 import { EXPERIENCE_OPTIONS } from './unpacking-constants'
 
@@ -48,17 +48,27 @@ const ELEMENT_TO_DOMAINS: Record<ElementKey, string[]> = {
   earth: ['Gather Resource', 'Skillful Organizing'],
 }
 
-/** WAVE stage → primary domain. */
-const WAVE_TO_DOMAIN: Record<PersonalMoveType, string> = {
-  wakeUp: 'Raise Awareness',
-  // Open Up = receptivity/intake (bars-engine's coinage, NOT Wilber's "lines"
-  // meaning — see FOUNDATIONS.md divergence note). Its inner cell is Gather
-  // Resource: "opening to the emotional energy to do the work." This value is
-  // narrative-flavor only (seeds Q1 of generated quests); no progress/energy effect.
-  openUp: 'Gather Resource',
-  cleanUp: 'Skillful Organizing',
-  growUp: 'Gather Resource',
-  showUp: 'Direct Action',
+/**
+ * WAVE move → cell of the 8-cell board (domain × aspect). The 5 moves are the
+ * INNER column (self-development). Narrative-flavor only — seeds Q1 of generated
+ * quests; no progress/energy/quest-selection effect. See integral-axes/spec.md.
+ *
+ * Note: Open Up = receptivity/intake (bars-engine's coinage, NOT Wilber's "lines"
+ * meaning — see FOUNDATIONS.md divergence note); its inner cell is Gather Resource
+ * ("opening to the emotional energy to do the work"). Grow Up is an ordinary inner
+ * move (lines/capacity) and shares Gather Resource — altitude lives in the 6 faces.
+ */
+const MOVE_CELL_AFFINITY: Record<PersonalMoveType, MoveCellAffinity> = {
+  wakeUp: { domain: 'Raise Awareness', aspect: 'inner' },
+  openUp: { domain: 'Gather Resource', aspect: 'inner' },
+  cleanUp: { domain: 'Skillful Organizing', aspect: 'inner' },
+  growUp: { domain: 'Gather Resource', aspect: 'inner' },
+  showUp: { domain: 'Direct Action', aspect: 'inner' },
+}
+
+/** The domain a move expresses in (back-compat seam for the former WAVE_TO_DOMAIN). */
+export function moveDomain(move: PersonalMoveType): string {
+  return MOVE_CELL_AFFINITY[move].domain
 }
 
 function pickN<T>(arr: readonly T[], n: number): T[] {
@@ -109,7 +119,7 @@ export function pickExperienceForPlayer(
 ): string {
   if (nationElement && archetypeWave) {
     const nationDomains = ELEMENT_TO_DOMAINS[nationElement]
-    const waveDomain = WAVE_TO_DOMAIN[archetypeWave]
+    const waveDomain = moveDomain(archetypeWave)
     const intersection = nationDomains.filter((d) => d === waveDomain)
     if (intersection.length > 0) {
       return intersection[0]!
@@ -120,7 +130,7 @@ export function pickExperienceForPlayer(
     return domains[Math.floor(Math.random() * domains.length)]!
   }
   if (archetypeWave) {
-    return WAVE_TO_DOMAIN[archetypeWave]
+    return moveDomain(archetypeWave)
   }
   return EXPERIENCE_OPTIONS[Math.floor(Math.random() * EXPERIENCE_OPTIONS.length)]!
 }

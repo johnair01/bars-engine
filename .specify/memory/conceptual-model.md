@@ -25,6 +25,21 @@ Schema: `CustomBar.allyshipDomain`, `Player.campaignDomainPreference`
 
 **Parser context**: For AI classification (book analysis), see `src/lib/allyship-domains-parser-context.ts`.
 
+### Inner / Outer (the 8-cell board)
+
+Each domain has an **inner** (left-hand: I/We interiors) and **outer** (right-hand: It/Its exteriors, incl. acting with/for others) cell → `AllyshipAspect = 'inner' | 'outer'`. The 5 WAVE moves are the **inner column** (self-development); the **outer column is allyship**. Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`).
+
+| Domain | Inner | Outer (allyship) |
+|--------|-------|------------------|
+| Gather Resource | open to emotional energy (Open Up); build capacity (Grow Up) | acquire resources; help others gather inner resource |
+| Raise Awareness | storytelling, meaning-making (Wake Up) | marketing |
+| Skillful Organizing | parts work, self-governance (Clean Up) | organize structures/systems |
+| Direct Action | aligned doing (Show Up) | right-quadrant action in the world |
+
+Specs: [`integral-axes`](../specs/integral-axes/spec.md) (board), [`inner-outer-allyship-moves`](../specs/inner-outer-allyship-moves/spec.md) (outer column move grammar).
+
+**Three orthogonal axes:** horizontal = the 5 WAVE moves; **altitudinal = the 6 Game Master faces** (= Integral altitude levels Magenta→Teal); the board = domains × inner/outer. See `FOUNDATIONS.md`.
+
 ## The 5 Moves (Personal Throughput)
 
 How people get things done. Distinct from allyship domains. WAVE order: **Wake → Open → Clean → Grow → Show**.

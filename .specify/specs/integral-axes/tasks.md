@@ -3,15 +3,15 @@
 Implement per [spec.md](./spec.md) / [plan.md](./plan.md). Run `npm run check` after each phase (fail-fix).
 
 ## Phase 1 — Ontology / docs
-- [ ] **T1**: `FOUNDATIONS.md` — add the 8-cell board table (domain × inner/outer) + inner = left-hand / outer = right-hand (incl. allyship) definition; note moves = inner column. (FR1) *(Wilber crossover + faces↔altitude tables already added.)*
-- [ ] **T2**: `.specify/memory/conceptual-model.md` — add `AllyshipAspect`, the domain×aspect board, and the three-axes (horizontal/altitudinal/board) table. (FR2)
+- [x] **T1**: `FOUNDATIONS.md` — add the 8-cell board table (domain × inner/outer) + inner = left-hand / outer = right-hand (incl. allyship) definition; note moves = inner column. (FR1) *(Wilber crossover + faces↔altitude tables already added.)*
+- [x] **T2**: `.specify/memory/conceptual-model.md` — add `AllyshipAspect`, the domain×aspect board, and the three-axes (horizontal/altitudinal/board) table. (FR2)
 
 ## Phase 2 — Domain inner/outer (low-risk, shippable alone)
-- [ ] **T3**: `src/lib/quest-grammar/types.ts` — add `AllyshipAspect` and `MoveCellAffinity` (no `altitude` field). (FR3)
-- [ ] **T4**: `src/lib/quest-grammar/canonical-kernel.ts` — replace `WAVE_TO_DOMAIN` with `MOVE_CELL_AFFINITY` (exhaustive over `PersonalMoveType`; `growUp` → Gather Resource inner). (FR4)
-- [ ] **T5**: `canonical-kernel.ts` — add `export function moveDomain(move): string`; refactor `pickExperienceForPlayer` to derive from affinity, keeping signature + return type identical. (FR4)
-- [ ] **T6**: Grep-audit `WAVE_TO_DOMAIN` readers (expected: only `pickExperienceForPlayer`); migrate any stragglers. (FR5)
-- [ ] **T7**: `npm run check` green; spot-verify Q1 strings per move×element are coherent. (FR6)
+- [x] **T3**: `src/lib/quest-grammar/types.ts` — add `AllyshipAspect` and `MoveCellAffinity` (no `altitude` field). (FR3)
+- [x] **T4**: `src/lib/quest-grammar/canonical-kernel.ts` — replace `WAVE_TO_DOMAIN` with `MOVE_CELL_AFFINITY` (exhaustive over `PersonalMoveType`; `growUp` → Gather Resource inner). (FR4)
+- [x] **T5**: `canonical-kernel.ts` — add `export function moveDomain(move): string`; refactor `pickExperienceForPlayer` to derive from affinity, keeping signature + return type identical. (FR4)
+- [x] **T6**: Grep-audit `WAVE_TO_DOMAIN` readers (expected: only `pickExperienceForPlayer`); migrate any stragglers. (FR5)
+- [x] **T7**: `npm run check` green; spot-verify Q1 strings per move×element are coherent. (FR6)
 - [ ] **T8**: Commit + push Phase 1–2 (`fail-fix-workflow`).
 
 ## Phase 3 — Persistence (separate gated slice; full Prisma discipline)

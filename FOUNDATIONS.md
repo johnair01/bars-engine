@@ -76,6 +76,19 @@ The six faces are the **altitudinal (vertical) axis** — the developmental leve
 
 **Three orthogonal axes:** **horizontal** = the 5 WAVE moves (*how* I develop), **altitudinal** = the 6 faces (*what level/lens* guides me), **the board** = allyship domains × inner/outer (*where* the work lands). Moves are not faces; neither is a domain.
 
+### The allyship board — 4 domains × inner/outer (8 cells)
+
+Each allyship domain (WHERE) has an **inner** (left-hand: I/We interiors) and **outer** (right-hand: It/Its exteriors, incl. acting with/for others) cell. The 5 WAVE moves are the **inner column** (self-development). The **outer column is allyship** — you can only touch another's interior via their right-hand.
+
+| Domain | Inner (left-hand: I/We) | Outer (right-hand: It/Its — incl. allyship) |
+|--------|--------------------------|----------------------------------------------|
+| **Gather Resource** | open self to the emotional energy to do the work *(Open Up)*; build capacity/lines *(Grow Up)* | acquire objective resources, or help another gather *their* inner resource (the human resource) |
+| **Raise Awareness** | storytelling, meaning-making *(Wake Up)* | marketing — letting people know what's up |
+| **Skillful Organizing** | self-governance, parts work *(Clean Up)* | organizing the right-hand quadrants (structures/systems) |
+| **Direct Action** | doing an emotional-alchemy move *(Show Up, aligned doing)* | right-quadrant action in the world |
+
+Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`): a move's `{ domain, aspect }`. Today all moves are `aspect: 'inner'`; the **outer/allyship** column's move grammar is spec'd in [`inner-outer-allyship-moves`](.specify/specs/inner-outer-allyship-moves/spec.md). See [`integral-axes`](.specify/specs/integral-axes/spec.md).
+
 **Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
 
 ## Emotional Alchemy (Narrative Movement)
