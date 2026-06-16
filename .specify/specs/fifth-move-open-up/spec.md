@@ -16,7 +16,7 @@ Add **Open Up** as the fifth personal-throughput move, expanding the WAVE from f
 | WAVE position | **After Wake, before Clean**: Wake → Open → Clean → Grow → Show. Notice the charge, then open to it, then clear the way. |
 | Moves ↔ elements | **Independent.** Adding a fifth move does NOT force a 5-move-to-5-element alignment. The 15 emotional moves keep their existing `primaryWaveStage` mappings; element grammar is untouched. |
 | Scope (this slice) | **Ontology + grammar only.** Update the conceptual model + foundations docs and the `quest-grammar` type unions and their exhaustive maps/arrays. **Out of scope:** `Nation.openUp` schema field, `CustomBar.moveType` data rollout, and all move UIs — deferred to a later slice. |
-| Move → allyship domain | There are 4 allyship domains for 5 moves. Default `openUp → 'Raise Awareness'` (opening expands awareness/possibility) for `WAVE_TO_DOMAIN`. **Flagged** as revisitable (see Open Questions). |
+| Move → allyship domain | There are 4 allyship domains for 5 moves. `openUp → 'Gather Resource'` (receptivity/intake — its inner cell) for `WAVE_TO_DOMAIN`. **Resolved** (see Open Questions §1). |
 | Type values | `WaveStage`: add `'Open'`. `PersonalMoveType`: add `'openUp'`. Display label: "Open Up". |
 
 ## Conceptual Model
@@ -63,7 +63,7 @@ Adding `'openUp'` to `PersonalMoveType` makes every exhaustive `Record<PersonalM
 ### Phase 3 — Exhaustive maps/arrays (lockstep)
 - **FR4**: `WAVE_NAMES` (`choice-privileging-context.ts`) + `WAVE_LABELS` (`compileQuestCore.ts`): add `openUp: 'Open Up'`.
 - **FR5**: `ALL_WAVE_MOVES` (`compileQuestCore.ts`) + `VALID_STAGES` (`archetype-wave.ts`): insert `'openUp'` in WAVE order (`['wakeUp','openUp','cleanUp','growUp','showUp']`).
-- **FR6**: `WAVE_TO_DOMAIN` (`canonical-kernel.ts`): add `openUp: 'Raise Awareness'` (flagged default).
+- **FR6**: `WAVE_TO_DOMAIN` (`canonical-kernel.ts`): `openUp: 'Gather Resource'` (receptivity/intake — its inner cell).
 - **FR7**: Parity for non-exhaustive lists/validators: `z.enum([...])` in `spoke-generator.ts`, `cyoa-intake/*`, and test arrays (`battery-6face.ts`) — add `'openUp'`.
 
 ### Phase 4 — Verify
@@ -83,7 +83,7 @@ Adding `'openUp'` to `PersonalMoveType` makes every exhaustive `Record<PersonalM
 
 ## Open Questions
 
-1. **Move → allyship domain** for Open Up — defaulting to `'Raise Awareness'`; should it instead be `'Gather Resource'` (receiving) or a new domain? (Revisit when Nation fields roll out.)
+1. ~~**Move → allyship domain** for Open Up — defaulting to `'Raise Awareness'`; should it instead be `'Gather Resource'` (receiving) or a new domain?~~ **RESOLVED (2026-06-16):** `openUp → 'Gather Resource'`. Open Up = receptivity/intake (its inner cell is Gather Resource: "opening to the emotional energy to do the work"). `WAVE_TO_DOMAIN` is narrative-flavor only (seeds Q1 of generated quests) with no progress/energy/quest-selection effect, so a single coherent mapping is correct. See FOUNDATIONS.md Wilber-divergence note. (Deeper `domain × inner/outer` two-axis model deferred to its own spec.)
 2. **Element affinity** — does Open Up eventually get one or more of the 15 emotional moves mapped to it as `primaryWaveStage`, or stay element-agnostic?
 
 ## Dependencies / References
