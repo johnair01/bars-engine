@@ -10,6 +10,15 @@
 
 export type WallKey = "car" | "presale" | "runway";
 
+/**
+ * Campaign ref the July-18 barn lives under. The event `Instance` and the three wall
+ * `CampaignMilestone` rows share this ref (see `scripts/seed-barn-raising.ts`).
+ */
+export const BARN_CAMPAIGN_REF = "mtgoa-barn-raising";
+
+/** Ordered wall keys (matches `BARN_WALLS`). */
+export const WALL_KEYS: readonly WallKey[] = ["car", "presale", "runway"];
+
 export interface BarnWall {
   key: WallKey;
   /** Short display name. */
@@ -103,6 +112,22 @@ export const PREVIEW_BARN_STATE: BarnState = {
   beams: 5,
 };
 
+/**
+ * Map raw milestone rows → per-wall raised **cents**. `CampaignMilestone.currentValue` is
+ * stored in **dollars** (see `src/actions/donate.ts`), so we ×100 here. Pure + tested.
+ */
+export function buildRaisedCents(
+  rows: ReadonlyArray<{ wallKey: string | null; currentValue: number }>,
+): Record<WallKey, number> {
+  const out: Record<WallKey, number> = { car: 0, presale: 0, runway: 0 };
+  for (const r of rows) {
+    if (r.wallKey === "car" || r.wallKey === "presale" || r.wallKey === "runway") {
+      out[r.wallKey] = Math.round(r.currentValue * 100);
+    }
+  }
+  return out;
+}
+
 export function wallProgress01(wall: BarnWall, state: BarnState): number {
   if (wall.targetCents <= 0) return 0;
   return Math.min(1, state.raisedCents[wall.key] / wall.targetCents);
@@ -129,6 +154,56 @@ export function formatMoneyCents(cents: number, cadence: "once" | "month" = "onc
   const dollars = Math.round(cents / 100);
   const base = `$${dollars.toLocaleString("en-US")}`;
   return cadence === "month" ? `${base}/mo` : base;
+}
+
+/** One guided next-step after a wall fills (FR6 "keep building"). */
+export interface KeepBuildingAction {
+  label: string;
+  href: string;
+}
+
+/** "Keep building" guidance shown after a contribution tops off a wall. */
+export interface KeepBuildingGuidance {
+  /** The wall that just reached its target. */
+  completedWallKey: WallKey;
+  title: string;
+  message: string;
+  /** Ordered next steps: cross-wall → purchases → in-kind → access. */
+  actions: KeepBuildingAction[];
+}
+
+/**
+ * FR6: when a contribution tops off `creditedWall`, return the "keep building" redirect —
+ * point the giver to the next plank (the other open walls first, then in-kind, then access).
+ * Returns `null` when the credited wall is *not* yet full (no redirect needed). Pure + tested.
+ */
+export function keepBuildingAfterWall(
+  state: BarnState,
+  creditedWall: WallKey,
+): KeepBuildingGuidance | null {
+  const wall = BARN_WALLS.find((w) => w.key === creditedWall);
+  if (!wall) return null;
+  if (wallProgress01(wall, state) < 1) return null; // wall not full → no redirect
+
+  const actions: KeepBuildingAction[] = [];
+  // 1. Cross-wall: other walls still open, in priority order (car → pre-sale → runway).
+  for (const w of BARN_WALLS) {
+    if (w.key === creditedWall) continue;
+    if (wallProgress01(w, state) < 1) {
+      actions.push({ label: w.cta.label, href: w.cta.href });
+    }
+  }
+  // 2. In-kind: lend time / offer space.
+  actions.push({ label: "Lend a hand or offer space", href: "/event/donate/wizard?dswPath=time" });
+  // 3. Access: open the app.
+  actions.push({ label: "Open the app", href: "/game/" });
+
+  return {
+    completedWallKey: creditedWall,
+    title: `${wall.name} is funded — roof's on that wall 🎉`,
+    message: "Your gift topped off this wall. Here's where the next plank can go.",
+    actions: actions.slice(0, 3),
+  };
 }
 
 /** Threshold beats that "fire something real" as a wall fills (non-pressure). */

@@ -227,12 +227,15 @@ export function checkoutHref(
   product: MarketingProduct,
   variant: PriceVariant,
   campaignRef?: string,
+  /** Which barn wall this purchase credits. Defaults to "presale" for product sales. */
+  wall = "presale",
 ): string {
   const params = new URLSearchParams({
     dswPath: "money",
     amount: (variant.amountCents / 100).toFixed(2),
     product: product.key,
     variant: variant.label,
+    wall,
     dswNarrative: `${product.name} — ${variant.label}`,
   });
   if (campaignRef) params.set("ref", campaignRef);

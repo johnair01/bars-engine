@@ -8,6 +8,8 @@ import {
   otherProducts,
 } from "@/lib/marketing/products";
 import { BarnRaisingBar } from "@/components/event/BarnRaisingBar";
+import { getBarnSnapshot } from "@/actions/barn";
+import type { BarnState } from "@/lib/event/barn-raising";
 
 export const metadata: Metadata = {
   title: "Get Started — Mastering the Game of Allyship",
@@ -38,6 +40,15 @@ export default async function PricingPage() {
     if (cfg?.heroSubtitle) heroSubtitle = cfg.heroSubtitle;
   } catch {
     /* keep defaults — never block the front door on the database */
+  }
+
+  // Live barn totals for the teaser — tolerate DB-down (preview deploys) by falling
+  // back to the honest empty state inside the bar.
+  let barnState: BarnState | undefined;
+  try {
+    barnState = await getBarnSnapshot();
+  } catch {
+    barnState = undefined;
   }
 
   return (
@@ -151,7 +162,7 @@ export default async function PricingPage() {
 
         {/* Barn raising teaser — the send-off centerpiece */}
         <section aria-label="Barn raising">
-          <BarnRaisingBar variant="teaser" />
+          <BarnRaisingBar variant="teaser" state={barnState} />
         </section>
 
         {/* Funnel CTAs: support + account */}

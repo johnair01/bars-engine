@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { reportDonationWithState } from '@/actions/donate'
+import { KeepBuildingCard } from '@/components/donation/KeepBuildingCard'
 
 type Props = {
   instanceId: string
@@ -15,6 +16,12 @@ type Props = {
   dswNarrative?: string
   dswMilestoneId?: string
   dswEchoQuestId?: string
+  /** Barn wall key this purchase credits (e.g. "presale"). */
+  wall?: string
+  /** Product key from the pricing catalog. */
+  product?: string
+  /** Product variant label. */
+  variant?: string
   /**
    * Where to return after login when pending donation cookie is set (allowlisted server-side).
    * @default '/event/donate'
@@ -32,6 +39,9 @@ export function SelfReportDonationForm({
   dswNarrative,
   dswMilestoneId,
   dswEchoQuestId,
+  wall,
+  product,
+  variant,
   donateReturnPath = '/event/donate',
 }: Props) {
   const router = useRouter()
@@ -48,14 +58,30 @@ export function SelfReportDonationForm({
   }, [state, router])
 
   return (
-    <form action={formAction} className="space-y-4">
-      <input type="hidden" name="donateReturnPath" value={donateReturnPath} />
+    <div className="space-y-4">
+      {state?.success && (
+        <section className="rounded-xl border border-green-900/60 bg-green-950/30 p-4 text-green-200">
+          <div className="font-bold">Thank you!</div>
+          <div className="mt-1 text-sm">
+            Your donation was recorded.{' '}
+            {state.vibeulonsMinted != null && state.vibeulonsMinted > 0
+              ? `${state.vibeulonsMinted} vibeulon(s) were added to your wallet.`
+              : 'Thank you for supporting the residency.'}
+          </div>
+        </section>
+      )}
+      {state?.success && state.keepBuilding && <KeepBuildingCard guidance={state.keepBuilding} />}
+      <form action={formAction} className="space-y-4">
+        <input type="hidden" name="donateReturnPath" value={donateReturnPath} />
       <input type="hidden" name="instanceId" value={instanceId} />
       {dswPath ? <input type="hidden" name="dswPath" value={dswPath} /> : null}
       {dswTier ? <input type="hidden" name="dswTier" value={dswTier} /> : null}
       {dswNarrative ? <input type="hidden" name="dswNarrative" value={dswNarrative} /> : null}
       {dswMilestoneId ? <input type="hidden" name="dswMilestoneId" value={dswMilestoneId} /> : null}
       {dswEchoQuestId ? <input type="hidden" name="dswEchoQuestId" value={dswEchoQuestId} /> : null}
+      {wall ? <input type="hidden" name="wall" value={wall} /> : null}
+      {product ? <input type="hidden" name="product" value={product} /> : null}
+      {variant ? <input type="hidden" name="variant" value={variant} /> : null}
       <p className="text-xs text-zinc-500">
         Recording for <span className="text-zinc-400">{instanceName}</span>
         {dswTier ? (
@@ -121,6 +147,7 @@ export function SelfReportDonationForm({
       >
         {isPending ? 'Processing...' : isLoggedIn ? 'Report donation' : 'Report donation (sign in required)'}
       </button>
-    </form>
+      </form>
+    </div>
   )
 }
