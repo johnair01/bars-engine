@@ -25,6 +25,9 @@ export default async function DonatePage(props: {
     dswMilestoneId?: string
     dswEchoQuestId?: string
     ref?: string
+    wall?: string
+    product?: string
+    variant?: string
   }>
 }) {
   const sp = await props.searchParams

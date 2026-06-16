@@ -20,11 +20,11 @@
 - [x] **T2.3** Wired `/event/barn` to `getBarnSnapshot` (try/catch → empty `BarnState`); `?preview=1` still forces fill.
 - [ ] **T2.4** `/pricing` teaser live snapshot — **deferred** (teaser renders the empty state; avoid touching `/pricing` which moved in PR #113).
 
-## Phase 3 — Write path (checkout tagging) — DEFERRED to slice 2
-- [ ] **T3.1** `/event/donate` reads `product`/`variant`/`wall` and forwards into the self-report form.
-- [ ] **T3.2** `donate.ts` persists `product`/`variant`/`wall` into `Donation.dswMeta`.
-- [ ] **T3.3** `donate.ts` resolves the wall milestone by `(campaignRef, wallKey)` when no `milestoneId`; product purchases default to the **pre-sale** wall.
-- [ ] **T3.4** Wall-complete "keep building" redirect (FR6).
+## Phase 3 — Write path (checkout tagging) — SLICE 2 DONE
+- [x] **T3.1** `/event/donate` reads `product`/`variant`/`wall` and forwards into the self-report form.
+- [x] **T3.2** `donate.ts` persists `product`/`variant`/`wall` into `Donation.dswMeta`.
+- [x] **T3.3** `donate.ts` resolves the wall milestone by `(campaignRef, wallKey)` when no `milestoneId`; product purchases default to the **pre-sale** wall (set in `checkoutHref`).
+- [ ] **T3.4** Wall-complete "keep building" redirect (FR6) — deferred slice 3.
 
 ## Phase 4 — Verification quest (required)
 - [x] **T4.1** Authored Twine passages for `cert-barn-raising-live-v1` (live walls → buy → self-report → pre-sale wall rises).

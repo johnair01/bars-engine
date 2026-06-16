@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { maybeCompleteMilestoneAndAdvanceKotter } from '@/actions/campaign-deck'
+import { WALL_KEYS, type WallKey } from '@/lib/event/barn-raising'
 
 const PENDING_DONATION_COOKIE = 'bars_pending_donation'
 const DEFAULT_PACK_RATE_CENTS = 100 // 1 pack per $1
@@ -14,6 +15,7 @@ const VIBEULONS_PER_PACK = 1
 const DSW_NARRATIVE_MAX = 280
 const DSW_ALLOWED_PATH = new Set(['money', 'time', 'space'])
 const DSW_ALLOWED_TIER = new Set(['small', 'medium', 'large', 'custom'])
+const WALL_KEY_SET = new Set<string>(WALL_KEYS)
 
 const cuidSchema = z.string().cuid()
 
@@ -43,6 +45,12 @@ export type DonationWizardMeta = {
   milestoneId?: string
   /** Optional `CustomBar` (quest) id for steward-facing echo */
   echoQuestId?: string
+  /** Barn wall key to credit when no explicit milestoneId (e.g. "presale") */
+  wall?: WallKey
+  /** Product key from the pricing catalog (for contribution note) */
+  product?: string
+  /** Product variant label (for contribution note) */
+  variant?: string
 }
 
 function buildDswMetaRecord(dsw?: DonationWizardMeta): Record<string, string> | undefined {
@@ -50,6 +58,9 @@ function buildDswMetaRecord(dsw?: DonationWizardMeta): Record<string, string> | 
   const o: Record<string, string> = {}
   if (dsw.milestoneId) o.milestoneId = dsw.milestoneId
   if (dsw.echoQuestId) o.echoQuestId = dsw.echoQuestId
+  if (dsw.wall) o.wall = dsw.wall
+  if (dsw.product) o.product = dsw.product
+  if (dsw.variant) o.variant = dsw.variant
   if (Object.keys(o).length === 0) return undefined
   return o
 }
@@ -67,22 +78,33 @@ function parseDswFromForm(formData: FormData): DonationWizardMeta | undefined {
   const milestoneId = cuidSchema.safeParse(rawMilestone).success ? rawMilestone : ''
   const echoQuestId = cuidSchema.safeParse(rawQuest).success ? rawQuest : ''
 
-  if (!path && !tier && !narrative && !milestoneId && !echoQuestId) return undefined
+  const rawWall = (formData.get('wall') as string | null)?.trim() || ''
+  const wall = WALL_KEY_SET.has(rawWall) ? (rawWall as WallKey) : undefined
+  const product = (formData.get('product') as string | null)?.trim().slice(0, 64) || undefined
+  const variant = (formData.get('variant') as string | null)?.trim().slice(0, 64) || undefined
+
+  if (!path && !tier && !narrative && !milestoneId && !echoQuestId && !wall && !product && !variant) return undefined
   return {
     ...(path ? { path } : {}),
     ...(tier ? { tier } : {}),
     ...(narrative ? { narrative } : {}),
     ...(milestoneId ? { milestoneId } : {}),
     ...(echoQuestId ? { echoQuestId } : {}),
+    ...(wall ? { wall } : {}),
+    ...(product ? { product } : {}),
+    ...(variant ? { variant } : {}),
   }
 }
 
 function buildDonationNote(dsw?: DonationWizardMeta, milestoneTitle?: string | null): string {
   const base = 'Self-reported donation'
-  if (!dsw || (!dsw.path && !dsw.tier && !dsw.narrative && !dsw.milestoneId && !dsw.echoQuestId)) {
+  if (!dsw || (!dsw.path && !dsw.tier && !dsw.narrative && !dsw.milestoneId && !dsw.echoQuestId && !dsw.wall && !dsw.product)) {
     return base
   }
   const kv: string[] = []
+  if (dsw.product) kv.push(`product=${dsw.product}`)
+  if (dsw.variant) kv.push(`variant=${dsw.variant}`)
+  if (dsw.wall) kv.push(`wall=${dsw.wall}`)
   if (dsw.path) kv.push(`path=${dsw.path}`)
   if (dsw.tier) kv.push(`tier=${dsw.tier}`)
   if (dsw.milestoneId) kv.push(`milestoneId=${dsw.milestoneId}`)
@@ -128,6 +150,9 @@ function pendingCookiePayload(
     ...(dsw?.narrative ? { dswNarrative: dsw.narrative } : {}),
     ...(dsw?.milestoneId ? { dswMilestoneId: dsw.milestoneId } : {}),
     ...(dsw?.echoQuestId ? { dswEchoQuestId: dsw.echoQuestId } : {}),
+    ...(dsw?.wall ? { wall: dsw.wall } : {}),
+    ...(dsw?.product ? { product: dsw.product } : {}),
+    ...(dsw?.variant ? { variant: dsw.variant } : {}),
   }
 }
 
@@ -150,13 +175,21 @@ function dswFromPendingCookie(data: Record<string, unknown>): DonationWizardMeta
     typeof data.dswEchoQuestId === 'string' && cuidSchema.safeParse(data.dswEchoQuestId.trim()).success
       ? data.dswEchoQuestId.trim()
       : ''
-  if (!p && !t && !n && !m && !q) return undefined
+  const rawWall = typeof data.wall === 'string' ? data.wall.trim() : ''
+  const w = WALL_KEY_SET.has(rawWall) ? (rawWall as WallKey) : undefined
+  const product = typeof data.product === 'string' ? data.product.trim().slice(0, 64) : undefined
+  const variant = typeof data.variant === 'string' ? data.variant.trim().slice(0, 64) : undefined
+
+  if (!p && !t && !n && !m && !q && !w && !product && !variant) return undefined
   return {
     ...(p ? { path: p } : {}),
     ...(t ? { tier: t } : {}),
     ...(n ? { narrative: n } : {}),
     ...(m ? { milestoneId: m } : {}),
     ...(q ? { echoQuestId: q } : {}),
+    ...(w ? { wall: w } : {}),
+    ...(product ? { product } : {}),
+    ...(variant ? { variant } : {}),
   }
 }
 
@@ -244,6 +277,17 @@ async function createDonationAndPacks(
         error: 'That milestone is not active for this campaign. Refresh the page and pick again.',
       }
     }
+  }
+
+  if (dsw?.wall && !dsw?.milestoneId && campaignRef) {
+    const wallMilestone = await db.campaignMilestone.findFirst({
+      where: { campaignRef, wallKey: dsw.wall, status: 'active' },
+      select: { id: true },
+    })
+    if (!wallMilestone) {
+      return { error: `The ${dsw.wall} wall isn't active yet. Contact a steward.` }
+    }
+    dsw = { ...dsw, milestoneId: wallMilestone.id }
   }
 
   if (dsw?.echoQuestId) {
@@ -354,6 +398,7 @@ async function createDonationAndPacks(
     revalidatePath('/event')
     revalidatePath('/event/donate')
     revalidatePath('/event/donate/wizard')
+    revalidatePath('/event/barn')
     revalidatePath('/demo/bruised-banana/donate')
     revalidatePath('/')
     revalidatePath('/wallet')

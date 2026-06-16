@@ -137,6 +137,9 @@ export function DonatePageView({
             dswNarrative={parsed.dswNarrative}
             dswMilestoneId={parsed.dswMilestoneId}
             dswEchoQuestId={parsed.dswEchoQuestId}
+            wall={parsed.wall}
+            product={parsed.product}
+            variant={parsed.variant}
             donateReturnPath={donateReturnPath}
           />
         </section>

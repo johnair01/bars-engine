@@ -15,6 +15,12 @@ type Props = {
   dswNarrative?: string
   dswMilestoneId?: string
   dswEchoQuestId?: string
+  /** Barn wall key this purchase credits (e.g. "presale"). */
+  wall?: string
+  /** Product key from the pricing catalog. */
+  product?: string
+  /** Product variant label. */
+  variant?: string
   /**
    * Where to return after login when pending donation cookie is set (allowlisted server-side).
    * @default '/event/donate'
@@ -32,6 +38,9 @@ export function SelfReportDonationForm({
   dswNarrative,
   dswMilestoneId,
   dswEchoQuestId,
+  wall,
+  product,
+  variant,
   donateReturnPath = '/event/donate',
 }: Props) {
   const router = useRouter()
@@ -56,6 +65,9 @@ export function SelfReportDonationForm({
       {dswNarrative ? <input type="hidden" name="dswNarrative" value={dswNarrative} /> : null}
       {dswMilestoneId ? <input type="hidden" name="dswMilestoneId" value={dswMilestoneId} /> : null}
       {dswEchoQuestId ? <input type="hidden" name="dswEchoQuestId" value={dswEchoQuestId} /> : null}
+      {wall ? <input type="hidden" name="wall" value={wall} /> : null}
+      {product ? <input type="hidden" name="product" value={product} /> : null}
+      {variant ? <input type="hidden" name="variant" value={variant} /> : null}
       <p className="text-xs text-zinc-500">
         Recording for <span className="text-zinc-400">{instanceName}</span>
         {dswTier ? (
