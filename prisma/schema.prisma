@@ -356,6 +356,8 @@ model CustomBar {
   contextLines                         String?
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization                   String?
+  /// BSCW: canvas layout JSON for seed capture whiteboard { items: CanvasItem[] }
+  canvasLayout                         String?
   isExemplar                           Boolean                @default(false)
   spokeSessionId                       String?
   /// CSHE: clothing-swap listing excluded from public gallery (host/co-host moderation)

@@ -985,3 +985,114 @@ export async function createSupportingBarForQuest(
     return { error: e instanceof Error ? e.message : 'Failed to create BAR' }
   }
 }
+
+// ---------------------------------------------------------------------------
+// CAPTURE BAR FROM CANVAS (BSCW — Seed Capture Whiteboard)
+// ---------------------------------------------------------------------------
+
+export type CanvasItemType = 'text' | 'photo' | 'voice' | 'link'
+
+export interface CanvasItem {
+  id: string
+  type: CanvasItemType
+  x: number
+  y: number
+  rot: number
+  // text sticker
+  text?: string
+  tint?: string | null
+  size?: number
+  // media
+  assetId?: string | null
+  // link
+  url?: string
+  label?: string
+}
+
+export interface CaptureBarFromCanvasInput {
+  items: CanvasItem[]
+  fieldTint: string | null
+  charge: 1 | 2 | 3 | 4 | 5
+  provenance?: string
+}
+
+function deriveCanvasTitle(items: CanvasItem[]): string {
+  const firstText = items.find(i => i.type === 'text' && i.text?.trim())
+  if (!firstText?.text) return 'Untitled seed'
+  const firstLine = firstText.text.trim().split('\n')[0].trim()
+  return firstLine.slice(0, 120) || 'Untitled seed'
+}
+
+function deriveCanvasDescription(items: CanvasItem[]): string {
+  const texts = items
+    .filter(i => i.type === 'text' && i.text?.trim())
+    .map(i => i.text!.trim())
+  return texts.join('\n\n') || ''
+}
+
+function serializeCanvasInputs(items: CanvasItem[]): string {
+  const links = items
+    .filter(i => i.type === 'link' && i.url)
+    .map(i => ({ type: 'link', url: i.url, label: i.label || i.url }))
+  return JSON.stringify(links)
+}
+
+export async function captureBarFromCanvas(
+  payload: CaptureBarFromCanvasInput
+): Promise<{ barId: string } | { error: string }> {
+  const playerId = await getPlayerId()
+  if (!playerId) return { error: 'Not logged in' }
+
+  const { items, fieldTint, charge, provenance } = payload
+
+  const hasContent =
+    items.some(i => i.type === 'text' && i.text?.trim()) ||
+    items.some(i => i.type === 'photo' || i.type === 'voice' || i.type === 'link')
+
+  if (!hasContent) return { error: 'Add something to the canvas first' }
+
+  const title = deriveCanvasTitle(items)
+  const description = deriveCanvasDescription(items)
+  const nation = normalizeFieldTint(fieldTint)
+  const intensity = String(charge)
+  const inputs = serializeCanvasInputs(items)
+  const canvasLayout = JSON.stringify(items)
+  const seedMetabolization = CAPTURE_SEED_METABOLIZATION
+
+  try {
+    const bar = await db.customBar.create({
+      data: {
+        creatorId: playerId,
+        title,
+        description: description || title,
+        type: 'bar',
+        reward: 0,
+        visibility: 'private',
+        status: 'active',
+        inputs,
+        rootId: 'temp',
+        nation,
+        intensity,
+        canvasLayout,
+        seedMetabolization,
+        contextLines: provenance || null,
+      },
+    })
+
+    await db.customBar.update({
+      where: { id: bar.id },
+      data: { rootId: bar.id },
+    })
+
+    revalidatePath('/bars')
+    revalidatePath('/bars/garden')
+    revalidatePath('/hand')
+    revalidatePath('/')
+
+    return { barId: bar.id }
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error'
+    console.error('[BAR] Canvas capture failed:', message)
+    return { error: 'Failed to capture seed. Please try again.' }
+  }
+}
