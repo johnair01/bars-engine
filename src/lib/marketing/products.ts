@@ -215,6 +215,30 @@ export function lowestPrice(product: MarketingProduct): PriceVariant | null {
   );
 }
 
+/**
+ * Checkout deep-link for a priced product variant.
+ *
+ * The repo's money flow is link-based + honor-system (no Stripe SDK): we hand off to
+ * `/event/donate` with the amount pre-filled, the buyer pays via the Instance's payment
+ * links (Stripe/Venmo/…), then self-reports — recording a `MilestoneContribution`. The
+ * product + variant ride along so the contribution note captures what was bought (Wall 2).
+ */
+export function checkoutHref(
+  product: MarketingProduct,
+  variant: PriceVariant,
+  campaignRef?: string,
+): string {
+  const params = new URLSearchParams({
+    dswPath: "money",
+    amount: (variant.amountCents / 100).toFixed(2),
+    product: product.key,
+    variant: variant.label,
+    dswNarrative: `${product.name} — ${variant.label}`,
+  });
+  if (campaignRef) params.set("ref", campaignRef);
+  return `/event/donate?${params.toString()}`;
+}
+
 /** Cross-sell helper: a few other products to surface from a given one. */
 export function otherProducts(
   key: ProductKey,

@@ -294,6 +294,68 @@
   );
 }
 
+/* ─── Card-Table Menu Surface — Register 6 Zone/Texture ───────────────────────
+   The dark-slate table the MtGoA deck menu (and other card-table menus) rests on.
+   Cool/bluish to contrast the warm card bodies; lit from the top-left; restrained
+   grain so it reads as stone, not flat fill. Hex mirrors SURFACE_TOKENS.tableSlate*
+   in card-tokens.ts — keep in sync.
+   Design: .specify/specs/mtgoa-menu-skeuomorphic-cyoa/design-intake.md
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.card-table {
+  position: relative;
+  background:
+    radial-gradient(ellipse 120% 85% at 30% 0%, #1d1f25 0%, #15161a 45%, #0b0c0f 100%);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),   /* faint top rim — the slate catches light */
+    inset 0 0 80px rgba(0, 0, 0, 0.45);         /* deep inner vignette */
+  overflow: hidden;
+}
+
+/* Restrained stone grain (static — no motion). */
+.card-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    repeating-linear-gradient(
+      27deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      -63deg,
+      rgba(0, 0, 0, 0.05) 0px,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+}
+
+/* A card resting on the table casts a real shadow onto the slate.
+   Apply to the wrapper/slot around each CultivationCard — NOT the card itself,
+   whose own box-shadow owns the top-edge highlight + element frame/glow. */
+.card-table__slot {
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+}
+
+/* The quiet funnel ribbon on a deck card. Wayfinding, not a CTA.
+   --ribbon-tint is set by the component from a BARN_WALLS token (semantic), or
+   falls back to a neutral slate for free-door spokes. */
+.card-funnel-ribbon {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  background: color-mix(in srgb, var(--ribbon-tint, #8e9aab) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ribbon-tint, #8e9aab) 45%, transparent);
+}
+
 /* ─── Reduced Motion Overrides ────────────────────────────────────────────────
    All animations pause. Haptic / audio are non-motion and still fire. ──────── */
 
