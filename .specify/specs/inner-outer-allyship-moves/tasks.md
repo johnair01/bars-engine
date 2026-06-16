@@ -13,9 +13,9 @@ Implement per [spec.md](./spec.md) / [plan.md](./plan.md). **Blocked on** [`inte
 - [x] **T6**: `npm run check` green; commit + push.
 
 ## Phase 3 — Quest-grammar wiring (deterministic)
-- [ ] **T7**: `canonical-kernel.ts` — bridge: outer aspect resolves to the **outer cell** of the move's domain (via `MoveCellAffinity`); inner → inner cell. (FR6)
-- [ ] **T8**: Optional face-style modulation of outer phrasing via existing overlays — read-only reuse, no new face logic. (FR7)
-- [ ] **T9**: `npm run check` green; commit + push.
+- [x] **T7**: `canonical-kernel.ts` — bridge: outer aspect resolves to the **outer cell** of the move's domain (via `MoveCellAffinity`); inner → inner cell. (FR6) → `resolveMoveCell(EnactedMove)`.
+- [x] **T8**: Optional face-style modulation of outer phrasing via existing overlays — read-only reuse, no new face logic. (FR7) → `describeMove(m, face?)` + `FACE_HEALTHY_REGISTER` (healthy pole only; with/for shadow left as documented seam).
+- [x] **T9**: `npm run check` green; commit + push. (`61c7d1a`)
 
 ## Phase 4 — UX + persistence (later; Verification Quest required)
 - [ ] **T10**: Server Action for player inner/outer choice on move-taking; define contract before UI. (FR8)
