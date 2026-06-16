@@ -1,0 +1,15 @@
+/* BARS Engine — Webfonts
+ *
+ * The covenant calls for Futura PT Bold (titles/chrome), a rounded sans
+ * (ui-rounded / Nunito) for player prose, and a tabular mono for stats.
+ * Futura PT is a licensed font and was NOT shipped in the source repo, so we
+ * substitute Jost — a geometric Futura-adjacent sans on Google Fonts.
+ *   • Display / chrome  → Jost        (geometric, Futura substitute)  ⚠ substitution
+ *   • Body / prose      → Nunito      (warm, rounded — matches ui-rounded intent)
+ *   • Stats / numerals  → Space Mono  (retro tabular mono, reads with the pixel art)
+ *
+ * To restore exact brand type, drop the licensed Futura PT files in
+ * assets/fonts/ and replace the Jost @import + --font-display stack.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');

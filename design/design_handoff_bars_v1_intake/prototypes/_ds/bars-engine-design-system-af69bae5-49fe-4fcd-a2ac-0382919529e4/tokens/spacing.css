@@ -1,0 +1,65 @@
+/* BARS Engine — Spacing, Radius, Shadow & Motion Tokens
+ *
+ * Shadows are the heart of the aesthetic. The single most important trick is the
+ * inset 0 1px 0 highlight that turns a flat dark card into a physical object —
+ * paired with an element-frame ring and an outer element glow whose radius
+ * scales with ALTITUDE. Never remove the inset highlight.
+ */
+
+:root {
+  /* ── Spacing scale ────────────────────────────────────────────────────── */
+  --bars-space-1: 0.25rem;  /*  4px */
+  --bars-space-2: 0.5rem;   /*  8px */
+  --bars-space-3: 0.75rem;  /* 12px — default card padding step */
+  --bars-space-4: 1rem;     /* 16px — card padding */
+  --bars-space-5: 1.25rem;  /* 20px */
+  --bars-space-6: 1.5rem;   /* 24px — section gap */
+  --bars-space-8: 2rem;     /* 32px */
+  --bars-space-10: 2.5rem;  /* 40px */
+  --bars-space-12: 3rem;    /* 48px — screen gutter */
+
+  /* ── Radii ────────────────────────────────────────────────────────────── */
+  --bars-radius-sm:   6px;   /* chips, small badges, art-window-in-badge */
+  --bars-radius-md:   8px;   /* buttons, inputs, inset wells */
+  --bars-radius-lg:   12px;  /* the cultivation card — canonical */
+  --bars-radius-xl:   16px;  /* sheets, large containers */
+  --bars-radius-2xl:  24px;  /* modal shells */
+  --bars-radius-full: 9999px;/* avatars (circle), pill toggles */
+
+  /* ── Altitude channel — border + glow intensity ──────────────────────────
+     dissatisfied → 1px border, 30% opacity, no glow (raw, pre-alchemy)
+     neutral      → 2px border, 70% opacity, 4px glow, 4s float
+     satisfied    → 2px border, 100% opacity, 12px glow, 6s float
+     ─────────────────────────────────────────────────────────────────────── */
+  --bars-alt-border-width-dissatisfied: 1px;
+  --bars-alt-border-width-neutral:      2px;
+  --bars-alt-border-width-satisfied:    2px;
+  --bars-alt-opacity-dissatisfied: 0.3; /* @kind other */
+  --bars-alt-opacity-neutral:      0.7; /* @kind other */
+  --bars-alt-opacity-satisfied:    1;   /* @kind other */
+  --bars-alt-glow-dissatisfied: 0px;
+  --bars-alt-glow-neutral:      4px;
+  --bars-alt-glow-satisfied:    12px;
+
+  /* default channel = neutral */
+  --bars-border-width: var(--bars-alt-border-width-neutral);
+  --bars-border-opacity: var(--bars-alt-opacity-neutral);
+  --bars-glow-radius: var(--bars-alt-glow-neutral);
+
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
+  /* The load-bearing inset top highlight (apply on every card). */
+  --bars-shadow-inset-top: inset 0 1px 0 var(--bars-inset-top);
+  /* Pressed inset. */
+  --bars-shadow-pressed: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.4);
+  /* Elevated surface (modal / sheet). */
+  --bars-shadow-elevated: 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --bars-ease-out:  cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --bars-dur-press: 80ms;  /* @kind other */
+  --bars-dur-fast:  150ms; /* @kind other */
+  --bars-dur-base:  200ms; /* @kind other */
+  --bars-dur-slow:  300ms; /* @kind other */
+  --bars-float-period-neutral:   4s; /* @kind other */
+  --bars-float-period-satisfied: 6s; /* @kind other */
+}

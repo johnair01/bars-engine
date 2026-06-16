@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:ui": "bash scripts/verify-ui.sh"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
