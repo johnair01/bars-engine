@@ -14,6 +14,7 @@ function assert(c: boolean, m: string) {
 
 function run() {
   assert(parsePortalMoveFromBlueprintKey('face_shaman_move_wakeUp') === 'wakeUp', 'wakeUp')
+  assert(parsePortalMoveFromBlueprintKey('face_oracle_move_openUp') === 'openUp', 'openUp')
   assert(parsePortalMoveFromBlueprintKey('face_regent_move_cleanUp') === 'cleanUp', 'cleanUp')
   assert(parsePortalMoveFromBlueprintKey('face_sage_move_showUp') === 'showUp', 'showUp')
   assert(parsePortalMoveFromBlueprintKey(undefined) === null, 'undef')

@@ -13,6 +13,7 @@ import type { SpokeMoveBedMoveType } from '@/lib/spoke-move-beds'
 
 const MOVE_LABEL: Record<SpokeMoveBedMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',

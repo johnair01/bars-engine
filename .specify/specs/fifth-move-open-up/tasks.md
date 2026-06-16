@@ -31,7 +31,12 @@
 - [x] **A.3** Display path: `ArchetypeHandbookContent`, `OnboardingRecommendation`, `wiki/nations`, `wiki/archetypes` render Open Up; feeding selects (`guided-onboarding.ts`, wiki pages) add `openUp: true`.
 - [x] **A.4** Content: authored Open Up text for all 5 nations + 8 archetypes (element/voice-matched, in the `Name: description` pattern) directly in the canonical seed (`src/lib/seed-utils.ts` `runSeed`, which upserts) + the typed reference (`src/lib/nation/nations.ts`). Applied to the live DB (13/13 populated). Composted the throwaway standalone backfill script per generative-dependencies.
 
+### Slice C — Spoke seed-bed 5th "Open Up" bed ✅ (done)
+- [x] **C.1** `SPOKE_MOVE_BED_MOVE_TYPES` +`'openUp'` (WAVE order); `parsePortalMoveFromBlueprintKey` handles `_move_openUp`. `SpokeMoveBed.moveType` is `String` — no schema change.
+- [x] **C.2** Exhaustive `MOVE_LABEL` (`SpokeNurseryBeds`) +`openUp`; iterating consumers (bed snapshots, focus buttons, anchor records) auto-extend to 5. `compile-spoke-quest` `moveTypes` +`openUp` (→ node_2 seeds).
+- [x] **C.3** Test: `spoke-move-beds.test.ts` asserts `openUp` parse; passes. `npm run check` 0 errors.
+- [x] **C.4** Updated `.specify/specs/spoke-move-seed-beds/spec.md` (4→5 fixed beds).
+
 ## Still out of scope (later slices)
 - [ ] move UIs / dashboards / room-stage renderers that hardcode four moves (slice B).
-- [ ] spoke seed-bed 5th "Open Up" bed (`SpokeMoveBedMoveType`) (slice C).
 - [ ] mapping any of the 15 emotional moves to `openUp` as `primaryWaveStage` (slice D).

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Let **any player** who reaches the **plant / nursery** surface after (or alongside) **campaign hub spokes** create and nurture **`campaign_kernel`** seeds using **BARs** as input — with **four fixed beds per spoke** aligned to **personal throughput moves** (Wake Up, Clean Up, Grow Up, Show Up). **First mover per `(campaignRef, spokeIndex, moveType)`** may anchor the **official spoke BAR** for that bed; later players **plant additional** kernels and/or **water** existing ones. Longer term, beds support **versioning / forest exploration** (forks, lineage) without breaking the four-slot grammar.
+Let **any player** who reaches the **plant / nursery** surface after (or alongside) **campaign hub spokes** create and nurture **`campaign_kernel`** seeds using **BARs** as input — with **five fixed beds per spoke** aligned to **personal throughput moves** (Wake Up, Open Up, Clean Up, Grow Up, Show Up). **First mover per `(campaignRef, spokeIndex, moveType)`** may anchor the **official spoke BAR** for that bed; later players **plant additional** kernels and/or **water** existing ones. Longer term, beds support **versioning / forest exploration** (forks, lineage) without breaking the five-slot grammar.
 
 **Problem:** Hub → spoke → BAR is a strong ritual, but **downstream collective creation** (new campaign soil) is admin-heavy today (`createCampaignSeed` in [`src/actions/campaign-bar.ts`](../../../src/actions/campaign-bar.ts)). Players need a **legible, flow-preserving** path from **spoke fruit** to **waterable seeds**.
 
@@ -12,7 +12,7 @@ Let **any player** who reaches the **plant / nursery** surface after (or alongsi
 
 | Topic | Decision |
 |-------|----------|
-| Slot model | **Four beds per spoke** — keys `wakeUp \| cleanUp \| growUp \| showUp` scoped by **`campaignRef` + `spokeIndex` (0–7)**. |
+| Slot model | **Five beds per spoke** — keys `wakeUp \| openUp \| cleanUp \| growUp \| showUp` scoped by **`campaignRef` + `spokeIndex` (0–7)**. (Open Up added per `.specify/specs/fifth-move-open-up` slice C.) |
 | First mover | **Per `(campaignRef, spokeIndex, moveType)`** — first player to satisfy anchor rules may bind the **canonical spoke BAR** for that bed. |
 | BAR source | Any player with access may **plant** using **any BAR they are allowed to use** (e.g. own vault); **anchor** uses the **spoke-emitted BAR** for that move path when eligible. |
 | Spoke completion | Spoke **does not complete** until at least one **qualifying spoke BAR** exists; **progress does not persist** until BAR emit succeeds — player must **replay** if they abandon before BAR. |
@@ -25,13 +25,13 @@ Let **any player** who reaches the **plant / nursery** surface after (or alongsi
 ```text
 Campaign (Instance / campaignRef)
   └─ Hub spoke index 0..7
-       └─ Move bed: wakeUp | cleanUp | growUp | showUp   ← exactly 4 per spoke
+       └─ Move bed: wakeUp | openUp | cleanUp | growUp | showUp   ← exactly 5 per spoke
             ├─ anchor: optional { spokeBarId, anchoredByPlayerId, anchoredAt }  // first mover
             ├─ kernels: campaign_kernel[]                 // many plants (B); lineage (C) later
             └─ water: existing campaign-bar watering model
 ```
 
-**WHO:** Player (any logged-in). **WHAT:** BAR → `campaign_kernel`. **WHERE:** Campaign + spoke + move bed. **Personal throughput:** the four moves define **beds**, not optional tags.
+**WHO:** Player (any logged-in). **WHAT:** BAR → `campaign_kernel`. **WHERE:** Campaign + spoke + move bed. **Personal throughput:** the five moves define **beds**, not optional tags.
 
 ## API Contracts (API-First)
 
@@ -90,7 +90,7 @@ declare function getSpokeMoveBeds(input: {
 
 ### P3 — Anyone plants with any BAR
 
-**As a** later visitor, **I want** to **plant** a new kernel from **any BAR I own** (or policy allows), **so** the nursery can grow many trees in the same four beds.
+**As a** later visitor, **I want** to **plant** a new kernel from **any BAR I own** (or policy allows), **so** the nursery can grow many trees in the same five beds.
 
 **Acceptance:** New `campaign_kernel` rows appear under correct bed; list visible on nursery UI.
 
@@ -119,7 +119,7 @@ declare function getSpokeMoveBeds(input: {
 - **FR1**: Data model for **bed identity** `(campaignRef, spokeIndex, moveType)` and **optional anchor** + **kernel list** (new table(s) or disciplined JSON on `Instance` — see plan).
 - **FR2**: **Spoke completion gate** — no durable “finished spoke” without **spoke BAR**; align with portal adventure + `PlayerAdventureProgress` / hub journey state ([CHS](../campaign-hub-spoke-landing-architecture/spec.md)).
 - **FR3**: **Server action** `plantKernelFromBar` with **first-mover** and **BAR eligibility** checks.
-- **FR4**: **Nursery UI** — landing page or hub sub-route showing **four beds** for current spoke; list kernels; CTAs plant / water.
+- **FR4**: **Nursery UI** — landing page or hub sub-route showing **five beds** for current spoke; list kernels; CTAs plant / water.
 - **FR5**: **Quality gate** on kernel text (min length, banned empty; optional steward review flag).
 - **FR6**: **Admin override** path for anchor reassignment or kernel archive.
 
@@ -138,7 +138,7 @@ declare function getSpokeMoveBeds(input: {
 ## Verification Quest
 
 - **ID:** `cert-spoke-move-seed-beds-v1`
-- **Steps:** (1) Open campaign hub. (2) Enter one spoke; complete path; emit BAR. (3) Open nursery for that spoke; confirm four beds visible. (4) Plant **anchor** with spoke BAR as first mover. (5) Second account or incognito: plant **additional** with another BAR. (6) Start watering face on one kernel. (7) Admin: demonstrate override or document stub.
+- **Steps:** (1) Open campaign hub. (2) Enter one spoke; complete path; emit BAR. (3) Open nursery for that spoke; confirm five beds visible. (4) Plant **anchor** with spoke BAR as first mover. (5) Second account or incognito: plant **additional** with another BAR. (6) Start watering face on one kernel. (7) Admin: demonstrate override or document stub.
 - **Framing:** Bruised Banana fundraiser / residency readiness — verify collective creation path before party scale.
 - Reference: [cyoa-certification-quests](../cyoa-certification-quests/spec.md), `scripts/seed-cyoa-certification-quests.ts`
 

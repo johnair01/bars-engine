@@ -32,7 +32,7 @@ export async function compileSpokeQuest(input: CompileSpokeQuestInput): Promise<
     const nodeOverrides: Record<string, NodeChoiceOverride> = {}
 
     // 1. Fetch seeds for each move type and inject them into the corresponding nodes
-    const moveTypes: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
+    const moveTypes: PersonalMoveType[] = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp']
 
     for (const moveType of moveTypes) {
         const seeds = await getSpokeSeeds(campaignRef, spokeIndex, moveType)
