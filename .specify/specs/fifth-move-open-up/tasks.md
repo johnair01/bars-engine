@@ -29,7 +29,7 @@
 - [x] **A.1** Add `Nation.openUp` + `Archetype.openUp` `String?` fields; additive migration `…_add_open_up_move_fields` (applied + client regenerated). `Archetype.primaryWaveStage` already `String?` — accepts `'openUp'` with no schema change.
 - [x] **A.2** Write path: `admin.ts` `updateNation`/`updateArchetype` accept + persist `openUp`; admin edit forms (`/admin/world/nation/[id]`, `/admin/world/archetype/[id]`) gain an Open Up textarea.
 - [x] **A.3** Display path: `ArchetypeHandbookContent`, `OnboardingRecommendation`, `wiki/nations`, `wiki/archetypes` render Open Up; feeding selects (`guided-onboarding.ts`, wiki pages) add `openUp: true`.
-- [ ] **A.4** Content (deferred): populate per-nation / per-archetype Open Up text (seed/admin) — data exists but is null until authored.
+- [x] **A.4** Content: authored Open Up text for all 5 nations + 8 archetypes (element/voice-matched, in the `Name: description` pattern) directly in the canonical seed (`src/lib/seed-utils.ts` `runSeed`, which upserts) + the typed reference (`src/lib/nation/nations.ts`). Applied to the live DB (13/13 populated). Composted the throwaway standalone backfill script per generative-dependencies.
 
 ## Still out of scope (later slices)
 - [ ] move UIs / dashboards / room-stage renderers that hardcode four moves (slice B).
