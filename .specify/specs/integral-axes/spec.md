@@ -128,7 +128,7 @@ export function moveDomain(move: PersonalMoveType): string // = MOVE_CELL_AFFINI
 - `packages/bars-core` fifth-move/axis port.
 
 ## Open Questions
-1. **The outer/allyship column has no move grammar.** The five WAVE moves are all *inner*. Allyship (the outer column) is the engine's namesake yet has **no moves of its own** — it is implied, not enacted. **This is the live frontier.** Does allyship get its own move set (ally-moves), or is it handled by applying inner moves toward others? Out of scope here; flagged for a future spec.
+1. **Inner vs. outer allyship — the outer column has no move grammar.** The five WAVE moves currently encode **inner allyship**: the ally's *own* interior development (left-hand/inner column). **Outer allyship** = enacting in the **right-hand quadrants of and with others**, across the altitude levels (the 6 faces) and across the domains — the outer column (marketing, organizing systems, direct action, resourcing others / "the human resource"). This column has **no moves of its own yet** — the engine's namesake is implied, not enacted. **This is the live frontier.** Design fork: *(a)* a separate outer-allyship move set, or *(b)* the same five moves gaining an `aspect: 'outer'` expression (a move becomes outer allyship when directed into others'/collective RH quadrants — making the board a **move × domain × aspect** matrix, modulated by face/altitude). **Lean: (b)** — it's why `MoveCellAffinity` already carries `aspect`. Out of scope here; flagged for a future spec.
 2. **Aspect persistence shape** — when Phase 3 lands, is `allyshipDomainAspect` a sibling field, or do we encode aspect into the `allyshipDomain` string? (Lean: sibling field, typed.)
 
 ## Dependencies / References
