@@ -28,6 +28,7 @@
     "db:generate": "prisma generate",
     "db:migrate:deploy": "tsx scripts/migrate-with-direct-url.ts deploy",
     "db:migrate:status": "tsx scripts/migrate-with-direct-url.ts status",
+    "db:url:doctor": "tsx scripts/db-url-doctor.ts",
     "deck:export-pdf": "tsx scripts/export-oracle-deck-pdf.ts",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
