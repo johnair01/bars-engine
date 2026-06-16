@@ -18,12 +18,16 @@ frames. Each phase is independently shippable.
 - [ ] **T1.2** — Reframe `GrowFromBar` as one "Show Up / seed this" affordance; clear copy + correct
   post-seed routing (via `navigation-contract`). `npm run check`.
 
-## Phase 2 — Explicit personal→collective bridge ← highest-value link
-- [ ] **T2.1** — `src/actions/campaign-attach.ts`: `attachBarToCampaign`, `detachBarFromCampaign`,
-  `listAttachableCampaigns` (write `campaignRef` + a contribution intent; idempotent).
-- [ ] **T2.2** — "Offer to a campaign" affordance on BAR + quest detail and in the Vault.
-- [ ] **T2.3** — Campaign hub surfaces the player-declared contribution (reuse contribution rollup).
-- [ ] **T2.4** — Unit tests for the action; `npm run check`.
+## Phase 2 — Explicit personal→collective bridge ← highest-value link ✅ DONE
+- [x] **T2.1** — `src/actions/campaign-attach.ts`: `attachBarToCampaign`, `detachBarFromCampaign`,
+  `listAttachableCampaigns` (+ `getMyDeclaredContributions`). Writes `CustomBar.campaignRef` + a
+  player-created `ContributionAnnotation` (actionType='bar'); idempotent + re-target safe; no migration.
+- [x] **T2.2** — "Offer to a campaign" affordance: `src/components/bars/OfferToCampaign.tsx` on the
+  BAR detail page (`/bars/[id]`), owner-only, after `GrowFromBar`.
+- [x] **T2.3** — Campaign hub surfaces the player-declared contribution ("Offered by you" list in
+  `CampaignHubView`); annotation also feeds the existing `availableCount` rollup denominator.
+- [x] **T2.4** — 13 unit tests (`src/actions/__tests__/campaign-attach.test.ts`, vitest, db+auth
+  mocked); registered in `vitest.config.ts`. `tsc --noEmit` + `eslint` clean (0 errors).
 
 ## Phase 3 — Milestone authoring
 - [ ] **T3.1** — `src/actions/campaign-milestone-authoring.ts`: `proposeMilestone`,

@@ -6,6 +6,7 @@ import { get8PortalsForCampaign } from '@/actions/campaign-portals'
 import { CampaignHubView } from '@/components/campaign/CampaignHubView'
 import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
 import { getCampaignContributionProgress } from '@/actions/campaign-contributions'
+import { getMyDeclaredContributions } from '@/actions/campaign-attach'
 import { getBookMilestoneRollup } from '@/actions/chapter-spoke'
 
 /**
@@ -86,13 +87,15 @@ export default async function CampaignHubPage(props: {
 
   const bookRef = BOOK_HUB_MAP[campaignRef]
 
-  const [result, milestoneGuidance, contributionProgress, recentCapture, intakeAdventure, bookRollupRaw] =
+  const [result, milestoneGuidance, contributionProgress, myDeclaredContributions, recentCapture, intakeAdventure, bookRollupRaw] =
     await Promise.all([
       get8PortalsForCampaign(campaignRef),
       getCampaignMilestoneGuidance(player.id, { campaignRef }),
       // Sub-AC 3c: fetch player's contribution completion count for progress bar
       // Fails-soft (returns null) on any DB/auth error — hub renders without it
       getCampaignContributionProgress(campaignRef, player.id),
+      // TSG Phase 2 — BARs this player has offered to the campaign (fail-soft [])
+      getMyDeclaredContributions(campaignRef, player.id),
       db.customBar.findFirst({
         where: {
           creatorId: player.id,
@@ -134,6 +137,7 @@ export default async function CampaignHubPage(props: {
       data={result}
       milestoneGuidance={milestoneGuidance}
       contributionProgress={contributionProgress}
+      myDeclaredContributions={myDeclaredContributions}
       recentCapture={recentCapture ?? undefined}
       intakeAdventureId={intakeAdventure?.id ?? null}
       showFundraisingSettings={showFundraisingSettings}
