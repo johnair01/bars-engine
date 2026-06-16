@@ -29,7 +29,6 @@ export function RedeemForm({ initialCode, next }: { initialCode: string; next?: 
   }
 
   const ok = result?.ok === true
-  const continueHref = next || '/'
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -70,14 +69,24 @@ export function RedeemForm({ initialCode, next }: { initialCode: string; next?: 
               : 'border-amber-700/60 bg-amber-950/40 text-amber-200'
           }`}
         >
-          <p>{result.message}</p>
-          {ok && (
-            <Link
-              href={continueHref}
-              className="mt-2 inline-block font-bold text-emerald-300 underline-offset-2 hover:underline"
-            >
-              {next ? 'Continue →' : 'Enter the app →'}
-            </Link>
+          <p className={result.ok ? 'font-semibold' : undefined}>{result.message}</p>
+          {result.ok && (
+            <div className="mt-3 flex flex-col gap-2">
+              <Link
+                href={next || result.nextStep.href}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-600 px-4 font-bold text-white transition-colors hover:bg-emerald-500"
+              >
+                {next ? 'Continue →' : `${result.nextStep.label} →`}
+              </Link>
+              {!next && result.nextStep.href !== '/dashboard' && (
+                <Link
+                  href="/dashboard"
+                  className="text-xs font-semibold text-emerald-300/80 underline-offset-2 hover:text-emerald-200 hover:underline"
+                >
+                  Or go to your dashboard →
+                </Link>
+              )}
+            </div>
           )}
           {!ok && 'needsAuth' in result && result.needsAuth && (
             <Link

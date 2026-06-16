@@ -28,6 +28,17 @@ const REDEEM_MESSAGES: Record<string, string> = {
   network: 'Could not reach the store to verify your key. Please try again.',
 }
 
+/** Where a buyer should go right after unlocking each SKU — the "now what?" CTA. */
+const NEXT_STEP: Record<string, { href: string; label: string }> = {
+  'book-digital': { href: '/handbook', label: 'Read the book' },
+  'book-physical': { href: '/handbook', label: 'Read the digital book' },
+  'rpg-handbook-digital': { href: '/handbook', label: 'Open the handbook' },
+  'rpg-handbook-physical': { href: '/handbook', label: 'Open the digital handbook' },
+  'deck-digital': { href: '/deck', label: 'Open the Oracle deck' },
+  'game-subscription': { href: '/play', label: 'Start playing' },
+  'founding-ally': { href: '/dashboard', label: 'Enter the app' },
+}
+
 function unlocked(sku: string, alreadyRedeemed: boolean) {
   // One unlock can open the reader, the deck, and downloads — revalidate broadly.
   for (const p of ['/', '/redeem', '/handbook', '/downloads']) revalidatePath(p)
@@ -36,6 +47,7 @@ function unlocked(sku: string, alreadyRedeemed: boolean) {
     sku,
     offerName: offerName(sku),
     alreadyRedeemed,
+    nextStep: NEXT_STEP[sku] ?? { href: '/dashboard', label: 'Enter the app' },
     message: alreadyRedeemed
       ? `You've already unlocked ${offerName(sku)}.`
       : `Unlocked: ${offerName(sku)}.`,
