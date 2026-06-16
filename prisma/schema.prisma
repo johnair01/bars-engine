@@ -1427,6 +1427,10 @@ model QuestMoveLog {
   effectsJson  String?
   createdAt    DateTime   @default(now())
   outcome      String?
+  /// IOA: inner (self-development) | outer (allyship). Nullable — legacy logs predate the aspect. See specs/inner-outer-allyship-moves.
+  moveAspect   String?
+  /// IOA: who an outer move acts on — individual | collective | system. Null for inner (self-directed).
+  allyshipTarget String?
   createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
   move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
   player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)

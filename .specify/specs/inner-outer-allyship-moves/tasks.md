@@ -18,10 +18,11 @@ Implement per [spec.md](./spec.md) / [plan.md](./plan.md). **Blocked on** [`inte
 - [x] **T9**: `npm run check` green; commit + push. (`61c7d1a`)
 
 ## Phase 4 — UX + persistence (later; Verification Quest required)
-- [ ] **T10**: Server Action for player inner/outer choice on move-taking; define contract before UI. (FR8)
-- [ ] **T11**: `prisma/schema.prisma` — `QuestMoveLog.moveAspect String?` (+ optional `allyshipTarget String?`); `npx prisma migrate dev --name add_move_aspect`; commit `prisma/migrations/…`; `npm run db:sync` → `migrate deploy` → `npm run db:record-schema-hash`. (FR8)
-- [ ] **T12**: Verification Quest `cert-inner-outer-allyship-v1` (Twine + idempotent seed, per `cyoa-certification-quests`), framed toward the Bruised Banana Fundraiser (e.g. an outer Show Up that invites a guest). **Required before marking the UI feature complete.** (FR9)
-- [ ] **T13**: `npm run check` + `npm run build` green; commit + push.
+- [x] **T10**: Server Action for player inner/outer choice on move-taking; contract defined before UI. (FR8) → `src/actions/move-aspect.ts` `recordEnactedMove(RecordEnactedMoveInput)`; validates the aspect/target invariant via `isValidAspectTarget` (factored out of `isValidEnactedMove`) + quest access; writes `moveAspect`/`allyshipTarget` to `QuestMoveLog`. No shadow recorded (engine does not judge).
+- [x] **T11 (authored)**: `prisma/schema.prisma` — `QuestMoveLog.moveAspect String?` + `allyshipTarget String?`; migration hand-authored at `prisma/migrations/20260616000000_add_move_aspect/` (trivial ADD COLUMN); `prisma generate` run offline so the client types update. (FR8)
+  - ⚠️ **DB-gated, pending live DB:** `prisma migrate deploy` → `npm run db:record-schema-hash` (and `db:sync`) — **not runnable in this DB-less remote env** (`localhost:5432` unreachable). Run against the target DB on deploy; `.prisma_hash` will refresh then.
+- [x] **T12**: Verification Quest `cert-inner-outer-allyship-v1` — appended to `scripts/seed-cyoa-certification-quests.ts` (idempotent upsert) + `cert-inner-outer-allyship-v1` registered in `CERT_QUEST_IDS` + `seed:cert:inner-outer-allyship` script. Framed toward the Bruised Banana Fundraiser (outer Show Up inviting a guest). Seed run is DB-gated. (FR9)
+- [x] **T13 (partial)**: `npm run check` **green** (0 errors; `tsc --noEmit` type-checked the whole app incl. the new action). `npm run build` aborts only at `prisma migrate deploy` (DB unreachable in this env) — environment gate, not a code failure. Commit + push done.
 
 ## Notes
 - Phases 1–3 are deterministic, offline-capable, and carry no gameplay risk.

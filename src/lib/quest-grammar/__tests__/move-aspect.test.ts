@@ -3,7 +3,7 @@
  * Run: npx tsx src/lib/quest-grammar/__tests__/move-aspect.test.ts
  */
 import assert from 'node:assert/strict'
-import { describeMove, isValidEnactedMove, MOVE_ASPECT_MATRIX, FACE_HEALTHY_REGISTER, faceRegister } from '../move-aspect'
+import { describeMove, isValidEnactedMove, isValidAspectTarget, MOVE_ASPECT_MATRIX, FACE_HEALTHY_REGISTER, faceRegister } from '../move-aspect'
 import { resolveMoveCell, moveDomain } from '../canonical-kernel'
 import { GAME_MASTER_FACES, FACE_META } from '../types'
 import type { PersonalMoveType, AllyshipTarget } from '../types'
@@ -124,6 +124,20 @@ function testFaceRegisterReusesFaceMeta() {
   }
 }
 
+// --- Phase 4 ---
+
+function testAspectTargetInvariant() {
+  // FR8: the structural invariant, independent of any PersonalMoveType.
+  assert.equal(isValidAspectTarget('outer', 'individual'), true, 'outer + target valid')
+  assert.equal(isValidAspectTarget('outer', undefined), false, 'outer without target invalid')
+  assert.equal(isValidAspectTarget('inner', undefined), true, 'inner self-directed valid')
+  assert.equal(isValidAspectTarget('inner', 'system'), false, 'inner with target invalid')
+  // isValidEnactedMove now delegates to it — same answers for a known move.
+  assert.equal(isValidEnactedMove({ move: 'showUp', aspect: 'outer', target: 'individual' }), true)
+  assert.equal(isValidEnactedMove({ move: 'showUp', aspect: 'outer' }), false)
+}
+
+testAspectTargetInvariant()
 testAllTenPhrasings()
 testWakeUpOuterIsWitnessNotMarket()
 testTargetDefaultsAndRenders()

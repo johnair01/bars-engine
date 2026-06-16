@@ -11,7 +11,7 @@
  */
 
 import type { PersonalMoveType } from './types'
-import type { AllyshipTarget, EnactedMove, GameMasterFace } from './types'
+import type { AllyshipTarget, EnactedMove, GameMasterFace, MoveAspect } from './types'
 import { FACE_META } from './types'
 
 /** The two directional expressions of a move, plus its canonical (hint-only) target. */
@@ -111,14 +111,24 @@ export function faceRegister(face: GameMasterFace): { label: string; register: s
 }
 
 /**
- * Type guard for an enacted move's shape:
- * - outer ⇒ must carry a target (the structural difference of allyship)
+ * The structural invariant of allyship, independent of which WAVE move:
+ * - outer ⇒ must carry a target (you enact allyship *on* someone/something)
  * - inner ⇒ self-directed, must NOT carry a target
  * Move × target pairings are otherwise unconstrained ("allow all", spec OQ1).
+ * Factored out so persistence (the FR8 Server Action) can validate the
+ * aspect/target pair without needing a `PersonalMoveType`.
+ */
+export function isValidAspectTarget(aspect: MoveAspect, target?: AllyshipTarget): boolean {
+  return aspect === 'outer' ? target !== undefined : target === undefined
+}
+
+/**
+ * Type guard for an enacted move's shape: a known WAVE move whose aspect/target
+ * pair satisfies {@link isValidAspectTarget}.
  */
 export function isValidEnactedMove(m: EnactedMove): boolean {
   if (!(m.move in MOVE_ASPECT_MATRIX)) return false
-  return m.aspect === 'outer' ? m.target !== undefined : m.target === undefined
+  return isValidAspectTarget(m.aspect, m.target)
 }
 
 export { MOVE_ASPECT_MATRIX, FACE_HEALTHY_REGISTER }
