@@ -134,7 +134,7 @@ export function SceneDeckCardPanel({
             <>
               <p className="text-sm text-zinc-500 rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-3">
                 No BARs in your vault yet. Use <strong className="text-zinc-400">Guided new BAR</strong> or{' '}
-                <Link href="/bars/create" className="text-amber-400 hover:text-amber-300">
+                <Link href="/bars/capture" className="text-amber-400 hover:text-amber-300">
                   capture one
                 </Link>
                 .
@@ -189,7 +189,7 @@ export function SceneDeckCardPanel({
               </label>
               <p className="text-xs text-zinc-500">
                 Need a new inspiration first?{' '}
-                <Link href="/bars/create" className="text-amber-400 hover:text-amber-300">
+                <Link href="/bars/capture" className="text-amber-400 hover:text-amber-300">
                   Capture
                 </Link>{' '}
                 or use <strong className="text-zinc-400">Guided new BAR</strong> above.

@@ -126,14 +126,7 @@ export default async function HandPage(props: { searchParams: Promise<{ quest?: 
                             href="/bars/capture"
                             className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-purple-800/70 bg-purple-950/30 px-4 py-3 text-sm font-semibold text-purple-100 hover:border-purple-500/70 hover:bg-purple-900/40 min-h-[44px] sm:min-w-[12rem]"
                         >
-                            Capture seed
-                        </Link>
-                        <Link
-                            href="/bars/create"
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-amber-800/70 bg-amber-950/30 px-4 py-3 text-sm font-semibold text-amber-100 hover:border-amber-500/70 hover:bg-amber-900/40 min-h-[44px] sm:min-w-[12rem]"
-                        >
-                            <span aria-hidden>📜</span>
-                            Create BAR
+                            New BAR →
                         </Link>
                         <Link
                             href="/campaign/marketplace?ref=bruised-banana"

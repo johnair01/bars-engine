@@ -166,6 +166,7 @@ export async function createBarForUpload(data: {
     }
 }
 
+/** @deprecated Use captureBarFromCanvas via /bars/capture instead. */
 export async function createPlayerBar(prevState: { error?: string; success?: boolean } | null, formData: FormData) {
     const playerId = await getPlayerId()
     if (!playerId) return { error: 'Not logged in' }
@@ -1014,6 +1015,9 @@ export interface CaptureBarFromCanvasInput {
   fieldTint: string | null
   charge: 1 | 2 | 3 | 4 | 5
   provenance?: string
+  storyContent?: string      // → CustomBar.storyContent (intent/tags)
+  campaignRef?: string       // → CustomBar.campaignRef
+  provenanceSource?: string  // appended to contextLines
 }
 
 function deriveCanvasTitle(items: CanvasItem[]): string {
@@ -1039,11 +1043,11 @@ function serializeCanvasInputs(items: CanvasItem[]): string {
 
 export async function captureBarFromCanvas(
   payload: CaptureBarFromCanvasInput
-): Promise<{ barId: string } | { error: string }> {
+): Promise<{ barId: string; title: string } | { error: string }> {
   const playerId = await getPlayerId()
   if (!playerId) return { error: 'Not logged in' }
 
-  const { items, fieldTint, charge, provenance } = payload
+  const { items, fieldTint, charge, provenance, storyContent, campaignRef, provenanceSource } = payload
 
   const hasContent =
     items.some(i => i.type === 'text' && i.text?.trim()) ||
@@ -1058,6 +1062,9 @@ export async function captureBarFromCanvas(
   const inputs = serializeCanvasInputs(items)
   const canvasLayout = JSON.stringify(items)
   const seedMetabolization = CAPTURE_SEED_METABOLIZATION
+
+  const contextParts = [provenance, provenanceSource].filter(Boolean)
+  const contextLines = contextParts.length > 0 ? contextParts.join(' · ') : null
 
   try {
     const bar = await db.customBar.create({
@@ -1075,7 +1082,9 @@ export async function captureBarFromCanvas(
         intensity,
         canvasLayout,
         seedMetabolization,
-        contextLines: provenance || null,
+        contextLines,
+        storyContent: storyContent?.trim() || null,
+        campaignRef: campaignRef || null,
       },
     })
 
@@ -1089,7 +1098,7 @@ export async function captureBarFromCanvas(
     revalidatePath('/hand')
     revalidatePath('/')
 
-    return { barId: bar.id }
+    return { barId: bar.id, title }
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     console.error('[BAR] Canvas capture failed:', message)

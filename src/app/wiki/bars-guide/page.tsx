@@ -148,7 +148,7 @@ export default function BarsGuidePage() {
           </p>
         </div>
         <Link
-          href="/bars/create"
+          href="/bars/capture"
           className="inline-block text-xs font-bold px-4 py-2 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/30 transition-colors"
         >
           Create a BAR now →
@@ -159,7 +159,7 @@ export default function BarsGuidePage() {
       <section className="border-t border-zinc-800 pt-6 space-y-3">
         <h2 className="text-sm uppercase tracking-widest text-zinc-500">What to do next</h2>
         <div className="flex flex-wrap gap-3">
-          <Link href="/bars/create" className="text-xs px-3 py-2 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/30 transition-colors">
+          <Link href="/bars/capture" className="text-xs px-3 py-2 rounded-lg border border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/30 transition-colors">
             Create your first BAR →
           </Link>
           <Link href="/wiki/quests-guide" className="text-xs px-3 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:bg-zinc-800 transition-colors">

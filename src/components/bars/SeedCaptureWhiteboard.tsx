@@ -485,12 +485,15 @@ interface BottomChromeProps {
   fieldTint: ElementKey | null
   charge: 1 | 2 | 3 | 4 | 5
   onSetCharge: (c: 1 | 2 | 3 | 4 | 5) => void
+  intent: string
+  onIntentChange: (v: string) => void
   onCapture: () => void
   capturing: boolean
   captureError: string | null
 }
 
-function BottomChrome({ fieldTint, charge, onSetCharge, onCapture, capturing, captureError }: BottomChromeProps) {
+function BottomChrome({ fieldTint, charge, onSetCharge, intent, onIntentChange, onCapture, capturing, captureError }: BottomChromeProps) {
+  const [showIntent, setShowIntent] = useState(false)
   const now = new Date()
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   const tok = fieldTint ? ELEMENT_TOKENS[fieldTint] : null
@@ -547,12 +550,56 @@ function BottomChrome({ fieldTint, charge, onSetCharge, onCapture, capturing, ca
         </div>
       </div>
 
+      {/* Intent field (collapsed by default) */}
+      {showIntent ? (
+        <div className="flex items-center gap-2">
+          <input
+            autoFocus
+            type="text"
+            value={intent}
+            onChange={(e) => onIntentChange(e.target.value)}
+            maxLength={80}
+            placeholder="quest, reflection, gift…"
+            style={{
+              flex: 1,
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none',
+              borderBottom: '1px solid rgba(255,255,255,0.18)',
+              outline: 'none',
+              padding: '4px 0',
+              fontFamily: 'Nunito, sans-serif',
+              fontSize: 13,
+              color: '#e8e6e0',
+            }}
+          />
+          <button
+            onClick={() => { onIntentChange(''); setShowIntent(false) }}
+            style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'rgba(232,226,218,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowIntent(true)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontFamily: 'Space Mono, monospace', fontSize: 9,
+            textTransform: 'uppercase', letterSpacing: '0.12em',
+            color: intent ? 'rgba(232,226,218,0.7)' : 'rgba(232,226,218,0.35)',
+            textAlign: 'left',
+          }}
+        >
+          {intent ? `intent: ${intent}` : '+ intent'}
+        </button>
+      )}
+
       {/* Provenance */}
       <span
         className="font-mono text-[9px] uppercase tracking-[0.1em]"
         style={{ color: 'rgba(232,226,218,0.58)' }}
       >
-        {timeStr} PM · auto-located
+        {timeStr} · auto-located
       </span>
 
       {/* Error */}
@@ -778,9 +825,125 @@ function TextEditorOverlay({
   )
 }
 
+interface CapturedOverlayProps {
+  barId: string
+  title: string
+  onTuneNow: () => void
+  onBackToBoard: () => void
+}
+
+function CapturedOverlay({ title, onTuneNow, onBackToBoard }: CapturedOverlayProps) {
+  const woodGem = '#2ecc71'
+  const woodGlow = '#27ae60'
+  return (
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center gap-5"
+      style={{
+        zIndex: 50,
+        background: 'rgba(10,9,8,0.88)',
+        backdropFilter: 'blur(12px)',
+        padding: '0 28px',
+      }}
+    >
+      {/* Wood ◇ glyph */}
+      <div
+        aria-hidden
+        style={{
+          fontSize: 64,
+          color: woodGem,
+          filter: `drop-shadow(0 0 32px ${woodGlow}) drop-shadow(0 0 8px ${woodGem})`,
+          lineHeight: 1,
+        }}
+      >
+        ◇
+      </div>
+
+      {/* Headline */}
+      <p
+        style={{
+          fontFamily: 'Jost, sans-serif',
+          fontWeight: 700,
+          fontSize: 28,
+          color: '#e8e6e0',
+          textAlign: 'center',
+          margin: 0,
+        }}
+      >
+        A seed is on the board
+      </p>
+
+      {/* Derived title */}
+      <p
+        style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 11,
+          color: 'rgba(232,226,218,0.55)',
+          margin: 0,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
+        }}
+      >
+        {title}
+      </p>
+
+      <div className="flex flex-col gap-3 w-full" style={{ marginTop: 8 }}>
+        {/* Tune now */}
+        <button
+          onClick={onTuneNow}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: 8,
+            background: '#7c3aed',
+            color: '#fff',
+            fontFamily: 'Jost, sans-serif',
+            fontWeight: 700,
+            fontSize: 15.5,
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 0 30px -6px rgba(168,85,247,0.6), inset 0 1px 0 rgba(255,255,255,0.18)',
+          }}
+        >
+          Tune now →
+        </button>
+
+        {/* Back to board */}
+        <button
+          onClick={onBackToBoard}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 8,
+            background: 'transparent',
+            color: 'rgba(232,226,218,0.72)',
+            fontFamily: 'Jost, sans-serif',
+            fontWeight: 600,
+            fontSize: 14,
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: 'pointer',
+          }}
+        >
+          Back to board
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string }) {
+export function SeedCaptureWhiteboard({
+  defaultText,
+  campaignRef,
+  provenanceSource,
+}: {
+  defaultText?: string
+  campaignRef?: string
+  provenanceSource?: string
+}) {
   const router = useRouter()
   const boardRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -803,6 +966,8 @@ export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string })
   const [capturing, setCapturing] = useState(false)
   const [captureError, setCaptureError] = useState<string | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [intent, setIntent] = useState('')
+  const [captured, setCaptured] = useState<{ barId: string; title: string } | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1009,13 +1174,20 @@ export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string })
     setCaptureError(null)
     setCapturing(true)
     try {
-      const result = await captureBarFromCanvas({ items, fieldTint, charge })
+      const result = await captureBarFromCanvas({
+        items,
+        fieldTint,
+        charge,
+        storyContent: intent.trim() || undefined,
+        campaignRef,
+        provenanceSource,
+      })
       if ('error' in result) {
         setCaptureError(result.error)
         return
       }
 
-      const { barId } = result
+      const { barId, title } = result
 
       // Upload any pending photo files now that we have a barId
       const photoItems = items.filter(i => i.type === 'photo')
@@ -1030,13 +1202,13 @@ export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string })
         )
       }
 
-      router.push('/hand')
+      setCaptured({ barId, title })
     } catch (err) {
       setCaptureError(err instanceof Error ? err.message : 'Capture failed')
     } finally {
       setCapturing(false)
     }
-  }, [items, fieldTint, charge, router])
+  }, [items, fieldTint, charge, intent, campaignRef, provenanceSource])
 
   // ─── Scale to viewport ─────────────────────────────────────────────────────
 
@@ -1241,6 +1413,8 @@ export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string })
           fieldTint={fieldTint}
           charge={charge}
           onSetCharge={setCharge}
+          intent={intent}
+          onIntentChange={setIntent}
           onCapture={handleCapture}
           capturing={capturing}
           captureError={captureError}
@@ -1257,6 +1431,16 @@ export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string })
             onDraftTintChange={setDraftTint}
             onDraftSizeChange={setDraftSize}
             onDone={commitEditor}
+          />
+        )}
+
+        {/* Post-capture confirmation overlay */}
+        {captured && (
+          <CapturedOverlay
+            barId={captured.barId}
+            title={captured.title}
+            onTuneNow={() => router.push(`/bars/${captured.barId}`)}
+            onBackToBoard={() => router.push('/hand')}
           />
         )}
       </div>

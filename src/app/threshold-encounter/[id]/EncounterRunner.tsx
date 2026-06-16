@@ -124,7 +124,7 @@ export function EncounterRunner({ passages, encounterId, gmFace, vector, exportH
             />
             <div className="flex gap-3">
               <Link
-                href={`/bars/create?source=encounter&ref=${encounterId}${barReflection ? `&prefill=${encodeURIComponent(barReflection)}` : ''}`}
+                href={`/bars/capture?source=encounter&refId=${encounterId}${barReflection ? `&text=${encodeURIComponent(barReflection)}` : ''}`}
                 className="flex-1 py-2.5 text-center text-sm font-medium rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition"
               >
                 Create BAR from reflection

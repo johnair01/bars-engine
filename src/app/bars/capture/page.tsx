@@ -14,14 +14,27 @@ import { SeedCaptureWhiteboard } from '@/components/bars/SeedCaptureWhiteboard'
  * @example /bars/capture
  * @agentDiscoverable false
  */
-export default async function BarCapturePage(props: { searchParams: Promise<{ text?: string }> }) {
+export default async function BarCapturePage(props: {
+  searchParams: Promise<{ prefill?: string; text?: string; ref?: string; source?: string; refId?: string }>
+}) {
   const [player, searchParams] = await Promise.all([
     getCurrentPlayer(),
     props.searchParams,
   ])
   if (!player) redirect('/login')
 
-  const defaultText = searchParams.text ? decodeURIComponent(searchParams.text) : undefined
+  const rawText = searchParams.prefill ?? searchParams.text
+  const defaultText = rawText ? decodeURIComponent(rawText) : undefined
+  const campaignRef = searchParams.ref
+  const provenanceSource = searchParams.source
+    ? `${searchParams.source}:${searchParams.refId ?? ''}`
+    : undefined
 
-  return <SeedCaptureWhiteboard defaultText={defaultText} />
+  return (
+    <SeedCaptureWhiteboard
+      defaultText={defaultText}
+      campaignRef={campaignRef}
+      provenanceSource={provenanceSource}
+    />
+  )
 }
