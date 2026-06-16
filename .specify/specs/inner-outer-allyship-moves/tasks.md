@@ -3,14 +3,14 @@
 Implement per [spec.md](./spec.md) / [plan.md](./plan.md). **Blocked on** [`integral-axes`](../integral-axes/spec.md) Phase 2 (`MoveCellAffinity.aspect`). Run `npm run check` after each phase (fail-fix).
 
 ## Phase 1 — Ontology / docs
-- [ ] **T1**: `FOUNDATIONS.md` — add the move × aspect matrix + inner-allyship / outer-allyship definition; cite "Mastering the Game of Allyship". (FR1)
-- [ ] **T2**: `.specify/memory/conceptual-model.md` — add `MoveAspect`, `AllyshipTarget`, the matrix, the aspect axis. (FR2)
+- [x] **T1**: `FOUNDATIONS.md` — add the move × aspect matrix + inner-allyship / outer-allyship definition; cite "Mastering the Game of Allyship". (FR1)
+- [x] **T2**: `.specify/memory/conceptual-model.md` — add `MoveAspect`, `AllyshipTarget`, the matrix, the aspect axis. (FR2)
 
 ## Phase 2 — Types + deterministic matrix (shippable alone)
-- [ ] **T3**: `src/lib/quest-grammar/types.ts` — add `MoveAspect`, `AllyshipTarget`, `EnactedMove`. (FR3)
-- [ ] **T4**: `src/lib/quest-grammar/move-aspect.ts` (new) — `MOVE_ASPECT_MATRIX` (exhaustive over `PersonalMoveType`), `describeMove`, `isValidEnactedMove` (outer ⇒ target required). (FR4)
-- [ ] **T5**: Unit tests — all 10 inner/outer phrasings + target validation (outer without target ⇒ invalid). (FR5)
-- [ ] **T6**: `npm run check` green; commit + push.
+- [x] **T3**: `src/lib/quest-grammar/types.ts` — add `MoveAspect`, `AllyshipTarget`, `EnactedMove`. (FR3)
+- [x] **T4**: `src/lib/quest-grammar/move-aspect.ts` (new) — `MOVE_ASPECT_MATRIX` (exhaustive over `PersonalMoveType`), `describeMove`, `isValidEnactedMove` (outer ⇒ target required). (FR4)
+- [x] **T5**: Unit tests — all 10 inner/outer phrasings + target validation (outer without target ⇒ invalid). (FR5)
+- [x] **T6**: `npm run check` green; commit + push.
 
 ## Phase 3 — Quest-grammar wiring (deterministic)
 - [ ] **T7**: `canonical-kernel.ts` — bridge: outer aspect resolves to the **outer cell** of the move's domain (via `MoveCellAffinity`); inner → inner cell. (FR6)

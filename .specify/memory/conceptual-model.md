@@ -38,7 +38,21 @@ Each domain has an **inner** (left-hand: I/We interiors) and **outer** (right-ha
 
 Specs: [`integral-axes`](../specs/integral-axes/spec.md) (board), [`inner-outer-allyship-moves`](../specs/inner-outer-allyship-moves/spec.md) (outer column move grammar).
 
-**Three orthogonal axes:** horizontal = the 5 WAVE moves; **altitudinal = the 6 Game Master faces** (= Integral altitude levels Magenta→Teal); the board = domains × inner/outer. See `FOUNDATIONS.md`.
+**Three orthogonal axes:** horizontal = the 5 WAVE moves; **altitudinal = the 6 Game Master faces** (= Integral altitude levels Magenta→Teal); the board = domains × inner/outer. The **aspect** axis (inner ↔ outer) is below. See `FOUNDATIONS.md`.
+
+### Move × aspect grammar (IOA)
+
+Each WAVE move has an inner (self-development) and an outer (allyship) expression — `MoveAspect = 'inner' | 'outer'` (alias of `AllyshipAspect`). Outer moves act on an `AllyshipTarget = 'individual' | 'collective' | 'system'` and **require** a target; inner moves are self-directed. An `EnactedMove { move, aspect, target? }` is rendered deterministically by `describeMove` (authored matrix, no AI) in `quest-grammar/move-aspect.ts`.
+
+| Move | Inner | Outer (allyship) |
+|------|-------|------------------|
+| Wake Up | see for yourself | help others see — witness & amplify |
+| Open Up | receive energy/possibility within | hold space (receptive) — make room for another's resource |
+| Clean Up | parts work, self-governance | repair the systems |
+| Grow Up | build your own capacity | mentor & resource (generative) — build others' capacity |
+| Show Up | aligned doing (your action) | direct action with/for the cause |
+
+All move × target combos are valid (coarse by design); the with/for modifier is deferred. Types in `quest-grammar/types.ts`; grammar in `quest-grammar/move-aspect.ts`.
 
 ## The 5 Moves (Personal Throughput)
 

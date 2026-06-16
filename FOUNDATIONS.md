@@ -87,7 +87,21 @@ Each allyship domain (WHERE) has an **inner** (left-hand: I/We interiors) and **
 | **Skillful Organizing** | self-governance, parts work *(Clean Up)* | organizing the right-hand quadrants (structures/systems) |
 | **Direct Action** | doing an emotional-alchemy move *(Show Up, aligned doing)* | right-quadrant action in the world |
 
-Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`): a move's `{ domain, aspect }`. Today all moves are `aspect: 'inner'`; the **outer/allyship** column's move grammar is spec'd in [`inner-outer-allyship-moves`](.specify/specs/inner-outer-allyship-moves/spec.md). See [`integral-axes`](.specify/specs/integral-axes/spec.md).
+Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`): a move's `{ domain, aspect }`. The **outer/allyship** column's move grammar is below. See [`integral-axes`](.specify/specs/integral-axes/spec.md).
+
+### Move × aspect — inner allyship / outer allyship
+
+The engine's namesake is **allyship**, so the five WAVE moves each have an **inner** and an **outer** expression. **Inner allyship** = the ally's own interior development (left-hand; the existing default). **Outer allyship** = the same move enacted in others'/collective right-hand quadrants — you can only touch another's interior *via* their right-hand, so allyship is structurally outer. Outer moves require an `AllyshipTarget` (individual / collective / system); inner moves are self-directed. Same move, two directions of enactment — influence: *Mastering the Game of Allyship* (Wendell Britt).
+
+| Move | Inner (self-development) | Outer (allyship) |
+|------|--------------------------|------------------|
+| **Wake Up** | see for yourself — notice your charge, privilege, what's true | help others see — **witness & amplify** (not "market") |
+| **Open Up** | open to receive energy, possibility, emergence within | hold space — make room for another's resource (receptive) |
+| **Clean Up** | parts work, shadow, self-governance | repair the systems — clear structural distortion |
+| **Grow Up** | build your own capacity / lines | mentor and resource — build others' capacity (generative) |
+| **Show Up** | aligned doing — take your own action | direct action with/for the cause in the world |
+
+Open Up vs. Grow Up share Gather Resource but stay distinct: outer Open Up is **receptive** (make room), outer Grow Up is **generative** (build capacity). The matrix is **authored data** (`quest-grammar/move-aspect.ts`), deterministic and offline-capable — the with/for modifier is deferred. Spec'd in [`inner-outer-allyship-moves`](.specify/specs/inner-outer-allyship-moves/spec.md).
 
 **Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
 

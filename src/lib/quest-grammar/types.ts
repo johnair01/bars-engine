@@ -148,6 +148,31 @@ export interface MoveCellAffinity {
   secondary?: { domain: string; aspect: AllyshipAspect }
 }
 
+/**
+ * Aspect of an enacted move. Alias of {@link AllyshipAspect} — one source of truth.
+ * `inner` = self-development (left-hand); `outer` = allyship in others' right-hand.
+ * See .specify/specs/inner-outer-allyship-moves/spec.md.
+ */
+export type MoveAspect = AllyshipAspect
+
+/**
+ * Who an outer (allyship) move acts on. Coarse by design (spec OQ1); enrich when UX lands.
+ */
+export type AllyshipTarget = 'individual' | 'collective' | 'system'
+
+/**
+ * A move taken in play: which WAVE move, inner or outer, and (for outer) on whom.
+ * Inner moves are self-directed (no target). Outer moves require a target — that
+ * structural difference is the basis for "with and for others". The with/for
+ * modifier is deferred to a later phase (see spec Design Decisions).
+ */
+export interface EnactedMove {
+  move: PersonalMoveType
+  aspect: MoveAspect
+  /** Required when aspect === 'outer'; omitted for inner (self-directed). */
+  target?: AllyshipTarget
+}
+
 export type QuestModel = 'personal' | 'communal'
 
 export interface QuestCompileInput {
