@@ -1,0 +1,69 @@
+# Tasks: Throughput Spine — Go-Live
+
+Implements [spec.md](./spec.md) per [plan.md](./plan.md). Order: journey map → close links → seed →
+frames. Each phase is independently shippable.
+
+## Phase 0 — Journey contract (do first) ✅ DONE
+- [x] **T0.1** — `journey-map.md` written: spine states/transitions/surfaces + gap ledger. **Finding:**
+  the spine breaks at exactly **two points — T4 (attach-to-campaign) and T6 (milestone authoring)**;
+  everything else works or is frame-polish owned by an existing spec.
+- [x] **T0.2** — Schema decision recorded: **NO new fields required for v1.** Attach reuses
+  `CustomBar.campaignRef` + `ContributionAnnotation`; milestone authoring reuses `CampaignMilestone`
+  (+ `CampaignMilestoneMarker` for the celebration/reach narrative). **Phases 1–3 need no migration.**
+  Two optional future fields (`ContributionAnnotation.source`, `CampaignMilestone.celebration`) deferred.
+
+## Phase 1 — Seed coherence (`GrowFromBar`) ✅ DONE
+- [x] **T1.1** — MVP artifact set locked (Quest, Daemon, generic Artifact); deferred Show-Up types
+  (Story/Ritual/Plan/Gift/Deck Card/Contact) recorded in
+  [seed-coherence.md](./seed-coherence.md) — explicitly out of v1.
+- [x] **T1.2** — `GrowFromBar` reframed as one **Show Up** move ("Seed this BAR") with three labeled
+  forms + per-form copy; post-seed routing unchanged (already correct via `navigation-contract`:
+  quest→`/hand?quest=`, daemon→`/daemons`, artifact→`/growth-scene/:id`). `tsc`+`eslint` clean.
+
+## Phase 2 — Explicit personal→collective bridge ← highest-value link ✅ DONE
+- [x] **T2.1** — `src/actions/campaign-attach.ts`: `attachBarToCampaign`, `detachBarFromCampaign`,
+  `listAttachableCampaigns` (+ `getMyDeclaredContributions`). Writes `CustomBar.campaignRef` + a
+  player-created `ContributionAnnotation` (actionType='bar'); idempotent + re-target safe; no migration.
+- [x] **T2.2** — "Offer to a campaign" affordance: `src/components/bars/OfferToCampaign.tsx` on the
+  BAR detail page (`/bars/[id]`), owner-only, after `GrowFromBar`.
+- [x] **T2.3** — Campaign hub surfaces the player-declared contribution ("Offered by you" list in
+  `CampaignHubView`); annotation also feeds the existing `availableCount` rollup denominator.
+- [x] **T2.4** — 13 unit tests (`src/actions/__tests__/campaign-attach.test.ts`, vitest, db+auth
+  mocked); registered in `vitest.config.ts`. `tsc --noEmit` + `eslint` clean (0 errors).
+
+## Phase 3 — Milestone authoring ✅ DONE
+- [x] **T3.1** — `src/actions/campaign-milestone-authoring.ts`: `proposeMilestone` (any member),
+  `updateMilestoneCraft` (proposer or steward+), `approveMilestone` (steward+), `listCampaignMilestones`.
+  Reuses `CampaignMilestone` (propose→active) + a paired `CampaignMilestoneMarker` for the celebration;
+  no migration. Steward gate reuses `assertCanEditInstanceDonation` resolved by campaignRef.
+- [x] **T3.2** — Craft UI: `MilestoneAuthoringPanel` (why-it-matters + target + celebration; inline
+  edit + approve) on steward-gated page `/campaign/[ref]/milestones`; "Milestones" hub nav button.
+- [x] **T3.3** — Celebration on reach: authoring writes a `CampaignMilestoneMarker` (triggerCount =
+  rounded target, narrativeText = celebration) — already rendered by `ContributionProgressBar` when a
+  player reaches the count. (Reward beyond the narrative beat deferred to roadmap.)
+- [x] **T3.4** — 12 unit tests (`src/actions/__tests__/campaign-milestone-authoring.test.ts`);
+  `tsc --noEmit` + `eslint` clean (0 errors); 25 TSG tests pass total.
+
+## Phase 4 — Now page rewrite (delegate)
+- [ ] **T4.1** — Drive `now-event-vault-throughput-qol` to acceptance: high-contrast compass, ONE
+  primary next-move CTA, visible charge→quest provenance, events discoverability.
+
+## Phase 5 — Vault redesign (delegate)
+- [ ] **T5.1** — Implement `home-vault-ia-redesign` core (Hand/Vault legibility + naming).
+- [ ] **T5.2** — BRS **tend** action (incremental develop a seed; route-to-guide).
+- [ ] **T5.3** — Finish `vault-page-experience` caps/compost; CYOA hard-compost modal = v2.
+
+## Verification Quest (the walkability gate)
+- [x] **T6.1** — Twine `cert-throughput-spine-v1` authored: 7 steps (capture → metabolize → seed →
+  offer → hub contribution → milestone advance → steward authoring) + FEEDBACK + END_SUCCESS
+  (no-link final passage).
+- [x] **T6.2** — `scripts/seed-cert-throughput-spine.ts` + `npm run seed:cert:throughput-spine`
+  (idempotent upsert; resets prior completion; `isSystem`/public; Bruised Banana frame).
+- [ ] **T6.3** — Run `npm run seed:cert:throughput-spine` against a DB + walk end-to-end in preview
+  (needs `DATABASE_URL` — not available in this container). Completing it **is** the go-live signal.
+
+## Definition of done (go-live readiness)
+- [ ] Phases 0–3 shipped (links closed, seed coherent); Phases 4–5 at their specs' acceptance.
+- [ ] `cert-throughput-spine-v1` completable end-to-end.
+- [ ] `npm run check` green; any migration committed with schema.
+- [ ] BACKLOG `1.82 TSG` updated; `npm run backlog:seed`.

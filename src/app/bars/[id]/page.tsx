@@ -11,6 +11,8 @@ import { BarDetailClient } from './BarDetailClient'
 import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
+import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
+import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
@@ -62,6 +64,9 @@ export default async function BarDetailPage({
 
     // Pending campaign role invitation for this BAR (if current user is target)
     const campaignInvitation = await getCampaignInvitationForBar(bar.id, player.id)
+
+    // TSG Phase 2 — campaigns this player can offer the BAR to (owner only).
+    const attachableCampaigns = isOwner ? await listAttachableCampaigns() : []
 
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
@@ -192,6 +197,15 @@ export default async function BarDetailPage({
                 {/* Grow from this BAR (owner or recipient) — bar and charge_capture can become quests */}
                 {(isOwner || isRecipient) && (bar.type === 'bar' || bar.type === 'charge_capture') && (
                     <GrowFromBar barId={bar.id} />
+                )}
+
+                {/* Offer to a campaign (owner only) — the personal→collective bridge */}
+                {isOwner && (
+                    <OfferToCampaign
+                        barId={bar.id}
+                        currentCampaignRef={bar.campaignRef ?? null}
+                        campaigns={attachableCampaigns}
+                    />
                 )}
 
                 {/* Inspirations (social links) */}
