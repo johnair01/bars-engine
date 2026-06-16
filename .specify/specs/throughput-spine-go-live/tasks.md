@@ -3,13 +3,14 @@
 Implements [spec.md](./spec.md) per [plan.md](./plan.md). Order: journey map → close links → seed →
 frames. Each phase is independently shippable.
 
-## Phase 0 — Journey contract (do first)
-- [ ] **T0.1** — Write `journey-map.md`: the spine as states + transitions + surfaces (capture →
-  metabolize → tend → seed → attach → milestone), each transition annotated with owning spec +
-  current status + the exact gap.
-- [ ] **T0.2** — Confirm the **schema question**: can `campaignRef` + `ContributionAnnotation` +
-  `CampaignMilestone` express attach-intent + milestone craft/celebration **without new fields**?
-  Decide reuse vs. (minimal) migration; record the decision.
+## Phase 0 — Journey contract (do first) ✅ DONE
+- [x] **T0.1** — `journey-map.md` written: spine states/transitions/surfaces + gap ledger. **Finding:**
+  the spine breaks at exactly **two points — T4 (attach-to-campaign) and T6 (milestone authoring)**;
+  everything else works or is frame-polish owned by an existing spec.
+- [x] **T0.2** — Schema decision recorded: **NO new fields required for v1.** Attach reuses
+  `CustomBar.campaignRef` + `ContributionAnnotation`; milestone authoring reuses `CampaignMilestone`
+  (+ `CampaignMilestoneMarker` for the celebration/reach narrative). **Phases 1–3 need no migration.**
+  Two optional future fields (`ContributionAnnotation.source`, `CampaignMilestone.celebration`) deferred.
 
 ## Phase 1 — Seed coherence (`GrowFromBar`)
 - [ ] **T1.1** — Lock MVP artifact set (Quest, Daemon, generic Artifact); add a roadmap note for the
