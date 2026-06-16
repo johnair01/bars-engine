@@ -14,7 +14,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { timingSafeEqual } from 'node:crypto'
+import { db } from '@/lib/db'
 import {
   mintRedemptionCode,
   revokeByExternalOrderId,
@@ -23,6 +25,8 @@ import {
 } from '@/lib/entitlements/service'
 import { resolveSkuFromGumroad } from '@/lib/launch/gumroad'
 import { grantForSku } from '@/lib/launch/grants'
+import { wallForSku, parseGumroadPriceCents } from '@/lib/launch/barn-credit'
+import { creditBarnWallAnon } from '@/actions/barn'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -109,11 +113,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Recurring renewal charge → extend the existing entitlement, don't re-mint.
+    // (Renewals are recurring patronage — a future "runway" wall credit, not pre-sale —
+    // so they intentionally do not touch the barn here.)
     if (subscriptionId && get('is_recurring_charge') === 'true') {
       const days = grantForSku(sku).durationDays ?? 30
       const extended = await extendSubscription(subscriptionId, days)
       return NextResponse.json({ ok: true, action: 'renewed', sku, extended })
     }
+
+    // Sale-time barn bridge (idempotent): a recognized sale raises the pre-sale wall once.
+    // Anchor idempotency on the RedemptionCode (unique per externalOrderId) — only the
+    // first delivery of this sale (before its code exists) credits the wall. Gumroad
+    // retries sequentially, so the pre-check is a sound once-only guard.
+    const alreadyMinted = await db.redemptionCode.findUnique({
+      where: { externalOrderId: saleId },
+      select: { id: true },
+    })
 
     const rc = await mintRedemptionCode({
       sku,
@@ -123,7 +138,25 @@ export async function POST(req: NextRequest) {
       code: get('license_key'),
     })
 
-    return NextResponse.json({ ok: true, action: 'minted', sku, status: rc.status })
+    let barnCredited = false
+    if (!alreadyMinted) {
+      const cents = parseGumroadPriceCents(get('price'))
+      if (cents) {
+        try {
+          const credited = await creditBarnWallAnon(wallForSku(sku), cents / 100)
+          if (credited) {
+            barnCredited = true
+            revalidatePath('/event/barn')
+            revalidatePath('/launch')
+          }
+        } catch (e) {
+          // Never fail the sale on a barn-credit hiccup — the entitlement is what matters.
+          console.warn('[gumroad] barn credit failed', e)
+        }
+      }
+    }
+
+    return NextResponse.json({ ok: true, action: 'minted', sku, status: rc.status, barnCredited })
   } catch (err) {
     // 500 ⇒ Gumroad retries (good for transient DB errors).
     console.error('[gumroad] webhook error', err)

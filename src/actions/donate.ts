@@ -410,7 +410,7 @@ async function createDonationAndPacks(
     revalidatePath('/event/donate')
     revalidatePath('/event/donate/wizard')
     revalidatePath('/event/barn')
-    revalidatePath('/pricing')
+    revalidatePath('/launch')
     revalidatePath('/demo/bruised-banana/donate')
     revalidatePath('/')
     revalidatePath('/wallet')

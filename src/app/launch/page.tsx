@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LaunchOffers } from './LaunchOffers'
 import { LAUNCH_GOAL_CENTS, formatPrice } from '@/lib/launch/offers'
+import { BarnRaisingBar } from '@/components/event/BarnRaisingBar'
+import { getBarnSnapshot } from '@/actions/barn'
+import type { BarnState } from '@/lib/event/barn-raising'
 
 export const metadata: Metadata = {
   title: 'Mastering Allyship — Launch',
@@ -17,7 +20,16 @@ export const metadata: Metadata = {
  * client island (LaunchOffers). No auth required — it is a public funnel,
  * shared directly and from the book's "unlock the goodies" link.
  */
-export default function LaunchPage() {
+export default async function LaunchPage() {
+  // Live barn totals for the teaser — every Gumroad sale raises the pre-sale wall (see
+  // the webhook bridge). DB-safe: fall back to the honest empty state on a preview deploy.
+  let barnState: BarnState | undefined
+  try {
+    barnState = await getBarnSnapshot()
+  } catch {
+    barnState = undefined
+  }
+
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-12">
@@ -39,6 +51,11 @@ export default function LaunchPage() {
 
         {/* Offers */}
         <LaunchOffers />
+
+        {/* Barn raising — every purchase raises the pre-sale wall */}
+        <section aria-label="Barn raising">
+          <BarnRaisingBar variant="teaser" state={barnState} />
+        </section>
 
         {/* Footer */}
         <footer className="space-y-2 border-t border-zinc-800 pt-8 text-center text-sm text-[#6b6965]">

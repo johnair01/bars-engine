@@ -169,7 +169,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
-            href="/pricing"
+            href="/launch"
             className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg text-center transition-all shadow-lg shadow-green-900/30"
           >
             Explore the book, deck &amp; game

@@ -75,7 +75,7 @@ export const SPOKE_FUNNEL_MAP: readonly SpokeFunnel[] = [
     numeral: "VI",
     band: "become",
     ribbon: "Get your tools",
-    href: "/pricing",
+    href: "/launch",
     wallTint: "presale",
   },
   {

@@ -47,7 +47,7 @@ assert.ok(g, 'car full → guidance')
 assert.strictEqual(g!.completedWallKey, 'car')
 assert.strictEqual(g!.actions.length, 3, 'capped at 3 actions')
 // First action is the next open wall (pre-sale), not the completed one.
-assert.ok(g!.actions[0].href.includes('/pricing'), 'first action = pre-sale (next open wall)')
+assert.ok(g!.actions[0].href.includes('/launch'), 'first action = pre-sale (next open wall)')
 assert.ok(!g!.actions.some((a) => a.href.includes('wall=car')), 'no link back to the full wall')
 
 // All walls full → no cross-wall links, falls through to in-kind + access only.
