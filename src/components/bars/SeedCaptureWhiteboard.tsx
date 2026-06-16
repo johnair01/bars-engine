@@ -13,7 +13,6 @@ import {
 const LOGICAL_W = 392
 const LOGICAL_H = 812
 
-// Clamp region: item center stays within this band
 const CLAMP_X = { min: 44, max: 348 } as const
 const CLAMP_Y = { min: 122, max: 560 } as const
 
@@ -29,21 +28,6 @@ const CHARGE_LABELS: Record<number, string> = {
 
 const ELEMENT_ORDER: ElementKey[] = ['fire', 'water', 'wood', 'metal', 'earth']
 
-const DEFAULT_ITEMS: CanvasItem[] = [
-  {
-    id: 'seed-text-1',
-    type: 'text',
-    x: 184,
-    y: 218,
-    rot: -2,
-    text: 'I went quiet in the\nmeeting again.',
-    tint: 'water',
-    size: 27,
-  },
-]
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v))
 }
@@ -52,13 +36,33 @@ function makeId() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-function getElementTokens(tint: ElementKey | null) {
-  return tint ? ELEMENT_TOKENS[tint] : null
+function textColor(tint: ElementKey | null) {
+  return tint ? ELEMENT_TOKENS[tint].gem : '#f4f1ec'
 }
 
-function textColor(tint: ElementKey | null) {
-  const t = getElementTokens(tint)
-  return t ? t.gem : '#f4f1ec'
+function buildDefaultItems(defaultText?: string): CanvasItem[] {
+  if (defaultText?.trim()) {
+    return [{
+      id: 'seed-text-1',
+      type: 'text',
+      x: 196,
+      y: 300,
+      rot: 0,
+      text: defaultText.trim(),
+      tint: null,
+      size: 27,
+    }]
+  }
+  return [{
+    id: 'seed-text-1',
+    type: 'text',
+    x: 184,
+    y: 218,
+    rot: -2,
+    text: 'I went quiet in the\nmeeting again.',
+    tint: 'water',
+    size: 27,
+  }]
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -416,13 +420,16 @@ function VoiceChip({ item, isDragging, onPointerDown }: VoiceChipProps) {
 
 interface CompostNodeProps {
   overTrash: boolean
+  reducedMotion: boolean
 }
 
-function CompostNode({ overTrash }: CompostNodeProps) {
+function CompostNode({ overTrash, reducedMotion }: CompostNodeProps) {
   const earthTok = ELEMENT_TOKENS.earth
   return (
     <div
       className="bars-compost-node"
+      role="img"
+      aria-label="Compost — drag here to remove"
       style={{
         position: 'absolute',
         bottom: 196,
@@ -445,7 +452,7 @@ function CompostNode({ overTrash }: CompostNodeProps) {
               color: earthTok.gem,
               background: `color-mix(in srgb, ${earthTok.frame} 42%, rgba(5,4,3,0.7))`,
               boxShadow: `inset 0 0 0 1.5px ${earthTok.frame}, 0 0 26px -2px ${earthTok.glow}`,
-              animation: 'barsCompostPulse 1.1s ease-in-out infinite',
+              animation: reducedMotion ? 'none' : 'barsCompostPulse 1.1s ease-in-out infinite',
             }
           : {
               color: 'rgba(232,226,218,0.72)',
@@ -455,13 +462,9 @@ function CompostNode({ overTrash }: CompostNodeProps) {
             }),
       }}
     >
-      {/* Trash icon */}
-      <svg width="18" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor">
-        {/* lid */}
+      <svg width="18" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor" aria-hidden>
         <path d="M1 4h16" strokeWidth={2} strokeLinecap="round" />
-        {/* handle */}
         <path d="M6 4V2h6v2" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        {/* body */}
         <path d="M3 4l1 14h10l1-14" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span
@@ -777,16 +780,18 @@ function TextEditorOverlay({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function SeedCaptureWhiteboard() {
+export function SeedCaptureWhiteboard({ defaultText }: { defaultText?: string }) {
   const router = useRouter()
   const boardRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const linkInputRef = useRef<HTMLInputElement>(null)
+  // Map of itemId → File for photos selected but not yet uploaded
+  const photoFilesRef = useRef<Map<string, File>>(new Map())
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [linkInputValue, setLinkInputValue] = useState('')
 
-  const [items, setItems] = useState<CanvasItem[]>(DEFAULT_ITEMS)
+  const [items, setItems] = useState<CanvasItem[]>(() => buildDefaultItems(defaultText))
   const [fieldTint, setFieldTint] = useState<ElementKey | null>('water')
   const [charge, setCharge] = useState<1 | 2 | 3 | 4 | 5>(3)
   const [editing, setEditing] = useState<EditingTarget>(null)
@@ -797,6 +802,15 @@ export function SeedCaptureWhiteboard() {
   const [overTrash, setOverTrash] = useState(false)
   const [capturing, setCapturing] = useState(false)
   const [captureError, setCaptureError] = useState<string | null>(null)
+  const [reducedMotion, setReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   // ─── Drag handlers ─────────────────────────────────────────────────────────
 
@@ -946,18 +960,20 @@ export function SeedCaptureWhiteboard() {
   const handlePhotoSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
+    const id = makeId()
+    const previewUrl = URL.createObjectURL(file)
+    // Store File object for upload on capture
+    photoFilesRef.current.set(id, file)
     setItems((prev) => [
       ...prev,
       {
-        id: makeId(),
+        id,
         type: 'photo',
         x: 130,
         y: 300,
         rot: -4,
         assetId: null,
-        // store dataUrl in text field for client display (uploaded on capture)
-        text: url,
+        text: previewUrl,  // blob URL for preview only
       },
     ])
     e.target.value = ''
@@ -993,16 +1009,30 @@ export function SeedCaptureWhiteboard() {
     setCaptureError(null)
     setCapturing(true)
     try {
-      const result = await captureBarFromCanvas({
-        items,
-        fieldTint,
-        charge,
-      })
+      const result = await captureBarFromCanvas({ items, fieldTint, charge })
       if ('error' in result) {
         setCaptureError(result.error)
-      } else {
-        router.push('/hand')
+        return
       }
+
+      const { barId } = result
+
+      // Upload any pending photo files now that we have a barId
+      const photoItems = items.filter(i => i.type === 'photo')
+      if (photoItems.length > 0 && photoFilesRef.current.size > 0) {
+        const { uploadBarAsset } = await import('@/lib/asset-upload-client')
+        await Promise.allSettled(
+          photoItems.map(async (item) => {
+            const file = photoFilesRef.current.get(item.id)
+            if (!file) return
+            await uploadBarAsset(file, { barId, side: 'front' })
+          })
+        )
+      }
+
+      router.push('/hand')
+    } catch (err) {
+      setCaptureError(err instanceof Error ? err.message : 'Capture failed')
     } finally {
       setCapturing(false)
     }
@@ -1205,7 +1235,7 @@ export function SeedCaptureWhiteboard() {
         />
 
         {/* Compost node (visible while dragging) */}
-        {dragId !== null && <CompostNode overTrash={overTrash} />}
+        {dragId !== null && <CompostNode overTrash={overTrash} reducedMotion={reducedMotion} />}
 
         <BottomChrome
           fieldTint={fieldTint}
