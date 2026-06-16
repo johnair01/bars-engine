@@ -42,8 +42,8 @@ async function seed() {
     {
       name: 'STEP_2',
       pid: '3',
-      text: '### Step 2: Buy from the pre-sale\n\n[Open /pricing](/pricing) and choose a price (e.g. the **Founder Bundle**). Confirm you land on [/event/donate](/event/donate) with the amount pre-filled.',
-      cleanText: 'From /pricing pick a price; land on /event/donate with amount pre-filled.',
+      text: '### Step 2: Stand at the pre-sale wall\n\nThe real pre-sale is [/launch](/launch) (Gumroad checkout — every sale raises the wall via the sale webhook). To verify the wall math without a live card charge, open [/event/donate?wall=presale](/event/donate?wall=presale) and enter an amount — the honor-system path credits the same pre-sale wall.',
+      cleanText: 'Open /event/donate?wall=presale and enter an amount (verifies the same pre-sale wall as /launch Gumroad sales).',
       links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }],
     },
     {

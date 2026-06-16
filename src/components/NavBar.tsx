@@ -70,9 +70,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                 {!isAuthenticated && (
                     <>
                         <Link
-                            href="/pricing"
+                            href="/launch"
                             title="The book, the deck, and the game — start here."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/pricing')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/launch')}`}
                         >
                             START
                         </Link>

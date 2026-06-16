@@ -54,7 +54,7 @@ export default async function BarnPage({
             Raise a plank
           </Link>
           <Link
-            href="/pricing"
+            href="/launch"
             className="min-h-[44px] rounded-lg border border-zinc-700 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
           >
             Browse the pre-sale

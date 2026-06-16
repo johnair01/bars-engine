@@ -24,6 +24,7 @@
 
 import type { ElementKey, CardAltitude, CardStage } from '@/lib/ui/card-tokens'
 import type { AlchemyAltitude } from '@/lib/alchemy/types'
+import { BARN_WALLS } from '@/lib/event/barn-raising'
 
 export type OfferKey =
   | 'book-digital'
@@ -180,13 +181,20 @@ export const LAUNCH_OFFERS: readonly LaunchOffer[] = [
   },
 ]
 
-/** Launch fundraising target — the spine of the campaign. */
-export const LAUNCH_GOAL_CENTS = 80000 // $800
+/**
+ * Launch fundraising target — the spine of the campaign. Derived from the barn's
+ * **pre-sale wall** target so the two can never drift: launch sales *are* the pre-sale
+ * wall (see the Gumroad webhook bridge). Single source of truth: `BARN_WALLS`.
+ */
+export const LAUNCH_GOAL_CENTS =
+  BARN_WALLS.find((w) => w.key === 'presale')?.targetCents ?? 500_000 // $5,000
 
-/** Format US cents as a price string, e.g. 1500 → "$15". */
+/** Format US cents as a price string, e.g. 1500 → "$15", 500000 → "$5,000". */
 export function formatPrice(cents: number): string {
   const dollars = cents / 100
-  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`
+  return Number.isInteger(dollars)
+    ? `$${dollars.toLocaleString('en-US')}`
+    : `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 /** Offers belonging to a UI group, in registry order. */

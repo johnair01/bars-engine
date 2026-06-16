@@ -62,7 +62,7 @@ export const BARN_WALLS: readonly BarnWall[] = [
       "The book, RPG, deck, app, pins & Founder Bundle. Every pre-order raises this wall.",
     targetCents: 500_000, // modeled goal (~50 guests × mix of bundles/books); tracks $ AND units
     cadence: "once",
-    cta: { label: "Browse the pre-sale", href: "/pricing" },
+    cta: { label: "Browse the pre-sale", href: "/launch" },
     accent: {
       bar: "from-emerald-600 to-teal-500",
       text: "text-emerald-300",
