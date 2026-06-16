@@ -181,6 +181,16 @@ export default async function PricingPage() {
               Already have an account? Log in
             </Link>
           </div>
+          <p className="text-xs text-zinc-500">
+            Already bought on Gumroad?{" "}
+            <Link
+              href="/redeem"
+              className="font-semibold text-zinc-300 underline-offset-2 hover:text-white hover:underline"
+            >
+              Redeem your code
+            </Link>{" "}
+            to unlock it in the app.
+          </p>
         </section>
       </div>
     </div>
