@@ -43,6 +43,8 @@ Moves are independent of the 5 elements (adding Open Up does not force a 5↔5 a
 
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
 
+> **Divergence from Wilber — "Open Up".** Ken Wilber added *Opening Up* as a fifth path in *Finding Radical Wholeness* (2024), where it means **developing your multiple intelligences / lines of development** (cognitive, emotional, moral, somatic, etc. — breadth across lines). **bars-engine's Open Up is intentionally a different concept: receptivity / intake** — opening to receive emotional energy, possibility, and emergence; the *intake (source) term* in the energy economy that admits fuel before Clean → Grow → Show metabolize it. Wilber's "lines" meaning is instead carried by our **Grow Up** ("increase skill capacity through developmental lines", above). So our five moves are *not* a relabeling of Wilber's five paths — Open Up is our own coinage. Do not attribute the receptivity meaning to Wilber.
+
 **Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
 
 ## Emotional Alchemy (Narrative Movement)
