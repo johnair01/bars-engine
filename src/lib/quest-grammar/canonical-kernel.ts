@@ -8,7 +8,7 @@
  */
 
 import type { ElementKey } from './elements'
-import type { PersonalMoveType, MoveCellAffinity } from './types'
+import type { PersonalMoveType, MoveCellAffinity, EnactedMove } from './types'
 import type { CanonicalMove } from './move-engine'
 import { EXPERIENCE_OPTIONS } from './unpacking-constants'
 
@@ -69,6 +69,21 @@ const MOVE_CELL_AFFINITY: Record<PersonalMoveType, MoveCellAffinity> = {
 /** The domain a move expresses in (back-compat seam for the former WAVE_TO_DOMAIN). */
 export function moveDomain(move: PersonalMoveType): string {
   return MOVE_CELL_AFFINITY[move].domain
+}
+
+/**
+ * FR6 — resolve an enacted move to its cell of the 8-cell board (domain × aspect).
+ *
+ * The bridge between the IOA grammar ({@link EnactedMove}) and the integral board:
+ * a move's **domain is invariant** (authored in `MOVE_CELL_AFFINITY`), while the
+ * **aspect follows the enactment** — `inner` → the move's inner cell (self-
+ * development), `outer` → the *outer cell* of the same domain (allyship in others'
+ * right-hand). Deterministic, no AI. Style (which *face* enacts the outer move) is a
+ * separate concern — see `describeMove` (FR7); the with/for shadow reading of the
+ * outer cell is a documented seam, not enacted here (spec Design Decisions).
+ */
+export function resolveMoveCell(m: EnactedMove): MoveCellAffinity {
+  return { domain: MOVE_CELL_AFFINITY[m.move].domain, aspect: m.aspect }
 }
 
 function pickN<T>(arr: readonly T[], n: number): T[] {
