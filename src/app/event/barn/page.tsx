@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BarnRaisingBar } from "@/components/event/BarnRaisingBar";
-import { PREVIEW_BARN_STATE } from "@/lib/event/barn-raising";
+import { PREVIEW_BARN_STATE, type BarnState } from "@/lib/event/barn-raising";
+import { getBarnSnapshot } from "@/actions/barn";
 
 export const metadata: Metadata = {
   title: "The Barn Raising — July 18",
@@ -28,7 +29,17 @@ export default async function BarnPage({
   searchParams: Promise<{ preview?: string }>;
 }) {
   const { preview } = await searchParams;
-  const state = preview ? PREVIEW_BARN_STATE : undefined;
+
+  // `?preview=1` forces illustrative fill; otherwise read live wall totals (tolerate
+  // DB-down on public/preview deploys → fall back to the empty "be the first plank" state).
+  let state: BarnState | undefined = preview ? PREVIEW_BARN_STATE : undefined;
+  if (!preview) {
+    try {
+      state = await getBarnSnapshot();
+    } catch {
+      state = undefined;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans">

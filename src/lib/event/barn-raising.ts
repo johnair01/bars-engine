@@ -10,6 +10,15 @@
 
 export type WallKey = "car" | "presale" | "runway";
 
+/**
+ * Campaign ref the July-18 barn lives under. The event `Instance` and the three wall
+ * `CampaignMilestone` rows share this ref (see `scripts/seed-barn-raising.ts`).
+ */
+export const BARN_CAMPAIGN_REF = "mtgoa-barn-raising";
+
+/** Ordered wall keys (matches `BARN_WALLS`). */
+export const WALL_KEYS: readonly WallKey[] = ["car", "presale", "runway"];
+
 export interface BarnWall {
   key: WallKey;
   /** Short display name. */
@@ -102,6 +111,22 @@ export const PREVIEW_BARN_STATE: BarnState = {
   hands: 14,
   beams: 5,
 };
+
+/**
+ * Map raw milestone rows → per-wall raised **cents**. `CampaignMilestone.currentValue` is
+ * stored in **dollars** (see `src/actions/donate.ts`), so we ×100 here. Pure + tested.
+ */
+export function buildRaisedCents(
+  rows: ReadonlyArray<{ wallKey: string | null; currentValue: number }>,
+): Record<WallKey, number> {
+  const out: Record<WallKey, number> = { car: 0, presale: 0, runway: 0 };
+  for (const r of rows) {
+    if (r.wallKey === "car" || r.wallKey === "presale" || r.wallKey === "runway") {
+      out[r.wallKey] = Math.round(r.currentValue * 100);
+    }
+  }
+  return out;
+}
 
 export function wallProgress01(wall: BarnWall, state: BarnState): number {
   if (wall.targetCents <= 0) return 0;

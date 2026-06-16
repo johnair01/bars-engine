@@ -3590,6 +3590,8 @@ model CampaignMilestone {
   targetValue        Float?
   currentValue       Float                   @default(0)
   status             String                  @default("proposed")
+  /// Optional barn-raising wall this milestone backs: 'car' | 'presale' | 'runway'.
+  wallKey            String?
   proposedByPlayerId String
   approvedByPlayerId String?
   approvedAt         DateTime?
@@ -3599,6 +3601,7 @@ model CampaignMilestone {
   contributions      MilestoneContribution[]
 
   @@index([campaignRef, status])
+  @@index([campaignRef, wallKey])
   @@map("campaign_milestones")
 }
 
