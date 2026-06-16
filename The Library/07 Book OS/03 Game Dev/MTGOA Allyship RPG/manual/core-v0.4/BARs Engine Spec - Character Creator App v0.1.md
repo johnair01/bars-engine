@@ -273,6 +273,7 @@ Options:
 - Strategist
 - Disruptor
 - Escape Artist
+- Catalyst
 - Alchemist
 - Storyteller
 

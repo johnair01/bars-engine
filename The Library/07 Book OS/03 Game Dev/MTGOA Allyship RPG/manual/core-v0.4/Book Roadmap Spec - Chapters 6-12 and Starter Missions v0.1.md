@@ -108,11 +108,12 @@ The reader should finish Chapter 6 feeling:
   - I'm Insignificant
   - I'm Not Worthy
   - I'm Not Capable
-- six superpower archetypes:
+- seven superpower archetypes:
   - Connector
   - Strategist
   - Disruptor
   - Escape Artist
+  - Catalyst
   - Alchemist
   - Storyteller
 - guidance for choosing a superpower without making trauma glamorous

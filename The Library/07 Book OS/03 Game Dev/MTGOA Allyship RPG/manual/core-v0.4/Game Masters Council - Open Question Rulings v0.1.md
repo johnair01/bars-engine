@@ -165,22 +165,23 @@ Do not write "safety moves" inside individual Belief moves. Put safety procedure
 
 Ruling:
 
-Six core superpower archetypes.
+Seven core superpower archetypes, mapped to six self-sabotaging beliefs.
 
 - **Connector**: creates relationships, circuits, translation, belonging, and mutual recognition
 - **Strategist**: sees the board, models consequences, sequences action, and finds leverage
 - **Disruptor**: interrupts patterns, breaks false inevitability, and makes stuck systems move
 - **Escape Artist**: finds exits, slips constraints, survives capture, and opens impossible routes
+- **Catalyst**: sees latent capacity, builds practice rooms, and helps power come online
 - **Alchemist**: metabolizes waste, grief, conflict, and failure into usable capacity
 - **Storyteller**: shapes meaning, memory, morale, narrative, and public imagination
 
 Why this serves the ideal reader:
 
-Six is enough to feel mythic without becoming an encyclopedia. These are not team roles. Team Roles describe how a student functions in the crew. Superpowers describe the extraordinary capacity the student brings into the fiction.
+Seven is still small enough to feel mythic without becoming an encyclopedia. The asymmetry matters: **Escape Artist** and **Catalyst** both grow around **I'm Not Capable**, but they turn the wound in different directions. Escape Artist develops exits, routes, and sovereign options. Catalyst develops capability, practice, and encouragement. These are not team roles. Team Roles describe how a student functions in the crew. Superpowers describe the extraordinary capacity the student brings into the fiction.
 
 Design note:
 
-Superpowers should not be literal combat powers only. They are dramatic capacities that can be expressed socially, magically, strategically, emotionally, or physically. A Connector might create a psychic bridge or introduce the right two people. An Alchemist might transmute toxic runoff or turn a failed apology into a new ritual of repair.
+Superpowers should not be literal combat powers only. They are dramatic capacities that can be expressed socially, magically, strategically, emotionally, or physically. A Connector might create a psychic bridge or introduce the right two people. An Alchemist might transmute toxic runoff or turn a failed apology into a new ritual of repair. A Catalyst might help another student access a power they were too scared to claim.
 
 ## Question 5: Are superpowers selected separately, derived from Belief, or chosen through a prompt matrix?
 
