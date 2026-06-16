@@ -384,8 +384,16 @@
   50%       { transform: translateX(-50%) scale(1.06); }
 }
 
+@keyframes barsVoiceBar {
+  0%, 100% { transform: scaleY(0.25); }
+  50%       { transform: scaleY(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bars-compost-node {
+    animation: none !important;
+  }
+  .bars-voice-bar {
     animation: none !important;
   }
 }

@@ -933,6 +933,254 @@ function CapturedOverlay({ title, onTuneNow, onBackToBoard }: CapturedOverlayPro
   )
 }
 
+interface VoiceRecorderOverlayProps {
+  onPlace: (blob: Blob, durationSec: number) => void
+  onClose: () => void
+}
+
+function VoiceRecorderOverlay({ onPlace, onClose }: VoiceRecorderOverlayProps) {
+  const [status, setStatus] = useState<'idle' | 'requesting' | 'recording' | 'done'>('idle')
+  const [durationSec, setDurationSec] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [waveHeights, setWaveHeights] = useState<number[]>(Array(20).fill(6))
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const blobRef = useRef<Blob | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (status !== 'recording') {
+      setWaveHeights(status === 'done'
+        ? [18, 32, 22, 40, 14, 28, 36, 20, 44, 16, 30, 24, 38, 18, 34, 22, 42, 14, 28, 20]
+        : Array(20).fill(6)
+      )
+      return
+    }
+    const id = setInterval(() => {
+      setWaveHeights(Array.from({ length: 20 }, () => Math.floor(Math.random() * 36) + 8))
+    }, 100)
+    return () => clearInterval(id)
+  }, [status])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+    }
+  }, [])
+
+  async function startRecording() {
+    setStatus('requesting')
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+      const mr = new MediaRecorder(stream)
+      chunksRef.current = []
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' })
+        blobRef.current = blob
+        setStatus('done')
+      }
+      mr.start()
+      mediaRecorderRef.current = mr
+      setDurationSec(0)
+      setStatus('recording')
+      timerRef.current = setInterval(() => setDurationSec((s) => s + 1), 1000)
+    } catch {
+      setError('Microphone access denied')
+      setStatus('idle')
+    }
+  }
+
+  function stopRecording() {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = null
+    mediaRecorderRef.current?.stop()
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+  }
+
+  function handlePlace() {
+    if (blobRef.current) onPlace(blobRef.current, durationSec)
+  }
+
+  function formatDur(s: number) {
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+  }
+
+  const waterGem = ELEMENT_TOKENS.water.gem
+  const isRecording = status === 'recording'
+  const isDone = status === 'done'
+
+  return (
+    <div
+      className="absolute inset-0 flex flex-col"
+      style={{ zIndex: 40, background: 'rgba(5,4,3,0.94)', backdropFilter: 'blur(10px)' }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between" style={{ padding: '18px 18px 0' }}>
+        <span
+          className="font-mono text-[9px] uppercase tracking-[0.14em]"
+          style={{ color: 'rgba(232,226,218,0.6)' }}
+        >
+          Voice memo
+        </span>
+        <button
+          onClick={onClose}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 999,
+            background: 'rgba(255,255,255,0.08)',
+            color: 'rgba(232,226,218,0.7)',
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+
+      {/* Center content */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-7">
+        {/* Waveform bars */}
+        <div className="flex items-center gap-[3px]" style={{ height: 52 }}>
+          {waveHeights.map((h, i) => (
+            <div
+              key={i}
+              className={isRecording ? 'bars-voice-bar' : ''}
+              style={{
+                width: 3,
+                height: h,
+                borderRadius: 2,
+                background: isDone
+                  ? `color-mix(in srgb, ${waterGem} 65%, transparent)`
+                  : isRecording
+                  ? waterGem
+                  : 'rgba(255,255,255,0.14)',
+                transformOrigin: 'center',
+                animation: isRecording
+                  ? `barsVoiceBar ${0.4 + (i % 7) * 0.08}s ease-in-out ${(i * 0.04).toFixed(2)}s infinite`
+                  : 'none',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Duration */}
+        <span
+          style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 36,
+            letterSpacing: '0.04em',
+            color: isRecording ? '#e8e6e0' : isDone ? '#e8e6e0' : 'rgba(232,226,218,0.25)',
+          }}
+        >
+          {formatDur(durationSec)}
+        </span>
+
+        {/* Error */}
+        {error && (
+          <p style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: '#f87171', textAlign: 'center' }}>
+            {error}
+          </p>
+        )}
+
+        {/* Record / Stop button */}
+        {!isDone && (
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={status === 'requesting'}
+            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              border: 'none',
+              cursor: status === 'requesting' ? 'default' : 'pointer',
+              background: isRecording ? '#ef4444' : '#7c3aed',
+              boxShadow: isRecording
+                ? '0 0 0 10px rgba(239,68,68,0.15), 0 0 32px -6px rgba(239,68,68,0.65)'
+                : '0 0 28px -6px rgba(124,58,237,0.65)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {isRecording ? (
+              <div style={{ width: 22, height: 22, borderRadius: 4, background: '#fff' }} />
+            ) : (
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#fff' }} />
+            )}
+          </button>
+        )}
+
+        {/* Hint text */}
+        {!isDone && (
+          <p
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 9,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: isRecording ? 'rgba(239,68,68,0.65)' : 'rgba(232,226,218,0.3)',
+              textAlign: 'center',
+            }}
+          >
+            {isRecording ? 'tap to stop' : status === 'requesting' ? 'requesting mic…' : 'tap to start'}
+          </p>
+        )}
+
+        {/* Done actions */}
+        {isDone && (
+          <div className="flex flex-col gap-3" style={{ width: 256 }}>
+            <button
+              onClick={handlePlace}
+              style={{
+                width: '100%',
+                padding: '15px',
+                borderRadius: 8,
+                background: '#7c3aed',
+                color: '#fff',
+                fontFamily: 'Jost, sans-serif',
+                fontWeight: 700,
+                fontSize: 15,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 0 22px -6px rgba(124,58,237,0.6)',
+              }}
+            >
+              Place on canvas →
+            </button>
+            <button
+              onClick={() => { blobRef.current = null; setDurationSec(0); setStatus('idle') }}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: 8,
+                background: 'transparent',
+                color: 'rgba(232,226,218,0.55)',
+                fontFamily: 'Jost, sans-serif',
+                fontSize: 14,
+                border: '1px solid rgba(255,255,255,0.1)',
+                cursor: 'pointer',
+              }}
+            >
+              Record again
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function SeedCaptureWhiteboard({
@@ -951,7 +1199,10 @@ export function SeedCaptureWhiteboard({
   const linkInputRef = useRef<HTMLInputElement>(null)
   // Map of itemId → File for photos selected but not yet uploaded
   const photoFilesRef = useRef<Map<string, File>>(new Map())
+  // Map of itemId → Blob for voice memos recorded but not yet uploaded
+  const audioFilesRef = useRef<Map<string, Blob>>(new Map())
   const [showLinkInput, setShowLinkInput] = useState(false)
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false)
   const [linkInputValue, setLinkInputValue] = useState('')
 
   const [items, setItems] = useState<CanvasItem[]>(() => buildDefaultItems(defaultText))
@@ -1033,13 +1284,15 @@ export function SeedCaptureWhiteboard({
       if (overTrash) {
         setItems((prev) => prev.filter((it) => it.id !== drag.itemId))
       } else if (!drag.moved) {
-        // Tap — open editor for text items
+        // Tap — open editor for text items; play voice memos
         const item = items.find((i) => i.id === drag.itemId)
         if (item?.type === 'text') {
           setDraft(item.text ?? '')
           setDraftTint((item.tint as ElementKey | 'none') ?? 'none')
           setDraftSize(item.size ?? 27)
           setEditing(drag.itemId)
+        } else if (item?.type === 'voice' && item.text) {
+          new Audio(item.text).play().catch(() => {})
         }
       }
 
@@ -1145,10 +1398,20 @@ export function SeedCaptureWhiteboard({
   }, [])
 
   const handleAddVoice = useCallback(() => {
+    setShowVoiceRecorder(true)
+  }, [])
+
+  const handleVoiceRecorded = useCallback((blob: Blob, durationSec: number) => {
+    const id = makeId()
+    const previewUrl = URL.createObjectURL(blob)
+    const m = Math.floor(durationSec / 60)
+    const s = String(durationSec % 60).padStart(2, '0')
+    audioFilesRef.current.set(id, blob)
     setItems((prev) => [
       ...prev,
-      { id: makeId(), type: 'voice', x: 296, y: 300, rot: 4, label: '0:14 voice' },
+      { id, type: 'voice', x: 196, y: 300, rot: -3, text: previewUrl, label: `${m}:${s}` },
     ])
+    setShowVoiceRecorder(false)
   }, [])
 
   const handleAddLink = useCallback(() => {
@@ -1189,15 +1452,22 @@ export function SeedCaptureWhiteboard({
 
       const { barId, title } = result
 
-      // Upload any pending photo files now that we have a barId
-      const photoItems = items.filter(i => i.type === 'photo')
-      if (photoItems.length > 0 && photoFilesRef.current.size > 0) {
+      // Upload pending photos and voice memos now that we have a barId
+      const mediaItems = items.filter(i => i.type === 'photo' || i.type === 'voice')
+      if (mediaItems.length > 0) {
         const { uploadBarAsset } = await import('@/lib/asset-upload-client')
         await Promise.allSettled(
-          photoItems.map(async (item) => {
-            const file = photoFilesRef.current.get(item.id)
-            if (!file) return
-            await uploadBarAsset(file, { barId, side: 'front' })
+          mediaItems.map(async (item) => {
+            if (item.type === 'photo') {
+              const file = photoFilesRef.current.get(item.id)
+              if (!file) return
+              await uploadBarAsset(file, { barId, side: 'front' })
+            } else if (item.type === 'voice') {
+              const blob = audioFilesRef.current.get(item.id)
+              if (!blob) return
+              const file = new File([blob], 'voice-memo.webm', { type: blob.type })
+              await uploadBarAsset(file, { barId, side: 'front' })
+            }
           })
         )
       }
@@ -1235,6 +1505,7 @@ export function SeedCaptureWhiteboard({
     >
       {/* Phone frame / logical canvas */}
       <div
+        ref={boardRef}
         style={{
           width: LOGICAL_W,
           height: LOGICAL_H,
@@ -1419,6 +1690,14 @@ export function SeedCaptureWhiteboard({
           capturing={capturing}
           captureError={captureError}
         />
+
+        {/* Voice recorder overlay */}
+        {showVoiceRecorder && (
+          <VoiceRecorderOverlay
+            onPlace={handleVoiceRecorded}
+            onClose={() => setShowVoiceRecorder(false)}
+          />
+        )}
 
         {/* Text editor overlay */}
         {editing !== null && (
