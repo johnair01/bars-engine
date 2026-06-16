@@ -12,11 +12,13 @@ frames. Each phase is independently shippable.
   (+ `CampaignMilestoneMarker` for the celebration/reach narrative). **Phases 1–3 need no migration.**
   Two optional future fields (`ContributionAnnotation.source`, `CampaignMilestone.celebration`) deferred.
 
-## Phase 1 — Seed coherence (`GrowFromBar`)
-- [ ] **T1.1** — Lock MVP artifact set (Quest, Daemon, generic Artifact); add a roadmap note for the
-  deferred Show-Up artifact types (Story/Ritual/Plan/Gift/Deck Card/Contact).
-- [ ] **T1.2** — Reframe `GrowFromBar` as one "Show Up / seed this" affordance; clear copy + correct
-  post-seed routing (via `navigation-contract`). `npm run check`.
+## Phase 1 — Seed coherence (`GrowFromBar`) ✅ DONE
+- [x] **T1.1** — MVP artifact set locked (Quest, Daemon, generic Artifact); deferred Show-Up types
+  (Story/Ritual/Plan/Gift/Deck Card/Contact) recorded in
+  [seed-coherence.md](./seed-coherence.md) — explicitly out of v1.
+- [x] **T1.2** — `GrowFromBar` reframed as one **Show Up** move ("Seed this BAR") with three labeled
+  forms + per-form copy; post-seed routing unchanged (already correct via `navigation-contract`:
+  quest→`/hand?quest=`, daemon→`/daemons`, artifact→`/growth-scene/:id`). `tsc`+`eslint` clean.
 
 ## Phase 2 — Explicit personal→collective bridge ← highest-value link ✅ DONE
 - [x] **T2.1** — `src/actions/campaign-attach.ts`: `attachBarToCampaign`, `detachBarFromCampaign`,
@@ -52,11 +54,13 @@ frames. Each phase is independently shippable.
 - [ ] **T5.3** — Finish `vault-page-experience` caps/compost; CYOA hard-compost modal = v2.
 
 ## Verification Quest (the walkability gate)
-- [ ] **T6.1** — Twine `cert-throughput-spine-v1` (7 steps per spec § Verification Quest); final
-  passage no-link.
-- [ ] **T6.2** — `scripts/seed-cert-throughput-spine.ts` + `npm run seed:cert:throughput-spine`
-  (idempotent; `isSystem`/public; Bruised Banana frame).
-- [ ] **T6.3** — Run end-to-end in preview — this completing **is** the go-live readiness signal.
+- [x] **T6.1** — Twine `cert-throughput-spine-v1` authored: 7 steps (capture → metabolize → seed →
+  offer → hub contribution → milestone advance → steward authoring) + FEEDBACK + END_SUCCESS
+  (no-link final passage).
+- [x] **T6.2** — `scripts/seed-cert-throughput-spine.ts` + `npm run seed:cert:throughput-spine`
+  (idempotent upsert; resets prior completion; `isSystem`/public; Bruised Banana frame).
+- [ ] **T6.3** — Run `npm run seed:cert:throughput-spine` against a DB + walk end-to-end in preview
+  (needs `DATABASE_URL` — not available in this container). Completing it **is** the go-live signal.
 
 ## Definition of done (go-live readiness)
 - [ ] Phases 0–3 shipped (links closed, seed coherent); Phases 4–5 at their specs' acceptance.

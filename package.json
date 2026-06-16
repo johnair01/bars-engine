@@ -141,6 +141,7 @@
     "seed:copy-quality": "tsx scripts/seed-onboarding-copy-quality-quest.ts",
     "seed:cert:donation-honor": "tsx scripts/seed-event-donation-honor-cert.ts",
     "seed:cert:book-paywall": "tsx scripts/with-env.ts \"tsx scripts/seed-cert-book-launch-paywall.ts\"",
+    "seed:cert:throughput-spine": "tsx scripts/seed-cert-throughput-spine.ts",
     "seed:wake-up": "tsx scripts/seed-wake-up-adventure.ts",
     "seed:mtgoa-ch1": "tsx scripts/seed-mtgoa-chapter1-cyoa.ts",
     "seed:bruised-banana": "tsx scripts/seed-bruised-banana-adventure.ts",
