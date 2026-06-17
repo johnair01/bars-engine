@@ -24,6 +24,8 @@ export default async function DeckPage() {
         title="The Allyship Deck"
         message="The Allyship Deck unlocks with the deck purchase, the game subscription, or the Founding Ally bundle."
         authed={access.authed}
+        learnMoreHref="/deck/sales"
+        learnMoreLabel="What's in the deck?"
       />
     )
   }
