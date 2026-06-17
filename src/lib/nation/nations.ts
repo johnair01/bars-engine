@@ -38,6 +38,8 @@ export interface NationDefinition {
   readonly imgUrl: string
   /** Wake Up lifecycle prompt — initial awareness */
   readonly wakeUp: string
+  /** Open Up lifecycle prompt — receptivity / possibility / emergence */
+  readonly openUp: string
   /** Clean Up lifecycle prompt — release and transformation */
   readonly cleanUp: string
   /** Grow Up lifecycle prompt — capacity building */
@@ -59,6 +61,7 @@ export const NATIONS: readonly NationDefinition[] = [
     element: 'metal',
     imgUrl: '/nations/argyra.png',
     wakeUp: 'Mirror Meditation: See yourself clearly by examining your reflections in others.',
+    openUp: 'Open Aperture: Loosen the frame and admit data you did not go looking for — possibility before precision.',
     cleanUp: 'Silver Purge: Dissolve illusions and false beliefs through logical analysis.',
     growUp: 'Crystal Lattice: Build systematic frameworks for understanding complexity.',
     showUp: 'Calculated Action: Execute with precision based on thorough analysis.',
@@ -70,6 +73,7 @@ export const NATIONS: readonly NationDefinition[] = [
     element: 'water',
     imgUrl: '/nations/lamenth.png',
     wakeUp: 'Ancestral Sight: Remember the wisdom embedded in your lineage.',
+    openUp: 'Open Channel: Let the current bring what it brings; receive memory, feeling, and the not-yet-spoken.',
     cleanUp: 'Stone Grief: Honor old pain by allowing it to fully pass through.',
     growUp: 'Foundation Building: Grow by deeply understanding where you came from.',
     showUp: 'Enduring Presence: Act with the weight of history behind you.',
@@ -81,6 +85,7 @@ export const NATIONS: readonly NationDefinition[] = [
     element: 'wood',
     imgUrl: '/nations/virelune.png',
     wakeUp: 'Vitality Sense: Notice where life force is rising and what wants to grow.',
+    openUp: 'Open Bud: Unfurl toward what is arriving; receive new life before deciding what to prune.',
     cleanUp: 'Growth Around: Let obstacles become compost; expand around what blocks you.',
     growUp: 'Sustained Bloom: Build capacity for joy that outlasts the moment.',
     showUp: 'Life Force Forward: Act with the energy of something coming alive.',
@@ -92,6 +97,7 @@ export const NATIONS: readonly NationDefinition[] = [
     element: 'fire',
     imgUrl: '/nations/pyrakanth.png',
     wakeUp: 'Ember Vision: Let passion illuminate what truly matters to you.',
+    openUp: 'Catch Light: Let the spark reach toward new tinder; welcome desires you did not plan for.',
     cleanUp: 'Burn Offering: Transform old wounds into fuel for new growth.',
     growUp: 'Wild Cultivation: Nurture your desires into full bloom through devoted care.',
     showUp: 'Blaze Forward: Act with full intensity and commitment.',
@@ -103,6 +109,7 @@ export const NATIONS: readonly NationDefinition[] = [
     element: 'earth',
     imgUrl: '/nations/meridia.png',
     wakeUp: 'Noon Clarity: Stand in the full light and see all things as they are.',
+    openUp: 'Open Stall: Lay your wares out in the full light and welcome the unexpected trade before weighing it.',
     cleanUp: 'Fair Exchange: Release attachments by trading old for new.',
     growUp: 'Market Mastery: Learn the art of value creation and exchange.',
     showUp: 'Golden Deal: Take action through negotiation and mutual benefit.',

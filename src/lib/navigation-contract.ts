@@ -36,13 +36,13 @@ export type NavigationContract = {
 export const NAV: Record<string, NavigationContract> = {
   // ── 3-2-1 shadow work outcomes ──────────────────────────────────────────
   '321_quest': {
-    onSuccess: (r) => `/hand?quest=${r.questId}`,
+    onSuccess: (r) => `/vault?quest=${r.questId}`,
     onCancel: '/',
     onError: 'stay',
   },
   /** 321 completed → Quest Wizard → quest created */
   '321_quest_wizard': {
-    onSuccess: (r) => `/hand?quest=${r.questId}`,
+    onSuccess: (r) => `/vault?quest=${r.questId}`,
     onCancel: '/shadow/321',
     onError: 'stay',
   },
@@ -71,7 +71,7 @@ export const NAV: Record<string, NavigationContract> = {
 
   // ── Grow from BAR (BAR detail page → artifact) ───────────────────────────
   'grow_quest': {
-    onSuccess: (r) => `/hand?quest=${r.questId}`,
+    onSuccess: (r) => `/vault?quest=${r.questId}`,
     onCancel: null,
     onError: 'stay',
   },
@@ -100,7 +100,7 @@ export const NAV: Record<string, NavigationContract> = {
 
   // ── Charge capture → quest ───────────────────────────────────────────────
   'charge_quest': {
-    onSuccess: (r) => `/hand?quest=${r.questId}`,
+    onSuccess: (r) => `/vault?quest=${r.questId}`,
     onCancel: null,
     onError: 'stay',
   },

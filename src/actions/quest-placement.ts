@@ -47,7 +47,7 @@ export async function addQuestToThread(
             data: { threadId, questId, position: nextPosition },
         })
 
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/')
         return { success: true }
     } catch (e: any) {
@@ -95,7 +95,7 @@ export async function addQuestAsSubquestToGameboard(
             },
         })
 
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/campaign/board')
         revalidatePath('/')
         return { success: true }

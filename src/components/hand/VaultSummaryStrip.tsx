@@ -50,7 +50,7 @@ export function VaultSummaryStrip({ counts }: VaultSummaryStripProps) {
             <div className="pt-1 border-t border-zinc-800/80">
                 <p className="text-xs text-zinc-500">
                     <span className="text-zinc-400">Next:</span>{' '}
-                    <Link href="/hand/compost" className="text-emerald-400/90 hover:text-emerald-300 font-medium">
+                    <Link href="/vault/compost" className="text-emerald-400/90 hover:text-emerald-300 font-medium">
                         Vault Compost
                     </Link>
                     {' — salvage lines &amp; archive drafts or unplaced quests. Also: capture charge, forge invites, or open '}

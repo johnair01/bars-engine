@@ -50,7 +50,7 @@ const ACTIONS: { href: string; label: string; description: string; element: Elem
     icon: '🗺️',
   },
   {
-    href: '/hand/library',
+    href: '/vault/library',
     label: 'The Library',
     description: 'Explore your curated and historical BARs provenance',
     element: 'earth',

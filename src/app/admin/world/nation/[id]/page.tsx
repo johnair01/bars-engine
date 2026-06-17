@@ -128,6 +128,12 @@ export default function NationEditorPage() {
                                 color="border-yellow-900/50 text-yellow-500"
                             />
                             <FlavorInput
+                                label="🌀 Open Up (Receptivity)"
+                                value={data.openUp}
+                                onChange={(val: string) => setData({ ...data, openUp: val })}
+                                color="border-sky-900/50 text-sky-500"
+                            />
+                            <FlavorInput
                                 label="🧹 Clean Up (Shadow Work)"
                                 value={data.cleanUp}
                                 onChange={(val: string) => setData({ ...data, cleanUp: val })}

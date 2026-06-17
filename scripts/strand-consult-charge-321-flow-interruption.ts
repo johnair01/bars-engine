@@ -42,7 +42,7 @@ const CONSULT_QUESTION = `**Major flow interruption**: Charge → 321 → (Quest
 **Design principle to add**: Major flows can't be interrupted. We need to identify which flows complete and which don't.
 
 **Current system**:
-- Shadow321Form: Turn into Quest → createQuestFrom321Metadata → redirect to /hand?quest=
+- Shadow321Form: Turn into Quest → createQuestFrom321Metadata → redirect to /vault?quest=
 - Shadow321Form: Create BAR → /create-bar?from321=1
 - Shadow321Form: Fuel System → persist321Session, router.refresh()
 - GrowFromBar (on BAR page): Plant as Quest → growQuestFromBar → /?focusQuest=; Wake as Daemon → /daemons; Create Artifact → /growth-scene/[id]

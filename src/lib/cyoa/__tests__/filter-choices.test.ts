@@ -19,7 +19,7 @@ import {
     true
   )
   assert.equal(authed.length, 1)
-  assert.equal(authed[0].targetId, 'redirect:/hand')
+  assert.equal(authed[0].targetId, 'redirect:/vault')
   assert.ok(authed[0].text.includes('Vault'))
 }
 

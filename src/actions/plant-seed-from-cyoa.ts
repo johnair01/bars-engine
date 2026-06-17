@@ -186,7 +186,7 @@ export async function plantSeedFromCyoa(
   // ── 7. Revalidate relevant paths ──────────────────────────────────────────
   revalidatePath('/', 'layout')
   revalidatePath('/bars')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath('/campaign/hub')
   revalidatePath('/campaign/landing')
 

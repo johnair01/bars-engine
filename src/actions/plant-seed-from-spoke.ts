@@ -85,7 +85,7 @@ export async function plantSeedFromSpoke(input: {
 
     revalidatePath('/campaign/hub')
     revalidatePath('/campaign/landing')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     return { success: true, barId: bar.id }
   } catch (e) {

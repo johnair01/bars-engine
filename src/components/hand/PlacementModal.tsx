@@ -37,7 +37,7 @@ export function PlacementModal({ questId }: { questId: string }) {
 
   const handleClose = () => {
     setOpen(false)
-    router.replace('/hand', { scroll: false })
+    router.replace('/vault', { scroll: false })
   }
 
   const handleAddToThread = async (threadId: string) => {

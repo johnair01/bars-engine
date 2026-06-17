@@ -12,9 +12,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
         let active: boolean
         if (path === '/') {
             active = pathname === '/'
-        } else if (path === '/hand') {
+        } else if (path === '/vault') {
             // VAULT: active across all player-possession routes
-            active = pathname.startsWith('/hand') ||
+            active = pathname.startsWith('/vault') ||
                      pathname.startsWith('/bars') ||
                      pathname.startsWith('/wallet') ||
                      pathname.startsWith('/daemons') ||
@@ -38,9 +38,9 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             NOW
                         </Link>
                         <Link
-                            href="/hand"
+                            href="/vault"
                             title="Your private studio: charges, quests, drafts, invitations — metabolize what you are carrying."
-                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/hand')}`}
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/vault')}`}
                         >
                             VAULT
                         </Link>

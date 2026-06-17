@@ -296,7 +296,7 @@ export async function plantKernelFromBar(input: {
   })
 
   revalidatePath(`/campaign/${campaignRef}/spoke/${spokeIndex}/seeds`)
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   return { success: true, kind: 'additional', bedId: result.bedId, kernelId: result.kernelId }
 }
 

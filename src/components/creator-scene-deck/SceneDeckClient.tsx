@@ -140,7 +140,7 @@ export function SceneDeckClient({
             KB: {SCENE_ATLAS_DISPLAY_NAME}
           </Link>
           {' · '}
-          <Link href="/hand" className="text-amber-400 hover:text-amber-300">
+          <Link href="/vault" className="text-amber-400 hover:text-amber-300">
             Your hand
           </Link>
         </p>

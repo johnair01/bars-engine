@@ -88,7 +88,7 @@ export async function createBarFromMoveChoice(input: {
 
     revalidatePath('/', 'layout')
     revalidatePath('/bars')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     const blueprintKey = `move_${input.moveType}`
     await appendCyoaArtifactBar(input.adventureId, {

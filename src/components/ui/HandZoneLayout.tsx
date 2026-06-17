@@ -7,11 +7,11 @@ import { zoneBackgroundStyle, type ZoneTextureId } from '@/lib/ui/zone-surfaces'
 
 function handPathToZone(pathname: string | null): ZoneTextureId {
   if (!pathname) return 'vault'
-  if (pathname.startsWith('/hand/quests')) return 'quest'
+  if (pathname.startsWith('/vault/quests')) return 'quest'
   return 'vault'
 }
 
-/** Applies Register 6 vault texture to all `/hand` routes; quest texture on `/hand/quests`. */
+/** Applies Register 6 vault texture to all `/vault` routes; quest texture on `/vault/quests`. */
 export function HandZoneLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const kind = handPathToZone(pathname)

@@ -187,7 +187,7 @@ export async function bindSceneGridCardToExistingBar(
 
   revalidatePath('/creator-scene-deck')
   revalidatePath(`/creator-scene-deck/${instanceSlug}`)
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath('/bars')
   return { ok: true }
 }

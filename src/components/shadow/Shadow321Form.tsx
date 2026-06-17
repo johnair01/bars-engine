@@ -154,7 +154,7 @@ export function Shadow321Form({
         if (embedded && onComplete) {
           onComplete(metadata)
         } else {
-          router.push(`/hand?quest=${res.questId}`)
+          router.push(`/vault?quest=${res.questId}`)
           router.refresh()
         }
       }

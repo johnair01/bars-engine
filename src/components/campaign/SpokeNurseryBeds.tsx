@@ -13,6 +13,7 @@ import type { SpokeMoveBedMoveType } from '@/lib/spoke-move-beds'
 
 const MOVE_LABEL: Record<SpokeMoveBedMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',
@@ -110,7 +111,7 @@ function BedSection(props: {
                 <span className="text-zinc-600">
                   Water {k.wateringComplete}/{k.wateringTotal}
                 </span>
-                <Link href="/hand" className="text-purple-400 hover:text-purple-300 text-[11px]">
+                <Link href="/vault" className="text-purple-400 hover:text-purple-300 text-[11px]">
                   Vault →
                 </Link>
               </li>

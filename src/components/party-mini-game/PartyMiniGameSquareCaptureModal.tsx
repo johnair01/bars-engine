@@ -249,7 +249,7 @@ function PartyMiniGameSquareCaptureModalInner({
 
           <p className="text-[10px] text-zinc-600 leading-relaxed">
             BARs are private drafts you can tend from{' '}
-            <Link href="/hand" className="text-zinc-400 underline-offset-2 hover:underline">
+            <Link href="/vault" className="text-zinc-400 underline-offset-2 hover:underline">
               Hand
             </Link>
             .

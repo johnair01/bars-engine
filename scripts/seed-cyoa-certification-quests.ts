@@ -44,7 +44,8 @@ const CERT_QUEST_IDS = [
     'cert-donation-self-service-wizard-v1',
     'cert-spoke-move-seed-beds-v1',
     'cert-book-os-v1-authoring-v1',
-    'cert-book-origin-fork-port-v1'
+    'cert-book-origin-fork-port-v1',
+    'cert-inner-outer-allyship-v1'
 ]
 
 async function seed() {
@@ -3769,7 +3770,7 @@ async function seed() {
         {
             name: 'STEP_2',
             pid: '3',
-            text: '### Step 2: Vault Create BAR\n\nOpen [/hand](/hand). The primary CTA should say **Create a BAR** and go to [/bars/create](/bars/create) (not charge capture).',
+            text: '### Step 2: Vault Create BAR\n\nOpen [/hand](/vault). The primary CTA should say **Create a BAR** and go to [/bars/create](/bars/create) (not charge capture).',
             cleanText: 'Step 2: Vault CTA.',
             links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
         },
@@ -4178,6 +4179,114 @@ async function seed() {
         }
     })
     console.log(`✅ Quest seeded: ${smbSlug}`)
+
+    // --- Certification: Inner / Outer Allyship Moves (IOA Phase 4) ---
+    const ioaTitle = 'Certification: Inner / Outer Allyship V1'
+    const ioaSlug = 'cert-inner-outer-allyship-v1'
+
+    const ioaPassages = [
+        {
+            name: 'START',
+            pid: '1',
+            text: 'This certification quest verifies inner / outer allyship moves. Every move can be taken **inner** (self-development) or **outer** (allyship enacted with others). For the Bruised Banana Fundraiser you will take an **outer Show Up** — inviting a guest to the party — and confirm the choice is recorded.',
+            cleanText: 'Verify inner/outer allyship moves by taking an outer Show Up to invite a guest to the Bruised Banana Fundraiser.',
+            links: [{ label: 'Begin', target: 'STEP_1' }]
+        },
+        {
+            name: 'STEP_1',
+            pid: '2',
+            text: '### Step 1: Inner vs. outer\n\nOn a move you are taking, confirm you can read both expressions of the same move. An **inner** Show Up is "embody your insight and take your own action." An **outer** Show Up is "take direct action on the ground — with others." Same move, two directions. (No AI required — the grammar is authored and works offline.)',
+            cleanText: 'Confirm the same move reads two ways: inner (self) vs outer (with others).',
+            links: [{ label: 'Next', target: 'STEP_2' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_2',
+            pid: '3',
+            text: '### Step 2: Take an outer Show Up\n\nChoose **outer** for a Show Up move toward the fundraiser: *invite a guest to the Bruised Banana party*. Outer allyship acts in the world with others, so it requires a **target** — choose **another person** (the guest you are inviting).',
+            cleanText: 'Take an outer Show Up to invite a guest; choose the target = another person.',
+            links: [{ label: 'Next', target: 'STEP_3' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_3',
+            pid: '4',
+            text: '### Step 3: Target is required for outer\n\nConfirm the structural rule: an **outer** move with no target is rejected, while an **inner** move is self-directed and takes no target. (Outer ⇒ target required; inner ⇒ no target.)',
+            cleanText: 'Confirm outer requires a target; inner takes none.',
+            links: [{ label: 'Next', target: 'STEP_4' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'STEP_4',
+            pid: '5',
+            text: '### Step 4: Choice persists\n\nAfter taking the move, confirm the choice is recorded on your move log: **aspect = outer**, **target = individual** (the guest). Reload and confirm it persists. The move log now remembers you acted *with* another, not just on yourself.',
+            cleanText: 'Confirm the move log records aspect=outer, target=individual and persists across reload.',
+            links: [{ label: 'Complete verification', target: 'END_SUCCESS' }, { label: 'Report Issue', target: 'FEEDBACK' }]
+        },
+        {
+            name: 'FEEDBACK',
+            pid: '7',
+            text: '### Report an Issue\n\nSomething isn\'t working as expected? Describe what you encountered so we can fix it.',
+            cleanText: '### Report an Issue\n\nDescribe what you encountered.',
+            links: [],
+            tags: ['feedback']
+        },
+        {
+            name: 'END_SUCCESS',
+            pid: '6',
+            text: 'Verification complete. You have taken an outer Show Up — inviting a guest to the Bruised Banana Fundraiser — and confirmed the inner/outer choice is recorded. Complete this quest to receive your vibeulon reward.',
+            cleanText: 'Verification complete.',
+            links: []
+        }
+    ]
+
+    const ioaParsedJson = JSON.stringify({
+        title: ioaTitle,
+        startPassage: 'START',
+        passages: ioaPassages
+    })
+
+    const ioaStory = await db.twineStory.upsert({
+        where: { slug: ioaSlug },
+        update: {
+            title: ioaTitle,
+            parsedJson: ioaParsedJson,
+            isPublished: true
+        },
+        create: {
+            title: ioaTitle,
+            slug: ioaSlug,
+            sourceType: 'manual_seed',
+            sourceText: 'Inner/outer allyship certification quest (seed-cyoa-certification-quests.ts)',
+            parsedJson: ioaParsedJson,
+            isPublished: true,
+            createdById
+        }
+    })
+
+    await db.customBar.upsert({
+        where: { id: ioaSlug },
+        update: {
+            title: ioaTitle,
+            description: 'Verify inner/outer allyship moves: take an outer Show Up to invite a guest to the Bruised Banana Fundraiser, confirm target required, confirm the choice persists on the move log.',
+            reward: 1,
+            twineStoryId: ioaStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/inner-outer-allyship-moves/spec.md'
+        },
+        create: {
+            id: ioaSlug,
+            title: ioaTitle,
+            description: 'Verify inner/outer allyship moves: take an outer Show Up to invite a guest to the Bruised Banana Fundraiser, confirm target required, confirm the choice persists on the move log.',
+            creatorId: createdById,
+            reward: 1,
+            twineStoryId: ioaStory.id,
+            status: 'active',
+            visibility: 'public',
+            isSystem: true,
+            backlogPromptPath: '.specify/specs/inner-outer-allyship-moves/spec.md'
+        }
+    })
+    console.log(`✅ Quest seeded: ${ioaSlug}`)
 
     console.log('✅ CYOA Certification Quests seeded.')
 }

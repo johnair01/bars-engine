@@ -284,7 +284,7 @@ export async function selectMoveAtNpc(input: {
 
         revalidatePath('/', 'layout')
         revalidatePath('/bars')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
 
         return { success: true, barId: bar.id, barTitle: title }
     } catch (e) {

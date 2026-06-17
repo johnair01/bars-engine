@@ -570,7 +570,7 @@ export async function acceptAidOffer(offerId: string) {
 
   revalidatePath('/campaign/board')
   revalidatePath('/')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   return { success: true }
 }
 
@@ -628,7 +628,7 @@ export async function forkDeclinedAidQuest(offerId: string) {
 
   revalidatePath('/campaign/board')
   revalidatePath('/')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   return { success: true }
 }
 
@@ -720,7 +720,7 @@ export async function forkQuestPrivately(questId: string) {
 
   revalidatePath('/campaign/board')
   revalidatePath('/')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   return { success: true, questId: fork.id }
 }
 

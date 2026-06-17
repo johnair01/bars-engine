@@ -124,7 +124,7 @@ export async function delegateBar(formData: FormData) {
         })
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/bars/available')
         return result
     } catch (e: unknown) {

@@ -64,7 +64,7 @@ export async function createGmFaceMoveQuestFromCampaign(
   if ('error' in result && result.error) return result
 
   revalidatePath('/')
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath('/campaign/hub')
   revalidatePath('/campaign/landing')
 

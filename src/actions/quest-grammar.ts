@@ -392,7 +392,7 @@ export async function generateQuestOverviewWithAI(
     const promptContext = await buildQuestPromptContext({ ...input, isAuthenticated: !!player }, packet)
 
     const overviewAuthRule = player
-      ? `- Final passage: choice to continue the journey (e.g. targetId: redirect:/hand or next in-world step). Do NOT use cold signup or "Create my account" — the player is already logged in.`
+      ? `- Final passage: choice to continue the journey (e.g. targetId: redirect:/vault or next in-world step). Do NOT use cold signup or "Create my account" — the player is already logged in.`
       : `- Final passage: choice to "Create my account" (targetId: signup) or similar cold-start CTA.`
 
     const systemPrompt = `You are a narrative designer for a choose-your-own-adventure quest. From the prompt context, generate a complete quest skeleton: objectives and passages with choices.

@@ -10,7 +10,7 @@
 import { db } from '@/lib/db'
 import type { PersonalMoveType } from './types'
 
-const VALID_STAGES: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'showUp']
+const VALID_STAGES: PersonalMoveType[] = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp']
 
 /**
  * Get the primary WAVE stage for an archetype.

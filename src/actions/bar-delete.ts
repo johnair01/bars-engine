@@ -32,7 +32,7 @@ export async function deleteBar(barId: string): Promise<{ success: true } | { er
       where: { id: barId },
     })
 
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/bars')
     revalidatePath(`/bars/${barId}`)
     revalidatePath('/')

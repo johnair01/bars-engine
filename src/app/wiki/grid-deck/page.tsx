@@ -114,7 +114,7 @@ export default function WikiGridDeckPage() {
           <li>Bars you create from the grid are <strong className="text-zinc-300">private</strong> by default.</li>
           <li>Other players cannot see your titles or notes through the grid.</li>
           <li>
-            You can still use your normal <Link href="/hand" className="text-amber-400 hover:text-amber-300">Hand</Link>{' '}
+            You can still use your normal <Link href="/vault" className="text-amber-400 hover:text-amber-300">Hand</Link>{' '}
             to work with BARs you made elsewhere.
           </li>
         </ul>
