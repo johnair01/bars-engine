@@ -4,8 +4,11 @@ import { db } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { appendCyoaArtifactBar } from '@/actions/cyoa-artifact-ledger'
+import { isValidAspectTarget } from '@/lib/quest-grammar/move-aspect'
+import type { MoveAspect, AllyshipTarget } from '@/lib/quest-grammar/types'
 
-const MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
+// Layer 0 base moves — the full WAVE set, including the fifth move (Open Up).
+const MOVE_TYPES = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp'] as const
 type MoveType = (typeof MOVE_TYPES)[number]
 
 function isValidMoveType(s: string): s is MoveType {
@@ -14,10 +17,14 @@ function isValidMoveType(s: string): s is MoveType {
 
 const MOVE_LABELS: Record<MoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',
 }
+
+const VALID_ASPECTS: readonly MoveAspect[] = ['inner', 'outer']
+const VALID_TARGETS: readonly AllyshipTarget[] = ['individual', 'collective', 'system']
 
 export type CreateBarFromMoveChoiceResult =
   | { success: true; barId: string }
@@ -35,12 +42,37 @@ export async function createBarFromMoveChoice(input: {
   choiceText?: string
   questId?: string
   campaignRef?: string | null
+  /** IOA base layer: inner (self) | outer (allyship). Optional — Nation-free. */
+  aspect?: MoveAspect
+  /** Required when aspect === 'outer'; omitted for inner. */
+  target?: AllyshipTarget
 }): Promise<CreateBarFromMoveChoiceResult> {
   const player = await getCurrentPlayer()
   if (!player) return { error: 'Not logged in' }
 
   if (!isValidMoveType(input.moveType)) {
     return { error: `Invalid moveType: ${input.moveType}` }
+  }
+
+  // Aspect is optional, but when present it must satisfy the allyship invariant
+  // (outer ⇒ target; inner ⇒ none) — one source of truth with the grammar.
+  if (input.aspect !== undefined) {
+    if (!VALID_ASPECTS.includes(input.aspect)) {
+      return { error: `Invalid aspect: ${String(input.aspect)}` }
+    }
+    if (input.target !== undefined && !VALID_TARGETS.includes(input.target)) {
+      return { error: `Invalid target: ${String(input.target)}` }
+    }
+    if (!isValidAspectTarget(input.aspect, input.target)) {
+      return {
+        error:
+          input.aspect === 'outer'
+            ? 'Outer (allyship) moves require a target (individual, collective, or system).'
+            : 'Inner moves are self-directed and cannot carry a target.',
+      }
+    }
+  } else if (input.target !== undefined) {
+    return { error: 'A target requires an outer aspect.' }
   }
 
   const label = MOVE_LABELS[input.moveType]
@@ -73,6 +105,8 @@ export async function createBarFromMoveChoice(input: {
         claimedById: player.id,
         inputs: JSON.stringify([]),
         moveType: input.moveType,
+        moveAspect: input.aspect ?? null,
+        allyshipTarget: input.target ?? null,
         parentId: input.questId ?? null,
         rootId: `cyoa_move_${input.passageNodeId}`,
         campaignRef,

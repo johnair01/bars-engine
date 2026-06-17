@@ -319,6 +319,11 @@ model CustomBar {
   rootId                               String?
   allowedNations                       String?
   allyshipDomain                       String?
+  /// IOA base layer: inner (self-development) | outer (allyship). Sibling of moveType —
+  /// the base move's aspect, recorded Nation-free. See specs/inner-outer-allyship-moves/data-model.md.
+  moveAspect                           String?
+  /// IOA base layer: who an outer move acts on — individual | collective | system. Null for inner.
+  allyshipTarget                       String?
   nation                               String?
   archetype                            String?
   lockType                             String?
