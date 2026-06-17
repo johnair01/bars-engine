@@ -5,7 +5,7 @@ import { buildWorldMapState } from './world-map'
 /** Curated primary CTA per space (not always the first card). */
 const PRIMARY_CTA: Record<SpaceId, { label: string; href: string }> = {
   library: { label: 'Open quest library', href: '/library' },
-  dojo: { label: 'Moves in your hand', href: '/hand/moves' },
+  dojo: { label: 'Moves in your hand', href: '/vault/moves' },
   forest: { label: 'Browse adventures', href: '/adventures' },
   forge: { label: 'Capture a charge', href: '/capture' },
 }

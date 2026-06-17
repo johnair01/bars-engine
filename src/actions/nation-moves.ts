@@ -290,7 +290,7 @@ export async function moveQuestToGraveyard(questId: string, confirmCostPaid: boo
 
     revalidatePath('/')
     revalidatePath('/bars/available')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     return { success: true }
   } catch (error) {
     console.error('[nation-moves] moveQuestToGraveyard failed:', error)
@@ -543,7 +543,7 @@ export async function applyNationMoveWithState(_prev: ApplyNationMoveState | nul
     revalidatePath('/')
     revalidatePath('/bars')
     revalidatePath('/bars/available')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     return {
       ok: true,

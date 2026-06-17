@@ -1,6 +1,6 @@
 import { getSpokeMoveBeds } from '@/actions/spoke-move-seeds'
 import type { SpokeMoveBedMoveType } from '@/lib/spoke-move-beds'
-import type { GameMasterFace } from '@/lib/quest-grammar/types'
+import type { GameMasterFace, PersonalMoveType } from '@/lib/quest-grammar/types'
 
 export { bridgeBranchWithBar, publishStoryForCollaboration } from '@/actions/collaborative-story'
 export { plantKernelFromBar } from '@/actions/spoke-move-seeds'
@@ -23,7 +23,9 @@ export interface SpokeSeed {
 export async function getSpokeSeeds(
     campaignRef: string,
     spokeIndex: number,
-    moveType: SpokeMoveBedMoveType
+    // Accepts any personal move; non-spoke-bed moves (e.g. openUp, which has no
+    // spoke bed yet) simply match no bed below and return [].
+    moveType: PersonalMoveType
 ): Promise<SpokeSeed[]> {
     const result = await getSpokeMoveBeds({ campaignRef, spokeIndex })
     if ('error' in result) return []

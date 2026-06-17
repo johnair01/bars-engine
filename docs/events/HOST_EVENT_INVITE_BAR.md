@@ -18,7 +18,7 @@ Use this when you want **RSVP on Partiful** and a **short in-app doorway** (JSON
 ## 3. Where the BAR lives (prod)
 
 - **Public guest URL:** `https://<your-host>/invite/event/<barId>` — e.g. seed ids `bb-event-invite-apr4-dance`, `bb-event-invite-apr26` ([`src/app/invite/event/[barId]/page.tsx`](../../src/app/invite/event/[barId]/page.tsx)).
-- **Stewards:** open **Hand → Vault** (`/hand`). Under **Campaign invitation BARs**, each row shows preview, copyable URL, and an inline form to set **Partiful RSVP URL** (HTTPS) and **event slug** for initiation. You need **owner/steward** on a campaign instance whose `campaignRef` matches the BAR, **or** you created the BAR, **or** you have the **admin** role.
+- **Stewards:** open **Hand → Vault** (`/vault`). Under **Campaign invitation BARs**, each row shows preview, copyable URL, and an inline form to set **Partiful RSVP URL** (HTTPS) and **event slug** for initiation. You need **owner/steward** on a campaign instance whose `campaignRef` matches the BAR, **or** you created the BAR, **or** you have the **admin** role.
 
 ## 4. Seeding / ops
 

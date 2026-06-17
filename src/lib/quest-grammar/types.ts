@@ -125,8 +125,53 @@ export interface UnpackingAnswers {
   q6Context?: string
 }
 
-/** 4 moves (personal throughput). Used for mastery: Wake Up = choice-based; Show Up = action-based. */
-export type PersonalMoveType = 'wakeUp' | 'cleanUp' | 'growUp' | 'showUp'
+/** 5 moves (personal throughput): Wake → Open → Clean → Grow → Show. Used for mastery: Wake Up = choice-based; Show Up = action-based. */
+export type PersonalMoveType = 'wakeUp' | 'openUp' | 'cleanUp' | 'growUp' | 'showUp'
+
+/**
+ * Aspect of an allyship domain: left-hand (interior/self) vs right-hand (exterior/others).
+ * Inner = the development column (I/We interiors). Outer = the allyship column (It/Its
+ * exteriors, incl. acting with/for others). See .specify/specs/integral-axes/spec.md.
+ */
+export type AllyshipAspect = 'inner' | 'outer'
+
+/**
+ * A move's affinity for a cell of the 8-cell board (domain × aspect). Narrative-flavor
+ * only — drives Q1 of generated quests; no progress/energy/quest-selection effect.
+ * The 5 WAVE moves are the inner column. See .specify/specs/integral-axes/spec.md.
+ */
+export interface MoveCellAffinity {
+  /** Primary domain cell this move expresses in. */
+  domain: string
+  aspect: AllyshipAspect
+  /** Optional lighter secondary cell. */
+  secondary?: { domain: string; aspect: AllyshipAspect }
+}
+
+/**
+ * Aspect of an enacted move. Alias of {@link AllyshipAspect} — one source of truth.
+ * `inner` = self-development (left-hand); `outer` = allyship in others' right-hand.
+ * See .specify/specs/inner-outer-allyship-moves/spec.md.
+ */
+export type MoveAspect = AllyshipAspect
+
+/**
+ * Who an outer (allyship) move acts on. Coarse by design (spec OQ1); enrich when UX lands.
+ */
+export type AllyshipTarget = 'individual' | 'collective' | 'system'
+
+/**
+ * A move taken in play: which WAVE move, inner or outer, and (for outer) on whom.
+ * Inner moves are self-directed (no target). Outer moves require a target — that
+ * structural difference is the basis for "with and for others". The with/for
+ * modifier is deferred to a later phase (see spec Design Decisions).
+ */
+export interface EnactedMove {
+  move: PersonalMoveType
+  aspect: MoveAspect
+  /** Required when aspect === 'outer'; omitted for inner (self-directed). */
+  target?: AllyshipTarget
+}
 
 export type QuestModel = 'personal' | 'communal'
 
@@ -185,7 +230,7 @@ export interface NodeAnchors {
   consequenceCue?: string
 }
 
-export type WaveStage = 'Wake' | 'Clean' | 'Grow' | 'Show'
+export type WaveStage = 'Wake' | 'Open' | 'Clean' | 'Grow' | 'Show'
 export type TranslateCategory = 'Generative' | 'Control'
 
 export interface NodeEmotional {

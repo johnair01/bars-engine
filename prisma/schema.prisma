@@ -98,6 +98,7 @@ model Player {
   alchemyCheckIns                AlchemyCheckIn[]
   alchemyPlayerState             AlchemyPlayerState?
   alchemySceneEvents             AlchemySceneEvent[]
+  handSlots                      HandSlot[]
   bookSectionApprovals           ApprovalEvent[]
   assets                         Asset[]
   submittedBacklogItems          BacklogItem[]               @relation("BacklogItemSubmittedBy")
@@ -356,6 +357,8 @@ model CustomBar {
   contextLines                         String?
   /// BSM (BAR Seed Metabolization): JSON { soilKind?, contextNote?, maturity?, compostedAt?, releaseNote? }
   seedMetabolization                   String?
+  /// BSCW: canvas layout JSON for seed capture whiteboard { items: CanvasItem[] }
+  canvasLayout                         String?
   isExemplar                           Boolean                @default(false)
   spokeSessionId                       String?
   /// CSHE: clothing-swap listing excluded from public gallery (host/co-host moderation)
@@ -416,9 +419,30 @@ model CustomBar {
   spokeMoveBedKernelSources            SpokeMoveBedKernel[]   @relation("SpokeMoveBedKernelSource")
   spokeMoveBedAnchor                   SpokeMoveBed?          @relation("SpokeMoveBedAnchor")
   threadQuests                         ThreadQuest[]
+  handSlots                            HandSlot[]
 
   @@index([collapsedFromInstanceId, type])
   @@map("custom_bars")
+}
+
+/// Bounded in-world inventory ("hand"). Each player has up to 6 ordered slots
+/// binding a CustomBar they carry into the spatial rooms. Slot 0 is the active
+/// "carrying" slot. The vault is everything active NOT bound to a HandSlot.
+/// See .specify/specs/hand-vault-bounded-inventory/spec.md
+model HandSlot {
+  id         String    @id @default(cuid())
+  playerId   String
+  slotIndex  Int // 0–5; slot 0 = active/carrying slot
+  barId      String?
+  isCarrying Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  bar        CustomBar? @relation(fields: [barId], references: [id], onDelete: SetNull)
+
+  @@unique([playerId, slotIndex])
+  @@index([barId])
+  @@map("hand_slots")
 }
 
 /// Attachments uploaded to a BAR (blob URL + metadata).
@@ -1287,6 +1311,7 @@ model Nation {
   imgUrl      String?
   archived    Boolean      @default(false)
   wakeUp      String?
+  openUp      String?
   cleanUp     String?
   growUp      String?
   showUp      String?
@@ -1405,6 +1430,10 @@ model QuestMoveLog {
   effectsJson  String?
   createdAt    DateTime   @default(now())
   outcome      String?
+  /// IOA: inner (self-development) | outer (allyship). Nullable — legacy logs predate the aspect. See specs/inner-outer-allyship-moves.
+  moveAspect   String?
+  /// IOA: who an outer move acts on — individual | collective | system. Null for inner (self-directed).
+  allyshipTarget String?
   createdBar   CustomBar? @relation("QuestMoveCreatedBar", fields: [createdBarId], references: [id])
   move         NationMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
   player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -1429,6 +1458,7 @@ model Archetype {
   lightSignposts    String?
   examples          String?
   wakeUp            String?
+  openUp            String?
   cleanUp           String?
   growUp            String?
   showUp            String?

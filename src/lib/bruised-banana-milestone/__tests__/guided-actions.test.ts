@@ -27,7 +27,7 @@ function testVaultBeforeGameboard() {
     isEventMode: true,
   })
   assert.equal(a[0]?.kind, 'vault')
-  assert.ok(a[0]?.href.includes('/hand/compost'))
+  assert.ok(a[0]?.href.includes('/vault/compost'))
 }
 
 function testGameboardWhenNoParticipation() {

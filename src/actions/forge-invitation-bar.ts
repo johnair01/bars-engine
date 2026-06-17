@@ -108,8 +108,8 @@ export async function forgeInvitationBar(
         const claimUrl = baseUrl ? `${baseUrl}/invite/claim/${result.bar.id}` : `/invite/claim/${result.bar.id}`
         const inviteUrl = baseUrl ? `${baseUrl}/invite/${token}` : `/invite/${token}`
 
-        revalidatePath('/hand')
-        revalidatePath('/hand/forge-invitation')
+        revalidatePath('/vault')
+        revalidatePath('/vault/forge-invitation')
         revalidatePath('/')
 
         return {

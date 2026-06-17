@@ -296,6 +296,7 @@ const ALL_WAVE_MOVES: PersonalMoveType[] = ['wakeUp', 'cleanUp', 'growUp', 'show
 /** Human-readable labels for WAVE moves. */
 const WAVE_MOVE_LABELS: Record<PersonalMoveType, string> = {
   wakeUp: 'Wake Up',
+  openUp: 'Open Up',
   cleanUp: 'Clean Up',
   growUp: 'Grow Up',
   showUp: 'Show Up',

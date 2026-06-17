@@ -33,7 +33,7 @@ export function applyAuthenticatedChoicePolicy(
 
   // Only signup/login was offered — logged-in players skip account creation
   if (choices.some((c) => SIGNUP_CHOICE_TARGET_IDS.has(c.targetId))) {
-    return [{ text: 'Continue to your Vault', targetId: 'redirect:/hand' }]
+    return [{ text: 'Continue to your Vault', targetId: 'redirect:/vault' }]
   }
 
   return choices

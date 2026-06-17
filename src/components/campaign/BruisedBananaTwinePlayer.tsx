@@ -409,7 +409,7 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
     const externalDonateLink = links.find((l) => isExternalDonateLink(l.target))
     const normalLinks = links.filter((l) => !isExternalDonateLink(l.target) && l.target !== 'Signup' && l.target !== 'Preview')
 
-    /** Match Forge (`/bars/create`) shell: private draft lands in Vault. */
+    /** Match Forge (`/bars/capture`) shell: private draft lands in Vault. */
     const isForgeBarStep = currentPassage.name === 'Create a BAR'
     const shellClass = isForgeBarStep
         ? 'max-w-xl border-zinc-700 bg-zinc-950/80'
@@ -501,7 +501,7 @@ export function BruisedBananaTwinePlayer({ tweeSource, hasPlayer = false }: Brui
             <div className="w-full pt-8 flex flex-col gap-3 max-w-md">
                 {currentPassage.name === 'Onboarding Complete' && hasPlayer && (
                     <Link
-                        href="/hand"
+                        href="/vault"
                         className="w-full text-left bg-amber-950/30 border border-amber-800/60 hover:border-amber-600 hover:bg-amber-950/50 text-amber-100 p-4 rounded-xl transition-all font-medium text-sm flex justify-between items-center"
                     >
                         <span>Open Vault (Hand)</span>

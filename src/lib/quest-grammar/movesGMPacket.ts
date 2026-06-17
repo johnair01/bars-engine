@@ -131,7 +131,7 @@ export function compileMovesGMPacket(input: MovesGMPacketInput = {}): Serializab
     emotional: { channel: 'Joy', movement: 'transcend' },
     text: COMMIT_TEXT,
     choices: isAuthenticated
-      ? [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/hand' }]
+      ? [{ text: 'Continue to your Vault', buttonLabel: 'Vault: Continue to your Sanctuary', targetId: 'redirect:/vault' }]
       : [{ text: 'Continue', targetId: 'moves_signup' }],
     anchors: {},
     isActionNode: true,

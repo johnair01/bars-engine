@@ -35,12 +35,12 @@ export function computeGuidedActions(ctx: GuidanceContext): GuidedAction[] {
       kind: 'vault',
       label: 'Vault compost — make room',
       hint,
-      href: '/hand/compost',
+      href: '/vault/compost',
     })
     out.push({
       kind: 'vault',
       label: 'Hand — drafts & quests',
-      href: '/hand',
+      href: '/vault',
     })
   } else if (!ctx.hasGameboardParticipation) {
     out.push({

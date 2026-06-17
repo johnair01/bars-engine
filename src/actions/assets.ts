@@ -162,7 +162,7 @@ export async function rotateAsset(
     if (asset.customBarId) {
       revalidatePath('/bars')
       revalidatePath(`/bars/${asset.customBarId}`)
-      revalidatePath('/hand')
+      revalidatePath('/vault')
     }
     return { success: true }
   } catch (e) {

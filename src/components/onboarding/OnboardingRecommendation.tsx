@@ -159,6 +159,12 @@ export function OnboardingRecommendation({ type, recommendedId, options, onCompl
                             <p className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">Wake Up</p>
                             <p className="text-xs text-zinc-300 italic">"{currentSelection.wakeUp}"</p>
                         </div>
+                        {currentSelection.openUp && (
+                            <div className="space-y-1">
+                                <p className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">Open Up</p>
+                                <p className="text-xs text-zinc-300 italic">"{currentSelection.openUp}"</p>
+                            </div>
+                        )}
                         <div className="space-y-1">
                             <p className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">Clean Up</p>
                             <p className="text-xs text-zinc-300 italic">"{currentSelection.cleanUp}"</p>

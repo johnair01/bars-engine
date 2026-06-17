@@ -404,7 +404,7 @@ export async function grantRoleToPlayer(input: {
     }
 
     revalidatePath('/admin/governance')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
 
     return {
       success: true,

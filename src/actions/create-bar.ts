@@ -382,7 +382,7 @@ export async function createCustomBar(prevState: unknown, formData: FormData) {
         }
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/bars/available')
         if (sceneGridActive) {
             revalidatePath('/creator-scene-deck')
@@ -762,7 +762,7 @@ export async function createQuestFromWizard(data: any) {
         }
 
         revalidatePath('/')
-        revalidatePath('/hand')
+        revalidatePath('/vault')
         revalidatePath('/bars/available')
         return { success: true, questId: newBar.id, visibility: effectiveVisibility, warning }
 

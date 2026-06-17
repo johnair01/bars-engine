@@ -334,7 +334,7 @@ export function AdventurePlayer({
       currentNode.metadata?.nextTargetId ??
       currentNode.choices[0]?.targetId
     if (nextId) void fetchNode(nextId)
-    else router.push('/hand')
+    else router.push('/vault')
   }
 
   const handleChoice = async (choice: Choice) => {
@@ -715,7 +715,7 @@ export function AdventurePlayer({
                     <p className="text-green-400 font-bold">Spoke journey complete</p>
                     <p className="text-zinc-400 text-sm mt-1">
                       Achievement saved — your BAR appears on{' '}
-                      <Link href="/hand" className="text-purple-400 hover:text-purple-300">
+                      <Link href="/vault" className="text-purple-400 hover:text-purple-300">
                         Hand
                       </Link>
                       .
@@ -738,7 +738,7 @@ export function AdventurePlayer({
                     </>
                   ) : (
                     <Link
-                      href="/hand"
+                      href="/vault"
                       className="block w-full text-center py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
                     >
                       Open hand →

@@ -114,7 +114,7 @@ async function main() {
   console.log('\n🧹 Cleaned up test bar')
 
   console.log('\n✅ OBT PASSED: offer bar / time-space flow works headlessly')
-  console.log('   Next: verify offer-bar appears in /hand, verify UI at /hand')
+  console.log('   Next: verify offer-bar appears in /hand, verify UI at /vault')
 }
 
 main()

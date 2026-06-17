@@ -82,7 +82,7 @@ export function VaultFourMovesStrip({ moves }: { moves: VaultRoomMovesConfig }) 
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 space-y-3">
             <div className="flex items-center justify-between">
                 <p className="text-[10px] uppercase tracking-widest text-zinc-500">Four Moves</p>
-                <Link href="/hand/moves" className="text-[10px] text-zinc-600 hover:text-zinc-400">
+                <Link href="/vault/moves" className="text-[10px] text-zinc-600 hover:text-zinc-400">
                     Reference →
                 </Link>
             </div>

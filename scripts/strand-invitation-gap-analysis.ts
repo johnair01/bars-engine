@@ -42,14 +42,14 @@ const SYSTEM_STATE = `
 ### What is built
 - **Landing page** (logged-out home): shows 4 basic moves (Wake Up, Clean Up, Grow Up, Show Up); primary CTA is Sign Up
 - **ref param attribution**: \`/?ref=bruised-banana\` passes through sign-up; stored as \`campaignRef\` in player storyProgress; post-sign-up redirects to /event
-- **Forge invitation page** (/hand/forge-invitation): player with gameAccountReady can create an invitation BAR targeting a nation or school (Game Master Face); generates a unique token
+- **Forge invitation page** (/vault/forge-invitation): player with gameAccountReady can create an invitation BAR targeting a nation or school (Game Master Face); generates a unique token
 - **Invite token page** (/invite/[token]): recipient lands here with forger's name shown; nation/school pre-filled from invitation target; standard sign-up form (name, email, password, nation, archetype)
 - **Player-led invitation BAR**: schema has forgerId, invitationTargetType, invitationTargetId; invitedByPlayerId recorded on new player
 - **Quest integration**: "Invite an Ally" quest completion can trigger forge flow; Strengthen the Residency END_INVITE branch auto-creates invitation BAR
 
 ### Known gaps / deferred tasks
 1. Sign-up flow does not yet capture "interest" (domain or intention choice) — deferred in T spec
-2. Forge invitation page is discoverable only from /hand (Quest Wallet) — not prominently surfaced elsewhere
+2. Forge invitation page is discoverable only from /vault (Quest Wallet) — not prominently surfaced elsewhere
 3. Post-sign-up orientation: player lands on /event after sign-up but there is no explicit "first quest" prompt or clear next action
 4. CYOA (Wake-Up campaign): not yet "perfected" — not the primary entry for new players; dripped to existing players
 5. No analytics on invitation conversion (who clicked → who signed up → who completed onboarding)

@@ -3,7 +3,7 @@
  * @see .specify/specs/spoke-move-seed-beds/spec.md
  */
 
-export const SPOKE_MOVE_BED_MOVE_TYPES = ['wakeUp', 'cleanUp', 'growUp', 'showUp'] as const
+export const SPOKE_MOVE_BED_MOVE_TYPES = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp'] as const
 export type SpokeMoveBedMoveType = (typeof SPOKE_MOVE_BED_MOVE_TYPES)[number]
 
 export function isSpokeMoveBedMoveType(s: string): s is SpokeMoveBedMoveType {
@@ -15,6 +15,7 @@ export function parsePortalMoveFromBlueprintKey(blueprintKey?: string | null): S
   if (!blueprintKey?.trim()) return null
   const k = blueprintKey.trim()
   if (/_move_wakeUp$/i.test(k)) return 'wakeUp'
+  if (/_move_openUp$/i.test(k)) return 'openUp'
   if (/_move_cleanUp$/i.test(k)) return 'cleanUp'
   if (/_move_showUp$/i.test(k)) return 'showUp'
   if (/_move_growUp$/i.test(k)) return 'growUp'

@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+// Render at request time, not at build. This page selects columns added by a
+// migration that only applies on Production deploy; Preview/build skips
+// `prisma migrate deploy`, so static prerender would hit a DB missing the
+// column (P2022). force-dynamic defers the query until after migrations run.
+export const dynamic = 'force-dynamic'
+
 /**
  * @page /wiki/archetypes
  * @entity WIKI
@@ -15,11 +21,12 @@ import { db } from '@/lib/db'
 export default async function ArchetypesPage() {
   const playbooks = await db.archetype.findMany({
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, description: true, primaryWaveStage: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true },
+    select: { id: true, name: true, description: true, primaryWaveStage: true, wakeUp: true, openUp: true, cleanUp: true, growUp: true, showUp: true },
   })
 
   const WAVE_LABELS: Record<string, string> = {
     wakeUp: 'Wake Up',
+    openUp: 'Open Up',
     cleanUp: 'Clean Up',
     growUp: 'Grow Up',
     showUp: 'Show Up',
@@ -54,6 +61,7 @@ export default async function ArchetypesPage() {
             )}
             <div className="grid gap-2 text-sm border-t border-zinc-800 pt-3">
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Wake Up</span><span className="text-zinc-300">{pb.wakeUp ?? '—'}</span></div>
+              <div><span className="font-medium text-zinc-400 w-20 inline-block">Open Up</span><span className="text-zinc-300">{pb.openUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Clean Up</span><span className="text-zinc-300">{pb.cleanUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Grow Up</span><span className="text-zinc-300">{pb.growUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Show Up</span><span className="text-zinc-300">{pb.showUp ?? '—'}</span></div>

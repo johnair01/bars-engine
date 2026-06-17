@@ -303,7 +303,7 @@ export async function completeGscpAdventureTerminal(adventureId: string): Promis
     data: { stateData: JSON.stringify(merged) },
   })
 
-  revalidatePath('/hand')
+  revalidatePath('/vault')
   revalidatePath('/campaign/hub')
   revalidatePath(`/campaign/${bundle.campaignRef}/spoke/${bundle.spokeIndex}/seeds`)
 

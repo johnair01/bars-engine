@@ -164,7 +164,7 @@ export function HandModal({ onClose, carryingBarId }: Props) {
                                 Need to access more BARs? Leave the play space to enter the Vault.
                             </p>
                             <Link
-                                href="/hand"
+                                href="/vault"
                                 className="block w-full text-center px-3 py-2 rounded bg-purple-600/80 hover:bg-purple-500 text-white text-xs font-medium transition-colors"
                             >
                                 Open Vault →

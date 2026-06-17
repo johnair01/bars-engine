@@ -822,7 +822,7 @@ export function QuestDetailModal({ isOpen, onClose, quest, context, isCompleted,
                                                     <div className="text-xs text-amber-300">
                                                         Equip moves in your Moves Library to use them here.
                                                     </div>
-                                                    <Link href="/hand/moves" className="inline-block rounded-lg border border-amber-800/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-300 hover:text-amber-200 hover:border-amber-700 transition-colors">
+                                                    <Link href="/vault/moves" className="inline-block rounded-lg border border-amber-800/50 bg-amber-900/20 px-3 py-2 text-xs text-amber-300 hover:text-amber-200 hover:border-amber-700 transition-colors">
                                                         ⚔️ Open Moves Library
                                                     </Link>
                                                 </div>

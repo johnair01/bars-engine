@@ -24,7 +24,7 @@ const ROOMS: RoomCard[] = [
     {
         move: 'Wake Up',
         room: 'Charges',
-        href: '/hand/charges',
+        href: '/vault/charges',
         count: null,
         verb: 'See what\'s alive',
         border: 'border-emerald-900/50',
@@ -34,7 +34,7 @@ const ROOMS: RoomCard[] = [
     {
         move: 'Clean Up',
         room: 'Compost',
-        href: '/hand/compost',
+        href: '/vault/compost',
         count: null,
         verb: 'Release & metabolize',
         border: 'border-sky-900/50',
@@ -44,7 +44,7 @@ const ROOMS: RoomCard[] = [
     {
         move: 'Grow Up',
         room: 'Drafts',
-        href: '/hand/drafts',
+        href: '/vault/drafts',
         count: null,
         verb: 'Shape your work',
         border: 'border-violet-900/50',
@@ -54,7 +54,7 @@ const ROOMS: RoomCard[] = [
     {
         move: 'Show Up',
         room: 'Quests & Invitations',
-        href: '/hand/quests',
+        href: '/vault/quests',
         count: null,
         verb: 'Place, deliver, act',
         border: 'border-amber-900/50',
@@ -113,7 +113,7 @@ export function VaultMoveDashboard({
             </div>
 
             <Link
-                href="/hand/who"
+                href="/vault/who"
                 className="group block rounded-xl border border-emerald-800/55 bg-emerald-950/25 hover:bg-emerald-950/40 px-4 py-3 transition-colors space-y-1"
             >
                 <div className="flex items-center justify-between gap-1">

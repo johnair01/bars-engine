@@ -31,7 +31,7 @@ export default async function MapPage(props: {
 
   // type=thread&threadId → hand (threads live there)
   if (type === 'thread' && threadId) {
-    redirect('/hand')
+    redirect('/vault')
   }
 
   // type=story&adventureId → adventure play (if valid)

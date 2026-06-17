@@ -30,15 +30,78 @@ The game is structured around five dimensions. Use this ontology when writing sp
 | **WHAT** | The work | Quests |
 | **WHERE** | Context of work | Allyship domains (Gathering Resources, Direct Action, Raise Awareness, Skillful Organizing) |
 | **Energy** | What makes things happen | Vibeulons |
-| **Personal throughput** | How people get things done | 4 moves: Wake Up, Clean Up, Grow Up, Show Up |
+| **Personal throughput** | How people get things done | 5 moves: Wake Up, Open Up, Clean Up, Grow Up, Show Up |
 
-**4 moves (personal throughput)** — distinct from allyship domains:
+**5 moves (personal throughput)** — distinct from allyship domains. WAVE order: Wake → Open → Clean → Grow → Show:
 - **Wake Up** — See more of what's available (who, what, where, how)
+- **Open Up** — Open to receive, open possibilities, open to emergence — the receptive/generative phase after noticing a charge
 - **Clean Up** — Get more emotional energy; unblock vibeulon-generating actions
 - **Grow Up** — Increase skill capacity through developmental lines
 - **Show Up** — Do the work of completing quests
 
+Moves are independent of the 5 elements (adding Open Up does not force a 5↔5 alignment).
+
 Allyship domains = WHERE the work happens. Moves = how the player gets it done.
+
+### How bars-engine maps to (and renames) Wilber
+
+The engine is built on Ken Wilber's Integral Theory but **deliberately re-slices and renames** his paths — do not assume a 1:1 relabel. Wilber's five paths (*Finding Radical Wholeness*, 2024) are **Waking / Growing / Opening / Cleaning / Showing Up**, each tied to an AQAL element. The engine distributes those across **two different axes**:
+
+| Engine concept | AQAL element | Wilber's name | Notes |
+|----------------|--------------|---------------|-------|
+| **Wake Up** (move) | states | Waking Up | ✓ same |
+| **Open Up** (move) | — (receptivity/intake) | *none* | **bars-engine original coinage** |
+| **Clean Up** (move) | shadow | Cleaning Up | ✓ same |
+| **Grow Up** (move) | lines / multiple intelligences | **Wilber's *Opening Up*** | ⚠️ name crosses over ("developmental lines", above) |
+| **Show Up** (move) | embodiment | Showing Up | ✓ same |
+| **Six Game Master Faces** (altitude) | levels / altitude | **Wilber's *Growing Up*** | ⚠️ vertical development lives in the faces, **not** the move named "Grow Up" |
+
+**Two key divergences:**
+
+1. **"Open Up" is our own concept** — receptivity / intake: opening to receive emotional energy, possibility, and emergence; the *intake (source) term* in the energy economy that admits fuel before the other moves metabolize it. It is **not** Wilber's *Opening Up* (which is lines/multiple intelligences — and which we instead carry in **Grow Up**). Do not attribute the receptivity meaning to Wilber.
+2. **Vertical development = the Six Faces, not "Grow Up"** — Wilber's *Growing Up* (climbing the altitude levels) is represented by the Game Master faces (see below). The WAVE move "Grow Up" is a *horizontal* in-the-moment capacity/lines move, not vertical altitude.
+
+### The Six Game Master Faces = Integral altitude levels
+
+The six faces are the **altitudinal (vertical) axis** — the developmental levels of Spiral Dynamics / Integral altitude, renamed game-native (`choiceType: 'altitudinal'` in `quest-grammar/types.ts`):
+
+| Face | Altitude | Character |
+|------|----------|-----------|
+| Shaman | Magenta | magic, tribal, ritual belonging |
+| Challenger | Red | power, impulse, edge |
+| Regent | Amber | order, rules, conformity |
+| Architect | Orange | rational, strategic, achievist |
+| Diplomat | Green | pluralistic, relational, care |
+| Sage | Teal | integral, systemic (second tier) |
+
+**Three orthogonal axes:** **horizontal** = the 5 WAVE moves (*how* I develop), **altitudinal** = the 6 faces (*what level/lens* guides me), **the board** = allyship domains × inner/outer (*where* the work lands). Moves are not faces; neither is a domain.
+
+### The allyship board — 4 domains × inner/outer (8 cells)
+
+Each allyship domain (WHERE) has an **inner** (left-hand: I/We interiors) and **outer** (right-hand: It/Its exteriors, incl. acting with/for others) cell. The 5 WAVE moves are the **inner column** (self-development). The **outer column is allyship** — you can only touch another's interior via their right-hand.
+
+| Domain | Inner (left-hand: I/We) | Outer (right-hand: It/Its — incl. allyship) |
+|--------|--------------------------|----------------------------------------------|
+| **Gather Resource** | open self to the emotional energy to do the work *(Open Up)*; build capacity/lines *(Grow Up)* | acquire objective resources, or help another gather *their* inner resource (the human resource) |
+| **Raise Awareness** | storytelling, meaning-making *(Wake Up)* | marketing — letting people know what's up |
+| **Skillful Organizing** | self-governance, parts work *(Clean Up)* | organizing the right-hand quadrants (structures/systems) |
+| **Direct Action** | doing an emotional-alchemy move *(Show Up, aligned doing)* | right-quadrant action in the world |
+
+Encoded as `MoveCellAffinity` (`quest-grammar/types.ts`): a move's `{ domain, aspect }`. The **outer/allyship** column's move grammar is below. See [`integral-axes`](.specify/specs/integral-axes/spec.md).
+
+### Move × aspect — inner allyship / outer allyship
+
+The engine's namesake is **allyship**, so the five WAVE moves each have an **inner** and an **outer** expression. **Inner allyship** = the ally's own interior development (left-hand; the existing default). **Outer allyship** = the same move enacted in others'/collective right-hand quadrants — you can only touch another's interior *via* their right-hand, so allyship is structurally outer. Outer moves require an `AllyshipTarget` (individual / collective / system); inner moves are self-directed. Same move, two directions of enactment — influence: *Mastering the Game of Allyship* (Wendell Britt).
+
+| Move | Inner (self-development) | Outer (allyship) |
+|------|--------------------------|------------------|
+| **Wake Up** | see for yourself — notice your charge, privilege, what's true | help others see — **witness & amplify** (not "market") |
+| **Open Up** | open to receive energy, possibility, emergence within | hold space — make room for another's resource (receptive) |
+| **Clean Up** | parts work, shadow, self-governance | repair the systems — clear structural distortion |
+| **Grow Up** | build your own capacity / lines | mentor and resource — build others' capacity (generative) |
+| **Show Up** | aligned doing — take your own action | direct action with/for the cause in the world |
+
+Open Up vs. Grow Up share Gather Resource but stay distinct: outer Open Up is **receptive** (make room), outer Grow Up is **generative** (build capacity). The matrix is **authored data** (`quest-grammar/move-aspect.ts`), deterministic and offline-capable — the with/for modifier is deferred. Spec'd in [`inner-outer-allyship-moves`](.specify/specs/inner-outer-allyship-moves/spec.md).
 
 **Intention-activated value**: Value flows with intention. When players declare what they intend (domain-aligned or cross-domain), they activate the pipeline: intention → commitment → action → quest completion → vibeulons. See [docs/INTENTION_ACTIVATED_VALUE.md](docs/INTENTION_ACTIVATED_VALUE.md).
 
@@ -166,7 +229,7 @@ The ritual for metabolizing roadblocks:
 - What they need to do next
 
 **Completion contract**: Each branch of a major flow must end with either:
-- A clear destination (redirect to the created artifact: /hand?quest=, /daemons, /growth-scene/[id])
+- A clear destination (redirect to the created artifact: /vault?quest=, /daemons, /growth-scene/[id])
 - A success notification (toast or banner) plus redirect
 - Explicit error feedback with retry guidance
 

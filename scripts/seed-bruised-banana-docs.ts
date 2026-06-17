@@ -110,7 +110,7 @@ Quests are the work of the game.
 
 **Subquests**: Campaign quests can have subquests—smaller steps. When you pick up a campaign quest, you can add subquests to break it down. Personal and public quests can be appended to campaign quests for context.
 
-**Where quests live**: Gameboard (campaign), Dashboard (active), Quest Wallet (/hand), Market (browse).
+**Where quests live**: Gameboard (campaign), Dashboard (active), Quest Wallet (/vault), Market (browse).
 `,
     },
     {

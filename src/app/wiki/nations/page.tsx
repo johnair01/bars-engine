@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+// Render at request time, not at build. This page selects columns added by a
+// migration that only applies on Production deploy; Preview/build skips
+// `prisma migrate deploy`, so static prerender would hit a DB missing the
+// column (P2022). force-dynamic defers the query until after migrations run.
+export const dynamic = 'force-dynamic'
+
 /**
  * @page /wiki/nations
  * @entity WIKI
@@ -16,7 +22,7 @@ export default async function NationsPage() {
   const nations = await db.nation.findMany({
     where: { archived: false },
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, description: true, element: true, wakeUp: true, cleanUp: true, growUp: true, showUp: true },
+    select: { id: true, name: true, description: true, element: true, wakeUp: true, openUp: true, cleanUp: true, growUp: true, showUp: true },
   })
 
   const ELEMENT_CHANNEL: Record<string, string> = {
@@ -54,6 +60,7 @@ export default async function NationsPage() {
             </p>
             <div className="grid gap-2 text-sm border-t border-zinc-800 pt-3">
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Wake Up</span><span className="text-zinc-300">{nation.wakeUp ?? '—'}</span></div>
+              <div><span className="font-medium text-zinc-400 w-20 inline-block">Open Up</span><span className="text-zinc-300">{nation.openUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Clean Up</span><span className="text-zinc-300">{nation.cleanUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Grow Up</span><span className="text-zinc-300">{nation.growUp ?? '—'}</span></div>
               <div><span className="font-medium text-zinc-400 w-20 inline-block">Show Up</span><span className="text-zinc-300">{nation.showUp ?? '—'}</span></div>

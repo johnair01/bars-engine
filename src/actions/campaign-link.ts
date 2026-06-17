@@ -55,7 +55,7 @@ export async function linkQuestToCampaign(
     })
 
     revalidatePath('/')
-    revalidatePath('/hand')
+    revalidatePath('/vault')
     revalidatePath('/bars/available')
     revalidatePath(`/bars/${questId}`)
     return { success: true }

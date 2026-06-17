@@ -32,7 +32,7 @@ type Props = {
   dswPath: OfferBarDswPath
   campaignRef?: string | null
   marketplaceHref: string
-  /** Vault / Hand — default `/hand`. */
+  /** Vault / Hand — default `/vault`. */
   vaultHref?: string
 }
 
@@ -42,7 +42,7 @@ export function OfferBarModal({
   dswPath,
   campaignRef,
   marketplaceHref,
-  vaultHref = '/hand',
+  vaultHref = '/vault',
 }: Props) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')

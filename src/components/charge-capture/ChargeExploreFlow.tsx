@@ -185,7 +185,7 @@ export function ChargeExploreFlow({ barId }: { barId: string }) {
         </div>
         <div className="flex gap-3">
           <Link
-            href="/hand"
+            href="/vault"
             className="flex-1 text-center py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition"
           >
             Go to Vault →
