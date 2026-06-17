@@ -17,6 +17,13 @@ const ELEMENT_BUTTON_CLASSES: Record<ElementKey, string> = {
 // Element assignment: element=color per UI Covenant three-channel encoding
 const ACTIONS: { href: string; label: string; description: string; element: ElementKey; icon?: string }[] = [
   {
+    href: '/collection',
+    label: 'Your Collection',
+    description: 'Open the products you own — the deck, the book, the handbook',
+    element: 'water',
+    icon: '🃏',
+  },
+  {
     href: '/shadow/321',
     label: '321 Shadow Process',
     description: 'Face it, talk to it, be it — then turn it into a quest',
