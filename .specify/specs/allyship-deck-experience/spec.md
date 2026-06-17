@@ -42,9 +42,12 @@ Clean=Water, Wake=Earth, **Open=Liminal purple** (reserved; not an element).
   element, face colors, glyph paths, brand constants), `MoveIcon` / `MovePip` / `FaceBadge`,
   `AllyshipCard` (`grid` + `full`), and an **unauthenticated** `/deck/preview` gallery of all
   120 cards (also fixes "design can't find the cards"). Unit-tested incl. full-deck coverage.
-- **Slice 2 — the card app upgrade.** Rebuild `/deck` (`AllyshipDeckReader`) to the handoff:
-  Draw (face-down → 420ms flip → reveal), Browse (filter chips), Find-a-card (the authored
-  `problems[]`), Card detail with the practice well + **Send to BARS**.
+- **Slice 2 (done) — the card app upgrade.** Rebuilt `/deck` (`AllyshipDeckReader`) on the
+  new card: Draw (face-down → 420ms flip → reveal), Browse (filter chips), Find-a-card (the
+  authored `problems[]`), card detail overlay with the practice well. Deck layout now loads
+  the handoff fonts + scrolls. (The old serif "Guide"/instruction-card tab was dropped to
+  match the handoff's Draw/Browse/Find nav; instruction cards remain in the JSON.)
+  **Send to BARS** is the detail's remaining seam → slice 3.
 - **Slice 3 — Send to BARS.** Card → seed a quest with the originating card in provenance →
   normal BAR flow. (Capture-charge / 3·2·1 live on the generated quest, not the seed.)
 - **Slice 4 — deck Sales landing page.** Fan-of-3 hero, five-moves strip, how-it-works,
