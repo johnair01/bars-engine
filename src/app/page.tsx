@@ -33,49 +33,14 @@ import { CampaignsResponsibleSection } from '@/components/dashboard/CampaignsRes
 import { DashboardTwoChannelHub } from '@/components/dashboard/DashboardTwoChannelHub'
 import { OrientationCompass } from '@/components/dashboard/OrientationCompass'
 import { NationProvider } from '@/lib/ui/nation-provider'
-import { getCampaignMilestoneGuidance } from '@/actions/campaign-milestone-guidance'
-import { CampaignMilestoneStrip } from '@/components/campaign/CampaignMilestoneStrip'
 import { derivePlayerMoveContext } from '@/lib/player-move-context'
 import {
   campaignHomePath,
   needsCampaignOnboardingRoute,
   resolveDefaultCampaignRef,
 } from '@/lib/campaign-player-home'
-import {
-  buildMilestoneSnapshot,
-  type CampaignMilestoneGuidance,
-  type GuidedAction,
-  type InstanceLikeForSnapshot,
-} from '@/lib/bruised-banana-milestone'
-
-/** Prefer full BBMT guidance; otherwise show fundraising + donate CTA when an active BB/event instance exists. */
-function residencyProgressForDashboardHeader(
-  guidance: CampaignMilestoneGuidance | null,
-  instance: InstanceLikeForSnapshot | null | undefined,
-  campaignRef: string
-): CampaignMilestoneGuidance | null {
-  if (guidance) return guidance
-  if (!instance) return null
-  const isBb =
-    campaignRef === 'bruised-banana' ||
-    (instance.campaignRef ?? '') === 'bruised-banana' ||
-    (instance.slug ?? '') === 'bruised-banana'
-  if (!instance.isEventMode && !isBb) return null
-  const snapshot = buildMilestoneSnapshot(instance, { campaignRefOverride: campaignRef })
-  if (!snapshot) return null
-  const q = encodeURIComponent(campaignRef)
-  const guidedActions: GuidedAction[] = [
-    {
-      kind: 'event',
-      label: 'Support the residency',
-      href: `/event/donate/wizard?ref=${q}&source=now`,
-      hint: 'Honor reporting, wizard paths for money / time / space, and fundraiser context.',
-    },
-    { kind: 'event', label: 'Event hub', href: `/event?ref=${q}` },
-    { kind: 'campaign', label: 'Campaign', href: `/campaign?ref=${q}` },
-  ]
-  return { snapshot, guidedActions }
-}
+import { getBarnSnapshot } from '@/actions/barn'
+import { LAUNCH_GOAL_CENTS, formatPrice } from '@/lib/launch/offers'
 
 function isPrismaConnectionError(err: unknown): boolean {
   const e = err as { code?: string; name?: string; message?: string }
@@ -121,16 +86,19 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const heroTitle = appConfig?.heroTitle || 'BARS ENGINE'
   const heroSubtitle = appConfig?.heroSubtitle || 'A quest system for the vibrational convergence'
 
-  const formatUsdCents = (cents: number) => new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
-  const eventGoal = activeInstance?.goalAmountCents ?? 0
-  const eventCurrent = activeInstance?.currentAmountCents ?? 0
-  const eventPct = eventGoal > 0 ? Math.max(0, Math.min(1, eventCurrent / eventGoal)) : 0
-
   if (!playerId) {
+    // Live launch momentum for the logged-out card: the pre-sale wall ($5,000) is the
+    // launch goal (single source of truth), credited by the Gumroad sale bridge.
+    let launchRaisedCents = 0
+    try {
+      const barn = await getBarnSnapshot()
+      launchRaisedCents = barn.raisedCents.presale ?? 0
+    } catch {
+      // Barn not seeded / DB unreachable — show the card without progress.
+    }
+    const launchPct =
+      LAUNCH_GOAL_CENTS > 0 ? Math.max(0, Math.min(1, launchRaisedCents / LAUNCH_GOAL_CENTS)) : 0
+
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-black text-white font-mono flex-col gap-8 p-8">
         <div className="text-center space-y-4">
@@ -140,32 +108,28 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           <p className="text-zinc-400 text-lg">{heroSubtitle}</p>
         </div>
 
-        {activeInstance?.isEventMode && (
-          <Link
-            href="/event"
-            className="w-full max-w-md block bg-zinc-900/40 border border-zinc-800 hover:border-green-600/60 rounded-2xl p-5 transition-colors"
-          >
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Live Instance</div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="font-bold text-white truncate">{activeInstance.name}</div>
-              <div className="text-xs text-green-400 font-bold">View →</div>
+        <Link
+          href="/launch"
+          className="w-full max-w-md block bg-zinc-900/40 border border-zinc-800 hover:border-green-600/60 rounded-2xl p-5 transition-colors"
+        >
+          <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">The launch is open</div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-bold text-white truncate">Mastering the Game of Allyship</div>
+            <div className="text-xs text-green-400 font-bold">View →</div>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex justify-between text-xs text-zinc-500">
+              <span>{formatPrice(launchRaisedCents)}</span>
+              <span>{formatPrice(LAUNCH_GOAL_CENTS)}</span>
             </div>
-            {eventGoal > 0 && (
-              <div className="mt-3 space-y-2">
-                <div className="flex justify-between text-xs text-zinc-500">
-                  <span>{formatUsdCents(eventCurrent)}</span>
-                  <span>{formatUsdCents(eventGoal)}</span>
-                </div>
-                <div className="h-2 rounded-full bg-black border border-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
-                    style={{ width: `${Math.round(eventPct * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </Link>
-        )}
+            <div className="h-2 rounded-full bg-black border border-zinc-800 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
+                style={{ width: `${Math.round(launchPct * 100)}%` }}
+              />
+            </div>
+          </div>
+        </Link>
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <Link
@@ -428,13 +392,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const todayCharge = 'success' in chargeResult ? chargeResult.bar : (chargeResult.bar ?? null)
   const chargeArchive = 'success' in archiveResult ? archiveResult.bars : (archiveResult.bars ?? [])
 
-  let milestoneGuidance = null as Awaited<ReturnType<typeof getCampaignMilestoneGuidance>>
-  try {
-    milestoneGuidance = await getCampaignMilestoneGuidance(playerId)
-  } catch {
-    milestoneGuidance = null
-  }
-
   const defaultCampaignRefEarly = resolveDefaultCampaignRef(activeInstance?.campaignRef)
 
   // Derive move context via shared utility (G17 — single source of truth)
@@ -459,11 +416,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
   const isSetupIncomplete = !player.nationId || !player.archetypeId
 
   const defaultCampaignRef = defaultCampaignRefEarly
-  const residencyProgressStrip = residencyProgressForDashboardHeader(
-    milestoneGuidance,
-    activeInstance,
-    defaultCampaignRef
-  )
   const useCampaignOnboarding = needsCampaignOnboardingRoute(player, hasActiveOrientationThread)
   const playerCampaignHomeHref = campaignHomePath({
     campaignRef: defaultCampaignRef,
@@ -528,7 +480,6 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
         <OrientationCompass
           {...compassProps}
           hasCheckedIn={!!todayCheckIn}
-          residencyEventsHref={defaultCampaignRef === 'bruised-banana' ? '/event' : null}
         />
 
         <DashboardTwoChannelHub
@@ -536,21 +487,10 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           campaignHomeHref={playerCampaignHomeHref}
         />
 
-        {residencyProgressStrip && (
-          <CampaignMilestoneStrip data={residencyProgressStrip} variant="dashboard" />
-        )}
-
         <p className="text-xs text-zinc-600">
           Check in · capture what&apos;s charged · follow the compass to your next move ·{' '}
           <Link href="/wiki/handbook" className="text-zinc-500 hover:text-zinc-300 underline-offset-2 hover:underline">
             Player handbook
-          </Link>
-          <span className="text-zinc-700"> · </span>
-          <Link
-            href="/event"
-            className="text-amber-400/95 hover:text-amber-300 font-semibold underline-offset-2 hover:underline"
-          >
-            Residency events
           </Link>
         </p>
 

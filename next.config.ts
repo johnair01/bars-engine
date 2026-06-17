@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/hand", destination: "/vault", permanent: true },
       { source: "/hand/:path*", destination: "/vault/:path*", permanent: true },
+      // Vanity short-link (printed/QR): retired from the Bruised Banana residency,
+      // now points at the MTGOA launch. Temporary (307) so the target can move again.
+      { source: "/200", destination: "/launch", permanent: false },
     ];
   },
 };
