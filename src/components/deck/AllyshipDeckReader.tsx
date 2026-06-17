@@ -18,6 +18,7 @@ import type {
   AllyshipDomain,
 } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
+import { SendToBarsButton } from './SendToBarsButton'
 
 type View = 'draw' | 'browse' | 'find'
 
@@ -133,7 +134,12 @@ export function AllyshipDeckReader() {
             {drawn ? (
               <>
                 <div key={drawn.id} className="deck-card-flip-in" style={{ width: 'min(360px, 92vw)' }}>
-                  <AllyshipCard card={drawn} variant="full" subject={subject} />
+                  <AllyshipCard
+                    card={drawn}
+                    variant="full"
+                    subject={subject}
+                    footerSlot={<SendToBarsButton cardId={drawn.id} subject={subject} />}
+                  />
                 </div>
                 <button type="button" style={secondaryBtn} onClick={draw}>
                   Draw again
@@ -209,8 +215,12 @@ export function AllyshipDeckReader() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.72)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 50 }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(380px, 92vw)' }}>
-            <AllyshipCard card={selected} variant="full" subject={subject} />
-            {/* Send to BARS lands in slice 3 (footerSlot). */}
+            <AllyshipCard
+              card={selected}
+              variant="full"
+              subject={subject}
+              footerSlot={<SendToBarsButton cardId={selected.id} subject={subject} />}
+            />
             <button type="button" onClick={() => setSelected(null)} style={closeBtn}>
               Close
             </button>

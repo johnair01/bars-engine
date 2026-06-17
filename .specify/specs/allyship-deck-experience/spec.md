@@ -48,8 +48,11 @@ Clean=Water, Wake=Earth, **Open=Liminal purple** (reserved; not an element).
   the handoff fonts + scrolls. (The old serif "Guide"/instruction-card tab was dropped to
   match the handoff's Draw/Browse/Find nav; instruction cards remain in the JSON.)
   **Send to BARS** is the detail's remaining seam → slice 3.
-- **Slice 3 — Send to BARS.** Card → seed a quest with the originating card in provenance →
-  normal BAR flow. (Capture-charge / 3·2·1 live on the generated quest, not the seed.)
+- **Slice 3 (done) — Send to BARS.** `buildDeckSeed` (pure) turns a card into a quest seed
+  (title, practice+question description, provenance); `sendDeckCardToBars` creates a private
+  `CustomBar` (type `vibe`) with the card stamped into `agentMetadata`, then routes to
+  `/bars/{id}` — where capture-charge / 3·2·1 already live. Card text is read from the
+  authoritative `assembleDeck()`, not the client. Button on the drawn card + detail overlay.
 - **Slice 4 — deck Sales landing page.** Fan-of-3 hero, five-moves strip, how-it-works,
   social proof ($21,646 / 371 backers), CTAs → Gumroad `/launch`.
 
