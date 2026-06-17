@@ -53,8 +53,11 @@ Clean=Water, Wake=Earth, **Open=Liminal purple** (reserved; not an element).
   `CustomBar` (type `vibe`) with the card stamped into `agentMetadata`, then routes to
   `/bars/{id}` — where capture-charge / 3·2·1 already live. Card text is read from the
   authoritative `assembleDeck()`, not the client. Button on the drawn card + detail overlay.
-- **Slice 4 — deck Sales landing page.** Fan-of-3 hero, five-moves strip, how-it-works,
-  social proof ($21,646 / 371 backers), CTAs → Gumroad `/launch`.
+- **Slice 4 (done) — deck Sales landing page.** `/deck/sales` (public): fan-of-3 hero (real
+  cards via `DeckFanHero`), the five-move strip, how-it-works (Draw → Practice → Send to BARS),
+  and campaign social proof — all CTAs hand off to the Gumroad funnel at `/launch`. Copy +
+  figures live in `lib/launch/deck-sales-copy.ts` (single source, honest-by-default). The deck
+  paywall now offers a "What's in the deck?" link into the page (`Paywall.learnMoreHref`).
 
 ## Deferred / not built
 

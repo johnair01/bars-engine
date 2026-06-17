@@ -10,10 +10,15 @@ export function Paywall({
   title,
   message,
   authed,
+  learnMoreHref,
+  learnMoreLabel,
 }: {
   title: string
   message?: string
   authed: boolean
+  /** Optional top-of-funnel link (e.g. a Sales page) for visitors who want the pitch first. */
+  learnMoreHref?: string
+  learnMoreLabel?: string
 }) {
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-16">
@@ -42,6 +47,14 @@ export function Paywall({
             I have a code
           </Link>
         </div>
+
+        {learnMoreHref && (
+          <p className="text-xs text-[#6b6965]">
+            <Link href={learnMoreHref} className="text-purple-400 underline-offset-2 hover:underline">
+              {learnMoreLabel ?? 'Learn more'}
+            </Link>
+          </p>
+        )}
 
         {!authed && (
           <p className="text-xs text-[#6b6965]">
