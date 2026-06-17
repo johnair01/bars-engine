@@ -24,7 +24,7 @@ const ACTIONS: { href: string; label: string; description: string; element: Elem
     icon: '◐',
   },
   {
-    href: '/bars/create',
+    href: '/bars/capture',
     label: 'Create BAR',
     description: 'Share an insight or story',
     element: 'earth',

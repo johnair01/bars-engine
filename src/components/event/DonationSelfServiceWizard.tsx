@@ -85,8 +85,8 @@ export function DonationSelfServiceWizard({
     [searchParams, campaignRef]
   )
   const barsCreateHref = refParam
-    ? `/bars/create?ref=${encodeURIComponent(refParam)}`
-    : '/bars/create'
+    ? `/bars/capture?ref=${encodeURIComponent(refParam)}`
+    : '/bars/capture'
 
   /** BB campaign: sign-in from wizard lands on grammatical initiation (demo’s sibling path). Optional `afterAuth` overrides. */
   const loginReturnHref = useMemo(() => {

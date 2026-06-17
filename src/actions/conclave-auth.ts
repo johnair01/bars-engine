@@ -76,7 +76,15 @@ export async function login(formData: FormData) {
         }
 
         const cookieStore = await cookies()
-        cookieStore.set('bars_player_id', player.id, { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+        // Persist the session like the signup path does — without an explicit
+        // maxAge/path the cookie is session-scoped and dies when the browser
+        // closes, which logged people out on every restart. 30 days, root path.
+        cookieStore.set('bars_player_id', player.id, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+        })
 
         // If the player hasn't selected Nation / Archetype yet, drive them into the guided narrative
         // node where those choices are made — unless returnTo is a public entry (donate, initiation, etc.).

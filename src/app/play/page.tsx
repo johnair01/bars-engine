@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { getCurrentPlayer } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { SCENE_ATLAS_DISPLAY_NAME, SCENE_ATLAS_TAGLINE } from '@/lib/creator-scene-grid-deck/branding'
+import { checkAccess } from '@/lib/entitlements/gate'
+import { Paywall } from '@/components/launch/Paywall'
 
 /**
  * @page /play
@@ -18,6 +20,18 @@ export default async function PlayPage() {
   const player = await getCurrentPlayer()
   if (!player) {
     redirect('/conclave/guided')
+  }
+
+  // Soft gate: app access (dormant until ENABLE_LAUNCH_GATES; grandfathers existing players).
+  const access = await checkAccess('app-access', { soft: true })
+  if (!access.allowed) {
+    return (
+      <Paywall
+        title="The Game"
+        message="Playing the game comes with the digital book (30-day access), the game subscription, or the Founding Ally bundle."
+        authed={access.authed}
+      />
+    )
   }
 
   return (

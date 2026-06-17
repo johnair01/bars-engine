@@ -6,6 +6,12 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { maybeCompleteMilestoneAndAdvanceKotter } from '@/actions/campaign-deck'
+import {
+  WALL_KEYS,
+  keepBuildingAfterWall,
+  type WallKey,
+  type KeepBuildingGuidance,
+} from '@/lib/event/barn-raising'
 
 const PENDING_DONATION_COOKIE = 'bars_pending_donation'
 const DEFAULT_PACK_RATE_CENTS = 100 // 1 pack per $1
@@ -14,6 +20,7 @@ const VIBEULONS_PER_PACK = 1
 const DSW_NARRATIVE_MAX = 280
 const DSW_ALLOWED_PATH = new Set(['money', 'time', 'space'])
 const DSW_ALLOWED_TIER = new Set(['small', 'medium', 'large', 'custom'])
+const WALL_KEY_SET = new Set<string>(WALL_KEYS)
 
 const cuidSchema = z.string().cuid()
 
@@ -43,6 +50,12 @@ export type DonationWizardMeta = {
   milestoneId?: string
   /** Optional `CustomBar` (quest) id for steward-facing echo */
   echoQuestId?: string
+  /** Barn wall key to credit when no explicit milestoneId (e.g. "presale") */
+  wall?: WallKey
+  /** Product key from the pricing catalog (for contribution note) */
+  product?: string
+  /** Product variant label (for contribution note) */
+  variant?: string
 }
 
 function buildDswMetaRecord(dsw?: DonationWizardMeta): Record<string, string> | undefined {
@@ -50,6 +63,9 @@ function buildDswMetaRecord(dsw?: DonationWizardMeta): Record<string, string> | 
   const o: Record<string, string> = {}
   if (dsw.milestoneId) o.milestoneId = dsw.milestoneId
   if (dsw.echoQuestId) o.echoQuestId = dsw.echoQuestId
+  if (dsw.wall) o.wall = dsw.wall
+  if (dsw.product) o.product = dsw.product
+  if (dsw.variant) o.variant = dsw.variant
   if (Object.keys(o).length === 0) return undefined
   return o
 }
@@ -67,22 +83,33 @@ function parseDswFromForm(formData: FormData): DonationWizardMeta | undefined {
   const milestoneId = cuidSchema.safeParse(rawMilestone).success ? rawMilestone : ''
   const echoQuestId = cuidSchema.safeParse(rawQuest).success ? rawQuest : ''
 
-  if (!path && !tier && !narrative && !milestoneId && !echoQuestId) return undefined
+  const rawWall = (formData.get('wall') as string | null)?.trim() || ''
+  const wall = WALL_KEY_SET.has(rawWall) ? (rawWall as WallKey) : undefined
+  const product = (formData.get('product') as string | null)?.trim().slice(0, 64) || undefined
+  const variant = (formData.get('variant') as string | null)?.trim().slice(0, 64) || undefined
+
+  if (!path && !tier && !narrative && !milestoneId && !echoQuestId && !wall && !product && !variant) return undefined
   return {
     ...(path ? { path } : {}),
     ...(tier ? { tier } : {}),
     ...(narrative ? { narrative } : {}),
     ...(milestoneId ? { milestoneId } : {}),
     ...(echoQuestId ? { echoQuestId } : {}),
+    ...(wall ? { wall } : {}),
+    ...(product ? { product } : {}),
+    ...(variant ? { variant } : {}),
   }
 }
 
 function buildDonationNote(dsw?: DonationWizardMeta, milestoneTitle?: string | null): string {
   const base = 'Self-reported donation'
-  if (!dsw || (!dsw.path && !dsw.tier && !dsw.narrative && !dsw.milestoneId && !dsw.echoQuestId)) {
+  if (!dsw || (!dsw.path && !dsw.tier && !dsw.narrative && !dsw.milestoneId && !dsw.echoQuestId && !dsw.wall && !dsw.product)) {
     return base
   }
   const kv: string[] = []
+  if (dsw.product) kv.push(`product=${dsw.product}`)
+  if (dsw.variant) kv.push(`variant=${dsw.variant}`)
+  if (dsw.wall) kv.push(`wall=${dsw.wall}`)
   if (dsw.path) kv.push(`path=${dsw.path}`)
   if (dsw.tier) kv.push(`tier=${dsw.tier}`)
   if (dsw.milestoneId) kv.push(`milestoneId=${dsw.milestoneId}`)
@@ -104,6 +131,8 @@ export type ReportDonationState = {
   amountCents?: number
   /** Vibeulons minted to the player when self-report succeeds (no intermediate “pack” step). */
   vibeulonsMinted?: number
+  /** FR6 — "keep building" redirect when this gift topped off a wall. */
+  keepBuilding?: KeepBuildingGuidance
 }
 
 function parseAmountCents(raw: FormDataEntryValue | null): number | null {
@@ -128,6 +157,9 @@ function pendingCookiePayload(
     ...(dsw?.narrative ? { dswNarrative: dsw.narrative } : {}),
     ...(dsw?.milestoneId ? { dswMilestoneId: dsw.milestoneId } : {}),
     ...(dsw?.echoQuestId ? { dswEchoQuestId: dsw.echoQuestId } : {}),
+    ...(dsw?.wall ? { wall: dsw.wall } : {}),
+    ...(dsw?.product ? { product: dsw.product } : {}),
+    ...(dsw?.variant ? { variant: dsw.variant } : {}),
   }
 }
 
@@ -150,13 +182,21 @@ function dswFromPendingCookie(data: Record<string, unknown>): DonationWizardMeta
     typeof data.dswEchoQuestId === 'string' && cuidSchema.safeParse(data.dswEchoQuestId.trim()).success
       ? data.dswEchoQuestId.trim()
       : ''
-  if (!p && !t && !n && !m && !q) return undefined
+  const rawWall = typeof data.wall === 'string' ? data.wall.trim() : ''
+  const w = WALL_KEY_SET.has(rawWall) ? (rawWall as WallKey) : undefined
+  const product = typeof data.product === 'string' ? data.product.trim().slice(0, 64) : undefined
+  const variant = typeof data.variant === 'string' ? data.variant.trim().slice(0, 64) : undefined
+
+  if (!p && !t && !n && !m && !q && !w && !product && !variant) return undefined
   return {
     ...(p ? { path: p } : {}),
     ...(t ? { tier: t } : {}),
     ...(n ? { narrative: n } : {}),
     ...(m ? { milestoneId: m } : {}),
     ...(q ? { echoQuestId: q } : {}),
+    ...(w ? { wall: w } : {}),
+    ...(product ? { product } : {}),
+    ...(variant ? { variant } : {}),
   }
 }
 
@@ -246,6 +286,17 @@ async function createDonationAndPacks(
     }
   }
 
+  if (dsw?.wall && !dsw?.milestoneId && campaignRef) {
+    const wallMilestone = await db.campaignMilestone.findFirst({
+      where: { campaignRef, wallKey: dsw.wall, status: 'active' },
+      select: { id: true },
+    })
+    if (!wallMilestone) {
+      return { error: `The ${dsw.wall} wall isn't active yet. Contact a steward.` }
+    }
+    dsw = { ...dsw, milestoneId: wallMilestone.id }
+  }
+
   if (dsw?.echoQuestId) {
     const bar = await db.customBar.findFirst({
       where: { id: dsw.echoQuestId },
@@ -263,6 +314,7 @@ async function createDonationAndPacks(
   }
 
   let linkedMilestoneId: string | null = null
+  let creditedWallKey: WallKey | null = null
 
   try {
     const result = await db.$transaction(async (tx) => {
@@ -270,7 +322,7 @@ async function createDonationAndPacks(
         dsw?.milestoneId && campaignRef
           ? await tx.campaignMilestone.findFirst({
               where: { id: dsw.milestoneId, campaignRef, status: 'active' },
-              select: { id: true, title: true },
+              select: { id: true, title: true, wallKey: true },
             })
           : null
 
@@ -301,6 +353,9 @@ async function createDonationAndPacks(
           data: { currentValue: { increment: dollars } },
         })
         linkedMilestoneId = msRow.id
+        if (msRow.wallKey && WALL_KEY_SET.has(msRow.wallKey)) {
+          creditedWallKey = msRow.wallKey as WallKey
+        }
       }
 
       await tx.instance.update({
@@ -354,14 +409,29 @@ async function createDonationAndPacks(
     revalidatePath('/event')
     revalidatePath('/event/donate')
     revalidatePath('/event/donate/wizard')
+    revalidatePath('/event/barn')
+    revalidatePath('/launch')
     revalidatePath('/demo/bruised-banana/donate')
     revalidatePath('/')
     revalidatePath('/wallet')
+
+    // FR6 — "keep building": if this gift topped off a wall, point the giver to the next plank.
+    let keepBuilding: KeepBuildingGuidance | undefined
+    if (creditedWallKey) {
+      try {
+        const { getBarnSnapshot } = await import('@/actions/barn')
+        const snap = await getBarnSnapshot(campaignRef)
+        keepBuilding = keepBuildingAfterWall(snap, creditedWallKey) ?? undefined
+      } catch (e) {
+        console.warn('[donate] keepBuilding snapshot', e)
+      }
+    }
 
     return {
       success: true,
       amountCents,
       vibeulonsMinted,
+      ...(keepBuilding ? { keepBuilding } : {}),
     }
   } catch (e) {
     console.error('[donate] createDonationAndPacks failed:', e)
@@ -377,6 +447,7 @@ export async function processPendingDonation(playerId: string): Promise<{
   success?: boolean
   amountCents?: number
   vibeulonsMinted?: number
+  keepBuilding?: KeepBuildingGuidance
 } | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get(PENDING_DONATION_COOKIE)?.value
@@ -409,7 +480,12 @@ export async function processPendingDonation(playerId: string): Promise<{
   cookieStore.delete(PENDING_DONATION_COOKIE)
 
   if (result.success) {
-    return { success: true, amountCents: result.amountCents, vibeulonsMinted: result.vibeulonsMinted }
+    return {
+      success: true,
+      amountCents: result.amountCents,
+      vibeulonsMinted: result.vibeulonsMinted,
+      ...(result.keepBuilding ? { keepBuilding: result.keepBuilding } : {}),
+    }
   }
   return null
 }

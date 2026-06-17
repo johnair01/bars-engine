@@ -49,7 +49,7 @@ export default async function BarsPage() {
                             BAR Feed
                         </Link>
                         <Link
-                            href="/bars/create"
+                            href="/bars/capture"
                             className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition shadow-lg shadow-purple-900/20"
                         >
                             + Capture
@@ -134,7 +134,7 @@ export default async function BarsPage() {
                         <div className="text-center py-12 border border-dashed border-zinc-800 rounded-xl">
                             <p className="text-zinc-500 mb-3">No inspirations yet.</p>
                             <p className="text-zinc-600 text-sm mb-4">Capture a spark—it can grow into a quest or become a talisman for another.</p>
-                            <Link href="/bars/create" className="text-purple-400 hover:text-purple-300 font-bold">
+                            <Link href="/bars/capture" className="text-purple-400 hover:text-purple-300 font-bold">
                                 Capture your first inspiration →
                             </Link>
                         </div>

@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
+// Render at request time, not at build. This page selects columns added by a
+// migration that only applies on Production deploy; Preview/build skips
+// `prisma migrate deploy`, so static prerender would hit a DB missing the
+// column (P2022). force-dynamic defers the query until after migrations run.
+export const dynamic = 'force-dynamic'
+
 /**
  * @page /wiki/nations
  * @entity WIKI

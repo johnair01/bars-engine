@@ -3,6 +3,8 @@ import Link from 'next/link'
 import type { Instance } from '@prisma/client'
 import { SelfReportDonationForm } from '@/app/event/donate/SelfReportDonationForm'
 import type { ParsedDonatePageSearchParams } from '@/lib/donation-page-params'
+import type { KeepBuildingGuidance } from '@/lib/event/barn-raising'
+import { KeepBuildingCard } from '@/components/donation/KeepBuildingCard'
 
 function formatUsdCents(cents: number) {
   const dollars = cents / 100
@@ -35,6 +37,7 @@ export type DonatePageViewProps = {
     success?: boolean
     amountCents?: number
     vibeulonsMinted?: number
+    keepBuilding?: KeepBuildingGuidance
   } | null
   backLink?: DonatePageBackLink
   /** Extra context under the title (e.g. outreach / demo BAR copy) */
@@ -101,6 +104,8 @@ export function DonatePageView({
           </section>
         )}
 
+        {result?.keepBuilding && <KeepBuildingCard guidance={result.keepBuilding} />}
+
         {providerLinks.length > 0 && (
           <section className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 space-y-4">
             <h2 className="text-lg font-bold text-white">Send your donation</h2>
@@ -137,6 +142,9 @@ export function DonatePageView({
             dswNarrative={parsed.dswNarrative}
             dswMilestoneId={parsed.dswMilestoneId}
             dswEchoQuestId={parsed.dswEchoQuestId}
+            wall={parsed.wall}
+            product={parsed.product}
+            variant={parsed.variant}
             donateReturnPath={donateReturnPath}
           />
         </section>

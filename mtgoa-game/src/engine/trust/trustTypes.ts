@@ -26,6 +26,10 @@ export interface TrustCard {
   domain?: DomainName;
   /** Domain that only resolves once the NPC is an ally (e.g. Direct Action). */
   herOnly?: boolean;
+  /** Hidden from the playable hand until the NPC is converted, then revealed as a
+   *  root-realization beat (the intake "epiphany" card). Optional for the win —
+   *  it never gates the capstone, so the completability proof is unaffected. */
+  hidden?: boolean;
   text: string;
 }
 
@@ -44,6 +48,8 @@ export interface EncounterConfig {
   /** The live need each turn. Length 1 = constant (L1). Longer = alternating. */
   needSequence: Element[];
   startingStress: number;
+  /** Shadows to dissolve before conversion. Defaults to TRUST_RULES (2). */
+  convertThreshold?: number;
   shadows: TrustShadow[];
   deck: TrustCard[];
   capstone: { title: string; body: string };
