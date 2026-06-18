@@ -1105,3 +1105,121 @@ export async function captureBarFromCanvas(
     return { error: 'Failed to capture seed. Please try again.' }
   }
 }
+
+// ---------------------------------------------------------------------------
+// TUNE BAR — Capture → Keep → Tune flow
+// ---------------------------------------------------------------------------
+
+const VALID_MOVE_TYPES = ['wakeUp', 'openUp', 'cleanUp', 'growUp', 'showUp'] as const
+type MoveType = (typeof VALID_MOVE_TYPES)[number]
+
+const VALID_ALTITUDES = ['dissatisfied', 'neutral', 'satisfied'] as const
+
+export interface TuneBarInput {
+    nation?: string              // element key (fire | water | wood | metal | earth)
+    intensity?: string           // altitude (dissatisfied | neutral | satisfied)
+    emotionalAlchemyTag?: string // charge name / feeling tag
+    moveType?: string            // wakeUp | openUp | cleanUp | growUp | showUp
+}
+
+export type TuneBarResult =
+    | { success: true; maturity: MaturityPhase }
+    | { error: string }
+
+/**
+ * Tune a BAR's three channels and advance maturity accordingly.
+ * Maturity only moves forward (never back). Channel completion determines the
+ * next maturity phase:
+ *   nation set               → context_named
+ *   intensity + alchemyTag   → elaborated
+ *   moveType set             → shared_or_acted
+ */
+export async function tuneBar(barId: string, patch: TuneBarInput): Promise<TuneBarResult> {
+    const playerId = await getPlayerId()
+    if (!playerId) return { error: 'Not logged in' }
+
+    const bar = await db.customBar.findUnique({
+        where: { id: barId },
+        select: {
+            id: true,
+            creatorId: true,
+            type: true,
+            seedMetabolization: true,
+            nation: true,
+            intensity: true,
+            emotionalAlchemyTag: true,
+            moveType: true,
+        },
+    })
+    if (!bar) return { error: 'BAR not found' }
+    if (bar.creatorId !== playerId) return { error: 'Not authorized' }
+    if (!['bar', 'charge_capture'].includes(bar.type)) {
+        return { error: 'This BAR type does not support tuning' }
+    }
+
+    // Merge patch into current state — only accept valid values
+    const nextNation = patch.nation
+        ? (ELEMENT_KEYS as readonly string[]).includes(patch.nation.toLowerCase())
+            ? patch.nation.toLowerCase()
+            : bar.nation
+        : bar.nation
+
+    const nextIntensity = patch.intensity
+        ? (VALID_ALTITUDES as readonly string[]).includes(patch.intensity)
+            ? patch.intensity
+            : bar.intensity
+        : bar.intensity
+
+    const nextAlchemyTag =
+        patch.emotionalAlchemyTag !== undefined
+            ? (patch.emotionalAlchemyTag || '').trim().slice(0, 60) || null
+            : bar.emotionalAlchemyTag
+
+    const nextMoveType = patch.moveType
+        ? (VALID_MOVE_TYPES as readonly string[]).includes(patch.moveType)
+            ? patch.moveType
+            : bar.moveType
+        : bar.moveType
+
+    // Derive target maturity from channel completion
+    let targetMaturity: MaturityPhase = 'captured'
+    if (nextNation) targetMaturity = 'context_named'
+    if (nextIntensity && nextAlchemyTag) targetMaturity = 'elaborated'
+    if (nextMoveType) targetMaturity = 'shared_or_acted'
+
+    // Maturity only moves forward — clamp to max(current, target)
+    const PHASES: MaturityPhase[] = [
+        'captured', 'context_named', 'elaborated', 'shared_or_acted', 'integrated',
+    ]
+    const currentMaturity = effectiveMaturity(parseSeedMetabolization(bar.seedMetabolization))
+    const currentIdx = PHASES.indexOf(currentMaturity)
+    const targetIdx = PHASES.indexOf(targetMaturity)
+    const nextMaturity = PHASES[Math.max(currentIdx, targetIdx)]
+
+    try {
+        await db.customBar.update({
+            where: { id: barId },
+            data: {
+                nation: nextNation,
+                intensity: nextIntensity,
+                emotionalAlchemyTag: nextAlchemyTag,
+                moveType: nextMoveType,
+                seedMetabolization: mergeSeedMetabolization(bar.seedMetabolization, {
+                    maturity: nextMaturity,
+                }),
+            },
+        })
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        console.error('[tuneBar] update failed:', message)
+        return { error: 'Failed to tune BAR. Please try again.' }
+    }
+
+    revalidatePath('/bars')
+    revalidatePath(`/bars/${barId}`)
+    revalidatePath(`/bars/${barId}/tune`)
+    revalidatePath('/bars/garden')
+    revalidatePath('/vault')
+
+    return { success: true, maturity: nextMaturity }
+}
