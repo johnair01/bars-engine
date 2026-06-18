@@ -130,6 +130,7 @@
   "cards": [
     {
       "id": "WAKE-GR-SHAMAN",
+      "num": "001",
       "kind": "move",
       "move": "wake_up",
       "operation": "shaman",
@@ -160,6 +161,7 @@
     },
     {
       "id": "WAKE-GR-CHALLENGER",
+      "num": "002",
       "kind": "move",
       "move": "wake_up",
       "operation": "challenger",
@@ -189,6 +191,7 @@
     },
     {
       "id": "WAKE-GR-REGENT",
+      "num": "003",
       "kind": "move",
       "move": "wake_up",
       "operation": "regent",
@@ -218,6 +221,7 @@
     },
     {
       "id": "WAKE-GR-ARCHITECT",
+      "num": "004",
       "kind": "move",
       "move": "wake_up",
       "operation": "architect",
@@ -247,6 +251,7 @@
     },
     {
       "id": "WAKE-GR-DIPLOMAT",
+      "num": "005",
       "kind": "move",
       "move": "wake_up",
       "operation": "diplomat",
@@ -276,6 +281,7 @@
     },
     {
       "id": "WAKE-GR-SAGE",
+      "num": "006",
       "kind": "move",
       "move": "wake_up",
       "operation": "sage",
@@ -304,6 +310,7 @@
     },
     {
       "id": "WAKE-RA-SHAMAN",
+      "num": "007",
       "kind": "move",
       "move": "wake_up",
       "operation": "shaman",
@@ -334,6 +341,7 @@
     },
     {
       "id": "WAKE-RA-CHALLENGER",
+      "num": "008",
       "kind": "move",
       "move": "wake_up",
       "operation": "challenger",
@@ -363,6 +371,7 @@
     },
     {
       "id": "WAKE-RA-REGENT",
+      "num": "009",
       "kind": "move",
       "move": "wake_up",
       "operation": "regent",
@@ -392,6 +401,7 @@
     },
     {
       "id": "WAKE-RA-ARCHITECT",
+      "num": "010",
       "kind": "move",
       "move": "wake_up",
       "operation": "architect",
@@ -421,6 +431,7 @@
     },
     {
       "id": "WAKE-RA-DIPLOMAT",
+      "num": "011",
       "kind": "move",
       "move": "wake_up",
       "operation": "diplomat",
@@ -450,6 +461,7 @@
     },
     {
       "id": "WAKE-RA-SAGE",
+      "num": "012",
       "kind": "move",
       "move": "wake_up",
       "operation": "sage",
@@ -479,6 +491,7 @@
     },
     {
       "id": "WAKE-DA-SHAMAN",
+      "num": "013",
       "kind": "move",
       "move": "wake_up",
       "operation": "shaman",
@@ -507,6 +520,7 @@
     },
     {
       "id": "WAKE-DA-CHALLENGER",
+      "num": "014",
       "kind": "move",
       "move": "wake_up",
       "operation": "challenger",
@@ -535,6 +549,7 @@
     },
     {
       "id": "WAKE-DA-REGENT",
+      "num": "015",
       "kind": "move",
       "move": "wake_up",
       "operation": "regent",
@@ -564,6 +579,7 @@
     },
     {
       "id": "WAKE-DA-ARCHITECT",
+      "num": "016",
       "kind": "move",
       "move": "wake_up",
       "operation": "architect",
@@ -592,6 +608,7 @@
     },
     {
       "id": "WAKE-DA-DIPLOMAT",
+      "num": "017",
       "kind": "move",
       "move": "wake_up",
       "operation": "diplomat",
@@ -620,6 +637,7 @@
     },
     {
       "id": "WAKE-DA-SAGE",
+      "num": "018",
       "kind": "move",
       "move": "wake_up",
       "operation": "sage",
@@ -648,6 +666,7 @@
     },
     {
       "id": "WAKE-SO-SHAMAN",
+      "num": "019",
       "kind": "move",
       "move": "wake_up",
       "operation": "shaman",
@@ -676,6 +695,7 @@
     },
     {
       "id": "WAKE-SO-CHALLENGER",
+      "num": "020",
       "kind": "move",
       "move": "wake_up",
       "operation": "challenger",
@@ -704,6 +724,7 @@
     },
     {
       "id": "WAKE-SO-REGENT",
+      "num": "021",
       "kind": "move",
       "move": "wake_up",
       "operation": "regent",
@@ -731,6 +752,7 @@
     },
     {
       "id": "WAKE-SO-ARCHITECT",
+      "num": "022",
       "kind": "move",
       "move": "wake_up",
       "operation": "architect",
@@ -760,6 +782,7 @@
     },
     {
       "id": "WAKE-SO-DIPLOMAT",
+      "num": "023",
       "kind": "move",
       "move": "wake_up",
       "operation": "diplomat",
@@ -789,6 +812,7 @@
     },
     {
       "id": "WAKE-SO-SAGE",
+      "num": "024",
       "kind": "move",
       "move": "wake_up",
       "operation": "sage",
@@ -816,6 +840,7 @@
     },
     {
       "id": "OPEN-GR-SHAMAN",
+      "num": "025",
       "kind": "move",
       "move": "open_up",
       "operation": "shaman",
@@ -847,6 +872,7 @@
     },
     {
       "id": "OPEN-GR-CHALLENGER",
+      "num": "026",
       "kind": "move",
       "move": "open_up",
       "operation": "challenger",
@@ -878,6 +904,7 @@
     },
     {
       "id": "OPEN-GR-REGENT",
+      "num": "027",
       "kind": "move",
       "move": "open_up",
       "operation": "regent",
@@ -908,6 +935,7 @@
     },
     {
       "id": "OPEN-GR-ARCHITECT",
+      "num": "028",
       "kind": "move",
       "move": "open_up",
       "operation": "architect",
@@ -938,6 +966,7 @@
     },
     {
       "id": "OPEN-GR-DIPLOMAT",
+      "num": "029",
       "kind": "move",
       "move": "open_up",
       "operation": "diplomat",
@@ -968,6 +997,7 @@
     },
     {
       "id": "OPEN-GR-SAGE",
+      "num": "030",
       "kind": "move",
       "move": "open_up",
       "operation": "sage",
@@ -998,6 +1028,7 @@
     },
     {
       "id": "OPEN-RA-SHAMAN",
+      "num": "031",
       "kind": "move",
       "move": "open_up",
       "operation": "shaman",
@@ -1026,6 +1057,7 @@
     },
     {
       "id": "OPEN-RA-CHALLENGER",
+      "num": "032",
       "kind": "move",
       "move": "open_up",
       "operation": "challenger",
@@ -1055,6 +1087,7 @@
     },
     {
       "id": "OPEN-RA-REGENT",
+      "num": "033",
       "kind": "move",
       "move": "open_up",
       "operation": "regent",
@@ -1084,6 +1117,7 @@
     },
     {
       "id": "OPEN-RA-ARCHITECT",
+      "num": "034",
       "kind": "move",
       "move": "open_up",
       "operation": "architect",
@@ -1112,6 +1146,7 @@
     },
     {
       "id": "OPEN-RA-DIPLOMAT",
+      "num": "035",
       "kind": "move",
       "move": "open_up",
       "operation": "diplomat",
@@ -1140,6 +1175,7 @@
     },
     {
       "id": "OPEN-RA-SAGE",
+      "num": "036",
       "kind": "move",
       "move": "open_up",
       "operation": "sage",
@@ -1169,6 +1205,7 @@
     },
     {
       "id": "OPEN-DA-SHAMAN",
+      "num": "037",
       "kind": "move",
       "move": "open_up",
       "operation": "shaman",
@@ -1197,6 +1234,7 @@
     },
     {
       "id": "OPEN-DA-CHALLENGER",
+      "num": "038",
       "kind": "move",
       "move": "open_up",
       "operation": "challenger",
@@ -1225,6 +1263,7 @@
     },
     {
       "id": "OPEN-DA-REGENT",
+      "num": "039",
       "kind": "move",
       "move": "open_up",
       "operation": "regent",
@@ -1254,6 +1293,7 @@
     },
     {
       "id": "OPEN-DA-ARCHITECT",
+      "num": "040",
       "kind": "move",
       "move": "open_up",
       "operation": "architect",
@@ -1282,6 +1322,7 @@
     },
     {
       "id": "OPEN-DA-DIPLOMAT",
+      "num": "041",
       "kind": "move",
       "move": "open_up",
       "operation": "diplomat",
@@ -1311,6 +1352,7 @@
     },
     {
       "id": "OPEN-DA-SAGE",
+      "num": "042",
       "kind": "move",
       "move": "open_up",
       "operation": "sage",
@@ -1340,6 +1382,7 @@
     },
     {
       "id": "OPEN-SO-SHAMAN",
+      "num": "043",
       "kind": "move",
       "move": "open_up",
       "operation": "shaman",
@@ -1368,6 +1411,7 @@
     },
     {
       "id": "OPEN-SO-CHALLENGER",
+      "num": "044",
       "kind": "move",
       "move": "open_up",
       "operation": "challenger",
@@ -1396,6 +1440,7 @@
     },
     {
       "id": "OPEN-SO-REGENT",
+      "num": "045",
       "kind": "move",
       "move": "open_up",
       "operation": "regent",
@@ -1424,6 +1469,7 @@
     },
     {
       "id": "OPEN-SO-ARCHITECT",
+      "num": "046",
       "kind": "move",
       "move": "open_up",
       "operation": "architect",
@@ -1452,6 +1498,7 @@
     },
     {
       "id": "OPEN-SO-DIPLOMAT",
+      "num": "047",
       "kind": "move",
       "move": "open_up",
       "operation": "diplomat",
@@ -1481,6 +1528,7 @@
     },
     {
       "id": "OPEN-SO-SAGE",
+      "num": "048",
       "kind": "move",
       "move": "open_up",
       "operation": "sage",
@@ -1509,6 +1557,7 @@
     },
     {
       "id": "CLEAN-GR-SHAMAN",
+      "num": "049",
       "kind": "move",
       "move": "clean_up",
       "operation": "shaman",
@@ -1536,6 +1585,7 @@
     },
     {
       "id": "CLEAN-GR-CHALLENGER",
+      "num": "050",
       "kind": "move",
       "move": "clean_up",
       "operation": "challenger",
@@ -1566,6 +1616,7 @@
     },
     {
       "id": "CLEAN-GR-REGENT",
+      "num": "051",
       "kind": "move",
       "move": "clean_up",
       "operation": "regent",
@@ -1594,6 +1645,7 @@
     },
     {
       "id": "CLEAN-GR-ARCHITECT",
+      "num": "052",
       "kind": "move",
       "move": "clean_up",
       "operation": "architect",
@@ -1623,6 +1675,7 @@
     },
     {
       "id": "CLEAN-GR-DIPLOMAT",
+      "num": "053",
       "kind": "move",
       "move": "clean_up",
       "operation": "diplomat",
@@ -1651,6 +1704,7 @@
     },
     {
       "id": "CLEAN-GR-SAGE",
+      "num": "054",
       "kind": "move",
       "move": "clean_up",
       "operation": "sage",
@@ -1680,6 +1734,7 @@
     },
     {
       "id": "CLEAN-RA-SHAMAN",
+      "num": "055",
       "kind": "move",
       "move": "clean_up",
       "operation": "shaman",
@@ -1707,6 +1762,7 @@
     },
     {
       "id": "CLEAN-RA-CHALLENGER",
+      "num": "056",
       "kind": "move",
       "move": "clean_up",
       "operation": "challenger",
@@ -1736,6 +1792,7 @@
     },
     {
       "id": "CLEAN-RA-REGENT",
+      "num": "057",
       "kind": "move",
       "move": "clean_up",
       "operation": "regent",
@@ -1764,6 +1821,7 @@
     },
     {
       "id": "CLEAN-RA-ARCHITECT",
+      "num": "058",
       "kind": "move",
       "move": "clean_up",
       "operation": "architect",
@@ -1793,6 +1851,7 @@
     },
     {
       "id": "CLEAN-RA-DIPLOMAT",
+      "num": "059",
       "kind": "move",
       "move": "clean_up",
       "operation": "diplomat",
@@ -1821,6 +1880,7 @@
     },
     {
       "id": "CLEAN-RA-SAGE",
+      "num": "060",
       "kind": "move",
       "move": "clean_up",
       "operation": "sage",
@@ -1850,6 +1910,7 @@
     },
     {
       "id": "CLEAN-DA-SHAMAN",
+      "num": "061",
       "kind": "move",
       "move": "clean_up",
       "operation": "shaman",
@@ -1878,6 +1939,7 @@
     },
     {
       "id": "CLEAN-DA-CHALLENGER",
+      "num": "062",
       "kind": "move",
       "move": "clean_up",
       "operation": "challenger",
@@ -1907,6 +1969,7 @@
     },
     {
       "id": "CLEAN-DA-REGENT",
+      "num": "063",
       "kind": "move",
       "move": "clean_up",
       "operation": "regent",
@@ -1935,6 +1998,7 @@
     },
     {
       "id": "CLEAN-DA-ARCHITECT",
+      "num": "064",
       "kind": "move",
       "move": "clean_up",
       "operation": "architect",
@@ -1964,6 +2028,7 @@
     },
     {
       "id": "CLEAN-DA-DIPLOMAT",
+      "num": "065",
       "kind": "move",
       "move": "clean_up",
       "operation": "diplomat",
@@ -1993,6 +2058,7 @@
     },
     {
       "id": "CLEAN-DA-SAGE",
+      "num": "066",
       "kind": "move",
       "move": "clean_up",
       "operation": "sage",
@@ -2021,6 +2087,7 @@
     },
     {
       "id": "CLEAN-SO-SHAMAN",
+      "num": "067",
       "kind": "move",
       "move": "clean_up",
       "operation": "shaman",
@@ -2048,6 +2115,7 @@
     },
     {
       "id": "CLEAN-SO-CHALLENGER",
+      "num": "068",
       "kind": "move",
       "move": "clean_up",
       "operation": "challenger",
@@ -2077,6 +2145,7 @@
     },
     {
       "id": "CLEAN-SO-REGENT",
+      "num": "069",
       "kind": "move",
       "move": "clean_up",
       "operation": "regent",
@@ -2104,6 +2173,7 @@
     },
     {
       "id": "CLEAN-SO-ARCHITECT",
+      "num": "070",
       "kind": "move",
       "move": "clean_up",
       "operation": "architect",
@@ -2133,6 +2203,7 @@
     },
     {
       "id": "CLEAN-SO-DIPLOMAT",
+      "num": "071",
       "kind": "move",
       "move": "clean_up",
       "operation": "diplomat",
@@ -2162,6 +2233,7 @@
     },
     {
       "id": "CLEAN-SO-SAGE",
+      "num": "072",
       "kind": "move",
       "move": "clean_up",
       "operation": "sage",
@@ -2190,6 +2262,7 @@
     },
     {
       "id": "GROW-GR-SHAMAN",
+      "num": "073",
       "kind": "move",
       "move": "grow_up",
       "operation": "shaman",
@@ -2218,6 +2291,7 @@
     },
     {
       "id": "GROW-GR-CHALLENGER",
+      "num": "074",
       "kind": "move",
       "move": "grow_up",
       "operation": "challenger",
@@ -2245,6 +2319,7 @@
     },
     {
       "id": "GROW-GR-REGENT",
+      "num": "075",
       "kind": "move",
       "move": "grow_up",
       "operation": "regent",
@@ -2274,6 +2349,7 @@
     },
     {
       "id": "GROW-GR-ARCHITECT",
+      "num": "076",
       "kind": "move",
       "move": "grow_up",
       "operation": "architect",
@@ -2303,6 +2379,7 @@
     },
     {
       "id": "GROW-GR-DIPLOMAT",
+      "num": "077",
       "kind": "move",
       "move": "grow_up",
       "operation": "diplomat",
@@ -2332,6 +2409,7 @@
     },
     {
       "id": "GROW-GR-SAGE",
+      "num": "078",
       "kind": "move",
       "move": "grow_up",
       "operation": "sage",
@@ -2361,6 +2439,7 @@
     },
     {
       "id": "GROW-RA-SHAMAN",
+      "num": "079",
       "kind": "move",
       "move": "grow_up",
       "operation": "shaman",
@@ -2389,6 +2468,7 @@
     },
     {
       "id": "GROW-RA-CHALLENGER",
+      "num": "080",
       "kind": "move",
       "move": "grow_up",
       "operation": "challenger",
@@ -2415,6 +2495,7 @@
     },
     {
       "id": "GROW-RA-REGENT",
+      "num": "081",
       "kind": "move",
       "move": "grow_up",
       "operation": "regent",
@@ -2443,6 +2524,7 @@
     },
     {
       "id": "GROW-RA-ARCHITECT",
+      "num": "082",
       "kind": "move",
       "move": "grow_up",
       "operation": "architect",
@@ -2471,6 +2553,7 @@
     },
     {
       "id": "GROW-RA-DIPLOMAT",
+      "num": "083",
       "kind": "move",
       "move": "grow_up",
       "operation": "diplomat",
@@ -2499,6 +2582,7 @@
     },
     {
       "id": "GROW-RA-SAGE",
+      "num": "084",
       "kind": "move",
       "move": "grow_up",
       "operation": "sage",
@@ -2526,6 +2610,7 @@
     },
     {
       "id": "GROW-DA-SHAMAN",
+      "num": "085",
       "kind": "move",
       "move": "grow_up",
       "operation": "shaman",
@@ -2554,6 +2639,7 @@
     },
     {
       "id": "GROW-DA-CHALLENGER",
+      "num": "086",
       "kind": "move",
       "move": "grow_up",
       "operation": "challenger",
@@ -2580,6 +2666,7 @@
     },
     {
       "id": "GROW-DA-REGENT",
+      "num": "087",
       "kind": "move",
       "move": "grow_up",
       "operation": "regent",
@@ -2608,6 +2695,7 @@
     },
     {
       "id": "GROW-DA-ARCHITECT",
+      "num": "088",
       "kind": "move",
       "move": "grow_up",
       "operation": "architect",
@@ -2636,6 +2724,7 @@
     },
     {
       "id": "GROW-DA-DIPLOMAT",
+      "num": "089",
       "kind": "move",
       "move": "grow_up",
       "operation": "diplomat",
@@ -2663,6 +2752,7 @@
     },
     {
       "id": "GROW-DA-SAGE",
+      "num": "090",
       "kind": "move",
       "move": "grow_up",
       "operation": "sage",
@@ -2692,6 +2782,7 @@
     },
     {
       "id": "GROW-SO-SHAMAN",
+      "num": "091",
       "kind": "move",
       "move": "grow_up",
       "operation": "shaman",
@@ -2720,6 +2811,7 @@
     },
     {
       "id": "GROW-SO-CHALLENGER",
+      "num": "092",
       "kind": "move",
       "move": "grow_up",
       "operation": "challenger",
@@ -2748,6 +2840,7 @@
     },
     {
       "id": "GROW-SO-REGENT",
+      "num": "093",
       "kind": "move",
       "move": "grow_up",
       "operation": "regent",
@@ -2776,6 +2869,7 @@
     },
     {
       "id": "GROW-SO-ARCHITECT",
+      "num": "094",
       "kind": "move",
       "move": "grow_up",
       "operation": "architect",
@@ -2804,6 +2898,7 @@
     },
     {
       "id": "GROW-SO-DIPLOMAT",
+      "num": "095",
       "kind": "move",
       "move": "grow_up",
       "operation": "diplomat",
@@ -2832,6 +2927,7 @@
     },
     {
       "id": "GROW-SO-SAGE",
+      "num": "096",
       "kind": "move",
       "move": "grow_up",
       "operation": "sage",
@@ -2860,6 +2956,7 @@
     },
     {
       "id": "SHOW-GR-SHAMAN",
+      "num": "097",
       "kind": "move",
       "move": "show_up",
       "operation": "shaman",
@@ -2888,6 +2985,7 @@
     },
     {
       "id": "SHOW-GR-CHALLENGER",
+      "num": "098",
       "kind": "move",
       "move": "show_up",
       "operation": "challenger",
@@ -2917,6 +3015,7 @@
     },
     {
       "id": "SHOW-GR-REGENT",
+      "num": "099",
       "kind": "move",
       "move": "show_up",
       "operation": "regent",
@@ -2946,6 +3045,7 @@
     },
     {
       "id": "SHOW-GR-ARCHITECT",
+      "num": "100",
       "kind": "move",
       "move": "show_up",
       "operation": "architect",
@@ -2975,6 +3075,7 @@
     },
     {
       "id": "SHOW-GR-DIPLOMAT",
+      "num": "101",
       "kind": "move",
       "move": "show_up",
       "operation": "diplomat",
@@ -3004,6 +3105,7 @@
     },
     {
       "id": "SHOW-GR-SAGE",
+      "num": "102",
       "kind": "move",
       "move": "show_up",
       "operation": "sage",
@@ -3033,6 +3135,7 @@
     },
     {
       "id": "SHOW-RA-SHAMAN",
+      "num": "103",
       "kind": "move",
       "move": "show_up",
       "operation": "shaman",
@@ -3060,6 +3163,7 @@
     },
     {
       "id": "SHOW-RA-CHALLENGER",
+      "num": "104",
       "kind": "move",
       "move": "show_up",
       "operation": "challenger",
@@ -3088,6 +3192,7 @@
     },
     {
       "id": "SHOW-RA-REGENT",
+      "num": "105",
       "kind": "move",
       "move": "show_up",
       "operation": "regent",
@@ -3116,6 +3221,7 @@
     },
     {
       "id": "SHOW-RA-ARCHITECT",
+      "num": "106",
       "kind": "move",
       "move": "show_up",
       "operation": "architect",
@@ -3143,6 +3249,7 @@
     },
     {
       "id": "SHOW-RA-DIPLOMAT",
+      "num": "107",
       "kind": "move",
       "move": "show_up",
       "operation": "diplomat",
@@ -3172,6 +3279,7 @@
     },
     {
       "id": "SHOW-RA-SAGE",
+      "num": "108",
       "kind": "move",
       "move": "show_up",
       "operation": "sage",
@@ -3200,6 +3308,7 @@
     },
     {
       "id": "SHOW-DA-SHAMAN",
+      "num": "109",
       "kind": "move",
       "move": "show_up",
       "operation": "shaman",
@@ -3228,6 +3337,7 @@
     },
     {
       "id": "SHOW-DA-CHALLENGER",
+      "num": "110",
       "kind": "move",
       "move": "show_up",
       "operation": "challenger",
@@ -3256,6 +3366,7 @@
     },
     {
       "id": "SHOW-DA-REGENT",
+      "num": "111",
       "kind": "move",
       "move": "show_up",
       "operation": "regent",
@@ -3285,6 +3396,7 @@
     },
     {
       "id": "SHOW-DA-ARCHITECT",
+      "num": "112",
       "kind": "move",
       "move": "show_up",
       "operation": "architect",
@@ -3313,6 +3425,7 @@
     },
     {
       "id": "SHOW-DA-DIPLOMAT",
+      "num": "113",
       "kind": "move",
       "move": "show_up",
       "operation": "diplomat",
@@ -3342,6 +3455,7 @@
     },
     {
       "id": "SHOW-DA-SAGE",
+      "num": "114",
       "kind": "move",
       "move": "show_up",
       "operation": "sage",
@@ -3371,6 +3485,7 @@
     },
     {
       "id": "SHOW-SO-SHAMAN",
+      "num": "115",
       "kind": "move",
       "move": "show_up",
       "operation": "shaman",
@@ -3399,6 +3514,7 @@
     },
     {
       "id": "SHOW-SO-CHALLENGER",
+      "num": "116",
       "kind": "move",
       "move": "show_up",
       "operation": "challenger",
@@ -3427,6 +3543,7 @@
     },
     {
       "id": "SHOW-SO-REGENT",
+      "num": "117",
       "kind": "move",
       "move": "show_up",
       "operation": "regent",
@@ -3456,6 +3573,7 @@
     },
     {
       "id": "SHOW-SO-ARCHITECT",
+      "num": "118",
       "kind": "move",
       "move": "show_up",
       "operation": "architect",
@@ -3485,6 +3603,7 @@
     },
     {
       "id": "SHOW-SO-DIPLOMAT",
+      "num": "119",
       "kind": "move",
       "move": "show_up",
       "operation": "diplomat",
@@ -3514,6 +3633,7 @@
     },
     {
       "id": "SHOW-SO-SAGE",
+      "num": "120",
       "kind": "move",
       "move": "show_up",
       "operation": "sage",

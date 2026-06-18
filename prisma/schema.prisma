@@ -183,6 +183,7 @@ model Player {
   questProposals                 QuestProposal[]
   redemptionPacks                RedemptionPack[]
   entitlements                   Entitlement[]
+  deckJournalEntries             DeckJournalEntry[]
   roomPresences                  RoomPresence[]
   sceneAtlasGuidedDrafts         SceneAtlasGuidedDraft[]
   shadow321Sessions              Shadow321Session[]
@@ -4259,6 +4260,21 @@ model ChapterMilestone {
 
   @@index([bookRef])
   @@map("chapter_milestones")
+}
+
+/// Allyship Deck draw journal — one row per card drawn, server-persisted cross-device.
+/// Streak is computed from consecutive calendar days in drawnAt (player's local TZ via client).
+/// Vibeulons start at 1 per draw; real rewards from the BAR layer added later.
+model DeckJournalEntry {
+  id        String   @id @default(cuid())
+  playerId  String
+  cardId    String
+  drawnAt   DateTime @default(now())
+  vibeulons Int      @default(1)
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, drawnAt(sort: Desc)])
+  @@map("deck_journal_entries")
 }
 
 /// CHS campaign backbone: fixed 52 or 64 content slots; draw uses only bound slots (see campaign-hub-spoke-landing-architecture spec).
