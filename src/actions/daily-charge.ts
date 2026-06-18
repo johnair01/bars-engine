@@ -21,7 +21,7 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { getTodayCharge } from '@/actions/charge-capture'
-import { addBarToHand } from '@/actions/hand'
+import { addBarToHandForPlayer } from '@/lib/hand-service'
 import type { CaptureDestination } from '@/actions/capture-bar'
 import {
     mergeSeedMetabolization,
@@ -131,7 +131,7 @@ export async function applyDailyCharge(
 
         if (input.destination === 'hand') {
             // Best-effort placement; if the hand is full the BAR stays in the vault.
-            await addBarToHand({ barId })
+            await addBarToHandForPlayer(player.id, barId)
         }
 
         revalidatePath('/')

@@ -16,35 +16,17 @@
 
 import { dbBase } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import {
+    HAND_SIZE,
+    readHandDb,
+    addBarToHandForPlayer,
+    type HandSlotBar,
+    type HandSlotDTO,
+    type HandContents,
+    type OverflowContext,
+} from '@/lib/hand-service'
 
-const HAND_SIZE = 6
-
-export type HandSlotBar = {
-    id: string
-    title: string
-    type: string
-    moveType: string | null
-}
-
-export type HandSlotDTO = {
-    slotIndex: number // 0–5
-    barId: string | null
-    isCarrying: boolean
-    bar: HandSlotBar | null
-}
-
-export type HandContents = {
-    slots: HandSlotDTO[] // always length HAND_SIZE, ordered by slotIndex
-    filledCount: number
-    size: number
-    carryingBarId: string | null
-}
-
-export type OverflowContext = {
-    newBarId: string
-    newBarTitle: string
-    currentHand: Array<{ slotIndex: number; barId: string; title: string; type: string }>
-}
+export type { HandSlotBar, HandSlotDTO, HandContents, OverflowContext }
 
 type ErrorResult = { error: string }
 
@@ -53,45 +35,11 @@ function ownedActiveBarWhere(playerId: string, barId: string) {
     return { id: barId, creatorId: playerId, status: 'active', archivedAt: null }
 }
 
-async function readHand(playerId: string): Promise<HandContents> {
-    const rows = await dbBase.handSlot.findMany({
-        where: { playerId },
-        orderBy: { slotIndex: 'asc' },
-        include: {
-            bar: { select: { id: true, title: true, type: true, moveType: true } },
-        },
-    })
-
-    const bySlot = new Map<number, (typeof rows)[number]>()
-    for (const r of rows) bySlot.set(r.slotIndex, r)
-
-    const slots: HandSlotDTO[] = []
-    for (let i = 0; i < HAND_SIZE; i++) {
-        const r = bySlot.get(i)
-        slots.push({
-            slotIndex: i,
-            barId: r?.barId ?? null,
-            isCarrying: r?.isCarrying ?? false,
-            bar: r?.bar
-                ? { id: r.bar.id, title: r.bar.title, type: r.bar.type, moveType: r.bar.moveType }
-                : null,
-        })
-    }
-
-    const carrying = rows.find((r) => r.isCarrying && r.barId)
-    return {
-        slots,
-        filledCount: slots.filter((s) => s.barId).length,
-        size: HAND_SIZE,
-        carryingBarId: carrying?.barId ?? null,
-    }
-}
-
 /** Get the player's current hand (6 slots, filled count, carrying state). */
 export async function getPlayerHand(): Promise<HandContents | ErrorResult> {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not authenticated' }
-    return readHand(player.id)
+    return readHandDb(player.id)
 }
 
 /**
@@ -107,60 +55,7 @@ export async function addBarToHand(input: {
 > {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not authenticated' }
-
-    const bar = await dbBase.customBar.findFirst({
-        where: ownedActiveBarWhere(player.id, input.barId),
-        select: { id: true, title: true, type: true },
-    })
-    if (!bar) return { error: 'BAR not found or not yours' }
-
-    const slots = await dbBase.handSlot.findMany({ where: { playerId: player.id } })
-
-    // Idempotent: already in hand.
-    if (slots.some((s) => s.barId === input.barId)) {
-        return { success: true, hand: await readHand(player.id) }
-    }
-
-    const usedIndexes = new Set(slots.filter((s) => s.barId).map((s) => s.slotIndex))
-    let emptyIndex = -1
-    for (let i = 0; i < HAND_SIZE; i++) {
-        if (!usedIndexes.has(i)) {
-            emptyIndex = i
-            break
-        }
-    }
-
-    if (emptyIndex === -1) {
-        // Hand full → overflow.
-        const filled = await dbBase.handSlot.findMany({
-            where: { playerId: player.id, barId: { not: null } },
-            orderBy: { slotIndex: 'asc' },
-            include: { bar: { select: { id: true, title: true, type: true } } },
-        })
-        return {
-            success: false,
-            overflow: {
-                newBarId: bar.id,
-                newBarTitle: bar.title,
-                currentHand: filled
-                    .filter((s) => s.bar)
-                    .map((s) => ({
-                        slotIndex: s.slotIndex,
-                        barId: s.bar!.id,
-                        title: s.bar!.title,
-                        type: s.bar!.type,
-                    })),
-            },
-        }
-    }
-
-    await dbBase.handSlot.upsert({
-        where: { playerId_slotIndex: { playerId: player.id, slotIndex: emptyIndex } },
-        create: { playerId: player.id, slotIndex: emptyIndex, barId: bar.id },
-        update: { barId: bar.id, isCarrying: false },
-    })
-
-    return { success: true, hand: await readHand(player.id) }
+    return addBarToHandForPlayer(player.id, input.barId)
 }
 
 /**
@@ -177,7 +72,7 @@ export async function resolveOverflow(input: {
 
     // Declined to swap → new BAR stays in the vault, hand unchanged.
     if (input.depositBarId === input.newBarId) {
-        return { success: true, hand: await readHand(player.id) }
+        return { success: true, hand: await readHandDb(player.id) }
     }
 
     const bar = await dbBase.customBar.findFirst({
@@ -197,7 +92,7 @@ export async function resolveOverflow(input: {
         data: { barId: input.newBarId, isCarrying: false },
     })
 
-    return { success: true, hand: await readHand(player.id) }
+    return { success: true, hand: await readHandDb(player.id) }
 }
 
 /** Move a hand BAR to the vault (free action). Frees its slot. */
@@ -217,7 +112,7 @@ export async function depositHandBarToVault(input: {
         data: { barId: null, isCarrying: false },
     })
 
-    return { success: true, hand: await readHand(player.id) }
+    return { success: true, hand: await readHandDb(player.id) }
 }
 
 /** Promote a vault BAR into the hand. Only allowed when an empty slot exists. */
@@ -240,7 +135,7 @@ export async function promoteVaultBarToHand(input: {
 
     const slots = await dbBase.handSlot.findMany({ where: { playerId: player.id } })
     if (slots.some((s) => s.barId === input.barId)) {
-        return { success: true, hand: await readHand(player.id) }
+        return { success: true, hand: await readHandDb(player.id) }
     }
 
     const usedIndexes = new Set(slots.filter((s) => s.barId).map((s) => s.slotIndex))
@@ -264,7 +159,7 @@ export async function promoteVaultBarToHand(input: {
         update: { barId: bar.id, isCarrying: false },
     })
 
-    return { success: true, hand: await readHand(player.id) }
+    return { success: true, hand: await readHandDb(player.id) }
 }
 
 /**
@@ -291,7 +186,7 @@ export async function setCarryingFromHand(input: {
         }
     })
 
-    return { success: true, hand: await readHand(player.id) }
+    return { success: true, hand: await readHandDb(player.id) }
 }
 
 /** Reorder slots. Applies a new (slotIndex, barId) arrangement atomically. */
@@ -330,5 +225,5 @@ export async function reorderHandSlots(input: {
         await tx.handSlot.deleteMany({ where: { playerId: player.id, slotIndex: { lt: 0 } } })
     })
 
-    return { success: true, hand: await readHand(player.id) }
+    return { success: true, hand: await readHandDb(player.id) }
 }
