@@ -18,12 +18,15 @@
 - [ ] Repoint `EventHero` to the Book Launch umbrella (title/subtitle/tagline/
       anchor date/place + primary CTA). Read `UI_COVENANT.md` first.
 - [ ] Replace the April "Weekend" section with **The Events**: July 18 virtual
-      launch anchor + two cards — **Dance Party Fundraiser** (Jul 20, 8 PM) +
-      **Integral Emergence Game** (Jul 21, 2 PM) at the Bruised Banana
-      (NightCard pattern).
+      **Launch Party** anchor (recorded paid webinar, free for book buyers →
+      sales driver) + two cards — **Dance Party Fundraiser** (Jul 20, 8 PM) +
+      **Integral Emergence** (Jul 21, 2 PM, placeholder copy) at the Bruised
+      Banana (NightCard pattern).
 - [ ] Rename support section header + CTA to **"Support the mission"**; name the
       ask (replace car #1, launch products #2, for the non-profit); route to
       `/event/donate/wizard`.
+- [ ] Build the **car block as a toggleable/removable unit** (temporary — comes
+      off the public page once funded) without disturbing surrounding sections.
 - [ ] Remove Bruised-Banana-specific blocks: `PartyMiniGameInModal` bingo,
       Fri/Sat/Sun split, "Birthday Quest Weekend" subtitle.
 - [ ] Update footer deep-links to the events; preserve logged-in/out states.

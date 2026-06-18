@@ -20,11 +20,13 @@
 
 Revamp `/event` from the April "Birthday Quest Weekend" into the public landing
 page for the **Mastering the Game of Allyship Book Launch** — a suite anchored on
-the **July 18, 2026 virtual book launch** and hosting two in-person events at the
-Bruised Banana: a **Dance Party Fundraiser** (July 20) and an **Integral
-Emergence Game** (July 21). All contributions support the **MTGOA non-profit**
-(in pre-production) — the headline ask is **replacing the car that exploded**,
-then **launching the products**.
+the **July 18, 2026 virtual Launch Party** (a celebration of the work + a recorded
+**paid webinar**, **free for anyone who has bought the book** — so it also drives
+book sales) and hosting two in-person events at the Bruised Banana: a **Dance
+Party Fundraiser** (July 20) and an **Integral Emergence** event (July 21). All
+contributions support the **MTGOA non-profit** (in pre-production) — the headline
+ask is **replacing the car that exploded** (temporary), then **launching the
+products**.
 
 **Problem.** The live `/event` page advertises a past/retired April weekend with
 Bruised-Banana-specific copy and mini-games. It does not represent the upcoming
@@ -44,9 +46,9 @@ hardcoded content for v1 (no admin-data dependency, no AI). Read
 | **Page identity** | **Replace** the existing `/event` (Bruised Banana Birthday Quest Weekend) with the **Book Launch suite** landing. The April content is composted, not preserved as a fallback. |
 | **Umbrella framing** | **"Mastering the Game of Allyship Book Launch"** — a *suite* hosting multiple events. |
 | **Support CTA copy** | User-facing support copy becomes **"Support the mission"** (replaces "Support the Quest" / generic "Donate" labels on the public page). |
-| **Mission + ask** | Beneficiary is the **MTGOA non-profit** (pre-production). Ask priority: **(1) replace the exploded car**, **(2) launch the products** — both in support of the non-profit. "Support the mission" routes to **`/event/donate/wizard`**. |
-| **Events in the suite** | **July 18** — virtual book launch (anchor). **July 20, 8 PM @ Bruised Banana** — Dance Party Fundraiser (public; suggested donation; on-page RSVP + donate wizard; Partiful page incoming). **July 21, 2 PM @ Bruised Banana** — Integral Emergence Game. |
-| **Anchor date** | **July 18, 2026** is the **virtual book launch**; the two in-person events follow on July 20 & 21. |
+| **Mission + ask** | Beneficiary is the **MTGOA non-profit** (pre-production). Ask priority: **(1) replace the exploded car** (named explicitly on the public page; **temporary** — removed once funded), **(2) launch the products** — both in support of the non-profit. "Support the mission" routes to **`/event/donate/wizard`**. |
+| **Events in the suite** | **July 18** — virtual **Launch Party** (anchor): celebration + recorded **paid webinar**, **free for book buyers**, drives book sales. **July 20, 8 PM @ Bruised Banana** — Dance Party Fundraiser (public; suggested donation; on-page RSVP + donate wizard; Partiful page incoming). **July 21, 2 PM @ Bruised Banana** — Integral Emergence event (description in development). |
+| **Anchor date** | **July 18, 2026** is the **virtual Launch Party** (not the book's go-live; the book is likely but not guaranteed done by then); the two in-person events follow on July 20 & 21. |
 | **Public access (no login)** | **All suite/event pages are fully readable logged-out.** Login is required only to **RSVP in-app** and unlock goodies. "Find out about stuff" never requires an account. |
 | **Barn-raising** | Survives as a **secondary, well-stewarded teaser** only — not the headline. |
 | **Dual-track / Portland** | Non-AI path is canonical; copy respects the community's AI allergy. |
@@ -63,18 +65,23 @@ hardcoded content for v1 (no admin-data dependency, no AI). Read
 ## Page Structure (replaces current section order)
 
 1. **Hero** — umbrella: "Mastering the Game of Allyship Book Launch" + tagline +
-   anchor (**July 18 virtual launch**) + primary CTA.
+   anchor (**July 18 virtual Launch Party**) + primary CTA.
 2. **The Events** — three moments, two of them `NightCard`-style cards:
-   - **July 18 · Virtual Book Launch** (anchor moment).
+   - **July 18 · Virtual Launch Party** (anchor) — celebration + recorded **paid
+     webinar**; **free for book buyers** → CTA leans toward buying the book.
    - **July 20 · 8 PM · Dance Party Fundraiser** — Bruised Banana; public;
      suggested donation; **on-page RSVP + donate wizard**; Partiful (incoming).
-   - **July 21 · 2 PM · Integral Emergence Game** — Bruised Banana.
+   - **July 21 · 2 PM · Integral Emergence** — Bruised Banana (copy in dev;
+     placeholder one-liner for v1).
 3. **Support the mission** — MTGOA non-profit ask (renamed from "Support the
-   Quest"); names the car-replacement (#1) + product launch (#2); routes to
-   `/event/donate/wizard`.
-4. **(Secondary) Barn-raising teaser** — well-stewarded send-off framing,
+   Quest"); names the car-replacement (#1, temporary) + product launch (#2);
+   routes to `/event/donate/wizard`.
+4. **(Temporary) Car block** — the exploded-car ask lives on the public page as
+   a named, story-driven line item; **removed once funded** (built so it can be
+   toggled/deleted without disturbing the rest).
+5. **(Secondary) Barn-raising teaser** — well-stewarded send-off framing,
    subordinate to the mission ask.
-5. **Footer** — deep links to each event, log in / play.
+6. **Footer** — deep links to each event, log in / play.
 
 > Removed for v1: Bruised Banana party mini-game bingo blocks
 > (`PartyMiniGameInModal`), April day-split (Fri/Sat/Sun) copy, "Birthday Quest
@@ -162,10 +169,13 @@ admin-editable suite content, that becomes a separate spec.)
 
 - **Q1 (Dance Party)** ✓ — **July 20, 8 PM, Bruised Banana. Public; suggested
   donation. On-page RSVP + donate wizard. Partiful page incoming.**
-- **Q2 (Emergence Game)** ✓ — **July 21, 2 PM, Bruised Banana.** One-line
-  description pending final wording (see Still Open).
-- **Q3 (Umbrella)** ✓ — **July 18 is the virtual book launch** (the anchor); the
-  in-person events are July 20 & 21. Hero tagline pending (see Still Open).
+- **Q2 (Emergence event)** ✓ — **July 21, 2 PM, Bruised Banana.** Concept still
+  being developed by the host; ship a **placeholder one-liner** for v1 (see Still
+  Open).
+- **Q3 (Umbrella)** ✓ — **July 18 is the virtual Launch Party** (anchor):
+  celebration + recorded **paid webinar**, **free for book buyers** (a sales
+  driver), **not** the book's go-live. In-person events July 20 & 21. Hero
+  tagline pending (see Still Open).
 - **Q4 (Mission destination)** ✓ — **`/event/donate/wizard`.** Note: folding the
   `/event/barn` milestone into the wizard is desired **but out of scope for now**
   (future spec).
@@ -180,10 +190,21 @@ admin-editable suite content, that becomes a separate spec.)
 ### Still Open (content polish, non-blocking)
 
 - Final **hero tagline/subtitle**.
-- One-line **"what is the Integral Emergence Game"** description (newcomer-safe,
-  voice-appropriate).
+- One-line **Integral Emergence** description — host to explain the concept more;
+  v1 placeholder (host approved using the draft below): *"The morning after the
+  party, we run the allyship game for real — a guided afternoon of structured
+  play where a room turns honest friction into shared insight."*
 - **Partiful URL** for the Dance Party (drop in when live).
-- Emergence Game **capacity / invite cap**, if any.
+- Emergence event **capacity / invite cap**, if any.
+- July 18 Launch Party CTA wiring: where "free for book buyers" + paid-webinar
+  registration points (book purchase funnel `/pricing` vs. webinar signup).
+
+### Build-blocker still pending
+
+- **On-page RSVP behavior (Dance Party):** capture name+email to a usable list /
+  event guest list (small server action) **vs.** lightweight "I'm coming" with
+  **Partiful** as the system of record (link-out only). Decides whether Phase 1
+  needs a server action.
 
 ## Dependencies
 
