@@ -17,7 +17,7 @@
 import { dbBase } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
 
-export const HAND_SIZE = 6
+const HAND_SIZE = 6
 
 export type HandSlotBar = {
     id: string
