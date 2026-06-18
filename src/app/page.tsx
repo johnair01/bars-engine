@@ -66,7 +66,6 @@ function isPrismaConnectionError(err: unknown): boolean {
  */
 export default async function Home(props: { searchParams: Promise<{ ritualComplete?: string, focusQuest?: string, ref?: string }> }) {
   const searchParams = await props.searchParams
-  const campaignRef = searchParams.ref ?? null
   const cookieStore = await cookies()
   const playerId = cookieStore.get('bars_player_id')?.value
 
@@ -146,20 +145,12 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
             Play the game
           </Link>
 
-          <div className="flex gap-3">
-            <Link
-              href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Support
-            </Link>
-            <Link
-              href="/login"
-              className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
-            >
-              Log In
-            </Link>
-          </div>
+          <Link
+            href="/login"
+            className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
+          >
+            Log In
+          </Link>
         </div>
 
         <div className="text-xs text-zinc-600 mt-8 text-center max-w-md">
