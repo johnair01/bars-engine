@@ -26,8 +26,6 @@ import {
     type OverflowContext,
 } from '@/lib/hand-service'
 
-export type { HandSlotBar, HandSlotDTO, HandContents, OverflowContext }
-
 type ErrorResult = { error: string }
 
 /** A BAR is eligible for the hand if the caller owns it and it is active. */
