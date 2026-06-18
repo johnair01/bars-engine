@@ -3,16 +3,21 @@
 /**
  * Inner / Outer Allyship — persistence of a player's aspect choice on move-taking.
  *
- * FR8 (Phase 4): when a player takes a move they may enact it **inner** (self-
- * development) or **outer** (allyship, which requires a target). This Server Action
- * is the contract for that choice — it annotates a `QuestMoveLog` row with
- * `moveAspect` (+ `allyshipTarget` for outer). Deterministic, no AI.
+ * Base layer: when a player takes a move they may enact it **inner** (self-
+ * development) or **outer** (allyship, which requires a target). Aspect is a
+ * property of the *base* move, so the source of truth is the base `CustomBar`
+ * (`moveAspect` + `allyshipTarget`) — recorded **Nation-free**. A `NationMove`
+ * is no longer required to record an aspect.
+ *
+ * When the move is taken via a Nation overlay (a `NationMove` id is supplied), a
+ * `QuestMoveLog` row is also written as a secondary *echo* of the same aspect, so
+ * the Nation path stays observable. The base `CustomBar` remains canonical.
  *
  * The with/for shadow reading of the chosen face×cell is a documented seam and is
  * deliberately NOT recorded here — the engine logs *what* was enacted, it does not
  * judge it (CLAUDE.md: "emotional energy is fuel, not judgment").
  *
- * See .specify/specs/inner-outer-allyship-moves/spec.md.
+ * See .specify/specs/inner-outer-allyship-moves/data-model.md and spec.md.
  */
 
 import { db } from '@/lib/db'
@@ -27,10 +32,18 @@ const VALID_TARGETS: readonly AllyshipTarget[] = ['individual', 'collective', 's
 
 /** Contract for recording a player's inner/outer choice when they take a move. */
 export interface RecordEnactedMoveInput {
-  /** The quest (CustomBar) the move is taken on. */
-  questId: string
-  /** The NationMove being taken (FK on QuestMoveLog.moveId). */
-  moveId: string
+  /**
+   * The base move-BAR (CustomBar) to stamp as the canonical aspect record.
+   * Defaults to `questId` when omitted. At least one of `barId`/`questId` is required.
+   */
+  barId?: string
+  /** The quest (CustomBar) the move is taken on / the base move-BAR's context. */
+  questId?: string
+  /**
+   * Optional NationMove id. When present, a QuestMoveLog echo is also written
+   * (the Nation overlay path). Omit for a Nation-free base move.
+   */
+  moveId?: string
   /** inner = self-development; outer = allyship (requires target). */
   aspect: MoveAspect
   /** Required when aspect === 'outer'; omitted/undefined for inner. */
@@ -38,7 +51,7 @@ export interface RecordEnactedMoveInput {
 }
 
 export type RecordEnactedMoveResult =
-  | { ok: true; logId: string; aspect: MoveAspect; target: AllyshipTarget | null }
+  | { ok: true; logId: string | null; aspect: MoveAspect; target: AllyshipTarget | null }
   | { ok: false; error: string }
 
 function userSafeError(error: unknown): string {
@@ -66,8 +79,9 @@ export async function recordEnactedMove(input: RecordEnactedMoveInput): Promise<
 
     const questId = input.questId?.trim()
     const moveId = input.moveId?.trim()
-    if (!questId) return { ok: false, error: 'Missing questId' }
-    if (!moveId) return { ok: false, error: 'Missing moveId' }
+    // Canonical home for the aspect is the base move-BAR; fall back to the quest.
+    const barId = input.barId?.trim() || questId
+    if (!barId) return { ok: false, error: 'Missing barId/questId' }
 
     if (!VALID_ASPECTS.includes(input.aspect)) {
       return { ok: false, error: `Invalid aspect: ${String(input.aspect)}` }
@@ -86,38 +100,51 @@ export async function recordEnactedMove(input: RecordEnactedMoveInput): Promise<
       }
     }
 
-    // Access: creator, claimer, or assigned (mirrors nation-moves).
-    const quest = await db.customBar.findUnique({
-      where: { id: questId },
+    // Access: creator, claimer, or assigned (mirrors nation-moves), checked on the
+    // base CustomBar that will carry the aspect.
+    const bar = await db.customBar.findUnique({
+      where: { id: barId },
       select: { id: true, creatorId: true, claimedById: true },
     })
-    if (!quest) return { ok: false, error: 'Quest not found' }
+    if (!bar) return { ok: false, error: 'BAR not found' }
 
-    const hasDirectAccess = quest.creatorId === player.id || quest.claimedById === player.id
+    const hasDirectAccess = bar.creatorId === player.id || bar.claimedById === player.id
     if (!hasDirectAccess) {
       const pq = await db.playerQuest.findUnique({
-        where: { playerId_questId: { playerId: player.id, questId } },
+        where: { playerId_questId: { playerId: player.id, questId: barId } },
         select: { status: true },
       })
-      if (pq?.status !== 'assigned') return { ok: false, error: 'Not authorized to act on this quest' }
+      if (pq?.status !== 'assigned') return { ok: false, error: 'Not authorized to act on this BAR' }
     }
 
     const target = input.target ?? null
-    const log = await db.questMoveLog.create({
-      data: {
-        questId,
-        moveId,
-        playerId: player.id,
-        moveAspect: input.aspect,
-        allyshipTarget: target,
-      },
-      select: { id: true },
+
+    // Canonical: stamp the base move-BAR (Nation-free source of truth).
+    await db.customBar.update({
+      where: { id: barId },
+      data: { moveAspect: input.aspect, allyshipTarget: target },
     })
+
+    // Echo: only on the Nation overlay path (a NationMove id + its quest context).
+    let logId: string | null = null
+    if (moveId && questId) {
+      const log = await db.questMoveLog.create({
+        data: {
+          questId,
+          moveId,
+          playerId: player.id,
+          moveAspect: input.aspect,
+          allyshipTarget: target,
+        },
+        select: { id: true },
+      })
+      logId = log.id
+    }
 
     revalidatePath('/')
     revalidatePath('/vault')
 
-    return { ok: true, logId: log.id, aspect: input.aspect, target }
+    return { ok: true, logId, aspect: input.aspect, target }
   } catch (error) {
     console.error('[move-aspect] recordEnactedMove failed:', error)
     return { ok: false, error: userSafeError(error) }
