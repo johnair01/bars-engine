@@ -485,7 +485,7 @@ function StepDeck({ deck, hand, currentCard, deckEmpty, handFull, onTake, onDraw
         </h2>
         <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: 12, lineHeight: 1.5, color: '#a09e98', margin: '6px 0 0' }}>
           {deckEmpty
-            ? 'Deck exhausted. Take what you've drawn into your hand.'
+            ? "Deck exhausted. Take what you've drawn into your hand."
             : 'Draw through your moves. Take up to 6 into your hand.'}
         </p>
       </div>
