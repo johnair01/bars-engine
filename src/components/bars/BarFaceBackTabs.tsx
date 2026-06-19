@@ -15,9 +15,12 @@ type BarFaceBackTabsProps = {
   tags: string[]
   isOwner?: boolean
   barId?: string
+  canvasLayout?: string | null
+  element?: string | null
+  charge?: number | null
 }
 
-export function BarFaceBackTabs({ description, imageUrl, assets = [], tags, isOwner, barId }: BarFaceBackTabsProps) {
+export function BarFaceBackTabs({ description, imageUrl, assets = [], tags, isOwner, barId, canvasLayout, element, charge }: BarFaceBackTabsProps) {
   const imageAssets = assets.filter((a) => a.mimeType?.startsWith('image/'))
   const useFlipCard = imageAssets.length > 0
   const router = useRouter()
@@ -106,6 +109,9 @@ export function BarFaceBackTabs({ description, imageUrl, assets = [], tags, isOw
           <BarCardFace
             description={editing ? editContent : description}
             imageUrl={imageUrl}
+            canvasLayout={canvasLayout}
+            element={element}
+            charge={charge}
             className="shadow-lg"
           />
         )

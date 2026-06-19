@@ -10,6 +10,7 @@ import { BarPhotoForm } from '@/components/bars/BarPhotoForm'
 import { BarDetailClient } from './BarDetailClient'
 import { CampaignInvitationAccept } from './CampaignInvitationAccept'
 import { BarFaceBackTabs } from '@/components/bars/BarFaceBackTabs'
+import { CanvasPreview } from '@/components/bars/CanvasPreview'
 import { GrowFromBar } from '@/components/bars/GrowFromBar'
 import { OfferToCampaign } from '@/components/bars/OfferToCampaign'
 import { listAttachableCampaigns } from '@/actions/campaign-attach'
@@ -58,6 +59,11 @@ export default async function BarDetailPage({
 
     const { bar, isOwner, isRecipient, recipientShare } = result
     const tags = bar.storyContent ? bar.storyContent.split(',').map(t => t.trim()).filter(Boolean) : []
+
+    // Canvas-capture display channels: layout (stickers), element (nation), charge (intensity 1–5).
+    const canvasLayout = bar.canvasLayout ?? null
+    const element = bar.nation ?? null
+    const charge = bar.intensity && /^[1-5]$/.test(bar.intensity) ? Number(bar.intensity) : null
 
     // Fetch recipients for the send form (only if owner)
     const recipients = isOwner ? await getBarRecipients() : []
@@ -122,6 +128,16 @@ export default async function BarDetailPage({
                     )}
                 </div>
 
+                {/* Canvas preview — the frozen polaroid of placed stickers (canvas BARs only) */}
+                {canvasLayout && (
+                    <CanvasPreview
+                        canvasLayout={canvasLayout}
+                        element={element}
+                        charge={charge}
+                        title={bar.title}
+                    />
+                )}
+
                 {/* Card: Face | Back */}
                 <BarFaceBackTabs
                     description={bar.description}
@@ -130,6 +146,9 @@ export default async function BarDetailPage({
                     tags={tags}
                     isOwner={isOwner}
                     barId={bar.id}
+                    canvasLayout={canvasLayout}
+                    element={element}
+                    charge={charge}
                 />
 
                 {/* Pending external shares (owner only) */}
