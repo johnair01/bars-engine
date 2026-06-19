@@ -28,14 +28,17 @@ export const DECK_VERSION = '0.1.0'
 
 function buildMoveCards(): MoveCard[] {
   const cards: MoveCard[] = []
+  let seq = 0
   for (const m of MOVES) {
     for (const d of DOMAINS) {
       for (const op of OPERATIONS) {
         const sub = SUBMOVES[m.key][op.key]
         const id = `${m.abbr}-${d.abbr}-${op.key.toUpperCase()}`
+        seq++
 
         const generated: MoveCard = {
           id,
+          num: String(seq).padStart(3, '0'),
           kind: 'move',
           move: m.key,
           operation: op.key,

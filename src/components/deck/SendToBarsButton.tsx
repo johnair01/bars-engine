@@ -11,7 +11,7 @@ import type { CardSubject } from './AllyshipCard'
  * stamped server-side) and routes the player to `/bars/{id}` — where the BAR flow lives
  * (capture charge / 3·2·1 happen on the bloomed quest, not the seed).
  */
-export function SendToBarsButton({ cardId, subject }: { cardId: string; subject: CardSubject }) {
+export function SendToBarsButton({ cardId, subject, label = 'Send to BARS →' }: { cardId: string; subject: CardSubject; label?: string }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +31,7 @@ export function SendToBarsButton({ cardId, subject }: { cardId: string; subject:
   return (
     <div style={{ marginTop: 14 }}>
       <button type="button" onClick={send} disabled={pending} style={{ ...btn, opacity: pending ? 0.6 : 1 }}>
-        {pending ? 'Sending…' : 'Send to BARS →'}
+        {pending ? 'Sending…' : label}
       </button>
       {error && (
         <p style={{ fontFamily: DECK_FONTS.body, fontSize: 12.5, color: '#f0a0a0', margin: '8px 0 0', textAlign: 'center' }}>
