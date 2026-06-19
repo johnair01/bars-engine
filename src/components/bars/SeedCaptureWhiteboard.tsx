@@ -696,7 +696,7 @@ function TextEditorOverlay({
 
   return (
     <div
-      className="absolute inset-0 flex flex-col"
+      className="fixed inset-0 flex flex-col"
       style={{
         zIndex: 40,
         background: 'rgba(5,4,3,0.9)',
@@ -1790,20 +1790,6 @@ export function SeedCaptureWhiteboard({
           />
         )}
 
-        {/* Text editor overlay */}
-        {editing !== null && (
-          <TextEditorOverlay
-            editing={editing}
-            draft={draft}
-            draftTint={draftTint}
-            draftSize={draftSize}
-            onDraftChange={setDraft}
-            onDraftTintChange={setDraftTint}
-            onDraftSizeChange={setDraftSize}
-            onDone={commitEditor}
-          />
-        )}
-
         {/* Post-capture confirmation overlay */}
         {captured && (
           <CapturedOverlay
@@ -1814,6 +1800,20 @@ export function SeedCaptureWhiteboard({
           />
         )}
       </div>
+
+      {/* Text editor overlay — outside scaled frame so range inputs work correctly on mobile */}
+      {editing !== null && (
+        <TextEditorOverlay
+          editing={editing}
+          draft={draft}
+          draftTint={draftTint}
+          draftSize={draftSize}
+          onDraftChange={setDraft}
+          onDraftTintChange={setDraftTint}
+          onDraftSizeChange={setDraftSize}
+          onDone={commitEditor}
+        />
+      )}
     </div>
   )
 }
