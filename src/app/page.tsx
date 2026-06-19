@@ -5,6 +5,14 @@ import { ensureWallet } from '@/actions/economy'
 import { getAppConfig } from '@/actions/config'
 import Link from 'next/link'
 import { getActiveInstance } from '@/actions/instance'
+import { parseCampaignDomainPreference, ALLYSHIP_DOMAINS } from '@/lib/allyship-domains'
+import { BARN_CAMPAIGN_REF } from '@/lib/event/barn-raising'
+// DashboardAvatarWithModal is now internal to DashboardHeader
+import { AppreciationsReceived } from '@/components/AppreciationsReceived'
+import { getAppreciationFeed } from '@/actions/appreciation'
+import { getTodayCharge, getChargeArchive } from '@/actions/charge-capture'
+import { RecentChargeSection } from '@/components/charge-capture/RecentChargeSection'
+import { getTodayCheckIn } from '@/actions/alchemy'
 import { SetupRequired } from '@/components/SetupRequired'
 import { DatabaseUnreachable } from '@/components/DatabaseUnreachable'
 import { NowHome } from '@/components/now/NowHome'
@@ -94,7 +102,7 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
           </Link>
 
           <Link
-            href="/game/"
+            href="/game/index.html"
             className="w-full py-3 px-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all"
           >
             Play the game
@@ -102,7 +110,11 @@ export default async function Home(props: { searchParams: Promise<{ ritualComple
 
           <div className="flex gap-3">
             <Link
-              href={`/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`}
+              href={
+                activeInstance?.campaignRef === BARN_CAMPAIGN_REF
+                  ? '/event/barn'
+                  : `/event${campaignRef ? `?ref=${encodeURIComponent(campaignRef)}` : ''}`
+              }
               className="flex-1 py-3 px-4 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800 text-zinc-200 font-bold rounded-lg text-center transition-all text-sm"
             >
               Support

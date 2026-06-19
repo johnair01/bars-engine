@@ -86,9 +86,23 @@ joins `moveType` as a sibling column, consistent with `allyshipDomain`.
 - The with/for shadow — still a documented seam, never encoded (engine does not judge).
 - Phase 3 deliverables and the verification quest.
 
-## Open items
-- Whether to **revert** the Phase 4 `QuestMoveLog` columns now (PR #120 open) or leave
-  them as the demoted echo. Lean: leave (already applied; nullable; harmless).
-- Does the Nation-move path (`nation-moves.ts`) also write aspect to the base CustomBar
-  it creates, so Layer 0 stays the single source even when entered via a Nation move?
-  Lean: yes — Nation move is an overlay *expression* of a base move.
+## Decisions (locked 2026-06-17)
+- **Keep** the Phase 4 `QuestMoveLog.moveAspect/allyshipTarget` columns as a demoted
+  Nation-path **echo** (already applied to the DB; nullable; harmless). No revert.
+- The Nation-move path (`nation-moves.ts`) **does** write aspect down to the base
+  `CustomBar` it creates — Layer 0 stays the single source of truth even when entered
+  via a Nation move (a Nation move is an overlay expression of a base move). It also
+  copies the aspect onto its `QuestMoveLog` echo.
+- Sequencing: built on branch `claude/ioa-base-layer-aspect` (on top of the Phase 4
+  branch's HEAD). Note: the Phase 4 work has **no open PR yet** (an earlier "PR #120"
+  reference was incorrect).
+
+## Build status (this branch)
+- [x] `CustomBar.moveAspect` + `CustomBar.allyshipTarget` (schema + migration
+  `20260617000000_add_custom_bar_move_aspect`).
+- [x] `createBarFromMoveChoice` persists aspect/target (Nation-free) + adds `openUp`.
+- [x] `recordEnactedMove` writes the base `CustomBar`; `moveId`/NationMove optional;
+  `QuestMoveLog` written only as the Nation-path echo.
+- [x] `applyNationMoveWithState` stamps aspect on the base `CustomBar` it creates.
+- [ ] **UI**: inline Inner|Outer segmented control on the base / CYOA move-taking
+  surface (`AdventurePlayer`), never gated on `player.nationId` — next pass.

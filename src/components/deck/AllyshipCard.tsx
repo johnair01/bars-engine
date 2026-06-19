@@ -101,6 +101,10 @@ export function AllyshipCard({
         >
           {question.length > 92 ? `${question.slice(0, 92)}…` : question}
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+          <span style={{ ...labelStyle, fontSize: 9 }}>#{card.num}</span>
+          {footerSlot}
+        </div>
       </button>
     )
   }
@@ -174,12 +178,14 @@ export function AllyshipCard({
       {/* foot */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
         <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 10, color: SURFACE_TOKENS.textMuted, letterSpacing: '0.08em' }}>
-          {card.id}
+          #{card.num}
         </span>
         <span style={{ fontFamily: DECK_FONTS.mono, fontSize: 12, color: DECK_GOLD }}>
           → {card.outputBar} ♦
         </span>
       </div>
+      {/* reward/minutes: omitted until BAR layer provides real values */}
+      {/* restore when wired: {card.minutes} MIN · #{card.num}   ♦ {card.reward} */}
 
       {footerSlot}
     </article>

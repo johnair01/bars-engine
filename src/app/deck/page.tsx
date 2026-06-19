@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { AllyshipDeckReader } from '@/components/deck/AllyshipDeckReader'
 import { Paywall } from '@/components/launch/Paywall'
 import { checkAccess } from '@/lib/entitlements/gate'
+import { getDeckStats } from '@/actions/deck-journal'
 
 export const metadata: Metadata = {
   title: 'The Allyship Deck — Mastering Allyship Moves',
@@ -30,5 +31,6 @@ export default async function DeckPage() {
     )
   }
 
-  return <AllyshipDeckReader />
+  const initialStats = await getDeckStats()
+  return <AllyshipDeckReader initialStats={initialStats} />
 }

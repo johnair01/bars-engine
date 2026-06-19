@@ -46,19 +46,35 @@ export default async function BarnPage({
       <div className="mx-auto flex max-w-3xl flex-col gap-10 px-5 pb-20 pt-20 sm:px-8">
         <BarnRaisingBar state={state} variant="full" />
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/event/donate/wizard"
-            className="min-h-[44px] rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-amber-500 hover:to-orange-500"
-          >
-            Raise a plank
-          </Link>
-          <Link
-            href="/launch"
-            className="min-h-[44px] rounded-lg border border-zinc-700 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
-          >
-            Browse the pre-sale
-          </Link>
+        {/* Show Up — three ways to back the barn: give, buy, or come stand a plank. */}
+        <div className="space-y-3">
+          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-zinc-500">
+            Show up
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Link
+              href="/event/donate?dswPath=money&wall=car"
+              className="flex min-h-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-5 py-3 text-center text-sm font-bold text-white shadow-lg transition-all hover:from-amber-500 hover:to-orange-500"
+            >
+              Chip in for the car
+            </Link>
+            <Link
+              href="/launch"
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-zinc-700 px-5 py-3 text-center text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
+            >
+              Buy from the pre-sale
+            </Link>
+            <Link
+              href="/event"
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-zinc-700 px-5 py-3 text-center text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800"
+            >
+              RSVP to the send-off
+            </Link>
+          </div>
+          <p className="text-xs text-zinc-600">
+            Any one of the three raises a wall — give to the car, back the pre-sale, or come stand a
+            plank on July 18.
+          </p>
         </div>
 
         {preview && (
