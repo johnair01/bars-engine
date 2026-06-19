@@ -20,6 +20,7 @@ import {
   isOfferLive,
   type LaunchOffer,
 } from '@/lib/launch/offers'
+import { demoCheckoutHref } from '@/lib/launch/demo'
 
 function PriceLine({ offer }: { offer: LaunchOffer }) {
   const price = formatPrice(offer.priceCents)
@@ -47,7 +48,32 @@ function PriceLine({ offer }: { offer: LaunchOffer }) {
   )
 }
 
-function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: string }) {
+function Cta({
+  offer,
+  href,
+  label,
+  demoMode,
+}: {
+  offer: LaunchOffer
+  href: string
+  label: string
+  demoMode?: boolean
+}) {
+  // Demo mode: route every offer to the internal payment-free checkout, even
+  // ones whose Gumroad URL isn't wired yet — so the whole funnel is walkable.
+  if (demoMode) {
+    return (
+      <div className="space-y-1">
+        <a
+          href={demoCheckoutHref(offer.key)}
+          className="flex min-h-11 w-full items-center justify-center rounded-xl bg-purple-600 px-4 font-bold text-white transition-colors hover:bg-purple-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0908]"
+        >
+          {label}
+        </a>
+        <p className="text-xs text-amber-300/90">Demo checkout · no payment</p>
+      </div>
+    )
+  }
   if (!isOfferLive(offer)) {
     return (
       <div className="space-y-1">
@@ -75,7 +101,7 @@ function Cta({ offer, href, label }: { offer: LaunchOffer; href: string; label: 
 }
 
 /** Pay-what-you-want control — anchors a suggested amount; final amount is set on Gumroad. */
-function PwywCta({ offer }: { offer: LaunchOffer }) {
+function PwywCta({ offer, demoMode }: { offer: LaunchOffer; demoMode?: boolean }) {
   const anchor = Math.round(offer.priceCents / 100)
   const [amount, setAmount] = useState<number>(anchor)
   const live = isOfferLive(offer)
@@ -97,13 +123,20 @@ function PwywCta({ offer }: { offer: LaunchOffer }) {
           style={{ fontVariantNumeric: 'tabular-nums' }}
         />
       </label>
-      <Cta offer={offer} href={offer.gumroadUrl} label={`Continue — $${amount}`} />
-      {live && <p className="text-xs text-zinc-500">Set your final amount on the next screen.</p>}
+      <Cta
+        offer={offer}
+        href={offer.gumroadUrl}
+        label={demoMode ? 'Continue' : `Continue — $${amount}`}
+        demoMode={demoMode}
+      />
+      {live && !demoMode && (
+        <p className="text-xs text-zinc-500">Set your final amount on the next screen.</p>
+      )}
     </div>
   )
 }
 
-function OfferCard({ offer }: { offer: LaunchOffer }) {
+function OfferCard({ offer, demoMode }: { offer: LaunchOffer; demoMode?: boolean }) {
   const st = STAGE_TOKENS[offer.stage]
   const sigil = ELEMENT_TOKENS[offer.element].sigil
   const ariaLabel = `${offer.name} — ${formatPrice(offer.priceCents)}${
@@ -151,9 +184,9 @@ function OfferCard({ offer }: { offer: LaunchOffer }) {
         <div className="mt-auto space-y-3 pt-2">
           <PriceLine offer={offer} />
           {offer.pwyw ? (
-            <PwywCta offer={offer} />
+            <PwywCta offer={offer} demoMode={demoMode} />
           ) : (
-            <Cta offer={offer} href={offer.gumroadUrl} label={offer.cta} />
+            <Cta offer={offer} href={offer.gumroadUrl} label={offer.cta} demoMode={demoMode} />
           )}
         </div>
       </div>
@@ -161,7 +194,7 @@ function OfferCard({ offer }: { offer: LaunchOffer }) {
   )
 }
 
-export function LaunchOffers() {
+export function LaunchOffers({ demoMode }: { demoMode?: boolean }) {
   const bundle = offersByGroup('bundle')
   const digital = offersByGroup('digital')
   const physical = offersByGroup('physical')
@@ -175,7 +208,7 @@ export function LaunchOffers() {
             Founding Ally Bundle
           </h2>
           <div className="mx-auto max-w-xl">
-            <OfferCard offer={bundle[0]} />
+            <OfferCard offer={bundle[0]} demoMode={demoMode} />
           </div>
         </section>
       )}
@@ -190,7 +223,7 @@ export function LaunchOffers() {
         </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {digital.map((offer) => (
-            <OfferCard key={offer.key} offer={offer} />
+            <OfferCard key={offer.key} offer={offer} demoMode={demoMode} />
           ))}
         </div>
       </section>
@@ -205,7 +238,7 @@ export function LaunchOffers() {
         </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {physical.map((offer) => (
-            <OfferCard key={offer.key} offer={offer} />
+            <OfferCard key={offer.key} offer={offer} demoMode={demoMode} />
           ))}
         </div>
       </section>

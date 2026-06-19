@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Your purchase is in — redeem your code to unlock the deck, the book, and the game.',
 }
 
-type Props = { searchParams: Promise<{ sku?: string; code?: string }> }
+type Props = { searchParams: Promise<{ sku?: string; code?: string; demo?: string }> }
 
 /**
  * /success — the post-purchase return surface.
@@ -29,6 +29,7 @@ export default async function SuccessPage({ searchParams }: Props) {
   const sp = await searchParams
   const sku = (sp.sku ?? '').trim() as OfferKey
   const code = (sp.code ?? '').trim()
+  const demo = sp.demo === '1'
 
   const offer = LAUNCH_OFFERS.find((o) => o.key === sku)
   const { playerId } = await getCurrentPlayerSafe()
@@ -56,16 +57,28 @@ export default async function SuccessPage({ searchParams }: Props) {
           </p>
         </header>
 
+        {demo && (
+          <p
+            role="status"
+            className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-4 py-3 text-center text-sm text-amber-200"
+          >
+            <span className="font-bold uppercase tracking-wide">Demo</span> — no payment was made.
+            Your unlock code is already attached below.
+          </p>
+        )}
+
         <ol className="space-y-3 rounded-xl border border-zinc-800 bg-[#141412] p-5 text-sm text-[#a09e98]">
+          {!demo && (
+            <li className="flex gap-3">
+              <span className="font-bold text-purple-400">1.</span>
+              <span>
+                Check your email for the receipt from Gumroad — it carries your{' '}
+                <span className="font-semibold text-[#e8e6e0]">unlock code</span> (license key).
+              </span>
+            </li>
+          )}
           <li className="flex gap-3">
-            <span className="font-bold text-purple-400">1.</span>
-            <span>
-              Check your email for the receipt from Gumroad — it carries your{' '}
-              <span className="font-semibold text-[#e8e6e0]">unlock code</span> (license key).
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="font-bold text-purple-400">2.</span>
+            <span className="font-bold text-purple-400">{demo ? '1.' : '2.'}</span>
             <span>
               {signedIn ? (
                 <>Redeem it below — it attaches to your account.</>

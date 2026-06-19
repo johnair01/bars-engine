@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LaunchOffers } from './LaunchOffers'
 import { LAUNCH_GOAL_CENTS, formatPrice } from '@/lib/launch/offers'
+import { isLaunchDemoMode } from '@/lib/launch/demo'
 import { BarnRaisingBar } from '@/components/event/BarnRaisingBar'
 import { getBarnSnapshot } from '@/actions/barn'
 import type { BarnState } from '@/lib/event/barn-raising'
@@ -30,9 +31,22 @@ export default async function LaunchPage() {
     barnState = undefined
   }
 
+  const demoMode = isLaunchDemoMode()
+
   return (
     <main className="min-h-screen bg-[#0a0908] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-12">
+        {demoMode && (
+          <div
+            role="status"
+            className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-4 py-3 text-center text-sm text-amber-200"
+          >
+            <span className="font-bold uppercase tracking-wide">Demo mode</span> — every offer
+            routes through a payment-free checkout so you can walk the full buy → unlock flow. No
+            cards are charged.
+          </div>
+        )}
+
         {/* Hero */}
         <header className="space-y-4 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-purple-400">
@@ -50,7 +64,7 @@ export default async function LaunchPage() {
         </header>
 
         {/* Offers */}
-        <LaunchOffers />
+        <LaunchOffers demoMode={demoMode} />
 
         {/* Barn raising — every purchase raises the pre-sale wall */}
         <section aria-label="Barn raising">
