@@ -207,7 +207,10 @@ export function UnpackingQuiz() {
         hand: hand.map(c => ({ title: c.title, family: c.family, face: c.face, why: c.why, element: c.el })),
       })
       if ('error' in result) { setSaveError(result.error); return }
-      router.push('/')
+      const params = new URLSearchParams()
+      if (campaign.trim()) params.set('campaign', campaign.trim())
+      if (domain) params.set('domain', domain)
+      router.push(`/bars/move-generator?${params.toString()}`)
     })
   }
 
