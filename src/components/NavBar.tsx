@@ -84,7 +84,14 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                             BOOK
                         </Link>
                         <Link
-                            href="/game/"
+                            href="/deck/sales"
+                            title="The Allyship Deck — 120 cards. See what's inside."
+                            className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/deck')}`}
+                        >
+                            DECK
+                        </Link>
+                        <Link
+                            href="/game/index.html"
                             title="Play Mastering the Game of Allyship in your browser. No account needed."
                             className={`px-3 sm:px-4 py-3 rounded transition-colors ${isActive('/game')}`}
                         >
@@ -116,12 +123,21 @@ export function NavBar({ isAdmin, isAuthenticated }: { isAdmin: boolean; isAuthe
                     </>
                 )}
                 {!isAuthenticated && (
-                    <Link
-                        href="/login"
-                        className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
-                    >
-                        Log in
-                    </Link>
+                    <>
+                        <Link
+                            href="/redeem"
+                            title="Bought something? Redeem your code to unlock it."
+                            className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
+                        >
+                            Redeem
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="text-zinc-500 hover:text-zinc-300 px-3 sm:px-4 py-3 rounded transition-colors uppercase tracking-widest text-[10px] sm:text-xs"
+                        >
+                            Log in
+                        </Link>
+                    </>
                 )}
             </div>
         </nav>
