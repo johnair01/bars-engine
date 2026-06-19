@@ -229,31 +229,16 @@ function ChapterCard() {
   )
 }
 
-/* ── Move 3: Events ── */
+/* ── Move 3: Events (RSVP on Partiful + optional list capture) ── */
 
 function EventsCard() {
-  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState('')
 
-  function toggle(key: string) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (selected.size === 0) {
-      setStatus('error')
-      setError('Pick at least one event.')
-      return
-    }
     setStatus('loading')
     setError('')
     try {
@@ -264,7 +249,8 @@ function EventsCard() {
           intent: 'event',
           email,
           name,
-          events: Array.from(selected),
+          // List signup is for the whole weekend; confirmation carries all three.
+          events: AWAKEN_EVENTS.map((ev) => ev.key),
         }),
       })
       const data = await res.json()
@@ -279,78 +265,72 @@ function EventsCard() {
   return (
     <Card accent="green" badge="Move 3" title="Be there · Jul 17–19">
       <p className="text-sm leading-relaxed text-zinc-300">
-        Three gatherings the weekend of July 18th. RSVP to the ones you&apos;ll make.
+        Three gatherings the weekend of July 18th. RSVP on Partiful for the ones you&apos;ll make.
       </p>
 
-      {status === 'done' ? (
-        <div className="mt-4 rounded-xl border border-green-700/50 bg-green-950/30 p-4">
-          <p className="text-sm font-semibold text-green-300">See you there. 🎉</p>
-          <p className="mt-1 text-xs text-zinc-400">
-            You&apos;re on the list for {selected.size} event{selected.size === 1 ? '' : 's'}. Watch
-            your inbox for details.
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={submit} className="mt-4 space-y-3">
-          <div className="space-y-2">
-            {AWAKEN_EVENTS.map((ev) => {
-              const on = selected.has(ev.key)
-              return (
-                <button
-                  type="button"
-                  key={ev.key}
-                  onClick={() => toggle(ev.key)}
-                  className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-                    on
-                      ? 'border-green-500 bg-green-950/30'
-                      : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-600'
-                  }`}
-                >
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[11px] ${
-                      on ? 'border-green-400 bg-green-400 text-black' : 'border-zinc-600 text-transparent'
-                    }`}
-                  >
-                    ✓
-                  </span>
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">{ev.title}</span>
-                      <span className="text-[11px] font-semibold text-green-400">{ev.when}</span>
-                    </span>
-                    <span className="mt-0.5 block text-xs text-zinc-400">{ev.blurb}</span>
-                    <span className="mt-0.5 block text-[11px] text-zinc-600">{ev.where}</span>
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name (optional)"
-            className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
-          />
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
-          />
-          {status === 'error' && <p className="text-xs text-red-400">{error}</p>}
-          <button
-            type="submit"
-            disabled={status === 'loading'}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-3 font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500 disabled:opacity-60"
+      <div className="mt-4 space-y-2">
+        {AWAKEN_EVENTS.map((ev) => (
+          <div
+            key={ev.key}
+            className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
           >
-            {status === 'loading' ? 'Reserving…' : `RSVP${selected.size ? ` to ${selected.size}` : ''} →`}
-          </button>
-        </form>
-      )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-white">{ev.title}</span>
+              <span className="text-[11px] font-semibold text-green-400">{ev.when}</span>
+            </div>
+            <p className="mt-0.5 text-xs text-zinc-400">{ev.blurb}</p>
+            <p className="mt-0.5 text-[11px] text-zinc-600">{ev.where}</p>
+            <a
+              href={ev.partifulUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500"
+            >
+              RSVP on Partiful →
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 border-t border-zinc-800 pt-4">
+        {status === 'done' ? (
+          <div className="rounded-xl border border-green-700/50 bg-green-950/30 p-4">
+            <p className="text-sm font-semibold text-green-300">You&apos;re on the list. 🎉</p>
+            <p className="mt-1 text-xs text-zinc-400">
+              Check your inbox — we sent the weekend details and every RSVP link.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-3">
+            <p className="text-sm font-semibold text-white">
+              Want reminders + the weekend details by email?
+            </p>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name (optional)"
+              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
+            />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              className="w-full rounded-xl border border-zinc-700 bg-black px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-green-500"
+            />
+            {status === 'error' && <p className="text-xs text-red-400">{error}</p>}
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-zinc-800 px-5 py-3 font-bold text-white transition-all hover:bg-zinc-700 disabled:opacity-60"
+            >
+              {status === 'loading' ? 'Adding you…' : 'Keep me posted →'}
+            </button>
+          </form>
+        )}
+      </div>
     </Card>
   )
 }

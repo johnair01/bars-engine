@@ -17,40 +17,47 @@ export type AwakenEvent = {
   date: string
   where: string
   blurb: string
+  /** Partiful event page — the official RSVP destination. */
+  partifulUrl: string
 }
 
 /**
- * The three events the weekend of July 18th, 2026.
- * July 18, 2026 is a Saturday, so the weekend spans Jul 17–19.
- * Titles/venues are placeholders — edit to match the real lineup.
+ * The three events the weekend of July 18th, 2026 (Jul 17–19).
+ * RSVPs are handled on Partiful (partifulUrl); /awaken links out to them.
+ *
+ * Titles + dates + Partiful URLs are confirmed. Two titles are still marked
+ * pending by the organizer, and venues/times are TBA — update `where` (and add
+ * times to the calendar links in calendar.ts) once finalized.
  */
 export const AWAKEN_EVENTS: AwakenEvent[] = [
   {
     key: 'jul17-opening-circle',
-    title: 'Opening Circle',
+    title: 'Mastering the Game of Allyship — Book Launch',
     when: 'Fri · Jul 17',
     date: '2026-07-17',
     where: 'Portland · TBA',
-    blurb:
-      'We open the weekend together — name what we are waking up to and set the intention for the work ahead.',
+    blurb: 'The launch itself — the book steps into the world. Come be there for the beginning.',
+    partifulUrl: 'https://partiful.com/e/JTEHEkp0YslfGplWK8vS',
   },
   {
+    // Title pending — organizer to finalize.
     key: 'jul18-mainstage',
-    title: 'The Main Event',
+    title: 'Book Launch Booty Shake™',
     when: 'Sat · Jul 18',
     date: '2026-07-18',
     where: 'Portland · TBA',
-    blurb:
-      'The centerpiece gathering. Story, music, and the live unveiling of where the car fund stands.',
+    blurb: 'A dance party to shake the book into the world. Bring your whole body.',
+    partifulUrl: 'https://partiful.com/e/de44COeykTCRP8qvGt3O',
   },
   {
+    // Title pending — organizer to finalize.
     key: 'jul19-send-off',
-    title: 'Send-Off Brunch',
+    title: 'Mastering the Game of Allyship — Book Launch Game',
     when: 'Sun · Jul 19',
     date: '2026-07-19',
     where: 'Portland · TBA',
-    blurb:
-      'A slower close — coffee, debrief, and the first steps each of us takes back into the world.',
+    blurb: 'Play the game the book is built on — live, together, to close the weekend.',
+    partifulUrl: 'https://partiful.com/e/eY5MfJQg7CtjdimimSxO',
   },
 ]
 

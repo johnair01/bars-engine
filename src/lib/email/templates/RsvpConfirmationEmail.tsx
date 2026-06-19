@@ -91,8 +91,9 @@ export function RsvpConfirmationEmail({ events, firstName, homeUrl }: RsvpConfir
           <Heading style={heading}>{greeting}</Heading>
 
           <Text style={text}>
-            Thank you for showing up — really. Here&apos;s what you&apos;re in for. Add each one to
-            your calendar so the weekend stays real between now and then.
+            Thank you for showing up — really. Here&apos;s the weekend. RSVP on Partiful for the
+            ones you&apos;ll make, and drop them on your calendar so they stay real between now and
+            then.
           </Text>
 
           {events.map((ev) => (
@@ -100,9 +101,14 @@ export function RsvpConfirmationEmail({ events, firstName, homeUrl }: RsvpConfir
               <Text style={eventWhen}>{ev.when}</Text>
               <Text style={eventTitle}>{ev.title}</Text>
               <Text style={eventMeta}>{ev.where}</Text>
-              <Link href={googleCalendarUrl(ev)} style={calLink}>
-                + Add to calendar
+              <Link href={ev.partifulUrl} style={calLink}>
+                RSVP on Partiful →
               </Link>
+              <Text style={{ ...eventMeta, margin: '6px 0 0' }}>
+                <Link href={googleCalendarUrl(ev)} style={calLink}>
+                  + Add to calendar
+                </Link>
+              </Text>
             </Section>
           ))}
 
@@ -136,13 +142,14 @@ export function rsvpConfirmationText({
     '',
     greeting,
     '',
-    'Thank you for showing up. Here is what you are in for — add each one to your',
-    'calendar so the weekend stays real between now and then.',
+    'Thank you for showing up. Here is the weekend — RSVP on Partiful for the ones',
+    'you will make, and drop them on your calendar so they stay real.',
     '',
   ]
   for (const ev of events) {
     lines.push(`${ev.when} — ${ev.title}`)
     lines.push(`  ${ev.where}`)
+    lines.push(`  RSVP on Partiful: ${ev.partifulUrl}`)
     lines.push(`  Add to calendar: ${googleCalendarUrl(ev)}`)
     lines.push('')
   }
