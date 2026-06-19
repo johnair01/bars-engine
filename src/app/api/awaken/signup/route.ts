@@ -12,6 +12,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { AWAKEN_EVENT_KEYS } from '@/lib/awaken/content'
+import { sendChapterOneEmail } from '@/lib/email/awaken'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Persist first — the lead is the thing we must not lose.
   try {
     await db.funnelSignup.create({
       data: { intent, email, name, events, source: 'awaken' },
@@ -65,5 +67,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ ok: true, intent, events })
+  // Then send (decoupled): a flaky provider must not 500 the request or lose
+  // the lead. We log failures for re-send tooling and still return ok.
+  let emailed = false
+  if (intent === 'chapter') {
+    const firstName = name?.split(/\s+/)[0] || null
+    const result = await sendChapterOneEmail({ to: email, firstName })
+    emailed = result.ok && !('skipped' in result && result.skipped)
+    if (!result.ok) {
+      console.error('[awaken/signup] chapter email failed to send', { email, error: result.error })
+    }
+  }
+
+  return NextResponse.json({ ok: true, intent, events, emailed })
 }
