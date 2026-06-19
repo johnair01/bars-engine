@@ -78,6 +78,21 @@ interface DragState {
   originY: number
   scale: number
   moved: boolean
+  currentX: number
+  currentY: number
+}
+
+interface GestureState {
+  pointer1Id: number
+  pointer2Id: number
+  itemId: string
+  p1Start: { x: number; y: number }
+  p2Start: { x: number; y: number }
+  p1Current: { x: number; y: number }
+  p2Current: { x: number; y: number }
+  originSize: number
+  originRot: number
+  scale: number
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -720,31 +735,6 @@ function TextEditorOverlay({
         </button>
       </div>
 
-      {/* Size slider (vertical, rotated) */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 6,
-          top: '50%',
-          transform: 'translateY(-50%) rotate(-90deg)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}
-      >
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.6)' }}>A</span>
-        <input
-          type="range"
-          min={16}
-          max={54}
-          step={1}
-          value={draftSize}
-          onChange={(e) => onDraftSizeChange(Number(e.target.value))}
-          style={{ width: 168 }}
-        />
-        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 20, color: 'rgba(232,226,218,0.6)' }}>A</span>
-      </div>
-
       {/* Textarea */}
       <div className="flex-1 flex items-center justify-center" style={{ padding: '0 52px' }}>
         <textarea
@@ -771,6 +761,21 @@ function TextEditorOverlay({
             textShadow: '0 2px 16px rgba(0,0,0,0.7)',
           }}
         />
+      </div>
+
+      {/* Size slider */}
+      <div className="flex items-center gap-3 px-6" style={{ paddingBottom: 4 }}>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 11, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
+        <input
+          type="range"
+          min={12}
+          max={80}
+          step={1}
+          value={draftSize}
+          onChange={(e) => onDraftSizeChange(Number(e.target.value))}
+          style={{ flex: 1 }}
+        />
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 800, fontSize: 22, color: 'rgba(232,226,218,0.5)', flexShrink: 0 }}>A</span>
       </div>
 
       {/* Element colour rail */}
@@ -1195,6 +1200,7 @@ export function SeedCaptureWhiteboard({
   const router = useRouter()
   const boardRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
+  const gestureRef = useRef<GestureState | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const linkInputRef = useRef<HTMLInputElement>(null)
   // Map of itemId → File for photos selected but not yet uploaded
@@ -1236,6 +1242,30 @@ export function SeedCaptureWhiteboard({
       if (!boardRef.current) return
       const rect = boardRef.current.getBoundingClientRect()
       const scale = rect.width / LOGICAL_W
+
+      // Second pointer on same item while dragging → start pinch/rotate gesture
+      const existingDrag = dragRef.current
+      if (existingDrag && existingDrag.itemId === id) {
+        const item = items.find((i) => i.id === id)
+        if (!item) return
+        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+        gestureRef.current = {
+          pointer1Id: existingDrag.pointerId,
+          pointer2Id: e.pointerId,
+          itemId: id,
+          p1Start: { x: existingDrag.currentX, y: existingDrag.currentY },
+          p2Start: { x: e.clientX, y: e.clientY },
+          p1Current: { x: existingDrag.currentX, y: existingDrag.currentY },
+          p2Current: { x: e.clientX, y: e.clientY },
+          originSize: item.size ?? (item.type === 'photo' ? 1.0 : 27),
+          originRot: item.rot,
+          scale,
+        }
+        dragRef.current = null
+        setDragId(null)
+        return
+      }
+
       const item = items.find((i) => i.id === id)
       if (!item) return
 
@@ -1249,6 +1279,8 @@ export function SeedCaptureWhiteboard({
         originY: item.y,
         scale,
         moved: false,
+        currentX: e.clientX,
+        currentY: e.clientY,
       }
       setDragId(id)
     },
@@ -1256,8 +1288,39 @@ export function SeedCaptureWhiteboard({
   )
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    // ── Gesture mode (pinch + rotate) ──────────────────────────────────────
+    const g = gestureRef.current
+    if (g) {
+      if (e.pointerId === g.pointer1Id) g.p1Current = { x: e.clientX, y: e.clientY }
+      if (e.pointerId === g.pointer2Id) g.p2Current = { x: e.clientX, y: e.clientY }
+
+      const initDist = Math.hypot(g.p2Start.x - g.p1Start.x, g.p2Start.y - g.p1Start.y)
+      const curDist  = Math.hypot(g.p2Current.x - g.p1Current.x, g.p2Current.y - g.p1Current.y)
+      const scaleFactor = initDist > 1 ? curDist / initDist : 1
+
+      const initAngle = Math.atan2(g.p2Start.y - g.p1Start.y, g.p2Start.x - g.p1Start.x)
+      const curAngle  = Math.atan2(g.p2Current.y - g.p1Current.y, g.p2Current.x - g.p1Current.x)
+      const angleDelta = (curAngle - initAngle) * (180 / Math.PI)
+
+      setItems((prev) =>
+        prev.map((it) => {
+          if (it.id !== g.itemId) return it
+          const isPhoto = it.type === 'photo'
+          const newSize = isPhoto
+            ? clamp(g.originSize * scaleFactor, 0.35, 3.5)
+            : clamp(Math.round(g.originSize * scaleFactor), 12, 80)
+          return { ...it, size: newSize, rot: g.originRot + angleDelta }
+        })
+      )
+      return
+    }
+
+    // ── Single-pointer drag ─────────────────────────────────────────────────
     const drag = dragRef.current
     if (!drag || drag.pointerId !== e.pointerId) return
+
+    drag.currentX = e.clientX
+    drag.currentY = e.clientY
 
     const dx = (e.clientX - drag.startX) / drag.scale
     const dy = (e.clientY - drag.startY) / drag.scale
@@ -1278,6 +1341,15 @@ export function SeedCaptureWhiteboard({
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
+      // ── Gesture exit ────────────────────────────────────────────────────────
+      const g = gestureRef.current
+      if (g && (e.pointerId === g.pointer1Id || e.pointerId === g.pointer2Id)) {
+        gestureRef.current = null
+        setDragId(null)
+        return
+      }
+
+      // ── Single-pointer drag end ─────────────────────────────────────────────
       const drag = dragRef.current
       if (!drag || drag.pointerId !== e.pointerId) return
 
@@ -1303,16 +1375,33 @@ export function SeedCaptureWhiteboard({
     [overTrash, items]
   )
 
-  // Empty canvas tap → new text
-  const handleCanvasTap = useCallback(
-    () => {
-      if (dragRef.current) return
-      setDraft('')
-      setDraftTint(fieldTint ?? 'none')
-      setDraftSize(30)
-      setEditing('new')
+  // Canvas background pointer-down: only used to detect second-finger gesture
+  // when the second finger lands on empty canvas rather than on a sticker
+  const handleCanvasPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag || !boardRef.current) return
+      const rect = boardRef.current.getBoundingClientRect()
+      const scale = rect.width / LOGICAL_W
+      const item = items.find((i) => i.id === drag.itemId)
+      if (!item) return
+      ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      gestureRef.current = {
+        pointer1Id: drag.pointerId,
+        pointer2Id: e.pointerId,
+        itemId: drag.itemId,
+        p1Start: { x: drag.currentX, y: drag.currentY },
+        p2Start: { x: e.clientX, y: e.clientY },
+        p1Current: { x: drag.currentX, y: drag.currentY },
+        p2Current: { x: e.clientX, y: e.clientY },
+        originSize: item.size ?? (item.type === 'photo' ? 1.0 : 27),
+        originRot: item.rot,
+        scale,
+      }
+      dragRef.current = null
+      setDragId(null)
     },
-    [fieldTint]
+    [items]
   )
 
   // ─── Editor commit ─────────────────────────────────────────────────────────
@@ -1572,7 +1661,7 @@ export function SeedCaptureWhiteboard({
         <div
           className="absolute inset-0"
           style={{ zIndex: 10 }}
-          onPointerDown={handleCanvasTap}
+          onPointerDown={handleCanvasPointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           role="region"
@@ -1591,6 +1680,8 @@ export function SeedCaptureWhiteboard({
               )
             }
             if (item.type === 'photo') {
+              const photoW = Math.round(118 * (item.size ?? 1.0))
+              const photoH = Math.round(132 * (item.size ?? 1.0))
               return (
                 <div
                   key={item.id}
@@ -1599,8 +1690,8 @@ export function SeedCaptureWhiteboard({
                     position: 'absolute',
                     left: item.x,
                     top: item.y,
-                    width: 118,
-                    height: 132,
+                    width: photoW,
+                    height: photoH,
                     transform: `translate(-50%,-50%) rotate(${item.rot}deg) ${isDragging ? 'scale(1.04)' : ''}`,
                     borderRadius: 11,
                     background: 'linear-gradient(155deg,#2b2724,#15110e)',
