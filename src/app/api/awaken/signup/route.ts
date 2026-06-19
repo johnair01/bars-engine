@@ -12,7 +12,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { AWAKEN_EVENT_KEYS } from '@/lib/awaken/content'
-import { sendChapterOneEmail } from '@/lib/email/awaken'
+import { sendChapterOneEmail, sendRsvpConfirmationEmail } from '@/lib/email/awaken'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -69,14 +69,19 @@ export async function POST(request: NextRequest) {
 
   // Then send (decoupled): a flaky provider must not 500 the request or lose
   // the lead. We log failures for re-send tooling and still return ok.
+  const firstName = name?.split(/\s+/)[0] || null
   let emailed = false
-  if (intent === 'chapter') {
-    const firstName = name?.split(/\s+/)[0] || null
-    const result = await sendChapterOneEmail({ to: email, firstName })
-    emailed = result.ok && !('skipped' in result && result.skipped)
-    if (!result.ok) {
-      console.error('[awaken/signup] chapter email failed to send', { email, error: result.error })
-    }
+  const result =
+    intent === 'chapter'
+      ? await sendChapterOneEmail({ to: email, firstName })
+      : await sendRsvpConfirmationEmail({ to: email, firstName, eventKeys: events })
+  emailed = result.ok && !('skipped' in result && result.skipped)
+  if (!result.ok) {
+    console.error('[awaken/signup] confirmation email failed to send', {
+      intent,
+      email,
+      error: result.error,
+    })
   }
 
   return NextResponse.json({ ok: true, intent, events, emailed })
