@@ -16,7 +16,7 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentPlayer } from '@/lib/auth'
 import { mergeSeedMetabolization } from '@/lib/bar-seed-metabolization/parse'
-import { addBarToHand, type HandContents, type OverflowContext } from '@/actions/hand'
+import { addBarToHandForPlayer, type HandContents, type OverflowContext } from '@/lib/hand-service'
 
 export type CaptureDestination = 'hand' | 'vault'
 
@@ -93,7 +93,7 @@ export async function captureBar(input: {
     }
 
     // destination === 'hand'
-    const handResult = await addBarToHand({ barId })
+    const handResult = await addBarToHandForPlayer(player.id, barId)
     if ('error' in handResult) {
         // Created but couldn't place — it's safely in the vault.
         return { success: true, barId, placedIn: 'vault' }
