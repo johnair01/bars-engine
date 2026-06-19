@@ -65,6 +65,41 @@
 
 ---
 
+## Demo walkthrough mode (no Gumroad needed)
+
+To walk the full logged-out **buy → success → redeem → unlock** flow without
+creating a single Gumroad product — e.g. to show stakeholders the funnel and
+critique its ergonomics — set one env var on a **preview / staging** deploy:
+
+```bash
+NEXT_PUBLIC_LAUNCH_DEMO_MODE=1
+```
+
+What it does: every `/launch` offer (including SKUs whose Gumroad URL isn't
+wired yet) routes to an internal `/launch/demo-checkout` that mints a **real**
+`RedemptionCode` (`source: 'demo'`) and hands off to the normal
+`/success → /redeem → Entitlement` pipeline. Only the payment screen is
+replaced; the genuine redemption mechanics run unchanged.
+
+- **Off by default.** Going live = leave it unset on Production. There is no
+  code to remove. When unset, `/launch/demo-checkout` 404s and offer cards link
+  to Gumroad (or read "Setup pending").
+- **It's a build-time `NEXT_PUBLIC_` var** — set it on the Preview environment
+  only, redeploy, and your demo link is live while Production stays real.
+- **Use a staging database.** Demo redemptions write real rows to whatever DB
+  that deploy points at — never run it against the production DB.
+- **Cleanup:** every demo row is tagged `source: 'demo'`. Remove them with
+  `npm run launch:demo:clean` (dry-run; add `-- --apply` to delete).
+
+## Checking your setup
+
+`npm run launch:check` reports, per SKU, whether the buy link and license-verify
+product id are wired plus the global webhook config — run it after setting the
+Gumroad env vars to confirm what Production will actually serve (add
+`-- --strict` to fail if any offer is only partially wired).
+
+---
+
 ## Fastest route to "walkable by EOD"
 
 The four 🔴 items — one DB seed (done) plus three Gumroad/Vercel settings —

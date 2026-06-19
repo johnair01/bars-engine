@@ -30,6 +30,7 @@
     "db:migrate:status": "tsx scripts/migrate-with-direct-url.ts status",
     "db:url:doctor": "tsx scripts/db-url-doctor.ts",
     "launch:check": "tsx scripts/launch-check.ts",
+    "launch:demo:clean": "tsx scripts/launch-demo-clean.ts",
     "deck:export-pdf": "tsx scripts/export-oracle-deck-pdf.ts",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
