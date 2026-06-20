@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import type { Loadout } from '../vocabulary'
-import { scoreLoadoutOverCampaign, type BaseCoord } from '../superpowers'
+import { SUPERPOWERS, type Loadout } from '../vocabulary'
+import { scoreLoadoutOverCampaign, superpowerDeck, type BaseCoord } from '../superpowers'
+import { assessQuality } from '../quality'
 
 const baseCards: BaseCoord[] = (
   JSON.parse(
@@ -28,10 +29,22 @@ describe('car-campaign quality harness', () => {
     expect(score.distinct.every((c) => c.level >= 0)).toBe(true)
   })
 
-  it('current generated decks are all below L3 (the baseline gap)', () => {
+  it('hero cells lift the campaign-ready count (12 L4, 24 ready cells)', () => {
     const score = scoreLoadoutOverCampaign(LOADOUT, baseCards)
-    expect(score.belowL3).toBe(score.distinct.length)
-    expect(score.campaignReadyCells).toBe(0)
+    expect(score.byLevel[4]).toBe(12) // 6 escape_artist inner + 6 connector outer hero cells
+    expect(score.byLevel[0]).toBe(48) // the still-generated remainder
+    expect(score.belowL3).toBe(48)
+    expect(score.campaignReadyCells).toBe(24) // 6 shared (move×face) coords × 4 domains
+  })
+
+  it('no published superpower card scores below L3 (publish gate)', () => {
+    for (const sp of SUPERPOWERS) {
+      for (const c of superpowerDeck(sp)) {
+        if (c.status === 'published') {
+          expect(assessQuality(c).level, `${c.id} must be ≥ L3 to publish`).toBeGreaterThanOrEqual(3)
+        }
+      }
+    }
   })
 
   it('is deterministic', () => {

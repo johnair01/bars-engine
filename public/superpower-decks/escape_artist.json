@@ -4,7 +4,7 @@
   "label": "The Escape Artist",
   "gift": "Honoring the wisdom of fear — finding the exit, the trapdoor, the well-timed retreat.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T19:52:44.405Z",
+  "generatedAt": "2026-06-20T21:43:57.441Z",
   "count": 60,
   "cards": [
     {
@@ -184,16 +184,17 @@
     {
       "id": "sp-escape_artist-WAKE-ARCHITECT-INNER",
       "slug": "escape_artist-wake_up-architect-inner",
-      "name": "Notice what your fear is protecting — Structure",
-      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "name": "Spot Your Dodge",
+      "essence": "Notice the plan you're avoiding because building it makes the need real.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Scan for the task you keep sliding past (the budget, the page, the list).",
+        "Feel the avoidance in your body.",
+        "Name the dodge out loud and take the smallest next step."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "wake_up"
@@ -202,13 +203,39 @@
         "architect"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "metal"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "What am I not letting myself see about the fund because seeing it commits me?",
+      "campaignQuestion": "What structural step for the car am I quietly dodging?",
+      "optimizesFor": "Seeing the avoided move before it silently sinks the campaign.",
+      "forbiddenMoves": [
+        "Calling the dodge 'being busy'",
+        "Guilt-spiraling instead of acting",
+        "Vanishing into research"
+      ],
+      "failureModes": [
+        "The budget you never open",
+        "Motion without the key move"
+      ],
+      "remediation": "Open the avoided thing for 5 minutes only.",
+      "tell": {
+        "working": "You name the dodge and touch it.",
+        "performed": "You make a new to-do list to avoid the old one."
+      },
+      "contraindications": [
+        "When you genuinely need rest, not another push"
+      ],
+      "example": "You keep 'forgetting' to total the costs; you open the doc for five minutes.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-WAKE-ARCHITECT-OUTER",
@@ -590,16 +617,17 @@
     {
       "id": "sp-escape_artist-OPEN-DIPLOMAT-INNER",
       "slug": "escape_artist-open_up-diplomat-inner",
-      "name": "Feel the fear without obeying it — Bridge",
-      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "name": "Receive Without Bracing",
+      "essence": "Let help land for the car without bracing for the catch.",
       "steps": [
-        "Receive it without flinching, across difference and relationship.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice the brace in your body when someone offers.",
+        "Breathe; let the offer in one inch further than feels safe.",
+        "Say a clean 'thank you' without deflecting."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "open_up"
@@ -608,13 +636,39 @@
         "diplomat"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "metal"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "connection"
+      ],
+      "primaryQuestion": "What am I protecting by refusing help — and is it still worth the cost?",
+      "campaignQuestion": "Whose offered help for the car am I deflecting out of habit?",
+      "optimizesFor": "Actually receiving the resources people offer, so the fund grows.",
+      "forbiddenMoves": [
+        "Deflecting the offer",
+        "Over-explaining why you don't really need it",
+        "Attaching strings to received help"
+      ],
+      "failureModes": [
+        "'I'm fine' when you're not",
+        "Turning help into a debt you must repay"
+      ],
+      "remediation": "If you deflect, circle back: 'Actually — yes, that would help.'",
+      "tell": {
+        "working": "You feel the brace soften.",
+        "performed": "You accept but immediately plan to pay it back double."
+      },
+      "contraindications": [
+        "When the 'help' has real strings you're right to refuse"
+      ],
+      "example": "A friend offers $300; instead of 'oh you don't have to,' say 'thank you — that genuinely helps.'",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-OPEN-DIPLOMAT-OUTER",
@@ -706,16 +760,17 @@
     {
       "id": "sp-escape_artist-CLEAN-SHAMAN-INNER",
       "slug": "escape_artist-clean_up-shaman-inner",
-      "name": "Sort wise retreat from mere flight — Sense",
-      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "name": "Wise Retreat or Just Scared?",
+      "essence": "Sort a genuine reason not to ask from plain exposure-fear.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Feel the flinch and locate it in the body.",
+        "Ask the Escape Artist's question: what is this fear protecting?",
+        "Sort: a real reason (name it) vs. just being seen needing help (proceed anyway)."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "clean_up"
@@ -724,13 +779,39 @@
         "shaman"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "metal"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "exploration"
+      ],
+      "primaryQuestion": "Is this 'no' wisdom, or is it just fear wearing wisdom's coat?",
+      "campaignQuestion": "Where am I calling avoidance 'discernment' in the campaign?",
+      "optimizesFor": "Not abandoning a good ask because needing help feels exposing.",
+      "forbiddenMoves": [
+        "Dressing avoidance as discernment",
+        "Ghosting the campaign to dodge the feeling",
+        "Carrying others' guilt about your need"
+      ],
+      "failureModes": [
+        "Perpetual 'not the right time'",
+        "Researching instead of asking"
+      ],
+      "remediation": "Set a 10-minute timer; send one ask before it rings.",
+      "tell": {
+        "working": "You name the fear and move.",
+        "performed": "You generate three more reasons to wait."
+      },
+      "contraindications": [
+        "When the retreat really is the wise move — then rest without guilt"
+      ],
+      "example": "You feel dread posting the fundraiser; you sort it: not danger, just exposure — you post.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-CLEAN-SHAMAN-OUTER",
@@ -1460,16 +1541,17 @@
     {
       "id": "sp-escape_artist-SHOW-CHALLENGER-INNER",
       "slug": "escape_artist-show_up-challenger-inner",
-      "name": "Open the exit you actually need — Edge",
-      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "name": "Stay for the Ask",
+      "essence": "Don't vanish in the sixty seconds before you send the ask.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Feel the urge to flee right before sending.",
+        "Set a 10-minute timer; name the fear out loud.",
+        "Send one ask before it rings."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -1478,13 +1560,39 @@
         "challenger"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "metal"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "agency"
+      ],
+      "primaryQuestion": "Is my urge to bolt protecting me from real danger, or just from being seen needing help?",
+      "campaignQuestion": "Which ask am I one click away from sending but keep escaping?",
+      "optimizesFor": "Sending the ask — the move that could actually increase life — instead of fleeing it.",
+      "forbiddenMoves": [
+        "Calling avoidance 'timing'",
+        "Suddenly reorganizing your whole plan to avoid sending",
+        "Pressuring yourself into freeze"
+      ],
+      "failureModes": [
+        "Perpetual 'not the right moment'",
+        "Researching instead of asking"
+      ],
+      "remediation": "Shrink it: send the ask to one safe person first.",
+      "tell": {
+        "working": "You name the fear and send anyway.",
+        "performed": "You produce three more reasons to wait."
+      },
+      "contraindications": [
+        "When pausing is genuinely wiser — but be honest"
+      ],
+      "example": "Timer set: text one person the fundraiser link before 10 minutes pass.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-SHOW-CHALLENGER-OUTER",
@@ -1576,16 +1684,17 @@
     {
       "id": "sp-escape_artist-SHOW-ARCHITECT-INNER",
       "slug": "escape_artist-show_up-architect-inner",
-      "name": "Open the exit you actually need — Structure",
-      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "name": "Pre-Commit the Rest",
+      "essence": "Decide in advance when you'll rest, so you don't bolt from the campaign mid-push.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Name the point where you'll pause (after the asks go out, not before).",
+        "Schedule the rest like an appointment.",
+        "When the urge to vanish hits early, feel it, point to the scheduled rest, and keep going."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -1594,13 +1703,39 @@
         "architect"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "earth"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "rest"
+      ],
+      "primaryQuestion": "Am I about to call quitting 'self-care' to escape the exposure?",
+      "campaignQuestion": "What sustainable rhythm lets me keep asking without burning out or bolting?",
+      "optimizesFor": "Staying in the campaign by resourcing rest, so the effort can increase life rather than drain you.",
+      "forbiddenMoves": [
+        "Disguising flight as self-care",
+        "Pushing with no rest until you crash",
+        "Ghosting without a return plan"
+      ],
+      "failureModes": [
+        "Bolting right before the finish",
+        "Burnout framed as boundaries"
+      ],
+      "remediation": "If you bolted, name the real fear and set the next small ask.",
+      "tell": {
+        "working": "You rest on schedule and return.",
+        "performed": "You 'rest' the moment it gets exposing."
+      },
+      "contraindications": [
+        "When you truly need to stop — then stop, cleanly"
+      ],
+      "example": "Plan: send five asks, then take the weekend off, then resume Monday.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-SHOW-ARCHITECT-OUTER",
@@ -1634,16 +1769,17 @@
     {
       "id": "sp-escape_artist-SHOW-DIPLOMAT-INNER",
       "slug": "escape_artist-show_up-diplomat-inner",
-      "name": "Open the exit you actually need — Bridge",
-      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "name": "Name the Cost of Staying",
+      "essence": "Name what staying in the ask actually costs you, so the cost is chosen, not leaked.",
       "steps": [
-        "Take the concrete act, across difference and relationship.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Feel where the campaign drains you.",
+        "Name the real cost out loud (time, pride, exposure).",
+        "Decide if it's worth it — and if yes, stay on purpose."
       ],
       "source": {
-        "origin": "ai",
-        "name": "Superpower deck generator (draft)"
+        "origin": "gm",
+        "name": "Authored hero cell",
+        "author": "Wendell Britt"
       },
       "moves": [
         "show_up"
@@ -1652,13 +1788,39 @@
         "diplomat"
       ],
       "domains": [],
-      "channels": [],
+      "channels": [
+        "earth"
+      ],
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
       ],
+      "capabilities": [
+        "rest"
+      ],
+      "primaryQuestion": "What is staying in this fundraiser costing me that I haven't named?",
+      "campaignQuestion": "What do I need to acknowledge about the cost so I can keep showing up honestly?",
+      "optimizesFor": "Chosen, sustainable presence instead of silent depletion.",
+      "forbiddenMoves": [
+        "Pretending it costs nothing",
+        "Becoming a martyr",
+        "Turning your cost into others' obligation"
+      ],
+      "failureModes": [
+        "Unnamed depletion becomes disappearance",
+        "Resentment poisons the gratitude"
+      ],
+      "remediation": "Name the cost to one trusted person; let it be witnessed.",
+      "tell": {
+        "working": "You stay clear-eyed about the price and stay anyway.",
+        "performed": "You keep score of what staying costs."
+      },
+      "contraindications": [
+        "When the cost is too high — then it's okay to step back"
+      ],
+      "example": "Admit asking for money bruises your pride; name it, and choose to keep asking.",
       "tier": "canonical",
-      "status": "draft"
+      "status": "published"
     },
     {
       "id": "sp-escape_artist-SHOW-DIPLOMAT-OUTER",

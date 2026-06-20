@@ -77,9 +77,13 @@ describe('ownership-gated resolution', () => {
     expect(without).toHaveLength(0)
   })
 
-  it('default pool excludes drafts until promotion', () => {
-    expect(publishedDeck('connector')).toHaveLength(0)
-    expect(poolWithSuperpowers(CANONICAL_TECHNIQUES, ['connector'])).toEqual([...CANONICAL_TECHNIQUES])
+  it('only published hero cells enter the default pool', () => {
+    const pub = publishedDeck('connector')
+    expect(pub.length).toBe(6) // the six authored Connector hero cells
+    expect(pub.every((c) => c.status === 'published')).toBe(true)
+    expect(poolWithSuperpowers(CANONICAL_TECHNIQUES, ['connector'])).toHaveLength(
+      CANONICAL_TECHNIQUES.length + 6,
+    )
   })
 })
 

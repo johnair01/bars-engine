@@ -10,9 +10,15 @@ import { SUPERPOWERS, type Superpower } from '../vocabulary'
 import type { Technique } from '../types'
 import { SUPERPOWER_PROFILES } from './profiles'
 import { buildSuperpowerDeck } from './grid'
+import { SUPERPOWER_OVERRIDES } from './overrides'
+
+/** Replace any generated cell with its hand-authored hero override (by id). */
+function applyOverrides(cards: Technique[]): Technique[] {
+  return cards.map((c) => SUPERPOWER_OVERRIDES[c.id] ?? c)
+}
 
 export const SUPERPOWER_DECKS: Record<Superpower, Technique[]> = Object.fromEntries(
-  SUPERPOWERS.map((sp) => [sp, buildSuperpowerDeck(SUPERPOWER_PROFILES[sp])]),
+  SUPERPOWERS.map((sp) => [sp, applyOverrides(buildSuperpowerDeck(SUPERPOWER_PROFILES[sp]))]),
 ) as Record<Superpower, Technique[]>
 
 /** Every card in a superpower's deck (any status). */
