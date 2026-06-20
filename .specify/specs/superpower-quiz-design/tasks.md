@@ -5,24 +5,29 @@
 > data + `scoreQuiz` (tested) before UI. Gate each phase with
 > `npm run build` && `npm run check`.
 
-## Phase 1 — Item bank + scoring (pure, no I/O)
-- [ ] **T1.1** `src/lib/superpowers/quiz/types.ts` — `QuizItem`, `QuizOption`,
+## Phase 1 — Item bank + scoring (pure, no I/O) — DONE
+- [x] **T1.0** `src/lib/superpowers/types.ts` — base `Superpower` (7),
+      `SuperpowerOrientation`, `orientationToMoveAspect`, `SUPERPOWERS`,
+      `SUPERPOWER_DEFS` (element/domains/shadows). *(campaign Phase 1 T1.1)*
+- [x] **T1.1** `src/lib/superpowers/quiz/types.ts` — `QuizItem`, `QuizOption`,
       `QuizAnswer`, `QuizResult`, `OrientationItem`. (FR1-3)
-- [ ] **T1.2** `src/lib/superpowers/quiz/items.ts` — port the **reviewed**
-      [item-bank.md](./item-bank.md) (11 forced-choice + 1 orientation, mined from
-      the six Strategy Guides + the Coach Strategy Guide) into typed data; each option
-      **multi-weighted & quasi-ipsative**; ensure **≥3–4 signals per superpower**
-      (balance Coach/Escape Artist via the candidate-pool alternates or rely on
-      percent-of-max). Copy in Wendell's voice. (FR1)
-- [ ] **T1.3** `src/lib/superpowers/quiz/orientation.ts` — internal/external
-      orientation item(s) (the addendum polarity). (FR3)
-- [ ] **T1.4** `src/lib/superpowers/quiz/score.ts` — `scoreQuiz`: additive →
-      percent-of-max → rank all 7 → margin → `confident` → primary/secondary;
-      exported `CONFIDENCE_THRESHOLD` + fixed `TIE_ORDER`. (FR2)
-- [ ] **T1.5** `__tests__/score.test.ts` — determinism; exact-tie uses TIE_ORDER;
-      near-tie (margin < threshold) ⇒ `confident:false`; item-count normalization;
-      every superpower reachable. (FR4)
-- [ ] **T1.6** Gate: `npm run check`.
+- [x] **T1.2** `src/lib/superpowers/quiz/items.ts` — ported the reviewed
+      [item-bank.md](./item-bank.md) (11 forced-choice items, multi-weighted
+      quasi-ipsative; ≥3 signals/superpower verified by test). (FR1)
+- [x] **T1.3** `ORIENTATION_ITEM` (internal/external) — lives in `items.ts`
+      (not a separate file). (FR3)
+- [x] **T1.4** `src/lib/superpowers/quiz/score.ts` — `scoreQuiz`: additive →
+      percent-of-max → rank 7 → margin → `confident` → primary/secondary;
+      exported `CONFIDENCE_THRESHOLD` (0.1) + fixed `TIE_ORDER`; dedupes answers
+      per item so pct ≤ 1. (FR2)
+- [x] **T1.5** `__tests__/score.test.ts` — 10 tests (tsx + node:assert):
+      structure, ≥3 signals/type, determinism, every superpower reachable,
+      empty→TIE_ORDER, near-tie<θ⇒not confident, clear winner confident,
+      normalization across unequal item counts, dedupe, orientation passthrough.
+      **Passes 10/10 via `npx tsx`.** (FR4)
+- [ ] **T1.6** Gate: `npm run build` && `npm run check` in full env (sandbox has
+      no `node_modules`; subset `tsc` showed no errors in the new files — only
+      missing `@/` alias + `@types/node` resolved by the project config).
 
 ## Phase 2 — Result descriptions + ethics
 - [ ] **T2.1** `src/lib/superpowers/quiz/descriptions.ts` — per-superpower

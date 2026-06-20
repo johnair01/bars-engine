@@ -6,9 +6,11 @@
 
 ## Phase 1 — Ontology + deterministic translation library (no I/O, no migration)
 
-- [ ] **T1.1** `src/lib/superpowers/types.ts` — `Superpower`,
-      `SuperpowerOrientation`, `SuperpowerTranslation`, `SuperpowerDef`; document
-      `internal→inner` / `external→outer`. (FR1)
+- [x] **T1.1** `src/lib/superpowers/types.ts` — `Superpower` (7),
+      `SuperpowerOrientation`, `orientationToMoveAspect`, `SUPERPOWERS`,
+      `SuperpowerDef` + `SUPERPOWER_DEFS` (element/domains/shadows). DONE
+      (shared with superpower-quiz-design Phase 1). `SuperpowerTranslation` lands
+      with the matrix (T1.2/T1.3). (FR1)
 - [ ] **T1.2** `src/lib/superpowers/matrix.ts` — authored **7×2** matrix (prompt +
       suggestedArtifact per superpower×orientation) + per-superpower `domains`,
       element/emotion, overuse/avoidance shadow, and pairings — **derived from the
