@@ -16,6 +16,8 @@
 
 import { dbBase } from '@/lib/db'
 import { getCurrentPlayer } from '@/lib/auth'
+import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
+import { isHandVaultMovable } from '@/lib/hand-movement'
 import {
     HAND_SIZE,
     readHandDb,
@@ -38,6 +40,51 @@ export async function getPlayerHand(): Promise<HandContents | ErrorResult> {
     const player = await getCurrentPlayer()
     if (!player) return { error: 'Not authenticated' }
     return readHandDb(player.id)
+}
+
+export type MovableVaultBar = {
+    id: string
+    title: string
+    element: string | null
+    maturity: string
+}
+
+/**
+ * List the player's Vault BARs eligible to be pulled into the Hand: owned,
+ * active, capture-type, non-planted (Fork B), and not already bound to a slot.
+ * Powers the Hand-glance empty-slot picker.
+ */
+export async function listMovableVaultBars(): Promise<MovableVaultBar[] | ErrorResult> {
+    const player = await getCurrentPlayer()
+    if (!player) return { error: 'Not authenticated' }
+
+    const [bars, slots] = await Promise.all([
+        dbBase.customBar.findMany({
+            where: {
+                creatorId: player.id,
+                status: 'active',
+                archivedAt: null,
+                type: { in: ['bar', 'charge_capture'] },
+            },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, title: true, nation: true, seedMetabolization: true },
+        }),
+        dbBase.handSlot.findMany({
+            where: { playerId: player.id, barId: { not: null } },
+            select: { barId: true },
+        }),
+    ])
+
+    const inHand = new Set(slots.map(s => s.barId))
+
+    const result: MovableVaultBar[] = []
+    for (const b of bars) {
+        if (inHand.has(b.id)) continue
+        const maturity = effectiveMaturity(parseSeedMetabolization(b.seedMetabolization))
+        if (!isHandVaultMovable(maturity)) continue
+        result.push({ id: b.id, title: b.title, element: b.nation, maturity })
+    }
+    return result
 }
 
 /**

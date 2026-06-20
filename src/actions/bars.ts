@@ -13,6 +13,8 @@ import {
 } from '@/lib/bar-seed-metabolization'
 import { assertCanCreateUnplacedVaultQuest } from '@/lib/vault-limits'
 import { CAPTURE_BAR_TYPES } from '@/lib/vault-ui'
+// Plain module (no 'use server') — safe to import from this server-action file.
+import { addBarToHandForPlayer } from '@/lib/hand-service'
 
 // Element channel ('nation' column) — valid capture-time field-tint values.
 // Mirrors ElementKey in src/lib/ui/card-tokens.ts (kept inline to avoid pulling
@@ -1043,7 +1045,10 @@ function serializeCanvasInputs(items: CanvasItem[]): string {
 
 export async function captureBarFromCanvas(
   payload: CaptureBarFromCanvasInput
-): Promise<{ barId: string; title: string } | { error: string }> {
+): Promise<
+  | { barId: string; title: string; placedIn: 'hand' | 'vault' }
+  | { error: string }
+> {
   const playerId = await getPlayerId()
   if (!playerId) return { error: 'Not logged in' }
 
@@ -1093,12 +1098,22 @@ export async function captureBarFromCanvas(
       data: { rootId: bar.id },
     })
 
+    // The whiteboard is the "make something now" surface — a fresh canvas
+    // capture is held in the Hand. If the Hand is full we keep the BAR in the
+    // Vault (no HandSlot bound) and let the caller surface a fallback toast;
+    // capture is never blocked. (Fork A — silent Vault fallback.)
+    let placedIn: 'hand' | 'vault' = 'vault'
+    const handResult = await addBarToHandForPlayer(playerId, bar.id)
+    if ('success' in handResult && handResult.success) {
+      placedIn = 'hand'
+    }
+
     revalidatePath('/bars')
     revalidatePath('/bars/garden')
     revalidatePath('/hand')
     revalidatePath('/')
 
-    return { barId: bar.id, title }
+    return { barId: bar.id, title, placedIn }
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     console.error('[BAR] Canvas capture failed:', message)

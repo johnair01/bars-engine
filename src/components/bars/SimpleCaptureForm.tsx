@@ -36,15 +36,18 @@ export function SimpleCaptureForm({ defaultText = '', campaignRef }: SimpleCaptu
         startTransition(async () => {
             const result = await captureBar({
                 content: trimmed,
-                destination: 'vault',
+                destination: 'hand',
             })
             if ('error' in result) {
                 setError(result.error)
                 return
             }
+            // Held in the Hand by default; a full Hand parks it in the Vault
+            // (Fork A — silent fallback, no overflow modal on this surface).
+            const dest = 'placedIn' in result && result.placedIn === 'hand' ? 'hand' : 'vault'
             const barId = result.barId
             const titleParam = encodeURIComponent(trimmed.split('\n')[0].slice(0, 60))
-            router.push(`/bars/kept?barId=${barId}&dest=vault&title=${titleParam}`)
+            router.push(`/bars/kept?barId=${barId}&dest=${dest}&title=${titleParam}`)
         })
     }
 

@@ -71,7 +71,7 @@ export default async function KeptPage({ searchParams }: KeptPageProps) {
                     </Link>
                 )}
                 <Link
-                    href="/bars/garden"
+                    href={dest === 'hand' ? '/hand' : '/bars/garden'}
                     className="block w-full py-3 rounded-xl text-sm text-center transition-all"
                     style={{
                         background: 'rgba(255,255,255,0.04)',
@@ -79,7 +79,7 @@ export default async function KeptPage({ searchParams }: KeptPageProps) {
                         color: '#a09e98',
                     }}
                 >
-                    Go to Garden
+                    {dest === 'hand' ? 'Go to your Hand' : 'Go to Garden'}
                 </Link>
             </div>
         </div>

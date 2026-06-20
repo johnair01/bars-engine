@@ -833,13 +833,20 @@ function TextEditorOverlay({
 interface CapturedOverlayProps {
   barId: string
   title: string
+  placedIn: 'hand' | 'vault'
   onTuneNow: () => void
   onBackToBoard: () => void
 }
 
-function CapturedOverlay({ title, onTuneNow, onBackToBoard }: CapturedOverlayProps) {
+function CapturedOverlay({ title, placedIn, onTuneNow, onBackToBoard }: CapturedOverlayProps) {
   const woodGem = '#2ecc71'
   const woodGlow = '#27ae60'
+  // Fork A: the seed is held in the Hand; if the Hand was full it falls back
+  // to the Vault — say so plainly rather than blocking with a modal.
+  const destinationLine =
+    placedIn === 'hand'
+      ? 'Held in your Hand'
+      : 'Hand full — saved to your Vault. Hold it later from your Hand.'
   return (
     <div
       className="absolute inset-0 flex flex-col items-center justify-center gap-5"
@@ -892,6 +899,21 @@ function CapturedOverlay({ title, onTuneNow, onBackToBoard }: CapturedOverlayPro
         }}
       >
         {title}
+      </p>
+
+      {/* Destination — Hand by default, Vault fallback when the Hand is full */}
+      <p
+        style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 10,
+          letterSpacing: '0.06em',
+          color: placedIn === 'hand' ? woodGem : 'rgba(232,226,218,0.7)',
+          textAlign: 'center',
+          margin: 0,
+          maxWidth: 280,
+        }}
+      >
+        {destinationLine}
       </p>
 
       <div className="flex flex-col gap-3 w-full" style={{ marginTop: 8 }}>
@@ -1224,7 +1246,7 @@ export function SeedCaptureWhiteboard({
   const [captureError, setCaptureError] = useState<string | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [intent, setIntent] = useState('')
-  const [captured, setCaptured] = useState<{ barId: string; title: string } | null>(null)
+  const [captured, setCaptured] = useState<{ barId: string; title: string; placedIn: 'hand' | 'vault' } | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1539,7 +1561,7 @@ export function SeedCaptureWhiteboard({
         return
       }
 
-      const { barId, title } = result
+      const { barId, title, placedIn } = result
 
       // Upload pending photos and voice memos now that we have a barId
       const mediaItems = items.filter(i => i.type === 'photo' || i.type === 'voice')
@@ -1561,7 +1583,7 @@ export function SeedCaptureWhiteboard({
         )
       }
 
-      setCaptured({ barId, title })
+      setCaptured({ barId, title, placedIn })
     } catch (err) {
       setCaptureError(err instanceof Error ? err.message : 'Capture failed')
     } finally {
@@ -1809,6 +1831,7 @@ export function SeedCaptureWhiteboard({
           <CapturedOverlay
             barId={captured.barId}
             title={captured.title}
+            placedIn={captured.placedIn}
             onTuneNow={() => router.push(`/bars/${captured.barId}`)}
             onBackToBoard={() => router.push('/hand')}
           />
