@@ -48,13 +48,14 @@ describe('assessQuality', () => {
     expect(a.unmet).toEqual([])
   })
 
-  it('a generated superpower card scores below L3', () => {
-    const generated = superpowerDeck('connector')[0]!
+  it('a generated superpower card sits at the L2 floor', () => {
+    const generated = superpowerDeck('connector')[0]! // wake/shaman/inner (not a hero override)
     const a = assessQuality(generated)
-    expect(a.level).toBeLessThan(3)
-    // generated cards meet the shadow check (#9) but fail the anatomy/form criteria
-    expect(a.met).toContain(9)
-    expect(a.unmet).toEqual(expect.arrayContaining([1, 4, 5, 7, 8]))
+    expect(a.level).toBe(2)
+    // L2 anatomy is present…
+    expect(a.met).toEqual(expect.arrayContaining([1, 2, 3, 4, 5, 6, 7]))
+    // …but the trust test (#8 tell) and voice (#12 authored) are not — keeps it < L4
+    expect(a.unmet).toEqual(expect.arrayContaining([8, 12]))
   })
 
   it('anatomy without the trust tests caps at L2', () => {

@@ -4,7 +4,7 @@
   "label": "The Escape Artist",
   "gift": "Honoring the wisdom of fear — finding the exit, the trapdoor, the well-timed retreat.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T22:03:02.079Z",
+  "generatedAt": "2026-06-20T22:12:25.763Z",
   "count": 60,
   "cards": [
     {
@@ -13,9 +13,8 @@
       "name": "Notice what your fear is protecting — Sense",
       "essence": "In yourself: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: what your fear is protecting."
       ],
       "source": {
         "origin": "ai",
@@ -32,6 +31,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -42,9 +55,8 @@
       "name": "Notice the trap closing on someone — Sense",
       "essence": "For others: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -62,6 +74,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -71,9 +97,8 @@
       "name": "Notice what your fear is protecting — Edge",
       "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: what your fear is protecting."
       ],
       "source": {
         "origin": "ai",
@@ -90,6 +115,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -100,9 +139,8 @@
       "name": "Notice the trap closing on someone — Edge",
       "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -120,6 +158,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -129,9 +181,8 @@
       "name": "Notice what your fear is protecting — Steward",
       "essence": "In yourself: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: what your fear is protecting."
       ],
       "source": {
         "origin": "ai",
@@ -149,6 +200,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -158,9 +223,8 @@
       "name": "Notice the trap closing on someone — Steward",
       "essence": "For others: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -177,6 +241,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -243,9 +321,8 @@
       "name": "Notice the trap closing on someone — Structure",
       "essence": "For others: the wisdom of fear, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -262,6 +339,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -272,9 +363,8 @@
       "name": "Notice what your fear is protecting — Bridge",
       "essence": "In yourself: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: what your fear is protecting."
       ],
       "source": {
         "origin": "ai",
@@ -291,6 +381,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -301,9 +405,8 @@
       "name": "Notice the trap closing on someone — Bridge",
       "essence": "For others: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -321,6 +424,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -330,9 +447,8 @@
       "name": "Notice what your fear is protecting — Whole",
       "essence": "In yourself: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Practice it within: what your fear is protecting.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: what your fear is protecting."
       ],
       "source": {
         "origin": "ai",
@@ -349,6 +465,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -359,9 +489,8 @@
       "name": "Notice the trap closing on someone — Whole",
       "essence": "For others: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Offer it to others: the trap closing on someone.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the trap closing on someone."
       ],
       "source": {
         "origin": "ai",
@@ -379,6 +508,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -388,9 +531,8 @@
       "name": "Feel the fear without obeying it — Sense",
       "essence": "In yourself: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the fear without obeying it."
       ],
       "source": {
         "origin": "ai",
@@ -407,6 +549,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -417,9 +573,8 @@
       "name": "Feel another’s need to get out — Sense",
       "essence": "For others: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -437,6 +592,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -446,9 +615,8 @@
       "name": "Feel the fear without obeying it — Edge",
       "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the fear without obeying it."
       ],
       "source": {
         "origin": "ai",
@@ -465,6 +633,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -475,9 +657,8 @@
       "name": "Feel another’s need to get out — Edge",
       "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -495,6 +676,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -504,9 +699,8 @@
       "name": "Feel the fear without obeying it — Steward",
       "essence": "In yourself: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the fear without obeying it."
       ],
       "source": {
         "origin": "ai",
@@ -523,6 +717,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -533,9 +741,8 @@
       "name": "Feel another’s need to get out — Steward",
       "essence": "For others: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -553,6 +760,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -562,9 +783,8 @@
       "name": "Feel the fear without obeying it — Structure",
       "essence": "In yourself: the wisdom of fear, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the fear without obeying it."
       ],
       "source": {
         "origin": "ai",
@@ -582,6 +802,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -591,9 +825,8 @@
       "name": "Feel another’s need to get out — Structure",
       "essence": "For others: the wisdom of fear, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -610,6 +843,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -676,9 +923,8 @@
       "name": "Feel another’s need to get out — Bridge",
       "essence": "For others: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Receive it without flinching, across difference and relationship.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — across difference and relationship.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -696,6 +942,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -705,9 +965,8 @@
       "name": "Feel the fear without obeying it — Whole",
       "essence": "In yourself: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Practice it within: the fear without obeying it.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the fear without obeying it."
       ],
       "source": {
         "origin": "ai",
@@ -725,6 +984,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -734,9 +1007,8 @@
       "name": "Feel another’s need to get out — Whole",
       "essence": "For others: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Offer it to others: another’s need to get out.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: another’s need to get out."
       ],
       "source": {
         "origin": "ai",
@@ -753,6 +1025,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -819,9 +1105,8 @@
       "name": "Sort the false exit from the real one — Sense",
       "essence": "For others: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -838,6 +1123,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -848,9 +1147,8 @@
       "name": "Sort wise retreat from mere flight — Edge",
       "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: wise retreat from mere flight."
       ],
       "source": {
         "origin": "ai",
@@ -867,6 +1165,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -877,9 +1189,8 @@
       "name": "Sort the false exit from the real one — Edge",
       "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -896,6 +1207,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -906,9 +1231,8 @@
       "name": "Sort wise retreat from mere flight — Steward",
       "essence": "In yourself: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: wise retreat from mere flight."
       ],
       "source": {
         "origin": "ai",
@@ -925,6 +1249,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -935,9 +1273,8 @@
       "name": "Sort the false exit from the real one — Steward",
       "essence": "For others: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -954,6 +1291,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -964,9 +1315,8 @@
       "name": "Sort wise retreat from mere flight — Structure",
       "essence": "In yourself: the wisdom of fear, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — building it into structure.",
+        "Turn it inward: wise retreat from mere flight."
       ],
       "source": {
         "origin": "ai",
@@ -983,6 +1333,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -993,9 +1357,8 @@
       "name": "Sort the false exit from the real one — Structure",
       "essence": "For others: the wisdom of fear, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -1012,6 +1375,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1022,9 +1399,8 @@
       "name": "Sort wise retreat from mere flight — Bridge",
       "essence": "In yourself: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: wise retreat from mere flight."
       ],
       "source": {
         "origin": "ai",
@@ -1041,6 +1417,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1051,9 +1441,8 @@
       "name": "Sort the false exit from the real one — Bridge",
       "essence": "For others: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -1070,6 +1459,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1080,9 +1483,8 @@
       "name": "Sort wise retreat from mere flight — Whole",
       "essence": "In yourself: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Practice it within: wise retreat from mere flight.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: wise retreat from mere flight."
       ],
       "source": {
         "origin": "ai",
@@ -1099,6 +1501,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1109,9 +1525,8 @@
       "name": "Sort the false exit from the real one — Whole",
       "essence": "For others: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Offer it to others: the false exit from the real one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: the false exit from the real one."
       ],
       "source": {
         "origin": "ai",
@@ -1129,6 +1544,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1138,9 +1567,8 @@
       "name": "Build your tolerance for staying — Sense",
       "essence": "In yourself: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1157,6 +1585,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1167,9 +1609,8 @@
       "name": "Build more ways out than one — Sense",
       "essence": "For others: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1186,6 +1627,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1196,9 +1651,8 @@
       "name": "Build your tolerance for staying — Edge",
       "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1215,6 +1669,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1225,9 +1693,8 @@
       "name": "Build more ways out than one — Edge",
       "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1245,6 +1712,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1254,9 +1735,8 @@
       "name": "Build your tolerance for staying — Steward",
       "essence": "In yourself: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1273,6 +1753,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1283,9 +1777,8 @@
       "name": "Build more ways out than one — Steward",
       "essence": "For others: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1303,6 +1796,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1312,9 +1819,8 @@
       "name": "Build your tolerance for staying — Structure",
       "essence": "In yourself: the wisdom of fear, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1331,6 +1837,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1341,9 +1861,8 @@
       "name": "Build more ways out than one — Structure",
       "essence": "For others: the wisdom of fear, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — building it into structure.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1361,6 +1880,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1370,9 +1903,8 @@
       "name": "Build your tolerance for staying — Bridge",
       "essence": "In yourself: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1389,6 +1921,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1399,9 +1945,8 @@
       "name": "Build more ways out than one — Bridge",
       "essence": "For others: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1419,6 +1964,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1428,9 +1987,8 @@
       "name": "Build your tolerance for staying — Whole",
       "essence": "In yourself: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Practice it within: your tolerance for staying.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your tolerance for staying."
       ],
       "source": {
         "origin": "ai",
@@ -1447,6 +2005,20 @@
       "aspect": "inner",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1457,9 +2029,8 @@
       "name": "Build more ways out than one — Whole",
       "essence": "For others: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Offer it to others: more ways out than one.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: more ways out than one."
       ],
       "source": {
         "origin": "ai",
@@ -1477,6 +2048,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1486,9 +2071,8 @@
       "name": "Open the exit you actually need — Sense",
       "essence": "In yourself: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: the exit you actually need."
       ],
       "source": {
         "origin": "ai",
@@ -1506,6 +2090,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1515,9 +2113,8 @@
       "name": "Open a door for someone else — Sense",
       "essence": "For others: the wisdom of fear, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1534,6 +2131,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1600,9 +2211,8 @@
       "name": "Open a door for someone else — Edge",
       "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1620,6 +2230,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1629,9 +2253,8 @@
       "name": "Open the exit you actually need — Steward",
       "essence": "In yourself: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: the exit you actually need."
       ],
       "source": {
         "origin": "ai",
@@ -1649,6 +2272,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1658,9 +2295,8 @@
       "name": "Open a door for someone else — Steward",
       "essence": "For others: the wisdom of fear, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1677,6 +2313,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1743,9 +2393,8 @@
       "name": "Open a door for someone else — Structure",
       "essence": "For others: the wisdom of fear, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1762,6 +2411,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1828,9 +2491,8 @@
       "name": "Open a door for someone else — Bridge",
       "essence": "For others: the wisdom of fear, across difference and relationship.",
       "steps": [
-        "Take the concrete act, across difference and relationship.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — across difference and relationship.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1848,6 +2510,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1857,9 +2533,8 @@
       "name": "Open the exit you actually need — Whole",
       "essence": "In yourself: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Practice it within: the exit you actually need.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: the exit you actually need."
       ],
       "source": {
         "origin": "ai",
@@ -1877,6 +2552,20 @@
       "superpowers": [
         "escape_artist"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1886,9 +2575,8 @@
       "name": "Open a door for someone else — Whole",
       "essence": "For others: the wisdom of fear, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Offer it to others: a door for someone else.",
-        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: a door for someone else."
       ],
       "source": {
         "origin": "ai",
@@ -1905,6 +2593,20 @@
       "aspect": "outer",
       "superpowers": [
         "escape_artist"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your the wisdom of fear at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Perpetual Vanisher — leaving before it’s time."
       ],
       "tier": "canonical",
       "status": "draft"

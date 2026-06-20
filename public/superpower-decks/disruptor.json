@@ -4,7 +4,7 @@
   "label": "The Disruptor",
   "gift": "Interruption — breaking stagnation and protecting integrity over harmony.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T22:03:02.080Z",
+  "generatedAt": "2026-06-20T22:12:25.763Z",
   "count": 60,
   "cards": [
     {
@@ -13,9 +13,8 @@
       "name": "Notice your own urge to break things — Sense",
       "essence": "In yourself: clean interruption, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -32,6 +31,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -42,9 +55,8 @@
       "name": "Notice the stagnation no one names — Sense",
       "essence": "For others: clean interruption, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -61,6 +73,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -71,9 +97,8 @@
       "name": "Notice your own urge to break things — Edge",
       "essence": "In yourself: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -90,6 +115,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -100,9 +139,8 @@
       "name": "Notice the stagnation no one names — Edge",
       "essence": "For others: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -119,6 +157,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -129,9 +181,8 @@
       "name": "Notice your own urge to break things — Steward",
       "essence": "In yourself: clean interruption, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -148,6 +199,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -158,9 +223,8 @@
       "name": "Notice the stagnation no one names — Steward",
       "essence": "For others: clean interruption, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -177,6 +241,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -187,9 +265,8 @@
       "name": "Notice your own urge to break things — Structure",
       "essence": "In yourself: clean interruption, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -206,6 +283,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -216,9 +307,8 @@
       "name": "Notice the stagnation no one names — Structure",
       "essence": "For others: clean interruption, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -235,6 +325,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -245,9 +349,8 @@
       "name": "Notice your own urge to break things — Bridge",
       "essence": "In yourself: clean interruption, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -264,6 +367,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -274,9 +391,8 @@
       "name": "Notice the stagnation no one names — Bridge",
       "essence": "For others: clean interruption, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -293,6 +409,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -303,9 +433,8 @@
       "name": "Notice your own urge to break things — Whole",
       "essence": "In yourself: clean interruption, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Practice it within: your own urge to break things.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: your own urge to break things."
       ],
       "source": {
         "origin": "ai",
@@ -322,6 +451,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -332,9 +475,8 @@
       "name": "Notice the stagnation no one names — Whole",
       "essence": "For others: clean interruption, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Offer it to others: the stagnation no one names.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the stagnation no one names."
       ],
       "source": {
         "origin": "ai",
@@ -352,6 +494,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -361,9 +517,8 @@
       "name": "Feel the anger as information — Sense",
       "essence": "In yourself: clean interruption, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -380,6 +535,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -390,9 +559,8 @@
       "name": "Feel the cost the pattern is hiding — Sense",
       "essence": "For others: clean interruption, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -409,6 +577,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -419,9 +601,8 @@
       "name": "Feel the anger as information — Edge",
       "essence": "In yourself: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -438,6 +619,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -448,9 +643,8 @@
       "name": "Feel the cost the pattern is hiding — Edge",
       "essence": "For others: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -467,6 +661,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -477,9 +685,8 @@
       "name": "Feel the anger as information — Steward",
       "essence": "In yourself: clean interruption, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -496,6 +703,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -506,9 +727,8 @@
       "name": "Feel the cost the pattern is hiding — Steward",
       "essence": "For others: clean interruption, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -525,6 +745,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -535,9 +769,8 @@
       "name": "Feel the anger as information — Structure",
       "essence": "In yourself: clean interruption, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -554,6 +787,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -564,9 +811,8 @@
       "name": "Feel the cost the pattern is hiding — Structure",
       "essence": "For others: clean interruption, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -583,6 +829,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -593,9 +853,8 @@
       "name": "Feel the anger as information — Bridge",
       "essence": "In yourself: clean interruption, across difference and relationship.",
       "steps": [
-        "Receive it without flinching, across difference and relationship.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — across difference and relationship.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -612,6 +871,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -622,9 +895,8 @@
       "name": "Feel the cost the pattern is hiding — Bridge",
       "essence": "For others: clean interruption, across difference and relationship.",
       "steps": [
-        "Receive it without flinching, across difference and relationship.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — across difference and relationship.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -641,6 +913,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -651,9 +937,8 @@
       "name": "Feel the anger as information — Whole",
       "essence": "In yourself: clean interruption, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Practice it within: the anger as information.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the anger as information."
       ],
       "source": {
         "origin": "ai",
@@ -670,6 +955,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -680,9 +979,8 @@
       "name": "Feel the cost the pattern is hiding — Whole",
       "essence": "For others: clean interruption, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Offer it to others: the cost the pattern is hiding.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: the cost the pattern is hiding."
       ],
       "source": {
         "origin": "ai",
@@ -700,6 +998,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -709,9 +1021,8 @@
       "name": "Forge the heat into a clean aim — Sense",
       "essence": "In yourself: clean interruption, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -728,6 +1039,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -738,9 +1063,8 @@
       "name": "Forge rupture pointed toward repair — Sense",
       "essence": "For others: clean interruption, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -757,6 +1081,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -767,9 +1105,8 @@
       "name": "Forge the heat into a clean aim — Edge",
       "essence": "In yourself: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -786,6 +1123,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -796,9 +1147,8 @@
       "name": "Forge rupture pointed toward repair — Edge",
       "essence": "For others: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -815,6 +1165,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -825,9 +1189,8 @@
       "name": "Forge the heat into a clean aim — Steward",
       "essence": "In yourself: clean interruption, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -844,6 +1207,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -854,9 +1231,8 @@
       "name": "Forge rupture pointed toward repair — Steward",
       "essence": "For others: clean interruption, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -873,6 +1249,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -883,9 +1273,8 @@
       "name": "Forge the heat into a clean aim — Structure",
       "essence": "In yourself: clean interruption, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — building it into structure.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -902,6 +1291,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -912,9 +1315,8 @@
       "name": "Forge rupture pointed toward repair — Structure",
       "essence": "For others: clean interruption, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — building it into structure.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -931,6 +1333,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -941,9 +1357,8 @@
       "name": "Forge the heat into a clean aim — Bridge",
       "essence": "In yourself: clean interruption, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -960,6 +1375,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -970,9 +1399,8 @@
       "name": "Forge rupture pointed toward repair — Bridge",
       "essence": "For others: clean interruption, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -989,6 +1417,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -999,9 +1441,8 @@
       "name": "Forge the heat into a clean aim — Whole",
       "essence": "In yourself: clean interruption, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Practice it within: the heat into a clean aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: the heat into a clean aim."
       ],
       "source": {
         "origin": "ai",
@@ -1018,6 +1459,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1028,9 +1483,8 @@
       "name": "Forge rupture pointed toward repair — Whole",
       "essence": "For others: clean interruption, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Offer it to others: rupture pointed toward repair.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: rupture pointed toward repair."
       ],
       "source": {
         "origin": "ai",
@@ -1048,6 +1502,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1057,9 +1525,8 @@
       "name": "Temper your timing and aim — Sense",
       "essence": "In yourself: clean interruption, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1076,6 +1543,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1086,9 +1567,8 @@
       "name": "Temper the group’s tolerance for change — Sense",
       "essence": "For others: clean interruption, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1105,6 +1585,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1115,9 +1609,8 @@
       "name": "Temper your timing and aim — Edge",
       "essence": "In yourself: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1134,6 +1627,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1144,9 +1651,8 @@
       "name": "Temper the group’s tolerance for change — Edge",
       "essence": "For others: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1163,6 +1669,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1173,9 +1693,8 @@
       "name": "Temper your timing and aim — Steward",
       "essence": "In yourself: clean interruption, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1192,6 +1711,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1202,9 +1735,8 @@
       "name": "Temper the group’s tolerance for change — Steward",
       "essence": "For others: clean interruption, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1221,6 +1753,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1231,9 +1777,8 @@
       "name": "Temper your timing and aim — Structure",
       "essence": "In yourself: clean interruption, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1250,6 +1795,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1260,9 +1819,8 @@
       "name": "Temper the group’s tolerance for change — Structure",
       "essence": "For others: clean interruption, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1279,6 +1837,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1289,9 +1861,8 @@
       "name": "Temper your timing and aim — Bridge",
       "essence": "In yourself: clean interruption, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1308,6 +1879,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1318,9 +1903,8 @@
       "name": "Temper the group’s tolerance for change — Bridge",
       "essence": "For others: clean interruption, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1337,6 +1921,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1347,9 +1945,8 @@
       "name": "Temper your timing and aim — Whole",
       "essence": "In yourself: clean interruption, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Practice it within: your timing and aim.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your timing and aim."
       ],
       "source": {
         "origin": "ai",
@@ -1366,6 +1963,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1376,9 +1987,8 @@
       "name": "Temper the group’s tolerance for change — Whole",
       "essence": "For others: clean interruption, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Offer it to others: the group’s tolerance for change.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the group’s tolerance for change."
       ],
       "source": {
         "origin": "ai",
@@ -1396,6 +2006,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1405,9 +2029,8 @@
       "name": "Break your own complicity — Sense",
       "essence": "In yourself: clean interruption, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1424,6 +2047,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1434,9 +2071,8 @@
       "name": "Break the pattern, then repair it — Sense",
       "essence": "For others: clean interruption, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1454,6 +2090,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1463,9 +2113,8 @@
       "name": "Break your own complicity — Edge",
       "essence": "In yourself: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1482,6 +2131,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1492,9 +2155,8 @@
       "name": "Break the pattern, then repair it — Edge",
       "essence": "For others: clean interruption, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1512,6 +2174,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1521,9 +2197,8 @@
       "name": "Break your own complicity — Steward",
       "essence": "In yourself: clean interruption, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1540,6 +2215,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1550,9 +2239,8 @@
       "name": "Break the pattern, then repair it — Steward",
       "essence": "For others: clean interruption, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1570,6 +2258,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1579,9 +2281,8 @@
       "name": "Break your own complicity — Structure",
       "essence": "In yourself: clean interruption, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1598,6 +2299,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1608,9 +2323,8 @@
       "name": "Break the pattern, then repair it — Structure",
       "essence": "For others: clean interruption, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1628,6 +2342,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1637,9 +2365,8 @@
       "name": "Break your own complicity — Bridge",
       "essence": "In yourself: clean interruption, across difference and relationship.",
       "steps": [
-        "Take the concrete act, across difference and relationship.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — across difference and relationship.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1656,6 +2383,20 @@
       "aspect": "inner",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1666,9 +2407,8 @@
       "name": "Break the pattern, then repair it — Bridge",
       "essence": "For others: clean interruption, across difference and relationship.",
       "steps": [
-        "Take the concrete act, across difference and relationship.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — across difference and relationship.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1686,6 +2426,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1695,9 +2449,8 @@
       "name": "Break your own complicity — Whole",
       "essence": "In yourself: clean interruption, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Practice it within: your own complicity.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: your own complicity."
       ],
       "source": {
         "origin": "ai",
@@ -1715,6 +2468,20 @@
       "superpowers": [
         "disruptor"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1724,9 +2491,8 @@
       "name": "Break the pattern, then repair it — Whole",
       "essence": "For others: clean interruption, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Offer it to others: the pattern, then repair it.",
-        "Shadow check: the Demolisher — rupture with no repair."
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: the pattern, then repair it."
       ],
       "source": {
         "origin": "ai",
@@ -1743,6 +2509,20 @@
       "aspect": "outer",
       "superpowers": [
         "disruptor"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your clean interruption at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Demolisher — rupture with no repair."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Demolisher — rupture with no repair."
       ],
       "tier": "canonical",
       "status": "draft"

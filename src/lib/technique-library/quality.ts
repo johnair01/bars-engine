@@ -41,21 +41,12 @@ export interface QualityAssessment {
   unmet: number[]
 }
 
-// ── templated-content detection (the generated L0/L1 floor) ──
-const TEMPLATED_ESSENCE = /^(In yourself|For others):/
-const TEMPLATED_STEP = /^(Practice it within:|Offer it to others:)/
-const TEMPLATED_NAME_SUFFIX = /\s—\s(Sense|Edge|Steward|Structure|Bridge|Whole)$/
+// ── detection helpers ──
+// Old generated marker steps (filtered out when counting "real" steps).
+const SCAFFOLD_STEP = /^(Practice it within:|Offer it to others:|Shadow check:)/
 const BODY_WORDS = /\b(body|bodies|felt|feel|feeling|sensation|breath|flinch|gut)\b/i
 const CONSENT_WORDS =
   /\b(consent|no[-\s]?strings|wanted|invite|invitation|is this my room|increase life|without pressure|obligation|ledger)\b/i
-
-function isTemplated(t: Technique): boolean {
-  return (
-    TEMPLATED_ESSENCE.test(t.essence) ||
-    t.steps.some((s) => TEMPLATED_STEP.test(s)) ||
-    TEMPLATED_NAME_SUFFIX.test(t.name)
-  )
-}
 
 function corpus(t: Technique): string {
   return [t.essence, t.primaryQuestion, t.campaignQuestion, t.optimizesFor, t.example, ...t.steps]
@@ -63,15 +54,19 @@ function corpus(t: Technique): string {
     .join(' ')
 }
 
-/** Per-criterion predicates. */
+/**
+ * Per-criterion predicates. Form (#1, #2) measures whether there are real,
+ * concrete steps. Voice (#12) keys off whether the card is hand-authored —
+ * generated (`origin:'ai'`) content is not considered in-voice until a human
+ * authors it, so it can reach L2 but not L4.
+ */
 function evaluate(t: Technique): Record<number, boolean> {
-  const templated = isTemplated(t)
-  const realSteps = t.steps.filter((s) => !TEMPLATED_STEP.test(s) && !/^Shadow check:/.test(s))
+  const realSteps = t.steps.filter((s) => !SCAFFOLD_STEP.test(s))
   const text = corpus(t)
 
   return {
-    1: !templated && realSteps.length >= 2,
-    2: !templated && realSteps.length >= 2 && realSteps.length <= 5,
+    1: realSteps.length >= 2,
+    2: realSteps.length >= 2 && realSteps.length <= 5,
     3:
       t.aspect === 'inner'
         ? !!t.primaryQuestion
@@ -86,7 +81,7 @@ function evaluate(t: Technique): Record<number, boolean> {
     9: t.steps.some((s) => /shadow/i.test(s)) || !!t.contraindications?.length,
     10: BODY_WORDS.test(text),
     11: CONSENT_WORDS.test(text) || !!t.forbiddenMoves?.some((f) => /pressur|obligation|guilt|strings/i.test(f)),
-    12: !templated,
+    12: t.source.origin !== 'ai',
   }
 }
 

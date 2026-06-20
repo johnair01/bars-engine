@@ -4,7 +4,7 @@
   "label": "The Connector",
   "gift": "Relational gravity — the pull that brings people into each other’s orbit.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T22:03:02.079Z",
+  "generatedAt": "2026-06-20T22:12:25.762Z",
   "count": 60,
   "cards": [
     {
@@ -13,9 +13,8 @@
       "name": "Notice your own pull toward people — Sense",
       "essence": "In yourself: relational gravity, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — sensing what is here.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -32,6 +31,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -42,9 +55,8 @@
       "name": "Notice the threads already in the room — Sense",
       "essence": "For others: relational gravity, sensing what is here.",
       "steps": [
-        "Notice what is actually here, sensing what is here.",
-        "Offer it to others: the threads already in the room.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — sensing what is here.",
+        "Bring it to others: the threads already in the room."
       ],
       "source": {
         "origin": "ai",
@@ -62,6 +74,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -71,9 +97,8 @@
       "name": "Notice your own pull toward people — Edge",
       "essence": "In yourself: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -90,6 +115,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -100,9 +139,8 @@
       "name": "Notice the threads already in the room — Edge",
       "essence": "For others: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Offer it to others: the threads already in the room.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the threads already in the room."
       ],
       "source": {
         "origin": "ai",
@@ -120,6 +158,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -129,9 +181,8 @@
       "name": "Notice your own pull toward people — Steward",
       "essence": "In yourself: relational gravity, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -149,6 +200,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -158,9 +223,8 @@
       "name": "Notice the threads already in the room — Steward",
       "essence": "For others: relational gravity, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Offer it to others: the threads already in the room.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the threads already in the room."
       ],
       "source": {
         "origin": "ai",
@@ -178,6 +242,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -187,9 +265,8 @@
       "name": "Notice your own pull toward people — Structure",
       "essence": "In yourself: relational gravity, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -206,6 +283,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -272,9 +363,8 @@
       "name": "Notice your own pull toward people — Bridge",
       "essence": "In yourself: relational gravity, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -291,6 +381,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -301,9 +405,8 @@
       "name": "Notice the threads already in the room — Bridge",
       "essence": "For others: relational gravity, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Offer it to others: the threads already in the room.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the threads already in the room."
       ],
       "source": {
         "origin": "ai",
@@ -320,6 +423,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -330,9 +447,8 @@
       "name": "Notice your own pull toward people — Whole",
       "essence": "In yourself: relational gravity, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Practice it within: your own pull toward people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: your own pull toward people."
       ],
       "source": {
         "origin": "ai",
@@ -349,6 +465,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -359,9 +489,8 @@
       "name": "Notice the threads already in the room — Whole",
       "essence": "For others: relational gravity, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Offer it to others: the threads already in the room.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the threads already in the room."
       ],
       "source": {
         "origin": "ai",
@@ -379,6 +508,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -388,9 +531,8 @@
       "name": "Receive the room without absorbing it — Sense",
       "essence": "In yourself: relational gravity, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -407,6 +549,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -417,9 +573,8 @@
       "name": "Receive what each person is reaching for — Sense",
       "essence": "For others: relational gravity, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Offer it to others: what each person is reaching for.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: what each person is reaching for."
       ],
       "source": {
         "origin": "ai",
@@ -437,6 +592,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -446,9 +615,8 @@
       "name": "Receive the room without absorbing it — Edge",
       "essence": "In yourself: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -465,6 +633,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -475,9 +657,8 @@
       "name": "Receive what each person is reaching for — Edge",
       "essence": "For others: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Offer it to others: what each person is reaching for.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: what each person is reaching for."
       ],
       "source": {
         "origin": "ai",
@@ -495,6 +676,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -504,9 +699,8 @@
       "name": "Receive the room without absorbing it — Steward",
       "essence": "In yourself: relational gravity, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -523,6 +717,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -533,9 +741,8 @@
       "name": "Receive what each person is reaching for — Steward",
       "essence": "For others: relational gravity, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Offer it to others: what each person is reaching for.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: what each person is reaching for."
       ],
       "source": {
         "origin": "ai",
@@ -553,6 +760,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -562,9 +783,8 @@
       "name": "Receive the room without absorbing it — Structure",
       "essence": "In yourself: relational gravity, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -582,6 +802,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -591,9 +825,8 @@
       "name": "Receive what each person is reaching for — Structure",
       "essence": "For others: relational gravity, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Offer it to others: what each person is reaching for.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: what each person is reaching for."
       ],
       "source": {
         "origin": "ai",
@@ -611,6 +844,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -620,9 +867,8 @@
       "name": "Receive the room without absorbing it — Bridge",
       "essence": "In yourself: relational gravity, across difference and relationship.",
       "steps": [
-        "Receive it without flinching, across difference and relationship.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — across difference and relationship.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -639,6 +885,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -706,9 +966,8 @@
       "name": "Receive the room without absorbing it — Whole",
       "essence": "In yourself: relational gravity, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Practice it within: the room without absorbing it.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the room without absorbing it."
       ],
       "source": {
         "origin": "ai",
@@ -726,6 +985,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -735,9 +1008,8 @@
       "name": "Receive what each person is reaching for — Whole",
       "essence": "For others: relational gravity, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Offer it to others: what each person is reaching for.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: what each person is reaching for."
       ],
       "source": {
         "origin": "ai",
@@ -755,6 +1027,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -764,9 +1050,8 @@
       "name": "Clear your need to be the hub — Sense",
       "essence": "In yourself: relational gravity, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -783,6 +1068,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -849,9 +1148,8 @@
       "name": "Clear your need to be the hub — Edge",
       "essence": "In yourself: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -868,6 +1166,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -878,9 +1190,8 @@
       "name": "Clear the static between people — Edge",
       "essence": "For others: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Offer it to others: the static between people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the static between people."
       ],
       "source": {
         "origin": "ai",
@@ -897,6 +1208,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -907,9 +1232,8 @@
       "name": "Clear your need to be the hub — Steward",
       "essence": "In yourself: relational gravity, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -926,6 +1250,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -936,9 +1274,8 @@
       "name": "Clear the static between people — Steward",
       "essence": "For others: relational gravity, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Offer it to others: the static between people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the static between people."
       ],
       "source": {
         "origin": "ai",
@@ -955,6 +1292,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -965,9 +1316,8 @@
       "name": "Clear your need to be the hub — Structure",
       "essence": "In yourself: relational gravity, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — building it into structure.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -984,6 +1334,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -994,9 +1358,8 @@
       "name": "Clear the static between people — Structure",
       "essence": "For others: relational gravity, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Offer it to others: the static between people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the static between people."
       ],
       "source": {
         "origin": "ai",
@@ -1013,6 +1376,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1023,9 +1400,8 @@
       "name": "Clear your need to be the hub — Bridge",
       "essence": "In yourself: relational gravity, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -1042,6 +1418,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1052,9 +1442,8 @@
       "name": "Clear the static between people — Bridge",
       "essence": "For others: relational gravity, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Offer it to others: the static between people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the static between people."
       ],
       "source": {
         "origin": "ai",
@@ -1071,6 +1460,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1081,9 +1484,8 @@
       "name": "Clear your need to be the hub — Whole",
       "essence": "In yourself: relational gravity, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Practice it within: your need to be the hub.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — integrating the whole field.",
+        "Turn it inward: your need to be the hub."
       ],
       "source": {
         "origin": "ai",
@@ -1100,6 +1502,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1110,9 +1526,8 @@
       "name": "Clear the static between people — Whole",
       "essence": "For others: relational gravity, integrating the whole field.",
       "steps": [
-        "Transform the charge, integrating the whole field.",
-        "Offer it to others: the static between people.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Transform the charge — integrating the whole field.",
+        "Bring it to others: the static between people."
       ],
       "source": {
         "origin": "ai",
@@ -1130,6 +1545,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1139,9 +1568,8 @@
       "name": "Widen your capacity to hold ties — Sense",
       "essence": "In yourself: relational gravity, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1158,6 +1586,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1168,9 +1610,8 @@
       "name": "Widen the circle of who belongs — Sense",
       "essence": "For others: relational gravity, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1187,6 +1628,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1197,9 +1652,8 @@
       "name": "Widen your capacity to hold ties — Edge",
       "essence": "In yourself: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1216,6 +1670,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1226,9 +1694,8 @@
       "name": "Widen the circle of who belongs — Edge",
       "essence": "For others: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1245,6 +1712,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1255,9 +1736,8 @@
       "name": "Widen your capacity to hold ties — Steward",
       "essence": "In yourself: relational gravity, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — stewarding it over time.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1274,6 +1754,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1284,9 +1778,8 @@
       "name": "Widen the circle of who belongs — Steward",
       "essence": "For others: relational gravity, stewarding it over time.",
       "steps": [
-        "Build the capacity, stewarding it over time.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — stewarding it over time.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1304,6 +1797,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1313,9 +1820,8 @@
       "name": "Widen your capacity to hold ties — Structure",
       "essence": "In yourself: relational gravity, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1332,6 +1838,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1342,9 +1862,8 @@
       "name": "Widen the circle of who belongs — Structure",
       "essence": "For others: relational gravity, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1362,6 +1881,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1371,9 +1904,8 @@
       "name": "Widen your capacity to hold ties — Bridge",
       "essence": "In yourself: relational gravity, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1390,6 +1922,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1400,9 +1946,8 @@
       "name": "Widen the circle of who belongs — Bridge",
       "essence": "For others: relational gravity, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1420,6 +1965,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1429,9 +1988,8 @@
       "name": "Widen your capacity to hold ties — Whole",
       "essence": "In yourself: relational gravity, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Practice it within: your capacity to hold ties.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your capacity to hold ties."
       ],
       "source": {
         "origin": "ai",
@@ -1448,6 +2006,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1458,9 +2030,8 @@
       "name": "Widen the circle of who belongs — Whole",
       "essence": "For others: relational gravity, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Offer it to others: the circle of who belongs.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the circle of who belongs."
       ],
       "source": {
         "origin": "ai",
@@ -1478,6 +2049,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1487,9 +2072,8 @@
       "name": "Make one tie you will tend — Sense",
       "essence": "In yourself: relational gravity, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1507,6 +2091,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1516,9 +2114,8 @@
       "name": "Make the introduction that matters — Sense",
       "essence": "For others: relational gravity, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Offer it to others: the introduction that matters.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: the introduction that matters."
       ],
       "source": {
         "origin": "ai",
@@ -1536,6 +2133,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1545,9 +2156,8 @@
       "name": "Make one tie you will tend — Edge",
       "essence": "In yourself: relational gravity, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1564,6 +2174,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1630,9 +2254,8 @@
       "name": "Make one tie you will tend — Steward",
       "essence": "In yourself: relational gravity, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1650,6 +2273,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1659,9 +2296,8 @@
       "name": "Make the introduction that matters — Steward",
       "essence": "For others: relational gravity, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Offer it to others: the introduction that matters.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: the introduction that matters."
       ],
       "source": {
         "origin": "ai",
@@ -1679,6 +2315,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1688,9 +2338,8 @@
       "name": "Make one tie you will tend — Structure",
       "essence": "In yourself: relational gravity, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1707,6 +2356,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1773,9 +2436,8 @@
       "name": "Make one tie you will tend — Bridge",
       "essence": "In yourself: relational gravity, across difference and relationship.",
       "steps": [
-        "Take the concrete act, across difference and relationship.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — across difference and relationship.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1792,6 +2454,20 @@
       "aspect": "inner",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Bridge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1859,9 +2535,8 @@
       "name": "Make one tie you will tend — Whole",
       "essence": "In yourself: relational gravity, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Practice it within: one tie you will tend.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — integrating the whole field.",
+        "Turn it inward: one tie you will tend."
       ],
       "source": {
         "origin": "ai",
@@ -1879,6 +2554,20 @@
       "superpowers": [
         "connector"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1888,9 +2577,8 @@
       "name": "Make the introduction that matters — Whole",
       "essence": "For others: relational gravity, integrating the whole field.",
       "steps": [
-        "Take the concrete act, integrating the whole field.",
-        "Offer it to others: the introduction that matters.",
-        "Shadow check: the Overextended Hub — everything routing through you."
+        "Take the concrete act — integrating the whole field.",
+        "Bring it to others: the introduction that matters."
       ],
       "source": {
         "origin": "ai",
@@ -1907,6 +2595,20 @@
       "aspect": "outer",
       "superpowers": [
         "connector"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your relational gravity at the Whole level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Overextended Hub — everything routing through you."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Overextended Hub — everything routing through you."
       ],
       "tier": "canonical",
       "status": "draft"

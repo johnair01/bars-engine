@@ -1,6 +1,6 @@
 # Tasks: Superpower Deck Quality
 
-> **Status (2026-06-20):** Phases 1 & 3 implemented on `claude/admiring-shannon-wlddtw`. Additive `Technique` anatomy fields + `quality.ts` (RUBRIC + `assessQuality`) + car-campaign harness (`campaigns.ts`, `superpowers/quality-harness.ts`, `scripts/superpower-quality-report.ts`). 88 tests pass; tsc + eslint clean. **Baseline → after hero cells (loadout escape_artist/connector): 12 cards lifted to L4; campaign-ready cells 0 → 24/120; below-L3 60 → 48.** 89 tests pass (incl. publish gate: no published card < L3). Hero cells authored as matched escape_artist-inner + connector-outer pairs at 6 shared (move×face) coords via `superpowers/overrides/`. Storyteller added (both aspects, 6 coords = 12 L4 cells; storyteller loadout also 24 campaign-ready). 3 superpowers now have hero cells (24 cells total). Remaining lift = T8 (profile floor to L2) + remaining superpowers.
+> **Status (2026-06-20):** Phases 1 & 3 implemented on `claude/admiring-shannon-wlddtw`. Additive `Technique` anatomy fields + `quality.ts` (RUBRIC + `assessQuality`) + car-campaign harness (`campaigns.ts`, `superpowers/quality-harness.ts`, `scripts/superpower-quality-report.ts`). 88 tests pass; tsc + eslint clean. **Baseline → after hero cells (loadout escape_artist/connector): 12 cards lifted to L4; campaign-ready cells 0 → 24/120; below-L3 60 → 48.** 89 tests pass (incl. publish gate: no published card < L3). Hero cells authored as matched escape_artist-inner + connector-outer pairs at 6 shared (move×face) coords via `superpowers/overrides/`. Storyteller added (both aspects, 6 coords = 12 L4 cells; storyteller loadout also 24 campaign-ready). 3 superpowers have hero cells (24 L4). **Floor-raise done (T8): all 360 cards now L2+ (336 L2, 24 L4, none at L0/L1)** via enriched generator anatomy. assessQuality #1/#2 now measure form (real steps); #12 keys off authored-vs-generated (origin). Remaining: trust-test lift to L3 + remaining superpowers hero cells.
 
 Measurement first, then content. Additive schema; base deck/resolver/validator unchanged. Gap analysis: [gap-analysis.md](gap-analysis.md).
 
@@ -18,7 +18,7 @@ Measurement first, then content. Additive schema; base deck/resolver/validator u
 - [x] **T7** `__tests__/superpower-quality.test.ts`: harness runs deterministically; report shape stable.
 
 ## Phase 4 — Close the gap (content)
-- [ ] **T8** `profiles.ts` enrichment + `grid.ts` population so generation emits **L2** anatomy (optimizesFor / forbiddenMoves / failureModes / remediation / tell from richer per-move material).
+- [x] **T8** `profiles.ts` enrichment + `grid.ts` population so generation emits **L2** anatomy (optimizesFor / forbiddenMoves / failureModes / remediation / tell from richer per-move material).
 - [x] **T9** `superpowers/overrides/` — hand-author **hero cells to L4** for the campaign-critical coordinates (Connector-outer × {Open, Show} × {Diplomat, Challenger, Architect, Sage}; Escape-Artist-inner × Clean × {Shaman, Challenger}; then Storyteller-outer narrative cells). Apply via `decks.ts`.
 - [x] **T10** Guard test: no `status:'published'` superpower card scores `< L3` (recompute via `assessQuality`).
 - [x] **T11** `vitest`, `tsc --noEmit`, `eslint` — fail-fix.

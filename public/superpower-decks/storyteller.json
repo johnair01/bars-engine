@@ -4,7 +4,7 @@
   "label": "The Storyteller",
   "gift": "Poignance — weaving loss into meaning and grief into belonging.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T22:03:02.082Z",
+  "generatedAt": "2026-06-20T22:12:25.765Z",
   "count": 60,
   "cards": [
     {
@@ -125,9 +125,8 @@
       "name": "Notice the story you are already telling — Edge",
       "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Practice it within: the story you are already telling.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Turn it inward: the story you are already telling."
       ],
       "source": {
         "origin": "ai",
@@ -144,6 +143,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -154,9 +167,8 @@
       "name": "Notice the meaning trying to surface — Edge",
       "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Notice what is actually here, at the edge, naming what resists.",
-        "Offer it to others: the meaning trying to surface.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — at the edge, naming what resists.",
+        "Bring it to others: the meaning trying to surface."
       ],
       "source": {
         "origin": "ai",
@@ -173,6 +185,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -183,9 +209,8 @@
       "name": "Notice the story you are already telling — Steward",
       "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Practice it within: the story you are already telling.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — stewarding it over time.",
+        "Turn it inward: the story you are already telling."
       ],
       "source": {
         "origin": "ai",
@@ -202,6 +227,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -212,9 +251,8 @@
       "name": "Notice the meaning trying to surface — Steward",
       "essence": "For others: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Notice what is actually here, stewarding it over time.",
-        "Offer it to others: the meaning trying to surface.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — stewarding it over time.",
+        "Bring it to others: the meaning trying to surface."
       ],
       "source": {
         "origin": "ai",
@@ -231,6 +269,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -241,9 +293,8 @@
       "name": "Notice the story you are already telling — Structure",
       "essence": "In yourself: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Practice it within: the story you are already telling.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — building it into structure.",
+        "Turn it inward: the story you are already telling."
       ],
       "source": {
         "origin": "ai",
@@ -260,6 +311,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -270,9 +335,8 @@
       "name": "Notice the meaning trying to surface — Structure",
       "essence": "For others: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Notice what is actually here, building it into structure.",
-        "Offer it to others: the meaning trying to surface.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — building it into structure.",
+        "Bring it to others: the meaning trying to surface."
       ],
       "source": {
         "origin": "ai",
@@ -289,6 +353,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -299,9 +377,8 @@
       "name": "Notice the story you are already telling — Bridge",
       "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Practice it within: the story you are already telling.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — across difference and relationship.",
+        "Turn it inward: the story you are already telling."
       ],
       "source": {
         "origin": "ai",
@@ -318,6 +395,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -328,9 +419,8 @@
       "name": "Notice the meaning trying to surface — Bridge",
       "essence": "For others: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Notice what is actually here, across difference and relationship.",
-        "Offer it to others: the meaning trying to surface.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — across difference and relationship.",
+        "Bring it to others: the meaning trying to surface."
       ],
       "source": {
         "origin": "ai",
@@ -348,6 +438,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -357,9 +461,8 @@
       "name": "Notice the story you are already telling — Whole",
       "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Practice it within: the story you are already telling.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — integrating the whole field.",
+        "Turn it inward: the story you are already telling."
       ],
       "source": {
         "origin": "ai",
@@ -376,6 +479,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -386,9 +503,8 @@
       "name": "Notice the meaning trying to surface — Whole",
       "essence": "For others: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Notice what is actually here, integrating the whole field.",
-        "Offer it to others: the meaning trying to surface.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Notice what is actually here — integrating the whole field.",
+        "Bring it to others: the meaning trying to surface."
       ],
       "source": {
         "origin": "ai",
@@ -406,6 +522,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I not letting myself notice here?",
+      "campaignQuestion": "What does this situation need someone to see?",
+      "optimizesFor": "Seeing what is actually there before reacting — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Reacting before you have actually looked",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Blind spots you swear aren't there"
+      ],
+      "remediation": "Name one thing you hadn't let yourself see.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -415,9 +545,8 @@
       "name": "Feel the grief beneath the story — Sense",
       "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Practice it within: the grief beneath the story.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — sensing what is here.",
+        "Turn it inward: the grief beneath the story."
       ],
       "source": {
         "origin": "ai",
@@ -434,6 +563,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -444,9 +587,8 @@
       "name": "Feel what this loss means to others — Sense",
       "essence": "For others: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Receive it without flinching, sensing what is here.",
-        "Offer it to others: what this loss means to others.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — sensing what is here.",
+        "Bring it to others: what this loss means to others."
       ],
       "source": {
         "origin": "ai",
@@ -464,6 +606,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -473,9 +629,8 @@
       "name": "Feel the grief beneath the story — Edge",
       "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Practice it within: the grief beneath the story.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Turn it inward: the grief beneath the story."
       ],
       "source": {
         "origin": "ai",
@@ -492,6 +647,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -502,9 +671,8 @@
       "name": "Feel what this loss means to others — Edge",
       "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Receive it without flinching, at the edge, naming what resists.",
-        "Offer it to others: what this loss means to others.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — at the edge, naming what resists.",
+        "Bring it to others: what this loss means to others."
       ],
       "source": {
         "origin": "ai",
@@ -522,6 +690,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -531,9 +713,8 @@
       "name": "Feel the grief beneath the story — Steward",
       "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Practice it within: the grief beneath the story.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — stewarding it over time.",
+        "Turn it inward: the grief beneath the story."
       ],
       "source": {
         "origin": "ai",
@@ -550,6 +731,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -560,9 +755,8 @@
       "name": "Feel what this loss means to others — Steward",
       "essence": "For others: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Receive it without flinching, stewarding it over time.",
-        "Offer it to others: what this loss means to others.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — stewarding it over time.",
+        "Bring it to others: what this loss means to others."
       ],
       "source": {
         "origin": "ai",
@@ -580,6 +774,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -589,9 +797,8 @@
       "name": "Feel the grief beneath the story — Structure",
       "essence": "In yourself: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Practice it within: the grief beneath the story.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — building it into structure.",
+        "Turn it inward: the grief beneath the story."
       ],
       "source": {
         "origin": "ai",
@@ -609,6 +816,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -618,9 +839,8 @@
       "name": "Feel what this loss means to others — Structure",
       "essence": "For others: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Receive it without flinching, building it into structure.",
-        "Offer it to others: what this loss means to others.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — building it into structure.",
+        "Bring it to others: what this loss means to others."
       ],
       "source": {
         "origin": "ai",
@@ -637,6 +857,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -759,9 +993,8 @@
       "name": "Feel the grief beneath the story — Whole",
       "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Practice it within: the grief beneath the story.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — integrating the whole field.",
+        "Turn it inward: the grief beneath the story."
       ],
       "source": {
         "origin": "ai",
@@ -778,6 +1011,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -788,9 +1035,8 @@
       "name": "Feel what this loss means to others — Whole",
       "essence": "For others: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Receive it without flinching, integrating the whole field.",
-        "Offer it to others: what this loss means to others.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Receive it without flinching — integrating the whole field.",
+        "Bring it to others: what this loss means to others."
       ],
       "source": {
         "origin": "ai",
@@ -808,6 +1054,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What am I actually feeling, underneath?",
+      "campaignQuestion": "What is the other person or group really reaching for?",
+      "optimizesFor": "Receiving the charge instead of bracing against it — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Numbing or performing the feeling instead of feeling it",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Knowing without feeling"
+      ],
+      "remediation": "Let it land for one breath before you respond.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -817,9 +1077,8 @@
       "name": "Find your own true meaning first — Sense",
       "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Practice it within: your own true meaning first.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — sensing what is here.",
+        "Turn it inward: your own true meaning first."
       ],
       "source": {
         "origin": "ai",
@@ -836,6 +1095,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -846,9 +1119,8 @@
       "name": "Find the thread from loss to belonging — Sense",
       "essence": "For others: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Transform the charge, sensing what is here.",
-        "Offer it to others: the thread from loss to belonging.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — sensing what is here.",
+        "Bring it to others: the thread from loss to belonging."
       ],
       "source": {
         "origin": "ai",
@@ -866,6 +1138,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -875,9 +1161,8 @@
       "name": "Find your own true meaning first — Edge",
       "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Practice it within: your own true meaning first.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — at the edge, naming what resists.",
+        "Turn it inward: your own true meaning first."
       ],
       "source": {
         "origin": "ai",
@@ -894,6 +1179,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -904,9 +1203,8 @@
       "name": "Find the thread from loss to belonging — Edge",
       "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Transform the charge, at the edge, naming what resists.",
-        "Offer it to others: the thread from loss to belonging.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — at the edge, naming what resists.",
+        "Bring it to others: the thread from loss to belonging."
       ],
       "source": {
         "origin": "ai",
@@ -924,6 +1222,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -933,9 +1245,8 @@
       "name": "Find your own true meaning first — Steward",
       "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Practice it within: your own true meaning first.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — stewarding it over time.",
+        "Turn it inward: your own true meaning first."
       ],
       "source": {
         "origin": "ai",
@@ -952,6 +1263,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -962,9 +1287,8 @@
       "name": "Find the thread from loss to belonging — Steward",
       "essence": "For others: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Transform the charge, stewarding it over time.",
-        "Offer it to others: the thread from loss to belonging.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — stewarding it over time.",
+        "Bring it to others: the thread from loss to belonging."
       ],
       "source": {
         "origin": "ai",
@@ -982,6 +1306,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -991,9 +1329,8 @@
       "name": "Find your own true meaning first — Structure",
       "essence": "In yourself: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Practice it within: your own true meaning first.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — building it into structure.",
+        "Turn it inward: your own true meaning first."
       ],
       "source": {
         "origin": "ai",
@@ -1010,6 +1347,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1020,9 +1371,8 @@
       "name": "Find the thread from loss to belonging — Structure",
       "essence": "For others: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Transform the charge, building it into structure.",
-        "Offer it to others: the thread from loss to belonging.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — building it into structure.",
+        "Bring it to others: the thread from loss to belonging."
       ],
       "source": {
         "origin": "ai",
@@ -1040,6 +1390,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1049,9 +1413,8 @@
       "name": "Find your own true meaning first — Bridge",
       "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Practice it within: your own true meaning first.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — across difference and relationship.",
+        "Turn it inward: your own true meaning first."
       ],
       "source": {
         "origin": "ai",
@@ -1069,6 +1432,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1078,9 +1455,8 @@
       "name": "Find the thread from loss to belonging — Bridge",
       "essence": "For others: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Transform the charge, across difference and relationship.",
-        "Offer it to others: the thread from loss to belonging.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Transform the charge — across difference and relationship.",
+        "Bring it to others: the thread from loss to belonging."
       ],
       "source": {
         "origin": "ai",
@@ -1097,6 +1473,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What charge am I carrying that needs to move?",
+      "campaignQuestion": "What needs to be metabolized before we move together?",
+      "optimizesFor": "Metabolizing the charge so it stops leaking — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Venting the charge onto someone else",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The same charge, discharged again"
+      ],
+      "remediation": "Name what you are feeling out loud before you act.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1219,9 +1609,8 @@
       "name": "Deepen your honesty over performance — Sense",
       "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Practice it within: your honesty over performance.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — sensing what is here.",
+        "Turn it inward: your honesty over performance."
       ],
       "source": {
         "origin": "ai",
@@ -1238,6 +1627,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1248,9 +1651,8 @@
       "name": "Deepen the shared story’s roots — Sense",
       "essence": "For others: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Build the capacity, sensing what is here.",
-        "Offer it to others: the shared story’s roots.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — sensing what is here.",
+        "Bring it to others: the shared story’s roots."
       ],
       "source": {
         "origin": "ai",
@@ -1268,6 +1670,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1277,9 +1693,8 @@
       "name": "Deepen your honesty over performance — Edge",
       "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Practice it within: your honesty over performance.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — at the edge, naming what resists.",
+        "Turn it inward: your honesty over performance."
       ],
       "source": {
         "origin": "ai",
@@ -1297,6 +1712,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1306,9 +1735,8 @@
       "name": "Deepen the shared story’s roots — Edge",
       "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Build the capacity, at the edge, naming what resists.",
-        "Offer it to others: the shared story’s roots.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — at the edge, naming what resists.",
+        "Bring it to others: the shared story’s roots."
       ],
       "source": {
         "origin": "ai",
@@ -1325,6 +1753,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1447,9 +1889,8 @@
       "name": "Deepen your honesty over performance — Structure",
       "essence": "In yourself: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Practice it within: your honesty over performance.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — building it into structure.",
+        "Turn it inward: your honesty over performance."
       ],
       "source": {
         "origin": "ai",
@@ -1466,6 +1907,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1476,9 +1931,8 @@
       "name": "Deepen the shared story’s roots — Structure",
       "essence": "For others: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Build the capacity, building it into structure.",
-        "Offer it to others: the shared story’s roots.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — building it into structure.",
+        "Bring it to others: the shared story’s roots."
       ],
       "source": {
         "origin": "ai",
@@ -1495,6 +1949,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1505,9 +1973,8 @@
       "name": "Deepen your honesty over performance — Bridge",
       "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Practice it within: your honesty over performance.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — across difference and relationship.",
+        "Turn it inward: your honesty over performance."
       ],
       "source": {
         "origin": "ai",
@@ -1524,6 +1991,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1534,9 +2015,8 @@
       "name": "Deepen the shared story’s roots — Bridge",
       "essence": "For others: poignance — loss into meaning, across difference and relationship.",
       "steps": [
-        "Build the capacity, across difference and relationship.",
-        "Offer it to others: the shared story’s roots.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — across difference and relationship.",
+        "Bring it to others: the shared story’s roots."
       ],
       "source": {
         "origin": "ai",
@@ -1554,6 +2034,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Bridge level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1563,9 +2057,8 @@
       "name": "Deepen your honesty over performance — Whole",
       "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Practice it within: your honesty over performance.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — integrating the whole field.",
+        "Turn it inward: your honesty over performance."
       ],
       "source": {
         "origin": "ai",
@@ -1582,6 +2075,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1592,9 +2099,8 @@
       "name": "Deepen the shared story’s roots — Whole",
       "essence": "For others: poignance — loss into meaning, integrating the whole field.",
       "steps": [
-        "Build the capacity, integrating the whole field.",
-        "Offer it to others: the shared story’s roots.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Build the capacity — integrating the whole field.",
+        "Bring it to others: the shared story’s roots."
       ],
       "source": {
         "origin": "ai",
@@ -1612,6 +2118,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "Who do I need to become for this?",
+      "campaignQuestion": "What capacity does this work need us to build?",
+      "optimizesFor": "Building the capacity the work keeps asking for — your poignance — loss into meaning at the Whole level.",
+      "forbiddenMoves": [
+        "Forcing growth or skipping the rep",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "Busywork mistaken for growth"
+      ],
+      "remediation": "Pick one small rep and do it once.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1621,9 +2141,8 @@
       "name": "Name what this means to you — Sense",
       "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Practice it within: what this means to you.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — sensing what is here.",
+        "Turn it inward: what this means to you."
       ],
       "source": {
         "origin": "ai",
@@ -1640,6 +2159,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1650,9 +2183,8 @@
       "name": "Name what this means, for the room — Sense",
       "essence": "For others: poignance — loss into meaning, sensing what is here.",
       "steps": [
-        "Take the concrete act, sensing what is here.",
-        "Offer it to others: what this means, for the room.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — sensing what is here.",
+        "Bring it to others: what this means, for the room."
       ],
       "source": {
         "origin": "ai",
@@ -1670,6 +2202,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Sense level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1679,9 +2225,8 @@
       "name": "Name what this means to you — Edge",
       "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Practice it within: what this means to you.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Turn it inward: what this means to you."
       ],
       "source": {
         "origin": "ai",
@@ -1698,6 +2243,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1708,9 +2267,8 @@
       "name": "Name what this means, for the room — Edge",
       "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
       "steps": [
-        "Take the concrete act, at the edge, naming what resists.",
-        "Offer it to others: what this means, for the room.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — at the edge, naming what resists.",
+        "Bring it to others: what this means, for the room."
       ],
       "source": {
         "origin": "ai",
@@ -1728,6 +2286,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Edge level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1737,9 +2309,8 @@
       "name": "Name what this means to you — Steward",
       "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Practice it within: what this means to you.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — stewarding it over time.",
+        "Turn it inward: what this means to you."
       ],
       "source": {
         "origin": "ai",
@@ -1756,6 +2327,20 @@
       "aspect": "inner",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"
@@ -1766,9 +2351,8 @@
       "name": "Name what this means, for the room — Steward",
       "essence": "For others: poignance — loss into meaning, stewarding it over time.",
       "steps": [
-        "Take the concrete act, stewarding it over time.",
-        "Offer it to others: what this means, for the room.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — stewarding it over time.",
+        "Bring it to others: what this means, for the room."
       ],
       "source": {
         "origin": "ai",
@@ -1786,6 +2370,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Steward level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1795,9 +2393,8 @@
       "name": "Name what this means to you — Structure",
       "essence": "In yourself: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Practice it within: what this means to you.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — building it into structure.",
+        "Turn it inward: what this means to you."
       ],
       "source": {
         "origin": "ai",
@@ -1815,6 +2412,20 @@
       "superpowers": [
         "storyteller"
       ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
+      ],
       "tier": "canonical",
       "status": "draft"
     },
@@ -1824,9 +2435,8 @@
       "name": "Name what this means, for the room — Structure",
       "essence": "For others: poignance — loss into meaning, building it into structure.",
       "steps": [
-        "Take the concrete act, building it into structure.",
-        "Offer it to others: what this means, for the room.",
-        "Shadow check: the Performer — spectacle over truth."
+        "Take the concrete act — building it into structure.",
+        "Bring it to others: what this means, for the room."
       ],
       "source": {
         "origin": "ai",
@@ -1843,6 +2453,20 @@
       "aspect": "outer",
       "superpowers": [
         "storyteller"
+      ],
+      "primaryQuestion": "What is the one act I keep avoiding?",
+      "campaignQuestion": "What concrete act would actually help right now?",
+      "optimizesFor": "Taking the one concrete act that moves things — your poignance — loss into meaning at the Structure level.",
+      "forbiddenMoves": [
+        "Hinting or prepping forever instead of acting",
+        "Sliding into the Performer — spectacle over truth."
+      ],
+      "failureModes": [
+        "The move that never quite happens"
+      ],
+      "remediation": "Do the smallest real version today.",
+      "contraindications": [
+        "Overusing this becomes the Performer — spectacle over truth."
       ],
       "tier": "canonical",
       "status": "draft"

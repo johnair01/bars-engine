@@ -29,11 +29,12 @@ describe('car-campaign quality harness', () => {
     expect(score.distinct.every((c) => c.level >= 0)).toBe(true)
   })
 
-  it('hero cells lift the campaign-ready count (12 L4, 24 ready cells)', () => {
+  it('floor-raise + hero cells: 12 L4, 48 L2, 24 campaign-ready', () => {
     const score = scoreLoadoutOverCampaign(LOADOUT, baseCards)
     expect(score.byLevel[4]).toBe(12) // 6 escape_artist inner + 6 connector outer hero cells
-    expect(score.byLevel[0]).toBe(48) // the still-generated remainder
-    expect(score.belowL3).toBe(48)
+    expect(score.byLevel[2]).toBe(48) // the generated remainder now sits at the L2 floor
+    expect(score.byLevel[0]).toBe(0) // nothing left at L0
+    expect(score.belowL3).toBe(48) // L2 is still below the "usable" L3 bar
     expect(score.campaignReadyCells).toBe(24) // 6 shared (move×face) coords × 4 domains
   })
 
