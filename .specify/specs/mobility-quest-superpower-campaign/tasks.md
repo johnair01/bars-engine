@@ -59,6 +59,11 @@
 
 ## Phase 3 — Campaign route + tiered milestone needs
 
+- [x] **T3.0** `src/lib/superpowers/needs.ts` — pure tiered-matching engine:
+      `matchNeedsForPlayer` (Tier 1 superpower+orientation, Tier 2 open-aid
+      fallback; excludes claimed/done) + `summarizeNeeds` (per-unit progress,
+      internal/external split — Six Faces: unit-typed, never blended, no
+      multiplier). Tested needs.test.ts 6/6. (FR9/FR10 core)
 - [ ] **T3.1** Seed/author the **Mobility Quest** `Campaign` (slug, allyshipDomain,
       wake-up/show-up copy) + its `CampaignMilestone`s if not present. (FR8)
 - [ ] **T3.2** `src/actions/milestone-needs.ts` — `listMilestoneNeedsForPlayer`
