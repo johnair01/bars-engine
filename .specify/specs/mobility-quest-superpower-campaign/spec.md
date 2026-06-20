@@ -27,6 +27,25 @@ authored data (a matrix), not generated. Dual-track: the whole flow is playable
 without a language model; AI is optional flavor only. Portland-AI-allergy
 sensitive — the non-AI path is first-class.
 
+## Source Material (canonical inputs)
+
+This spec formalizes existing creator artifacts; the implementation **re-authors**
+them, it does not invent the content.
+
+| Source | Where | Role |
+|--------|-------|------|
+| **Superpower Polarity Addendum** | uploaded `.md` | Internal/external orientation polarity (this spec's trigger) |
+| **Borogove Twine — "Wendell Support Quest"** | [`borogove-source.md`](./borogove-source.md) (extracted) | The campaign prototyped end-to-end: Start hub, Timebank, "Discover your contribution", Allyship Quests, Allyship Dojo. The voice source + structural blueprint. |
+| **Superpower Strategy Guides** (6) + **Outlines** + **Compendium** | Google Drive (MtGoA), `owner: wendell@masteringallyship.com` | Canonical per-superpower content: element, Wake/Clean/Grow/Show path, **overuse/avoidance shadows** (→ internal orientation), **how it pairs with other superpowers** (→ collective deck-building). Authority for the translation matrix (FR2). |
+| **Allyship Superpower Quiz** | Google Drive spreadsheet | The real basis for the discovery intake (FR5) — preferred over re-deriving from the Twine. |
+| **"Mastering the Game of Allyship"** book drafts | Google Drive | Long-form voice corpus for re-authoring. |
+
+> **Canon note:** the six canonical superpowers are **Connector · Strategist ·
+> Disruptor · Storyteller · Alchemist · Escape Artist** (Drive guides + existing
+> [`superpower-move-extensions`](../superpower-move-extensions/spec.md)). The
+> addendum lists **Coach** in place of **Escape Artist** — a discrepancy resolved
+> in Design Decisions (pending creator confirmation).
+
 ## Design Decisions
 
 | Topic | Decision |
