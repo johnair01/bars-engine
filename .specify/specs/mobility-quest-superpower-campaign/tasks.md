@@ -49,12 +49,12 @@
       (CampaignMembership.superpower; documented seam — LatentAllyshipIntake is
       invite-bound and a poor fit). (FR6)
 - [ ] **T2.5** Routing unit tests with deterministic path fixtures.
-- [~] **T2.6** Reveal UI: `src/components/superpowers/SuperpowerReveal.tsx` DONE
-      (CultivationCard; element=channel, altitude=confidence; primary + secondary +
-      margin band + shadow + spectrum + mechanism disclosure; no email gate;
-      tsc+eslint clean). REMAINING: the RSC route `src/app/campaign/[ref]/superpower/
-      page.tsx`, the quiz-runner step UI (ComposerStepRenderer), and TranslatedCard.
-      (FR7)
+- [x] **T2.6** Reveal + intake UI (DB-free, deterministic): `SuperpowerReveal.tsx`
+      (primary CultivationCard + shadow + margin band + spectrum + mechanism
+      disclosure, no email gate), `SuperpowerQuiz.tsx` (12 forced-choice steps +
+      orientation → submitSuperpowerIntake → reveal; progress bar; keyboard/ARIA),
+      and route `src/app/superpower/page.tsx` (`?ref=` forwarded). tsc+eslint clean.
+      REMAINING: ComposerStepRenderer styling pass + TranslatedCard. (FR7)
 - [ ] **T2.7** Orientation toggle ("Where is this card asking you to ally?"):
       honor card metadata when present, else allow toggle (addendum AC). (FR7, P2)
 - [ ] **T2.8** Gate: `npm run build` && `npm run check`.
