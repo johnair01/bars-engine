@@ -68,16 +68,13 @@
       multiplier). Tested needs.test.ts 6/6. (FR9/FR10 core)
 - [ ] **T3.1** Seed/author the **Mobility Quest** `Campaign` (slug, allyshipDomain,
       wake-up/show-up copy) + its `CampaignMilestone`s if not present. (FR8)
-- [ ] **T3.2** `src/actions/milestone-needs.ts` — `listMilestoneNeedsForPlayer`
-      (Tier 1 superpower-matched first; Tier 2 open `GameboardAidOffer` fallback),
-      `claimMilestoneNeed`, `completeMilestoneNeed`. Needs include
-      `unit ∈ {action|currency|hours}` (default `action`/`1`); returned so UI can
-      group. **No multiplier field.** (FR9; Six Faces Δ T3.2)
-- [ ] **T3.3** On completion, route the contribution to the correct **unit
-      bucket**: write `MilestoneContribution` + `ContributionRecord` and advance
-      the milestone's per-unit total via the existing path
-      (`campaign-contributions.ts`); money needs reuse the **DSW / barn-raising
-      `wallKey`** money path, not a new ledger. (FR10; Six Faces Δ T3.3)
+- [x] **T3.2** `src/actions/milestone-needs.ts` — `listMilestoneNeedsForPlayer`
+      (Tier 1 superpower+orientation via engine, Tier 2 open fallback; lens from
+      arg or CampaignMembership), `claimMilestoneNeed`, `completeMilestoneNeed`.
+      Wraps the pure engine; tsc-verified vs the generated client. (FR9)
+- [x] **T3.3** completeMilestoneNeed writes `MilestoneContribution` + upserts
+      `ContributionRecord` + advances milestone in one transaction; per-unit honest
+      view from `summarizeNeeds` (legacy currentValue advanced for parity). (FR10)
 - [ ] **T3.4** `src/components/superpowers/MilestoneNeeds.tsx` — matched needs +
       open-aid fallback; **group by unit into separate sub-bars**; **never** show a
       per-action point value to the contributor (UI_COVENANT). Wire into Mobility
@@ -99,16 +96,18 @@
 > [prisma-migration-discipline](../../../.agents/skills/prisma-migration-discipline/SKILL.md).
 > No `db push` for changes that merge to main.
 
-- [ ] **T4.1** Decide model-vs-JSON for needs + result home (Open Q #1/#2).
-- [ ] **T4.2** Edit `prisma/schema.prisma` — additive:
+- [x] **T4.1** Decided: first-class `MilestoneNeed` model; per-campaign result on `CampaignMembership`.
+- [x] **T4.2** Edited `prisma/schema.prisma` — additive (DONE):
       `LatentAllyshipIntake.superpower String?` + `.superpowerOrientation String?`;
       **per-campaign** result on `CampaignMembership.superpower String?` +
       `.superpowerOrientation String?` (not global `Player`);
       `MilestoneNeed` model (or `CampaignMilestone.needsJson`) with
       `unit String @default("action")`, `value Float @default(1)`, **no
       multiplier field** (Six Faces Δ T4.2). (FR12)
-- [ ] **T4.3** `npx prisma migrate dev --name add_superpower_fields`; **commit**
-      `prisma/migrations/…` together with `schema.prisma`. (FR12)
+- [~] **T4.3** Migration authored DB-free via `prisma migrate diff` →
+      `prisma/migrations/20260620000000_add_superpower_fields/migration.sql`
+      (additive: 2 ADD COLUMN sets + CREATE TABLE milestone_needs + indexes + FK).
+      **APPLY in a DB env**: `npm run db:migrate:deploy` (then db:record-schema-hash). (FR12)
 - [ ] **T4.4** `npm run db:sync` (regenerate client); then
       `npm run db:record-schema-hash` per CLAUDE.md. (FR12)
 - [ ] **T4.5** Human-glance the generated `migration.sql` (additive, not destructive).
