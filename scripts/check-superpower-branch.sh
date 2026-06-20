@@ -6,13 +6,24 @@
 #   ./scripts/check-superpower-branch.sh
 #   REPO_DIR=/path/to/bars-engine ./scripts/check-superpower-branch.sh
 #
+# Re-exec under bash if started with `sh script.sh` / a non-bash shell.
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
+
 set -euo pipefail
 
 BRANCH="claude/determined-ramanujan-rfq6a4"
-# Defaults to the repo this script lives in; override with REPO_DIR=…
-REPO_DIR="${REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+# Where the repo lives. Default: this script's parent dir; fall back to $PWD.
+SCRIPT_SRC="${BASH_SOURCE[0]:-$0}"
+DEFAULT_DIR="$(cd "$(dirname "$SCRIPT_SRC")/.." 2>/dev/null && pwd || echo "$PWD")"
+REPO_DIR="${REPO_DIR:-$DEFAULT_DIR}"
 
 cd "$REPO_DIR"
+if [ ! -f package.json ] || [ ! -d .git ]; then
+  echo "✗ '$REPO_DIR' is not the bars-engine repo. Run from the repo root, or:" >&2
+  echo "    REPO_DIR=/path/to/bars-engine bash scripts/check-superpower-branch.sh" >&2
+  exit 1
+fi
 echo "▶ Repo: $(pwd)"
 
 # Stash any local changes so the checkout is clean (restored at the end if present)
