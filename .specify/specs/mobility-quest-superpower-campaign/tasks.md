@@ -9,9 +9,14 @@
 - [ ] **T1.1** `src/lib/superpowers/types.ts` — `Superpower`,
       `SuperpowerOrientation`, `SuperpowerTranslation`, `SuperpowerDef`; document
       `internal→inner` / `external→outer`. (FR1)
-- [ ] **T1.2** `src/lib/superpowers/matrix.ts` — authored 6×2 matrix (prompt +
-      suggestedArtifact per superpower×orientation) + `domains` per superpower,
-      reconciled with `superpower-move-extensions`. (FR2)
+- [ ] **T1.2** `src/lib/superpowers/matrix.ts` — authored **7×2** matrix (prompt +
+      suggestedArtifact per superpower×orientation) + per-superpower `domains`,
+      element/emotion, overuse/avoidance shadow, and pairings — **derived from the
+      six Strategy Guides**; Coach authored from the addendum (flag: no Drive
+      guide). Reconcile with `superpower-move-extensions`. (FR2)
+- [ ] **T1.2a** (content follow-up) Author a **Coach Strategy Guide** to match the
+      other six (element/shadows/signs/pairings); until then Coach uses addendum
+      stub content.
 - [ ] **T1.3** `src/lib/superpowers/translate.ts` — `translateCardForSuperpower`,
       `orientationToMoveAspect`. (FR3)
 - [ ] **T1.4** Extend `buildDeckSeed` in `src/lib/allyship-deck/seed.ts` with
@@ -31,10 +36,12 @@
 - [ ] **T2.2** Extend `src/lib/cyoa-intake/resolveRouting.ts` to accumulate
       `superpowerWeights` and resolve `SuperpowerRoutingResult` (top superpower +
       orientation), preserving existing routing fields. (FR5)
-- [ ] **T2.3** Re-author the Borogove CYOA into intake passages **in Wendell's
-      narrative voice** (not verbatim, not generic), with per-choice hidden
-      `superpowerWeights`; preserve the choice structure + weighting. Voice samples
-      per CLAUDE.md § Voices. (FR5; Resolved Q: re-author in voice)
+- [ ] **T2.3** Build the discovery CYOA from the **Allyship Superpower Quiz**:
+      since the Drive quiz file is empty, construct items from each Strategy Guide's
+      "Signs Someone Needs an X" + overuse/avoidance shadows + element/emotion
+      (Coach from the addendum); hidden `superpowerWeights` per choice; **re-author
+      copy in Wendell's narrative voice** (Borogove heist register), preserving a
+      coherent branch structure. (FR5; Resolved Qs: quiz basis + voice)
 - [ ] **T2.4** `src/actions/superpower-intake.ts` — `submitSuperpointIntake`
       (`submitSuperpowerIntake`) server action; persists result on existing
       `LatentAllyshipIntake` (anon-capable via session). (FR6)

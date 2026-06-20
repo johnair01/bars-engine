@@ -40,17 +40,21 @@ them, it does not invent the content.
 | **Allyship Superpower Quiz** | Google Drive spreadsheet | The real basis for the discovery intake (FR5) — preferred over re-deriving from the Twine. |
 | **"Mastering the Game of Allyship"** book drafts | Google Drive | Long-form voice corpus for re-authoring. |
 
-> **Canon note:** the six canonical superpowers are **Connector · Strategist ·
-> Disruptor · Storyteller · Alchemist · Escape Artist** (Drive guides + existing
-> [`superpower-move-extensions`](../superpower-move-extensions/spec.md)). The
-> addendum lists **Coach** in place of **Escape Artist** — a discrepancy resolved
-> in Design Decisions (pending creator confirmation).
+> **Canon note (resolved):** the six canonical superpowers are **Connector ·
+> Strategist · Disruptor · Storyteller · Alchemist · Escape Artist** (Drive
+> guides + [`superpower-move-extensions`](../superpower-move-extensions/spec.md)).
+> The addendum's **Coach** is added as a **7th** (Wendell, 2026-06-20) — Coach has
+> no Drive guide yet, so its content is authored from the addendum (a Coach
+> Strategy Guide is a content follow-up). The Drive **Superpower Quiz** file is an
+> empty placeholder; the intake instrument is derived from the guides' diagnostics.
 
 ## Design Decisions
 
 | Topic | Decision |
 |-------|----------|
 | **Superpower model = compose both axes** | A `Superpower` is a **translation layer** carrying **both** a domain emphasis (from [`superpower-move-extensions`](../superpower-move-extensions/spec.md)) **and** an `orientation` toggle (this addendum). The two prior specs are not in conflict — they are orthogonal axes that merge. |
+| **Seven superpowers (canon 6 + Coach)** | Use all six canonical superpowers — **Connector, Strategist, Disruptor, Storyteller, Alchemist, Escape Artist** (Drive Strategy Guides + `superpower-move-extensions`) — **and add Coach as a 7th** (from the addendum). *(Wendell, 2026-06-20.)* Caveat: there is **no Coach Strategy Guide** in Drive yet, so Coach's matrix content is authored from the addendum's prompts (internal: "next honest step I can take"; external: "who needs support choosing/completing the next step") + element TBD; the other six derive from their guides. A Coach Strategy Guide is a content follow-up. |
+| **Intake basis = the Superpower Quiz (guide-derived)** | The discovery CYOA is built on the **Allyship Superpower Quiz** *(Wendell, 2026-06-20)*. **The Drive quiz spreadsheet is currently an empty placeholder**, so the instrument is **constructed from each Strategy Guide's diagnostic content** — "Signs Someone Needs an X," the overuse/avoidance shadows, and the element/emotion signature — which is precisely quiz-scoring logic. Coach's quiz items are authored from the addendum. |
 | **Orientation reuses `MoveAspect`** | The addendum's `internal`/`external` polarity **is** the existing `MoveAspect` `inner`/`outer` from [`inner-outer-allyship-moves`](../inner-outer-allyship-moves/spec.md). We do not introduce a parallel type; we map `internal→inner`, `external→outer`. Card metadata (`primaryQuestion`/`campaignQuestion`) already encodes the self/world reading. |
 | **Superpower is a layer, not a card system** | Per the addendum's design principle, superpowers **translate** existing `allyship-deck.json` cards; the deck remains the single source of truth. No new card models. |
 | **Move generator is the bridge** | `buildDeckSeed(card, subject)` gains `superpower` + `orientation` params. The same call powers the intake reveal quest, a player's personal quest, and a milestone-scoped contribution need. |
@@ -79,18 +83,21 @@ works) and **orientation** (internal self-allyship ↔ external world-facing
 allyship). The orientation question — *"Where is this card asking you to ally?"* —
 is the addendum's UI toggle.
 
-| Superpower | Domain emphasis (from move-extensions) | **Internal** (self-allyship) | **External** (world-facing) |
-|------------|----------------------------------------|------------------------------|-----------------------------|
-| **Connector** | Raise Awareness, Gather Resources | Connect inner parts/desires/fears → parts map, values bridge | Connect people → introduction, warm handoff, relationship map |
-| **Storyteller** | Raise Awareness | What story am I telling myself about this quest? | What story would help others care? |
-| **Strategist** | Skillful Organizing | Where is my energy leaking? inner strategy to preserve capacity | Where is the leverage in the world? |
-| **Disruptor** | Direct Action | What inner rule / shame spell / false obligation to challenge? | What external assumption/norm/bottleneck to challenge? |
-| **Alchemist** | Direct Action, emotional alchemy | What emotion must I metabolize before I can show up? | What relational tension/friction needs transforming? |
-| **Coach** | Gather Resources (capacity-building) | What is the next honest step I can actually take? | Who needs support choosing & completing the next step? |
+| Superpower | Domain emphasis | Element / emotion (from guides) | **Internal** (self-allyship) | **External** (world-facing) |
+|------------|----------------|---------------------------------|------------------------------|-----------------------------|
+| **Connector** | Raise Awareness, Gather Resources | (TBD — from guide) | Connect inner parts/desires/fears → parts map, values bridge | Connect people → introduction, warm handoff, relationship map |
+| **Storyteller** | Raise Awareness | Water & Fire (Sadness→Poignance & Anger→Triumph) | What story am I telling myself about this quest? | What story would help others care? |
+| **Strategist** | Skillful Organizing | (TBD — from guide) | Where is my energy leaking? inner strategy to preserve capacity | Where is the leverage in the world? |
+| **Disruptor** | Direct Action | Fire (Anger→Triumph) | What inner rule / shame spell / false obligation to challenge? | What external assumption/norm/bottleneck to challenge? |
+| **Alchemist** | Direct Action, emotional alchemy | ALL elements (master of alchemy) | What emotion must I metabolize before I can show up? | What relational tension/friction needs transforming? |
+| **Escape Artist** | Direct Action (strategic exit) | Water (Sadness→Depth & meaning) | What failing inner system/attachment must I walk away from? | Where is misalignment, and who needs guiding out of a failing system? |
+| **Coach** *(7th; no Drive guide yet)* | Gather Resources (capacity-building) | TBD (author w/ Coach guide) | What is the next honest step I can actually take? | Who needs support choosing & completing the next step? |
 
 > `internal → MoveAspect 'inner'`, `external → MoveAspect 'outer'`. Each cell also
 > names a **suggested artifact** (the addendum's Connector example), surfaced on
-> the card display.
+> the card display. Each guide also supplies the **overuse/avoidance shadow**
+> (→ feeds internal-orientation prompts) and **how the superpower pairs with
+> others** (→ the addendum's collective deck-building).
 
 ### Card display (addendum § Card Display)
 
@@ -119,7 +126,8 @@ Milestone (e.g. "Raise $X for the move" / "Find 3 housing leads")
 // src/lib/superpowers/types.ts
 export type Superpower =
   | 'connector' | 'storyteller' | 'strategist'
-  | 'disruptor' | 'alchemist' | 'coach'
+  | 'disruptor' | 'alchemist' | 'escape_artist' | 'coach'
+// 6 canonical (Drive Strategy Guides) + 'coach' (7th, from the addendum).
 
 // Addendum orientation maps onto the existing MoveAspect.
 export type SuperpowerOrientation = 'internal' | 'external'
@@ -259,8 +267,10 @@ fundraiser, so we can confirm the flow before launch.
 ### Phase 1 — Ontology + deterministic translation library
 - **FR1**: `src/lib/superpowers/types.ts` — `Superpower`, `SuperpowerOrientation`,
   `SuperpowerTranslation`; document the orientation→`MoveAspect` mapping.
-- **FR2**: `src/lib/superpowers/matrix.ts` — authored matrix (6 superpowers × 2
-  orientations: prompt + suggestedArtifact), exhaustive; reconcile domain emphasis
+- **FR2**: `src/lib/superpowers/matrix.ts` — authored matrix (**7 superpowers** ×
+  2 orientations: prompt + suggestedArtifact), exhaustive; per-superpower `domains`
+  + element/emotion + overuse/avoidance shadow + pairings, **derived from the six
+  Strategy Guides** (Coach authored from the addendum). Reconcile domain emphasis
   with [`superpower-move-extensions`](../superpower-move-extensions/spec.md).
 - **FR3**: `src/lib/superpowers/translate.ts` — `translateCardForSuperpower`,
   `orientationToMoveAspect`; unit tests covering all 12 cells + the addendum's
@@ -270,8 +280,11 @@ fundraiser, so we can confirm the flow before launch.
 
 ### Phase 2 — Superpower CYOA intake (reuse ECI)
 - **FR5**: Extend `resolveRouting` with `superpowerWeights` accumulation →
-  `SuperpowerRoutingResult` (top superpower + orientation). Port the Borogove
-  CYOA content into intake passages with hidden `superpowerWeights` per choice.
+  `SuperpowerRoutingResult` (top superpower + orientation). **Build the discovery
+  CYOA from the Allyship Superpower Quiz** — since the Drive quiz file is empty,
+  construct items from each Strategy Guide's "Signs Someone Needs an X" + shadows +
+  element/emotion (Coach from the addendum); hidden `superpowerWeights` per choice;
+  re-author copy in Wendell's voice (per Resolved Q).
 - **FR6**: `submitSuperpowerIntake` server action (persists a
   `LatentAllyshipIntake` extended with the superpower result; anonymous-capable).
 - **FR7**: Reveal page (`/campaign/[ref]/superpower` or a dedicated route) using
@@ -356,6 +369,11 @@ fundraiser, so we can confirm the flow before launch.
 - Reciprocity / relational weave between matched players → future.
 
 ## Resolved Questions
+- **Sixth/seventh superpower** → keep canonical six (…Escape Artist) **and add
+  Coach as a 7th**; Coach content authored from the addendum (no Drive guide yet).
+  *(Wendell, 2026-06-20.)*
+- **Intake basis** → the **Allyship Superpower Quiz**, constructed from the six
+  Strategy Guides' diagnostics (the Drive quiz file is empty). *(Wendell, 2026-06-20.)*
 - **Result home** → **per-campaign** (stored on `CampaignMembership`, not global
   `Player`); a player may bring a different superpower to a different cause.
   Optional global "primary" deferred. *(Wendell, 2026-06-20.)*
