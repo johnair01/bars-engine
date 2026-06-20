@@ -43,17 +43,18 @@ them, it does not invent the content.
 > **Canon note (resolved):** the six canonical superpowers are **Connector ·
 > Strategist · Disruptor · Storyteller · Alchemist · Escape Artist** (Drive
 > guides + [`superpower-move-extensions`](../superpower-move-extensions/spec.md)).
-> The addendum's **Coach** is added as a **7th** (Wendell, 2026-06-20) — Coach has
-> no Drive guide yet, so its content is authored from the addendum (a Coach
-> Strategy Guide is a content follow-up). The Drive **Superpower Quiz** file is an
-> empty placeholder; the intake instrument is derived from the guides' diagnostics.
+> The addendum's **Coach** is added as a **7th** (Wendell, 2026-06-20) and now has a
+> full [Coach Strategy Guide](../superpower-quiz-design/coach-strategy-guide.md)
+> matching the others (Fire, Frustration→Triumph; integrator). The Drive
+> **Superpower Quiz** file is an empty placeholder; the intake instrument is derived
+> from the guides' diagnostics.
 
 ## Design Decisions
 
 | Topic | Decision |
 |-------|----------|
 | **Superpower model = compose both axes** | A `Superpower` is a **translation layer** carrying **both** a domain emphasis (from [`superpower-move-extensions`](../superpower-move-extensions/spec.md)) **and** an `orientation` toggle (this addendum). The two prior specs are not in conflict — they are orthogonal axes that merge. |
-| **Seven superpowers (canon 6 + Coach)** | Use all six canonical superpowers — **Connector, Strategist, Disruptor, Storyteller, Alchemist, Escape Artist** (Drive Strategy Guides + `superpower-move-extensions`) — **and add Coach as a 7th** (from the addendum). *(Wendell, 2026-06-20.)* Caveat: there is **no Coach Strategy Guide** in Drive yet, so Coach's matrix content is authored from the addendum's prompts (internal: "next honest step I can take"; external: "who needs support choosing/completing the next step") + element TBD; the other six derive from their guides. A Coach Strategy Guide is a content follow-up. |
+| **Seven superpowers (canon 6 + Coach)** | Use all six canonical superpowers — **Connector, Strategist, Disruptor, Storyteller, Alchemist, Escape Artist** (Drive Strategy Guides + `superpower-move-extensions`) — **and add Coach as a 7th** (from the addendum). *(Wendell, 2026-06-20.)* Coach now has a full **[Coach Strategy Guide](../superpower-quiz-design/coach-strategy-guide.md)** matching the others: softened Disruptor, **Fire (Frustration→Triumph)**, integrator of the other six aimed at a person's agency — helps people abandon an outgrown level + its story. Domain emphasis: Gather Resources (capacity-building) / self-allyship. |
 | **Intake basis = the Superpower Quiz (guide-derived)** | The discovery CYOA is built on the **Allyship Superpower Quiz** *(Wendell, 2026-06-20)*. **The Drive quiz spreadsheet is currently an empty placeholder**, so the instrument is **constructed from each Strategy Guide's diagnostic content** — "Signs Someone Needs an X," the overuse/avoidance shadows, and the element/emotion signature — which is precisely quiz-scoring logic. Coach's quiz items are authored from the addendum. |
 | **Orientation reuses `MoveAspect`** | The addendum's `internal`/`external` polarity **is** the existing `MoveAspect` `inner`/`outer` from [`inner-outer-allyship-moves`](../inner-outer-allyship-moves/spec.md). We do not introduce a parallel type; we map `internal→inner`, `external→outer`. Card metadata (`primaryQuestion`/`campaignQuestion`) already encodes the self/world reading. |
 | **Superpower is a layer, not a card system** | Per the addendum's design principle, superpowers **translate** existing `allyship-deck.json` cards; the deck remains the single source of truth. No new card models. |
@@ -91,7 +92,7 @@ is the addendum's UI toggle.
 | **Disruptor** | Direct Action | Fire (Anger→Triumph) | What inner rule / shame spell / false obligation to challenge? | What external assumption/norm/bottleneck to challenge? |
 | **Alchemist** | Direct Action, emotional alchemy | ALL elements (master of alchemy) | What emotion must I metabolize before I can show up? | What relational tension/friction needs transforming? |
 | **Escape Artist** | Direct Action (strategic exit) | Water (Sadness→Depth & meaning) | What failing inner system/attachment must I walk away from? | Where is misalignment, and who needs guiding out of a failing system? |
-| **Coach** *(7th; no Drive guide yet)* | Gather Resources (capacity-building) | TBD (author w/ Coach guide) | What is the next honest step I can actually take? | Who needs support choosing & completing the next step? |
+| **Coach** *(7th; softened Disruptor / integrator)* | Gather Resources (capacity-building) | Fire (Frustration→Triumph) | What level have I outgrown, and what's the next honest step to leave it? | Who am I calling up — helping abandon an outgrown level + its story? |
 
 > `internal → MoveAspect 'inner'`, `external → MoveAspect 'outer'`. Each cell also
 > names a **suggested artifact** (the addendum's Connector example), surfaced on
@@ -372,8 +373,8 @@ fundraiser, so we can confirm the flow before launch.
 
 ## Resolved Questions
 - **Sixth/seventh superpower** → keep canonical six (…Escape Artist) **and add
-  Coach as a 7th**; Coach content authored from the addendum (no Drive guide yet).
-  *(Wendell, 2026-06-20.)*
+  Coach as a 7th**; full Coach Strategy Guide now authored (Fire, Frustration→
+  Triumph; integrator of the six). *(Wendell, 2026-06-20.)*
 - **Intake basis** → the **Allyship Superpower Quiz**, constructed from the six
   Strategy Guides' diagnostics (the Drive quiz file is empty). *(Wendell, 2026-06-20.)*
 - **Result home** → **per-campaign** (stored on `CampaignMembership`, not global

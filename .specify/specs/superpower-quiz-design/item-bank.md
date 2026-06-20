@@ -17,7 +17,7 @@
 | **Disruptor** | Fire (Anger→Triumph) | Direct Action | **the Chaos Bringer** — burns everything, fights to fight | **the Caged Rebel** — bitter, waits for permission, inert | stuck in stagnation/avoidance; in denial about a broken system |
 | **Alchemist** | All elements (Sadness→Poignance→Joy) | Direct Action / emotional alchemy | **Emotional Overload** — absorbs too much, burns out | **the Detached Observer** — intellectualizes, stays distant | emotionally stuck in grief/fear; knows what to do but can't move |
 | **Escape Artist** | Water (Sadness→Poignance) + Metal (Fear→Excitement) | Direct Action (strategic exit) | **the Martyr** — stays too long out of guilt | **the Ghost** — bolts at first friction | sustaining a broken system; drained faster than they recover; punished for growth |
-| **Coach** *(provisional — no Drive guide)* | Wood (capacity/growth) — *TBD* | Gather Resources (capacity-building) | over-directs / rescues *(provisional)* | won't claim authority to guide *(provisional)* | needs the next honest step; needs support choosing & completing it |
+| **Coach** | Fire (Frustration→Triumph) — softened Disruptor; integrator of all | Gather Resources (capacity-building) / self-allyship | **the Taskmaster** — drags instead of calls up; creates dependence | **the Empty Cheerleader** — only affirms, never nudges | knows what to do but won't start; outgrown their level but loyal to it; stuck in an expired story; waiting for permission |
 
 Abbreviations below: `CON STO STR DIS ALC ESC COA`.
 
@@ -133,8 +133,8 @@ Counting primary (2) appearances across Q1–Q11:
 |--|--|--|--|--|--|--|--|
 | Items appearing as primary | Q1,2,5,6,7,8,9?,10,11 (≈8) | Q1,2(sec),5,6,7,8,9(sec),10,11 (≈7) | Q1,2,3,5,6,7,8,9,10,11 (≈9) | Q1,2(sec→DIS2),4,5,7,8,9,10,11 (≈8) | Q1,2,3,4,5,6,7,8,9,10,11 (≈10) | Q3,4,5,7,8(no),9,10,11 (≈7) | Q3,5,7,8,10,11 (≈6) |
 
-All seven clear the ≥3–4 signal floor (Coach lowest at ~6 — acceptable; flagged
-provisional). **To finalize**: balance so every superpower has the *same* primary
+All seven clear the ≥3–4 signal floor (Coach lowest at ~6 — acceptable). **To
+finalize**: balance so every superpower has the *same* primary
 count, or rely on percent-of-max normalization (the scorer does this). Over-generate
 a few alternates (below) and swap to even out Coach/Escape Artist.
 
@@ -192,11 +192,14 @@ out of guilt — or the Ghost who bolts at the first discomfort and never belong
 anywhere. **At your best:** you leave *well*, and help others see their own open
 door. *Not quite you? Try {secondary}.*
 
-**Coach** *(provisional)* — *You help people find and take the next honest step.*
-You turn "I should" into "I did." **Shadow:** over-directing or rescuing instead of
-building capacity — or hanging back, unwilling to hold someone accountable. **At
-your best:** you build others' agency, not dependence. *Not quite you? Try
-{secondary}.* *(This superpower lacks a full Strategy Guide — copy is provisional.)*
+**Coach** — *You help people remember their own power by helping them abandon the
+level they've outgrown — and the story that keeps them there.* You're the softened
+Disruptor: frustration at wasted potential, re-aimed from systems to a person's
+excuse, converted into their Triumph. **Shadow:** the Taskmaster who drags instead
+of calls up (and breeds dependence) — or the Empty Cheerleader who only affirms and
+never delivers the honest nudge. **At your best:** you hand power back; they climb,
+and they credit themselves. *Not quite you? Try {secondary}.* See
+[coach-strategy-guide.md](./coach-strategy-guide.md).
 
 ### Result framing (shown with every result)
 > "This is a **lens, not a verdict** — computed from 12 questions, a snapshot of a

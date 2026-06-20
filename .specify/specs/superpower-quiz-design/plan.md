@@ -79,7 +79,7 @@ reviewed independently.
 | Item-count tension (psychometrics vs UX) | Multi-weighted options → ~12 Q still gives ≥3–4 signals/type |
 | Quiz feels Barnum / extractive | Shadows + falsifiable copy + mechanism disclosure + Barnum self-check |
 | Type instability erodes trust | Report primary+secondary+margin, frame as a lens, "try adjacent" |
-| Coach thinner than peers | Flag provisional; author Coach Strategy Guide (parent task T1.2a) |
+| Coach thinner than peers | Resolved — full [Coach Strategy Guide](./coach-strategy-guide.md) authored to match the other six |
 | Scope creep into a "personality engine" | Spec caps at 12 items / 7 types / 1 orientation; expansion is explicit |
 
 ## Dependencies

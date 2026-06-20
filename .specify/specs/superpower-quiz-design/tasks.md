@@ -10,7 +10,7 @@
       `QuizAnswer`, `QuizResult`, `OrientationItem`. (FR1-3)
 - [ ] **T1.2** `src/lib/superpowers/quiz/items.ts` — port the **reviewed**
       [item-bank.md](./item-bank.md) (11 forced-choice + 1 orientation, mined from
-      the six Strategy Guides; Coach provisional) into typed data; each option
+      the six Strategy Guides + the Coach Strategy Guide) into typed data; each option
       **multi-weighted & quasi-ipsative**; ensure **≥3–4 signals per superpower**
       (balance Coach/Escape Artist via the candidate-pool alternates or rely on
       percent-of-max). Copy in Wendell's voice. (FR1)

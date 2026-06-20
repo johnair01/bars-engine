@@ -14,9 +14,10 @@
       element/emotion, overuse/avoidance shadow, and pairings — **derived from the
       six Strategy Guides**; Coach authored from the addendum (flag: no Drive
       guide). Reconcile with `superpower-move-extensions`. (FR2)
-- [ ] **T1.2a** (content follow-up) Author a **Coach Strategy Guide** to match the
-      other six (element/shadows/signs/pairings); until then Coach uses addendum
-      stub content.
+- [x] **T1.2a** Author a **Coach Strategy Guide** matching the other six — DONE:
+      [coach-strategy-guide.md](../superpower-quiz-design/coach-strategy-guide.md)
+      (Strategist's POV; Fire Frustration→Triumph; Taskmaster/Empty-Cheerleader
+      shadows; integrator of the six; pairings + signs).
 - [ ] **T1.3** `src/lib/superpowers/translate.ts` — `translateCardForSuperpower`,
       `orientationToMoveAspect`. (FR3)
 - [ ] **T1.4** Extend `buildDeckSeed` in `src/lib/allyship-deck/seed.ts` with

@@ -37,7 +37,7 @@ required. Dual-track / Portland-AI-allergy first-class.
 | **Result is a lens, taker is authority** | Frame as a **time-bound snapshot**, invite disagreement ("Does this fit? try the adjacent one"), **disclose the mechanism** ("computed from 12 questions; a lens, not a verdict"), **never label/limit/gate**. (§4 b8-b11) |
 | **No dark patterns** | **No email/signup gate before results** (show first, offer capture after); no confirmshaming; affirmative opt-in; symmetric opt-out; mobile-first; accessible (labels, keyboard, focus). Narrative **heist** framing (Wendell voice) for intrinsic motivation. (§5 u6-u15) |
 | **Orientation captured, not scored** | The internal/external **orientation** is a separate dimension (the addendum's polarity = `MoveAspect` inner/outer), surfaced as its own question/toggle, not blended into superpower scoring. |
-| **Coach handled honestly** | Coach has **no Strategy Guide yet**, so its items + shadow are authored from the addendum and clearly flagged as provisional until a guide exists. |
+| **Coach handled honestly** | Coach now has a full **[Coach Strategy Guide](./coach-strategy-guide.md)** matching the other six (authored in the Strategist's POV). Coach = softened Disruptor, **Fire (Frustration→Triumph)**, the integrator of the other six aimed at a person's agency; helps people abandon an outgrown level + its story. Shadows: the Taskmaster (overuse) / the Empty Cheerleader (avoidance). |
 
 ## Conceptual Model
 
