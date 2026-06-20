@@ -17,6 +17,10 @@ import { listAttachableCampaigns } from '@/actions/campaign-attach'
 import { BarSocialLinks } from '@/components/bars/BarSocialLinks'
 import { BarSocialLinksForm } from '@/components/bars/BarSocialLinksForm'
 import { DeleteBarButton } from '@/components/bars/DeleteBarButton'
+import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { readHandDb } from '@/lib/hand-service'
+import { effectiveMaturity, parseSeedMetabolization } from '@/lib/bar-seed-metabolization'
+import { isHandVaultMovable } from '@/lib/hand-movement'
 
 /**
  * @page /bars/:id
@@ -73,6 +77,18 @@ export default async function BarDetailPage({
 
     // TSG Phase 2 — campaigns this player can offer the BAR to (owner only).
     const attachableCampaigns = isOwner ? await listAttachableCampaigns() : []
+
+    // Hand ↔ Vault movement (owner only). The toggle is offered on capture-type,
+    // non-planted BARs; Hand membership is read from HandSlot inline (no extra
+    // server action). Fork B restricts which maturities are movable.
+    const barMaturity = effectiveMaturity(parseSeedMetabolization(bar.seedMetabolization))
+    const canMoveHandVault =
+        isOwner &&
+        (bar.type === 'bar' || bar.type === 'charge_capture') &&
+        isHandVaultMovable(barMaturity)
+    const hand = canMoveHandVault ? await readHandDb(player.id) : null
+    const inHand = hand ? hand.slots.some(s => s.barId === bar.id) : false
+    const handFull = hand ? hand.filledCount >= hand.size : false
 
     return (
         <BarDetailClient bar={bar} isOwner={isOwner} isRecipient={isRecipient} recipientShare={recipientShare ?? null}>
@@ -210,6 +226,23 @@ export default async function BarDetailPage({
                                 </div>
                             ))}
                         </div>
+                    </section>
+                )}
+
+                {/* Hold in Hand / Return to Vault (owner only, non-planted) */}
+                {canMoveHandVault && (
+                    <section className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-6 flex items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-sm font-bold text-white">
+                                {inHand ? 'In your Hand' : 'In your Vault'}
+                            </h2>
+                            <p className="text-xs text-zinc-500 mt-1">
+                                {inHand
+                                    ? 'Carried into play. Return it to the Vault to free a slot.'
+                                    : 'Stored. Hold it in your Hand to work it with your daily charge and moves.'}
+                            </p>
+                        </div>
+                        <HandLocationToggle barId={bar.id} inHand={inHand} handFull={handFull} />
                     </section>
                 )}
 

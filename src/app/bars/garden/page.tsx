@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { listMyBarsForGarden, type BarGardenFilters } from '@/actions/bars'
 import { BarListThumb } from '@/components/bars/BarListThumb'
+import { HandLocationToggle } from '@/components/hand/HandLocationToggle'
+import { readHandDb } from '@/lib/hand-service'
+import { isHandVaultMovable } from '@/lib/hand-movement'
 import {
   MATURITY_PHASES,
   SOIL_KINDS,
@@ -58,6 +61,11 @@ export default async function BarsGardenPage({
     maturity,
     includeComposted,
   })
+
+  // Hand membership for the inline "Hold in Hand / Return to Vault" control.
+  const hand = await readHandDb(player.id)
+  const inHandIds = new Set(hand.slots.filter(s => s.barId).map(s => s.barId))
+  const handFull = hand.filledCount >= hand.size
 
   const qs = (
     patch: Partial<{ soil: BarGardenFilters['soil']; maturity: BarGardenFilters['maturity']; showComposted: boolean }> = {}
@@ -146,8 +154,13 @@ export default async function BarsGardenPage({
               const meta = parseSeedMetabolization(bar.seedMetabolization)
               const mat = effectiveMaturity(meta)
               const composted = bar.archivedAt != null
+              const movable =
+                !composted &&
+                (bar.type === 'bar' || bar.type === 'charge_capture') &&
+                isHandVaultMovable(mat)
               return (
-                <Link key={bar.id} href={`/bars/${bar.id}`} className="block group">
+                <div key={bar.id} className="space-y-2">
+                <Link href={`/bars/${bar.id}`} className="block group">
                   <div
                     className={`rounded-xl p-4 transition-colors border ${
                       composted
@@ -189,6 +202,17 @@ export default async function BarsGardenPage({
                     </div>
                   </div>
                 </Link>
+                {movable && (
+                  <div className="flex justify-end px-1">
+                    <HandLocationToggle
+                      barId={bar.id}
+                      inHand={inHandIds.has(bar.id)}
+                      handFull={handFull}
+                      compact
+                    />
+                  </div>
+                )}
+                </div>
               )
             })}
           </div>
