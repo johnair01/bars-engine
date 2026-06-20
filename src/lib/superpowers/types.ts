@@ -38,6 +38,9 @@ export const SUPERPOWERS: readonly Superpower[] = [
  */
 export type SuperpowerOrientation = 'internal' | 'external'
 
+/** Tuple form for runtime validation (e.g. zod enums). */
+export const SUPERPOWER_ORIENTATIONS = ['internal', 'external'] as const
+
 /** Bridge: internal→inner, external→outer (inner-outer-allyship-moves). */
 export function orientationToMoveAspect(o: SuperpowerOrientation): MoveAspect {
   return o === 'internal' ? 'inner' : 'outer'

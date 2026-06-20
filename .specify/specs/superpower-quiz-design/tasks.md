@@ -40,8 +40,9 @@
 - [x] **T2.4** Lint pass: no double-headed hedges; behavioral not adjectival — verified in BARNUM_CHECK.md. (FR5) DONE
 
 ## Phase 3 — Handoff + verification (UI owned by campaign spec)
-- [ ] **T3.1** Map `QuizResult` → `SuperpowerRoutingResult` (primary=superpower,
-      orientation); carry secondary + margin for the reveal. (FR7)
+- [x] **T3.1** Map `QuizResult` → `SuperpowerRoutingResult` — DONE:
+      `src/lib/superpowers/routing.ts` (`quizResultToRouting`, `resolveSuperpowerIntake`);
+      carries secondary + margin + ranked for the reveal. Tested routing.test.ts. (FR7)
 - [ ] **T3.2** Confirm the campaign reveal renders primary + secondary + margin
       band + shadow + mechanism disclosure, **no email gate**, WCAG-accessible.
       (FR7 — implemented in parent spec)

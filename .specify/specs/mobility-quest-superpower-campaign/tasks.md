@@ -34,20 +34,20 @@
 
 ## Phase 2 — Superpower CYOA intake (reuse ECI)
 
-- [ ] **T2.1** Extend `src/lib/cyoa-intake/intakeSurface.ts` choice types with
-      optional `superpowerWeights`. (FR5)
-- [ ] **T2.2** Extend `src/lib/cyoa-intake/resolveRouting.ts` to accumulate
-      `superpowerWeights` and resolve `SuperpowerRoutingResult` (top superpower +
-      orientation), preserving existing routing fields. (FR5)
-- [ ] **T2.3** Build the discovery CYOA from the **Allyship Superpower Quiz**:
-      since the Drive quiz file is empty, construct items from each Strategy Guide's
-      "Signs Someone Needs an X" + overuse/avoidance shadows + element/emotion
-      (Coach from the addendum); hidden `superpowerWeights` per choice; **re-author
-      copy in Wendell's narrative voice** (Borogove heist register), preserving a
-      coherent branch structure. (FR5; Resolved Qs: quiz basis + voice)
-- [ ] **T2.4** `src/actions/superpower-intake.ts` — `submitSuperpointIntake`
-      (`submitSuperpowerIntake`) server action; persists result on existing
-      `LatentAllyshipIntake` (anon-capable via session). (FR6)
+- [~] **T2.1/T2.2** SUPERSEDED — instead of bolting `superpowerWeights` onto the
+      ECI template router, the discovery instrument is the standalone quiz
+      ([superpower-quiz-design](../superpower-quiz-design/spec.md): `quiz/items.ts`
+      + `quiz/score.ts`) and routing is `src/lib/superpowers/routing.ts`
+      (`quizResultToRouting` → `SuperpowerRoutingResult`). DONE + tested
+      (routing.test.ts 4/4). (FR5)
+- [x] **T2.3** Discovery quiz built from the Strategy Guides + Coach guide
+      (`quiz/items.ts`, ported from item-bank.md). DONE. **Voice polish** (fuller
+      Borogove heist register on each item) remains a copy pass.
+- [x] **T2.4** `src/actions/superpower-intake.ts` — `submitSuperpowerIntake`
+      server action (zod-validated; deterministic scoring; returns routing +
+      reveal copy; no email gate). DONE. **Persistence deferred to Phase 4**
+      (CampaignMembership.superpower; documented seam — LatentAllyshipIntake is
+      invite-bound and a poor fit). (FR6)
 - [ ] **T2.5** Routing unit tests with deterministic path fixtures.
 - [ ] **T2.6** Reveal UI: `src/app/campaign/[ref]/superpower/page.tsx` (RSC) +
       client using `ComposerStepRenderer`; `src/components/superpowers/TranslatedCard.tsx`
