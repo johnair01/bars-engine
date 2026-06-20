@@ -43,6 +43,29 @@ export function orientationToMoveAspect(o: SuperpowerOrientation): MoveAspect {
   return o === 'internal' ? 'inner' : 'outer'
 }
 
+/** Card reading used per orientation: internal → self, external → for-others. */
+export function orientationToSubject(o: SuperpowerOrientation): 'self' | 'campaign' {
+  return o === 'internal' ? 'self' : 'campaign'
+}
+
+/**
+ * A deck card translated through a superpower + orientation = a personalized
+ * quest prompt (the addendum's equation). Deterministic — built from authored
+ * matrix data + the card's own reading (deck.json stays source of truth).
+ */
+export interface SuperpowerTranslation {
+  superpower: Superpower
+  orientation: SuperpowerOrientation
+  baseCardId: string
+  baseCardTitle: string
+  /** The card's own reading for this orientation (primary vs campaign question). */
+  cardReading: string
+  /** The superpower-lens question applied to the card. */
+  prompt: string
+  /** Suggested artifact the quest should produce. */
+  suggestedArtifact: string
+}
+
 /**
  * Static profile per superpower, mined from the Strategy Guides
  * (superpower-quiz-design/item-bank.md). `domains` = WHERE it naturally works;

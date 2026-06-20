@@ -29,15 +29,15 @@
       no `node_modules`; subset `tsc` showed no errors in the new files — only
       missing `@/` alias + `@types/node` resolved by the project config).
 
-## Phase 2 — Result descriptions + ethics
-- [ ] **T2.1** `src/lib/superpowers/quiz/descriptions.ts` — per-superpower
+## Phase 2 — Result descriptions + ethics — DONE
+- [x] **T2.1** `src/lib/superpowers/quiz/descriptions.ts` — per-superpower
       **falsifiable, behavioral** copy **including the overuse/avoidance shadow**;
       no two-sided hedges; favorability NOT equalized. (FR5)
-- [ ] **T2.2** Result-framing copy: lens-not-verdict, **mechanism disclosure**,
+- [x] **T2.2** Result-framing copy: lens-not-verdict, **mechanism disclosure**,
       "you are the authority / try the adjacent one." No authority/AI cosplay. (FR6)
-- [ ] **T2.3** `BARNUM_CHECK.md` — verify a *foreign* superpower's description is
-      distinguishable from one's own (the Barnum A/B antidote); record the check. (FR6)
-- [ ] **T2.4** Lint pass: no double-headed hedges; behavioral not adjectival. (FR5)
+- [x] **T2.3** `BARNUM_CHECK.md` — verify a *foreign* superpower's description is
+      distinguishable from one's own (the Barnum A/B antidote); recorded in BARNUM_CHECK.md. (FR6) DONE
+- [x] **T2.4** Lint pass: no double-headed hedges; behavioral not adjectival — verified in BARNUM_CHECK.md. (FR5) DONE
 
 ## Phase 3 — Handoff + verification (UI owned by campaign spec)
 - [ ] **T3.1** Map `QuizResult` → `SuperpowerRoutingResult` (primary=superpower,

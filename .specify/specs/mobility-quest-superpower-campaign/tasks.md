@@ -11,7 +11,7 @@
       `SuperpowerDef` + `SUPERPOWER_DEFS` (element/domains/shadows). DONE
       (shared with superpower-quiz-design Phase 1). `SuperpowerTranslation` lands
       with the matrix (T1.2/T1.3). (FR1)
-- [ ] **T1.2** `src/lib/superpowers/matrix.ts` — authored **7×2** matrix (prompt +
+- [x] **T1.2** `src/lib/superpowers/matrix.ts` — authored **7×2** matrix (prompt +
       suggestedArtifact per superpower×orientation) + per-superpower `domains`,
       element/emotion, overuse/avoidance shadow, and pairings — **derived from the
       six Strategy Guides**; Coach authored from the addendum (flag: no Drive
@@ -20,12 +20,12 @@
       [coach-strategy-guide.md](../superpower-quiz-design/coach-strategy-guide.md)
       (Strategist's POV; Fire Frustration→Triumph; Taskmaster/Empty-Cheerleader
       shadows; integrator of the six; pairings + signs).
-- [ ] **T1.3** `src/lib/superpowers/translate.ts` — `translateCardForSuperpower`,
+- [x] **T1.3** `src/lib/superpowers/translate.ts` — `translateCardForSuperpower`,
       `orientationToMoveAspect`. (FR3)
-- [ ] **T1.4** Extend `buildDeckSeed` in `src/lib/allyship-deck/seed.ts` with
+- [x] **T1.4** Extend `buildDeckSeed` in `src/lib/allyship-deck/seed.ts` with
       optional `{ superpower, orientation }`; thread into provenance;
       backward-compatible. (FR4)
-- [ ] **T1.5** Unit tests: all 12 translation cells assert internal⇒self-prompt /
+- [x] **T1.5** Unit tests (src/lib/superpowers/__tests__/translate.test.ts, 8/8 via tsx): all 12 translation cells assert internal⇒self-prompt /
       external⇒world-prompt + correct artifact; `orientationToMoveAspect`;
       `buildDeckSeed` provenance with/without opts.
 - [ ] **T1.6** Update cross-refs in `inner-outer-allyship-moves` and
