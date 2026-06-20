@@ -28,9 +28,9 @@
 
 ## Phase 3 — Verification Quest
 
-- [ ] **T3.1** `scripts/seed-hand-vault-movement-cert.ts` — idempotent seed for `cert-hand-vault-movement-v1` (TwineStory + CustomBar, `isSystem: true`, `visibility: 'public'`, deterministic id). Steps per spec; Bruised Banana framing.
-- [ ] **T3.2** `package.json` — add `"seed:cert:hand-vault-movement": "tsx scripts/seed-hand-vault-movement-cert.ts"`.
-- [ ] **T3.3** Run the seed; confirm the quest is completable end to end.
+- [x] **T3.1** `scripts/seed-hand-vault-movement-cert.ts` — idempotent seed for `cert-hand-vault-movement-v1` (TwineStory + CustomBar, `isSystem: true`, `visibility: 'public'`, deterministic id `cert-hand-vault-movement-v1`). 6 steps per spec + FEEDBACK/END_SUCCESS; Bruised Banana framing. Mirrors `seed-cert-throughput-spine.ts`. Type-checks clean.
+- [x] **T3.2** `package.json` — added `"seed:cert:hand-vault-movement": "tsx scripts/seed-hand-vault-movement-cert.ts"`.
+- [ ] **T3.3** Run the seed; confirm the quest is completable end to end. **Pending** — needs a live `DATABASE_URL` (unset in sandbox). Run `npm run seed:cert:hand-vault-movement` against a real DB.
 
 ## Phase 4 — Fail-Fix & Backlog
 
