@@ -69,6 +69,22 @@ export interface Technique {
   failureModes?: string[]
   contraindications?: string[]
 
+  // ── authored anatomy (the skill-stack; optional, lifts a card toward L2–L4) ──
+  /** Introspective reading (inner aspect) — "what am I feeling/avoiding?" */
+  primaryQuestion?: string
+  /** For-others / milestone reading (outer aspect) — "what does this campaign need?" */
+  campaignQuestion?: string
+  /** Anti-patterns — what NOT to do. */
+  forbiddenMoves?: string[]
+  /** A small recovery when the move fails. */
+  remediation?: string
+  /** Working-vs-performed test: how to tell real use from performance. */
+  tell?: { working: string; performed: string }
+  /** A concrete enactment (e.g. campaign-anchored). */
+  example?: string
+  /** Last assessed quality level (cache; assessQuality is the source of truth). */
+  qualityLevel?: 0 | 1 | 2 | 3 | 4
+
   // ── lifecycle / ownership (living library) ──
   tier: TechniqueTier
   status: 'draft' | 'candidate' | 'published'

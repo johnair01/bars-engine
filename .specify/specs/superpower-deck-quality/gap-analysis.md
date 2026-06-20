@@ -57,7 +57,7 @@ Scored against the 12 criteria:
 | 11 | Token/ticket + consent/placement | ✗ |
 | 12 | In-voice & cell-specific | ✗ — template |
 
-**Level: L1 (barely).** Only the shadow check lands.
+**Level: L0** (confirmed by `assessQuality`). Only the shadow check (#9) lands; the form/anatomy criteria all fail, so the card never reaches L1's `{1,2}` floor.
 
 ---
 
