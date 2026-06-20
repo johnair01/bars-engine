@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/colors.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/tokens/cards.css">
+<link rel="stylesheet" href="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/styles.css">
+<script src="_ds/bars-engine-design-system-af69bae5-49fe-4fcd-a2ac-0382919529e4/_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  .seclabel { font-family: var(--bars-font-mono); font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: #6b6862; }
+  .frlabel { font-family: var(--bars-font-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #8a877f; }
+  .frnote { font-family: var(--bars-font-body); font-size: 12.5px; color: #6f6c64; max-width: 460px; line-height: 1.55; }
+  .frnote b { color: #3c3930; font-weight: 700; }
+  @keyframes foilshift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  @keyframes sheensweep { 0%{transform:translateX(-160%) skewX(-18deg);} 60%,100%{transform:translateX(260%) skewX(-18deg);} }
+  .foil-anim { animation: foilshift 7s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .foil-anim { animation: none; } }
+</style>
+</helmet>
+
+<div style="{{ rootStyle }}">
+
+  <div style="max-width:920px;">
+    <span class="seclabel" style="color:#b09a4e;">Mastering the Game of Allyship · Spotlight back</span>
+    <h1 style="margin:10px 0 0;font-family:var(--bars-font-display);font-weight:700;font-size:38px;letter-spacing:-.018em;color:#26231d;">Premium print treatments</h1>
+    <p style="margin:12px 0 0;font-family:var(--bars-font-body);font-size:15.5px;line-height:1.55;color:#5f5c55;max-width:700px;">Same composition, three levels of detailing — each rendered with the texture, foil and emboss it would carry on press. Spec notes under each double as a printer brief.</p>
+  </div>
+
+  <div style="{{ rowStyle }}">
+
+    <!-- =================== V1 · STRUCK GOLD =================== -->
+    <sc-if value="{{ visV1 }}" hint-placeholder-val="{{ true }}">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;width:460px;">
+      <span class="frlabel">01 · Struck Gold</span>
+      <div data-ex="v1" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:3px solid var(--gold);background:radial-gradient(120% 80% at 50% 42%, #161220 0%, #0a0810 60%, #060509 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 34px 1px color-mix(in srgb,var(--bars-liminal) 26%,transparent),0 30px 64px -28px rgba(0,0,0,.95);">
+        <!-- substrate tooth -->
+        <div style="{{ substrateStyle }}"></div>
+        <!-- guilloche engraved field -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;opacity:.5;" fill="none">
+          <sc-for list="{{ g1Rings }}" as="d" hint-placeholder-count="9">
+            <path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 17%,transparent)" stroke-width="0.7"></path>
+          </sc-for>
+        </svg>
+        <!-- concentric hexagon spotlight -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;" fill="none">
+          <polygon points="230,82 438,202 438,442 230,562 22,442 22,202" stroke="color-mix(in srgb,var(--gold) 26%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 32%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 30%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 34%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,266 278,294 278,350 230,378 182,350 182,294" stroke="color-mix(in srgb,var(--gold) 32%,transparent)" stroke-width="1.4"></polygon>
+        </svg>
+        <!-- center glow -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:360px;height:360px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 30%,transparent), transparent 62%);"></div>
+        <!-- mark -->
+        <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:368px;height:368px;object-fit:contain;filter:drop-shadow(0 0 26px color-mix(in srgb,var(--bars-liminal) 55%,transparent));">
+        <!-- spot-gloss sheen sweep over mark -->
+        <div style="position:absolute;left:0;right:0;top:130px;height:360px;overflow:hidden;pointer-events:none;">
+          <div style="position:absolute;top:0;bottom:0;left:0;width:90px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);animation:sheensweep 6.5s ease-in-out infinite;"></div>
+        </div>
+        <!-- emboss / glow underlay for frame -->
+        <div style="position:absolute;inset:14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.5),0 0 16px -3px color-mix(in srgb,var(--gold) 50%,transparent),inset 0 0 22px -10px color-mix(in srgb,var(--gold) 60%,transparent);"></div>
+        <!-- foil gradient ring -->
+        <div class="{{ foilClass }}" style="position:absolute;inset:14px;border-radius:11px;padding:3px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+        <!-- arched label -->
+        <div style="position:absolute;top:44px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:11px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 82%,transparent);">◆ THE ALLYSHIP DECK ◆</span></div>
+        <!-- corner gems -->
+        <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;top:40px;left:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-fire-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-fire-gem)"></polygon></svg>
+        <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;top:40px;right:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-water-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-water-gem)"></polygon></svg>
+        <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;bottom:40px;left:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-wood-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-wood-gem)"></polygon></svg>
+        <svg width="18" height="20" viewBox="0 0 28 32" style="position:absolute;bottom:40px;right:40px;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--bars-earth-glow) 80%,transparent));"><polygon points="14,1.5 26,8.75 26,23.25 14,30.5 2,23.25 2,8.75" fill="var(--bars-earth-gem)"></polygon></svg>
+      </div>
+      <p class="frnote"><b>Struck Gold.</b> Gold foil stamp on frame, label &amp; corner gems · blind-deboss double rule · guilloché engraved field · spot-gloss UV on the mark · linen-tooth uncoated stock, matte.</p>
+    </figure>
+    </sc-if>
+
+    <!-- =================== V2 · ENGRAVED LIGHT =================== -->
+    <sc-if value="{{ visV2 }}" hint-placeholder-val="{{ true }}">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;width:460px;">
+      <span class="frlabel">02 · Engraved Light</span>
+      <div data-ex="v2" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:2px solid color-mix(in srgb,var(--gold) 72%,transparent);background:radial-gradient(120% 78% at 50% 40%, #14131a 0%, #0a090d 58%, #050507 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 30px 1px color-mix(in srgb,var(--gold) 14%,transparent),0 30px 64px -28px rgba(0,0,0,.95);">
+        <div style="{{ substrateStyle }}"></div>
+        <!-- engraved radial burst -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;opacity:.55;" fill="none">
+          <sc-for list="{{ rays }}" as="d" hint-placeholder-count="80">
+            <path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 13%,transparent)" stroke-width="0.6"></path>
+          </sc-for>
+        </svg>
+        <!-- hexagon spotlight, hairline engraved -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;" fill="none">
+          <polygon points="230,82 438,202 438,442 230,562 22,442 22,202" stroke="color-mix(in srgb,var(--gold) 20%,transparent)" stroke-width="0.8"></polygon>
+          <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--gold) 16%,transparent)" stroke-width="0.8"></polygon>
+          <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--gold) 14%,transparent)" stroke-width="0.8"></polygon>
+          <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--gold) 12%,transparent)" stroke-width="0.8"></polygon>
+        </svg>
+        <!-- center glow -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:340px;height:340px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 24%,transparent), transparent 64%);"></div>
+        <!-- mark -->
+        <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:352px;height:352px;object-fit:contain;filter:drop-shadow(0 0 24px color-mix(in srgb,var(--bars-liminal) 50%,transparent));">
+        <div style="position:absolute;left:0;right:0;top:140px;height:340px;overflow:hidden;pointer-events:none;">
+          <div style="position:absolute;top:0;bottom:0;left:0;width:80px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);animation:sheensweep 7.5s ease-in-out infinite;"></div>
+        </div>
+        <!-- double hairline foil frame -->
+        <div class="{{ foilClass }}" style="position:absolute;inset:15px;border-radius:11px;padding:1.5px;background:linear-gradient(115deg,#8a6d28,#f3e3a6,#fff7da,#c9a14a,#f1e2a0,#7d5f22);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+        <div style="position:absolute;inset:23px;border-radius:8px;border:0.5px solid color-mix(in srgb,var(--gold) 28%,transparent);"></div>
+        <!-- label between rules -->
+        <div style="position:absolute;top:50px;left:64px;right:64px;display:flex;align-items:center;gap:12px;justify-content:center;">
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 55%,transparent));"></div>
+          <span style="font-family:var(--bars-font-mono);font-size:10px;letter-spacing:.32em;color:color-mix(in srgb,var(--gold) 82%,transparent);white-space:nowrap;">THE ALLYSHIP DECK</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,transparent),transparent);"></div>
+        </div>
+        <!-- engraved corner diamonds -->
+        <svg width="14" height="14" viewBox="0 0 28 28" style="position:absolute;top:42px;left:42px;"><polygon points="14,2 26,14 14,26 2,14" fill="none" stroke="var(--bars-fire-gem)" stroke-width="2" style="filter:drop-shadow(0 0 5px color-mix(in srgb,var(--bars-fire-glow) 70%,transparent));"></polygon></svg>
+        <svg width="14" height="14" viewBox="0 0 28 28" style="position:absolute;top:42px;right:42px;"><polygon points="14,2 26,14 14,26 2,14" fill="none" stroke="var(--bars-water-gem)" stroke-width="2" style="filter:drop-shadow(0 0 5px color-mix(in srgb,var(--bars-water-glow) 70%,transparent));"></polygon></svg>
+        <svg width="14" height="14" viewBox="0 0 28 28" style="position:absolute;bottom:42px;left:42px;"><polygon points="14,2 26,14 14,26 2,14" fill="none" stroke="var(--bars-wood-gem)" stroke-width="2" style="filter:drop-shadow(0 0 5px color-mix(in srgb,var(--bars-wood-glow) 70%,transparent));"></polygon></svg>
+        <svg width="14" height="14" viewBox="0 0 28 28" style="position:absolute;bottom:42px;right:42px;"><polygon points="14,2 26,14 14,26 2,14" fill="none" stroke="var(--bars-earth-gem)" stroke-width="2" style="filter:drop-shadow(0 0 5px color-mix(in srgb,var(--bars-earth-glow) 70%,transparent));"></polygon></svg>
+      </div>
+      <p class="frnote"><b>Engraved Light.</b> Fine gold foil hairline frame · etched radial line-burst (engraving) · spot-gloss UV on the mark · smooth matte coat. The quietest, most austere luxury read.</p>
+    </figure>
+    </sc-if>
+
+    <!-- =================== V3 · DEEP TAROT =================== -->
+    <sc-if value="{{ visV3 }}" hint-placeholder-val="{{ true }}">
+    <figure style="margin:0;display:flex;flex-direction:column;gap:14px;flex:none;width:460px;">
+      <span class="frlabel">03 · Deep Tarot</span>
+      <div data-ex="v3" style="position:relative;width:460px;height:644px;border-radius:18px;overflow:hidden;border:4px solid var(--gold);background:radial-gradient(120% 80% at 50% 42%, #281c3e 0%, #160f28 56%, #0a0714 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 34px 1px color-mix(in srgb,var(--bars-liminal) 30%,transparent),0 30px 64px -28px rgba(0,0,0,.96);">
+        <div style="{{ substrateStyle }}"></div>
+        <!-- guilloche banknote band near border -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;opacity:.6;" fill="none">
+          <sc-for list="{{ g3Band }}" as="d" hint-placeholder-count="4">
+            <path d="{{ d }}" stroke="color-mix(in srgb,var(--gold) 20%,transparent)" stroke-width="0.7"></path>
+          </sc-for>
+        </svg>
+        <!-- hexagon spotlight -->
+        <svg viewBox="0 0 460 644" width="460" height="644" style="position:absolute;inset:0;" fill="none">
+          <polygon points="230,129 397,225 397,418 230,515 63,418 63,225" stroke="color-mix(in srgb,var(--bars-fire-gem) 30%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,176 356,249 356,395 230,468 104,395 104,249" stroke="color-mix(in srgb,var(--bars-wood-gem) 28%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,223 316,272 316,371 230,421 144,371 144,272" stroke="color-mix(in srgb,var(--bars-water-gem) 32%,transparent)" stroke-width="1.4"></polygon>
+          <polygon points="230,266 278,294 278,350 230,378 182,350 182,294" stroke="color-mix(in srgb,var(--gold) 34%,transparent)" stroke-width="1.4"></polygon>
+        </svg>
+        <!-- center glow + mark -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:340px;height:340px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--bars-liminal) 34%,transparent), transparent 62%);"></div>
+        <img src="assets/logo/mtgoa-logo-transparent.png" alt="Mastering the Game of Allyship" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:352px;height:352px;object-fit:contain;filter:drop-shadow(0 0 28px color-mix(in srgb,var(--bars-liminal) 60%,transparent));">
+        <div style="position:absolute;left:0;right:0;top:130px;height:360px;overflow:hidden;pointer-events:none;">
+          <div style="position:absolute;top:0;bottom:0;left:0;width:90px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:sheensweep 6s ease-in-out infinite;"></div>
+        </div>
+        <!-- emboss underlay -->
+        <div style="position:absolute;inset:13px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.26),0 0 0 1px rgba(0,0,0,.5),0 0 18px -3px color-mix(in srgb,var(--gold) 55%,transparent),inset 0 0 24px -10px color-mix(in srgb,var(--gold) 64%,transparent);"></div>
+        <!-- ornamental foil ring -->
+        <div class="{{ foilClass }}" style="position:absolute;inset:13px;border-radius:12px;padding:4px;background:linear-gradient(115deg,#7d5f22,#e9d290,#fff7da,#c9a14a,#fdf2c0,#b8862e,#f1e2a0,#8a6d28);background-size:240% 240%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;"></div>
+        <!-- gilt edge highlight -->
+        <div style="position:absolute;inset:21px;border-radius:8px;border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);"></div>
+        <!-- corner filigree flourishes -->
+        <svg width="52" height="52" viewBox="0 0 52 52" style="position:absolute;top:24px;left:24px;color:var(--gold);"><path d="{{ filigree }}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.85"></path></svg>
+        <svg width="52" height="52" viewBox="0 0 52 52" style="position:absolute;top:24px;right:24px;transform:scaleX(-1);color:var(--gold);"><path d="{{ filigree }}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.85"></path></svg>
+        <svg width="52" height="52" viewBox="0 0 52 52" style="position:absolute;bottom:24px;left:24px;transform:scaleY(-1);color:var(--gold);"><path d="{{ filigree }}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.85"></path></svg>
+        <svg width="52" height="52" viewBox="0 0 52 52" style="position:absolute;bottom:24px;right:24px;transform:scale(-1,-1);color:var(--gold);"><path d="{{ filigree }}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.85"></path></svg>
+        <!-- label -->
+        <div style="position:absolute;top:46px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-mono);font-size:10.5px;letter-spacing:.34em;color:color-mix(in srgb,var(--gold) 84%,transparent);">✦ THE ALLYSHIP DECK ✦</span></div>
+        <!-- bottom cartouche -->
+        <div style="position:absolute;bottom:46px;left:0;right:0;text-align:center;"><span style="font-family:var(--bars-font-display);font-weight:600;font-size:14px;letter-spacing:.02em;color:#e7e2d6;">Pave the Yellow Brick Road</span></div>
+      </div>
+      <p class="frnote"><b>Deep Tarot.</b> Heavy gold foil ornamental border · guilloché banknote band · embossed corner filigree · gilt-painted edges · aubergine soft-touch laminate. The most decorative, collectible read.</p>
+    </figure>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1560,&quot;height&quot;:900},&quot;goldTone&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A84C&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;substrate&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;linen&quot;,&quot;noise&quot;,&quot;smooth&quot;],&quot;default&quot;:&quot;linen&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;animateFoil&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { only: null };
+
+  componentDidMount() {
+    this.syncHash();
+    this._h = () => this.syncHash();
+    window.addEventListener('hashchange', this._h);
+  }
+  componentWillUnmount() { if (this._h) window.removeEventListener('hashchange', this._h); }
+  syncHash() {
+    const m = (location.hash || '').replace(/^#/, '').trim();
+    this.setState({ only: m || null });
+  }
+
+  rosette(cx, cy, baseR, amp, petals, phase) {
+    const steps = 260, p = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps * Math.PI * 2;
+      const rr = baseR + amp * Math.cos(petals * t + phase);
+      p.push((cx + rr * Math.cos(t)).toFixed(1) + ',' + (cy + rr * Math.sin(t)).toFixed(1));
+    }
+    return 'M' + p.join('L') + 'Z';
+  }
+  guilloche(cx, cy, r0, r1, rings, amp, petals) {
+    const a = [];
+    for (let i = 0; i < rings; i++) {
+      const f = rings === 1 ? 0 : i / (rings - 1);
+      const baseR = r0 + (r1 - r0) * f;
+      a.push(this.rosette(cx, cy, baseR, amp, petals, (i % 2) * Math.PI / petals));
+    }
+    return a;
+  }
+  rays(cx, cy, r0, r1, n) {
+    const a = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / n * Math.PI * 2;
+      a.push('M' + (cx + r0 * Math.cos(t)).toFixed(1) + ' ' + (cy + r0 * Math.sin(t)).toFixed(1) +
+             'L' + (cx + r1 * Math.cos(t)).toFixed(1) + ' ' + (cy + r1 * Math.sin(t)).toFixed(1));
+    }
+    return a;
+  }
+  substrate() {
+    const s = this.props.substrate ?? 'linen';
+    if (s === 'smooth') return 'display:none;';
+    if (s === 'noise') return "position:absolute;inset:0;pointer-events:none;opacity:.08;mix-blend-mode:overlay;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\");";
+    return "position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 3px);";
+  }
+
+  renderVals() {
+    const only = this.state.only;
+    const isGallery = !only;
+    const vis = (id) => isGallery || only === id;
+    const gold = this.props.goldTone ?? '#C9A84C';
+    const anim = (this.props.animateFoil ?? true);
+
+    const rootStyle = isGallery
+      ? 'display:flex;flex-direction:column;gap:40px;width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:56px;background:#e7e5df;font-family:var(--bars-font-body);--gold:' + gold + ';'
+      : 'display:block;width:max-content;background:transparent;padding:0;margin:0;font-family:var(--bars-font-body);--gold:' + gold + ';';
+
+    return {
+      rootStyle,
+      rowStyle: isGallery ? 'display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;' : 'display:block;',
+      isGallery,
+      visV1: vis('v1'), visV2: vis('v2'), visV3: vis('v3'),
+      substrateStyle: this.substrate(),
+      foilClass: anim ? 'foil-anim' : '',
+      g1Rings: this.guilloche(230, 322, 64, 250, 11, 9, 18),
+      rays: this.rays(230, 322, 60, 470, 108),
+      g3Band: this.guilloche(230, 322, 196, 232, 4, 7, 30),
+      filigree: 'M6,46 C6,26 14,12 34,9 M6,46 C24,44 33,35 37,18 M34,9 C34,2 40,1 45,4 C48,6 47,12 42,12 M37,18 C44,17 47,22 44,26',
+    };
+  }
+}
+</script>
+</body>
+</html>

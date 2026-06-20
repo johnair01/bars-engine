@@ -19,6 +19,7 @@ import type {
   AllyshipDomain,
 } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
+import { DeckCardBack } from './DeckCardBack'
 import { SendToBarsButton } from './SendToBarsButton'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
@@ -256,7 +257,7 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
                     <p style={{ fontFamily: DECK_FONTS.body, fontSize: 14, color: SURFACE_TOKENS.textSecondary, textAlign: 'center', margin: 0 }}>
                       One card, one concrete move. Shuffle when you&rsquo;re ready.
                     </p>
-                    <FaceDown pulsing={shuffling} />
+                    <DeckCardBack width={240} pulsing={shuffling} />
                     <button type="button" style={{ ...primaryBtn, opacity: shuffling ? 0.6 : 1 }} onClick={draw} disabled={shuffling}>
                       {shuffling ? 'Shuffling…' : 'Shuffle & draw'}
                     </button>
@@ -489,28 +490,6 @@ function ReminderToggle() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
-
-function FaceDown({ pulsing }: { pulsing: boolean }) {
-  return (
-    <div style={{
-      position: 'relative',
-      width: 200,
-      height: 288,
-      borderRadius: 12,
-      border: `2px solid ${DECK_GOLD}`,
-      background: 'radial-gradient(120% 90% at 50% 0%, #241a3e, #0c0a14 70%)',
-      boxShadow: `inset 0 1px 0 rgba(255,255,255,.06), 0 0 30px -12px ${LIMINAL.frame}, 0 20px 44px -20px rgba(0,0,0,.9)`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'transform 200ms ease',
-      transform: pulsing ? 'scale(.97)' : 'none',
-    }}>
-      <div style={{ position: 'absolute', inset: 10, borderRadius: 10, border: `1px solid color-mix(in srgb, ${DECK_GOLD} 40%, transparent)` }} />
-      <span style={{ fontFamily: DECK_FONTS.display, fontWeight: 800, fontSize: 60, color: `color-mix(in srgb, ${DECK_GOLD} 80%, transparent)` }}>B</span>
-    </div>
-  )
-}
 
 function CardGrid({ cards, subject, onPick }: { cards: MoveCard[]; subject: CardSubject; onPick: (c: MoveCard) => void }) {
   return (
