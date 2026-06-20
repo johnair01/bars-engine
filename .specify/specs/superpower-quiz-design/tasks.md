@@ -8,12 +8,12 @@
 ## Phase 1 — Item bank + scoring (pure, no I/O)
 - [ ] **T1.1** `src/lib/superpowers/quiz/types.ts` — `QuizItem`, `QuizOption`,
       `QuizAnswer`, `QuizResult`, `OrientationItem`. (FR1-3)
-- [ ] **T1.2** `src/lib/superpowers/quiz/items.ts` — over-generate ~40+ candidate
-      forced-choice situational items, trim to **~12**; each option **multi-weighted
-      & quasi-ipsative**; ensure **≥3–4 signals per superpower** and balanced/
-      normalizable item counts; copy in Wendell's voice; derived from Strategy
-      Guides' "Signs Someone Needs an X" + shadows + element/emotion (Coach from
-      addendum). (FR1)
+- [ ] **T1.2** `src/lib/superpowers/quiz/items.ts` — port the **reviewed**
+      [item-bank.md](./item-bank.md) (11 forced-choice + 1 orientation, mined from
+      the six Strategy Guides; Coach provisional) into typed data; each option
+      **multi-weighted & quasi-ipsative**; ensure **≥3–4 signals per superpower**
+      (balance Coach/Escape Artist via the candidate-pool alternates or rely on
+      percent-of-max). Copy in Wendell's voice. (FR1)
 - [ ] **T1.3** `src/lib/superpowers/quiz/orientation.ts` — internal/external
       orientation item(s) (the addendum polarity). (FR3)
 - [ ] **T1.4** `src/lib/superpowers/quiz/score.ts` — `scoreQuiz`: additive →
