@@ -10,9 +10,9 @@
 
 ## Phase 1 — Capture routes to Hand (API → UI)
 
-- [ ] **T1.1** `src/actions/bars.ts` — extend `captureBarFromCanvas`: after creating the BAR, `await addBarToHandForPlayer(playerId, bar.id)` (import from `@/lib/hand-service`). Return `{ barId, title, placedIn: 'hand' }`, or `{ barId, title, placedIn: 'vault', overflow }` when the Hand is full. Keep existing `revalidatePath` calls. Type-check green.
-- [ ] **T1.2** `src/components/bars/SeedCaptureWhiteboard.tsx` (`handleCapture`) — branch on result: `placedIn:'hand'` → `setCaptured` with "in your Hand" copy; `overflow` → open overflow modal and resolve via `resolveOverflow`; `error` → `setCaptureError`. Run media upload in both the hand and vault (overflow-parked) branches.
-- [ ] **T1.3** `src/components/now/OverflowModal.tsx` — extract the overflow markup from `CaptureBox.tsx` into a shared component; refactor `CaptureBox` to use it (no behavior change); use it in the whiteboard.
+- [ ] **T1.1** `src/actions/bars.ts` — extend `captureBarFromCanvas`: after creating the BAR, `await addBarToHandForPlayer(playerId, bar.id)` (import from `@/lib/hand-service`). Return `{ barId, title, placedIn: 'hand' }`, or `{ barId, title, placedIn: 'vault' }` when the Hand is full (Fork A: no `overflow` needed for the canvas — the BAR simply stays in the Vault). Keep existing `revalidatePath` calls. Type-check green.
+- [ ] **T1.2** `src/components/bars/SeedCaptureWhiteboard.tsx` (`handleCapture`) — branch on result: `placedIn:'hand'` → `setCaptured` "in your Hand"; `placedIn:'vault'` (Hand full, **Fork A**) → `setCaptured` + **Vault-fallback toast** "Hand full — saved to Vault; hold it later" (no modal); `error` → `setCaptureError`. Run media upload in both non-error branches.
+- [ ] **T1.3** `src/components/now/OverflowModal.tsx` — extract the overflow markup from `CaptureBox.tsx` into a shared component; refactor `CaptureBox` to use it (no behavior change). (Whiteboard does **not** use it — Fork A is silent fallback; extraction is for reuse/testability.)
 - [ ] **T1.4** `src/components/bars/SimpleCaptureForm.tsx` — pass `destination: 'hand'`; route to `/bars/kept?dest=hand`.
 - [ ] **T1.5** `src/app/bars/kept/page.tsx` — confirm `dest=hand` copy/links read correctly ("landed in your Hand"; onward to Tune / Now).
 - [ ] **T1.6** Verify on `/`: a whiteboard capture appears in the Hand glance and does not increment Vault (unless Hand was full).

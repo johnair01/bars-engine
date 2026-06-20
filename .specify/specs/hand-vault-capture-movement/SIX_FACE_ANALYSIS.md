@@ -61,6 +61,13 @@
 | **OverflowModal extraction** | **Yes, extract** `src/components/now/OverflowModal.tsx` from `CaptureBox` and share it — but per Fork A it may only be needed by `CaptureBox` (not the whiteboard). Extract anyway for reuse + testability; it's ~80 lines of duplicated markup otherwise. |
 | **Hand-glance Vault picker UX** | **In-place bottom-sheet**, not a page route. Stays on Now (mobile-first), and the empty slot offers both "Pull from Vault" and "Capture new" so we don't overload the tap. |
 
+## Residual forks — DECIDED by the human (2026-06-20)
+
+- **Fork A → Silent Vault fallback + toast** on the whiteboard when Hand is full. No modal on the canvas.
+- **Fork B → Restrict the movement toggle to non-planted BARs** (`captured` / `shared_or_acted`) in v1; Garden↔Hand deferred.
+
+Original framing retained below for the record.
+
 ## Residual forks for the human (faces split / ontology choice)
 
 **Fork A — Whiteboard capture when the Hand is full (6/6):**

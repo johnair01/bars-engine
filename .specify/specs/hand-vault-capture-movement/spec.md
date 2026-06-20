@@ -15,7 +15,7 @@ The result: the Hand is perpetually empty, exactly as reported.
 
 **Practice**: Deftness Development — spec kit first, API-first (contract before UI), deterministic over AI. This kit adds **no new Prisma models**; it reuses the existing `HandSlot` join table.
 
-> Reviewed by the Six GM Faces — see [SIX_FACE_ANALYSIS.md](./SIX_FACE_ANALYSIS.md). Two product forks remain open for the human (Fork A: whiteboard overflow behavior; Fork B: movement on planted/Garden BARs).
+> Reviewed by the Six GM Faces — see [SIX_FACE_ANALYSIS.md](./SIX_FACE_ANALYSIS.md). Both product forks now decided: **Fork A** = silent Vault fallback on whiteboard when Hand full; **Fork B** = movement toggle restricted to non-planted BARs in v1.
 
 ## GM Face Routing
 
@@ -35,7 +35,9 @@ Review Faces:
 | Topic | Decision |
 |-------|----------|
 | Schema | **No new field, no new table.** Hand membership stays explicit via the existing `HandSlot` join table (a BAR is "in Hand" iff a `HandSlot` row binds it; "in Vault" iff owned + active + unbound). The issue's suggested `location` column is unnecessary and would duplicate state. |
-| Canvas capture destination | **Always to Hand.** The Seed Capture Whiteboard (`/bars/capture`) routes the new BAR into the Hand via `addBarToHandForPlayer`. A full Hand surfaces the **overflow modal** (deposit one Hand BAR → Vault) — capture is still never lost (the BAR is parked in the Vault until resolved). This is a deliberate divergence from the default-Vault rule in [`home-vault-ia-redesign`](../home-vault-ia-redesign/spec.md): the whiteboard is the player's "make something now" surface, so its output should be active in hand. |
+| Canvas capture destination | **Always to Hand.** The Seed Capture Whiteboard (`/bars/capture`) routes the new BAR into the Hand via `addBarToHandForPlayer`. The whiteboard is the player's "make something now" surface, so its output should be active in hand (cf. default-Vault in [`home-vault-ia-redesign`](../home-vault-ia-redesign/spec.md)). |
+| Whiteboard capture when Hand full (**Fork A — decided**) | **Silent Vault fallback + toast** ("Hand full — saved to Vault; hold it later"). No modal on the immersive canvas; capture is never lost and the player resolves later from the Hand glance. (The forced overflow modal stays only on the deliberate `CaptureBox` Hand toggle.) |
+| Movement eligibility by maturity (**Fork B — decided**) | **v1 shows the toggle only on non-planted BARs** (`captured` / `shared_or_acted`). Planted Garden seeds (`context_named` / `elaborated`) stay homed in the Garden; Garden↔Hand movement is a separate follow-up. Keeps location ontology clean. |
 | Quick-capture (`CaptureBox`, NOW footer) | **Unchanged** — it already offers the Hand/Vault toggle (default Vault) and wires the overflow modal correctly. |
 | Capture doctrine (one principle, not two defaults) | **"Quick-keep files (Vault); deliberate make holds (Hand)."** The two capture surfaces default differently *on purpose*: the footer is a fast inbox dump, the whiteboard is a deliberate creation. This **restores** `bar-seed-capture-whiteboard` FR13's original "redirect to `/hand`" intent (Integrator). |
 | Movement copy as constants | "Hold in Hand" / "Return to Vault" live in **one shared constant** so [`hand-vault-rename`](../hand-vault-rename/spec.md) can repoint the vocabulary without hunting strings (Ontologist). |
@@ -79,14 +81,14 @@ Route the canvas capture into the Hand instead of leaving it unbound.
 // existing signature unchanged at the call site; result shape extended
 function captureBarFromCanvas(payload: CaptureBarFromCanvasInput): Promise<
   | { barId: string; title: string; placedIn: 'hand' }
-  | { barId: string; title: string; placedIn: 'vault'; overflow: OverflowContext } // hand was full
+  | { barId: string; title: string; placedIn: 'vault' } // hand was full → silent fallback (Fork A)
   | { error: string }
 >
 ```
 
 - After creating the BAR (unchanged), call `addBarToHandForPlayer(playerId, bar.id)`.
 - On success → `placedIn: 'hand'`.
-- On `overflow` → BAR is created and parked in the Vault; return `placedIn: 'vault'` + the `OverflowContext` so the whiteboard can show the existing overflow modal (resolve via `resolveOverflow`).
+- When the Hand is full → the BAR simply stays in the Vault (no `HandSlot` bound); return `placedIn: 'vault'`. The whiteboard shows the Vault-fallback toast — **no overflow modal on the canvas** (Fork A). No `OverflowContext` is returned here.
 - Keep `revalidatePath('/bars')`, `'/bars/garden'`, `'/hand'`, `'/'`.
 - Media upload (photos/voice) in `SeedCaptureWhiteboard` runs after, unchanged, keyed off `barId` in every branch.
 
@@ -111,9 +113,9 @@ The BAR detail page and list rows are **server components**; they read `HandSlot
 
 **Acceptance**: After `/bars/capture` → Keep, `/` Hand glance shows the BAR in a slot and the Vault count does not increment (unless the Hand was full).
 
-**HV-MV-2**: If my Hand is full (6/6) when I capture on the whiteboard, I get the overflow modal and choose one Hand BAR to send to the Vault; the new BAR takes its slot. Capture is never lost.
+**HV-MV-2**: If my Hand is full (6/6) when I capture on the whiteboard, the BAR is saved to my Vault with a toast telling me so — capture is never blocked or lost — and I can hold it later from the Hand glance.
 
-**Acceptance**: With 6 BARs in Hand, capturing shows the overflow modal; resolving it leaves the new BAR in Hand and the chosen BAR in the Vault.
+**Acceptance**: With 6 BARs in Hand, a whiteboard capture lands in the Vault, shows the fallback toast, and no modal interrupts the canvas. (The forced overflow swap remains exercised by the `CaptureBox` Hand toggle.)
 
 ### P0 — Vault → Hand
 
@@ -144,12 +146,12 @@ The BAR detail page and list rows are **server components**; they read `HandSlot
 ### Phase 1 — Capture routes to Hand (API → UI)
 
 - **FR1**: Extend `captureBarFromCanvas` to call `addBarToHandForPlayer` and return `placedIn` + optional `overflow` (contract above). Type-check green.
-- **FR2**: `SeedCaptureWhiteboard.handleCapture` confirms "in your Hand" on `placedIn: 'hand'` and shows errors on `error`. **Hand-full behavior is Fork A** (see SIX_FACE_ANALYSIS): convened recommendation is a **silent Vault fallback + toast** ("Hand full — saved to Vault; hold it later"), *not* a modal on the immersive canvas. (If the human picks the modal instead, reuse the shared `OverflowModal` + `resolveOverflow`.) Media upload runs in every non-error branch. Coordinate the return type with `bar-capture-consolidation`.
+- **FR2**: `SeedCaptureWhiteboard.handleCapture` confirms "in your Hand" on `placedIn: 'hand'`, shows errors on `error`, and on `placedIn: 'vault'` (Hand was full) shows a **silent Vault-fallback toast** ("Hand full — saved to Vault; hold it later") — **no modal on the canvas** (Fork A, decided). Media upload runs in every non-error branch. Coordinate the return type with `bar-capture-consolidation`.
 - **FR3**: `SimpleCaptureForm` routes to Hand (pass `destination: 'hand'` to `captureBar`); `/bars/kept` reads `dest=hand` and its copy + onward links reflect the Hand.
 
 ### Phase 2 — Bidirectional movement UI
 
-- **FR4**: Compute `inHand` / `handFull` inline in the server components (detail page + list rows) from `HandSlot`; **no new server action**. Movement copy lives in one shared constant. **Fork B**: in v1 the toggle is shown only for non-planted BARs (`captured` / `shared_or_acted`); `context_named`/`elaborated` (Garden) are deferred — pending the human's call.
+- **FR4**: Compute `inHand` / `handFull` inline in the server components (detail page + list rows) from `HandSlot`; **no new server action**. Movement copy lives in one shared constant. **Fork B (decided)**: in v1 the toggle is shown only for non-planted BARs (`captured` / `shared_or_acted`); `context_named`/`elaborated` (Garden) are deferred to a Garden↔Hand follow-up.
 - **FR5**: BAR detail page (`src/app/bars/[id]/page.tsx`): a contextual `HandLocationToggle` client component — "Hold in Hand" when in Vault, "Return to Vault" when in Hand; hand-full message handled; `router.refresh()` after. **Gate strictly to `isOwner`** (never `isRecipient`) — a talisman recipient must not move someone else's BAR (Steward).
 - **FR6**: Vault/feed list rows: an inline quick-action (same toggle, compact) on owned-BAR rows. Reuse `HandLocationToggle`. (Identify the row component(s) during planning — candidates under `src/components/hand/Vault*` and the feed/garden lists.)
 - **FR7**: Hand glance empty slot (`src/components/now/HandGlance.tsx`): replace the `/bars/create` link with a control that opens a Vault picker and calls `promoteVaultBarToHand`; keep a "create new" affordance available too.

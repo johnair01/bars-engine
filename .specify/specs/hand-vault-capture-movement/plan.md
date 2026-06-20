@@ -29,10 +29,10 @@ Minimize new surface area: one new client component (`HandLocationToggle`) does 
 - **OverflowModal extraction** → **yes, extract** `src/components/now/OverflowModal.tsx` from `CaptureBox` for reuse + testability (even if Fork A means only `CaptureBox` consumes it).
 - **Hand-glance Vault picker UX** → **in-place bottom-sheet** (stay on Now, mobile-first); the empty slot offers both "Pull from Vault" and "Capture new" so a bare tap is never ambiguous.
 
-## Residual forks for the human (do not implement until decided)
+## Forks — DECIDED
 
-- **Fork A — whiteboard Hand-full**: convened recommendation = **silent Vault fallback + toast** (no modal on the canvas). Alternative = forced overflow modal.
-- **Fork B — movement on planted/Garden BARs**: convened recommendation = **restrict toggle to non-planted BARs in v1**; handle Garden↔Hand as a follow-up. Alternative = enable on planted, labeling origin "Garden".
+- **Fork A — whiteboard Hand-full** → **silent Vault fallback + toast** (no modal on the canvas). `captureBarFromCanvas` returns `placedIn: 'vault'` with no `overflow`; the whiteboard shows the fallback toast.
+- **Fork B — movement on planted/Garden BARs** → **restrict toggle to non-planted BARs** (`captured` / `shared_or_acted`) in v1; Garden↔Hand is a follow-up.
 
 ## Architect notes folded into the spec
 
