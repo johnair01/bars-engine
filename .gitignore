@@ -111,3 +111,6 @@ chatgpt_repo_snapshot_*/
 
 # Allyship deck review/print artifacts (regenerable; not committed)
 /output/
+
+# Generated Gumroad/marketing image exports (reproducible via scripts/render-gumroad.mjs)
+gumroad-exports/
