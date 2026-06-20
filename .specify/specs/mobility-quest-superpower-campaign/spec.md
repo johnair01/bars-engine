@@ -36,6 +36,9 @@ sensitive — the non-AI path is first-class.
 | **Superpower is a layer, not a card system** | Per the addendum's design principle, superpowers **translate** existing `allyship-deck.json` cards; the deck remains the single source of truth. No new card models. |
 | **Move generator is the bridge** | `buildDeckSeed(card, subject)` gains `superpower` + `orientation` params. The same call powers the intake reveal quest, a player's personal quest, and a milestone-scoped contribution need. |
 | **Donation is tiered** | **Tier 1 (primary): superpower-matched milestone needs** — a milestone decomposes into superpower-typed needs; players see needs matching their revealed superpower+orientation; completion writes a `MilestoneContribution`/`ContributionRecord`. **Tier 2 (fallback): open aid** — reuse existing `GameboardAidOffer` for anything unmatched. |
+| **Need value = unit-typed, never weighted** (Six Faces ruling) | A need carries **`unit ∈ { action \| currency \| hours }`** + `value` (default `action`/`1`). Stewards choose the *unit* to match the milestone's target; they may **not** make one action "worth more" than another. Milestones **aggregate per unit** (honest sub-bars, never blended). Player-facing surfaces stay **discrete and dignified** (no point value shown). **Internal-orientation acts track separately** and are never dwarfed by external money/hours totals — protecting the polarity. Cross-unit equivalence is forbidden (engine must not judge). See [STRAND_CONSULT_SIX_FACES.md](./STRAND_CONSULT_SIX_FACES.md). |
+| **Superpower result is per-campaign** | A player's revealed superpower + orientation is stored **per campaign** (a person may bring a different superpower to a different cause), with an optional global "primary" deferred. Resolves Open Q #1. |
+| **CYOA re-authored in Wendell's voice** | The Borogove draft is **re-authored into ECI intake passages in Wendell's narrative voice** (not ported verbatim, not a generic register), preserving the choice structure + hidden weights. Voice samples sourced from the creator's archived material per CLAUDE.md § Voices. Resolves Open Q #4. |
 | **Intake extends ECI, not a new engine** | The superpower CYOA ports onto the existing `cyoa-intake` pipeline (`LatentAllyshipIntake` + `resolveRouting`). We add `superpowerWeights` alongside the existing `sdWeights`, and the reveal infers **Superpower + Orientation** (in addition to / instead of move type). |
 | **Translation matrix is authored data** | `translateCardForSuperpower(card, superpower, orientation)` is a deterministic function over an authored matrix (the six superpowers × internal/external from the addendum), not AI. |
 | **Persistence is additive + phased** | Player superpower result and milestone-need typing are additive Prisma fields, gated to their phase with full migration discipline. Earlier phases ship type/library + UI on existing models only. |
@@ -160,6 +163,23 @@ export async function submitSuperpowerIntake(input: {
 ### Milestone needs + scoped contribution (Server Actions)
 
 ```ts
+// src/lib/superpowers/needs.ts — Six Faces ruling: unit-typed, never weighted
+export type NeedUnit = 'action' | 'currency' | 'hours'
+
+export interface MilestoneNeed {
+  id: string
+  milestoneId: string
+  superpower: Superpower
+  orientation: SuperpowerOrientation
+  cardId: string             // the base allyship card translated into the need
+  unit: NeedUnit             // default 'action'
+  value: number              // in `unit`; default 1; NO per-action multiplier
+  status: 'open' | 'claimed' | 'done'
+  claimedByPlayerId?: string
+}
+```
+
+```ts
 // src/actions/milestone-needs.ts ('use server')
 export async function listMilestoneNeedsForPlayer(input: {
   campaignRef: string
@@ -243,11 +263,19 @@ fundraiser, so we can confirm the flow before launch.
 - **FR8**: Mobility Quest campaign hub section linking intake → reveal → "apply
   your superpower" (the needs list).
 - **FR9**: `listMilestoneNeedsForPlayer` (Tier 1 matched, Tier 2 open-aid
-  fallback), `claimMilestoneNeed`, `completeMilestoneNeed` server actions.
+  fallback), `claimMilestoneNeed`, `completeMilestoneNeed` server actions. Needs
+  carry `unit` so the UI can group; **no per-action multiplier** (Six Faces).
 - **FR10**: Need completion writes `MilestoneContribution` + `ContributionRecord`
-  and advances milestone `currentValue` (reuse existing contribution path).
+  routed to the correct **unit bucket**, advancing the milestone's per-unit
+  total (reuse existing contribution path; money needs reuse the DSW /
+  barn-raising `wallKey` money path). Milestones render **honest per-unit
+  sub-bars**, never one blended number.
 - **FR11**: Steward UI/seed to author milestone needs (superpower + orientation +
-  cardId + value) for the Mobility Quest milestones.
+  cardId + **unit** + value) for the Mobility Quest milestones. Stewards pick the
+  unit to match the milestone target; they cannot weight one action above another.
+- **FR11a**: Player-facing surfaces never display a per-action point value;
+  **internal-orientation contributions are tracked separately** from external
+  money/hours totals (Six Faces — protects the polarity).
 
 ### Phase 4 — Persistence hardening + Verification Quest
 - **FR12**: Additive Prisma fields (see § Persisted data) with full migration
@@ -274,7 +302,7 @@ fundraiser, so we can confirm the flow before launch.
 
 | Check | Done |
 |-------|------|
-| Fields named: `Player.superpower String?`, `Player.superpowerOrientation String?` (or on a result row); `LatentAllyshipIntake.superpower String?` + `.superpowerOrientation String?`; **`MilestoneNeed`** model (or `CampaignMilestone` JSON `needsJson`) carrying `{ superpower, orientation, cardId, value, status }` | ☐ |
+| Fields named: per-campaign superpower result (e.g. on `CampaignMembership.superpower String?` + `.superpowerOrientation String?`, **not** global `Player`); `LatentAllyshipIntake.superpower String?` + `.superpowerOrientation String?`; **`MilestoneNeed`** model (or `CampaignMilestone` JSON `needsJson`) carrying `{ superpower, orientation, cardId, unit, value, status }` with `unit String @default("action")`, `value Float @default(1)`, **no multiplier field** (Six Faces) | ☐ |
 | `tasks.md` includes `npx prisma migrate dev --name add_superpower_fields` + commit `prisma/migrations/…` with `schema.prisma` | ☐ |
 | Verification: `npm run db:sync` after schema edit; `npm run check` | ☐ |
 | Human glanced at `migration.sql` (additive, not destructive) | ☐ |
@@ -308,19 +336,26 @@ fundraiser, so we can confirm the flow before launch.
 - Energy asymmetry of inner vs outer moves → [`energy-direction-volume`](../energy-direction-volume/spec.md).
 - Reciprocity / relational weave between matched players → future.
 
+## Resolved Questions
+- **Result home** → **per-campaign** (stored on `CampaignMembership`, not global
+  `Player`); a player may bring a different superpower to a different cause.
+  Optional global "primary" deferred. *(Wendell, 2026-06-20.)*
+- **Need value units** → **unit-typed, never weighted** (`action`/`currency`/
+  `hours`, default `action`/`1`); per-unit aggregation; internal orientation
+  tracked separately; no cross-unit equivalence. *(Six Faces ruling —
+  [STRAND_CONSULT_SIX_FACES.md](./STRAND_CONSULT_SIX_FACES.md).)*
+- **Borogove import fidelity** → **re-author into ECI intake passages in
+  Wendell's narrative voice**, preserving choice structure + hidden weights.
+  *(Wendell, 2026-06-20.)*
+
 ## Open Questions
-1. **Result home** — does the superpower result live on `Player` (persists across
-   campaigns) or per-campaign (a player may bring a different superpower to a
-   different cause)? Lean: per-campaign result, optional global "primary."
-2. **Need value units** — are milestone needs counted as discrete actions
-   (value: 1) or weighted (e.g. a Connector intro worth more)? Lean: start
-   discrete; let stewards weight.
-3. **Orientation source** — when card metadata already specifies orientation,
+1. **Orientation source** — when card metadata already specifies orientation,
    suppress the toggle (addendum AC) vs always allow override? Lean: honor
    metadata, allow explicit override with a confirm.
-4. **Borogove import fidelity** — port the draft passages verbatim or re-author to
-   match ECI weighting + voice? Lean: re-author into intake passages, preserving
-   the choice structure.
+2. **Internal-track visibility** — when a milestone has both internal and external
+   tracks, is internal progress shown to the campaign at large or kept private to
+   the player? Lean: aggregate internal counts shown, individual internal acts
+   private. *(Raised by the Six Faces council.)*
 
 ## Dependencies / References
 - Depends on: [`inner-outer-allyship-moves`](../inner-outer-allyship-moves/spec.md)

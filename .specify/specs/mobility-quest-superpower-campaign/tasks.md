@@ -31,8 +31,10 @@
 - [ ] **T2.2** Extend `src/lib/cyoa-intake/resolveRouting.ts` to accumulate
       `superpowerWeights` and resolve `SuperpowerRoutingResult` (top superpower +
       orientation), preserving existing routing fields. (FR5)
-- [ ] **T2.3** Port the Borogove CYOA into intake passages with per-choice hidden
-      `superpowerWeights` (re-author to ECI shape; preserve choice structure). (FR5)
+- [ ] **T2.3** Re-author the Borogove CYOA into intake passages **in Wendell's
+      narrative voice** (not verbatim, not generic), with per-choice hidden
+      `superpowerWeights`; preserve the choice structure + weighting. Voice samples
+      per CLAUDE.md § Voices. (FR5; Resolved Q: re-author in voice)
 - [ ] **T2.4** `src/actions/superpower-intake.ts` — `submitSuperpointIntake`
       (`submitSuperpowerIntake`) server action; persists result on existing
       `LatentAllyshipIntake` (anon-capable via session). (FR6)
@@ -51,14 +53,25 @@
       wake-up/show-up copy) + its `CampaignMilestone`s if not present. (FR8)
 - [ ] **T3.2** `src/actions/milestone-needs.ts` — `listMilestoneNeedsForPlayer`
       (Tier 1 superpower-matched first; Tier 2 open `GameboardAidOffer` fallback),
-      `claimMilestoneNeed`, `completeMilestoneNeed`. (FR9)
-- [ ] **T3.3** On completion, write `MilestoneContribution` + `ContributionRecord`
-      and advance milestone `currentValue` via existing contribution path
-      (`campaign-contributions.ts`). (FR10)
+      `claimMilestoneNeed`, `completeMilestoneNeed`. Needs include
+      `unit ∈ {action|currency|hours}` (default `action`/`1`); returned so UI can
+      group. **No multiplier field.** (FR9; Six Faces Δ T3.2)
+- [ ] **T3.3** On completion, route the contribution to the correct **unit
+      bucket**: write `MilestoneContribution` + `ContributionRecord` and advance
+      the milestone's per-unit total via the existing path
+      (`campaign-contributions.ts`); money needs reuse the **DSW / barn-raising
+      `wallKey`** money path, not a new ledger. (FR10; Six Faces Δ T3.3)
 - [ ] **T3.4** `src/components/superpowers/MilestoneNeeds.tsx` — matched needs +
-      open-aid fallback (UI_COVENANT). Wire into Mobility Quest hub section. (FR8)
+      open-aid fallback; **group by unit into separate sub-bars**; **never** show a
+      per-action point value to the contributor (UI_COVENANT). Wire into Mobility
+      Quest hub section. (FR8, FR11a; Six Faces Δ T3.4)
 - [ ] **T3.5** Steward seed/UI to author milestone needs
-      (`{ superpower, orientation, cardId, value }`) for Mobility Quest. (FR11)
+      (`{ superpower, orientation, cardId, unit, value }`) for Mobility Quest;
+      steward picks unit to match the milestone target, cannot weight one action
+      over another. (FR11)
+- [ ] **T3.5a** Persist the **per-campaign** superpower result on
+      `CampaignMembership` (Phase 3: ride existing storage; Phase 4: typed
+      columns) — not on global `Player`. (Resolved Q: per-campaign)
 - [ ] **T3.6** Integration test: matched player sees Tier-1 needs; completing one
       advances the milestone; unmatched capacity falls back to Tier 2.
 - [ ] **T3.7** Gate: `npm run build` && `npm run check`.
@@ -72,8 +85,11 @@
 - [ ] **T4.1** Decide model-vs-JSON for needs + result home (Open Q #1/#2).
 - [ ] **T4.2** Edit `prisma/schema.prisma` — additive:
       `LatentAllyshipIntake.superpower String?` + `.superpowerOrientation String?`;
-      optional `Player.superpower String?` + `.superpowerOrientation String?`;
-      `MilestoneNeed` model (or `CampaignMilestone.needsJson`). (FR12)
+      **per-campaign** result on `CampaignMembership.superpower String?` +
+      `.superpowerOrientation String?` (not global `Player`);
+      `MilestoneNeed` model (or `CampaignMilestone.needsJson`) with
+      `unit String @default("action")`, `value Float @default(1)`, **no
+      multiplier field** (Six Faces Δ T4.2). (FR12)
 - [ ] **T4.3** `npx prisma migrate dev --name add_superpower_fields`; **commit**
       `prisma/migrations/…` together with `schema.prisma`. (FR12)
 - [ ] **T4.4** `npm run db:sync` (regenerate client); then
@@ -91,10 +107,15 @@
 - [ ] **T5.1** Add this spec to `.specify/backlog/BACKLOG.md`; run
       `npm run backlog:seed`.
 
-## Cross-cutting acceptance (addendum)
+## Cross-cutting acceptance (addendum + Six Faces)
 - [ ] Cards translate by superpower and orientation.
 - [ ] Internal cards generate self-allyship prompts; external cards generate
       world-facing prompts.
 - [ ] Users can toggle orientation when card metadata does not specify it.
 - [ ] Existing `allyship-deck.json` remains source of truth.
 - [ ] Superpowers act as translation layers, not new card systems.
+- [ ] **No player-facing surface displays a per-action point value; milestones
+      aggregate per unit (honest sub-bars, never blended).** (Six Faces)
+- [ ] **Internal-orientation contributions are tracked separately from external
+      money/hours totals** (protects the polarity). (Six Faces)
+- [ ] Superpower result is stored **per campaign**, not globally.
