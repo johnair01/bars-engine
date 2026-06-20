@@ -15,6 +15,9 @@ export default defineConfig({
       'src/lib/alchemy-engine/__tests__/e2e-arc-dissatisfied-to-epiphany.test.ts',
       'src/lib/alchemy-engine/__tests__/passage-resolver.test.ts',
       'src/lib/alchemy-engine/__tests__/reflection-bar-persistence-wiring.test.ts',
+      'src/lib/technique-library/__tests__/vocabulary-no-drift.test.ts',
+      'src/lib/technique-library/__tests__/resolve.test.ts',
+      'src/lib/technique-library/__tests__/validate.test.ts',
     ],
   },
   resolve: {
