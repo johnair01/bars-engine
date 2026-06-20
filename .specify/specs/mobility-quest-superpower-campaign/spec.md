@@ -280,11 +280,13 @@ fundraiser, so we can confirm the flow before launch.
 
 ### Phase 2 — Superpower CYOA intake (reuse ECI)
 - **FR5**: Extend `resolveRouting` with `superpowerWeights` accumulation →
-  `SuperpowerRoutingResult` (top superpower + orientation). **Build the discovery
-  CYOA from the Allyship Superpower Quiz** — since the Drive quiz file is empty,
-  construct items from each Strategy Guide's "Signs Someone Needs an X" + shadows +
-  element/emotion (Coach from the addendum); hidden `superpowerWeights` per choice;
-  re-author copy in Wendell's voice (per Resolved Q).
+  `SuperpowerRoutingResult` (top superpower + orientation). The discovery quiz —
+  item bank, deterministic scoring, anti-Barnum result copy — is specified in
+  **[`superpower-quiz-design`](../superpower-quiz-design/spec.md)** (evidence-based,
+  scoped to ~12 items). This FR is the **wiring**: map that spec's `QuizResult`
+  (primary + secondary + margin + orientation) into `SuperpowerRoutingResult` and
+  the reveal. Result copy includes each superpower's **shadow**; **no email gate**
+  before results.
 - **FR6**: `submitSuperpowerIntake` server action (persists a
   `LatentAllyshipIntake` extended with the superpower result; anonymous-capable).
 - **FR7**: Reveal page (`/campaign/[ref]/superpower` or a dedicated route) using
@@ -395,7 +397,9 @@ fundraiser, so we can confirm the flow before launch.
    private. *(Raised by the Six Faces council.)*
 
 ## Dependencies / References
-- Depends on: [`inner-outer-allyship-moves`](../inner-outer-allyship-moves/spec.md)
+- Depends on: [`superpower-quiz-design`](../superpower-quiz-design/spec.md) (the
+  discovery instrument + scoring this campaign consumes),
+  [`inner-outer-allyship-moves`](../inner-outer-allyship-moves/spec.md)
   (MoveAspect inner/outer), [`superpower-move-extensions`](../superpower-move-extensions/spec.md)
   (domain-keyed superpowers), `allyship-deck` (cards + `buildDeckSeed`),
   `cyoa-intake` (ECI routing), `CampaignMilestone`/`MilestoneContribution`.
