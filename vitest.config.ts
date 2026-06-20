@@ -18,6 +18,7 @@ export default defineConfig({
       'src/lib/technique-library/__tests__/vocabulary-no-drift.test.ts',
       'src/lib/technique-library/__tests__/resolve.test.ts',
       'src/lib/technique-library/__tests__/validate.test.ts',
+      'src/lib/technique-library/__tests__/superpower-decks.test.ts',
     ],
   },
   resolve: {

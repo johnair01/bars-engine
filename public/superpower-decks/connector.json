@@ -1,0 +1,1751 @@
+{
+  "deck_slug": "superpower-connector",
+  "superpower": "connector",
+  "label": "The Connector",
+  "gift": "Relational gravity — the pull that brings people into each other’s orbit.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-20T19:52:44.403Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-connector-WAKE-SHAMAN-INNER",
+      "slug": "connector-wake_up-shaman-inner",
+      "name": "Notice your own pull toward people — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SHAMAN-OUTER",
+      "slug": "connector-wake_up-shaman-outer",
+      "name": "Notice the threads already in the room — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-CHALLENGER-INNER",
+      "slug": "connector-wake_up-challenger-inner",
+      "name": "Notice your own pull toward people — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-CHALLENGER-OUTER",
+      "slug": "connector-wake_up-challenger-outer",
+      "name": "Notice the threads already in the room — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-REGENT-INNER",
+      "slug": "connector-wake_up-regent-inner",
+      "name": "Notice your own pull toward people — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-REGENT-OUTER",
+      "slug": "connector-wake_up-regent-outer",
+      "name": "Notice the threads already in the room — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-ARCHITECT-INNER",
+      "slug": "connector-wake_up-architect-inner",
+      "name": "Notice your own pull toward people — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-ARCHITECT-OUTER",
+      "slug": "connector-wake_up-architect-outer",
+      "name": "Notice the threads already in the room — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-DIPLOMAT-INNER",
+      "slug": "connector-wake_up-diplomat-inner",
+      "name": "Notice your own pull toward people — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-DIPLOMAT-OUTER",
+      "slug": "connector-wake_up-diplomat-outer",
+      "name": "Notice the threads already in the room — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SAGE-INNER",
+      "slug": "connector-wake_up-sage-inner",
+      "name": "Notice your own pull toward people — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Practice it within: your own pull toward people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-WAKE-SAGE-OUTER",
+      "slug": "connector-wake_up-sage-outer",
+      "name": "Notice the threads already in the room — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Offer it to others: the threads already in the room.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SHAMAN-INNER",
+      "slug": "connector-open_up-shaman-inner",
+      "name": "Receive the room without absorbing it — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SHAMAN-OUTER",
+      "slug": "connector-open_up-shaman-outer",
+      "name": "Receive what each person is reaching for — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-CHALLENGER-INNER",
+      "slug": "connector-open_up-challenger-inner",
+      "name": "Receive the room without absorbing it — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-CHALLENGER-OUTER",
+      "slug": "connector-open_up-challenger-outer",
+      "name": "Receive what each person is reaching for — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-REGENT-INNER",
+      "slug": "connector-open_up-regent-inner",
+      "name": "Receive the room without absorbing it — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-REGENT-OUTER",
+      "slug": "connector-open_up-regent-outer",
+      "name": "Receive what each person is reaching for — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-ARCHITECT-INNER",
+      "slug": "connector-open_up-architect-inner",
+      "name": "Receive the room without absorbing it — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-ARCHITECT-OUTER",
+      "slug": "connector-open_up-architect-outer",
+      "name": "Receive what each person is reaching for — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-DIPLOMAT-INNER",
+      "slug": "connector-open_up-diplomat-inner",
+      "name": "Receive the room without absorbing it — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-DIPLOMAT-OUTER",
+      "slug": "connector-open_up-diplomat-outer",
+      "name": "Receive what each person is reaching for — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SAGE-INNER",
+      "slug": "connector-open_up-sage-inner",
+      "name": "Receive the room without absorbing it — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Practice it within: the room without absorbing it.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-OPEN-SAGE-OUTER",
+      "slug": "connector-open_up-sage-outer",
+      "name": "Receive what each person is reaching for — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Offer it to others: what each person is reaching for.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SHAMAN-INNER",
+      "slug": "connector-clean_up-shaman-inner",
+      "name": "Clear your need to be the hub — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SHAMAN-OUTER",
+      "slug": "connector-clean_up-shaman-outer",
+      "name": "Clear the static between people — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-CHALLENGER-INNER",
+      "slug": "connector-clean_up-challenger-inner",
+      "name": "Clear your need to be the hub — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-CHALLENGER-OUTER",
+      "slug": "connector-clean_up-challenger-outer",
+      "name": "Clear the static between people — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-REGENT-INNER",
+      "slug": "connector-clean_up-regent-inner",
+      "name": "Clear your need to be the hub — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-REGENT-OUTER",
+      "slug": "connector-clean_up-regent-outer",
+      "name": "Clear the static between people — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-ARCHITECT-INNER",
+      "slug": "connector-clean_up-architect-inner",
+      "name": "Clear your need to be the hub — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-ARCHITECT-OUTER",
+      "slug": "connector-clean_up-architect-outer",
+      "name": "Clear the static between people — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-DIPLOMAT-INNER",
+      "slug": "connector-clean_up-diplomat-inner",
+      "name": "Clear your need to be the hub — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-DIPLOMAT-OUTER",
+      "slug": "connector-clean_up-diplomat-outer",
+      "name": "Clear the static between people — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SAGE-INNER",
+      "slug": "connector-clean_up-sage-inner",
+      "name": "Clear your need to be the hub — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Practice it within: your need to be the hub.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-CLEAN-SAGE-OUTER",
+      "slug": "connector-clean_up-sage-outer",
+      "name": "Clear the static between people — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Offer it to others: the static between people.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SHAMAN-INNER",
+      "slug": "connector-grow_up-shaman-inner",
+      "name": "Widen your capacity to hold ties — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SHAMAN-OUTER",
+      "slug": "connector-grow_up-shaman-outer",
+      "name": "Widen the circle of who belongs — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-CHALLENGER-INNER",
+      "slug": "connector-grow_up-challenger-inner",
+      "name": "Widen your capacity to hold ties — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-CHALLENGER-OUTER",
+      "slug": "connector-grow_up-challenger-outer",
+      "name": "Widen the circle of who belongs — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-REGENT-INNER",
+      "slug": "connector-grow_up-regent-inner",
+      "name": "Widen your capacity to hold ties — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-REGENT-OUTER",
+      "slug": "connector-grow_up-regent-outer",
+      "name": "Widen the circle of who belongs — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-ARCHITECT-INNER",
+      "slug": "connector-grow_up-architect-inner",
+      "name": "Widen your capacity to hold ties — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-ARCHITECT-OUTER",
+      "slug": "connector-grow_up-architect-outer",
+      "name": "Widen the circle of who belongs — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-DIPLOMAT-INNER",
+      "slug": "connector-grow_up-diplomat-inner",
+      "name": "Widen your capacity to hold ties — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-DIPLOMAT-OUTER",
+      "slug": "connector-grow_up-diplomat-outer",
+      "name": "Widen the circle of who belongs — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SAGE-INNER",
+      "slug": "connector-grow_up-sage-inner",
+      "name": "Widen your capacity to hold ties — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Practice it within: your capacity to hold ties.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-GROW-SAGE-OUTER",
+      "slug": "connector-grow_up-sage-outer",
+      "name": "Widen the circle of who belongs — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Offer it to others: the circle of who belongs.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SHAMAN-INNER",
+      "slug": "connector-show_up-shaman-inner",
+      "name": "Make one tie you will tend — Sense",
+      "essence": "In yourself: relational gravity, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SHAMAN-OUTER",
+      "slug": "connector-show_up-shaman-outer",
+      "name": "Make the introduction that matters — Sense",
+      "essence": "For others: relational gravity, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-CHALLENGER-INNER",
+      "slug": "connector-show_up-challenger-inner",
+      "name": "Make one tie you will tend — Edge",
+      "essence": "In yourself: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-CHALLENGER-OUTER",
+      "slug": "connector-show_up-challenger-outer",
+      "name": "Make the introduction that matters — Edge",
+      "essence": "For others: relational gravity, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-REGENT-INNER",
+      "slug": "connector-show_up-regent-inner",
+      "name": "Make one tie you will tend — Steward",
+      "essence": "In yourself: relational gravity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-REGENT-OUTER",
+      "slug": "connector-show_up-regent-outer",
+      "name": "Make the introduction that matters — Steward",
+      "essence": "For others: relational gravity, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-ARCHITECT-INNER",
+      "slug": "connector-show_up-architect-inner",
+      "name": "Make one tie you will tend — Structure",
+      "essence": "In yourself: relational gravity, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-ARCHITECT-OUTER",
+      "slug": "connector-show_up-architect-outer",
+      "name": "Make the introduction that matters — Structure",
+      "essence": "For others: relational gravity, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-DIPLOMAT-INNER",
+      "slug": "connector-show_up-diplomat-inner",
+      "name": "Make one tie you will tend — Bridge",
+      "essence": "In yourself: relational gravity, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-DIPLOMAT-OUTER",
+      "slug": "connector-show_up-diplomat-outer",
+      "name": "Make the introduction that matters — Bridge",
+      "essence": "For others: relational gravity, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SAGE-INNER",
+      "slug": "connector-show_up-sage-inner",
+      "name": "Make one tie you will tend — Whole",
+      "essence": "In yourself: relational gravity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Practice it within: one tie you will tend.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-connector-SHOW-SAGE-OUTER",
+      "slug": "connector-show_up-sage-outer",
+      "name": "Make the introduction that matters — Whole",
+      "essence": "For others: relational gravity, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Offer it to others: the introduction that matters.",
+        "Shadow check: the Overextended Hub — everything routing through you."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "connector"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}

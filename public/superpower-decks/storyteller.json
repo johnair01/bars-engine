@@ -1,0 +1,1751 @@
+{
+  "deck_slug": "superpower-storyteller",
+  "superpower": "storyteller",
+  "label": "The Storyteller",
+  "gift": "Poignance — weaving loss into meaning and grief into belonging.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-20T19:52:44.406Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-storyteller-WAKE-SHAMAN-INNER",
+      "slug": "storyteller-wake_up-shaman-inner",
+      "name": "Notice the story you are already telling — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SHAMAN-OUTER",
+      "slug": "storyteller-wake_up-shaman-outer",
+      "name": "Notice the meaning trying to surface — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-CHALLENGER-INNER",
+      "slug": "storyteller-wake_up-challenger-inner",
+      "name": "Notice the story you are already telling — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-CHALLENGER-OUTER",
+      "slug": "storyteller-wake_up-challenger-outer",
+      "name": "Notice the meaning trying to surface — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-REGENT-INNER",
+      "slug": "storyteller-wake_up-regent-inner",
+      "name": "Notice the story you are already telling — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-REGENT-OUTER",
+      "slug": "storyteller-wake_up-regent-outer",
+      "name": "Notice the meaning trying to surface — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-ARCHITECT-INNER",
+      "slug": "storyteller-wake_up-architect-inner",
+      "name": "Notice the story you are already telling — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-ARCHITECT-OUTER",
+      "slug": "storyteller-wake_up-architect-outer",
+      "name": "Notice the meaning trying to surface — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-DIPLOMAT-INNER",
+      "slug": "storyteller-wake_up-diplomat-inner",
+      "name": "Notice the story you are already telling — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-DIPLOMAT-OUTER",
+      "slug": "storyteller-wake_up-diplomat-outer",
+      "name": "Notice the meaning trying to surface — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SAGE-INNER",
+      "slug": "storyteller-wake_up-sage-inner",
+      "name": "Notice the story you are already telling — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Practice it within: the story you are already telling.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-WAKE-SAGE-OUTER",
+      "slug": "storyteller-wake_up-sage-outer",
+      "name": "Notice the meaning trying to surface — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Offer it to others: the meaning trying to surface.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SHAMAN-INNER",
+      "slug": "storyteller-open_up-shaman-inner",
+      "name": "Feel the grief beneath the story — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SHAMAN-OUTER",
+      "slug": "storyteller-open_up-shaman-outer",
+      "name": "Feel what this loss means to others — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-CHALLENGER-INNER",
+      "slug": "storyteller-open_up-challenger-inner",
+      "name": "Feel the grief beneath the story — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-CHALLENGER-OUTER",
+      "slug": "storyteller-open_up-challenger-outer",
+      "name": "Feel what this loss means to others — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-REGENT-INNER",
+      "slug": "storyteller-open_up-regent-inner",
+      "name": "Feel the grief beneath the story — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-REGENT-OUTER",
+      "slug": "storyteller-open_up-regent-outer",
+      "name": "Feel what this loss means to others — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-ARCHITECT-INNER",
+      "slug": "storyteller-open_up-architect-inner",
+      "name": "Feel the grief beneath the story — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-ARCHITECT-OUTER",
+      "slug": "storyteller-open_up-architect-outer",
+      "name": "Feel what this loss means to others — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-DIPLOMAT-INNER",
+      "slug": "storyteller-open_up-diplomat-inner",
+      "name": "Feel the grief beneath the story — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-DIPLOMAT-OUTER",
+      "slug": "storyteller-open_up-diplomat-outer",
+      "name": "Feel what this loss means to others — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SAGE-INNER",
+      "slug": "storyteller-open_up-sage-inner",
+      "name": "Feel the grief beneath the story — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Practice it within: the grief beneath the story.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-OPEN-SAGE-OUTER",
+      "slug": "storyteller-open_up-sage-outer",
+      "name": "Feel what this loss means to others — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Offer it to others: what this loss means to others.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SHAMAN-INNER",
+      "slug": "storyteller-clean_up-shaman-inner",
+      "name": "Find your own true meaning first — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SHAMAN-OUTER",
+      "slug": "storyteller-clean_up-shaman-outer",
+      "name": "Find the thread from loss to belonging — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-CHALLENGER-INNER",
+      "slug": "storyteller-clean_up-challenger-inner",
+      "name": "Find your own true meaning first — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-CHALLENGER-OUTER",
+      "slug": "storyteller-clean_up-challenger-outer",
+      "name": "Find the thread from loss to belonging — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-REGENT-INNER",
+      "slug": "storyteller-clean_up-regent-inner",
+      "name": "Find your own true meaning first — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-REGENT-OUTER",
+      "slug": "storyteller-clean_up-regent-outer",
+      "name": "Find the thread from loss to belonging — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-ARCHITECT-INNER",
+      "slug": "storyteller-clean_up-architect-inner",
+      "name": "Find your own true meaning first — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-ARCHITECT-OUTER",
+      "slug": "storyteller-clean_up-architect-outer",
+      "name": "Find the thread from loss to belonging — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-DIPLOMAT-INNER",
+      "slug": "storyteller-clean_up-diplomat-inner",
+      "name": "Find your own true meaning first — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-DIPLOMAT-OUTER",
+      "slug": "storyteller-clean_up-diplomat-outer",
+      "name": "Find the thread from loss to belonging — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SAGE-INNER",
+      "slug": "storyteller-clean_up-sage-inner",
+      "name": "Find your own true meaning first — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Practice it within: your own true meaning first.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-CLEAN-SAGE-OUTER",
+      "slug": "storyteller-clean_up-sage-outer",
+      "name": "Find the thread from loss to belonging — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Offer it to others: the thread from loss to belonging.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SHAMAN-INNER",
+      "slug": "storyteller-grow_up-shaman-inner",
+      "name": "Deepen your honesty over performance — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SHAMAN-OUTER",
+      "slug": "storyteller-grow_up-shaman-outer",
+      "name": "Deepen the shared story’s roots — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-CHALLENGER-INNER",
+      "slug": "storyteller-grow_up-challenger-inner",
+      "name": "Deepen your honesty over performance — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-CHALLENGER-OUTER",
+      "slug": "storyteller-grow_up-challenger-outer",
+      "name": "Deepen the shared story’s roots — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-REGENT-INNER",
+      "slug": "storyteller-grow_up-regent-inner",
+      "name": "Deepen your honesty over performance — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-REGENT-OUTER",
+      "slug": "storyteller-grow_up-regent-outer",
+      "name": "Deepen the shared story’s roots — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-ARCHITECT-INNER",
+      "slug": "storyteller-grow_up-architect-inner",
+      "name": "Deepen your honesty over performance — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-ARCHITECT-OUTER",
+      "slug": "storyteller-grow_up-architect-outer",
+      "name": "Deepen the shared story’s roots — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-DIPLOMAT-INNER",
+      "slug": "storyteller-grow_up-diplomat-inner",
+      "name": "Deepen your honesty over performance — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-DIPLOMAT-OUTER",
+      "slug": "storyteller-grow_up-diplomat-outer",
+      "name": "Deepen the shared story’s roots — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SAGE-INNER",
+      "slug": "storyteller-grow_up-sage-inner",
+      "name": "Deepen your honesty over performance — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Practice it within: your honesty over performance.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-GROW-SAGE-OUTER",
+      "slug": "storyteller-grow_up-sage-outer",
+      "name": "Deepen the shared story’s roots — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Offer it to others: the shared story’s roots.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SHAMAN-INNER",
+      "slug": "storyteller-show_up-shaman-inner",
+      "name": "Name what this means to you — Sense",
+      "essence": "In yourself: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SHAMAN-OUTER",
+      "slug": "storyteller-show_up-shaman-outer",
+      "name": "Name what this means, for the room — Sense",
+      "essence": "For others: poignance — loss into meaning, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-CHALLENGER-INNER",
+      "slug": "storyteller-show_up-challenger-inner",
+      "name": "Name what this means to you — Edge",
+      "essence": "In yourself: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-CHALLENGER-OUTER",
+      "slug": "storyteller-show_up-challenger-outer",
+      "name": "Name what this means, for the room — Edge",
+      "essence": "For others: poignance — loss into meaning, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-REGENT-INNER",
+      "slug": "storyteller-show_up-regent-inner",
+      "name": "Name what this means to you — Steward",
+      "essence": "In yourself: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-REGENT-OUTER",
+      "slug": "storyteller-show_up-regent-outer",
+      "name": "Name what this means, for the room — Steward",
+      "essence": "For others: poignance — loss into meaning, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-ARCHITECT-INNER",
+      "slug": "storyteller-show_up-architect-inner",
+      "name": "Name what this means to you — Structure",
+      "essence": "In yourself: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-ARCHITECT-OUTER",
+      "slug": "storyteller-show_up-architect-outer",
+      "name": "Name what this means, for the room — Structure",
+      "essence": "For others: poignance — loss into meaning, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-DIPLOMAT-INNER",
+      "slug": "storyteller-show_up-diplomat-inner",
+      "name": "Name what this means to you — Bridge",
+      "essence": "In yourself: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-DIPLOMAT-OUTER",
+      "slug": "storyteller-show_up-diplomat-outer",
+      "name": "Name what this means, for the room — Bridge",
+      "essence": "For others: poignance — loss into meaning, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SAGE-INNER",
+      "slug": "storyteller-show_up-sage-inner",
+      "name": "Name what this means to you — Whole",
+      "essence": "In yourself: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Practice it within: what this means to you.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-storyteller-SHOW-SAGE-OUTER",
+      "slug": "storyteller-show_up-sage-outer",
+      "name": "Name what this means, for the room — Whole",
+      "essence": "For others: poignance — loss into meaning, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Offer it to others: what this means, for the room.",
+        "Shadow check: the Performer — spectacle over truth."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "storyteller"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}

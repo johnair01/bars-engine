@@ -1,0 +1,1751 @@
+{
+  "deck_slug": "superpower-escape_artist",
+  "superpower": "escape_artist",
+  "label": "The Escape Artist",
+  "gift": "Honoring the wisdom of fear — finding the exit, the trapdoor, the well-timed retreat.",
+  "version": "0.1.0-draft",
+  "generatedAt": "2026-06-20T19:52:44.405Z",
+  "count": 60,
+  "cards": [
+    {
+      "id": "sp-escape_artist-WAKE-SHAMAN-INNER",
+      "slug": "escape_artist-wake_up-shaman-inner",
+      "name": "Notice what your fear is protecting — Sense",
+      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-SHAMAN-OUTER",
+      "slug": "escape_artist-wake_up-shaman-outer",
+      "name": "Notice the trap closing on someone — Sense",
+      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Notice what is actually here, sensing what is here.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-CHALLENGER-INNER",
+      "slug": "escape_artist-wake_up-challenger-inner",
+      "name": "Notice what your fear is protecting — Edge",
+      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-CHALLENGER-OUTER",
+      "slug": "escape_artist-wake_up-challenger-outer",
+      "name": "Notice the trap closing on someone — Edge",
+      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Notice what is actually here, at the edge, naming what resists.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-REGENT-INNER",
+      "slug": "escape_artist-wake_up-regent-inner",
+      "name": "Notice what your fear is protecting — Steward",
+      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-REGENT-OUTER",
+      "slug": "escape_artist-wake_up-regent-outer",
+      "name": "Notice the trap closing on someone — Steward",
+      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Notice what is actually here, stewarding it over time.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-ARCHITECT-INNER",
+      "slug": "escape_artist-wake_up-architect-inner",
+      "name": "Notice what your fear is protecting — Structure",
+      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-ARCHITECT-OUTER",
+      "slug": "escape_artist-wake_up-architect-outer",
+      "name": "Notice the trap closing on someone — Structure",
+      "essence": "For others: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Notice what is actually here, building it into structure.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-DIPLOMAT-INNER",
+      "slug": "escape_artist-wake_up-diplomat-inner",
+      "name": "Notice what your fear is protecting — Bridge",
+      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-DIPLOMAT-OUTER",
+      "slug": "escape_artist-wake_up-diplomat-outer",
+      "name": "Notice the trap closing on someone — Bridge",
+      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Notice what is actually here, across difference and relationship.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-SAGE-INNER",
+      "slug": "escape_artist-wake_up-sage-inner",
+      "name": "Notice what your fear is protecting — Whole",
+      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Practice it within: what your fear is protecting.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-WAKE-SAGE-OUTER",
+      "slug": "escape_artist-wake_up-sage-outer",
+      "name": "Notice the trap closing on someone — Whole",
+      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Notice what is actually here, integrating the whole field.",
+        "Offer it to others: the trap closing on someone.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "wake_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-SHAMAN-INNER",
+      "slug": "escape_artist-open_up-shaman-inner",
+      "name": "Feel the fear without obeying it — Sense",
+      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-SHAMAN-OUTER",
+      "slug": "escape_artist-open_up-shaman-outer",
+      "name": "Feel another’s need to get out — Sense",
+      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Receive it without flinching, sensing what is here.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-CHALLENGER-INNER",
+      "slug": "escape_artist-open_up-challenger-inner",
+      "name": "Feel the fear without obeying it — Edge",
+      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-CHALLENGER-OUTER",
+      "slug": "escape_artist-open_up-challenger-outer",
+      "name": "Feel another’s need to get out — Edge",
+      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Receive it without flinching, at the edge, naming what resists.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-REGENT-INNER",
+      "slug": "escape_artist-open_up-regent-inner",
+      "name": "Feel the fear without obeying it — Steward",
+      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-REGENT-OUTER",
+      "slug": "escape_artist-open_up-regent-outer",
+      "name": "Feel another’s need to get out — Steward",
+      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Receive it without flinching, stewarding it over time.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-ARCHITECT-INNER",
+      "slug": "escape_artist-open_up-architect-inner",
+      "name": "Feel the fear without obeying it — Structure",
+      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-ARCHITECT-OUTER",
+      "slug": "escape_artist-open_up-architect-outer",
+      "name": "Feel another’s need to get out — Structure",
+      "essence": "For others: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Receive it without flinching, building it into structure.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-DIPLOMAT-INNER",
+      "slug": "escape_artist-open_up-diplomat-inner",
+      "name": "Feel the fear without obeying it — Bridge",
+      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-DIPLOMAT-OUTER",
+      "slug": "escape_artist-open_up-diplomat-outer",
+      "name": "Feel another’s need to get out — Bridge",
+      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Receive it without flinching, across difference and relationship.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-SAGE-INNER",
+      "slug": "escape_artist-open_up-sage-inner",
+      "name": "Feel the fear without obeying it — Whole",
+      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Practice it within: the fear without obeying it.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-OPEN-SAGE-OUTER",
+      "slug": "escape_artist-open_up-sage-outer",
+      "name": "Feel another’s need to get out — Whole",
+      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Receive it without flinching, integrating the whole field.",
+        "Offer it to others: another’s need to get out.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "open_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-SHAMAN-INNER",
+      "slug": "escape_artist-clean_up-shaman-inner",
+      "name": "Sort wise retreat from mere flight — Sense",
+      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-SHAMAN-OUTER",
+      "slug": "escape_artist-clean_up-shaman-outer",
+      "name": "Sort the false exit from the real one — Sense",
+      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Transform the charge, sensing what is here.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-CHALLENGER-INNER",
+      "slug": "escape_artist-clean_up-challenger-inner",
+      "name": "Sort wise retreat from mere flight — Edge",
+      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-CHALLENGER-OUTER",
+      "slug": "escape_artist-clean_up-challenger-outer",
+      "name": "Sort the false exit from the real one — Edge",
+      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Transform the charge, at the edge, naming what resists.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-REGENT-INNER",
+      "slug": "escape_artist-clean_up-regent-inner",
+      "name": "Sort wise retreat from mere flight — Steward",
+      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-REGENT-OUTER",
+      "slug": "escape_artist-clean_up-regent-outer",
+      "name": "Sort the false exit from the real one — Steward",
+      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Transform the charge, stewarding it over time.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-ARCHITECT-INNER",
+      "slug": "escape_artist-clean_up-architect-inner",
+      "name": "Sort wise retreat from mere flight — Structure",
+      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-ARCHITECT-OUTER",
+      "slug": "escape_artist-clean_up-architect-outer",
+      "name": "Sort the false exit from the real one — Structure",
+      "essence": "For others: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Transform the charge, building it into structure.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-DIPLOMAT-INNER",
+      "slug": "escape_artist-clean_up-diplomat-inner",
+      "name": "Sort wise retreat from mere flight — Bridge",
+      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-DIPLOMAT-OUTER",
+      "slug": "escape_artist-clean_up-diplomat-outer",
+      "name": "Sort the false exit from the real one — Bridge",
+      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Transform the charge, across difference and relationship.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-SAGE-INNER",
+      "slug": "escape_artist-clean_up-sage-inner",
+      "name": "Sort wise retreat from mere flight — Whole",
+      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Practice it within: wise retreat from mere flight.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-CLEAN-SAGE-OUTER",
+      "slug": "escape_artist-clean_up-sage-outer",
+      "name": "Sort the false exit from the real one — Whole",
+      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Transform the charge, integrating the whole field.",
+        "Offer it to others: the false exit from the real one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "clean_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-SHAMAN-INNER",
+      "slug": "escape_artist-grow_up-shaman-inner",
+      "name": "Build your tolerance for staying — Sense",
+      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-SHAMAN-OUTER",
+      "slug": "escape_artist-grow_up-shaman-outer",
+      "name": "Build more ways out than one — Sense",
+      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Build the capacity, sensing what is here.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-CHALLENGER-INNER",
+      "slug": "escape_artist-grow_up-challenger-inner",
+      "name": "Build your tolerance for staying — Edge",
+      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-CHALLENGER-OUTER",
+      "slug": "escape_artist-grow_up-challenger-outer",
+      "name": "Build more ways out than one — Edge",
+      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Build the capacity, at the edge, naming what resists.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-REGENT-INNER",
+      "slug": "escape_artist-grow_up-regent-inner",
+      "name": "Build your tolerance for staying — Steward",
+      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-REGENT-OUTER",
+      "slug": "escape_artist-grow_up-regent-outer",
+      "name": "Build more ways out than one — Steward",
+      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Build the capacity, stewarding it over time.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-ARCHITECT-INNER",
+      "slug": "escape_artist-grow_up-architect-inner",
+      "name": "Build your tolerance for staying — Structure",
+      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-ARCHITECT-OUTER",
+      "slug": "escape_artist-grow_up-architect-outer",
+      "name": "Build more ways out than one — Structure",
+      "essence": "For others: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Build the capacity, building it into structure.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-DIPLOMAT-INNER",
+      "slug": "escape_artist-grow_up-diplomat-inner",
+      "name": "Build your tolerance for staying — Bridge",
+      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-DIPLOMAT-OUTER",
+      "slug": "escape_artist-grow_up-diplomat-outer",
+      "name": "Build more ways out than one — Bridge",
+      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Build the capacity, across difference and relationship.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-SAGE-INNER",
+      "slug": "escape_artist-grow_up-sage-inner",
+      "name": "Build your tolerance for staying — Whole",
+      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Practice it within: your tolerance for staying.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-GROW-SAGE-OUTER",
+      "slug": "escape_artist-grow_up-sage-outer",
+      "name": "Build more ways out than one — Whole",
+      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Build the capacity, integrating the whole field.",
+        "Offer it to others: more ways out than one.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "grow_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-SHAMAN-INNER",
+      "slug": "escape_artist-show_up-shaman-inner",
+      "name": "Open the exit you actually need — Sense",
+      "essence": "In yourself: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-SHAMAN-OUTER",
+      "slug": "escape_artist-show_up-shaman-outer",
+      "name": "Open a door for someone else — Sense",
+      "essence": "For others: the wisdom of fear, sensing what is here.",
+      "steps": [
+        "Take the concrete act, sensing what is here.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "shaman"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-CHALLENGER-INNER",
+      "slug": "escape_artist-show_up-challenger-inner",
+      "name": "Open the exit you actually need — Edge",
+      "essence": "In yourself: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-CHALLENGER-OUTER",
+      "slug": "escape_artist-show_up-challenger-outer",
+      "name": "Open a door for someone else — Edge",
+      "essence": "For others: the wisdom of fear, at the edge, naming what resists.",
+      "steps": [
+        "Take the concrete act, at the edge, naming what resists.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "challenger"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-REGENT-INNER",
+      "slug": "escape_artist-show_up-regent-inner",
+      "name": "Open the exit you actually need — Steward",
+      "essence": "In yourself: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-REGENT-OUTER",
+      "slug": "escape_artist-show_up-regent-outer",
+      "name": "Open a door for someone else — Steward",
+      "essence": "For others: the wisdom of fear, stewarding it over time.",
+      "steps": [
+        "Take the concrete act, stewarding it over time.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "regent"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-ARCHITECT-INNER",
+      "slug": "escape_artist-show_up-architect-inner",
+      "name": "Open the exit you actually need — Structure",
+      "essence": "In yourself: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-ARCHITECT-OUTER",
+      "slug": "escape_artist-show_up-architect-outer",
+      "name": "Open a door for someone else — Structure",
+      "essence": "For others: the wisdom of fear, building it into structure.",
+      "steps": [
+        "Take the concrete act, building it into structure.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "architect"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-DIPLOMAT-INNER",
+      "slug": "escape_artist-show_up-diplomat-inner",
+      "name": "Open the exit you actually need — Bridge",
+      "essence": "In yourself: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-DIPLOMAT-OUTER",
+      "slug": "escape_artist-show_up-diplomat-outer",
+      "name": "Open a door for someone else — Bridge",
+      "essence": "For others: the wisdom of fear, across difference and relationship.",
+      "steps": [
+        "Take the concrete act, across difference and relationship.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "diplomat"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-SAGE-INNER",
+      "slug": "escape_artist-show_up-sage-inner",
+      "name": "Open the exit you actually need — Whole",
+      "essence": "In yourself: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Practice it within: the exit you actually need.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "inner",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    },
+    {
+      "id": "sp-escape_artist-SHOW-SAGE-OUTER",
+      "slug": "escape_artist-show_up-sage-outer",
+      "name": "Open a door for someone else — Whole",
+      "essence": "For others: the wisdom of fear, integrating the whole field.",
+      "steps": [
+        "Take the concrete act, integrating the whole field.",
+        "Offer it to others: a door for someone else.",
+        "Shadow check: the Perpetual Vanisher — leaving before it’s time."
+      ],
+      "source": {
+        "origin": "ai",
+        "name": "Superpower deck generator (draft)"
+      },
+      "moves": [
+        "show_up"
+      ],
+      "operations": [
+        "sage"
+      ],
+      "domains": [],
+      "channels": [],
+      "aspect": "outer",
+      "superpowers": [
+        "escape_artist"
+      ],
+      "tier": "canonical",
+      "status": "draft"
+    }
+  ]
+}
