@@ -4339,3 +4339,23 @@ enum NarrativeTemplateKind {
   ORIENTATION
   CUSTOM
 }
+
+/// Awaken funnel lead capture — chapter-one email signups and July weekend
+/// event RSVPs from the public /awaken guided flow. Intentionally standalone
+/// (no Player FK) so brand-new, unauthenticated visitors can convert.
+model FunnelSignup {
+  id        String   @id @default(cuid())
+  /// "chapter" (download Chapter One) | "event" (RSVP to weekend events)
+  intent    String
+  email     String
+  name      String?
+  /// Event keys the visitor RSVP'd to (empty for chapter intent).
+  events    String[] @default([])
+  /// Where the signup originated (defaults to the awaken funnel).
+  source    String   @default("awaken")
+  createdAt DateTime @default(now())
+
+  @@index([intent, createdAt])
+  @@index([email])
+  @@map("funnel_signups")
+}
