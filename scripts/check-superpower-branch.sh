@@ -9,9 +9,11 @@
 # Re-exec under bash if started with `sh script.sh` / a non-bash shell.
 if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 
-set -euo pipefail
+# Note: intentionally NOT using `set -u` — keeps the script tolerant of stray
+# characters from copy-paste. `-e` + pipefail still catch real failures.
+set -eo pipefail
 
-BRANCH="claude/determined-ramanujan-rfq6a4"
+: "${BRANCH:=claude/determined-ramanujan-rfq6a4}"
 
 # Where the repo lives. Default: this script's parent dir; fall back to $PWD.
 SCRIPT_SRC="${BASH_SOURCE[0]:-$0}"
