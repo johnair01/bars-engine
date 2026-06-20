@@ -4,7 +4,7 @@
   "label": "The Connector",
   "gift": "Relational gravity — the pull that brings people into each other’s orbit.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T21:43:57.441Z",
+  "generatedAt": "2026-06-20T21:57:03.769Z",
   "count": 60,
   "cards": [
     {
@@ -213,10 +213,10 @@
     {
       "id": "sp-connector-WAKE-ARCHITECT-OUTER",
       "slug": "connector-wake_up-architect-outer",
-      "name": "Map the Givers",
-      "essence": "See the whole giving network — who could give, who could match, who could spread the ask.",
+      "name": "Map the Network",
+      "essence": "See the whole web of people who could help — who can act, who can connect you onward, who can amplify.",
       "steps": [
-        "List everyone in reach who cares about you, in three tiers: give, match, amplify.",
+        "List everyone in reach who cares, in three tiers: help directly, connect you onward, amplify.",
         "Spot the one connector who could open ten more doors — and notice who you flinch to ask.",
         "Name the highest-leverage ask first."
       ],
@@ -242,16 +242,16 @@
       "capabilities": [
         "exploration"
       ],
-      "primaryQuestion": "Whose generosity am I overlooking because asking them feels too exposing?",
-      "campaignQuestion": "Who in the network gives, who matches, and who amplifies — and where's the leverage?",
+      "primaryQuestion": "Whose support am I overlooking because asking them feels too exposing?",
+      "campaignQuestion": "Who can help directly, who can connect, who can amplify — and where's the leverage?",
       "optimizesFor": "Seeing latent reach before grinding out one-by-one asks.",
       "forbiddenMoves": [
         "Only counting the obvious few",
         "Ignoring people who'd want to help",
-        "Pressure people who can't give"
+        "Pressure people who can't help"
       ],
       "failureModes": [
-        "Tunnel vision on three donors",
+        "Tunnel vision on the obvious few",
         "Missing the person who'd rally others"
       ],
       "remediation": "If stuck, ask one person 'who else do you know who'd want in on this?'",
@@ -262,7 +262,7 @@
       "contraindications": [
         "When you're using mapping to avoid the actual ask"
       ],
-      "example": "Realize your old teammate runs a group chat of 40 — one warm intro could matter more than ten DMs.",
+      "example": "Realize an old teammate runs a group chat of 40 — one warm intro could matter more than ten DMs.",
       "tier": "canonical",
       "status": "published"
     },
@@ -649,8 +649,8 @@
       "name": "The Warm Ask",
       "essence": "Open a real ask to someone who'd want to help — without turning the relationship into a ledger.",
       "steps": [
-        "List ten people who'd be glad to be asked.",
-        "For each, name a specific amount and a true reason you feel in your body.",
+        "List the people who'd be glad to be asked.",
+        "For each, name the specific thing you'd ask for and a true reason you feel in your body.",
         "Ask one today, in your own voice, with an explicit no-strings out."
       ],
       "source": {
@@ -675,9 +675,9 @@
       "capabilities": [
         "connection"
       ],
-      "primaryQuestion": "Whose help am I afraid to receive for the car, and what story makes the ask feel like a debt?",
-      "campaignQuestion": "Who would genuinely want to chip in $50–$500 toward the car, and how do I invite them cleanly?",
-      "optimizesFor": "Resource flow through warmth, not pressure.",
+      "primaryQuestion": "Whose help am I afraid to receive, and what story makes the ask feel like a debt?",
+      "campaignQuestion": "Who would genuinely want a chance to help with this — and how do I invite them cleanly?",
+      "optimizesFor": "Support that flows through warmth, not pressure.",
       "forbiddenMoves": [
         "Mass-blast the same message",
         "Imply obligation",
@@ -696,7 +696,7 @@
       "contraindications": [
         "When there's no real warmth in the relationship yet"
       ],
-      "example": "Text Aunt Dana: 'Saving for a car so I can stop borrowing rides. Would you put $200 toward it? Totally fine if not.'",
+      "example": "Message one person who'd want in: name the specific thing and a clear amount or task, with a genuine 'no worries if not.'",
       "tier": "canonical",
       "status": "published"
     },
@@ -791,7 +791,7 @@
       "id": "sp-connector-CLEAN-SHAMAN-OUTER",
       "slug": "connector-clean_up-shaman-outer",
       "name": "Clear the Static",
-      "essence": "Clear the relational static with a giver before you ask, so the ask lands clean.",
+      "essence": "Clear the relational static with someone before you ask, so the ask lands clean.",
       "steps": [
         "Notice the unspoken charge with this person (old debts, awkwardness).",
         "Name it lightly to yourself, then feel where it sits in your body.",
@@ -839,7 +839,7 @@
       "contraindications": [
         "When the relationship needs repair before any ask"
       ],
-      "example": "Before texting an estranged cousin, feel the old charge, then lead with reconnection, not the ask.",
+      "example": "Before reaching out to someone you've drifted from, feel the old charge, then lead with reconnection, not the ask.",
       "tier": "canonical",
       "status": "published"
     },
@@ -1572,11 +1572,11 @@
       "id": "sp-connector-SHOW-CHALLENGER-OUTER",
       "slug": "connector-show_up-challenger-outer",
       "name": "The Direct Ask",
-      "essence": "Make the one concrete ask that moves the car fund today — specific person, specific number, by when.",
+      "essence": "Make the one concrete ask that moves the work today — specific person, specific request, by when.",
       "steps": [
-        "Pick the person and the number.",
-        "Make the ask plainly, with a deadline ('trying to close the gap by month's end').",
-        "Send the link so yes is easy; make no easy too."
+        "Pick the person and the specific request.",
+        "Make the ask plainly, with a deadline.",
+        "Make it easy to say yes — and easy to say no."
       ],
       "source": {
         "origin": "gm",
@@ -1600,27 +1600,27 @@
       "capabilities": [
         "agency"
       ],
-      "primaryQuestion": "What am I feeling in my gut right before I send the ask — and am I about to soften it?",
-      "campaignQuestion": "What's the single ask that moves the fund today: to whom, how much, by when?",
-      "optimizesFor": "An actual dollar amount on the table, not a softened hint.",
+      "primaryQuestion": "What am I feeling in my gut right before I make the ask — and am I about to soften it?",
+      "campaignQuestion": "What's the single ask that moves things today: to whom, for what, by when?",
+      "optimizesFor": "A real, specific request on the table, not a softened hint.",
       "forbiddenMoves": [
         "Hinting instead of asking",
-        "Burying the number",
+        "Burying the request",
         "Pressure a yes"
       ],
       "failureModes": [
-        "The ask that never quite gets sent",
+        "The ask that never quite gets made",
         "Vague 'anything helps' with no target"
       ],
-      "remediation": "If you softened it, send a one-line follow-up with the real number.",
+      "remediation": "If you softened it, follow up with one line naming the real request.",
       "tell": {
-        "working": "There's a specific number on the table.",
+        "working": "There's a specific request on the table.",
         "performed": "You 'raised awareness' but asked no one."
       },
       "contraindications": [
         "When you haven't built any relationship with the person yet"
       ],
-      "example": "DM a friend: 'Closing in on the car — could you do $100 by Friday? Link here. No worries if not.'",
+      "example": "Ask directly: 'Could you do [specific thing] by Friday? Totally fine to say no.'",
       "tier": "canonical",
       "status": "published"
     },
@@ -1715,10 +1715,10 @@
       "id": "sp-connector-SHOW-ARCHITECT-OUTER",
       "slug": "connector-show_up-architect-outer",
       "name": "Build the Milestone Ladder",
-      "essence": "Give the $8,500 a structure people can join — milestones, a match, a visible climb.",
+      "essence": "Give the goal a structure people can join — milestones, a match, a visible climb.",
       "steps": [
-        "Break the goal into rungs ($2k / $4k / $6k / $8.5k) with a why for each.",
-        "Line up one matcher to double a rung.",
+        "Break the goal into rungs (25% / 50% / 75% / 100%) with a why for each.",
+        "Line up one person to match or double a rung.",
         "Post the ladder so people see the climb and where they fit."
       ],
       "source": {
@@ -1744,18 +1744,18 @@
         "participation"
       ],
       "primaryQuestion": "Am I avoiding building structure because it makes the need feel real?",
-      "campaignQuestion": "What structure — milestones, a match, a tracker — turns scattered asks into a climb people join?",
-      "optimizesFor": "Momentum that compounds instead of one-off asks.",
+      "campaignQuestion": "What structure — milestones, a match, a tracker — turns scattered effort into a climb people join?",
+      "optimizesFor": "Momentum that compounds instead of one-off pushes.",
       "forbiddenMoves": [
-        "Over-engineering the spreadsheet",
-        "Hiding the number",
+        "Over-engineering the tracker",
+        "Hiding the goal",
         "Pressure a matcher"
       ],
       "failureModes": [
         "A ladder no one sees",
-        "Structure that stalls the actual asking"
+        "Structure that stalls the actual work"
       ],
-      "remediation": "Ship the simplest version today: three rungs and a thermometer.",
+      "remediation": "Ship the simplest version today: three rungs and a visible tracker.",
       "tell": {
         "working": "People start asking how to help.",
         "performed": "You tinker with the design to delay asking."
@@ -1763,7 +1763,7 @@
       "contraindications": [
         "When structure is procrastination in disguise"
       ],
-      "example": "Post: 'Car fund: $2k unlocks the down payment. A friend matches the next $1k!'",
+      "example": "Post the first milestone and a matcher: 'Hit the first 25% and a friend matches the next chunk.'",
       "tier": "canonical",
       "status": "published"
     },
@@ -1804,7 +1804,7 @@
       "steps": [
         "Frame the ask as an invitation into something good.",
         "State the no-strings out loud and feel whether your body agrees.",
-        "Thank givers in a way that completes the loop, not opens a debt."
+        "Thank helpers in a way that completes the loop, not opens a debt."
       ],
       "source": {
         "origin": "gm",
@@ -1830,26 +1830,26 @@
         "participation"
       ],
       "primaryQuestion": "Am I about to extract from someone instead of inviting them?",
-      "campaignQuestion": "How do I invite givers to the car fund so they feel chosen, not used?",
-      "optimizesFor": "Giving that strengthens the relationship instead of taxing it.",
+      "campaignQuestion": "How do I invite people to help so they feel chosen, not used?",
+      "optimizesFor": "Helping that strengthens the relationship instead of taxing it.",
       "forbiddenMoves": [
         "Guilt-tripping",
         "Using someone's story without consent",
         "Implying obligation"
       ],
       "failureModes": [
-        "The giver feels cornered",
+        "The helper feels cornered",
         "A yes that quietly costs the friendship"
       ],
       "remediation": "If you sense pressure, say 'genuinely no strings — I'll love you either way.'",
       "tell": {
-        "working": "Givers thank YOU for the chance.",
+        "working": "Helpers thank YOU for the chance.",
         "performed": "You feel a flicker of leverage."
       },
       "contraindications": [
-        "When you need money so badly you can't hear a no"
+        "When you need it so badly you can't hear a no"
       ],
-      "example": "'I'm inviting a few people who've had my back to help me get mobile again — zero pressure.'",
+      "example": "'I'm inviting a few people who've had my back to be part of this — zero pressure.'",
       "tier": "canonical",
       "status": "published"
     },

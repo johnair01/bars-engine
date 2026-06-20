@@ -4,7 +4,7 @@
   "label": "The Escape Artist",
   "gift": "Honoring the wisdom of fear — finding the exit, the trapdoor, the well-timed retreat.",
   "version": "0.1.0-draft",
-  "generatedAt": "2026-06-20T21:43:57.441Z",
+  "generatedAt": "2026-06-20T21:57:03.770Z",
   "count": 60,
   "cards": [
     {
@@ -185,9 +185,9 @@
       "id": "sp-escape_artist-WAKE-ARCHITECT-INNER",
       "slug": "escape_artist-wake_up-architect-inner",
       "name": "Spot Your Dodge",
-      "essence": "Notice the plan you're avoiding because building it makes the need real.",
+      "essence": "Notice the step you're avoiding because doing it makes the need real.",
       "steps": [
-        "Scan for the task you keep sliding past (the budget, the page, the list).",
+        "Scan for the task you keep sliding past.",
         "Feel the avoidance in your body.",
         "Name the dodge out loud and take the smallest next step."
       ],
@@ -213,16 +213,16 @@
       "capabilities": [
         "exploration"
       ],
-      "primaryQuestion": "What am I not letting myself see about the fund because seeing it commits me?",
-      "campaignQuestion": "What structural step for the car am I quietly dodging?",
-      "optimizesFor": "Seeing the avoided move before it silently sinks the campaign.",
+      "primaryQuestion": "What am I not letting myself see because seeing it commits me?",
+      "campaignQuestion": "What key step am I quietly dodging?",
+      "optimizesFor": "Seeing the avoided move before it silently sinks the effort.",
       "forbiddenMoves": [
         "Calling the dodge 'being busy'",
         "Guilt-spiraling instead of acting",
         "Vanishing into research"
       ],
       "failureModes": [
-        "The budget you never open",
+        "The task you never open",
         "Motion without the key move"
       ],
       "remediation": "Open the avoided thing for 5 minutes only.",
@@ -233,7 +233,7 @@
       "contraindications": [
         "When you genuinely need rest, not another push"
       ],
-      "example": "You keep 'forgetting' to total the costs; you open the doc for five minutes.",
+      "example": "You keep 'forgetting' the key task; you open it for five minutes.",
       "tier": "canonical",
       "status": "published"
     },
@@ -618,7 +618,7 @@
       "id": "sp-escape_artist-OPEN-DIPLOMAT-INNER",
       "slug": "escape_artist-open_up-diplomat-inner",
       "name": "Receive Without Bracing",
-      "essence": "Let help land for the car without bracing for the catch.",
+      "essence": "Let help land without bracing for the catch.",
       "steps": [
         "Notice the brace in your body when someone offers.",
         "Breathe; let the offer in one inch further than feels safe.",
@@ -647,8 +647,8 @@
         "connection"
       ],
       "primaryQuestion": "What am I protecting by refusing help — and is it still worth the cost?",
-      "campaignQuestion": "Whose offered help for the car am I deflecting out of habit?",
-      "optimizesFor": "Actually receiving the resources people offer, so the fund grows.",
+      "campaignQuestion": "Whose offered help am I deflecting out of habit?",
+      "optimizesFor": "Actually receiving the support people offer.",
       "forbiddenMoves": [
         "Deflecting the offer",
         "Over-explaining why you don't really need it",
@@ -666,7 +666,7 @@
       "contraindications": [
         "When the 'help' has real strings you're right to refuse"
       ],
-      "example": "A friend offers $300; instead of 'oh you don't have to,' say 'thank you — that genuinely helps.'",
+      "example": "Someone offers to pitch in; instead of 'oh you don't have to,' say 'thank you — that genuinely helps.'",
       "tier": "canonical",
       "status": "published"
     },
@@ -761,7 +761,7 @@
       "id": "sp-escape_artist-CLEAN-SHAMAN-INNER",
       "slug": "escape_artist-clean_up-shaman-inner",
       "name": "Wise Retreat or Just Scared?",
-      "essence": "Sort a genuine reason not to ask from plain exposure-fear.",
+      "essence": "Sort a genuine reason not to act from plain exposure-fear.",
       "steps": [
         "Feel the flinch and locate it in the body.",
         "Ask the Escape Artist's question: what is this fear protecting?",
@@ -790,18 +790,18 @@
         "exploration"
       ],
       "primaryQuestion": "Is this 'no' wisdom, or is it just fear wearing wisdom's coat?",
-      "campaignQuestion": "Where am I calling avoidance 'discernment' in the campaign?",
-      "optimizesFor": "Not abandoning a good ask because needing help feels exposing.",
+      "campaignQuestion": "Where am I calling avoidance 'discernment'?",
+      "optimizesFor": "Not abandoning a good move because being seen needing help feels exposing.",
       "forbiddenMoves": [
         "Dressing avoidance as discernment",
-        "Ghosting the campaign to dodge the feeling",
+        "Going quiet to dodge the feeling",
         "Carrying others' guilt about your need"
       ],
       "failureModes": [
         "Perpetual 'not the right time'",
-        "Researching instead of asking"
+        "Researching instead of acting"
       ],
-      "remediation": "Set a 10-minute timer; send one ask before it rings.",
+      "remediation": "Set a 10-minute timer; take one real step before it rings.",
       "tell": {
         "working": "You name the fear and move.",
         "performed": "You generate three more reasons to wait."
@@ -809,7 +809,7 @@
       "contraindications": [
         "When the retreat really is the wise move — then rest without guilt"
       ],
-      "example": "You feel dread posting the fundraiser; you sort it: not danger, just exposure — you post.",
+      "example": "You feel dread about posting the ask; you sort it: not danger, just exposure — you post.",
       "tier": "canonical",
       "status": "published"
     },
@@ -1542,11 +1542,11 @@
       "id": "sp-escape_artist-SHOW-CHALLENGER-INNER",
       "slug": "escape_artist-show_up-challenger-inner",
       "name": "Stay for the Ask",
-      "essence": "Don't vanish in the sixty seconds before you send the ask.",
+      "essence": "Don’t vanish in the sixty seconds before you make the ask.",
       "steps": [
-        "Feel the urge to flee right before sending.",
+        "Feel the urge to flee right before you act.",
         "Set a 10-minute timer; name the fear out loud.",
-        "Send one ask before it rings."
+        "Make one ask before it rings."
       ],
       "source": {
         "origin": "gm",
@@ -1571,26 +1571,26 @@
         "agency"
       ],
       "primaryQuestion": "Is my urge to bolt protecting me from real danger, or just from being seen needing help?",
-      "campaignQuestion": "Which ask am I one click away from sending but keep escaping?",
-      "optimizesFor": "Sending the ask — the move that could actually increase life — instead of fleeing it.",
+      "campaignQuestion": "Which ask am I one click away from making but keep escaping?",
+      "optimizesFor": "Making the ask — the move that could actually increase life — instead of fleeing it.",
       "forbiddenMoves": [
         "Calling avoidance 'timing'",
-        "Suddenly reorganizing your whole plan to avoid sending",
+        "Suddenly reorganizing your whole plan to avoid acting",
         "Pressuring yourself into freeze"
       ],
       "failureModes": [
         "Perpetual 'not the right moment'",
         "Researching instead of asking"
       ],
-      "remediation": "Shrink it: send the ask to one safe person first.",
+      "remediation": "Shrink it: make the ask to one safe person first.",
       "tell": {
-        "working": "You name the fear and send anyway.",
+        "working": "You name the fear and act anyway.",
         "performed": "You produce three more reasons to wait."
       },
       "contraindications": [
         "When pausing is genuinely wiser — but be honest"
       ],
-      "example": "Timer set: text one person the fundraiser link before 10 minutes pass.",
+      "example": "Timer set: make one ask before 10 minutes pass.",
       "tier": "canonical",
       "status": "published"
     },
@@ -1685,9 +1685,9 @@
       "id": "sp-escape_artist-SHOW-ARCHITECT-INNER",
       "slug": "escape_artist-show_up-architect-inner",
       "name": "Pre-Commit the Rest",
-      "essence": "Decide in advance when you'll rest, so you don't bolt from the campaign mid-push.",
+      "essence": "Decide in advance when you'll rest, so you don't bolt mid-push.",
       "steps": [
-        "Name the point where you'll pause (after the asks go out, not before).",
+        "Name the point where you'll pause (after the work goes out, not before).",
         "Schedule the rest like an appointment.",
         "When the urge to vanish hits early, feel it, point to the scheduled rest, and keep going."
       ],
@@ -1714,8 +1714,8 @@
         "rest"
       ],
       "primaryQuestion": "Am I about to call quitting 'self-care' to escape the exposure?",
-      "campaignQuestion": "What sustainable rhythm lets me keep asking without burning out or bolting?",
-      "optimizesFor": "Staying in the campaign by resourcing rest, so the effort can increase life rather than drain you.",
+      "campaignQuestion": "What sustainable rhythm lets me keep showing up without burning out or bolting?",
+      "optimizesFor": "Staying in the work by resourcing rest, so the effort can increase life rather than drain you.",
       "forbiddenMoves": [
         "Disguising flight as self-care",
         "Pushing with no rest until you crash",
@@ -1725,7 +1725,7 @@
         "Bolting right before the finish",
         "Burnout framed as boundaries"
       ],
-      "remediation": "If you bolted, name the real fear and set the next small ask.",
+      "remediation": "If you bolted, name the real fear and set the next small step.",
       "tell": {
         "working": "You rest on schedule and return.",
         "performed": "You 'rest' the moment it gets exposing."
@@ -1733,7 +1733,7 @@
       "contraindications": [
         "When you truly need to stop — then stop, cleanly"
       ],
-      "example": "Plan: send five asks, then take the weekend off, then resume Monday.",
+      "example": "Plan: do the next batch of work, then take the weekend off, then resume Monday.",
       "tier": "canonical",
       "status": "published"
     },
@@ -1770,9 +1770,9 @@
       "id": "sp-escape_artist-SHOW-DIPLOMAT-INNER",
       "slug": "escape_artist-show_up-diplomat-inner",
       "name": "Name the Cost of Staying",
-      "essence": "Name what staying in the ask actually costs you, so the cost is chosen, not leaked.",
+      "essence": "Name what staying in the work actually costs you, so the cost is chosen, not leaked.",
       "steps": [
-        "Feel where the campaign drains you.",
+        "Feel where the work drains you.",
         "Name the real cost out loud (time, pride, exposure).",
         "Decide if it's worth it — and if yes, stay on purpose."
       ],
@@ -1798,7 +1798,7 @@
       "capabilities": [
         "rest"
       ],
-      "primaryQuestion": "What is staying in this fundraiser costing me that I haven't named?",
+      "primaryQuestion": "What is staying in this costing me that I haven't named?",
       "campaignQuestion": "What do I need to acknowledge about the cost so I can keep showing up honestly?",
       "optimizesFor": "Chosen, sustainable presence instead of silent depletion.",
       "forbiddenMoves": [
@@ -1818,7 +1818,7 @@
       "contraindications": [
         "When the cost is too high — then it's okay to step back"
       ],
-      "example": "Admit asking for money bruises your pride; name it, and choose to keep asking.",
+      "example": "Admit the work bruises your pride; name it, and choose to keep going.",
       "tier": "canonical",
       "status": "published"
     },

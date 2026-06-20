@@ -9,7 +9,7 @@ import { join } from 'node:path'
 
 import type { MoveCard, AllyshipCard } from '../src/lib/allyship-deck/types'
 import { MOVE_VALUES, OPERATION_VALUES, type Loadout } from '../src/lib/technique-library/vocabulary'
-import { CAR_CAMPAIGN } from '../src/lib/technique-library/campaigns'
+import { CAMPAIGNS } from '../src/lib/technique-library/campaigns'
 import {
   scoreLoadoutOverCampaign,
   type CellScore,
@@ -25,11 +25,13 @@ const loadout: Loadout = { inner: 'escape_artist', outer: 'connector' }
 
 const score = scoreLoadoutOverCampaign(loadout, baseCards)
 
-console.log(`\nCampaign: ${CAR_CAMPAIGN.goal}`)
-console.log(`Loadout: inner=${loadout.inner}  outer=${loadout.outer}\n`)
-console.log('Domain framing:')
-for (const [domain, framing] of Object.entries(CAR_CAMPAIGN.domainFraming)) {
-  console.log(`  ${domain.padEnd(20)} ${framing}`)
+console.log(`\nLoadout: inner=${loadout.inner}  outer=${loadout.outer}`)
+console.log('Cards are CAMPAIGN-AGNOSTIC — quality is intrinsic. Same scores apply to every campaign below.\n')
+for (const campaign of CAMPAIGNS) {
+  console.log(`Campaign lens: ${campaign.goal}`)
+  for (const [domain, framing] of Object.entries(campaign.domainFraming)) {
+    console.log(`    ${domain.padEnd(20)} ${framing}`)
+  }
 }
 
 console.log(`\nSurfaced cards: ${score.distinct.length} distinct (across ${score.baseCells} base cells)`)

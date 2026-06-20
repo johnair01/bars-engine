@@ -12,6 +12,7 @@ Define what makes a move **good**, measure the six generated superpower decks ag
 
 | Topic | Decision |
 |-------|----------|
+| **Cards are campaign-agnostic** | A card must work for ANY campaign. Campaigns (car fund, mutual-aid, coworker advocacy) are **test lenses only** — `assessQuality` and the harness score a card's *intrinsic* quality, independent of campaign. Durable fields stay neutral; the optional `example` is one illustration, never a constraint. Multiple campaigns of different shapes (money / organizing / individual advocacy) are authored precisely to confirm the same cards stay useful everywhere. |
 | **Quality is defined by a rubric, not vibes** | A 12-criterion **Move Quality Rubric** (below), every criterion traceable to the book or the base deck. A move's quality level is how many criteria it meets. |
 | **Quality levels L0–L4** | L0 Stub (generated template) → L1 Specific (real, enactable) → L2 Anatomized (optimizes-for / forbidden / failure / remediation + dual reading) → L3 Battle-tested (passes the body, token, consent/placement, and working-vs-performed tests; survives the campaign harness) → L4 Canonical (in-voice, human-authored, `published`). **"Usable" = L3.** |
 | **Gold standard = the base deck's authored anatomy** | The base `MoveCard` carries `primaryQuestion`, `campaignQuestion`, `optimizesFor`, `forbiddenMoves`, `failureModes`, `remediation`, `flavor`. Superpower cards should reach the same anatomy. |
