@@ -1,33 +1,39 @@
-# Tasks: Superpower Move Decks
+# Tasks: Superpower Move Decks (Expansion Packs)
 
-Additive content on the existing `technique-library`. No schema/resolver/validator changes. Generated moves land as `status: 'draft'` (inert) until the author promotes them.
+Each superpower deck = a standalone **60-card** pack (move × level × aspect), isolated from the base deck and base pool. Additive; no schema/resolver/validator changes. Drafts are inert (never pooled) until promoted.
 
-## Phase 1 — Structure + profiles
-- [ ] **T1** `src/lib/technique-library/superpowers/profiles.ts`: `SuperpowerProfile` interface + `SUPERPOWER_PROFILES` for all six (gift, shadow, inner/outer signature names) per spec table.
-- [ ] **T2** Reconcile the six `Superpower` keys with `superpower-move-extensions` (enum is source of truth); note any rename.
-- [ ] **T3** Structural helper/convention + a test fixture asserting the 13-slot shape (5 basic moves one-per-BasicMove; 6 altitude one-per-Operation; 2 signatures inner+outer).
+## Phase 1 — Structure + profiles + helpers
+- [ ] **T1** `superpowers/profiles.ts`: `SUPERPOWER_PROFILES` (gift, shadow, inner-character, outer-character) for all six.
+- [ ] **T2** Reconcile the six `Superpower` keys with `superpower-move-extensions` (enum is source of truth).
+- [ ] **T3** `superpowers/grid.ts`: `buildSuperpowerDeck(sp, cells)` enforcing exactly 60 cells (every move × operation × aspect), id `sp-<sp>-<MOVE>-<OP>-<ASPECT>`, fixed tags.
+- [ ] **T4** `superpowers/pools.ts`: `poolWithSuperpowers(base, owned)` and `citeSuperpowerMove(card, loadout, subject, owned)` (pure; citation is coordinate-only, no content).
 
 ## Phase 2 — Generate + author decks (draft)
-- [ ] **T4** `connector.ts` — 13 moves from the spec's worked example (the canonical pattern). `source.origin:'ai'`, `status:'draft'`.
-- [ ] **T5** `strategist.ts`, `escape-artist.ts`, `disruptor.ts`, `storyteller.ts` — 13 each, via the Generation Method (profile + operation chapters + deck grammar). Each move: imperative name, one-line essence, 2–4 steps, correct tags, a shadow-check line.
-- [ ] **T6** `alchemist.ts` — the 2 signatures + any altitude deltas not covered by the substrate (document why the rest is inherited).
-- [ ] **T7** Every generated move passes `validateTechnique` (cover via the deck test, it.each).
+- [ ] **T5** `connector.ts` — 60 cells from the spec's worked example as the canonical pattern. `origin:'ai'`, `status:'draft'`.
+- [ ] **T6** `strategist.ts`, `escape-artist.ts`, `disruptor.ts`, `storyteller.ts` — 60 each via the Generation Method (profile × level register × move purpose); each cell: name, essence, 2–4 steps, fixed tags, shadow-check.
+- [ ] **T7** `alchemist.ts` — resolve the open question: ship a 60-grid or document re-skin of the substrate (do not duplicate substrate into the base pool).
+- [ ] **T8** Every card passes `validateTechnique`.
 
-## Phase 3 — Aggregate, cover, verify
-- [ ] **T8** `superpowers/index.ts`: `SUPERPOWER_TECHNIQUES` (all) + a `publishedSuperpowerMoves()` selector (`status==='published'`).
-- [ ] **T9** `canonical.ts`: merge only `published` superpower moves into `CANONICAL_TECHNIQUES`.
-- [ ] **T10** `scripts/superpower-coverage.ts`: for each superpower, run a loadout with that superpower in both slots over the 120 cards (both subjects); report cards-with-≥1 class move; expect 120/120 once published.
-- [ ] **T11** `__tests__/superpower-decks.test.ts`: 13-slot shape per deck; tags correct; all valid; **draft decks excluded** from the published pool.
-- [ ] **T12** `vitest run src/lib/technique-library`, `tsc --noEmit`, `eslint` — fail-fix.
+## Phase 3 — Assemble, verify, isolate
+- [ ] **T9** `superpowers/index.ts`: `SUPERPOWER_DECKS`, `superpowerDeck(sp)`, `publishedDeck(sp)` (status filter).
+- [ ] **T10** `scripts/assemble-superpower-decks.ts`: write `public/superpower-decks/<sp>.json` (mirror `assemble-allyship-deck.ts`).
+- [ ] **T11** `scripts/superpower-coverage.ts`: owned pack resolves a class card on every base card (both subjects); unowned resolves none but `citeSuperpowerMove` returns a coordinate.
+- [ ] **T12** `__tests__/superpower-decks.test.ts`:
+  - each deck has exactly 60 cells covering every (move × operation × aspect);
+  - all valid; ids unique;
+  - **base isolation**: `CANONICAL_TECHNIQUES` has zero `superpowers`-tagged cards; `allyship-deck.json` length === 120;
+  - owned vs unowned resolution differs; `citeSuperpowerMove` always resolvable without content.
+- [ ] **T13** `vitest run src/lib/technique-library`, `tsc --noEmit`, `eslint` — fail-fix.
 
-## Phase 4 — Promotion (author-gated)
-- [ ] **T13** Author reviews each deck and flips `status` → `published` (per deck or per move). Only then do they enter play.
-- [ ] **T14** Re-run coverage; confirm 120/120 per published superpower; update strand notes.
+## Phase 4 — Promotion + product wiring (later)
+- [ ] **T14** Author promotes `draft → published` per deck.
+- [ ] **T15** Entitlement source for `owned: Superpower[]` — defer to product layer; this feature only consumes it.
 
 ## Housekeeping
-- [ ] **T15** `BACKLOG.md` entry + `npm run backlog:seed` (DB).
-- [ ] **T16** When a loadout-picker / draw UI is specced, add the required Verification Quest (Twine + seed).
+- [ ] **T16** `BACKLOG.md` entry + `npm run backlog:seed` (DB).
+- [ ] **T17** When a pack-aware draw UI or store/entitlement surface is specced, add the required Verification Quest (Twine + seed).
 
 ## Verification (every phase)
 - `vitest run src/lib/technique-library`; `tsc --noEmit`; `eslint` clean.
-- `npm run check` + `npm run build` before merge to main (needs DB for `db:generate`).
+- Base deck stays 120; base pool free of superpower cards.
+- `npm run check` + `npm run build` before merge (needs DB for `db:generate`).

@@ -1,49 +1,53 @@
-# Plan: Superpower Move Decks
+# Plan: Superpower Move Decks (Expansion Packs)
 
-> Implement per [.specify/specs/superpower-move-decks/spec.md](spec.md). Additive data on top of the existing `technique-library`. No schema, resolver, or validator changes.
+> Implement per [.specify/specs/superpower-move-decks/spec.md](spec.md). Each superpower deck is a standalone **60-card** pack (move × level × aspect), **isolated** from the base deck and base pool. Additive; no schema/resolver/validator changes.
 
 ## Strategy
 
-The hard parts are already done: `Technique`, the resolver (with `superpowers` matching + `viaSlot`), and the validator all exist. This feature is **structured content** — 78 `Technique` objects tagged `superpowers:[<sp>]` — plus a thin profile constant and a coverage check. Land it incrementally and safely: generated moves are `status: 'draft'` and excluded from the default pool until the author promotes them, so partial decks never affect play.
+The schema, resolver (with `superpowers` matching + `viaSlot`), and validator already exist. This feature is (a) a deterministic 60-cell grid builder, (b) generated+curated content per superpower, (c) two pure helpers (`poolWithSuperpowers`, `citeSuperpowerMove`), and (d) per-pack static artifacts. The non-negotiable invariant: **the base deck stays 120 and the base pool (`CANONICAL_TECHNIQUES`) contains zero superpower cards** — packs are only ever composed into a pool by an owner at call time.
+
+Land incrementally: drafts are `status:'draft'` and never pooled, so partial decks can't affect base play.
 
 ## New surface
 
 ```
 src/lib/technique-library/superpowers/
-  profiles.ts          # SuperpowerProfile + SUPERPOWER_PROFILES (6)
-  strategist.ts        # STRATEGIST_MOVES: Technique[]  (13)
-  connector.ts         # CONNECTOR_MOVES   (13)  ← worked example in spec
-  escape-artist.ts     # ESCAPE_ARTIST_MOVES (13)
-  disruptor.ts         # DISRUPTOR_MOVES   (13)
-  storyteller.ts       # STORYTELLER_MOVES (13)
-  alchemist.ts         # ALCHEMIST_MOVES   (deltas + 2 signatures)
-  index.ts             # SUPERPOWER_TECHNIQUES = [...all]
+  profiles.ts            # SUPERPOWER_PROFILES (6): gift, shadow, inner/outer character
+  grid.ts                # buildSuperpowerDeck(sp, cells) — enforces the 60-cell shape + id convention
+  strategist.ts connector.ts escape-artist.ts disruptor.ts storyteller.ts alchemist.ts
+                         #   each: <SP>_DECK: Technique[] (60), origin:'ai', status:'draft'
+  pools.ts               # poolWithSuperpowers(base, owned), citeSuperpowerMove(...)
+  index.ts               # SUPERPOWER_DECKS, superpowerDeck(sp), publishedDeck(sp)
   __tests__/superpower-decks.test.ts
 scripts/
-  superpower-coverage.ts   # per-superpower 120-card coverage
+  assemble-superpower-decks.ts   # writes public/superpower-decks/<sp>.json (mirrors assemble-allyship-deck.ts)
+  superpower-coverage.ts          # owned-vs-unowned resolution + base-isolation report
+public/superpower-decks/<sp>.json # assembled artifacts (one per pack)
 ```
 
-`canonical.ts` merges `published` superpower moves into `CANONICAL_TECHNIQUES`.
+`canonical.ts` is **not** touched — base pool stays base-only.
 
-## Deck-shape contract (enforced by test)
+## Grid contract (enforced by test)
 
-Per non-Alchemist superpower: exactly **5 basic** (`moves:[one], operations:[]`), **6 altitude** (`moves:[], operations:[one]`), **2 signature** (`aspect:inner` + `aspect:outer`, both wildcard move/op). All `superpowers:[<sp>]`, `channels:[]` unless intrinsic, `domains:[]`. Alchemist: documented subset (substrate covers basic/altitude; author the 2 signatures + any deltas).
+Per superpower: exactly 60 cards = every `(BasicMove × Operation × {inner,outer})`. Tags per card: `superpowers:[sp]`, `moves:[m]`, `operations:[o]`, `aspect:a`, `domains:[]`, `channels:[]` (unless intrinsic). Id `sp-<sp>-<MOVE>-<OP>-<ASPECT>`. 30 inner + 30 outer.
 
 ## Key implementation notes
-- **Resolver already works** — a move tagged `superpowers:['connector']` surfaces only when Connector is the active-slot superpower (or never, if neither slot is Connector). `viaSlot` is set to the active aspect. Verify, don't rebuild.
-- **Status gating** — `canonical.ts` should merge only `status === 'published'`. Add a filter at the merge site so draft decks are inert. (Decide: keep a separate `SUPERPOWER_TECHNIQUES_ALL` for tooling vs the published subset for the pool.)
-- **Generation** — draft content with AI assistance per the spec's Generation Method, then hand-curate. Treat the Connector worked example in the spec as the canonical pattern for voice/length.
-- **Coverage math** — basic moves cover by move-row, altitude moves by operation-column; together they blanket the grid. The per-superpower report should show 120/120 once a deck's 11 basic+altitude moves are `published`.
+- **Resolver reuse** — a superpower card surfaces only when its `sp` is the active-slot superpower AND it's in the pool. Owners get it via `poolWithSuperpowers`; non-owners never do. Verify with tests; do not modify `resolve.ts`.
+- **Citation needs no content** — the full grid guarantees a card exists at every `(m,o,a)`, so `citeSuperpowerMove` is pure coordinate math (returns the deterministic `cardId` + `owned` flag), usable even when the player doesn't own the pack.
+- **Base isolation test is load-bearing** — assert `CANONICAL_TECHNIQUES` has no `superpowers.length > 0` cards and `allyship-deck.json` length stays 120.
+- **Generation** — follow the spec's method and the Connector worked example for voice/length; require a shadow-check line per cell. 60 cells × 5 decks is large — generate per deck, curate, promote.
+- **Artifacts** — mirror `assemble-allyship-deck.ts` so packs are printable/shippable independently.
 
 ## Risks / mitigations
 | Risk | Mitigation |
 |------|------------|
-| Generated content is generic / off-voice | Curate against the Connector exemplar; require a shadow-check line per move; author promotes to `published`. |
-| Draft decks leak into play | Merge only `published` into the pool; structural test asserts drafts excluded. |
-| Naming drift vs `superpower-move-extensions` | Reconcile the six keys with that spec in Phase 1; `Superpower` enum is the source of truth. |
-| Over-authoring (chasing per-cell coverage) | Hold the 13-slot shape; wildcard tags give full coverage without 60 moves/superpower. |
+| Pack content leaks into base play | Never merge into `CANONICAL_TECHNIQUES`; base-isolation test; drafts unpooled. |
+| 300+ generated cells are generic | Curate against the Connector exemplar; shadow-check per cell; author promotes to `published`. |
+| Citation reveals gated content | `citeSuperpowerMove` returns coordinates + `owned` only — never name/essence/steps. |
+| Naming drift vs `superpower-move-extensions` | Reconcile the six keys in Phase 1; `Superpower` enum is source of truth. |
+| Alchemist double-counts the substrate | Decide in FR5 — ship a distinct 60-grid or document re-skin; don't duplicate substrate into the base pool. |
 
 ## Verification
-- `node_modules/.bin/vitest run src/lib/technique-library` — structural + validation tests green.
-- `tsx scripts/superpower-coverage.ts` — 120/120 per published superpower.
-- `tsc --noEmit` + `eslint` clean. (`npm run check` when a DB is available.)
+- `vitest run src/lib/technique-library` — 60-cell completeness, base isolation, owned/unowned resolution, citation.
+- `tsx scripts/superpower-coverage.ts` — owned pack resolves a class card on every base card; unowned resolves none (but cites).
+- `tsc --noEmit` + `eslint` clean; `npm run check`/`build` before merge (DB needed for `db:generate`).

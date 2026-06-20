@@ -1,12 +1,12 @@
 name: superpower-move-decks
 description: >-
-  Generate the six Superpower move-decks (Strategist, Connector, Escape Artist,
-  Disruptor, Alchemist, Storyteller) as canonical Techniques tagged
-  superpowers:[<sp>]. Each superpower gets its own version of the 5 basic moves,
-  a move at each of the 6 altitude levels (Shaman->Sage), and a signature inner
-  + outer move — making the 2-slot loadout (inner/outer allyship) functional and
-  giving every deck card a class-specific reading. Sourced from the MTGOA work
-  and the existing allyship deck grammar.
+  Define the six Superpower expansion decks (Strategist, Connector, Escape
+  Artist, Disruptor, Alchemist, Storyteller). Each is a standalone 60-card pack
+  = 5 basic moves x 6 levels (Shaman->Sage) x 2 aspects (inner/outer). These are
+  NOT merged into the 120-card base Allyship Deck or its technique pool; they are
+  add-on expansion packs. The base experience cites where a superpower card
+  applies and invites the player to get that superpower's deck. Superpowers are
+  an orienting add-on, deliberately moved out of the book/base.
 type: feature
 status: active
 created_at: '2026-06-20T19:30:47.499597+00:00'
