@@ -20,9 +20,9 @@
 ## Phase 2 — Bidirectional movement UI
 
 - [ ] **T2.0** Discovery — enumerate the exact Vault/feed/garden list components that render owned BAR rows (under `src/components/hand/Vault*`, garden list, feed). Record the target files here before editing.
-- [ ] **T2.1** `src/actions/hand.ts` — add `getBarHandState({ barId }): Promise<{ inHand: boolean; handFull: boolean } | { error }>` from `HandSlot` rows (auth-checked).
-- [ ] **T2.2** `src/components/hand/HandLocationToggle.tsx` (new, client) — "Hold in Hand" (Vault→Hand via `promoteVaultBarToHand`) / "Return to Vault" (Hand→Vault via `depositHandBarToVault`); non-blocking hand-full message; `compact?` prop for list rows; `router.refresh()` after success.
-- [ ] **T2.3** `src/app/bars/[id]/page.tsx` — render `HandLocationToggle` in the owner actions block (~L216), seeded with `getBarHandState`.
+- [ ] **T2.1** Movement copy constants (`HOLD_IN_HAND` / `RETURN_TO_VAULT`) in one shared module so `hand-vault-rename` can repoint. **No `getBarHandState` action** — compute `inHand`/`handFull` inline in the server components from `HandSlot` (Architect).
+- [ ] **T2.2** `src/components/hand/HandLocationToggle.tsx` (new, client) — "Hold in Hand" (Vault→Hand via `promoteVaultBarToHand`) / "Return to Vault" (Hand→Vault via `depositHandBarToVault`); non-blocking hand-full message; `compact?` prop for list rows; `router.refresh()` after success. Visibly distinct from the Compost affordance (Return ≠ archive).
+- [ ] **T2.3** `src/app/bars/[id]/page.tsx` — render `HandLocationToggle` (~L216), seeded with inline `inHand`/`handFull`. **Gate to `isOwner` only** (never `isRecipient`). Honor Fork B eligibility (non-planted in v1).
 - [ ] **T2.4** Vault/feed/garden rows (files from T2.0) — add compact `HandLocationToggle` on owned-BAR rows.
 - [ ] **T2.5** `src/components/now/HandGlance.tsx` — empty slot: replace the `/bars/create` link with a Vault-picker control (bottom-sheet of Vault BARs) → `promoteVaultBarToHand(targetSlot)`; keep a "create new" affordance.
 

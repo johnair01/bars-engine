@@ -23,11 +23,23 @@ Minimize new surface area: one new client component (`HandLocationToggle`) does 
 | Vault/feed rows | `src/components/hand/Vault*` + garden/feed list row component(s) — **confirm exact files in T2.0** | Add compact `HandLocationToggle` on owned-BAR rows. |
 | Hand glance | `src/components/now/HandGlance.tsx` (empty slot ~L102) | Replace `/bars/create` link with Vault-picker control → `promoteVaultBarToHand`; keep a create affordance. |
 
-## Open implementation questions (resolve during build, not blocking the spec)
+## Open implementation questions — resolved by the Six Faces ([SIX_FACE_ANALYSIS.md](./SIX_FACE_ANALYSIS.md))
 
-- **Vault/feed row inventory (T2.0)**: enumerate the exact list components that render owned BAR rows (Vault sections under `src/components/hand/`, the garden list, any feed). The spec mandates row-level controls; the precise files are a discovery step.
-- **OverflowModal extraction**: the overflow markup currently lives inline in `CaptureBox.tsx`. Extract to a shared component so the whiteboard reuses it rather than duplicating ~80 lines.
-- **Hand-glance Vault picker UX**: lightweight bottom-sheet list of Vault BARs vs. routing to a dedicated picker page. Prefer an in-place sheet to stay on Now (mobile-first).
+- **Vault/feed row inventory (T2.0)** → keep as a scoped discovery step: target owned-BAR rows in `src/components/hand/Vault*` and the Garden list first; defer feed if rows aren't owner-context. One `HandLocationToggle(compact)` everywhere.
+- **OverflowModal extraction** → **yes, extract** `src/components/now/OverflowModal.tsx` from `CaptureBox` for reuse + testability (even if Fork A means only `CaptureBox` consumes it).
+- **Hand-glance Vault picker UX** → **in-place bottom-sheet** (stay on Now, mobile-first); the empty slot offers both "Pull from Vault" and "Capture new" so a bare tap is never ambiguous.
+
+## Residual forks for the human (do not implement until decided)
+
+- **Fork A — whiteboard Hand-full**: convened recommendation = **silent Vault fallback + toast** (no modal on the canvas). Alternative = forced overflow modal.
+- **Fork B — movement on planted/Garden BARs**: convened recommendation = **restrict toggle to non-planted BARs in v1**; handle Garden↔Hand as a follow-up. Alternative = enable on planted, labeling origin "Garden".
+
+## Architect notes folded into the spec
+
+- **No new `getBarHandState` action** — compute `inHand`/`handFull` inline in the server components.
+- **Coordinate the `captureBarFromCanvas` return type with `bar-capture-consolidation`** (it edits the same action: adds `title`, Captured overlay, Tune path). Converge on `{ barId, title, placedIn, overflow? }`.
+- Import `addBarToHandForPlayer` from `@/lib/hand-service` (not the `'use server'` `hand.ts`).
+- Optional hardening: wrap find+upsert in `addBarToHandForPlayer` in a `$transaction` if concurrent-capture slot races ever surface.
 
 ## Sequencing & risk
 
