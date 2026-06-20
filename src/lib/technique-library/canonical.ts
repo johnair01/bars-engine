@@ -11,6 +11,7 @@
  */
 
 import type { Technique } from './types'
+import { OPERATION_TECHNIQUES } from './canonical-operations'
 
 const MTGOA = {
   origin: 'book',
@@ -18,7 +19,8 @@ const MTGOA = {
   author: 'Wendell Britt',
 } as const
 
-export const CANONICAL_TECHNIQUES: Technique[] = [
+/** Tier-1 Emotional-Alchemy tools — the universal Alchemy substrate (Part VI). */
+export const ALCHEMY_SUBSTRATE: Technique[] = [
   {
     id: 'tech-wave',
     slug: 'wave',
@@ -288,3 +290,9 @@ export const CANONICAL_TECHNIQUES: Technique[] = [
     status: 'published',
   },
 ]
+
+/**
+ * The full canonical pool: the universal Alchemy substrate (above) plus the
+ * operation-scoped move practices from the MTGOA chapters (canonical-operations).
+ */
+export const CANONICAL_TECHNIQUES: Technique[] = [...ALCHEMY_SUBSTRATE, ...OPERATION_TECHNIQUES]

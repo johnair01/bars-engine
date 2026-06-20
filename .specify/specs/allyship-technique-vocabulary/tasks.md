@@ -2,7 +2,9 @@
 
 Implement in order. Phases 1–2 are pure TS (no DB, no UI). Phase 3 is persistence and is gated on a real need for community/personal techniques.
 
-> **Status (2026-06-20):** Phases 1 & 2 implemented on `claude/admiring-shannon-wlddtw`. 36 unit tests pass; `tsc --noEmit` clean (0 project errors); eslint clean. Full `npm run check` not run here (its `db:generate` step needs a database in this container) — verified via `tsc` + `vitest` + `eslint` directly. Coverage report (T10): Wake/Open/Clean Up = 100%, Grow Up = 0%, Show Up = 63% — the Grow Up + Show Up gaps are the Tier-2 (Superpower) / Tier-3 (Role) move work, by design.
+> **Status (2026-06-20):** Phases 1 & 2 implemented on `claude/admiring-shannon-wlddtw`. 66 unit tests pass; `tsc --noEmit` clean (0 project errors); eslint clean. Full `npm run check` not run here (its `db:generate` step needs a database in this container) — verified via `tsc` + `vitest` + `eslint` directly.
+>
+> **Coverage:** 100% — all 120 move cards resolve ≥1 technique. Pool = 42 canonical techniques: 12 Tier-1 alchemy substrate (`canonical.ts`, MTGOA Part VI) + 30 operation-scoped practices mined from the chapter manuscript (`canonical-operations.ts`, ch1–7 = the six mentor-worlds/Operations). The 30 operation techniques closed the earlier Grow Up (0%) and Show Up (63%) gaps. Per-move now 24/24 across wake/open/clean/grow/show.
 
 ## Phase 1 — Vocabulary module + resolver (TS only)
 
