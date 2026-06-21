@@ -86,10 +86,10 @@
       open-aid fallback; **group by unit into separate sub-bars**; **never** show a
       per-action point value to the contributor (UI_COVENANT). Wire into Mobility
       Quest hub section. (FR8, FR11a; Six Faces Δ T3.4)
-- [ ] **T3.5** Steward seed/UI to author milestone needs
-      (`{ superpower, orientation, cardId, unit, value }`) for Mobility Quest;
-      steward picks unit to match the milestone target, cannot weight one action
-      over another. (FR11)
+- [x] **T3.5** Steward authoring UI — `src/actions/milestone-needs-admin.ts`
+      (create/delete/list, steward-gated via playerCanListAllyshipIntakesForRef;
+      enforces `unit:'action'⇒value:1`, no multiplier), `StewardNeedAuthor.tsx`
+      form, route `/admin/campaign/[ref]/needs`. tsc+eslint clean. (FR11)
 - [x] **T3.5a** `submitSuperpowerIntake` now persists the result per-campaign on
       `CampaignMembership.superpower`/`.superpowerOrientation` (best-effort upsert,
       creates a MEMBER membership if needed; never blocks the reveal; returns
