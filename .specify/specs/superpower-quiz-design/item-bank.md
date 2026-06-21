@@ -25,6 +25,11 @@ Abbreviations below: `CON STO STR DIS ALC ESC COA`.
 
 ## Items (forced-choice, behavioral) — 11 superpower + 1 orientation
 
+> **Voiced copy lives in `src/lib/superpowers/quiz/items.ts`** (re-authored in
+> Wendell's heist/guild register, T2.3). The tables below are the canonical
+> *structure + weights*; `items.ts` carries the final wording. Keep ids + weights
+> in lockstep across both.
+
 > Each item: pick **one**. Each option carries `weights` (primary = 2, secondary =
 > 1). Quasi-ipsative: options are *not* equally desirable (shadows included).
 > Light guild/heist flavor in framing; items themselves stay concrete (research:

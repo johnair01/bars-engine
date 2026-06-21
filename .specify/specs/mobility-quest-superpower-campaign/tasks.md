@@ -41,8 +41,9 @@
       (`quizResultToRouting` → `SuperpowerRoutingResult`). DONE + tested
       (routing.test.ts 4/4). (FR5)
 - [x] **T2.3** Discovery quiz built from the Strategy Guides + Coach guide
-      (`quiz/items.ts`, ported from item-bank.md). DONE. **Voice polish** (fuller
-      Borogove heist register on each item) remains a copy pass.
+      (`quiz/items.ts`). **Voice polish DONE** — situations + option labels
+      re-authored in Wendell's heist/guild register (behavioral, ids+weights
+      unchanged; 14/14 tests green).
 - [x] **T2.4** `src/actions/superpower-intake.ts` — `submitSuperpowerIntake`
       server action (zod-validated; deterministic scoring; returns routing +
       reveal copy; no email gate). DONE. **Persistence deferred to Phase 4**
