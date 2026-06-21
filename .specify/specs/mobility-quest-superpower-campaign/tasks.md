@@ -75,7 +75,10 @@
 - [x] **T3.3** completeMilestoneNeed writes `MilestoneContribution` + upserts
       `ContributionRecord` + advances milestone in one transaction; per-unit honest
       view from `summarizeNeeds` (legacy currentValue advanced for parity). (FR10)
-- [ ] **T3.4** `src/components/superpowers/MilestoneNeeds.tsx` — matched needs +
+- [~] **T3.4** `src/components/superpowers/MilestoneNeeds.tsx` — DESIGN SPEC ready
+      ([MILESTONE_NEEDS_UI_DESIGN.md](./MILESTONE_NEEDS_UI_DESIGN.md), for Claude
+      design): tiered cards, per-unit/internal-external progress, no point values,
+      UI_COVENANT tokens. Build after design. Original notes: matched needs +
       open-aid fallback; **group by unit into separate sub-bars**; **never** show a
       per-action point value to the contributor (UI_COVENANT). Wire into Mobility
       Quest hub section. (FR8, FR11a; Six Faces Δ T3.4)
