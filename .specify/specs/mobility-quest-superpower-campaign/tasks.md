@@ -79,13 +79,13 @@
 - [x] **T3.3** completeMilestoneNeed writes `MilestoneContribution` + upserts
       `ContributionRecord` + advances milestone in one transaction; per-unit honest
       view from `summarizeNeeds` (legacy currentValue advanced for parity). (FR10)
-- [~] **T3.4** `src/components/superpowers/MilestoneNeeds.tsx` — DESIGN SPEC ready
-      ([MILESTONE_NEEDS_UI_DESIGN.md](./MILESTONE_NEEDS_UI_DESIGN.md), for Claude
-      design): tiered cards, per-unit/internal-external progress, no point values,
-      UI_COVENANT tokens. Build after design. Original notes: matched needs +
-      open-aid fallback; **group by unit into separate sub-bars**; **never** show a
-      per-action point value to the contributor (UI_COVENANT). Wire into Mobility
-      Quest hub section. (FR8, FR11a; Six Faces Δ T3.4)
+- [x] **T3.4** Design handoff built (Mobility Quest poker-card design): reusable
+      **`AllyshipCard.tsx`** (5:7 card, modifier foil, status bar, glyphs) +
+      `card-view.ts` mapper (need→card, tested) + **`MilestoneNeeds.tsx`** board
+      (progress header external/internal never blended; Tier 1 matched hand; Tier 2
+      collapsible; no points) wired to claim/complete/release; route
+      `/campaign/[ref]/needs` (`?lens=` preview). tsc+eslint clean; 34 tests green.
+      (FR8, FR11a; Six Faces Δ T3.4)
 - [x] **T3.5** Steward authoring UI — `src/actions/milestone-needs-admin.ts`
       (create/delete/list, steward-gated via playerCanListAllyshipIntakesForRef;
       enforces `unit:'action'⇒value:1`, no multiplier), `StewardNeedAuthor.tsx`

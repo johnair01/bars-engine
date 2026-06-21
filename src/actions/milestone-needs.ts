@@ -241,3 +241,27 @@ export async function completeMilestoneNeed(raw: unknown): Promise<CompleteMiles
 
   return { ok: true, contributionId }
 }
+
+export type ReleaseMilestoneNeedResult = { ok: true } | { ok: false; error: string }
+
+/** Return a need the current player claimed back to `open`. */
+export async function releaseMilestoneNeed(raw: unknown): Promise<ReleaseMilestoneNeedResult> {
+  const parsed = idSchema.safeParse(raw)
+  if (!parsed.success) return { ok: false, error: 'Invalid request.' }
+
+  const player = await getCurrentPlayer()
+  if (!player) return { ok: false, error: 'Sign in required.' }
+
+  const need = await db.milestoneNeed.findUnique({
+    where: { id: parsed.data.needId },
+    select: { id: true, status: true, claimedByPlayerId: true },
+  })
+  if (!need) return { ok: false, error: 'Need not found.' }
+  if (need.status === 'done') return { ok: false, error: 'Already complete.' }
+  if (need.claimedByPlayerId && need.claimedByPlayerId !== player.id) {
+    return { ok: false, error: 'Not yours to release.' }
+  }
+
+  await db.milestoneNeed.update({ where: { id: need.id }, data: { status: 'open', claimedByPlayerId: null } })
+  return { ok: true }
+}

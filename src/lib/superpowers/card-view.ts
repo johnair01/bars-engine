@@ -113,3 +113,9 @@ export function buildNeedView(
     status: resolveCardStatus(need.status, opts),
   }
 }
+
+/** Bespoke 3-letter abbreviations for the lens chip (design handoff). */
+export const SP_ABBR: Record<Superpower, string> = {
+  connector: 'CON', storyteller: 'STY', strategist: 'STR', disruptor: 'DIS',
+  alchemist: 'ALC', escape_artist: 'ESC', coach: 'COA',
+}
