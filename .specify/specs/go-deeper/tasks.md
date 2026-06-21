@@ -26,10 +26,11 @@ API-first, five slices. Reuse auth/entitlements/deck-UI/technique-library. Only 
 - [ ] **T13** Helper `superpowerPackSku(sp)` + reverse; unit test the round-trip.
 
 ## Slice 4 — Go Deeper
-- [ ] **T14** `src/actions/deck-techniques.ts`: `getCardGoDeeper(cardId, subject)` → owned content (published, highest level) | citation + `upsellSku` | `needsQuiz`/`needsLogin`; `available:false` when no published card.
-- [ ] **T15** `src/components/deck/GoDeeper.tsx`: overlay affordance — render move (owner) / inline Paywall upsell (non-owner) / quiz prompt (no loadout); shown only when `available`.
-- [ ] **T16** Wire `GoDeeper` into `AllyshipDeckReader` card overlay, reading the active subject.
-- [ ] **T17** Tests: `getCardGoDeeper` for owned / locked / needsQuiz / unavailable.
+> **Status (2026-06-20):** Implemented. Pure `buildGoDeeper` (technique-library/superpowers/go-deeper.ts) decides ok/locked/unavailable, gated to published L3+ cells; `getCardGoDeeper` server action (auth → loadout → owned, +needs_login/needs_quiz/not_found); `GoDeeper.tsx` wired into the deck detail overlay. 105 tests pass; tsc + eslint clean. Locked path never leaks content (citation only). Upsell links to /launch as placeholder until pack SKUs land (Slice 3 / merge).
+- [x] **T14** `src/actions/deck-techniques.ts`: `getCardGoDeeper(cardId, subject)` → owned content (published, highest level) | citation + `upsellSku` | `needsQuiz`/`needsLogin`; `available:false` when no published card.
+- [x] **T15** `src/components/deck/GoDeeper.tsx`: overlay affordance — render move (owner) / inline Paywall upsell (non-owner) / quiz prompt (no loadout); shown only when `available`.
+- [x] **T16** Wire `GoDeeper` into `AllyshipDeckReader` card overlay, reading the active subject.
+- [x] **T17** Tests: `getCardGoDeeper` for owned / locked / needsQuiz / unavailable.
 
 ## Slice 5 — Verification & polish
 - [ ] **T18** Verification quest `cert-go-deeper-v1` (Twine passages: quiz → result → draw → inner Go Deeper → outer upsell → mint) + idempotent seed; tie to Bruised Banana Fundraiser.

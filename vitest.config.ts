@@ -21,6 +21,7 @@ export default defineConfig({
       'src/lib/technique-library/__tests__/superpower-decks.test.ts',
       'src/lib/technique-library/__tests__/quality.test.ts',
       'src/lib/technique-library/__tests__/superpower-quality.test.ts',
+      'src/lib/technique-library/__tests__/go-deeper.test.ts',
       'src/lib/player-entitlements/__tests__/superpower-skus.test.ts',
     ],
   },

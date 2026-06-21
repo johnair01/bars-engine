@@ -20,6 +20,7 @@ import type {
 } from '@/lib/allyship-deck/types'
 import { AllyshipCard, type CardSubject } from './AllyshipCard'
 import { SendToBarsButton } from './SendToBarsButton'
+import { GoDeeper } from './GoDeeper'
 import { FindYourPath } from './FindYourPath'
 import { recordDraw, type DeckStats } from '@/actions/deck-journal'
 
@@ -305,6 +306,7 @@ export function AllyshipDeckReader({ initialStats }: { initialStats: DeckStats |
               subject={subject}
               footerSlot={<SendToBarsButton cardId={selected.id} subject={subject} />}
             />
+            <GoDeeper key={`${selected.id}:${subject}`} cardId={selected.id} subject={subject === 'self' ? 'self' : 'other'} />
             <button type="button" onClick={() => setSelected(null)} style={closeBtn}>Close</button>
           </div>
         </div>
